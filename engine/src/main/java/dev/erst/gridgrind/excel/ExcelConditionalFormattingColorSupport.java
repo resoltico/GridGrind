@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.Objects;
@@ -34,19 +35,19 @@ final class ExcelConditionalFormattingColorSupport {
   }
 
   /** Reads one OOXML color into the owned color vocabulary, preserving tint and reference kind. */
-  static Optional<ColorSpec> optionalColor(@Nullable CTColor color) {
+  static Optional<CellColorReport> optionalColor(@Nullable CTColor color) {
     if (color == null) {
       return Optional.empty();
     }
     Optional<Double> tint = color.isSetTint() ? Optional.of(color.getTint()) : Optional.empty();
     if (color.isSetRgb()) {
-      return rgbHex(color.getRgb()).map(value -> new ColorSpec.Rgb(new RgbHex(value), tint));
+      return rgbHex(color.getRgb()).map(value -> new CellColorReport.Rgb(new RgbHex(value), tint));
     }
     if (color.isSetTheme()) {
-      return Optional.of(new ColorSpec.Theme(Math.toIntExact(color.getTheme()), tint));
+      return Optional.of(new CellColorReport.Theme(Math.toIntExact(color.getTheme()), tint));
     }
     if (color.isSetIndexed()) {
-      return Optional.of(new ColorSpec.Indexed(Math.toIntExact(color.getIndexed()), tint));
+      return Optional.of(new CellColorReport.Indexed(Math.toIntExact(color.getIndexed()), tint));
     }
     return Optional.empty();
   }

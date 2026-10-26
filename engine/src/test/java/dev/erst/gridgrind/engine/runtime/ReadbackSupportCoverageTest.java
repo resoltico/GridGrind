@@ -12,11 +12,9 @@ import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
-import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
-import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
@@ -29,7 +27,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
-import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
@@ -44,35 +41,6 @@ import org.junit.jupiter.api.Test;
  * Coverage tests for runtime readback helpers introduced by projection-aware cell introspection.
  */
 class ReadbackSupportCoverageTest {
-  @Test
-  void styleReportConversionPreservesEveryOwnedDifferentialColorVariant() {
-    assertEquals(
-        Optional.empty(),
-        InspectionResultCellStyleReportSupport.toCellColorReport((ColorSpec) null));
-    assertEquals(
-        Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
-        InspectionResultCellStyleReportSupport.toCellColorReport(
-            ColorSpec.rgb(new RgbHex("#112233"))));
-    assertEquals(
-        Optional.of(CellColorReport.rgb(new RgbHex("#112233"), 0.25d)),
-        InspectionResultCellStyleReportSupport.toCellColorReport(
-            new ColorSpec.Rgb(new RgbHex("#112233"), Optional.of(0.25d))));
-    assertEquals(
-        Optional.of(CellColorReport.theme(4)),
-        InspectionResultCellStyleReportSupport.toCellColorReport(ColorSpec.theme(4)));
-    assertEquals(
-        Optional.of(CellColorReport.theme(4, -0.25d)),
-        InspectionResultCellStyleReportSupport.toCellColorReport(
-            new ColorSpec.Theme(4, Optional.of(-0.25d))));
-    assertEquals(
-        Optional.of(CellColorReport.indexed(9)),
-        InspectionResultCellStyleReportSupport.toCellColorReport(ColorSpec.indexed(9)));
-    assertEquals(
-        Optional.of(CellColorReport.indexed(9, 0.5d)),
-        InspectionResultCellStyleReportSupport.toCellColorReport(
-            new ColorSpec.Indexed(9, Optional.of(0.5d))));
-  }
-
   @Test
   void cellReportConversionProjectsFacetsAcrossAllSnapshotKinds() {
     ExcelCellReadProjection allFacets =

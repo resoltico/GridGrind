@@ -4,12 +4,12 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
@@ -67,7 +67,7 @@ final class XlsxRoundTripExpectedStateSupport {
       Map<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> expectedSheetSummaries,
       Map<String, ExpectedSheetLayoutState> expectedSheetLayouts,
       Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations,
-      Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting,
+      Map<String, List<ConditionalFormattingEntryReport>> expectedConditionalFormatting,
       Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
       Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects,
       Map<String, List<ExcelChartSnapshot>> expectedCharts,

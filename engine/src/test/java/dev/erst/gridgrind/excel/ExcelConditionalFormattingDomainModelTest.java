@@ -6,8 +6,12 @@ import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
@@ -143,17 +147,21 @@ class ExcelConditionalFormattingDomainModelTest {
             Optional.ofNullable(border));
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures =
         new ArrayList<>(List.of(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES));
-    ExcelDifferentialStyleSnapshot snapshot =
-        new ExcelDifferentialStyleSnapshot(
+    DifferentialStyleReport snapshot =
+        new DifferentialStyleReport(
             "0.00",
             true,
             false,
             FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
-            new ColorSpec.Theme(3, Optional.of(0.25d)),
+            Optional.ofNullable(
+                dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                    new ColorSpec.Theme(3, Optional.of(0.25d)))),
             true,
             false,
-            new ColorSpec.Indexed(12, Optional.empty()),
-            border,
+            Optional.ofNullable(
+                dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                    new ColorSpec.Indexed(12, Optional.empty()))),
+            Optional.ofNullable(dev.erst.gridgrind.excel.DifferentialStyleFixtures.border(border)),
             unsupportedFeatures);
     unsupportedFeatures.clear();
 
@@ -233,44 +241,72 @@ class ExcelConditionalFormattingDomainModelTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDifferentialStyleSnapshot(
-                " ", null, null, null, null, null, null, null, null, List.of()));
+            new DifferentialStyleReport(
+                " ",
+                null,
+                null,
+                null,
+                Optional.empty(),
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty(),
+                List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDifferentialStyleSnapshot(
-                null, null, null, null, null, null, null, null, null, null));
+            new DifferentialStyleReport(
+                null,
+                null,
+                null,
+                null,
+                Optional.empty(),
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty(),
+                null));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDifferentialStyleSnapshot(
+            new DifferentialStyleReport(
                 null,
                 null,
                 null,
                 null,
+                Optional.empty(),
                 null,
                 null,
-                null,
-                null,
-                border,
+                Optional.empty(),
+                Optional.ofNullable(
+                    dev.erst.gridgrind.excel.DifferentialStyleFixtures.border(border)),
                 List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT, null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDifferentialStyleSnapshot(
-                null, null, null, null, null, null, null, null, null, List.of()));
+            new DifferentialStyleReport(
+                null,
+                null,
+                null,
+                null,
+                Optional.empty(),
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty(),
+                List.of()));
     assertDoesNotThrow(
         () ->
-            new ExcelDifferentialStyleSnapshot(
+            new DifferentialStyleReport(
                 null,
                 null,
                 null,
                 null,
+                Optional.empty(),
                 null,
                 null,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
                 List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT)));
   }
 
@@ -298,18 +334,20 @@ class ExcelConditionalFormattingDomainModelTest {
     assertEquals("=A1>0", rule.formula());
     assertDoesNotThrow(
         () ->
-            new ExcelConditionalFormattingThresholdSnapshot(
+            new ConditionalFormattingThresholdReport(
                 ExcelConditionalFormattingThresholdType.NUMBER, null, 1.0d));
     assertDoesNotThrow(
         () ->
-            new ExcelConditionalFormattingThresholdSnapshot(
+            new ConditionalFormattingThresholdReport(
                 ExcelConditionalFormattingThresholdType.FORMULA, "A1", null));
     assertDoesNotThrow(
         () ->
-            new ExcelConditionalFormattingBlockSnapshot(
-                List.of("A1:A3"),
+            new ConditionalFormattingEntryReport(
+                List.of("A1:A3").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                    .toList(),
                 List.of(
-                    new ExcelConditionalFormattingRuleSnapshot.UnsupportedRule(
+                    new ConditionalFormattingRuleReport.UnsupportedRule(
                         1, false, "FORMULA", "detail"))));
 
     assertThrows(
@@ -326,21 +364,23 @@ class ExcelConditionalFormattingDomainModelTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingBlockSnapshot(
-                List.of(" "),
+            new ConditionalFormattingEntryReport(
+                List.of(" ").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                    .toList(),
                 List.of(
-                    new ExcelConditionalFormattingRuleSnapshot.UnsupportedRule(
+                    new ConditionalFormattingRuleReport.UnsupportedRule(
                         1, false, "FORMULA", "detail"))));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelConditionalFormattingBlockDefinition(List.of("A1:A3"), List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelConditionalFormattingThresholdSnapshot(null, null, 1.0d));
+        () -> new ConditionalFormattingThresholdReport(null, null, 1.0d));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingThresholdSnapshot(
+            new ConditionalFormattingThresholdReport(
                 ExcelConditionalFormattingThresholdType.FORMULA, " ", null));
   }
 
@@ -357,21 +397,35 @@ class ExcelConditionalFormattingDomainModelTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
-    ExcelDifferentialStyleSnapshot snapshot =
-        new ExcelDifferentialStyleSnapshot(
-            "0.00", null, null, null, null, null, null, null, null, List.of());
-    ExcelConditionalFormattingThresholdSnapshot threshold =
-        new ExcelConditionalFormattingThresholdSnapshot(
+    DifferentialStyleReport snapshot =
+        new DifferentialStyleReport(
+            "0.00",
+            null,
+            null,
+            null,
+            Optional.empty(),
+            null,
+            null,
+            Optional.empty(),
+            Optional.empty(),
+            List.of());
+    ConditionalFormattingThresholdReport threshold =
+        new ConditionalFormattingThresholdReport(
             ExcelConditionalFormattingThresholdType.MIN, null, 0.0d);
 
     ConditionalFormattingRuleSpec.CellValueRule authoredCellValueRule =
         new ConditionalFormattingRuleSpec.CellValueRule(
             ExcelComparisonOperator.BETWEEN, "=1", Optional.of("=9"), false, Optional.of(style));
-    ExcelConditionalFormattingRuleSnapshot.ColorScaleRule colorScaleRule =
-        new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
-            1, false, List.of(threshold), List.of("#102030"));
-    ExcelConditionalFormattingRuleSnapshot.IconSetRule iconSetRule =
-        new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
+    ConditionalFormattingRuleReport.ColorScaleRule colorScaleRule =
+        new ConditionalFormattingRuleReport.ColorScaleRule(
+            1,
+            false,
+            List.of(threshold),
+            List.of("#102030").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new)
+                .toList());
+    ConditionalFormattingRuleReport.IconSetRule iconSetRule =
+        new ConditionalFormattingRuleReport.IconSetRule(
             2,
             false,
             ExcelConditionalFormattingIconSet.GYR_3_ARROW,
@@ -381,38 +435,66 @@ class ExcelConditionalFormattingDomainModelTest {
 
     assertEquals("=1", authoredCellValueRule.formula1());
     assertEquals("=9", authoredCellValueRule.formula2().orElseThrow());
-    assertEquals(List.of("#102030"), colorScaleRule.colors());
+    assertEquals(List.of(new RgbHex("#102030")), colorScaleRule.colors());
     assertEquals(ExcelConditionalFormattingIconSet.GYR_3_ARROW, iconSetRule.iconSet());
 
     assertDoesNotThrow(
         () -> new ConditionalFormattingRuleSpec.FormulaRule("=A1>0", true, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelConditionalFormattingRuleSnapshot.FormulaRule(-1, false, "A1>0", snapshot));
+        () ->
+            new ConditionalFormattingRuleReport.FormulaRule(
+                -1, false, "A1>0", Optional.ofNullable(snapshot)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
-                1, false, ExcelComparisonOperator.GREATER_THAN, "1", " ", snapshot));
+            new ConditionalFormattingRuleReport.CellValueRule(
+                1,
+                false,
+                ExcelComparisonOperator.GREATER_THAN,
+                "1",
+                Optional.ofNullable(" "),
+                Optional.ofNullable(snapshot)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
-                1, false, "#102030", false, -1, 100, threshold, threshold));
+            new ConditionalFormattingRuleReport.DataBarRule(
+                1,
+                false,
+                Optional.ofNullable("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
+                false,
+                -1,
+                100,
+                threshold,
+                threshold));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
-                1, false, "#102030", false, 0, -1, threshold, threshold));
+            new ConditionalFormattingRuleReport.DataBarRule(
+                1,
+                false,
+                Optional.ofNullable("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
+                false,
+                0,
+                -1,
+                threshold,
+                threshold));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
-                1, false, "#102030", false, 0, 100, null, threshold));
+            new ConditionalFormattingRuleReport.DataBarRule(
+                1,
+                false,
+                Optional.ofNullable("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
+                false,
+                0,
+                100,
+                null,
+                threshold));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
+            new ConditionalFormattingRuleReport.IconSetRule(
                 1, false, null, false, false, List.of(threshold)));
   }
 }

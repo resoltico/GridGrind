@@ -11,6 +11,8 @@ import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -455,24 +457,27 @@ class AdvancedReadEngineTypesTest {
             new ExcelTableSnapshot.Behavior(true, true, true, false),
             new ExcelTableSnapshot.Presentation(
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
-    ExcelConditionalFormattingRuleSnapshot.Top10Rule top10 =
-        new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
+    ConditionalFormattingRuleReport.Top10Rule top10 =
+        new ConditionalFormattingRuleReport.Top10Rule(
             1,
             false,
             10,
             true,
             false,
-            new ExcelDifferentialStyleSnapshot(
-                "0.00",
-                true,
-                null,
-                null,
-                ColorSpec.rgb(new RgbHex("#AABBCC")),
-                null,
-                null,
-                null,
-                null,
-                List.of()));
+            Optional.ofNullable(
+                new DifferentialStyleReport(
+                    "0.00",
+                    true,
+                    null,
+                    null,
+                    Optional.ofNullable(
+                        dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                            ColorSpec.rgb(new RgbHex("#AABBCC")))),
+                    null,
+                    null,
+                    Optional.empty(),
+                    Optional.empty(),
+                    List.of())));
 
     assertEquals(Optional.empty(), normalized.presentation().comment());
     assertEquals(Optional.empty(), normalized.presentation().headerRowCellStyle());
@@ -484,7 +489,8 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRuleSnapshot.Top10Rule(1, false, -1, false, false, null));
+            new ConditionalFormattingRuleReport.Top10Rule(
+                1, false, -1, false, false, Optional.empty()));
   }
 
   private static CellColorReport rgb(String rgb) {

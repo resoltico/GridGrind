@@ -145,9 +145,7 @@ final class InspectionResultReadConverter {
           new SheetInspectionResult.ConditionalFormattingResult(
               conditionalFormatting.stepId(),
               new SheetLabel(conditionalFormatting.sheetName()),
-              conditionalFormatting.conditionalFormattingBlocks().stream()
-                  .map(InspectionResultValidationReportSupport::toConditionalFormattingEntryReport)
-                  .toList());
+              conditionalFormatting.conditionalFormattingBlocks());
       case dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult autofilters ->
           new SheetInspectionResult.AutofiltersResult(
               autofilters.stepId(),

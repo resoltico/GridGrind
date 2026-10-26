@@ -89,8 +89,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelIgnoredError;
 import dev.erst.gridgrind.excel.ExcelSheetDefaults;
 import dev.erst.gridgrind.excel.ExcelSheetDisplay;
@@ -1448,21 +1446,21 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                   .getFirst();
 
       assertEquals(1, reopened.conditionalFormattingBlocks().size());
-      ExcelConditionalFormattingBlockSnapshot reopenedBlock =
+      ConditionalFormattingEntryReport reopenedBlock =
           reopened.conditionalFormattingBlocks().getFirst();
-      assertEquals(List.of("B2:B5"), reopenedBlock.ranges());
+      assertEquals(
+          List.of("B2:B5"),
+          reopenedBlock.ranges().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
       assertEquals(2, reopenedBlock.rules().size());
       assertEquals(
           "B2>5",
-          cast(
-                  ExcelConditionalFormattingRuleSnapshot.FormulaRule.class,
-                  reopenedBlock.rules().get(0))
+          cast(ConditionalFormattingRuleReport.FormulaRule.class, reopenedBlock.rules().get(0))
               .formula());
       assertEquals(
           ExcelComparisonOperator.BETWEEN,
-          cast(
-                  ExcelConditionalFormattingRuleSnapshot.CellValueRule.class,
-                  reopenedBlock.rules().get(1))
+          cast(ConditionalFormattingRuleReport.CellValueRule.class, reopenedBlock.rules().get(1))
               .operator());
     }
   }

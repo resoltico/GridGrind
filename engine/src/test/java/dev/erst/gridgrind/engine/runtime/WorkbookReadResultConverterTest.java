@@ -32,11 +32,13 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
@@ -371,11 +373,18 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     new StepId("conditional-formatting"),
                     "Budget",
                     List.of(
-                        new ExcelConditionalFormattingBlockSnapshot(
-                            List.of("A1:A5"),
+                        new ConditionalFormattingEntryReport(
+                            List.of("A1:A5").stream()
+                                .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                                .toList(),
                             List.of(
-                                new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
-                                    1, false, 10, true, false, differentialStyle())))))));
+                                new ConditionalFormattingRuleReport.Top10Rule(
+                                    1,
+                                    false,
+                                    10,
+                                    true,
+                                    false,
+                                    Optional.ofNullable(differentialStyle()))))))));
     assertInstanceOf(
         ConditionalFormattingRuleReport.Top10Rule.class,
         conditionalFormatting.conditionalFormattingBlocks().getFirst().rules().getFirst());
@@ -1203,17 +1212,19 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     return new ExcelCustomXmlSchemaSnapshot(namespace, language, reference, xml);
   }
 
-  private static ExcelDifferentialStyleSnapshot differentialStyle() {
-    return new ExcelDifferentialStyleSnapshot(
+  private static DifferentialStyleReport differentialStyle() {
+    return new DifferentialStyleReport(
         "0.00",
         true,
         null,
         null,
-        ColorSpec.rgb(new RgbHex("#AABBCC")),
+        Optional.ofNullable(
+            dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                ColorSpec.rgb(new RgbHex("#AABBCC")))),
         null,
         null,
-        null,
-        null,
+        Optional.empty(),
+        Optional.empty(),
         List.of());
   }
 }

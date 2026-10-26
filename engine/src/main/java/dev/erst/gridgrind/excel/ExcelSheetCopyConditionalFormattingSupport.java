@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import java.util.List;
 import org.apache.poi.ss.formula.FormulaType;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -16,19 +18,19 @@ final class ExcelSheetCopyConditionalFormattingSupport {
     for (var block : blocks) {
       for (var rule : block.rules()) {
         switch (rule) {
-          case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupported ->
+          case ConditionalFormattingRuleReport.UnsupportedRule unsupported ->
               throw new IllegalArgumentException(
                   "cannot copy sheet '"
                       + sheetName
                       + "': unsupported conditional-formatting rule '"
                       + unsupported.kind()
                       + "' is not copyable");
-          case ExcelConditionalFormattingRuleSnapshot.FormulaRule value ->
-              requireSupportedStyle(value.style(), sheetName);
-          case ExcelConditionalFormattingRuleSnapshot.CellValueRule value ->
-              requireSupportedStyle(value.style(), sheetName);
-          case ExcelConditionalFormattingRuleSnapshot.Top10Rule value ->
-              requireSupportedStyle(value.style(), sheetName);
+          case ConditionalFormattingRuleReport.FormulaRule value ->
+              requireSupportedStyle(value.style().orElse(null), sheetName);
+          case ConditionalFormattingRuleReport.CellValueRule value ->
+              requireSupportedStyle(value.style().orElse(null), sheetName);
+          case ConditionalFormattingRuleReport.Top10Rule value ->
+              requireSupportedStyle(value.style().orElse(null), sheetName);
           default -> {}
         }
       }
@@ -39,7 +41,7 @@ final class ExcelSheetCopyConditionalFormattingSupport {
   }
 
   private static void requireSupportedStyle(
-      @org.jspecify.annotations.Nullable ExcelDifferentialStyleSnapshot style, String sheetName) {
+      @org.jspecify.annotations.Nullable DifferentialStyleReport style, String sheetName) {
     if (style != null && !style.unsupportedFeatures().isEmpty()) {
       throw new IllegalArgumentException(
           "cannot copy sheet '"

@@ -517,7 +517,10 @@ class ExcelWorkbookTest {
               .metadata()
               .conditionalFormatting(new ExcelRangeSelection.All())
               .getFirst()
-              .ranges());
+              .ranges()
+              .stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
     }
   }
 

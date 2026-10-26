@@ -2103,3 +2103,33 @@ Nested compile caught scalar shape assertions for typed report fields (2s); corr
 check/all retained seeds pass (20s). ./gradlew check passes (4m13s), all 143 golden cases unchanged.
 No active mutation/fuzz campaign. Inventories: snapshots 33→32, converter lines 3690→3613, blank
 checks 415→413, main Java 120109→119901; definitions 2 and Support 206 remain open. Baseline diff empty.
+
+## WP-40 factual conditional-formatting reports
+
+Deleted engine conditional-formatting block/rule/threshold and differential-style snapshots.
+POI reads now construct ConditionalFormattingEntryReport/RuleReport/ThresholdReport and
+DifferentialStyleReport directly. Color and border snapshot internals use CellColorReport and
+DifferentialBorderReport/SideReport, preserving observed metadata without authoring projections.
+Removed all corresponding runtime conversions and the newly unused InspectionResultCellStyleReportSupport.
+Copy validation consumes optional factual styles. Health analysis retains malformed-range checks,
+formula checks and evidence after unwrapping typed labels/options at the appropriate boundaries.
+
+Moved core report invariants into core tests and retired conversion-only assertions. Real POI,
+workbook/copy, malformed-style, health and parity checks remain; a test-only DifferentialStyleFixtures
+maps independently authored fixtures to expected factual colors/borders without sharing production
+read logic. Compilation exposed range/optional boundaries, stale report expectations and test-fixture
+annotations not on that source set; repaired without a new dependency. The first full behavior pass
+had ten typed-wrapper assertion failures (45s); two and one further sparse-border assertions surfaced
+on retries. Final focused malformed-style checks pass (15s). Deterministic check/all retained seeds
+pass (23s), then root ./gradlew check passed (3m10s), golden unchanged.
+
+Added a real POI theme-index-99 readback regression. My initial test incorrectly assumed ColorSpec
+rejects 99; the observed report assertion passed, but that rejection assertion failed. Verified both
+contracts allow nonnegative indices, removed the invalid assertion and retained its failure XML.
+Final ./gradlew check passes (2m45s): core 363, JSON 348, engine 1463 plus 14 parity, CLI 588, zero
+failures/errors/skips; all 143 golden cases unchanged. No active mutation/fuzz campaign ran.
+Task daemon 3833 had 125 retained workers at an idle completed gate; recorded ownership/resource
+state and stopped that task daemon only. Fresh checks ran afterward.
+
+Inventories: snapshots 32→28, converter lines 3613→3442, Support 206→205, blank checks 413→410,
+main Java 119901→119504. Definitions 2 remain; baseline diff empty. WP-40 remains open.

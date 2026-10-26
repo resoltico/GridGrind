@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.ArrayList;
@@ -10,15 +12,15 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 /** Derives health findings from canonical conditional-formatting snapshots. */
 final class ExcelConditionalFormattingHealthSupport {
   List<WorkbookAnalysis.AnalysisFinding> conditionalFormattingHealthFindings(
-      String sheetName, XSSFSheet sheet, List<ExcelConditionalFormattingBlockSnapshot> blocks) {
+      String sheetName, XSSFSheet sheet, List<ConditionalFormattingEntryReport> blocks) {
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
     List<PriorityContext> priorities = new ArrayList<>();
     int sheetIndex = sheet.getWorkbook().getSheetIndex(sheet);
     XSSFEvaluationWorkbook evaluationWorkbook = XSSFEvaluationWorkbook.create(sheet.getWorkbook());
 
-    for (ExcelConditionalFormattingBlockSnapshot block : blocks) {
+    for (ConditionalFormattingEntryReport block : blocks) {
       addBlockRangeFindings(findings, sheetName, block);
-      for (ExcelConditionalFormattingRuleSnapshot rule : block.rules()) {
+      for (ConditionalFormattingRuleReport rule : block.rules()) {
         priorities.add(priorityContext(sheetName, block, rule));
         addRuleFindings(findings, evaluationWorkbook, sheetIndex, sheetName, block, rule);
       }
@@ -31,7 +33,7 @@ final class ExcelConditionalFormattingHealthSupport {
   private static void addBlockRangeFindings(
       List<WorkbookAnalysis.AnalysisFinding> findings,
       String sheetName,
-      ExcelConditionalFormattingBlockSnapshot block) {
+      ConditionalFormattingEntryReport block) {
     if (block.ranges().isEmpty() || hasInvalidRanges(block.ranges())) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
@@ -40,7 +42,9 @@ final class ExcelConditionalFormattingHealthSupport {
               "Conditional-formatting block targets an empty or invalid range",
               "Conditional-formatting block has no valid target ranges.",
               blockLocation(sheetName, block.ranges()),
-              List.copyOf(block.ranges())));
+              block.ranges().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+                  .toList()));
     }
   }
 
@@ -49,16 +53,16 @@ final class ExcelConditionalFormattingHealthSupport {
       XSSFEvaluationWorkbook evaluationWorkbook,
       int sheetIndex,
       String sheetName,
-      ExcelConditionalFormattingBlockSnapshot block,
-      ExcelConditionalFormattingRuleSnapshot rule) {
+      ConditionalFormattingEntryReport block,
+      ConditionalFormattingRuleReport rule) {
     switch (rule) {
-      case ExcelConditionalFormattingRuleSnapshot.FormulaRule formulaRule ->
+      case ConditionalFormattingRuleReport.FormulaRule formulaRule ->
           addFormulaRuleFinding(
               findings, evaluationWorkbook, sheetIndex, sheetName, block, formulaRule);
-      case ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule ->
+      case ConditionalFormattingRuleReport.CellValueRule cellValueRule ->
           addCellValueRuleFinding(
               findings, evaluationWorkbook, sheetIndex, sheetName, block, cellValueRule);
-      case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
+      case ConditionalFormattingRuleReport.UnsupportedRule unsupportedRule ->
           findings.add(
               new WorkbookAnalysis.AnalysisFinding(
                   AnalysisFindingCode.CONDITIONAL_FORMATTING_UNSUPPORTED_RULE,
@@ -67,10 +71,10 @@ final class ExcelConditionalFormattingHealthSupport {
                   unsupportedRule.detail(),
                   blockLocation(sheetName, block.ranges()),
                   List.of(unsupportedRule.kind())));
-      case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule _ -> {}
-      case ExcelConditionalFormattingRuleSnapshot.DataBarRule _ -> {}
-      case ExcelConditionalFormattingRuleSnapshot.IconSetRule _ -> {}
-      case ExcelConditionalFormattingRuleSnapshot.Top10Rule _ -> {}
+      case ConditionalFormattingRuleReport.ColorScaleRule _ -> {}
+      case ConditionalFormattingRuleReport.DataBarRule _ -> {}
+      case ConditionalFormattingRuleReport.IconSetRule _ -> {}
+      case ConditionalFormattingRuleReport.Top10Rule _ -> {}
     }
   }
 
@@ -79,8 +83,8 @@ final class ExcelConditionalFormattingHealthSupport {
       XSSFEvaluationWorkbook evaluationWorkbook,
       int sheetIndex,
       String sheetName,
-      ExcelConditionalFormattingBlockSnapshot block,
-      ExcelConditionalFormattingRuleSnapshot.FormulaRule formulaRule) {
+      ConditionalFormattingEntryReport block,
+      ConditionalFormattingRuleReport.FormulaRule formulaRule) {
     if (!ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
         evaluationWorkbook, sheetIndex, formulaRule.formula())) {
       return;
@@ -100,8 +104,8 @@ final class ExcelConditionalFormattingHealthSupport {
       XSSFEvaluationWorkbook evaluationWorkbook,
       int sheetIndex,
       String sheetName,
-      ExcelConditionalFormattingBlockSnapshot block,
-      ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule) {
+      ConditionalFormattingEntryReport block,
+      ConditionalFormattingRuleReport.CellValueRule cellValueRule) {
     if (!hasBrokenCellValueOperand(evaluationWorkbook, sheetIndex, cellValueRule)) {
       return;
     }
@@ -118,17 +122,18 @@ final class ExcelConditionalFormattingHealthSupport {
   private static boolean hasBrokenCellValueOperand(
       XSSFEvaluationWorkbook evaluationWorkbook,
       int sheetIndex,
-      ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule) {
+      ConditionalFormattingRuleReport.CellValueRule cellValueRule) {
     return ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
             evaluationWorkbook, sheetIndex, cellValueRule.formula1())
-        || (cellValueRule.formula2() != null
+        || (cellValueRule.formula2().isPresent()
             && ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
-                evaluationWorkbook, sheetIndex, cellValueRule.formula2()));
+                evaluationWorkbook, sheetIndex, cellValueRule.formula2().orElseThrow()));
   }
 
-  private static boolean hasInvalidRanges(List<String> ranges) {
-    for (String range : ranges) {
-      if (ExcelSheetStructureSupport.parseOptionalRange(range).isEmpty()) {
+  private static boolean hasInvalidRanges(
+      List<dev.erst.gridgrind.core.vocabulary.RangeLabel> ranges) {
+    for (var range : ranges) {
+      if (ExcelSheetStructureSupport.parseOptionalRange(range.value()).isEmpty()) {
         return true;
       }
     }
@@ -137,8 +142,8 @@ final class ExcelConditionalFormattingHealthSupport {
 
   private static PriorityContext priorityContext(
       String sheetName,
-      ExcelConditionalFormattingBlockSnapshot block,
-      ExcelConditionalFormattingRuleSnapshot rule) {
+      ConditionalFormattingEntryReport block,
+      ConditionalFormattingRuleReport rule) {
     return new PriorityContext(
         rule.priority(),
         new BlockRuleContext(
@@ -148,11 +153,11 @@ final class ExcelConditionalFormattingHealthSupport {
   }
 
   private static List<String> cellValueRuleEvidence(
-      ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule) {
-    if (cellValueRule.formula2() == null) {
+      ConditionalFormattingRuleReport.CellValueRule cellValueRule) {
+    if (cellValueRule.formula2().isEmpty()) {
       return List.of(cellValueRule.formula1());
     }
-    return List.of(cellValueRule.formula1(), cellValueRule.formula2());
+    return List.of(cellValueRule.formula1(), cellValueRule.formula2().orElseThrow());
   }
 
   private static List<WorkbookAnalysis.AnalysisFinding> priorityCollisionFindings(
@@ -199,15 +204,17 @@ final class ExcelConditionalFormattingHealthSupport {
   }
 
   private static WorkbookAnalysis.AnalysisLocation blockLocation(
-      String sheetName, List<String> ranges) {
+      String sheetName, List<dev.erst.gridgrind.core.vocabulary.RangeLabel> ranges) {
     if (!ranges.isEmpty()) {
-      return new WorkbookAnalysis.AnalysisLocation.Range(sheetName, ranges.getFirst());
+      return new WorkbookAnalysis.AnalysisLocation.Range(sheetName, ranges.getFirst().value());
     }
     return new WorkbookAnalysis.AnalysisLocation.Sheet(sheetName);
   }
 
   private record BlockRuleContext(
-      WorkbookAnalysis.AnalysisLocation location, List<String> ranges, String label) {
+      WorkbookAnalysis.AnalysisLocation location,
+      List<dev.erst.gridgrind.core.vocabulary.RangeLabel> ranges,
+      String label) {
     private BlockRuleContext {
       ranges = List.copyOf(ranges);
     }

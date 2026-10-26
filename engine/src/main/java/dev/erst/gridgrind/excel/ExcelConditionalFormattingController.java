@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.ConditionType;
@@ -32,7 +34,7 @@ final class ExcelConditionalFormattingController {
   }
 
   /** Returns factual conditional-formatting blocks for one sheet and range selection. */
-  List<ExcelConditionalFormattingBlockSnapshot> conditionalFormatting(
+  List<ConditionalFormattingEntryReport> conditionalFormatting(
       XSSFSheet sheet, ExcelRangeSelection selection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
@@ -55,7 +57,7 @@ final class ExcelConditionalFormattingController {
   }
 
   /** Converts one loaded POI conditional-formatting rule into the matching GridGrind snapshot. */
-  static ExcelConditionalFormattingRuleSnapshot toSnapshot(
+  static ConditionalFormattingRuleReport toSnapshot(
       XSSFSheet sheet, XSSFConditionalFormattingRule rule, CTCfRule ctRule) {
     return ExcelConditionalFormattingSnapshotSupport.toSnapshot(sheet, rule, ctRule);
   }
@@ -83,7 +85,7 @@ final class ExcelConditionalFormattingController {
   }
 
   /** Returns the stable label used in priority-collision evidence for one snapshot rule family. */
-  static String ruleLabel(ExcelConditionalFormattingRuleSnapshot rule) {
+  static String ruleLabel(ConditionalFormattingRuleReport rule) {
     return ExcelConditionalFormattingSnapshotSupport.ruleLabel(rule);
   }
 }

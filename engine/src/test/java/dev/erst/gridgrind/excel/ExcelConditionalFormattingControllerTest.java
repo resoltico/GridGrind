@@ -6,8 +6,12 @@ import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -102,83 +106,106 @@ class ExcelConditionalFormattingControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelConditionalFormattingBlockSnapshot(
-                  List.of("A1:A3"),
+              new ConditionalFormattingEntryReport(
+                  List.of("A1:A3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
+                      new ConditionalFormattingRuleReport.FormulaRule(
                           1,
                           true,
                           "A1>10",
-                          new ExcelDifferentialStyleSnapshot(
-                              "0.00",
-                              true,
-                              false,
-                              FontHeightReport.fromPoints(BigDecimal.valueOf(12)),
-                              color("#102030"),
-                              true,
-                              true,
-                              color("#E0F0AA"),
-                              expandedBorder(borderSide(ExcelBorderStyle.THIN, "#405060")),
-                              List.of())),
-                      new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
+                          Optional.ofNullable(
+                              new DifferentialStyleReport(
+                                  "0.00",
+                                  true,
+                                  false,
+                                  FontHeightReport.fromPoints(BigDecimal.valueOf(12)),
+                                  Optional.ofNullable(
+                                      dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                                          color("#102030"))),
+                                  true,
+                                  true,
+                                  Optional.ofNullable(
+                                      dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                                          color("#E0F0AA"))),
+                                  Optional.ofNullable(
+                                      dev.erst.gridgrind.excel.DifferentialStyleFixtures.border(
+                                          expandedBorder(
+                                              borderSide(ExcelBorderStyle.THIN, "#405060")))),
+                                  List.of()))),
+                      new ConditionalFormattingRuleReport.CellValueRule(
                           2,
                           false,
                           ExcelComparisonOperator.BETWEEN,
                           "1",
-                          "9",
-                          new ExcelDifferentialStyleSnapshot(
-                              null,
-                              null,
-                              true,
-                              null,
-                              null,
-                              null,
-                              null,
-                              color("#AAEECC"),
-                              null,
-                              List.of())))),
-              new ExcelConditionalFormattingBlockSnapshot(
-                  List.of("C1:C3"),
+                          Optional.ofNullable("9"),
+                          Optional.ofNullable(
+                              new DifferentialStyleReport(
+                                  null,
+                                  null,
+                                  true,
+                                  null,
+                                  Optional.empty(),
+                                  null,
+                                  null,
+                                  Optional.ofNullable(
+                                      dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                                          color("#AAEECC"))),
+                                  Optional.empty(),
+                                  List.of()))))),
+              new ConditionalFormattingEntryReport(
+                  List.of("C1:C3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
+                      new ConditionalFormattingRuleReport.FormulaRule(
                           3,
                           false,
                           "C1=\"Ready\"",
-                          new ExcelDifferentialStyleSnapshot(
-                              null,
-                              false,
-                              null,
-                              null,
-                              color("#223344"),
-                              null,
-                              null,
-                              null,
-                              null,
-                              List.of()))))),
+                          Optional.ofNullable(
+                              new DifferentialStyleReport(
+                                  null,
+                                  false,
+                                  null,
+                                  null,
+                                  Optional.ofNullable(
+                                      dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                                          color("#223344"))),
+                                  null,
+                                  null,
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  List.of())))))),
           sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
 
       sheet.metadata().clearConditionalFormatting(new ExcelRangeSelection.Selected(List.of("A2")));
 
       assertEquals(
           List.of(
-              new ExcelConditionalFormattingBlockSnapshot(
-                  List.of("C1:C3"),
+              new ConditionalFormattingEntryReport(
+                  List.of("C1:C3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
+                      new ConditionalFormattingRuleReport.FormulaRule(
                           1,
                           false,
                           "C1=\"Ready\"",
-                          new ExcelDifferentialStyleSnapshot(
-                              null,
-                              false,
-                              null,
-                              null,
-                              color("#223344"),
-                              null,
-                              null,
-                              null,
-                              null,
-                              List.of()))))),
+                          Optional.ofNullable(
+                              new DifferentialStyleReport(
+                                  null,
+                                  false,
+                                  null,
+                                  null,
+                                  Optional.ofNullable(
+                                      dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                                          color("#223344"))),
+                                  null,
+                                  null,
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  List.of())))))),
           sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
 
       workbook
@@ -193,24 +220,29 @@ class ExcelConditionalFormattingControllerTest {
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of(
-              new ExcelConditionalFormattingBlockSnapshot(
-                  List.of("C1:C3"),
+              new ConditionalFormattingEntryReport(
+                  List.of("C1:C3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
+                      new ConditionalFormattingRuleReport.FormulaRule(
                           1,
                           false,
                           "C1=\"Ready\"",
-                          new ExcelDifferentialStyleSnapshot(
-                              null,
-                              false,
-                              null,
-                              null,
-                              color("#223344"),
-                              null,
-                              null,
-                              null,
-                              null,
-                              List.of()))))),
+                          Optional.ofNullable(
+                              new DifferentialStyleReport(
+                                  null,
+                                  false,
+                                  null,
+                                  null,
+                                  Optional.ofNullable(
+                                      dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                                          color("#223344"))),
+                                  null,
+                                  null,
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  List.of())))))),
           reopened.sheet("Ops").metadata().conditionalFormatting(new ExcelRangeSelection.All()));
     }
   }
@@ -238,14 +270,22 @@ class ExcelConditionalFormattingControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelConditionalFormattingBlockSnapshot(
-                  List.of("A1:A3"),
+              new ConditionalFormattingEntryReport(
+                  List.of("A1:A3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.FormulaRule(1, true, "A1>0", null),
-                      new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
-                          2, true, ExcelComparisonOperator.GREATER_THAN, "1", null, null),
-                      new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
-                          3, true, 10, false, false, null)))),
+                      new ConditionalFormattingRuleReport.FormulaRule(
+                          1, true, "A1>0", Optional.empty()),
+                      new ConditionalFormattingRuleReport.CellValueRule(
+                          2,
+                          true,
+                          ExcelComparisonOperator.GREATER_THAN,
+                          "1",
+                          Optional.empty(),
+                          Optional.empty()),
+                      new ConditionalFormattingRuleReport.Top10Rule(
+                          3, true, 10, false, false, Optional.empty())))),
           controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
     }
   }
@@ -282,30 +322,35 @@ class ExcelConditionalFormattingControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelConditionalFormattingBlockSnapshot(
-                  List.of("A1:A3"),
+              new ConditionalFormattingEntryReport(
+                  List.of("A1:A3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
+                      new ConditionalFormattingRuleReport.ColorScaleRule(
                           1,
                           false,
                           List.of(
-                              new ExcelConditionalFormattingThresholdSnapshot(
+                              new ConditionalFormattingThresholdReport(
                                   ExcelConditionalFormattingThresholdType.MIN, null, null),
-                              new ExcelConditionalFormattingThresholdSnapshot(
+                              new ConditionalFormattingThresholdReport(
                                   ExcelConditionalFormattingThresholdType.PERCENTILE, null, 50.0d),
-                              new ExcelConditionalFormattingThresholdSnapshot(
+                              new ConditionalFormattingThresholdReport(
                                   ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                          List.of("#AA2211", "#FFDD55", "#11CC66")),
-                      new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
+                          List.of("#AA2211", "#FFDD55", "#11CC66").stream()
+                              .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new)
+                              .toList()),
+                      new ConditionalFormattingRuleReport.DataBarRule(
                           2,
                           false,
-                          "#123456",
+                          Optional.ofNullable("#123456")
+                              .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
                           true,
                           10,
                           90,
-                          new ExcelConditionalFormattingThresholdSnapshot(
+                          new ConditionalFormattingThresholdReport(
                               ExcelConditionalFormattingThresholdType.MIN, null, null),
-                          new ExcelConditionalFormattingThresholdSnapshot(
+                          new ConditionalFormattingThresholdReport(
                               ExcelConditionalFormattingThresholdType.MAX, null, null))))),
           controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
     }
@@ -334,21 +379,23 @@ class ExcelConditionalFormattingControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelConditionalFormattingBlockSnapshot(
-                  List.of("A1:A3"),
+              new ConditionalFormattingEntryReport(
+                  List.of("A1:A3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
+                      new ConditionalFormattingRuleReport.IconSetRule(
                           1,
                           true,
                           ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
                           true,
                           false,
                           List.of(
-                              new ExcelConditionalFormattingThresholdSnapshot(
+                              new ConditionalFormattingThresholdReport(
                                   ExcelConditionalFormattingThresholdType.FORMULA, "A1*2", null),
-                              new ExcelConditionalFormattingThresholdSnapshot(
+                              new ConditionalFormattingThresholdReport(
                                   ExcelConditionalFormattingThresholdType.NUMBER, null, 40.0d),
-                              new ExcelConditionalFormattingThresholdSnapshot(
+                              new ConditionalFormattingThresholdReport(
                                   ExcelConditionalFormattingThresholdType.MAX, null, null)))))),
           controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
     }
@@ -384,26 +431,31 @@ class ExcelConditionalFormattingControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelConditionalFormattingBlockSnapshot(
-                  List.of("A1:A3"),
+              new ConditionalFormattingEntryReport(
+                  List.of("A1:A3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
+                      new ConditionalFormattingRuleReport.Top10Rule(
                           1,
                           true,
                           7,
                           true,
                           true,
-                          new ExcelDifferentialStyleSnapshot(
-                              null,
-                              true,
-                              null,
-                              null,
-                              color("#223344"),
-                              null,
-                              null,
-                              null,
-                              null,
-                              List.of()))))),
+                          Optional.ofNullable(
+                              new DifferentialStyleReport(
+                                  null,
+                                  true,
+                                  null,
+                                  null,
+                                  Optional.ofNullable(
+                                      dev.erst.gridgrind.excel.DifferentialStyleFixtures.color(
+                                          color("#223344"))),
+                                  null,
+                                  null,
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  List.of())))))),
           controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
     }
   }
@@ -444,16 +496,16 @@ class ExcelConditionalFormattingControllerTest {
               .metadata()
               .conditionalFormatting(new ExcelRangeSelection.Selected(List.of("C1:C2"))));
 
-      List<ExcelConditionalFormattingBlockSnapshot> selected =
+      List<ConditionalFormattingEntryReport> selected =
           sheet.metadata().conditionalFormatting(new ExcelRangeSelection.Selected(List.of("A2")));
       assertEquals(1, selected.size());
-      ExcelConditionalFormattingRuleSnapshot.CellValueRule rule =
+      ConditionalFormattingRuleReport.CellValueRule rule =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.CellValueRule.class,
+              ConditionalFormattingRuleReport.CellValueRule.class,
               selected.getFirst().rules().getFirst());
       assertEquals(ExcelComparisonOperator.GREATER_THAN, rule.operator());
       assertEquals("1", rule.formula1());
-      assertNull(rule.formula2());
+      assertTrue(rule.formula2().isEmpty());
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet.xssfSheet()).stream()
               .noneMatch(
@@ -532,22 +584,19 @@ class ExcelConditionalFormattingControllerTest {
         unsupportedCtRule.removeFormula(0);
       }
 
-      List<ExcelConditionalFormattingBlockSnapshot> blocks =
+      List<ConditionalFormattingEntryReport> blocks =
           controller.conditionalFormatting(sheet, new ExcelRangeSelection.All());
 
       assertEquals(4, blocks.size());
       assertInstanceOf(
-          ExcelConditionalFormattingRuleSnapshot.ColorScaleRule.class,
-          blocks.get(0).rules().getFirst());
+          ConditionalFormattingRuleReport.ColorScaleRule.class, blocks.get(0).rules().getFirst());
       assertInstanceOf(
-          ExcelConditionalFormattingRuleSnapshot.DataBarRule.class,
-          blocks.get(1).rules().getFirst());
+          ConditionalFormattingRuleReport.DataBarRule.class, blocks.get(1).rules().getFirst());
       assertInstanceOf(
-          ExcelConditionalFormattingRuleSnapshot.IconSetRule.class,
-          blocks.get(2).rules().getFirst());
-      ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupported =
+          ConditionalFormattingRuleReport.IconSetRule.class, blocks.get(2).rules().getFirst());
+      ConditionalFormattingRuleReport.UnsupportedRule unsupported =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.UnsupportedRule.class,
+              ConditionalFormattingRuleReport.UnsupportedRule.class,
               blocks.get(3).rules().getFirst());
       assertEquals("FORMULA", unsupported.kind());
       assertEquals("Formula rule is missing formula text.", unsupported.detail());
@@ -685,9 +734,9 @@ class ExcelConditionalFormattingControllerTest {
       var ctRule = ctBlock(sheet, "A1:A3").getCfRuleArray(0);
       ctRule.unsetType();
 
-      ExcelConditionalFormattingRuleSnapshot.UnsupportedRule snapshot =
+      ConditionalFormattingRuleReport.UnsupportedRule snapshot =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.UnsupportedRule.class,
+              ConditionalFormattingRuleReport.UnsupportedRule.class,
               ExcelConditionalFormattingController.toSnapshot(
                   sheet, formatting.getConditionalFormattingAt(0).getRule(0), ctRule));
 
@@ -711,9 +760,9 @@ class ExcelConditionalFormattingControllerTest {
       try (var cursor = unreadableCtRule.newCursor()) {
         cursor.setAttributeText(new javax.xml.namespace.QName("", "type"), "mystery");
       }
-      ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unreadableSnapshot =
+      ConditionalFormattingRuleReport.UnsupportedRule unreadableSnapshot =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.UnsupportedRule.class,
+              ConditionalFormattingRuleReport.UnsupportedRule.class,
               ExcelConditionalFormattingController.toSnapshot(
                   sheet, formatting.getConditionalFormattingAt(0).getRule(0), unreadableCtRule));
       assertEquals("UNKNOWN", unreadableSnapshot.kind());
@@ -726,9 +775,9 @@ class ExcelConditionalFormattingControllerTest {
       var unsupportedFamilyCtRule = ctBlock(sheet, "B1:B3").getCfRuleArray(0);
       unsupportedFamilyCtRule.setType(
           org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfType.ABOVE_AVERAGE);
-      ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedFamilySnapshot =
+      ConditionalFormattingRuleReport.UnsupportedRule unsupportedFamilySnapshot =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.UnsupportedRule.class,
+              ConditionalFormattingRuleReport.UnsupportedRule.class,
               ExcelConditionalFormattingController.toSnapshot(
                   sheet,
                   formatting.getConditionalFormattingAt(1).getRule(0),
@@ -740,64 +789,81 @@ class ExcelConditionalFormattingControllerTest {
 
   @Test
   void helperMethodsExposeStableLabelsAndFormulaValidation() throws Exception {
-    ExcelDifferentialStyleSnapshot style =
-        new ExcelDifferentialStyleSnapshot(
-            "0.00", null, null, null, null, null, null, null, null, List.of());
+    DifferentialStyleReport style =
+        new DifferentialStyleReport(
+            "0.00",
+            null,
+            null,
+            null,
+            Optional.empty(),
+            null,
+            null,
+            Optional.empty(),
+            Optional.empty(),
+            List.of());
 
     assertEquals(
         "FORMULA_RULE",
         ExcelConditionalFormattingController.ruleLabel(
-            new ExcelConditionalFormattingRuleSnapshot.FormulaRule(1, false, "A1>0", style)));
+            new ConditionalFormattingRuleReport.FormulaRule(
+                1, false, "A1>0", Optional.ofNullable(style))));
     assertEquals(
         "CELL_VALUE_RULE",
         ExcelConditionalFormattingController.ruleLabel(
-            new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
-                2, false, ExcelComparisonOperator.GREATER_THAN, "1", null, style)));
+            new ConditionalFormattingRuleReport.CellValueRule(
+                2,
+                false,
+                ExcelComparisonOperator.GREATER_THAN,
+                "1",
+                Optional.empty(),
+                Optional.ofNullable(style))));
     assertEquals(
         "COLOR_SCALE_RULE",
         ExcelConditionalFormattingController.ruleLabel(
-            new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
+            new ConditionalFormattingRuleReport.ColorScaleRule(
                 3,
                 false,
                 List.of(
-                    new ExcelConditionalFormattingThresholdSnapshot(
+                    new ConditionalFormattingThresholdReport(
                         ExcelConditionalFormattingThresholdType.MIN, null, 0.0d)),
-                List.of("#102030"))));
+                List.of("#102030").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new)
+                    .toList())));
     assertEquals(
         "DATA_BAR_RULE",
         ExcelConditionalFormattingController.ruleLabel(
-            new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
+            new ConditionalFormattingRuleReport.DataBarRule(
                 4,
                 false,
-                "#223344",
+                Optional.ofNullable("#223344").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
                 false,
                 0,
                 100,
-                new ExcelConditionalFormattingThresholdSnapshot(
+                new ConditionalFormattingThresholdReport(
                     ExcelConditionalFormattingThresholdType.MIN, null, 0.0d),
-                new ExcelConditionalFormattingThresholdSnapshot(
+                new ConditionalFormattingThresholdReport(
                     ExcelConditionalFormattingThresholdType.MAX, null, 1.0d))));
     assertEquals(
         "ICON_SET_RULE",
         ExcelConditionalFormattingController.ruleLabel(
-            new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
+            new ConditionalFormattingRuleReport.IconSetRule(
                 5,
                 false,
                 ExcelConditionalFormattingIconSet.GYR_3_ARROW,
                 false,
                 false,
                 List.of(
-                    new ExcelConditionalFormattingThresholdSnapshot(
+                    new ConditionalFormattingThresholdReport(
                         ExcelConditionalFormattingThresholdType.MIN, null, 0.0d)))));
     assertEquals(
         "TOP10_RULE",
         ExcelConditionalFormattingController.ruleLabel(
-            new ExcelConditionalFormattingRuleSnapshot.Top10Rule(6, true, 7, true, true, style)));
+            new ConditionalFormattingRuleReport.Top10Rule(
+                6, true, 7, true, true, Optional.ofNullable(style))));
     assertEquals(
         "UNSUPPORTED_RULE(DATA_BAR)",
         ExcelConditionalFormattingController.ruleLabel(
-            new ExcelConditionalFormattingRuleSnapshot.UnsupportedRule(
-                7, false, "data_bar", "detail")));
+            new ConditionalFormattingRuleReport.UnsupportedRule(7, false, "data_bar", "detail")));
     var explicitUnsupportedType =
         org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCfRule.Factory.newInstance();
     explicitUnsupportedType.setType(
@@ -1147,9 +1213,9 @@ class ExcelConditionalFormattingControllerTest {
       var top10FamilyCtRule = ctBlock(sheet, "E1:E3").getCfRuleArray(0);
       top10FamilyCtRule.setType(
           org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfType.TOP_10);
-      ExcelConditionalFormattingRuleSnapshot.Top10Rule top10 =
+      ConditionalFormattingRuleReport.Top10Rule top10 =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.Top10Rule.class,
+              ConditionalFormattingRuleReport.Top10Rule.class,
               ExcelConditionalFormattingController.toSnapshot(
                   sheet, formatting.getConditionalFormattingAt(4).getRule(0), top10FamilyCtRule));
       assertEquals(10, top10.rank());
@@ -1167,9 +1233,9 @@ class ExcelConditionalFormattingControllerTest {
       explicitTop10CtRule.setPercent(true);
       explicitTop10CtRule.setBottom(true);
       explicitTop10CtRule.setStopIfTrue(true);
-      ExcelConditionalFormattingRuleSnapshot.Top10Rule explicitTop10Snapshot =
+      ConditionalFormattingRuleReport.Top10Rule explicitTop10Snapshot =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.Top10Rule.class,
+              ConditionalFormattingRuleReport.Top10Rule.class,
               ExcelConditionalFormattingController.toSnapshot(
                   sheet, formatting.getConditionalFormattingAt(5).getRule(0), explicitTop10CtRule));
       assertEquals(7, explicitTop10Snapshot.rank());
@@ -1332,9 +1398,9 @@ class ExcelConditionalFormattingControllerTest {
   }
 
   private static void assertUnsupportedRule(
-      ExcelConditionalFormattingRuleSnapshot snapshot, String kind, String detailFragment) {
-    ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupported =
-        assertInstanceOf(ExcelConditionalFormattingRuleSnapshot.UnsupportedRule.class, snapshot);
+      ConditionalFormattingRuleReport snapshot, String kind, String detailFragment) {
+    ConditionalFormattingRuleReport.UnsupportedRule unsupported =
+        assertInstanceOf(ConditionalFormattingRuleReport.UnsupportedRule.class, snapshot);
     assertEquals(kind, unsupported.kind());
     assertTrue(unsupported.detail().contains(detailFragment), unsupported.detail());
   }

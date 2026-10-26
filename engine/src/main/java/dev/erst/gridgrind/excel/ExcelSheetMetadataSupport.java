@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
@@ -92,8 +93,7 @@ final class ExcelSheetMetadataSupport {
     return dataValidationController.dataValidations(xssfSheet(), selection);
   }
 
-  List<ExcelConditionalFormattingBlockSnapshot> conditionalFormatting(
-      ExcelRangeSelection selection) {
+  List<ConditionalFormattingEntryReport> conditionalFormatting(ExcelRangeSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     return conditionalFormattingController.conditionalFormatting(xssfSheet(), selection);
   }

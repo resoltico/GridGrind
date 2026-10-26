@@ -1,9 +1,10 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.core.model.style.BorderSidePatch;
-import dev.erst.gridgrind.core.model.style.ColorSpec;
-import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
@@ -54,8 +55,7 @@ final class ExcelConditionalFormattingStyleSupport {
   /**
    * Returns the factual differential-style snapshot attached to one conditional-formatting rule.
    */
-  static @Nullable ExcelDifferentialStyleSnapshot snapshotStyle(
-      StylesTable stylesTable, CTCfRule rule) {
+  static @Nullable DifferentialStyleReport snapshotStyle(StylesTable stylesTable, CTCfRule rule) {
     return ExcelConditionalFormattingStyleSnapshotSupport.optionalSnapshotStyle(stylesTable, rule)
         .orElse(null);
   }
@@ -72,7 +72,7 @@ final class ExcelConditionalFormattingStyleSupport {
   /**
    * Returns one modeled solid-fill foreground color, recording unsupported fill states as needed.
    */
-  static @Nullable ColorSpec patternForegroundColor(
+  static @Nullable CellColorReport patternForegroundColor(
       CTPatternFill patternFill,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     return ExcelConditionalFormattingStyleSnapshotSupport.patternForegroundColor(
@@ -87,25 +87,25 @@ final class ExcelConditionalFormattingStyleSupport {
   /** Reports whether one differential border references a side payload GridGrind cannot read. */
   static boolean hasUnsupportedSideReference(
       CTBorder border,
-      @Nullable BorderSidePatch top,
-      @Nullable BorderSidePatch right,
-      @Nullable BorderSidePatch bottom,
-      @Nullable BorderSidePatch left) {
+      @Nullable DifferentialBorderSideReport top,
+      @Nullable DifferentialBorderSideReport right,
+      @Nullable DifferentialBorderSideReport bottom,
+      @Nullable DifferentialBorderSideReport left) {
     return ExcelConditionalFormattingStyleSnapshotSupport.hasUnsupportedSideReference(
         border, top, right, bottom, left);
   }
 
   /** Collapses the four explicit sides of one differential border into the public border record. */
-  static @Nullable DifferentialBorderPatch borderValue(
-      @Nullable BorderSidePatch top,
-      @Nullable BorderSidePatch right,
-      @Nullable BorderSidePatch bottom,
-      @Nullable BorderSidePatch left) {
+  static @Nullable DifferentialBorderReport borderValue(
+      @Nullable DifferentialBorderSideReport top,
+      @Nullable DifferentialBorderSideReport right,
+      @Nullable DifferentialBorderSideReport bottom,
+      @Nullable DifferentialBorderSideReport left) {
     return ExcelConditionalFormattingStyleSnapshotSupport.borderValue(top, right, bottom, left);
   }
 
   /** Returns the factual border side modeled by one differential border-side XML payload. */
-  static @Nullable BorderSidePatch snapshotBorderSide(@Nullable CTBorderPr side) {
+  static @Nullable DifferentialBorderSideReport snapshotBorderSide(@Nullable CTBorderPr side) {
     return ExcelConditionalFormattingStyleSnapshotSupport.snapshotBorderSide(side);
   }
 
@@ -153,7 +153,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   record FillSnapshot(
-      @Nullable ColorSpec fillColor,
+      @Nullable CellColorReport fillColor,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     FillSnapshot {
       unsupportedFeatures = List.copyOf(unsupportedFeatures);
@@ -165,7 +165,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   record BorderSnapshot(
-      @Nullable DifferentialBorderPatch border,
+      @Nullable DifferentialBorderReport border,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     BorderSnapshot {
       unsupportedFeatures = List.copyOf(unsupportedFeatures);
@@ -180,7 +180,7 @@ final class ExcelConditionalFormattingStyleSupport {
       @Nullable Boolean bold,
       @Nullable Boolean italic,
       @Nullable FontHeightReport fontHeight,
-      @Nullable ColorSpec fontColor,
+      @Nullable CellColorReport fontColor,
       @Nullable Boolean underline,
       @Nullable Boolean strikeout,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {

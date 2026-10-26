@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
@@ -56,7 +57,7 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns conditional-formatting metadata for the selected ranges on one sheet. */
-  List<ExcelConditionalFormattingBlockSnapshot> conditionalFormatting(
+  List<ConditionalFormattingEntryReport> conditionalFormatting(
       ExcelSheet sheet, ExcelRangeSelection selection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(selection, "selection must not be null");

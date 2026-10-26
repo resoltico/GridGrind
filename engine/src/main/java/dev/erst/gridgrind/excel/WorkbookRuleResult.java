@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
@@ -30,7 +31,7 @@ public sealed interface WorkbookRuleResult extends WorkbookReadIntrospectionResu
   record ConditionalFormattingResult(
       StepId stepId,
       String sheetName,
-      List<ExcelConditionalFormattingBlockSnapshot> conditionalFormattingBlocks)
+      List<ConditionalFormattingEntryReport> conditionalFormattingBlocks)
       implements WorkbookRuleResult {
     public ConditionalFormattingResult {
 

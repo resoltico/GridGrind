@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -19,9 +23,9 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatti
 
 /** Reads conditional-formatting XML into canonical GridGrind snapshot values. */
 final class ExcelConditionalFormattingSnapshotSupport {
-  List<ExcelConditionalFormattingBlockSnapshot> conditionalFormatting(
+  List<ConditionalFormattingEntryReport> conditionalFormatting(
       XSSFSheet sheet, ExcelRangeSelection selection) {
-    List<ExcelConditionalFormattingBlockSnapshot> snapshots = new ArrayList<>();
+    List<ConditionalFormattingEntryReport> snapshots = new ArrayList<>();
     for (int blockIndex = 0;
         blockIndex < sheet.getSheetConditionalFormatting().getNumConditionalFormattings();
         blockIndex++) {
@@ -33,8 +37,9 @@ final class ExcelConditionalFormattingSnapshotSupport {
         continue;
       }
       snapshots.add(
-          new ExcelConditionalFormattingBlockSnapshot(
-              ranges, snapshotRules(sheet, formatting, ctBlock)));
+          new ConditionalFormattingEntryReport(
+              ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+              snapshotRules(sheet, formatting, ctBlock)));
     }
     return List.copyOf(snapshots);
   }
@@ -70,9 +75,9 @@ final class ExcelConditionalFormattingSnapshotSupport {
     return false;
   }
 
-  static ExcelConditionalFormattingRuleSnapshot toSnapshot(
+  static ConditionalFormattingRuleReport toSnapshot(
       XSSFSheet sheet, XSSFConditionalFormattingRule rule, CTCfRule ctRule) {
-    ExcelDifferentialStyleSnapshot style =
+    DifferentialStyleReport style =
         ExcelConditionalFormattingStyleSupport.snapshotStyle(
             sheet.getWorkbook().getStylesSource(), ctRule);
 
@@ -164,22 +169,22 @@ final class ExcelConditionalFormattingSnapshotSupport {
     };
   }
 
-  static String ruleLabel(ExcelConditionalFormattingRuleSnapshot rule) {
+  static String ruleLabel(ConditionalFormattingRuleReport rule) {
     return switch (rule) {
-      case ExcelConditionalFormattingRuleSnapshot.FormulaRule _ -> "FORMULA_RULE";
-      case ExcelConditionalFormattingRuleSnapshot.CellValueRule _ -> "CELL_VALUE_RULE";
-      case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule _ -> "COLOR_SCALE_RULE";
-      case ExcelConditionalFormattingRuleSnapshot.DataBarRule _ -> "DATA_BAR_RULE";
-      case ExcelConditionalFormattingRuleSnapshot.IconSetRule _ -> "ICON_SET_RULE";
-      case ExcelConditionalFormattingRuleSnapshot.Top10Rule _ -> "TOP10_RULE";
-      case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
+      case ConditionalFormattingRuleReport.FormulaRule _ -> "FORMULA_RULE";
+      case ConditionalFormattingRuleReport.CellValueRule _ -> "CELL_VALUE_RULE";
+      case ConditionalFormattingRuleReport.ColorScaleRule _ -> "COLOR_SCALE_RULE";
+      case ConditionalFormattingRuleReport.DataBarRule _ -> "DATA_BAR_RULE";
+      case ConditionalFormattingRuleReport.IconSetRule _ -> "ICON_SET_RULE";
+      case ConditionalFormattingRuleReport.Top10Rule _ -> "TOP10_RULE";
+      case ConditionalFormattingRuleReport.UnsupportedRule unsupportedRule ->
           "UNSUPPORTED_RULE(" + unsupportedRule.kind().toUpperCase(Locale.ROOT) + ")";
     };
   }
 
-  private static List<ExcelConditionalFormattingRuleSnapshot> snapshotRules(
+  private static List<ConditionalFormattingRuleReport> snapshotRules(
       XSSFSheet sheet, XSSFConditionalFormatting formatting, CTConditionalFormatting ctBlock) {
-    List<ExcelConditionalFormattingRuleSnapshot> rules = new ArrayList<>();
+    List<ConditionalFormattingRuleReport> rules = new ArrayList<>();
     for (int ruleIndex = 0; ruleIndex < formatting.getNumberOfRules(); ruleIndex++) {
       rules.add(
           toSnapshot(sheet, formatting.getRule(ruleIndex), ctBlock.getCfRuleArray(ruleIndex)));
@@ -187,19 +192,18 @@ final class ExcelConditionalFormattingSnapshotSupport {
     return List.copyOf(rules);
   }
 
-  private static List<ExcelConditionalFormattingThresholdSnapshot> thresholds(
+  private static List<ConditionalFormattingThresholdReport> thresholds(
       ConditionalFormattingThreshold[] thresholds) {
-    List<ExcelConditionalFormattingThresholdSnapshot> snapshots =
-        new ArrayList<>(thresholds.length);
+    List<ConditionalFormattingThresholdReport> snapshots = new ArrayList<>(thresholds.length);
     for (ConditionalFormattingThreshold threshold : thresholds) {
       snapshots.add(threshold(threshold));
     }
     return List.copyOf(snapshots);
   }
 
-  private static ExcelConditionalFormattingThresholdSnapshot threshold(
+  private static ConditionalFormattingThresholdReport threshold(
       ConditionalFormattingThreshold threshold) {
-    return new ExcelConditionalFormattingThresholdSnapshot(
+    return new ConditionalFormattingThresholdReport(
         ExcelConditionalFormattingPoiBridge.fromPoi(threshold.getRangeType()),
         threshold.getFormula(),
         threshold.getValue());
@@ -221,9 +225,9 @@ final class ExcelConditionalFormattingSnapshotSupport {
     return rgb;
   }
 
-  private static ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule(
+  private static ConditionalFormattingRuleReport.UnsupportedRule unsupportedRule(
       CTCfRule ctRule, String kind, String detail) {
-    return new ExcelConditionalFormattingRuleSnapshot.UnsupportedRule(
+    return new ConditionalFormattingRuleReport.UnsupportedRule(
         ctRule.getPriority(), ctRule.getStopIfTrue(), kind, detail);
   }
 
@@ -233,35 +237,35 @@ final class ExcelConditionalFormattingSnapshotSupport {
     }
   }
 
-  private static ExcelConditionalFormattingRuleSnapshot formulaRuleSnapshot(
+  private static ConditionalFormattingRuleReport formulaRuleSnapshot(
       XSSFConditionalFormattingRule rule,
       CTCfRule ctRule,
-      @Nullable ExcelDifferentialStyleSnapshot style) {
+      @Nullable DifferentialStyleReport style) {
     String formula = Objects.requireNonNullElse(rule.getFormula1(), "");
     if (formula.isBlank()) {
       return unsupportedRule(ctRule, "FORMULA", "Formula rule is missing formula text.");
     }
-    return new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
-        ctRule.getPriority(), ctRule.getStopIfTrue(), formula, style);
+    return new ConditionalFormattingRuleReport.FormulaRule(
+        ctRule.getPriority(), ctRule.getStopIfTrue(), formula, Optional.ofNullable(style));
   }
 
-  private static ExcelConditionalFormattingRuleSnapshot cellValueRuleSnapshot(
+  private static ConditionalFormattingRuleReport cellValueRuleSnapshot(
       XSSFConditionalFormattingRule rule,
       CTCfRule ctRule,
-      @Nullable ExcelDifferentialStyleSnapshot style) {
+      @Nullable DifferentialStyleReport style) {
     String formula1 = Objects.requireNonNullElse(rule.getFormula1(), "");
     if (formula1.isBlank()) {
       return unsupportedRule(ctRule, "CELL_VALUE_IS", "Cell-value rule is missing formula1.");
     }
     try {
-      return new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
+      return new ConditionalFormattingRuleReport.CellValueRule(
           ctRule.getPriority(),
           ctRule.getStopIfTrue(),
           ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(
               rule.getComparisonOperation()),
           formula1,
-          rule.getFormula2(),
-          style);
+          Optional.ofNullable(rule.getFormula2()),
+          Optional.ofNullable(style));
     } catch (IllegalArgumentException exception) {
       return unsupportedRule(
           ctRule,
@@ -270,7 +274,7 @@ final class ExcelConditionalFormattingSnapshotSupport {
     }
   }
 
-  private static ExcelConditionalFormattingRuleSnapshot colorScaleRuleSnapshot(
+  private static ConditionalFormattingRuleReport colorScaleRuleSnapshot(
       XSSFConditionalFormattingRule rule, CTCfRule ctRule) {
     var colorScaleFormatting = rule.getColorScaleFormatting();
     if (colorScaleFormatting == null) {
@@ -278,11 +282,13 @@ final class ExcelConditionalFormattingSnapshotSupport {
           ctRule, "COLOR_SCALE", "Color-scale rule is missing color-scale payload.");
     }
     try {
-      return new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
+      return new ConditionalFormattingRuleReport.ColorScaleRule(
           ctRule.getPriority(),
           ctRule.getStopIfTrue(),
           thresholds(colorScaleFormatting.getThresholds()),
-          colors(colorScaleFormatting.getColors()));
+          colors(colorScaleFormatting.getColors()).stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new)
+              .toList());
     } catch (RuntimeException exception) {
       return unsupportedRule(
           ctRule,
@@ -292,17 +298,18 @@ final class ExcelConditionalFormattingSnapshotSupport {
     }
   }
 
-  private static ExcelConditionalFormattingRuleSnapshot dataBarRuleSnapshot(
+  private static ConditionalFormattingRuleReport dataBarRuleSnapshot(
       XSSFConditionalFormattingRule rule, CTCfRule ctRule) {
     var dataBarFormatting = rule.getDataBarFormatting();
     if (dataBarFormatting == null) {
       return unsupportedRule(ctRule, "DATA_BAR", "Data-bar rule is missing data-bar payload.");
     }
     try {
-      return new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
+      return new ConditionalFormattingRuleReport.DataBarRule(
           ctRule.getPriority(),
           ctRule.getStopIfTrue(),
-          color(dataBarFormatting.getColor()),
+          Optional.ofNullable(color(dataBarFormatting.getColor()))
+              .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
           dataBarFormatting.isIconOnly(),
           dataBarFormatting.getWidthMin(),
           dataBarFormatting.getWidthMax(),
@@ -316,14 +323,14 @@ final class ExcelConditionalFormattingSnapshotSupport {
     }
   }
 
-  private static ExcelConditionalFormattingRuleSnapshot iconSetRuleSnapshot(
+  private static ConditionalFormattingRuleReport iconSetRuleSnapshot(
       XSSFConditionalFormattingRule rule, CTCfRule ctRule) {
     var iconFormatting = rule.getMultiStateFormatting();
     if (iconFormatting == null) {
       return unsupportedRule(ctRule, "ICON_SET", "Icon-set rule is missing icon-set payload.");
     }
     try {
-      return new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
+      return new ConditionalFormattingRuleReport.IconSetRule(
           ctRule.getPriority(),
           ctRule.getStopIfTrue(),
           ExcelConditionalFormattingPoiBridge.fromPoi(iconFormatting.getIconSet()),
@@ -339,14 +346,14 @@ final class ExcelConditionalFormattingSnapshotSupport {
     }
   }
 
-  private static ExcelConditionalFormattingRuleSnapshot top10RuleSnapshot(
-      CTCfRule ctRule, @Nullable ExcelDifferentialStyleSnapshot style) {
-    return new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
+  private static ConditionalFormattingRuleReport top10RuleSnapshot(
+      CTCfRule ctRule, @Nullable DifferentialStyleReport style) {
+    return new ConditionalFormattingRuleReport.Top10Rule(
         ctRule.getPriority(),
         ctRule.getStopIfTrue(),
         ctRule.isSetRank() ? Math.toIntExact(ctRule.getRank()) : 10,
         ctRule.isSetPercent() && ctRule.getPercent(),
         ctRule.isSetBottom() && ctRule.getBottom(),
-        style);
+        Optional.ofNullable(style));
   }
 }

@@ -3,12 +3,12 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
@@ -435,7 +435,7 @@ final class XlsxRoundTripExpectationVerification {
   }
 
   static void requireExpectedConditionalFormatting(
-      Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting,
+      Map<String, List<ConditionalFormattingEntryReport>> expectedConditionalFormatting,
       Path workbookPath)
       throws IOException {
     if (expectedConditionalFormatting.isEmpty()) {
@@ -443,7 +443,7 @@ final class XlsxRoundTripExpectationVerification {
     }
     try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
-      for (Map.Entry<String, List<ExcelConditionalFormattingBlockSnapshot>> entry :
+      for (Map.Entry<String, List<ConditionalFormattingEntryReport>> entry :
           expectedConditionalFormatting.entrySet()) {
         var actual =
             ((dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)

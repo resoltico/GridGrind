@@ -28,6 +28,8 @@ import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
@@ -613,20 +615,21 @@ class ExcelSheetCopyControllerTest {
                           && "LocalFormula".equals(formulaSnapshot.name())
                           && formulaSnapshot.refersToFormula().contains("Replica")
                           && formulaSnapshot.refersToFormula().contains("$B$2:$B$3")));
-      ExcelConditionalFormattingBlockSnapshot copiedFormatting =
+      ConditionalFormattingEntryReport copiedFormatting =
           replica.metadata().conditionalFormatting(new ExcelRangeSelection.All()).getFirst();
       assertEquals(
           "SUM(Replica!$B$2:$B$3)>0",
           assertInstanceOf(
-                  ExcelConditionalFormattingRuleSnapshot.FormulaRule.class,
+                  ConditionalFormattingRuleReport.FormulaRule.class,
                   copiedFormatting.rules().get(0))
               .formula());
       assertEquals(
           "SUM(Replica!$B$2:$B$3)",
           assertInstanceOf(
-                  ExcelConditionalFormattingRuleSnapshot.CellValueRule.class,
+                  ConditionalFormattingRuleReport.CellValueRule.class,
                   copiedFormatting.rules().get(1))
-              .formula2());
+              .formula2()
+              .orElseThrow());
       ExcelTableSnapshot copiedTable =
           tableController.tables(workbook, new ExcelTableSelection.All()).stream()
               .filter(table -> "Replica".equals(table.sheetName()))
@@ -794,7 +797,7 @@ class ExcelSheetCopyControllerTest {
               .getDataValidationArray(0)
               .getFormula1());
 
-      ExcelConditionalFormattingBlockSnapshot copiedFormatting =
+      ConditionalFormattingEntryReport copiedFormatting =
           workbook
               .sheet("Replica")
               .metadata()
@@ -803,28 +806,24 @@ class ExcelSheetCopyControllerTest {
       assertEquals(
           "SUM(Replica!$B$2:$B$3)>0",
           assertInstanceOf(
-                  ExcelConditionalFormattingRuleSnapshot.FormulaRule.class,
+                  ConditionalFormattingRuleReport.FormulaRule.class,
                   copiedFormatting.rules().get(0))
               .formula());
-      ExcelConditionalFormattingRuleSnapshot.CellValueRule copiedCellValueRule =
+      ConditionalFormattingRuleReport.CellValueRule copiedCellValueRule =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.CellValueRule.class,
-              copiedFormatting.rules().get(1));
+              ConditionalFormattingRuleReport.CellValueRule.class, copiedFormatting.rules().get(1));
       assertEquals("SUM(Replica!$B$2:$B$3)", copiedCellValueRule.formula1());
-      assertNull(copiedCellValueRule.formula2());
+      assertTrue(copiedCellValueRule.formula2().isEmpty());
       assertInstanceOf(
-          ExcelConditionalFormattingRuleSnapshot.ColorScaleRule.class,
-          copiedFormatting.rules().get(2));
+          ConditionalFormattingRuleReport.ColorScaleRule.class, copiedFormatting.rules().get(2));
       assertInstanceOf(
-          ExcelConditionalFormattingRuleSnapshot.DataBarRule.class,
-          copiedFormatting.rules().get(3));
-      ExcelConditionalFormattingRuleSnapshot.IconSetRule copiedIconSetRule =
+          ConditionalFormattingRuleReport.DataBarRule.class, copiedFormatting.rules().get(3));
+      ConditionalFormattingRuleReport.IconSetRule copiedIconSetRule =
           assertInstanceOf(
-              ExcelConditionalFormattingRuleSnapshot.IconSetRule.class,
-              copiedFormatting.rules().get(4));
+              ConditionalFormattingRuleReport.IconSetRule.class, copiedFormatting.rules().get(4));
       assertTrue(copiedIconSetRule.reversed());
       assertInstanceOf(
-          ExcelConditionalFormattingRuleSnapshot.Top10Rule.class, copiedFormatting.rules().get(5));
+          ConditionalFormattingRuleReport.Top10Rule.class, copiedFormatting.rules().get(5));
 
       ExcelTableSnapshot copiedTable =
           tableController.tables(workbook, new ExcelTableSelection.All()).stream()

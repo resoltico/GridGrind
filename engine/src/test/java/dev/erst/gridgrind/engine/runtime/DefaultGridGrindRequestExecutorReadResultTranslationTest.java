@@ -13,6 +13,10 @@ import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
@@ -28,14 +32,11 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
-import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Workbook read-result translation coverage. */
@@ -155,33 +156,42 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                 new StepId("conditional-formatting"),
                 "Budget",
                 List.of(
-                    new ExcelConditionalFormattingBlockSnapshot(
-                        List.of("A2:A5"),
+                    new ConditionalFormattingEntryReport(
+                        List.of("A2:A5").stream()
+                            .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                            .toList(),
                         List.of(
-                            new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
+                            new ConditionalFormattingRuleReport.FormulaRule(
                                 1,
                                 true,
                                 "A2>0",
-                                new ExcelDifferentialStyleSnapshot(
-                                    "0.00",
-                                    true,
-                                    null,
-                                    null,
-                                    ColorSpec.rgb(new RgbHex("#102030")),
-                                    null,
-                                    null,
-                                    ColorSpec.rgb(new RgbHex("#E0F0AA")),
-                                    null,
-                                    List.of())),
-                            new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
+                                Optional.ofNullable(
+                                    new DifferentialStyleReport(
+                                        "0.00",
+                                        true,
+                                        null,
+                                        null,
+                                        Optional.ofNullable(
+                                            dev.erst.gridgrind.excel.DifferentialStyleFixtures
+                                                .color(ColorSpec.rgb(new RgbHex("#102030")))),
+                                        null,
+                                        null,
+                                        Optional.ofNullable(
+                                            dev.erst.gridgrind.excel.DifferentialStyleFixtures
+                                                .color(ColorSpec.rgb(new RgbHex("#E0F0AA")))),
+                                        Optional.empty(),
+                                        List.of()))),
+                            new ConditionalFormattingRuleReport.ColorScaleRule(
                                 2,
                                 false,
                                 List.of(
-                                    new ExcelConditionalFormattingThresholdSnapshot(
+                                    new ConditionalFormattingThresholdReport(
                                         ExcelConditionalFormattingThresholdType.MIN, null, null),
-                                    new ExcelConditionalFormattingThresholdSnapshot(
+                                    new ConditionalFormattingThresholdReport(
                                         ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                                List.of("#AA0000", "#00AA00")))))));
+                                List.of("#AA0000", "#00AA00").stream()
+                                    .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new)
+                                    .toList()))))));
     InspectionResult formulaSurface =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaSurfaceResult(

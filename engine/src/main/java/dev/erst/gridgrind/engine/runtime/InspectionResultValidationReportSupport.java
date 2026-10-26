@@ -1,24 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.style.BorderSidePatch;
-import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
-import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
-import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
-import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
-import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.Optional;
 
@@ -49,131 +36,6 @@ final class InspectionResultValidationReportSupport {
         definition.suppressDropDownArrow(),
         promptInput(definition),
         errorAlertInput(definition));
-  }
-
-  static ConditionalFormattingEntryReport toConditionalFormattingEntryReport(
-      ExcelConditionalFormattingBlockSnapshot block) {
-    return new ConditionalFormattingEntryReport(
-        block.ranges().stream().map(RangeLabel::new).toList(),
-        block.rules().stream()
-            .map(InspectionResultValidationReportSupport::toConditionalFormattingRuleReport)
-            .toList());
-  }
-
-  static ConditionalFormattingRuleReport toConditionalFormattingRuleReport(
-      ExcelConditionalFormattingRuleSnapshot rule) {
-    return switch (rule) {
-      case ExcelConditionalFormattingRuleSnapshot.FormulaRule formulaRule ->
-          new ConditionalFormattingRuleReport.FormulaRule(
-              formulaRule.priority(),
-              formulaRule.stopIfTrue(),
-              formulaRule.formula(),
-              toDifferentialStyleReport(formulaRule.style()));
-      case ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule ->
-          new ConditionalFormattingRuleReport.CellValueRule(
-              cellValueRule.priority(),
-              cellValueRule.stopIfTrue(),
-              cellValueRule.operator(),
-              cellValueRule.formula1(),
-              Optional.ofNullable(cellValueRule.formula2()),
-              toDifferentialStyleReport(cellValueRule.style()));
-      case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule colorScaleRule ->
-          new ConditionalFormattingRuleReport.ColorScaleRule(
-              colorScaleRule.priority(),
-              colorScaleRule.stopIfTrue(),
-              colorScaleRule.thresholds().stream()
-                  .map(
-                      InspectionResultValidationReportSupport
-                          ::toConditionalFormattingThresholdReport)
-                  .toList(),
-              colorScaleRule.colors().stream().map(RgbHex::new).toList());
-      case ExcelConditionalFormattingRuleSnapshot.DataBarRule dataBarRule ->
-          new ConditionalFormattingRuleReport.DataBarRule(
-              dataBarRule.priority(),
-              dataBarRule.stopIfTrue(),
-              java.util.Optional.ofNullable(dataBarRule.color())
-                  .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
-              dataBarRule.iconOnly(),
-              dataBarRule.widthMin(),
-              dataBarRule.widthMax(),
-              toConditionalFormattingThresholdReport(dataBarRule.minThreshold()),
-              toConditionalFormattingThresholdReport(dataBarRule.maxThreshold()));
-      case ExcelConditionalFormattingRuleSnapshot.IconSetRule iconSetRule ->
-          new ConditionalFormattingRuleReport.IconSetRule(
-              iconSetRule.priority(),
-              iconSetRule.stopIfTrue(),
-              iconSetRule.iconSet(),
-              iconSetRule.iconOnly(),
-              iconSetRule.reversed(),
-              iconSetRule.thresholds().stream()
-                  .map(
-                      InspectionResultValidationReportSupport
-                          ::toConditionalFormattingThresholdReport)
-                  .toList());
-      case ExcelConditionalFormattingRuleSnapshot.Top10Rule top10Rule ->
-          new ConditionalFormattingRuleReport.Top10Rule(
-              top10Rule.priority(),
-              top10Rule.stopIfTrue(),
-              top10Rule.rank(),
-              top10Rule.percent(),
-              top10Rule.bottom(),
-              toDifferentialStyleReport(top10Rule.style()));
-      case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
-          new ConditionalFormattingRuleReport.UnsupportedRule(
-              unsupportedRule.priority(),
-              unsupportedRule.stopIfTrue(),
-              unsupportedRule.kind(),
-              unsupportedRule.detail());
-    };
-  }
-
-  static ConditionalFormattingThresholdReport toConditionalFormattingThresholdReport(
-      ExcelConditionalFormattingThresholdSnapshot threshold) {
-    return new ConditionalFormattingThresholdReport(
-        threshold.type(), threshold.formula(), threshold.value());
-  }
-
-  static Optional<DifferentialStyleReport> toDifferentialStyleReport(
-      @org.jspecify.annotations.Nullable ExcelDifferentialStyleSnapshot style) {
-    if (style == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new DifferentialStyleReport(
-            style.numberFormat(),
-            style.bold(),
-            style.italic(),
-            style.fontHeight(),
-            InspectionResultCellStyleReportSupport.toCellColorReport(style.fontColor()),
-            style.underline(),
-            style.strikeout(),
-            InspectionResultCellStyleReportSupport.toCellColorReport(style.fillColor()),
-            toDifferentialBorderReport(style.border()),
-            style.unsupportedFeatures()));
-  }
-
-  static Optional<DifferentialBorderReport> toDifferentialBorderReport(
-      @org.jspecify.annotations.Nullable DifferentialBorderPatch border) {
-    if (border == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new DifferentialBorderReport(
-            toDifferentialBorderSideReport(border.all().orElse(null)),
-            toDifferentialBorderSideReport(border.top().orElse(null)),
-            toDifferentialBorderSideReport(border.right().orElse(null)),
-            toDifferentialBorderSideReport(border.bottom().orElse(null)),
-            toDifferentialBorderSideReport(border.left().orElse(null))));
-  }
-
-  static Optional<DifferentialBorderSideReport> toDifferentialBorderSideReport(
-      @org.jspecify.annotations.Nullable BorderSidePatch side) {
-    return side == null
-        ? Optional.empty()
-        : Optional.of(
-            new DifferentialBorderSideReport(
-                side.style(),
-                side.color().flatMap(InspectionResultCellStyleReportSupport::toCellColorReport)));
   }
 
   private static Optional<DataValidationPromptSpec> promptInput(ResolvedDataValidation definition) {

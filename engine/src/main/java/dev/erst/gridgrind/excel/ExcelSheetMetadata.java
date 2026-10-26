@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
@@ -69,7 +70,7 @@ public final class ExcelSheetMetadata {
   }
 
   /** Returns factual conditional-formatting blocks for the selected ranges on this sheet. */
-  public List<ExcelConditionalFormattingBlockSnapshot> conditionalFormatting(
+  public List<ConditionalFormattingEntryReport> conditionalFormatting(
       ExcelRangeSelection selection) {
     return metadataSupport.conditionalFormatting(selection);
   }
