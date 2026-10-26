@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
@@ -99,10 +100,10 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns factual chart metadata selected by sheet-wide or exact chart selection. */
-  List<ExcelChartSnapshot> charts(ExcelWorkbook workbook, ExcelChartSelection selection) {
+  List<ChartReport> charts(ExcelWorkbook workbook, ExcelChartSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
-    List<ExcelChartSnapshot> charts = workbook.sheet(selection.sheetName()).drawings().charts();
+    List<ChartReport> charts = workbook.sheet(selection.sheetName()).drawings().charts();
     return switch (selection) {
       case ExcelChartSelection.AllOnSheet _ -> charts;
       case ExcelChartSelection.ByName byName ->

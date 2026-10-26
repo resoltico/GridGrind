@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
@@ -58,11 +59,11 @@ class ExcelChartInteropTest {
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelChartSnapshot areaChart = workbook.sheet("Charts").drawings().charts().getFirst();
+      ChartReport areaChart = workbook.sheet("Charts").drawings().charts().getFirst();
       assertEquals("AreaOnly", areaChart.name());
       assertInstanceOf(
-          ExcelChartSnapshot.Area.class,
-          ExcelChartTestSupport.singlePlot(areaChart, ExcelChartSnapshot.Area.class));
+          ChartReport.Area.class,
+          ExcelChartTestSupport.singlePlot(areaChart, ChartReport.Area.class));
     }
   }
 
@@ -75,39 +76,36 @@ class ExcelChartInteropTest {
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Charts");
 
-      ExcelChartSnapshot cachedFormulaLine =
+      ChartReport cachedFormulaLine =
           sheet.drawings().charts().stream()
               .filter(snapshot -> snapshot.name().startsWith("Chart-"))
               .findFirst()
               .orElseThrow();
-      ExcelChartSnapshot.Title.Formula cachedLineTitle =
-          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, cachedFormulaLine.title());
+      ChartReport.Title.Formula cachedLineTitle =
+          assertInstanceOf(ChartReport.Title.Formula.class, cachedFormulaLine.title());
       assertEquals("Charts!$B$1", cachedLineTitle.formula());
       assertEquals("Plan", cachedLineTitle.cachedText());
-      ExcelChartSnapshot.Line cachedLinePlot =
-          ExcelChartTestSupport.singlePlot(cachedFormulaLine, ExcelChartSnapshot.Line.class);
+      ChartReport.Line cachedLinePlot =
+          ExcelChartTestSupport.singlePlot(cachedFormulaLine, ChartReport.Line.class);
       assertEquals(
           List.of(ExcelChartAxisPosition.TOP, ExcelChartAxisPosition.RIGHT),
-          cachedLinePlot.axes().stream().map(ExcelChartSnapshot.Axis::position).toList());
+          cachedLinePlot.axes().stream().map(ChartReport.Axis::position).toList());
 
-      ExcelChartSnapshot.Series cachedLineSeries = cachedLinePlot.series().getFirst();
-      ExcelChartSnapshot.Title.Formula cachedLineSeriesTitle =
-          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, cachedLineSeries.title());
+      ChartReport.Series cachedLineSeries = cachedLinePlot.series().getFirst();
+      ChartReport.Title.Formula cachedLineSeriesTitle =
+          assertInstanceOf(ChartReport.Title.Formula.class, cachedLineSeries.title());
       assertEquals("Actual", cachedLineSeriesTitle.cachedText());
       assertEquals(
           List.of("Jan", "Mar", ""),
           assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringLiteral.class, cachedLineSeries.categories())
+                  ChartReport.DataSource.StringLiteral.class, cachedLineSeries.categories())
               .values());
 
-      ExcelChartSnapshot literalPie =
-          ExcelChartTestSupport.chart(sheet.drawings().charts(), "LiteralPie");
-      assertTrue(
-          ExcelChartTestSupport.singlePlot(literalPie, ExcelChartSnapshot.Pie.class).varyColors());
+      ChartReport literalPie = ExcelChartTestSupport.chart(sheet.drawings().charts(), "LiteralPie");
+      assertTrue(ExcelChartTestSupport.singlePlot(literalPie, ChartReport.Pie.class).varyColors());
       assertEquals(
           Optional.of(75),
-          ExcelChartTestSupport.singlePlot(literalPie, ExcelChartSnapshot.Pie.class)
-              .firstSliceAngle());
+          ExcelChartTestSupport.singlePlot(literalPie, ChartReport.Pie.class).firstSliceAngle());
 
       ExcelDrawingObjectSnapshot.Chart uncachedFormulaDrawingObject =
           assertInstanceOf(

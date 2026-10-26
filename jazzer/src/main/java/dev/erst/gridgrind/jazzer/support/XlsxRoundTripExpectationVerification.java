@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
@@ -306,9 +306,9 @@ final class XlsxRoundTripExpectationVerification {
                   + actualDrawingObjects);
         }
       }
-      for (Map.Entry<String, List<ExcelChartSnapshot>> entry :
+      for (Map.Entry<String, List<ChartReport>> entry :
           expectedWorkbookState.expectedCharts().entrySet()) {
-        List<ExcelChartSnapshot> actualCharts = workbook.sheet(entry.getKey()).drawings().charts();
+        List<ChartReport> actualCharts = workbook.sheet(entry.getKey()).drawings().charts();
         if (!entry.getValue().equals(actualCharts)) {
           throw new IllegalStateException(
               "charts changed across round-trip for "

@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
@@ -747,10 +748,10 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartSnapshot.Series(
-                new ExcelChartSnapshot.Title.None(),
-                new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
+            new ChartReport.Series(
+                new ChartReport.Title.None(),
+                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                new ChartReport.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
                 Optional.empty(),
                 Optional.of(ExcelChartMarkerStyle.CIRCLE),
                 Optional.of((short) 1),
@@ -758,42 +759,46 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartSnapshot.Series(
-                new ExcelChartSnapshot.Title.None(),
-                new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
+            new ChartReport.Series(
+                new ChartReport.Title.None(),
+                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                new ChartReport.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
                 Optional.empty(),
                 Optional.of(ExcelChartMarkerStyle.CIRCLE),
                 Optional.of((short) 10),
                 Optional.of(-1L)));
-    ExcelChartSnapshot.Series compactSeries =
-        new ExcelChartSnapshot.Series(
-            new ExcelChartSnapshot.Title.None(),
-            new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-            new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")));
+    ChartReport.Series compactSeries =
+        new ChartReport.Series(
+            new ChartReport.Title.None(),
+            new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+            new ChartReport.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
     assertEquals(Optional.empty(), compactSeries.smooth());
 
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartSnapshot(
+            new ChartReport(
                 " ",
                 DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(1, 1, 4, 6)),
-                new ExcelChartSnapshot.Title.None(),
-                new ExcelChartSnapshot.Legend.Hidden(),
+                new ChartReport.Title.None(),
+                new ChartReport.Legend.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,
                 true,
                 List.of(
-                    new ExcelChartSnapshot.Line(
+                    new ChartReport.Line(
                         false,
                         ExcelChartGrouping.STANDARD,
                         List.of(
-                            new ExcelChartSnapshot.Axis(
+                            new ChartReport.Axis(
                                 ExcelChartAxisKind.CATEGORY,
                                 ExcelChartAxisPosition.BOTTOM,
                                 ExcelChartAxisCrosses.AUTO_ZERO,
                                 true),
-                            new ExcelChartSnapshot.Axis(
+                            new ChartReport.Axis(
                                 ExcelChartAxisKind.VALUE,
                                 ExcelChartAxisPosition.LEFT,
                                 ExcelChartAxisCrosses.MIN,
@@ -802,11 +807,11 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartSnapshot(
+            new ChartReport(
                 "Chart",
                 DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(1, 1, 4, 6)),
-                new ExcelChartSnapshot.Title.None(),
-                new ExcelChartSnapshot.Legend.Hidden(),
+                new ChartReport.Title.None(),
+                new ChartReport.Legend.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,
                 true,
                 List.of()));

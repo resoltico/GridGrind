@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
@@ -70,7 +71,7 @@ public final class ExcelSheetDrawings {
   }
 
   /** Returns factual chart metadata for this sheet. */
-  public List<ExcelChartSnapshot> charts() {
+  public List<ChartReport> charts() {
     return drawingSupport.charts();
   }
 

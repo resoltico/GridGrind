@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
@@ -8,7 +9,6 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.excel.DrawingObjectNotFoundException;
-import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelFormulaRuntime;
 import dev.erst.gridgrind.excel.ExcelIoSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbookImageCatalogSupport;
@@ -71,12 +71,11 @@ public final class ExcelDrawingController {
     return List.copyOf(snapshots);
   }
 
-  public List<ExcelChartSnapshot> charts(XSSFSheet sheet) {
+  public List<ChartReport> charts(XSSFSheet sheet) {
     return charts(sheet, null);
   }
 
-  public List<ExcelChartSnapshot> charts(
-      XSSFSheet sheet, @Nullable ExcelFormulaRuntime formulaRuntime) {
+  public List<ChartReport> charts(XSSFSheet sheet, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing == null) {
@@ -84,7 +83,7 @@ public final class ExcelDrawingController {
     }
     drawing.getShapes();
 
-    List<ExcelChartSnapshot> snapshots = new ArrayList<>();
+    List<ChartReport> snapshots = new ArrayList<>();
     for (XSSFChart chart : drawing.getCharts()) {
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame = chart.getGraphicFrame();
       if (graphicFrame == null) {

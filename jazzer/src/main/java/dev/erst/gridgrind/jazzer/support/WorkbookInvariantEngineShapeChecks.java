@@ -138,7 +138,7 @@ final class WorkbookInvariantEngineShapeChecks {
     }
   }
 
-  static void requireEngineChartShape(dev.erst.gridgrind.excel.ExcelChartSnapshot chart) {
+  static void requireEngineChartShape(dev.erst.gridgrind.core.model.chart.ChartReport chart) {
     WorkbookInvariantChecks.require(chart != null, "engine chart must not be null");
     WorkbookInvariantChecks.requireNonBlank(chart.name(), "engine chart name");
     requireEngineDrawingAnchorShape(chart.anchor());
@@ -219,32 +219,33 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineChartLegendShape(
-      dev.erst.gridgrind.excel.ExcelChartSnapshot.Legend legend) {
+      dev.erst.gridgrind.core.model.chart.ChartReport.Legend legend) {
     WorkbookInvariantChecks.require(legend != null, "engine chart legend must not be null");
     switch (legend) {
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Legend.Hidden _ -> {}
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Legend.Visible visible ->
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Legend.Hidden _ -> {}
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Legend.Visible visible ->
           WorkbookInvariantChecks.require(
               visible.position() != null, "engine chart legend position must not be null");
     }
   }
 
-  static void requireEngineChartPlotShape(dev.erst.gridgrind.excel.ExcelChartSnapshot.Plot plot) {
+  static void requireEngineChartPlotShape(
+      dev.erst.gridgrind.core.model.chart.ChartReport.Plot plot) {
     WorkbookInvariantChecks.require(plot != null, "engine chart plot must not be null");
     switch (plot) {
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Area area -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Area area -> {
         WorkbookInvariantChecks.require(
             area.grouping() != null, "engine area chart grouping must not be null");
         area.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         area.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Area3D area3D -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Area3D area3D -> {
         WorkbookInvariantChecks.require(
             area3D.grouping() != null, "engine area 3D chart grouping must not be null");
         area3D.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         area3D.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Bar bar -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Bar bar -> {
         WorkbookInvariantChecks.require(
             bar.barDirection() != null, "engine bar chart barDirection must not be null");
         WorkbookInvariantChecks.require(
@@ -252,7 +253,7 @@ final class WorkbookInvariantEngineShapeChecks {
         bar.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         bar.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Bar3D bar3D -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Bar3D bar3D -> {
         WorkbookInvariantChecks.require(
             bar3D.barDirection() != null, "engine bar 3D chart barDirection must not be null");
         WorkbookInvariantChecks.require(
@@ -260,7 +261,7 @@ final class WorkbookInvariantEngineShapeChecks {
         bar3D.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         bar3D.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Doughnut doughnut -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Doughnut doughnut -> {
         doughnut
             .firstSliceAngle()
             .ifPresent(
@@ -279,19 +280,19 @@ final class WorkbookInvariantEngineShapeChecks {
             .series()
             .forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Line line -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Line line -> {
         WorkbookInvariantChecks.require(
             line.grouping() != null, "engine line chart grouping must not be null");
         line.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         line.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Line3D line3D -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Line3D line3D -> {
         WorkbookInvariantChecks.require(
             line3D.grouping() != null, "engine line 3D chart grouping must not be null");
         line3D.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         line3D.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Pie pie -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Pie pie -> {
         pie.firstSliceAngle()
             .ifPresent(
                 firstSliceAngle ->
@@ -300,31 +301,31 @@ final class WorkbookInvariantEngineShapeChecks {
                         "engine pie chart firstSliceAngle must be between 0 and 360"));
         pie.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Pie3D pie3D ->
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Pie3D pie3D ->
           pie3D.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Radar radar -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Radar radar -> {
         WorkbookInvariantChecks.require(
             radar.style() != null, "engine radar chart style must not be null");
         radar.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         radar.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Scatter scatter -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Scatter scatter -> {
         WorkbookInvariantChecks.require(
             scatter.style() != null, "engine scatter chart style must not be null");
         scatter.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         scatter.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Surface surface -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Surface surface -> {
         surface.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         surface.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Surface3D surface3D -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Surface3D surface3D -> {
         surface3D.axes().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartAxisShape);
         surface3D
             .series()
             .forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Unsupported unsupported -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Unsupported unsupported -> {
         WorkbookInvariantChecks.requireNonBlank(
             unsupported.plotTypeToken(), "engine unsupported chart plotTypeToken");
         WorkbookInvariantChecks.requireNonBlank(
@@ -434,7 +435,8 @@ final class WorkbookInvariantEngineShapeChecks {
                     valueFormat, "engine pivot dataField valueFormat"));
   }
 
-  static void requireEngineChartAxisShape(dev.erst.gridgrind.excel.ExcelChartSnapshot.Axis axis) {
+  static void requireEngineChartAxisShape(
+      dev.erst.gridgrind.core.model.chart.ChartReport.Axis axis) {
     WorkbookInvariantChecks.require(axis != null, "engine chart axis must not be null");
     WorkbookInvariantChecks.require(axis.kind() != null, "engine chart axis kind must not be null");
     WorkbookInvariantChecks.require(
@@ -444,7 +446,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineChartSeriesShape(
-      dev.erst.gridgrind.excel.ExcelChartSnapshot.Series series) {
+      dev.erst.gridgrind.core.model.chart.ChartReport.Series series) {
     WorkbookInvariantChecks.require(series != null, "engine chart series must not be null");
     requireEngineChartTitleShape(series.title());
     requireEngineChartDataSourceShape(series.categories());
@@ -452,14 +454,14 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineChartTitleShape(
-      dev.erst.gridgrind.excel.ExcelChartSnapshot.Title title) {
+      dev.erst.gridgrind.core.model.chart.ChartReport.Title title) {
     WorkbookInvariantChecks.require(title != null, "engine chart title must not be null");
     switch (title) {
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Title.None _ -> {}
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Title.Text text ->
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Title.None _ -> {}
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Title.Text text ->
           WorkbookInvariantChecks.require(
               text.text() != null, "engine chart title text must not be null");
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Title.Formula formula -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.Title.Formula formula -> {
         WorkbookInvariantChecks.requireNonBlank(formula.formula(), "engine chart title formula");
         WorkbookInvariantChecks.require(
             formula.cachedText() != null, "engine chart title cachedText must not be null");
@@ -468,17 +470,18 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineChartDataSourceShape(
-      dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource source) {
+      dev.erst.gridgrind.core.model.chart.ChartReport.DataSource source) {
     WorkbookInvariantChecks.require(source != null, "engine chart data source must not be null");
     switch (source) {
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.StringReference reference -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.DataSource.StringReference reference -> {
         WorkbookInvariantChecks.requireNonBlank(
             reference.formula(), "engine chart string-reference formula");
         WorkbookInvariantChecks.require(
             reference.cachedValues() != null,
             "engine chart string-reference cachedValues must not be null");
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.NumericReference reference -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.DataSource.NumericReference
+              reference -> {
         WorkbookInvariantChecks.requireNonBlank(
             reference.formula(), "engine chart numeric-reference formula");
         WorkbookInvariantChecks.require(
@@ -492,10 +495,10 @@ final class WorkbookInvariantEngineShapeChecks {
                         !formatCode.isBlank(),
                         "engine chart numeric-reference formatCode must not be blank"));
       }
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.StringLiteral literal ->
+      case dev.erst.gridgrind.core.model.chart.ChartReport.DataSource.StringLiteral literal ->
           WorkbookInvariantChecks.require(
               literal.values() != null, "engine chart string-literal values must not be null");
-      case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.NumericLiteral literal -> {
+      case dev.erst.gridgrind.core.model.chart.ChartReport.DataSource.NumericLiteral literal -> {
         WorkbookInvariantChecks.require(
             literal.values() != null, "engine chart numeric-literal values must not be null");
         literal

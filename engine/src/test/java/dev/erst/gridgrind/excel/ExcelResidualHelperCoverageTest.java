@@ -7,6 +7,7 @@ import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
@@ -104,7 +105,7 @@ class ExcelResidualHelperCoverageTest {
       assertTrue(ExcelChartSnapshotSupport.lineVaryColors(varyingLineChart));
 
       List<?> emptyPlots = ExcelChartPlotSnapshotSupport.snapshotPlots(emptyChart, List.of());
-      assertInstanceOf(ExcelChartSnapshot.Unsupported.class, emptyPlots.getFirst());
+      assertInstanceOf(ChartReport.Unsupported.class, emptyPlots.getFirst());
 
       XDDFBarChartData unplottedBarData =
           (XDDFBarChartData)
@@ -116,8 +117,7 @@ class ExcelResidualHelperCoverageTest {
           ExcelChartPlotSnapshotSupport.snapshotPlots(
               emptyChart, List.of(unplottedBarData, new UnsupportedChartData()));
       assertEquals(2, unsupportedPlots.size());
-      assertTrue(
-          unsupportedPlots.stream().allMatch(ExcelChartSnapshot.Unsupported.class::isInstance));
+      assertTrue(unsupportedPlots.stream().allMatch(ChartReport.Unsupported.class::isInstance));
 
       XSSFChart lineChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 8, 1, 14, 10));
       XDDFLineChartData lineData =
@@ -233,7 +233,7 @@ class ExcelResidualHelperCoverageTest {
           IllegalStateException.class,
           () -> ExcelChartSeriesSnapshotSupport.snapshotDataSource(sheet, null, null));
       assertInstanceOf(
-          ExcelChartSnapshot.DataSource.NumericLiteral.class,
+          ChartReport.DataSource.NumericLiteral.class,
           ExcelChartSeriesSnapshotSupport.snapshotDataSource(
               sheet, XDDFDataSourcesFactory.fromArray(new Double[] {1d, 2d}), null));
 
@@ -860,7 +860,7 @@ class ExcelResidualHelperCoverageTest {
     area3DData.addSeries(categories, values);
     area3DChart.plot(area3DData);
     assertInstanceOf(
-        ExcelChartSnapshot.Area3D.class,
+        ChartReport.Area3D.class,
         ExcelChartSnapshotSupport.snapshotChart(area3DChart, area3DChart.getGraphicFrame())
             .plots()
             .getFirst());
@@ -875,7 +875,7 @@ class ExcelResidualHelperCoverageTest {
     bar3DData.addSeries(categories, values);
     bar3DChart.plot(bar3DData);
     assertInstanceOf(
-        ExcelChartSnapshot.Bar3D.class,
+        ChartReport.Bar3D.class,
         ExcelChartSnapshotSupport.snapshotChart(bar3DChart, bar3DChart.getGraphicFrame())
             .plots()
             .getFirst());
@@ -890,7 +890,7 @@ class ExcelResidualHelperCoverageTest {
     line3DData.addSeries(categories, values);
     line3DChart.plot(line3DData);
     assertInstanceOf(
-        ExcelChartSnapshot.Line3D.class,
+        ChartReport.Line3D.class,
         ExcelChartSnapshotSupport.snapshotChart(line3DChart, line3DChart.getGraphicFrame())
             .plots()
             .getFirst());

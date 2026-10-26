@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
@@ -65,19 +66,17 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
       assertNotNull(blankTitleChart.getTitleText());
       assertTrue(blankTitleChart.getTitleText().getString().isBlank());
       assertInstanceOf(
-          ExcelChartSnapshot.Title.None.class,
-          ExcelDrawingChartSupport.snapshotTitle(blankTitleChart));
+          ChartReport.Title.None.class, ExcelDrawingChartSupport.snapshotTitle(blankTitleChart));
       org.apache.poi.xssf.usermodel.XSSFChart missingTextChart =
           drawing.createChart(poiAnchor(drawing, 15, 0, 19, 6));
       missingTextChart.getCTChart().addNewTitle().addNewTx();
       assertInstanceOf(
-          ExcelChartSnapshot.Title.None.class,
-          ExcelDrawingChartSupport.snapshotTitle(missingTextChart));
+          ChartReport.Title.None.class, ExcelDrawingChartSupport.snapshotTitle(missingTextChart));
       org.apache.poi.xssf.usermodel.XSSFChart textTitleChart =
           drawing.createChart(poiAnchor(drawing, 15, 7, 19, 13));
       textTitleChart.setTitleText("Solid");
       assertEquals(
-          new ExcelChartSnapshot.Title.Text("Solid"),
+          new ChartReport.Title.Text("Solid"),
           ExcelDrawingChartSupport.snapshotTitle(textTitleChart));
 
       org.apache.poi.xssf.usermodel.XSSFChart cachedTitleChart =
@@ -135,22 +134,21 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
       assertNull(invoke(invalidPngDimensions, "heightPixels", Integer.class));
       assertEquals(
           "Ops!$A$1",
-          ExcelDrawingChartSupport.titleSummary(
-              new ExcelChartSnapshot.Title.Formula("Ops!$A$1", "")));
+          ExcelDrawingChartSupport.titleSummary(new ChartReport.Title.Formula("Ops!$A$1", "")));
       assertEquals(
           "Fallback title",
           ExcelDrawingChartSupport.titleSummary(
-              new ExcelChartSnapshot.Title.Formula("Ops!$A$1", "Fallback title")));
+              new ChartReport.Title.Formula("Ops!$A$1", "Fallback title")));
 
       var formulaSeriesTitle =
           org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx.Factory.newInstance();
       formulaSeriesTitle.addNewStrRef().setF("Ops!$A$1");
       assertEquals(
-          new ExcelChartSnapshot.Title.Formula("Ops!$A$1", ""),
+          new ChartReport.Title.Formula("Ops!$A$1", ""),
           ExcelDrawingChartSupport.snapshotSeriesTitle(formulaSeriesTitle));
       formulaSeriesTitle.getStrRef().addNewStrCache();
       assertEquals(
-          new ExcelChartSnapshot.Title.Formula("Ops!$A$1", ""),
+          new ChartReport.Title.Formula("Ops!$A$1", ""),
           ExcelDrawingChartSupport.snapshotSeriesTitle(formulaSeriesTitle));
 
       org.apache.poi.xssf.usermodel.XSSFChart applyTitleChart =

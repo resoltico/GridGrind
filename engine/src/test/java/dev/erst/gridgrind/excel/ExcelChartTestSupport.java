@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
@@ -103,15 +104,14 @@ final class ExcelChartTestSupport {
         List.of(new ResolvedChart.Pie(varyColors, Optional.ofNullable(firstSliceAngle), series)));
   }
 
-  static ExcelChartSnapshot chart(List<ExcelChartSnapshot> charts, String name) {
+  static ChartReport chart(List<ChartReport> charts, String name) {
     return charts.stream()
         .filter(snapshot -> name.equals(snapshot.name()))
         .findFirst()
         .orElseThrow();
   }
 
-  static <T extends ExcelChartSnapshot.Plot> T singlePlot(
-      ExcelChartSnapshot chart, Class<T> plotType) {
+  static <T extends ChartReport.Plot> T singlePlot(ChartReport chart, Class<T> plotType) {
     if (chart.plots().size() != 1) {
       throw new IllegalArgumentException(
           "Expected one plot for chart '" + chart.name() + "' but found " + chart.plots().size());

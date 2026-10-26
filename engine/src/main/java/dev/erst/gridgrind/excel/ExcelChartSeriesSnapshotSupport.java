@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +15,11 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
 final class ExcelChartSeriesSnapshotSupport {
   private ExcelChartSeriesSnapshotSupport() {}
 
-  static List<ExcelChartSnapshot.Series> snapshotAreaSeries(
+  static List<ChartReport.Series> snapshotAreaSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData.Series) data.getSeries(index);
@@ -29,11 +30,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotArea3DSeries(
+  static List<ChartReport.Series> snapshotArea3DSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData.Series) data.getSeries(index);
@@ -44,11 +45,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotBarSeries(
+  static List<ChartReport.Series> snapshotBarSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFBarChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series) data.getSeries(index);
@@ -59,11 +60,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotBar3DSeries(
+  static List<ChartReport.Series> snapshotBar3DSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData.Series) data.getSeries(index);
@@ -74,11 +75,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotDoughnutSeries(
+  static List<ChartReport.Series> snapshotDoughnutSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData.Series) data.getSeries(index);
@@ -96,11 +97,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotLineSeries(
+  static List<ChartReport.Series> snapshotLineSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFLineChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series) data.getSeries(index);
@@ -117,11 +118,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotLine3DSeries(
+  static List<ChartReport.Series> snapshotLine3DSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData.Series) data.getSeries(index);
@@ -138,11 +139,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotPieSeries(
+  static List<ChartReport.Series> snapshotPieSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFPieChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFPieChartData.Series) data.getSeries(index);
@@ -160,11 +161,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotPie3DSeries(
+  static List<ChartReport.Series> snapshotPie3DSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData.Series) data.getSeries(index);
@@ -182,11 +183,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotRadarSeries(
+  static List<ChartReport.Series> snapshotRadarSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFRadarChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFRadarChartData.Series) data.getSeries(index);
@@ -203,11 +204,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotScatterSeries(
+  static List<ChartReport.Series> snapshotScatterSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData.Series) data.getSeries(index);
@@ -224,11 +225,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotSurfaceSeries(
+  static List<ChartReport.Series> snapshotSurfaceSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData.Series) data.getSeries(index);
@@ -245,11 +246,11 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartSnapshot.Series> snapshotSurface3DSeries(
+  static List<ChartReport.Series> snapshotSurface3DSeries(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData data,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    List<ExcelChartSnapshot.Series> series = new ArrayList<>();
+    List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData.Series) data.getSeries(index);
@@ -266,7 +267,7 @@ final class ExcelChartSeriesSnapshotSupport {
     return List.copyOf(series);
   }
 
-  private static ExcelChartSnapshot.Series snapshotSeries(
+  private static ChartReport.Series snapshotSeries(
       @Nullable XSSFSheet contextSheet,
       XDDFChartData.Series series,
       CTSerTx title,
@@ -278,7 +279,7 @@ final class ExcelChartSeriesSnapshotSupport {
         contextSheet, series, title, smooth, markerStyle, markerSize, null, formulaRuntime);
   }
 
-  private static ExcelChartSnapshot.Series snapshotSeries(
+  private static ChartReport.Series snapshotSeries(
       @Nullable XSSFSheet contextSheet,
       XDDFChartData.Series series,
       CTSerTx title,
@@ -287,7 +288,7 @@ final class ExcelChartSeriesSnapshotSupport {
       @Nullable Short markerSize,
       @Nullable Long explosion,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    return new ExcelChartSnapshot.Series(
+    return new ChartReport.Series(
         ExcelChartTitleSnapshotSupport.snapshotSeriesTitle(contextSheet, title, formulaRuntime),
         snapshotDataSource(contextSheet, series.getCategoryData(), formulaRuntime),
         snapshotDataSource(contextSheet, series.getValuesData(), formulaRuntime),
@@ -301,7 +302,7 @@ final class ExcelChartSeriesSnapshotSupport {
     return present ? value : null;
   }
 
-  static ExcelChartSnapshot.DataSource snapshotDataSource(
+  static ChartReport.DataSource snapshotDataSource(
       @Nullable XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
@@ -313,15 +314,15 @@ final class ExcelChartSeriesSnapshotSupport {
       List<String> values =
           resolvedOrCachedReferenceValues(contextSheet, referenceFormula, source, formulaRuntime);
       return source.isNumeric()
-          ? new ExcelChartSnapshot.DataSource.NumericReference(
+          ? new ChartReport.DataSource.NumericReference(
               referenceFormula, Optional.ofNullable(source.getFormatCode()), values)
-          : new ExcelChartSnapshot.DataSource.StringReference(referenceFormula, values);
+          : new ChartReport.DataSource.StringReference(referenceFormula, values);
     }
     List<String> values = cachedPointValues(source);
     return source.isNumeric()
-        ? new ExcelChartSnapshot.DataSource.NumericLiteral(
+        ? new ChartReport.DataSource.NumericLiteral(
             Optional.ofNullable(source.getFormatCode()), values)
-        : new ExcelChartSnapshot.DataSource.StringLiteral(values);
+        : new ChartReport.DataSource.StringLiteral(values);
   }
 
   static List<String> resolvedOrCachedReferenceValues(

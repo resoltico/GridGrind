@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
@@ -30,7 +31,7 @@ public sealed interface WorkbookDrawingResult extends WorkbookReadIntrospectionR
   }
 
   /** Returns factual chart metadata for one sheet. */
-  record ChartsResult(StepId stepId, String sheetName, List<ExcelChartSnapshot> charts)
+  record ChartsResult(StepId stepId, String sheetName, List<ChartReport> charts)
       implements WorkbookDrawingResult {
     public ChartsResult {
 

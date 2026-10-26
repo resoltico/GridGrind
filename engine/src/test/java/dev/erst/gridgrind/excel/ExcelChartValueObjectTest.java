@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
@@ -122,61 +123,60 @@ class ExcelChartValueObjectTest {
   @Test
   void snapshotShapesAreTopLevelChartsWithTypedPlots() {
     DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 6, 10);
-    ExcelChartSnapshot.Axis categoryAxis =
-        new ExcelChartSnapshot.Axis(
+    ChartReport.Axis categoryAxis =
+        new ChartReport.Axis(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true);
-    ExcelChartSnapshot.Axis valueAxis =
-        new ExcelChartSnapshot.Axis(
+    ChartReport.Axis valueAxis =
+        new ChartReport.Axis(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.MIN,
             false);
-    ExcelChartSnapshot.Series lineSeries =
-        new ExcelChartSnapshot.Series(
-            new ExcelChartSnapshot.Title.Formula("Charts!$B$1", "Plan"),
-            new ExcelChartSnapshot.DataSource.StringReference(
-                "Charts!$A$2:$A$4", List.of("Jan", "Feb")),
-            new ExcelChartSnapshot.DataSource.NumericReference(
+    ChartReport.Series lineSeries =
+        new ChartReport.Series(
+            new ChartReport.Title.Formula("Charts!$B$1", "Plan"),
+            new ChartReport.DataSource.StringReference("Charts!$A$2:$A$4", List.of("Jan", "Feb")),
+            new ChartReport.DataSource.NumericReference(
                 "Charts!$B$2:$B$4", Optional.of("0.0"), List.of("10", "18")),
             Optional.of(true),
             Optional.of(ExcelChartMarkerStyle.CIRCLE),
             Optional.of((short) 8),
             Optional.empty());
-    ExcelChartSnapshot lineSnapshot =
-        new ExcelChartSnapshot(
+    ChartReport lineSnapshot =
+        new ChartReport(
             "OpsLine",
             DrawingGeometryFixtures.report(anchor),
-            new ExcelChartSnapshot.Title.None(),
-            new ExcelChartSnapshot.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+            new ChartReport.Title.None(),
+            new ChartReport.Legend.Visible(ExcelChartLegendPosition.RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
             true,
             List.of(
-                new ExcelChartSnapshot.Line(
+                new ChartReport.Line(
                     false,
                     ExcelChartGrouping.STANDARD,
                     List.of(categoryAxis, valueAxis),
                     List.of(lineSeries))));
-    ExcelChartSnapshot.Plot linePlot = lineSnapshot.plots().getFirst();
-    assertInstanceOf(ExcelChartSnapshot.Line.class, linePlot);
+    ChartReport.Plot linePlot = lineSnapshot.plots().getFirst();
+    assertInstanceOf(ChartReport.Line.class, linePlot);
 
-    ExcelChartSnapshot unsupported =
-        new ExcelChartSnapshot(
+    ChartReport unsupported =
+        new ChartReport(
             "OpsUnsupported",
             DrawingGeometryFixtures.report(anchor),
-            new ExcelChartSnapshot.Title.Text("Broken"),
-            new ExcelChartSnapshot.Legend.Hidden(),
+            new ChartReport.Title.Text("Broken"),
+            new ChartReport.Legend.Hidden(),
             ExcelChartDisplayBlanksAs.GAP,
             false,
-            List.of(new ExcelChartSnapshot.Unsupported("AREA", "unsupported")));
+            List.of(new ChartReport.Unsupported("AREA", "unsupported")));
     assertEquals(
         "AREA",
-        assertInstanceOf(ExcelChartSnapshot.Unsupported.class, unsupported.plots().getFirst())
+        assertInstanceOf(ChartReport.Unsupported.class, unsupported.plots().getFirst())
             .plotTypeToken());
 
-    List<ExcelChartSnapshot> chartSnapshots = new ArrayList<>(List.of(lineSnapshot, unsupported));
+    List<ChartReport> chartSnapshots = new ArrayList<>(List.of(lineSnapshot, unsupported));
     WorkbookDrawingResult.ChartsResult chartsResult =
         new WorkbookDrawingResult.ChartsResult(new StepId("charts"), "Charts", chartSnapshots);
     chartSnapshots.clear();
@@ -184,15 +184,12 @@ class ExcelChartValueObjectTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelChartSnapshot.DataSource.NumericReference(
-                "B2:B4", Optional.of(" "), List.of("1")));
+        () -> new ChartReport.DataSource.NumericReference("B2:B4", Optional.of(" "), List.of("1")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of(" "), List.of("1")));
+        () -> new ChartReport.DataSource.NumericLiteral(Optional.of(" "), List.of("1")));
     assertThrows(
-        NullPointerException.class,
-        () -> new ExcelChartSnapshot.Title.Formula("Charts!$B$1", null));
+        NullPointerException.class, () -> new ChartReport.Title.Formula("Charts!$B$1", null));
   }
 
   @Test
@@ -312,57 +309,57 @@ class ExcelChartValueObjectTest {
     assertEquals(13, definitionPlots.size());
     assertInstanceOf(ResolvedChart.Surface3D.class, definitionPlots.getLast());
 
-    ExcelChartSnapshot.Series snapshotSeries =
-        new ExcelChartSnapshot.Series(
-            new ExcelChartSnapshot.Title.Text("Plan"),
-            new ExcelChartSnapshot.DataSource.StringReference(
+    ChartReport.Series snapshotSeries =
+        new ChartReport.Series(
+            new ChartReport.Title.Text("Plan"),
+            new ChartReport.DataSource.StringReference(
                 "Charts!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
-            new ExcelChartSnapshot.DataSource.NumericReference(
+            new ChartReport.DataSource.NumericReference(
                 "Charts!$B$2:$B$4", Optional.of("0.0"), List.of("10", "18", "15")),
             Optional.of(true),
             Optional.of(ExcelChartMarkerStyle.STAR),
             Optional.of((short) 11),
             Optional.of(50L));
-    List<ExcelChartSnapshot.Axis> snapshotCategoryAxes =
+    List<ChartReport.Axis> snapshotCategoryAxes =
         List.of(
-            new ExcelChartSnapshot.Axis(
+            new ChartReport.Axis(
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 true),
-            new ExcelChartSnapshot.Axis(
+            new ChartReport.Axis(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
                 ExcelChartAxisCrosses.MIN,
                 false));
-    List<ExcelChartSnapshot.Axis> snapshotSurfaceAxes =
+    List<ChartReport.Axis> snapshotSurfaceAxes =
         List.of(
-            new ExcelChartSnapshot.Axis(
+            new ChartReport.Axis(
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 true),
-            new ExcelChartSnapshot.Axis(
+            new ChartReport.Axis(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 true),
-            new ExcelChartSnapshot.Axis(
+            new ChartReport.Axis(
                 ExcelChartAxisKind.SERIES,
                 ExcelChartAxisPosition.RIGHT,
                 ExcelChartAxisCrosses.MAX,
                 false));
-    List<ExcelChartSnapshot.Plot> snapshotPlots =
+    List<ChartReport.Plot> snapshotPlots =
         List.of(
-            new ExcelChartSnapshot.Area(
+            new ChartReport.Area(
                 true, ExcelChartGrouping.STANDARD, snapshotCategoryAxes, List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Area3D(
+            new ChartReport.Area3D(
                 false,
                 ExcelChartGrouping.STACKED,
                 Optional.of(110),
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Bar(
+            new ChartReport.Bar(
                 true,
                 ExcelChartBarDirection.BAR,
                 ExcelChartBarGrouping.CLUSTERED,
@@ -370,7 +367,7 @@ class ExcelChartValueObjectTest {
                 Optional.of(15),
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Bar3D(
+            new ChartReport.Bar3D(
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.PERCENT_STACKED,
@@ -379,45 +376,43 @@ class ExcelChartValueObjectTest {
                 Optional.of(ExcelChartBarShape.PYRAMID),
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Doughnut(
+            new ChartReport.Doughnut(
                 true, Optional.of(45), Optional.of(55), List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Line(
+            new ChartReport.Line(
                 false,
                 ExcelChartGrouping.PERCENT_STACKED,
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Line3D(
+            new ChartReport.Line3D(
                 true,
                 ExcelChartGrouping.STACKED,
                 Optional.of(150),
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Pie(true, Optional.of(90), List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Pie3D(false, List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Radar(
+            new ChartReport.Pie(true, Optional.of(90), List.of(snapshotSeries)),
+            new ChartReport.Pie3D(false, List.of(snapshotSeries)),
+            new ChartReport.Radar(
                 true, ExcelChartRadarStyle.FILLED, snapshotCategoryAxes, List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Scatter(
+            new ChartReport.Scatter(
                 false,
                 ExcelChartScatterStyle.LINE_MARKER,
                 List.of(
-                    new ExcelChartSnapshot.Axis(
+                    new ChartReport.Axis(
                         ExcelChartAxisKind.VALUE,
                         ExcelChartAxisPosition.BOTTOM,
                         ExcelChartAxisCrosses.MIN,
                         true),
-                    new ExcelChartSnapshot.Axis(
+                    new ChartReport.Axis(
                         ExcelChartAxisKind.VALUE,
                         ExcelChartAxisPosition.LEFT,
                         ExcelChartAxisCrosses.AUTO_ZERO,
                         true)),
                 List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Surface(
-                true, true, snapshotSurfaceAxes, List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Surface3D(
-                false, false, snapshotSurfaceAxes, List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Unsupported("CUSTOM", "detail"));
+            new ChartReport.Surface(true, true, snapshotSurfaceAxes, List.of(snapshotSeries)),
+            new ChartReport.Surface3D(false, false, snapshotSurfaceAxes, List.of(snapshotSeries)),
+            new ChartReport.Unsupported("CUSTOM", "detail"));
     assertEquals(14, snapshotPlots.size());
-    assertInstanceOf(ExcelChartSnapshot.Unsupported.class, snapshotPlots.getLast());
+    assertInstanceOf(ChartReport.Unsupported.class, snapshotPlots.getLast());
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Charts");

@@ -53,7 +53,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
-import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -149,16 +148,23 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     "CourseTable",
                     new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B4"),
                     "/CORSO/RIGHE/RIGA")));
-    ExcelChartSnapshot snapshot =
-        new ExcelChartSnapshot(
+    ChartReport snapshot =
+        new ChartReport(
             "ExtendedChart",
             DrawingGeometryFixtures.report(excelAnchor()),
-            new ExcelChartSnapshot.Title.Text("Extended"),
-            new ExcelChartSnapshot.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            new ChartReport.Title.Text("Extended"),
+            new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
             false,
-            snapshotPlots(snapshotSeries(new ExcelChartSnapshot.Title.Text("Series"))));
-    ChartReport chartReport = InspectionResultDrawingReportSupport.toChartReport(snapshot);
+            snapshotPlots(snapshotSeries(new ChartReport.Title.Text("Series"))));
+    ChartReport chartReport =
+        assertInstanceOf(
+                dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult.class,
+                InspectionResultConverter.toReadResult(
+                    new dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult(
+                        new StepId("charts"), "Foglio1", List.of(snapshot))))
+            .charts()
+            .getFirst();
     WorkbookInspectionResult.CustomXmlMappingsResult mappings =
         assertInstanceOf(
             WorkbookInspectionResult.CustomXmlMappingsResult.class,
@@ -410,11 +416,11 @@ class SpreadsheetSurfaceConverterCoverageTest {
         Optional.of(4L));
   }
 
-  private static ExcelChartSnapshot.Series snapshotSeries(ExcelChartSnapshot.Title title) {
-    return new ExcelChartSnapshot.Series(
+  private static ChartReport.Series snapshotSeries(ChartReport.Title title) {
+    return new ChartReport.Series(
         title,
-        new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan", "Feb")),
-        new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of("0.0"), List.of("10", "18")),
+        new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+        new ChartReport.DataSource.NumericLiteral(Optional.of("0.0"), List.of("10", "18")),
         Optional.of(true),
         Optional.of(ExcelChartMarkerStyle.DIAMOND),
         Optional.of((short) 6),
@@ -425,7 +431,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
     return plotVariants().stream().map(variant -> variant.inputFactory().apply(series)).toList();
   }
 
-  private static List<ExcelChartSnapshot.Plot> snapshotPlots(ExcelChartSnapshot.Series series) {
+  private static List<ChartReport.Plot> snapshotPlots(ChartReport.Series series) {
     return plotVariants().stream().map(variant -> variant.snapshotFactory().apply(series)).toList();
   }
 
@@ -436,7 +442,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
                 new ChartPlotSpec.Area(
                     false, ExcelChartGrouping.STANDARD, inputAxes(), List.of(series)),
             series ->
-                new ExcelChartSnapshot.Area(
+                new ChartReport.Area(
                     false, ExcelChartGrouping.STANDARD, snapshotAxes(), List.of(series))),
         new PlotVariant(
             series ->
@@ -447,7 +453,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     inputAxes(),
                     List.of(series)),
             series ->
-                new ExcelChartSnapshot.Area3D(
+                new ChartReport.Area3D(
                     false,
                     ExcelChartGrouping.PERCENT_STACKED,
                     Optional.of(24),
@@ -464,7 +470,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     inputAxes(),
                     List.of(series)),
             series ->
-                new ExcelChartSnapshot.Bar(
+                new ChartReport.Bar(
                     false,
                     ExcelChartBarDirection.COLUMN,
                     ExcelChartBarGrouping.CLUSTERED,
@@ -484,7 +490,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     inputAxes(),
                     List.of(series)),
             series ->
-                new ExcelChartSnapshot.Bar3D(
+                new ChartReport.Bar3D(
                     true,
                     ExcelChartBarDirection.BAR,
                     ExcelChartBarGrouping.STACKED,
@@ -497,14 +503,13 @@ class SpreadsheetSurfaceConverterCoverageTest {
             series ->
                 new ChartPlotSpec.Doughnut(true, Optional.of(30), Optional.of(55), List.of(series)),
             series ->
-                new ExcelChartSnapshot.Doughnut(
-                    true, Optional.of(30), Optional.of(55), List.of(series))),
+                new ChartReport.Doughnut(true, Optional.of(30), Optional.of(55), List.of(series))),
         new PlotVariant(
             series ->
                 new ChartPlotSpec.Line(
                     false, ExcelChartGrouping.STANDARD, inputAxes(), List.of(series)),
             series ->
-                new ExcelChartSnapshot.Line(
+                new ChartReport.Line(
                     false, ExcelChartGrouping.STANDARD, snapshotAxes(), List.of(series))),
         new PlotVariant(
             series ->
@@ -515,7 +520,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     inputAxes(),
                     List.of(series)),
             series ->
-                new ExcelChartSnapshot.Line3D(
+                new ChartReport.Line3D(
                     false,
                     ExcelChartGrouping.STANDARD,
                     Optional.of(18),
@@ -523,16 +528,16 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     List.of(series))),
         new PlotVariant(
             series -> new ChartPlotSpec.Pie(true, Optional.of(90), List.of(series)),
-            series -> new ExcelChartSnapshot.Pie(true, Optional.of(90), List.of(series))),
+            series -> new ChartReport.Pie(true, Optional.of(90), List.of(series))),
         new PlotVariant(
             series -> new ChartPlotSpec.Pie3D(true, List.of(series)),
-            series -> new ExcelChartSnapshot.Pie3D(true, List.of(series))),
+            series -> new ChartReport.Pie3D(true, List.of(series))),
         new PlotVariant(
             series ->
                 new ChartPlotSpec.Radar(
                     false, ExcelChartRadarStyle.FILLED, inputAxes(), List.of(series)),
             series ->
-                new ExcelChartSnapshot.Radar(
+                new ChartReport.Radar(
                     false, ExcelChartRadarStyle.FILLED, snapshotAxes(), List.of(series))),
         new PlotVariant(
             series ->
@@ -542,21 +547,18 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     scatterInputAxes(),
                     List.of(series)),
             series ->
-                new ExcelChartSnapshot.Scatter(
+                new ChartReport.Scatter(
                     false,
                     ExcelChartScatterStyle.SMOOTH_MARKER,
                     scatterSnapshotAxes(),
                     List.of(series))),
         new PlotVariant(
             series -> new ChartPlotSpec.Surface(false, true, surfaceInputAxes(), List.of(series)),
-            series ->
-                new ExcelChartSnapshot.Surface(
-                    false, true, surfaceSnapshotAxes(), List.of(series))),
+            series -> new ChartReport.Surface(false, true, surfaceSnapshotAxes(), List.of(series))),
         new PlotVariant(
             series -> new ChartPlotSpec.Surface3D(true, false, surfaceInputAxes(), List.of(series)),
             series ->
-                new ExcelChartSnapshot.Surface3D(
-                    true, false, surfaceSnapshotAxes(), List.of(series))));
+                new ChartReport.Surface3D(true, false, surfaceSnapshotAxes(), List.of(series))));
   }
 
   private static List<ChartAxisSpec> inputAxes() {
@@ -606,47 +608,47 @@ class SpreadsheetSurfaceConverterCoverageTest {
             true));
   }
 
-  private static List<ExcelChartSnapshot.Axis> snapshotAxes() {
+  private static List<ChartReport.Axis> snapshotAxes() {
     return List.of(
-        new ExcelChartSnapshot.Axis(
+        new ChartReport.Axis(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartSnapshot.Axis(
+        new ChartReport.Axis(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  private static List<ExcelChartSnapshot.Axis> scatterSnapshotAxes() {
+  private static List<ChartReport.Axis> scatterSnapshotAxes() {
     return List.of(
-        new ExcelChartSnapshot.Axis(
+        new ChartReport.Axis(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartSnapshot.Axis(
+        new ChartReport.Axis(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  private static List<ExcelChartSnapshot.Axis> surfaceSnapshotAxes() {
+  private static List<ChartReport.Axis> surfaceSnapshotAxes() {
     return List.of(
-        new ExcelChartSnapshot.Axis(
+        new ChartReport.Axis(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartSnapshot.Axis(
+        new ChartReport.Axis(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartSnapshot.Axis(
+        new ChartReport.Axis(
             ExcelChartAxisKind.SERIES,
             ExcelChartAxisPosition.RIGHT,
             ExcelChartAxisCrosses.AUTO_ZERO,
@@ -706,7 +708,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
 
   private record PlotVariant(
       Function<ChartSeriesSpec, ChartPlotSpec> inputFactory,
-      Function<ExcelChartSnapshot.Series, ExcelChartSnapshot.Plot> snapshotFactory) {}
+      Function<ChartReport.Series, ChartReport.Plot> snapshotFactory) {}
 
   private static List<Class<?>> plotTypes(List<?> plots) {
     return plots.stream().<Class<?>>map(Object::getClass).toList();

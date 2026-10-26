@@ -86,7 +86,8 @@ final class WorkbookInvariantWorkbookChecks {
     WorkbookInvariantEngineShapeChecks.requireEngineDrawingObjectShape(drawingObject);
   }
 
-  private static void requireEngineChartShape(dev.erst.gridgrind.excel.ExcelChartSnapshot chart) {
+  private static void requireEngineChartShape(
+      dev.erst.gridgrind.core.model.chart.ChartReport chart) {
     WorkbookInvariantEngineShapeChecks.requireEngineChartShape(chart);
   }
 

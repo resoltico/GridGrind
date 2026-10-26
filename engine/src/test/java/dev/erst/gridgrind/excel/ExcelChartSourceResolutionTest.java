@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
@@ -40,14 +41,14 @@ class ExcelChartSourceResolutionTest {
                   ExcelChartTestSupport.ref("NumericCategories"),
                   ExcelChartTestSupport.ref("ChartActual"),
                   new ChartTitleSpec.Formula("=B1")));
-      ExcelChartSnapshot formulaTitleChart =
+      ChartReport formulaTitleChart =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "FormulaTitle");
-      ExcelChartSnapshot.Title.Formula chartTitle =
-          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, formulaTitleChart.title());
+      ChartReport.Title.Formula chartTitle =
+          assertInstanceOf(ChartReport.Title.Formula.class, formulaTitleChart.title());
       assertEquals("Plan", chartTitle.cachedText());
       assertInstanceOf(
-          ExcelChartSnapshot.DataSource.NumericReference.class,
-          ExcelChartTestSupport.singlePlot(formulaTitleChart, ExcelChartSnapshot.Line.class)
+          ChartReport.DataSource.NumericReference.class,
+          ExcelChartTestSupport.singlePlot(formulaTitleChart, ChartReport.Line.class)
               .series()
               .getFirst()
               .categories());
@@ -60,13 +61,13 @@ class ExcelChartSourceResolutionTest {
                   ExcelChartTestSupport.ref("SparseCategories"),
                   ExcelChartTestSupport.ref("ChartActual"),
                   new ChartTitleSpec.None()));
-      ExcelChartSnapshot sparseChart =
+      ChartReport sparseChart =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "SparseCategoriesChart");
       assertEquals(
           List.of("true", "", ""),
           assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class,
-                  ExcelChartTestSupport.singlePlot(sparseChart, ExcelChartSnapshot.Line.class)
+                  ChartReport.DataSource.StringReference.class,
+                  ExcelChartTestSupport.singlePlot(sparseChart, ChartReport.Line.class)
                       .series()
                       .getFirst()
                       .categories())
@@ -80,14 +81,13 @@ class ExcelChartSourceResolutionTest {
                   ExcelChartTestSupport.ref("FormulaCategories"),
                   ExcelChartTestSupport.ref("FormulaValues"),
                   new ChartTitleSpec.None()));
-      ExcelChartSnapshot formulaCategoriesChart =
+      ChartReport formulaCategoriesChart =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "FormulaCategoriesChart");
       assertEquals(
           List.of("Alpha", "2.0", "true", ""),
           assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class,
-                  ExcelChartTestSupport.singlePlot(
-                          formulaCategoriesChart, ExcelChartSnapshot.Line.class)
+                  ChartReport.DataSource.StringReference.class,
+                  ExcelChartTestSupport.singlePlot(formulaCategoriesChart, ChartReport.Line.class)
                       .series()
                       .getFirst()
                       .categories())
@@ -112,13 +112,13 @@ class ExcelChartSourceResolutionTest {
                   ExcelChartTestSupport.ref("'Other'!A2:A4"),
                   ExcelChartTestSupport.ref("ChartActual"),
                   new ChartTitleSpec.None()));
-      ExcelChartSnapshot crossSheetChart =
+      ChartReport crossSheetChart =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "CrossSheetCategoriesChart");
       assertEquals(
           List.of("North", "South", "West"),
           assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class,
-                  ExcelChartTestSupport.singlePlot(crossSheetChart, ExcelChartSnapshot.Line.class)
+                  ChartReport.DataSource.StringReference.class,
+                  ExcelChartTestSupport.singlePlot(crossSheetChart, ChartReport.Line.class)
                       .series()
                       .getFirst()
                       .categories())

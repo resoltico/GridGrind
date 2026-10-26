@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
@@ -299,24 +300,20 @@ class ExcelSheetCopyControllerTest {
           DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(0, 5, 3, 9)),
           copiedPicture.anchor());
 
-      ExcelChartSnapshot copiedChart = replica.drawings().charts().getFirst();
+      ChartReport copiedChart = replica.drawings().charts().getFirst();
       assertEquals("OpsChart", copiedChart.name());
       assertEquals(
           DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(6, 1, 12, 14)),
           copiedChart.anchor());
-      ExcelChartSnapshot.Series copiedSeries =
-          ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
-              .series()
-              .getFirst();
+      ChartReport.Series copiedSeries =
+          ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
           "Replica!$A$2:$A$4",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class, copiedSeries.categories())
+          assertInstanceOf(ChartReport.DataSource.StringReference.class, copiedSeries.categories())
               .formula());
       assertEquals(
           "Replica!$B$2:$B$4",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
+          assertInstanceOf(ChartReport.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
       workbook
@@ -335,15 +332,12 @@ class ExcelSheetCopyControllerTest {
           replica.drawings().drawingObjects().stream()
               .map(ExcelDrawingObjectSnapshot::name)
               .toList());
-      ExcelChartSnapshot copiedChart = replica.drawings().charts().getFirst();
-      ExcelChartSnapshot.Series copiedSeries =
-          ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
-              .series()
-              .getFirst();
+      ChartReport copiedChart = replica.drawings().charts().getFirst();
+      ChartReport.Series copiedSeries =
+          ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
           "Replica!$A$2:$A$4",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class, copiedSeries.categories())
+          assertInstanceOf(ChartReport.DataSource.StringReference.class, copiedSeries.categories())
               .formula());
     }
   }
@@ -392,7 +386,7 @@ class ExcelSheetCopyControllerTest {
       ExcelSheet replica = workbook.sheet("Replica");
       assertEquals(
           List.of("OpsBar", "OpsLine"),
-          replica.drawings().charts().stream().map(ExcelChartSnapshot::name).toList());
+          replica.drawings().charts().stream().map(ChartReport::name).toList());
       assertEquals(
           List.of("OpsBar", "OpsLine"),
           replica.drawings().drawingObjects().stream()
@@ -439,36 +433,28 @@ class ExcelSheetCopyControllerTest {
                   .copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
       assertEquals(List.of("Source", "Replica"), workbook.sheets().sheetNames());
 
-      ExcelChartSnapshot sourceChart = workbook.sheet("Source").drawings().charts().getFirst();
-      ExcelChartSnapshot.Series sourceSeries =
-          ExcelChartTestSupport.singlePlot(sourceChart, ExcelChartSnapshot.Bar.class)
-              .series()
-              .getFirst();
+      ChartReport sourceChart = workbook.sheet("Source").drawings().charts().getFirst();
+      ChartReport.Series sourceSeries =
+          ExcelChartTestSupport.singlePlot(sourceChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
           "ChartCategories",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class, sourceSeries.categories())
+          assertInstanceOf(ChartReport.DataSource.StringReference.class, sourceSeries.categories())
               .formula());
       assertEquals(
           "ChartPlan",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.NumericReference.class, sourceSeries.values())
+          assertInstanceOf(ChartReport.DataSource.NumericReference.class, sourceSeries.values())
               .formula());
 
-      ExcelChartSnapshot copiedChart = workbook.sheet("Replica").drawings().charts().getFirst();
-      ExcelChartSnapshot.Series copiedSeries =
-          ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
-              .series()
-              .getFirst();
+      ChartReport copiedChart = workbook.sheet("Replica").drawings().charts().getFirst();
+      ChartReport.Series copiedSeries =
+          ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
           "Replica!$A$2:$A$4",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class, copiedSeries.categories())
+          assertInstanceOf(ChartReport.DataSource.StringReference.class, copiedSeries.categories())
               .formula());
       assertEquals(
           "Replica!$B$2:$B$4",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
+          assertInstanceOf(ChartReport.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
       workbook
@@ -481,36 +467,28 @@ class ExcelSheetCopyControllerTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelChartSnapshot sourceChart = reopened.sheet("Source").drawings().charts().getFirst();
-      ExcelChartSnapshot.Series sourceSeries =
-          ExcelChartTestSupport.singlePlot(sourceChart, ExcelChartSnapshot.Bar.class)
-              .series()
-              .getFirst();
+      ChartReport sourceChart = reopened.sheet("Source").drawings().charts().getFirst();
+      ChartReport.Series sourceSeries =
+          ExcelChartTestSupport.singlePlot(sourceChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
           "ChartCategories",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class, sourceSeries.categories())
+          assertInstanceOf(ChartReport.DataSource.StringReference.class, sourceSeries.categories())
               .formula());
       assertEquals(
           "ChartPlan",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.NumericReference.class, sourceSeries.values())
+          assertInstanceOf(ChartReport.DataSource.NumericReference.class, sourceSeries.values())
               .formula());
 
-      ExcelChartSnapshot copiedChart = reopened.sheet("Replica").drawings().charts().getFirst();
-      ExcelChartSnapshot.Series copiedSeries =
-          ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
-              .series()
-              .getFirst();
+      ChartReport copiedChart = reopened.sheet("Replica").drawings().charts().getFirst();
+      ChartReport.Series copiedSeries =
+          ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
           "Replica!$A$2:$A$4",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.StringReference.class, copiedSeries.categories())
+          assertInstanceOf(ChartReport.DataSource.StringReference.class, copiedSeries.categories())
               .formula());
       assertEquals(
           "Replica!$B$2:$B$4",
-          assertInstanceOf(
-                  ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
+          assertInstanceOf(ChartReport.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
     }
   }

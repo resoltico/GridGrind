@@ -2332,3 +2332,18 @@ campaign. Task daemon 56897 retained 123 workers/6056MiB at the completed idle g
 and stopped that task daemon only. Inventories: snapshots 8→7, converter lines 2909→2843, Support
 204→203, blank checks 383→382, main Java 117784→117727; reports 96→98 for distinct factual text
 contracts. Definition 1 remains. Baseline diff empty; WP-40 remains open.
+
+## WP-40 direct chart reports
+
+Deleted ExcelChartSnapshot and its title/legend/axis/series/data-source/plot hierarchy. Chart reads
+and drawing inventory now use ChartReport directly; removed the whole chart identity-conversion
+chain. Old three-field series fixtures now supply their four explicit optional presentation fields.
+Retired the standalone converter-switch test; retained real POI plot-family/cache/title behavior and
+inspection-result coverage. Mixed chart/XML inspection coverage now exercises the actual inspection
+result path rather than a deleted leaf converter.
+
+Compilation caught one helper import changed by a mechanical prefix match and four deleted-converter
+references; corrected those. Core/engine/14 parity/static checks pass (53s), deterministic check/all
+retained seeds pass (17s). ./gradlew check passes (2m53s), all 143 golden cases unchanged, no active
+mutation/fuzz campaign. Inventories: snapshots 7→6, converter lines 2843→2640, blank checks 382→379,
+main Java 117727→117154; definition 1 and Support 203 remain. Baseline diff empty. WP-40 remains open.

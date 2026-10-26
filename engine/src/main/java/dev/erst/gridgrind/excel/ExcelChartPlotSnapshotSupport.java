@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,29 +34,27 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTUnsignedInt;
 final class ExcelChartPlotSnapshotSupport {
   private ExcelChartPlotSnapshotSupport() {}
 
-  static List<ExcelChartSnapshot.Plot> snapshotPlots(
-      XSSFChart chart, List<XDDFChartData> chartData) {
+  static List<ChartReport.Plot> snapshotPlots(XSSFChart chart, List<XDDFChartData> chartData) {
     return snapshotPlots(chart, chart.getGraphicFrame(), chartData, null);
   }
 
-  static List<ExcelChartSnapshot.Plot> snapshotPlots(
+  static List<ChartReport.Plot> snapshotPlots(
       XSSFChart chart,
       List<XDDFChartData> chartData,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     return snapshotPlots(chart, chart.getGraphicFrame(), chartData, formulaRuntime);
   }
 
-  static List<ExcelChartSnapshot.Plot> snapshotPlots(
+  static List<ChartReport.Plot> snapshotPlots(
       XSSFChart chart,
       XSSFGraphicFrame graphicFrame,
       List<XDDFChartData> chartData,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (chartData.isEmpty()) {
-      return List.of(
-          new ExcelChartSnapshot.Unsupported("UNKNOWN", "Chart contains no parsed plots"));
+      return List.of(new ChartReport.Unsupported("UNKNOWN", "Chart contains no parsed plots"));
     }
 
-    List<ExcelChartSnapshot.Plot> plots = new ArrayList<>();
+    List<ChartReport.Plot> plots = new ArrayList<>();
     PlotAreaState state = new PlotAreaState(chart);
     PlotCursor cursor = new PlotCursor();
     XSSFSheet contextSheet = ExcelChartRelationSupport.contextSheet(chart, graphicFrame);
@@ -64,7 +63,7 @@ final class ExcelChartPlotSnapshotSupport {
         plots.add(snapshotPlot(contextSheet, state, cursor, data, formulaRuntime));
       } catch (RuntimeException exception) {
         plots.add(
-            new ExcelChartSnapshot.Unsupported(
+            new ChartReport.Unsupported(
                 ExcelChartDataFamilyPoiBridge.plotTypeToken(data),
                 Objects.requireNonNullElse(
                     exception.getMessage(),
@@ -74,7 +73,7 @@ final class ExcelChartPlotSnapshotSupport {
     return List.copyOf(plots);
   }
 
-  private static ExcelChartSnapshot.Plot snapshotPlot(
+  private static ChartReport.Plot snapshotPlot(
       @Nullable XSSFSheet contextSheet,
       PlotAreaState state,
       PlotCursor cursor,
@@ -83,7 +82,7 @@ final class ExcelChartPlotSnapshotSupport {
     return switch (data) {
       case org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData areaData -> {
         CTAreaChart areaChart = state.plotArea().getAreaChartArray(cursor.nextArea());
-        yield new ExcelChartSnapshot.Area(
+        yield new ChartReport.Area(
             truthy(areaChart.getVaryColors()),
             ExcelChartPoiBridge.fromGroupingTokenOrDefault(
                 areaChart.isSetGrouping() ? areaChart.getGrouping().getVal().toString() : null),
@@ -93,7 +92,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData areaData -> {
         CTArea3DChart areaChart = state.plotArea().getArea3DChartArray(cursor.nextArea3D());
-        yield new ExcelChartSnapshot.Area3D(
+        yield new ChartReport.Area3D(
             truthy(areaChart.getVaryColors()),
             ExcelChartPoiBridge.fromGroupingTokenOrDefault(
                 areaChart.isSetGrouping() ? areaChart.getGrouping().getVal().toString() : null),
@@ -104,7 +103,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFBarChartData barData -> {
         CTBarChart barChart = state.plotArea().getBarChartArray(cursor.nextBar());
-        yield new ExcelChartSnapshot.Bar(
+        yield new ChartReport.Bar(
             truthy(barChart.getVaryColors()),
             ExcelChartPoiBridge.fromPoiBarDirection(barData.getBarDirection()),
             ExcelChartPoiBridge.fromBarGroupingTokenOrDefault(
@@ -117,7 +116,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData barData -> {
         CTBar3DChart barChart = state.plotArea().getBar3DChartArray(cursor.nextBar3D());
-        yield new ExcelChartSnapshot.Bar3D(
+        yield new ChartReport.Bar3D(
             truthy(barChart.getVaryColors()),
             ExcelChartPoiBridge.fromPoiBarDirection(barData.getBarDirection()),
             ExcelChartPoiBridge.fromBarGroupingTokenOrDefault(
@@ -134,7 +133,7 @@ final class ExcelChartPlotSnapshotSupport {
       case org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData doughnutData -> {
         CTDoughnutChart doughnutChart =
             state.plotArea().getDoughnutChartArray(cursor.nextDoughnut());
-        yield new ExcelChartSnapshot.Doughnut(
+        yield new ChartReport.Doughnut(
             truthy(doughnutChart.getVaryColors()),
             Optional.ofNullable(doughnutData.getFirstSliceAngle()),
             Optional.ofNullable(doughnutData.getHoleSize()),
@@ -143,7 +142,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFLineChartData lineData -> {
         CTLineChart lineChart = state.plotArea().getLineChartArray(cursor.nextLine());
-        yield new ExcelChartSnapshot.Line(
+        yield new ChartReport.Line(
             truthy(lineChart.getVaryColors()),
             ExcelChartPoiBridge.fromGroupingTokenOrDefault(
                 lineChart.getGrouping() == null
@@ -155,7 +154,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData lineData -> {
         CTLine3DChart lineChart = state.plotArea().getLine3DChartArray(cursor.nextLine3D());
-        yield new ExcelChartSnapshot.Line3D(
+        yield new ChartReport.Line3D(
             truthy(lineChart.getVaryColors()),
             ExcelChartPoiBridge.fromGroupingTokenOrDefault(
                 lineChart.getGrouping() == null
@@ -168,7 +167,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFPieChartData pieData -> {
         CTPieChart pieChart = state.plotArea().getPieChartArray(cursor.nextPie());
-        yield new ExcelChartSnapshot.Pie(
+        yield new ChartReport.Pie(
             truthy(pieChart.getVaryColors()),
             Optional.ofNullable(pieData.getFirstSliceAngle()),
             ExcelChartSeriesSnapshotSupport.snapshotPieSeries(
@@ -176,14 +175,14 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData pie3DData -> {
         CTPie3DChart pie3DChart = state.plotArea().getPie3DChartArray(cursor.nextPie3D());
-        yield new ExcelChartSnapshot.Pie3D(
+        yield new ChartReport.Pie3D(
             truthy(pie3DChart.getVaryColors()),
             ExcelChartSeriesSnapshotSupport.snapshotPie3DSeries(
                 contextSheet, pie3DData, formulaRuntime));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFRadarChartData radarData -> {
         CTRadarChart radarChart = state.plotArea().getRadarChartArray(cursor.nextRadar());
-        yield new ExcelChartSnapshot.Radar(
+        yield new ChartReport.Radar(
             truthy(radarChart.getVaryColors()),
             ExcelChartPoiBridge.fromPoiRadarStyle(radarData.getStyle()),
             snapshotAxes(state.axesById(), radarChart.getAxIdList()),
@@ -192,7 +191,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData scatterData -> {
         CTScatterChart scatterChart = state.plotArea().getScatterChartArray(cursor.nextScatter());
-        yield new ExcelChartSnapshot.Scatter(
+        yield new ChartReport.Scatter(
             truthy(scatterChart.getVaryColors()),
             ExcelChartPoiBridge.fromPoiScatterStyle(scatterData.getStyle()),
             snapshotAxes(state.axesById(), scatterChart.getAxIdList()),
@@ -201,7 +200,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData surfaceData -> {
         CTSurfaceChart surfaceChart = state.plotArea().getSurfaceChartArray(cursor.nextSurface());
-        yield new ExcelChartSnapshot.Surface(
+        yield new ChartReport.Surface(
             false,
             Boolean.TRUE.equals(surfaceData.isWireframe()),
             snapshotAxes(state.axesById(), surfaceChart.getAxIdList()),
@@ -211,7 +210,7 @@ final class ExcelChartPlotSnapshotSupport {
       case org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData surface3DData -> {
         CTSurface3DChart surface3DChart =
             state.plotArea().getSurface3DChartArray(cursor.nextSurface3D());
-        yield new ExcelChartSnapshot.Surface3D(
+        yield new ChartReport.Surface3D(
             false,
             Boolean.TRUE.equals(surface3DData.isWireframe()),
             snapshotAxes(state.axesById(), surface3DChart.getAxIdList()),
@@ -219,20 +218,20 @@ final class ExcelChartPlotSnapshotSupport {
                 contextSheet, surface3DData, formulaRuntime));
       }
       default ->
-          new ExcelChartSnapshot.Unsupported(
+          new ChartReport.Unsupported(
               ExcelChartDataFamilyPoiBridge.plotTypeToken(data),
               "Chart plot family is outside the current modeled chart contract.");
     };
   }
 
-  static List<ExcelChartSnapshot.Axis> snapshotAxes(
+  static List<ChartReport.Axis> snapshotAxes(
       Map<Long, XDDFChartAxis> axesById, List<CTUnsignedInt> axisIds) {
-    List<ExcelChartSnapshot.Axis> axes = new ArrayList<>();
+    List<ChartReport.Axis> axes = new ArrayList<>();
     for (CTUnsignedInt axisId : axisIds) {
       XDDFChartAxis axis = axesById.get(axisId.getVal());
       if (axis != null) {
         axes.add(
-            new ExcelChartSnapshot.Axis(
+            new ChartReport.Axis(
                 ExcelChartAxisPoiBridge.axisKind(axis),
                 ExcelChartPoiBridge.fromPoiAxisPosition(axis.getPosition()),
                 ExcelChartPoiBridge.fromPoiAxisCrosses(axis.getCrosses()),

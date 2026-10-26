@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.excel.ExcelChartMutationSupport;
 import dev.erst.gridgrind.excel.ExcelChartRelationSupport;
-import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshotSupport;
 import dev.erst.gridgrind.excel.ExcelChartTitleSnapshotSupport;
 import dev.erst.gridgrind.excel.ExcelFormulaRuntime;
@@ -30,12 +30,12 @@ public final class ExcelDrawingChartSupport {
         chart, graphicFrame, formulaRuntime);
   }
 
-  public static ExcelChartSnapshot snapshotChart(
+  public static ChartReport snapshotChart(
       XSSFChart chart, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
     return snapshotChart(chart, graphicFrame, null);
   }
 
-  public static ExcelChartSnapshot snapshotChart(
+  public static ChartReport snapshotChart(
       XSSFChart chart,
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
@@ -65,7 +65,7 @@ public final class ExcelDrawingChartSupport {
     return ExcelChartRelationSupport.chartForGraphicFrame(drawing, graphicFrame);
   }
 
-  public static ExcelChartSnapshot.Title snapshotTitle(XSSFChart chart) {
+  public static ChartReport.Title snapshotTitle(XSSFChart chart) {
     return ExcelChartTitleSnapshotSupport.snapshotTitle(chart);
   }
 
@@ -89,19 +89,19 @@ public final class ExcelDrawingChartSupport {
     return ExcelChartSnapshotSupport.pieVaryColors(chart);
   }
 
-  public static ExcelChartSnapshot.Title snapshotSeriesTitle(
+  public static ChartReport.Title snapshotSeriesTitle(
       org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx title) {
     return ExcelChartTitleSnapshotSupport.snapshotSeriesTitle(title);
   }
 
-  public static ExcelChartSnapshot.Title snapshotSeriesTitle(
+  public static ChartReport.Title snapshotSeriesTitle(
       XSSFSheet contextSheet,
       org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx title,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     return ExcelChartTitleSnapshotSupport.snapshotSeriesTitle(contextSheet, title, formulaRuntime);
   }
 
-  public static String titleSummary(ExcelChartSnapshot.Title title) {
+  public static String titleSummary(ChartReport.Title title) {
     return ExcelChartTitleSnapshotSupport.titleSummary(title);
   }
 }

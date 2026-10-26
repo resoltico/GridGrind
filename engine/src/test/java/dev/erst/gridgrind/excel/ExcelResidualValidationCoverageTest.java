@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
@@ -165,10 +166,10 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartSnapshot.Series(
-                new ExcelChartSnapshot.Title.Text("Sales"),
-                new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+            new ChartReport.Series(
+                new ChartReport.Title.Text("Sales"),
+                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of((short) 1),
@@ -176,18 +177,21 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelChartSnapshot.Series(
+            new ChartReport.Series(
                 null,
-                new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(
-                    Optional.empty(), List.of("10.0"))));
+                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartSnapshot.Series(
-                new ExcelChartSnapshot.Title.Text("Sales"),
-                new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+            new ChartReport.Series(
+                new ChartReport.Title.Text("Sales"),
+                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -195,10 +199,10 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartSnapshot.Series(
-                new ExcelChartSnapshot.Title.Text("Sales"),
-                new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+            new ChartReport.Series(
+                new ChartReport.Title.Text("Sales"),
+                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of((short) 73),

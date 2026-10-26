@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
@@ -87,7 +88,7 @@ final class ExcelSheetDrawingSupport {
     return drawingController.drawingObjects(xssfSheet(), formulaRuntime);
   }
 
-  List<ExcelChartSnapshot> charts() {
+  List<ChartReport> charts() {
     return drawingController.charts(xssfSheet(), formulaRuntime);
   }
 

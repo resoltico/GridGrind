@@ -739,111 +739,6 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     assertEquals("AREA", unsupportedPlot.plotTypeToken());
   }
 
-  @Test
-  void directChartReportConversionCoversStandaloneSwitchBranches() {
-    ExcelChartSnapshot lineSnapshot =
-        chartSnapshot(
-            "OpsLine",
-            new DrawingAnchorSpec.TwoCell(
-                new DrawingMarkerSpec(2, 3, 0, 0),
-                new DrawingMarkerSpec(7, 14, 0, 0),
-                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-            new ExcelChartSnapshot.Title.None(),
-            new ExcelChartSnapshot.Legend.Hidden(),
-            ExcelChartDisplayBlanksAs.GAP,
-            true,
-            new ExcelChartSnapshot.Line(
-                false,
-                ExcelChartGrouping.STANDARD,
-                List.of(
-                    new ExcelChartSnapshot.Axis(
-                        ExcelChartAxisKind.CATEGORY,
-                        ExcelChartAxisPosition.TOP,
-                        ExcelChartAxisCrosses.AUTO_ZERO,
-                        true),
-                    new ExcelChartSnapshot.Axis(
-                        ExcelChartAxisKind.VALUE,
-                        ExcelChartAxisPosition.RIGHT,
-                        ExcelChartAxisCrosses.MAX,
-                        false)),
-                List.of(
-                    chartSnapshotSeries(
-                        new ExcelChartSnapshot.Title.None(),
-                        new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan", "Feb")),
-                        new ExcelChartSnapshot.DataSource.NumericLiteral(
-                            Optional.of("0.0"), List.of("10", "18"))))));
-    ExcelChartSnapshot pieSnapshot =
-        chartSnapshot(
-            "OpsPie",
-            new DrawingAnchorSpec.TwoCell(
-                new DrawingMarkerSpec(8, 3, 0, 0),
-                new DrawingMarkerSpec(13, 14, 0, 0),
-                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-            new ExcelChartSnapshot.Title.Formula("Budget!$C$1", "Actual"),
-            new ExcelChartSnapshot.Legend.Hidden(),
-            ExcelChartDisplayBlanksAs.ZERO,
-            false,
-            new ExcelChartSnapshot.Pie(
-                true,
-                Optional.of(120),
-                List.of(
-                    chartSnapshotSeries(
-                        new ExcelChartSnapshot.Title.Text("Actual"),
-                        new ExcelChartSnapshot.DataSource.StringReference(
-                            "ChartCategories", List.of("Jan", "Feb")),
-                        new ExcelChartSnapshot.DataSource.NumericReference(
-                            "ChartActual", Optional.of("0.0"), List.of("12", "16"))))));
-    ExcelChartSnapshot unsupportedSnapshot =
-        chartSnapshot(
-            "AreaOnly",
-            new DrawingAnchorSpec.TwoCell(
-                new DrawingMarkerSpec(14, 3, 0, 0),
-                new DrawingMarkerSpec(19, 14, 0, 0),
-                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-            new ExcelChartSnapshot.Title.None(),
-            new ExcelChartSnapshot.Legend.Hidden(),
-            ExcelChartDisplayBlanksAs.GAP,
-            true,
-            new ExcelChartSnapshot.Unsupported(
-                "AREA", "Only simple single-plot charts are modeled."));
-
-    ChartReport lineReport =
-        InspectionResultDrawingReportSupport.toChartReport((ExcelChartSnapshot) lineSnapshot);
-    ChartReport.Line linePlot =
-        assertInstanceOf(ChartReport.Line.class, lineReport.plots().getFirst());
-    ChartReport pieReport =
-        InspectionResultDrawingReportSupport.toChartReport((ExcelChartSnapshot) pieSnapshot);
-    ChartReport.Pie piePlot = assertInstanceOf(ChartReport.Pie.class, pieReport.plots().getFirst());
-    ChartReport unsupportedReport =
-        InspectionResultDrawingReportSupport.toChartReport(
-            (ExcelChartSnapshot) unsupportedSnapshot);
-    ChartReport.Unsupported unsupportedPlot =
-        assertInstanceOf(ChartReport.Unsupported.class, unsupportedReport.plots().getFirst());
-
-    assertTrue(lineReport.title() instanceof ChartReport.Title.None);
-    assertTrue(lineReport.legend() instanceof ChartReport.Legend.Hidden);
-    assertEquals(
-        List.of("Jan", "Feb"),
-        assertInstanceOf(
-                ChartReport.DataSource.StringLiteral.class,
-                linePlot.series().getFirst().categories())
-            .values());
-    assertEquals(
-        Optional.of("0.0"),
-        assertInstanceOf(
-                ChartReport.DataSource.NumericLiteral.class, linePlot.series().getFirst().values())
-            .formatCode());
-    assertEquals(
-        "Actual",
-        assertInstanceOf(ChartReport.Title.Formula.class, pieReport.title()).cachedText());
-    assertEquals(
-        List.of("12", "16"),
-        assertInstanceOf(
-                ChartReport.DataSource.NumericReference.class, piePlot.series().getFirst().values())
-            .cachedValues());
-    assertEquals("AREA", unsupportedPlot.plotTypeToken());
-  }
-
   private static dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult baseChartsResult() {
     return new dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult(
         new StepId("charts"),
@@ -855,33 +750,33 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     new DrawingMarkerSpec(1, 2, 0, 0),
                     new DrawingMarkerSpec(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
-                new ExcelChartSnapshot.Title.Text("Roadmap"),
-                new ExcelChartSnapshot.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                new ChartReport.Title.Text("Roadmap"),
+                new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
                 ExcelChartDisplayBlanksAs.SPAN,
                 false,
-                new ExcelChartSnapshot.Bar(
+                new ChartReport.Bar(
                     true,
                     ExcelChartBarDirection.COLUMN,
                     ExcelChartBarGrouping.CLUSTERED,
                     Optional.empty(),
                     Optional.empty(),
                     List.of(
-                        new ExcelChartSnapshot.Axis(
+                        new ChartReport.Axis(
                             ExcelChartAxisKind.CATEGORY,
                             ExcelChartAxisPosition.BOTTOM,
                             ExcelChartAxisCrosses.AUTO_ZERO,
                             true),
-                        new ExcelChartSnapshot.Axis(
+                        new ChartReport.Axis(
                             ExcelChartAxisKind.VALUE,
                             ExcelChartAxisPosition.LEFT,
                             ExcelChartAxisCrosses.AUTO_ZERO,
                             true)),
                     List.of(
                         chartSnapshotSeries(
-                            new ExcelChartSnapshot.Title.Formula("Chart!$B$1", "Plan"),
-                            new ExcelChartSnapshot.DataSource.StringReference(
+                            new ChartReport.Title.Formula("Chart!$B$1", "Plan"),
+                            new ChartReport.DataSource.StringReference(
                                 "ChartCategories", List.of("Jan", "Feb", "Mar")),
-                            new ExcelChartSnapshot.DataSource.NumericReference(
+                            new ChartReport.DataSource.NumericReference(
                                 "ChartValues",
                                 Optional.empty(),
                                 List.of("10.0", "18.0", "15.0"))))))));
@@ -899,29 +794,29 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     new DrawingMarkerSpec(2, 3, 0, 0),
                     new DrawingMarkerSpec(7, 14, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                new ExcelChartSnapshot.Title.None(),
-                new ExcelChartSnapshot.Legend.Hidden(),
+                new ChartReport.Title.None(),
+                new ChartReport.Legend.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,
                 true,
-                new ExcelChartSnapshot.Line(
+                new ChartReport.Line(
                     false,
                     ExcelChartGrouping.STANDARD,
                     List.of(
-                        new ExcelChartSnapshot.Axis(
+                        new ChartReport.Axis(
                             ExcelChartAxisKind.CATEGORY,
                             ExcelChartAxisPosition.BOTTOM,
                             ExcelChartAxisCrosses.AUTO_ZERO,
                             true),
-                        new ExcelChartSnapshot.Axis(
+                        new ChartReport.Axis(
                             ExcelChartAxisKind.VALUE,
                             ExcelChartAxisPosition.LEFT,
                             ExcelChartAxisCrosses.MIN,
                             true)),
                     List.of(
                         chartSnapshotSeries(
-                            new ExcelChartSnapshot.Title.None(),
-                            new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan", "Feb")),
-                            new ExcelChartSnapshot.DataSource.NumericLiteral(
+                            new ChartReport.Title.None(),
+                            new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                            new ChartReport.DataSource.NumericLiteral(
                                 Optional.of("0.0"), List.of("10", "18")))))),
             chartSnapshot(
                 "ShareChart",
@@ -929,19 +824,19 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     new DrawingMarkerSpec(8, 3, 0, 0),
                     new DrawingMarkerSpec(13, 14, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                new ExcelChartSnapshot.Title.Formula("Budget!$C$1", "Actual"),
-                new ExcelChartSnapshot.Legend.Hidden(),
+                new ChartReport.Title.Formula("Budget!$C$1", "Actual"),
+                new ChartReport.Legend.Hidden(),
                 ExcelChartDisplayBlanksAs.ZERO,
                 false,
-                new ExcelChartSnapshot.Pie(
+                new ChartReport.Pie(
                     true,
                     Optional.of(120),
                     List.of(
                         chartSnapshotSeries(
-                            new ExcelChartSnapshot.Title.Text("Actual"),
-                            new ExcelChartSnapshot.DataSource.StringReference(
+                            new ChartReport.Title.Text("Actual"),
+                            new ChartReport.DataSource.StringReference(
                                 "ChartCategories", List.of("Jan", "Feb")),
-                            new ExcelChartSnapshot.DataSource.NumericReference(
+                            new ChartReport.DataSource.NumericReference(
                                 "ChartActual", Optional.of("0.0"), List.of("12", "16")))))),
             chartSnapshot(
                 "AreaOnly",
@@ -949,24 +844,24 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     new DrawingMarkerSpec(14, 3, 0, 0),
                     new DrawingMarkerSpec(19, 14, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                new ExcelChartSnapshot.Title.None(),
-                new ExcelChartSnapshot.Legend.Hidden(),
+                new ChartReport.Title.None(),
+                new ChartReport.Legend.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,
                 true,
-                new ExcelChartSnapshot.Unsupported(
+                new ChartReport.Unsupported(
                     "AREA",
                     "Chart plot family is outside the current modeled simple-chart contract."))));
   }
 
-  private static ExcelChartSnapshot chartSnapshot(
+  private static ChartReport chartSnapshot(
       String name,
       DrawingAnchorSpec.TwoCell anchor,
-      ExcelChartSnapshot.Title title,
-      ExcelChartSnapshot.Legend legend,
+      ChartReport.Title title,
+      ChartReport.Legend legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       boolean plotOnlyVisibleCells,
-      ExcelChartSnapshot.Plot plot) {
-    return new ExcelChartSnapshot(
+      ChartReport.Plot plot) {
+    return new ChartReport(
         name,
         DrawingGeometryFixtures.report(anchor),
         title,
@@ -976,11 +871,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         List.of(plot));
   }
 
-  private static ExcelChartSnapshot.Series chartSnapshotSeries(
-      ExcelChartSnapshot.Title title,
-      ExcelChartSnapshot.DataSource categories,
-      ExcelChartSnapshot.DataSource values) {
-    return new ExcelChartSnapshot.Series(
+  private static ChartReport.Series chartSnapshotSeries(
+      ChartReport.Title title, ChartReport.DataSource categories, ChartReport.DataSource values) {
+    return new ChartReport.Series(
         title,
         categories,
         values,

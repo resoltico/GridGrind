@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -26,9 +27,9 @@ public final class ExcelChartSnapshotSupport {
       XSSFChart chart,
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    ExcelChartSnapshot snapshot = snapshotChart(chart, graphicFrame, formulaRuntime);
+    ChartReport snapshot = snapshotChart(chart, graphicFrame, formulaRuntime);
     boolean supported =
-        snapshot.plots().stream().noneMatch(ExcelChartSnapshot.Unsupported.class::isInstance);
+        snapshot.plots().stream().noneMatch(ChartReport.Unsupported.class::isInstance);
     return new ExcelDrawingObjectSnapshot.Chart(
         ExcelChartTitleSnapshotSupport.resolvedChartName(graphicFrame),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(graphicFrame)),
@@ -37,19 +38,19 @@ public final class ExcelChartSnapshotSupport {
         ExcelChartTitleSnapshotSupport.titleSummary(snapshot.title()));
   }
 
-  public static ExcelChartSnapshot snapshotChart(
+  public static ChartReport snapshotChart(
       XSSFChart chart, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
     return snapshotChart(chart, graphicFrame, null);
   }
 
-  public static ExcelChartSnapshot snapshotChart(
+  public static ChartReport snapshotChart(
       XSSFChart chart,
       XSSFGraphicFrame graphicFrame,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     List<XDDFChartData> chartData = chart.getChartSeries();
-    List<ExcelChartSnapshot.Plot> plots =
+    List<ChartReport.Plot> plots =
         ExcelChartPlotSnapshotSupport.snapshotPlots(chart, graphicFrame, chartData, formulaRuntime);
-    return new ExcelChartSnapshot(
+    return new ChartReport(
         ExcelChartTitleSnapshotSupport.resolvedChartName(graphicFrame),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(graphicFrame)),
         ExcelChartTitleSnapshotSupport.snapshotTitle(chart, graphicFrame, formulaRuntime),
@@ -102,11 +103,11 @@ public final class ExcelChartSnapshotSupport {
     return List.copyOf(tokens);
   }
 
-  private static ExcelChartSnapshot.Legend snapshotLegend(XSSFChart chart) {
+  private static ChartReport.Legend snapshotLegend(XSSFChart chart) {
     if (!chart.getCTChart().isSetLegend()) {
-      return new ExcelChartSnapshot.Legend.Hidden();
+      return new ChartReport.Legend.Hidden();
     }
-    return new ExcelChartSnapshot.Legend.Visible(
+    return new ChartReport.Legend.Visible(
         ExcelChartPoiBridge.fromPoiLegendPosition(
             new org.apache.poi.xddf.usermodel.chart.XDDFChartLegend(chart.getCTChart())
                 .getPosition()));

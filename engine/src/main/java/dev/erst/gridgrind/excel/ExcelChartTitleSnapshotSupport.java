@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
@@ -15,31 +16,29 @@ public final class ExcelChartTitleSnapshotSupport {
 
   private ExcelChartTitleSnapshotSupport() {}
 
-  public static ExcelChartSnapshot.Title snapshotTitle(XSSFChart chart) {
+  public static ChartReport.Title snapshotTitle(XSSFChart chart) {
     return snapshotTitle(chart, null);
   }
 
-  static ExcelChartSnapshot.Title snapshotTitle(
+  static ChartReport.Title snapshotTitle(
       XSSFChart chart, @Nullable ExcelFormulaRuntime formulaRuntime) {
     return snapshotTitle(chart, chart.getGraphicFrame(), formulaRuntime);
   }
 
-  static ExcelChartSnapshot.Title snapshotTitle(
+  static ChartReport.Title snapshotTitle(
       XSSFChart chart,
       @Nullable XSSFGraphicFrame graphicFrame,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (!chart.getCTChart().isSetTitle()) {
-      return new ExcelChartSnapshot.Title.None();
+      return new ChartReport.Title.None();
     }
     String formula = chart.getTitleFormula();
     if (formula != null) {
-      return new ExcelChartSnapshot.Title.Formula(
+      return new ChartReport.Title.Formula(
           formula, cachedTitleText(chart, graphicFrame, formula, formulaRuntime));
     }
     String text = chart.getTitleText().getString();
-    return text.isBlank()
-        ? new ExcelChartSnapshot.Title.None()
-        : new ExcelChartSnapshot.Title.Text(text);
+    return text.isBlank() ? new ChartReport.Title.None() : new ChartReport.Title.Text(text);
   }
 
   public static String cachedTitleText(XSSFChart chart, String formula) {
@@ -108,21 +107,21 @@ public final class ExcelChartTitleSnapshotSupport {
     }
   }
 
-  public static ExcelChartSnapshot.Title snapshotSeriesTitle(CTSerTx title) {
+  public static ChartReport.Title snapshotSeriesTitle(CTSerTx title) {
     return snapshotSeriesTitle(null, title, null);
   }
 
-  public static ExcelChartSnapshot.Title snapshotSeriesTitle(
+  public static ChartReport.Title snapshotSeriesTitle(
       @Nullable XSSFSheet contextSheet,
       @Nullable CTSerTx title,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (title == null) {
-      return new ExcelChartSnapshot.Title.None();
+      return new ChartReport.Title.None();
     }
     if (title.isSetStrRef()) {
       if (contextSheet != null) {
         try {
-          return new ExcelChartSnapshot.Title.Formula(
+          return new ChartReport.Title.Formula(
               title.getStrRef().getF(),
               ExcelChartSourceSupport.scalarText(
                   contextSheet,
@@ -137,18 +136,16 @@ public final class ExcelChartTitleSnapshotSupport {
           title.getStrRef().isSetStrCache() && title.getStrRef().getStrCache().sizeOfPtArray() > 0
               ? title.getStrRef().getStrCache().getPtArray(0).getV()
               : "";
-      return new ExcelChartSnapshot.Title.Formula(title.getStrRef().getF(), cachedText);
+      return new ChartReport.Title.Formula(title.getStrRef().getF(), cachedText);
     }
-    return title.isSetV()
-        ? new ExcelChartSnapshot.Title.Text(title.getV())
-        : new ExcelChartSnapshot.Title.None();
+    return title.isSetV() ? new ChartReport.Title.Text(title.getV()) : new ChartReport.Title.None();
   }
 
-  public static String titleSummary(ExcelChartSnapshot.Title title) {
+  public static String titleSummary(ChartReport.Title title) {
     return switch (title) {
-      case ExcelChartSnapshot.Title.None _ -> "";
-      case ExcelChartSnapshot.Title.Text text -> text.text();
-      case ExcelChartSnapshot.Title.Formula formula ->
+      case ChartReport.Title.None _ -> "";
+      case ChartReport.Title.Text text -> text.text();
+      case ChartReport.Title.Formula formula ->
           formula.cachedText().isEmpty() ? formula.formula() : formula.cachedText();
     };
   }

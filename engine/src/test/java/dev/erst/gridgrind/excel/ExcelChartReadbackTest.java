@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
@@ -106,13 +107,11 @@ class ExcelChartReadbackTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelChartSnapshot chart = reopened.sheet("Summary").drawings().charts().getFirst();
-      ExcelChartSnapshot.Line line =
-          ExcelChartTestSupport.singlePlot(chart, ExcelChartSnapshot.Line.class);
-      ExcelChartSnapshot.DataSource.NumericReference values =
+      ChartReport chart = reopened.sheet("Summary").drawings().charts().getFirst();
+      ChartReport.Line line = ExcelChartTestSupport.singlePlot(chart, ChartReport.Line.class);
+      ChartReport.DataSource.NumericReference values =
           assertInstanceOf(
-              ExcelChartSnapshot.DataSource.NumericReference.class,
-              line.series().getFirst().values());
+              ChartReport.DataSource.NumericReference.class, line.series().getFirst().values());
 
       assertEquals("C2:C4", values.formula());
       assertEquals(List.of("4.0", "6.0", "10.0"), values.cachedValues());

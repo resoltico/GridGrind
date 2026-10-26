@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -186,8 +187,8 @@ class ExcelChartFallbackCoverageTest {
       seriesPoint.setIdx(0);
       seriesPoint.setV("cached-series");
 
-      ExcelChartSnapshot.Title.Formula fallbackSeriesTitle =
-          (ExcelChartSnapshot.Title.Formula)
+      ChartReport.Title.Formula fallbackSeriesTitle =
+          (ChartReport.Title.Formula)
               ExcelChartTitleSnapshotSupport.snapshotSeriesTitle(sheet, seriesTitle, null);
       assertEquals("'Missing'!$B$1", fallbackSeriesTitle.formula());
       assertEquals("cached-series", fallbackSeriesTitle.cachedText());
@@ -234,11 +235,11 @@ class ExcelChartFallbackCoverageTest {
       assertEquals(
           "Plan", ExcelChartTitleSnapshotSupport.cachedTitleText(chart, graphicFrame, "B1", null));
 
-      ExcelChartSnapshot snapshot = ExcelChartSnapshotSupport.snapshotChart(chart, graphicFrame);
+      ChartReport snapshot = ExcelChartSnapshotSupport.snapshotChart(chart, graphicFrame);
       assertEquals("DetachedFrame", snapshot.name());
-      assertInstanceOf(ExcelChartSnapshot.Line.class, snapshot.plots().getFirst());
-      ExcelChartSnapshot.Title.Formula resolvedTitle =
-          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, snapshot.title());
+      assertInstanceOf(ChartReport.Line.class, snapshot.plots().getFirst());
+      ChartReport.Title.Formula resolvedTitle =
+          assertInstanceOf(ChartReport.Title.Formula.class, snapshot.title());
       assertEquals("B1", resolvedTitle.formula());
       assertEquals("Plan", resolvedTitle.cachedText());
     }

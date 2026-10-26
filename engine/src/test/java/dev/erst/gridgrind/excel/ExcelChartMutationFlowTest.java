@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
@@ -47,8 +48,8 @@ class ExcelChartMutationFlowTest {
                   workbook,
                   new WorkbookReadCommand.GetCharts(
                       new StepId("charts"), new ExcelChartSelection.AllOnSheet("Charts"))));
-      ExcelChartSnapshot initialLine = ExcelChartTestSupport.chart(lineRead.charts(), "OpsLine");
-      assertEquals(new ExcelChartSnapshot.Title.Text("Line roadmap"), initialLine.title());
+      ChartReport initialLine = ExcelChartTestSupport.chart(lineRead.charts(), "OpsLine");
+      assertEquals(new ChartReport.Title.Text("Line roadmap"), initialLine.title());
 
       sheet
           .drawings()
@@ -58,12 +59,11 @@ class ExcelChartMutationFlowTest {
                   ExcelChartTestSupport.anchor(6, 2, 12, 18),
                   new ResolvedChartTitle.Text("Line focus"),
                   new ResolvedChartTitle.Text("Actual")));
-      ExcelChartSnapshot updatedLine =
-          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsLine");
+      ChartReport updatedLine = ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsLine");
       assertEquals(
           DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(6, 2, 12, 18)),
           updatedLine.anchor());
-      assertEquals(new ExcelChartSnapshot.Title.Text("Line focus"), updatedLine.title());
+      assertEquals(new ChartReport.Title.Text("Line focus"), updatedLine.title());
 
       sheet
           .drawings()
@@ -73,12 +73,10 @@ class ExcelChartMutationFlowTest {
                   ExcelChartTestSupport.anchor(13, 1, 19, 12),
                   new ResolvedChartTitle.Text("Share"),
                   90));
-      ExcelChartSnapshot initialPie =
-          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsPie");
+      ChartReport initialPie = ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsPie");
       assertEquals(
           Optional.of(90),
-          ExcelChartTestSupport.singlePlot(initialPie, ExcelChartSnapshot.Pie.class)
-              .firstSliceAngle());
+          ExcelChartTestSupport.singlePlot(initialPie, ChartReport.Pie.class).firstSliceAngle());
 
       sheet
           .drawings()
@@ -88,15 +86,13 @@ class ExcelChartMutationFlowTest {
                   ExcelChartTestSupport.anchor(14, 2, 20, 13),
                   new ResolvedChartTitle.Text("Updated share"),
                   120));
-      ExcelChartSnapshot updatedPie =
-          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsPie");
+      ChartReport updatedPie = ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsPie");
       assertEquals(
           DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(14, 2, 20, 13)),
           updatedPie.anchor());
       assertEquals(
           Optional.of(120),
-          ExcelChartTestSupport.singlePlot(updatedPie, ExcelChartSnapshot.Pie.class)
-              .firstSliceAngle());
+          ExcelChartTestSupport.singlePlot(updatedPie, ChartReport.Pie.class).firstSliceAngle());
 
       WorkbookDrawingResult.ChartsResult exactChartRead =
           assertInstanceOf(
@@ -190,11 +186,9 @@ class ExcelChartMutationFlowTest {
                           Optional.empty(),
                           Optional.empty(),
                           Optional.empty()))));
-      ExcelChartSnapshot barChart =
-          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsBarSeries");
+      ChartReport barChart = ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsBarSeries");
       assertEquals(
-          1,
-          ExcelChartTestSupport.singlePlot(barChart, ExcelChartSnapshot.Bar.class).series().size());
+          1, ExcelChartTestSupport.singlePlot(barChart, ChartReport.Bar.class).series().size());
 
       sheet
           .drawings()
@@ -213,12 +207,10 @@ class ExcelChartMutationFlowTest {
                   new ResolvedChartTitle.Text("Type change"),
                   45));
 
-      ExcelChartSnapshot updatedChart =
-          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsType");
+      ChartReport updatedChart = ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsType");
       assertEquals(
           Optional.of(45),
-          ExcelChartTestSupport.singlePlot(updatedChart, ExcelChartSnapshot.Pie.class)
-              .firstSliceAngle());
+          ExcelChartTestSupport.singlePlot(updatedChart, ChartReport.Pie.class).firstSliceAngle());
 
       sheet
           .drawings()
@@ -228,14 +220,11 @@ class ExcelChartMutationFlowTest {
                   ExcelChartTestSupport.anchor(8, 32, 14, 46),
                   new ChartTitleSpec.None(),
                   new ChartTitleSpec.Formula("B2")));
-      ExcelChartSnapshot lineChart =
-          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsFormula");
-      ExcelChartSnapshot.Series firstSeries =
-          ExcelChartTestSupport.singlePlot(lineChart, ExcelChartSnapshot.Line.class)
-              .series()
-              .getFirst();
-      ExcelChartSnapshot.Title.Formula title =
-          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, firstSeries.title());
+      ChartReport lineChart = ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsFormula");
+      ChartReport.Series firstSeries =
+          ExcelChartTestSupport.singlePlot(lineChart, ChartReport.Line.class).series().getFirst();
+      ChartReport.Title.Formula title =
+          assertInstanceOf(ChartReport.Title.Formula.class, firstSeries.title());
       assertEquals("10.0", title.cachedText());
     }
   }

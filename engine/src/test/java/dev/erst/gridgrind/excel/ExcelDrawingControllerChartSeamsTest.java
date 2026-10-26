@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -172,8 +173,7 @@ class ExcelDrawingControllerChartSeamsTest {
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Charts");
       assertEquals(
-          List.of("LiveChart"),
-          sheet.drawings().charts().stream().map(ExcelChartSnapshot::name).toList());
+          List.of("LiveChart"), sheet.drawings().charts().stream().map(ChartReport::name).toList());
       assertEquals(
           List.of("LiveChart"),
           sheet.drawings().drawingObjects().stream()

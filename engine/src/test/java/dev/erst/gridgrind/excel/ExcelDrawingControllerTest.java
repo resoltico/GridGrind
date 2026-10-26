@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
@@ -330,9 +331,9 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelChartSnapshot chart = reopened.sheet("Ops").drawings().charts().getFirst();
-      ExcelChartSnapshot.Title.Formula title =
-          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
+      ChartReport chart = reopened.sheet("Ops").drawings().charts().getFirst();
+      ChartReport.Title.Formula title =
+          assertInstanceOf(ChartReport.Title.Formula.class, chart.title());
       assertEquals("Ops!$B$1", title.formula());
       assertEquals("1.0", title.cachedText());
 
@@ -440,9 +441,9 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelChartSnapshot chart = reopened.sheet("Chart").drawings().charts().getFirst();
-      ExcelChartSnapshot.Title.Formula title =
-          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
+      ChartReport chart = reopened.sheet("Chart").drawings().charts().getFirst();
+      ChartReport.Title.Formula title =
+          assertInstanceOf(ChartReport.Title.Formula.class, chart.title());
       assertEquals("Chart!$E$1", title.formula());
       assertEquals("2.0", title.cachedText());
     }
@@ -517,7 +518,7 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelChartSnapshot comboChart = reopened.sheet("Chart").drawings().charts().getFirst();
+      ChartReport comboChart = reopened.sheet("Chart").drawings().charts().getFirst();
       assertEquals("ComboChart", comboChart.name());
       assertEquals(
           List.of("BAR", "LINE"),
@@ -525,25 +526,23 @@ class ExcelDrawingControllerTest {
               .map(
                   plot ->
                       switch (plot) {
-                        case ExcelChartSnapshot.Bar _ -> "BAR";
-                        case ExcelChartSnapshot.Line _ -> "LINE";
-                        case ExcelChartSnapshot.Unsupported unsupported ->
-                            unsupported.plotTypeToken();
+                        case ChartReport.Bar _ -> "BAR";
+                        case ChartReport.Line _ -> "LINE";
+                        case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
                         default -> throw new AssertionError("Unexpected plot type: " + plot);
                       })
               .toList());
-      ExcelChartSnapshot.Bar barPlot =
-          assertInstanceOf(ExcelChartSnapshot.Bar.class, comboChart.plots().getFirst());
-      ExcelChartSnapshot.Line linePlot =
-          assertInstanceOf(ExcelChartSnapshot.Line.class, comboChart.plots().get(1));
+      ChartReport.Bar barPlot =
+          assertInstanceOf(ChartReport.Bar.class, comboChart.plots().getFirst());
+      ChartReport.Line linePlot =
+          assertInstanceOf(ChartReport.Line.class, comboChart.plots().get(1));
       assertEquals(
           "Plan",
-          assertInstanceOf(ExcelChartSnapshot.Title.Text.class, barPlot.series().getFirst().title())
+          assertInstanceOf(ChartReport.Title.Text.class, barPlot.series().getFirst().title())
               .text());
       assertEquals(
           "Actual",
-          assertInstanceOf(
-                  ExcelChartSnapshot.Title.Text.class, linePlot.series().getFirst().title())
+          assertInstanceOf(ChartReport.Title.Text.class, linePlot.series().getFirst().title())
               .text());
     }
   }
@@ -997,7 +996,7 @@ class ExcelDrawingControllerTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Chart");
-      ExcelChartSnapshot comboChart = sheet.drawings().charts().getFirst();
+      ChartReport comboChart = sheet.drawings().charts().getFirst();
       assertEquals("ComboChart", comboChart.name());
       assertEquals(
           List.of("BAR", "LINE"),
@@ -1005,10 +1004,9 @@ class ExcelDrawingControllerTest {
               .map(
                   plot ->
                       switch (plot) {
-                        case ExcelChartSnapshot.Bar _ -> "BAR";
-                        case ExcelChartSnapshot.Line _ -> "LINE";
-                        case ExcelChartSnapshot.Unsupported unsupported ->
-                            unsupported.plotTypeToken();
+                        case ChartReport.Bar _ -> "BAR";
+                        case ChartReport.Line _ -> "LINE";
+                        case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
                         default -> throw new AssertionError("Unexpected plot type: " + plot);
                       })
               .toList());
@@ -1036,11 +1034,10 @@ class ExcelDrawingControllerTest {
                           new ChartTitleSpec.Formula("B1"),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      ExcelChartSnapshot replaced = sheet.drawings().charts().getFirst();
+      ChartReport replaced = sheet.drawings().charts().getFirst();
       assertEquals("ComboChart", replaced.name());
       assertInstanceOf(
-          ExcelChartSnapshot.Bar.class,
-          ExcelChartTestSupport.singlePlot(replaced, ExcelChartSnapshot.Bar.class));
+          ChartReport.Bar.class, ExcelChartTestSupport.singlePlot(replaced, ChartReport.Bar.class));
 
       sheet.cells().setCell("F1", new CellValue.Text("Touch"));
       workbook
@@ -1098,14 +1095,14 @@ class ExcelDrawingControllerTest {
 
       sheet.drawings().setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
       sheet.drawings().setChart(lineChartDefinition(anchor(7, 3, 13, 20)));
-      ExcelChartSnapshot typeChanged = sheet.drawings().charts().getFirst();
+      ChartReport typeChanged = sheet.drawings().charts().getFirst();
       List<ExcelDrawingObjectSnapshot> drawingObjectsBeforeFailure =
           sheet.drawings().drawingObjects();
-      List<ExcelChartSnapshot> chartsBeforeFailure = sheet.drawings().charts();
+      List<ChartReport> chartsBeforeFailure = sheet.drawings().charts();
       assertEquals("OpsChart", typeChanged.name());
       assertInstanceOf(
-          ExcelChartSnapshot.Line.class,
-          ExcelChartTestSupport.singlePlot(typeChanged, ExcelChartSnapshot.Line.class));
+          ChartReport.Line.class,
+          ExcelChartTestSupport.singlePlot(typeChanged, ChartReport.Line.class));
 
       IllegalArgumentException invalidChartMutation =
           assertThrows(
@@ -1218,11 +1215,10 @@ class ExcelDrawingControllerTest {
   }
 
   private static void assertInitialChartSnapshot(ExcelSheet sheet) {
-    ExcelChartSnapshot initial = sheet.drawings().charts().getFirst();
-    ExcelChartSnapshot.Bar bar =
-        ExcelChartTestSupport.singlePlot(initial, ExcelChartSnapshot.Bar.class);
+    ChartReport initial = sheet.drawings().charts().getFirst();
+    ChartReport.Bar bar = ExcelChartTestSupport.singlePlot(initial, ChartReport.Bar.class);
     assertEquals("OpsChart", initial.name());
-    assertEquals(new ExcelChartSnapshot.Title.Text("Roadmap"), initial.title());
+    assertEquals(new ChartReport.Title.Text("Roadmap"), initial.title());
     assertEquals(ExcelChartDisplayBlanksAs.SPAN, initial.displayBlanksAs());
     assertFalse(initial.plotOnlyVisibleCells());
     assertTrue(bar.varyColors());
@@ -1232,23 +1228,21 @@ class ExcelDrawingControllerTest {
     assertEquals(
         "A2:A4",
         assertInstanceOf(
-                ExcelChartSnapshot.DataSource.StringReference.class,
-                bar.series().getFirst().categories())
+                ChartReport.DataSource.StringReference.class, bar.series().getFirst().categories())
             .formula());
-    ExcelChartSnapshot.Series namedRangeSeries = bar.series().get(1);
-    ExcelChartSnapshot.Title.Formula namedRangeSeriesTitle =
-        assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, namedRangeSeries.title());
+    ChartReport.Series namedRangeSeries = bar.series().get(1);
+    ChartReport.Title.Formula namedRangeSeriesTitle =
+        assertInstanceOf(ChartReport.Title.Formula.class, namedRangeSeries.title());
     assertTrue(namedRangeSeriesTitle.formula().endsWith("$C$1"));
     assertEquals("Actual", namedRangeSeriesTitle.cachedText());
     assertEquals(
         "ChartCategories",
         assertInstanceOf(
-                ExcelChartSnapshot.DataSource.StringReference.class, namedRangeSeries.categories())
+                ChartReport.DataSource.StringReference.class, namedRangeSeries.categories())
             .formula());
     assertEquals(
         "ChartActual",
-        assertInstanceOf(
-                ExcelChartSnapshot.DataSource.NumericReference.class, namedRangeSeries.values())
+        assertInstanceOf(ChartReport.DataSource.NumericReference.class, namedRangeSeries.values())
             .formula());
   }
 
@@ -1263,12 +1257,11 @@ class ExcelDrawingControllerTest {
 
   private static void assertUpdatedChartSnapshot(
       ExcelSheet sheet, DrawingAnchorSpec.TwoCell movedAnchor) {
-    ExcelChartSnapshot updated = sheet.drawings().charts().getFirst();
-    ExcelChartSnapshot.Bar bar =
-        ExcelChartTestSupport.singlePlot(updated, ExcelChartSnapshot.Bar.class);
+    ChartReport updated = sheet.drawings().charts().getFirst();
+    ChartReport.Bar bar = ExcelChartTestSupport.singlePlot(updated, ChartReport.Bar.class);
     assertEquals(DrawingGeometryFixtures.report(movedAnchor), updated.anchor());
-    assertEquals(new ExcelChartSnapshot.Title.Text("Actual focus"), updated.title());
-    assertInstanceOf(ExcelChartSnapshot.Legend.Hidden.class, updated.legend());
+    assertEquals(new ChartReport.Title.Text("Actual focus"), updated.title());
+    assertInstanceOf(ChartReport.Legend.Hidden.class, updated.legend());
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, updated.displayBlanksAs());
     assertTrue(updated.plotOnlyVisibleCells());
     assertFalse(bar.varyColors());
@@ -1277,14 +1270,12 @@ class ExcelDrawingControllerTest {
     assertEquals(
         "ChartCategories",
         assertInstanceOf(
-                ExcelChartSnapshot.DataSource.StringReference.class,
-                bar.series().getFirst().categories())
+                ChartReport.DataSource.StringReference.class, bar.series().getFirst().categories())
             .formula());
     assertEquals(
         "ChartActual",
         assertInstanceOf(
-                ExcelChartSnapshot.DataSource.NumericReference.class,
-                bar.series().getFirst().values())
+                ChartReport.DataSource.NumericReference.class, bar.series().getFirst().values())
             .formula());
   }
 

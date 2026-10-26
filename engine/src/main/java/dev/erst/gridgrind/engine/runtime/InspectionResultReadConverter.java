@@ -97,11 +97,7 @@ final class InspectionResultReadConverter {
                   .toList());
       case dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult charts ->
           new WorkbookAssetInspectionResult.ChartsResult(
-              charts.stepId(),
-              new SheetLabel(charts.sheetName()),
-              charts.charts().stream()
-                  .map(InspectionResultDrawingReportSupport::toChartReport)
-                  .toList());
+              charts.stepId(), new SheetLabel(charts.sheetName()), charts.charts());
       case dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult pivotTables ->
           new WorkbookAssetInspectionResult.PivotTablesResult(
               pivotTables.stepId(), pivotTables.pivotTables());

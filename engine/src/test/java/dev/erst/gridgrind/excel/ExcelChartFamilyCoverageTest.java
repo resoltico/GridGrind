@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
@@ -211,91 +212,89 @@ class ExcelChartFamilyCoverageTest {
                       surfaceAxes(),
                       List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, null)))));
 
-      List<ExcelChartSnapshot> charts = sheet.drawings().charts();
+      List<ChartReport> charts = sheet.drawings().charts();
       assertEquals(13, charts.size());
 
-      ExcelChartSnapshot.Area area =
+      ChartReport.Area area =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "AreaOps"), ExcelChartSnapshot.Area.class);
+              ExcelChartTestSupport.chart(charts, "AreaOps"), ChartReport.Area.class);
       assertTrue(area.varyColors());
       assertEquals(ExcelChartGrouping.STACKED, area.grouping());
 
-      ExcelChartSnapshot.Area3D area3D =
+      ChartReport.Area3D area3D =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "Area3DOps"), ExcelChartSnapshot.Area3D.class);
+              ExcelChartTestSupport.chart(charts, "Area3DOps"), ChartReport.Area3D.class);
       assertEquals(Optional.of(140), area3D.gapDepth());
       assertEquals(ExcelChartAxisKind.DATE, area3D.axes().getFirst().kind());
 
-      ExcelChartSnapshot.Bar bar =
+      ChartReport.Bar bar =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "BarOps"), ExcelChartSnapshot.Bar.class);
+              ExcelChartTestSupport.chart(charts, "BarOps"), ChartReport.Bar.class);
       assertEquals(ExcelChartBarDirection.BAR, bar.barDirection());
       assertEquals(ExcelChartBarGrouping.STACKED, bar.grouping());
       assertEquals(Optional.of(40), bar.overlap());
 
-      ExcelChartSnapshot.Bar3D bar3D =
+      ChartReport.Bar3D bar3D =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "Bar3DOps"), ExcelChartSnapshot.Bar3D.class);
+              ExcelChartTestSupport.chart(charts, "Bar3DOps"), ChartReport.Bar3D.class);
       assertEquals(Optional.of(ExcelChartBarShape.CYLINDER), bar3D.shape());
       assertEquals(Optional.of(120), bar3D.gapDepth());
 
-      ExcelChartSnapshot.Doughnut doughnut =
+      ChartReport.Doughnut doughnut =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "DoughnutOps"),
-              ExcelChartSnapshot.Doughnut.class);
+              ExcelChartTestSupport.chart(charts, "DoughnutOps"), ChartReport.Doughnut.class);
       assertEquals(Optional.of(35), doughnut.firstSliceAngle());
       assertEquals(Optional.of(65), doughnut.holeSize());
       assertEquals(Optional.of(30L), doughnut.series().getFirst().explosion());
 
-      ExcelChartSnapshot.Line line =
+      ChartReport.Line line =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "LineOps"), ExcelChartSnapshot.Line.class);
+              ExcelChartTestSupport.chart(charts, "LineOps"), ChartReport.Line.class);
       assertEquals(
           Optional.of(ExcelChartMarkerStyle.CIRCLE), line.series().getFirst().markerStyle());
       assertEquals(Optional.of(true), line.series().getFirst().smooth());
 
-      ExcelChartSnapshot.Line3D line3D =
+      ChartReport.Line3D line3D =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "Line3DOps"), ExcelChartSnapshot.Line3D.class);
+              ExcelChartTestSupport.chart(charts, "Line3DOps"), ChartReport.Line3D.class);
       assertEquals(Optional.of(175), line3D.gapDepth());
       assertEquals(Optional.of(false), line3D.series().getFirst().smooth());
 
-      ExcelChartSnapshot.Pie pie =
+      ChartReport.Pie pie =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "PieOps"), ExcelChartSnapshot.Pie.class);
+              ExcelChartTestSupport.chart(charts, "PieOps"), ChartReport.Pie.class);
       assertEquals(Optional.of(120), pie.firstSliceAngle());
       assertEquals(Optional.of(45L), pie.series().getFirst().explosion());
 
-      ExcelChartSnapshot.Pie3D pie3D =
+      ChartReport.Pie3D pie3D =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "Pie3DOps"), ExcelChartSnapshot.Pie3D.class);
+              ExcelChartTestSupport.chart(charts, "Pie3DOps"), ChartReport.Pie3D.class);
       assertFalse(pie3D.varyColors());
       assertEquals(Optional.of(10L), pie3D.series().getFirst().explosion());
 
-      ExcelChartSnapshot.Radar radar =
+      ChartReport.Radar radar =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "RadarOps"), ExcelChartSnapshot.Radar.class);
+              ExcelChartTestSupport.chart(charts, "RadarOps"), ChartReport.Radar.class);
       assertEquals(ExcelChartRadarStyle.MARKER, radar.style());
 
-      ExcelChartSnapshot.Scatter scatter =
+      ChartReport.Scatter scatter =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "ScatterOps"), ExcelChartSnapshot.Scatter.class);
+              ExcelChartTestSupport.chart(charts, "ScatterOps"), ChartReport.Scatter.class);
       assertEquals(ExcelChartScatterStyle.SMOOTH_MARKER, scatter.style());
       assertEquals(
           Optional.of(ExcelChartMarkerStyle.STAR), scatter.series().getFirst().markerStyle());
       assertTrue(scatter.axes().stream().allMatch(axis -> axis.kind() == ExcelChartAxisKind.VALUE));
 
-      ExcelChartSnapshot.Surface surface =
+      ChartReport.Surface surface =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "SurfaceOps"), ExcelChartSnapshot.Surface.class);
+              ExcelChartTestSupport.chart(charts, "SurfaceOps"), ChartReport.Surface.class);
       assertTrue(surface.wireframe());
       assertTrue(
           surface.axes().stream().anyMatch(axis -> axis.kind() == ExcelChartAxisKind.SERIES));
 
-      ExcelChartSnapshot.Surface3D surface3D =
+      ChartReport.Surface3D surface3D =
           ExcelChartTestSupport.singlePlot(
-              ExcelChartTestSupport.chart(charts, "Surface3DOps"),
-              ExcelChartSnapshot.Surface3D.class);
+              ExcelChartTestSupport.chart(charts, "Surface3DOps"), ChartReport.Surface3D.class);
       assertFalse(surface3D.wireframe());
 
       List<ExcelDrawingObjectSnapshot.Chart> drawingCharts =

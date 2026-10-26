@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
@@ -52,9 +53,9 @@ class ExcelChartWrapperCoverageTest {
       ExcelChartMutationSupport.validateChart(sheet, definition);
       PreparedSeriesTitle preparedTitle =
           ExcelChartMutationSupport.prepareSeriesTitle(sheet, new ChartTitleSpec.Formula("B1"));
-      ExcelChartSnapshot.Title.Formula resolvedSeriesTitle =
+      ChartReport.Title.Formula resolvedSeriesTitle =
           assertInstanceOf(
-              ExcelChartSnapshot.Title.Formula.class,
+              ChartReport.Title.Formula.class,
               ExcelDrawingChartSupport.snapshotSeriesTitle(
                   sheet,
                   formulaSeriesTitle("Charts!$B$1"),
