@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import java.util.Objects;
 
 /** One factual sort condition stored inside an autofilter sort-state payload. */
@@ -22,7 +23,7 @@ public sealed interface ExcelAutofilterSortConditionSnapshot
   }
 
   /** One cell-fill-color factual sort condition. */
-  record CellColor(String range, boolean descending, ExcelColorSnapshot color)
+  record CellColor(String range, boolean descending, CellColorReport color)
       implements ExcelAutofilterSortConditionSnapshot {
     public CellColor {
       range = requireRange(range);
@@ -31,7 +32,7 @@ public sealed interface ExcelAutofilterSortConditionSnapshot
   }
 
   /** One font-color factual sort condition. */
-  record FontColor(String range, boolean descending, ExcelColorSnapshot color)
+  record FontColor(String range, boolean descending, CellColorReport color)
       implements ExcelAutofilterSortConditionSnapshot {
     public FontColor {
       range = requireRange(range);

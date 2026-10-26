@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.core.model.layout.WindowReport;
 import dev.erst.gridgrind.core.model.layout.WindowRowReport;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
@@ -218,7 +221,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
   static ExcelCellStyleSnapshot defaultStyle() {
     return new ExcelCellStyleSnapshot(
         "",
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
         new ExcelCellFontSnapshot(
             false,
@@ -228,13 +231,13 @@ class DefaultGridGrindRequestExecutorReadSupport {
             null,
             false,
             false),
-        ExcelCellFillSnapshot.pattern(dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.NONE),
+        CellFillReport.pattern(dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
-        new ExcelCellProtectionSnapshot(true, false));
+        new CellProtectionReport(true, false));
   }
 
   static ExcelPrintSetupSnapshot defaultPrintSetupSnapshot() {

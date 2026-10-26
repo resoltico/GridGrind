@@ -1,5 +1,11 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -40,7 +46,7 @@ final class ExcelCellStyleSnapshotSupport {
   ExcelCellStyleSnapshot snapshot(XSSFCellStyle style) {
     return new ExcelCellStyleSnapshot(
         resolveNumberFormat(style.getDataFormatString()),
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             style.getWrapText(),
             ExcelCellStylePoiBridge.fromPoi(style.getAlignment()),
             ExcelCellStylePoiBridge.fromPoi(style.getVerticalAlignment()),
@@ -53,10 +59,10 @@ final class ExcelCellStyleSnapshotSupport {
             borderSideSnapshot(style.getBorderRight(), style.getRightBorderXSSFColor()),
             borderSideSnapshot(style.getBorderBottom(), style.getBottomBorderXSSFColor()),
             borderSideSnapshot(style.getBorderLeft(), style.getLeftBorderXSSFColor())),
-        new ExcelCellProtectionSnapshot(style.getLocked(), style.getHidden()));
+        new CellProtectionReport(style.getLocked(), style.getHidden()));
   }
 
-  ExcelGradientFillSnapshot gradientFillSnapshot(CTGradientFill fill) {
+  CellGradientFillReport gradientFillSnapshot(CTGradientFill fill) {
     Double left = fill.isSetLeft() ? fill.getLeft() : null;
     Double right = fill.isSetRight() ? fill.getRight() : null;
     Double top = fill.isSetTop() ? fill.getTop() : null;
@@ -64,40 +70,39 @@ final class ExcelCellStyleSnapshotSupport {
     String type =
         ExcelGradientFillGeometry.effectiveType(
             fill.isSetType() ? fill.getType().toString() : null, left, right, top, bottom);
-    java.util.List<ExcelGradientStopSnapshot> stops =
+    java.util.List<CellGradientStopReport> stops =
         java.util.Arrays.stream(fill.getStopArray()).map(this::gradientStopSnapshot).toList();
     return "PATH".equals(type)
-        ? ExcelGradientFillSnapshot.path(left, right, top, bottom, stops)
-        : ExcelGradientFillSnapshot.linear(fill.isSetDegree() ? fill.getDegree() : null, stops);
+        ? CellGradientFillReport.path(left, right, top, bottom, stops)
+        : CellGradientFillReport.linear(fill.isSetDegree() ? fill.getDegree() : null, stops);
   }
 
-  private ExcelCellFillSnapshot fillSnapshot(XSSFCellStyle style) {
+  private CellFillReport fillSnapshot(XSSFCellStyle style) {
     XSSFCellFill fill = fill(style);
     if (fill.getCTFill().isSetGradientFill()) {
-      return ExcelCellFillSnapshot.gradient(
-          gradientFillSnapshot(fill.getCTFill().getGradientFill()));
+      return CellFillReport.gradient(gradientFillSnapshot(fill.getCTFill().getGradientFill()));
     }
     var pattern = ExcelCellStylePoiBridge.fromPoi(style.getFillPattern());
     if (pattern == dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.NONE) {
-      return ExcelCellFillSnapshot.pattern(pattern);
+      return CellFillReport.pattern(pattern);
     }
-    Optional<ExcelColorSnapshot> foreground =
+    Optional<CellColorReport> foreground =
         ExcelColorSnapshotSupport.snapshot(style.getFillForegroundColorColor());
-    Optional<ExcelColorSnapshot> background =
+    Optional<CellColorReport> background =
         pattern == dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.SOLID
             ? Optional.empty()
             : ExcelColorSnapshotSupport.snapshot(style.getFillBackgroundColorColor());
     if (foreground.isPresent() && background.isPresent()) {
-      return ExcelCellFillSnapshot.patternColors(
+      return CellFillReport.patternColors(
           pattern, foreground.orElseThrow(), background.orElseThrow());
     }
     if (foreground.isPresent()) {
-      return ExcelCellFillSnapshot.patternForeground(pattern, foreground.orElseThrow());
+      return CellFillReport.patternForeground(pattern, foreground.orElseThrow());
     }
     if (background.isPresent()) {
-      return ExcelCellFillSnapshot.patternBackground(pattern, background.orElseThrow());
+      return CellFillReport.patternBackground(pattern, background.orElseThrow());
     }
-    return ExcelCellFillSnapshot.pattern(pattern);
+    return CellFillReport.pattern(pattern);
   }
 
   private XSSFCellFill fill(XSSFCellStyle style) {
@@ -105,8 +110,8 @@ final class ExcelCellStyleSnapshotSupport {
     return workbook.getStylesSource().getFillAt((int) fillId);
   }
 
-  private ExcelGradientStopSnapshot gradientStopSnapshot(CTGradientStop stop) {
-    ExcelColorSnapshot color =
+  private CellGradientStopReport gradientStopSnapshot(CTGradientStop stop) {
+    CellColorReport color =
         ExcelColorSnapshotSupport.snapshot(workbook, stop.getColor())
             .orElseThrow(
                 () ->
@@ -114,7 +119,7 @@ final class ExcelCellStyleSnapshotSupport {
                         "Gradient stop at position "
                             + stop.getPosition()
                             + " is missing its color definition."));
-    return new ExcelGradientStopSnapshot(stop.getPosition(), color);
+    return new CellGradientStopReport(stop.getPosition(), color);
   }
 
   private static ExcelBorderSideSnapshot borderSideSnapshot(

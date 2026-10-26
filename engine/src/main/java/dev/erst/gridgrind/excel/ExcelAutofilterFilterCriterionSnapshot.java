@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -63,7 +64,7 @@ public sealed interface ExcelAutofilterFilterCriterionSnapshot
   }
 
   /** One color-based filter rule. */
-  record Color(boolean cellColor, @Nullable ExcelColorSnapshot color)
+  record Color(boolean cellColor, @Nullable CellColorReport color)
       implements ExcelAutofilterFilterCriterionSnapshot {
     public Color {}
   }

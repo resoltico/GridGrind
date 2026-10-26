@@ -1,26 +1,18 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
-import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
-import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
-import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
@@ -31,40 +23,15 @@ final class InspectionResultCellStyleReportSupport {
   static CellStyleReport toCellStyleReport(ExcelCellStyleSnapshot style) {
     return new CellStyleReport(
         style.numberFormat(),
-        new CellAlignmentReport(
-            style.alignment().wrapText(),
-            style.alignment().horizontalAlignment(),
-            style.alignment().verticalAlignment(),
-            style.alignment().textRotation(),
-            style.alignment().indentation()),
+        style.alignment(),
         toCellFontReport(style.font()),
-        toCellFillReport(style.fill()),
+        style.fill(),
         new CellBorderReport(
             toCellBorderSideReport(style.border().top()),
             toCellBorderSideReport(style.border().right()),
             toCellBorderSideReport(style.border().bottom()),
             toCellBorderSideReport(style.border().left())),
-        new CellProtectionReport(style.protection().locked(), style.protection().hiddenFormula()));
-  }
-
-  static Optional<CellColorReport> toCellColorReport(@Nullable ExcelColorSnapshot color) {
-    return color == null
-        ? Optional.empty()
-        : Optional.of(
-            switch (color) {
-              case ExcelColorSnapshot.Rgb rgb ->
-                  rgb.tint().isPresent()
-                      ? CellColorReport.rgb(new RgbHex(rgb.rgb()), rgb.tint().orElseThrow())
-                      : CellColorReport.rgb(new RgbHex(rgb.rgb()));
-              case ExcelColorSnapshot.Theme theme ->
-                  theme.tint().isPresent()
-                      ? CellColorReport.theme(theme.theme(), theme.tint().orElseThrow())
-                      : CellColorReport.theme(theme.theme());
-              case ExcelColorSnapshot.Indexed indexed ->
-                  indexed.tint().isPresent()
-                      ? CellColorReport.indexed(indexed.indexed(), indexed.tint().orElseThrow())
-                      : CellColorReport.indexed(indexed.indexed());
-            });
+        style.protection());
   }
 
   static Optional<CellColorReport> toCellColorReport(@Nullable ExcelColor color) {
@@ -97,7 +64,7 @@ final class InspectionResultCellStyleReportSupport {
         font.italic(),
         font.fontName(),
         toFontHeightReport(font.fontHeight()),
-        toCellColorReport(font.fontColor()).orElse(null),
+        font.fontColor(),
         font.underline(),
         font.strikeout());
   }
@@ -106,54 +73,8 @@ final class InspectionResultCellStyleReportSupport {
     if (side.style() == ExcelBorderStyle.NONE) {
       return new CellBorderSideReport.None();
     }
-    return toCellColorReport(side.color())
+    return Optional.ofNullable(side.color())
         .<CellBorderSideReport>map(color -> new CellBorderSideReport.Colored(side.style(), color))
         .orElseGet(() -> new CellBorderSideReport.DefaultColor(side.style()));
-  }
-
-  private static CellFillReport toCellFillReport(ExcelCellFillSnapshot fill) {
-    return switch (fill) {
-      case ExcelCellFillSnapshot.PatternOnly pattern -> CellFillReport.pattern(pattern.pattern());
-      case ExcelCellFillSnapshot.PatternForeground pattern ->
-          CellFillReport.patternForeground(
-              pattern.pattern(), toCellColorReport(pattern.foregroundColor()).orElseThrow());
-      case ExcelCellFillSnapshot.PatternBackground pattern ->
-          CellFillReport.patternBackground(
-              pattern.pattern(), toCellColorReport(pattern.backgroundColor()).orElseThrow());
-      case ExcelCellFillSnapshot.PatternForegroundBackground pattern ->
-          CellFillReport.patternColors(
-              pattern.pattern(),
-              toCellColorReport(pattern.foregroundColor()).orElseThrow(),
-              toCellColorReport(pattern.backgroundColor()).orElseThrow());
-      case ExcelCellFillSnapshot.Gradient gradient ->
-          CellFillReport.gradient(toCellGradientFillReport(gradient.gradient()));
-    };
-  }
-
-  private static CellGradientFillReport toCellGradientFillReport(
-      ExcelGradientFillSnapshot gradient) {
-    return switch (gradient) {
-      case ExcelGradientFillSnapshot.Linear linear ->
-          CellGradientFillReport.linear(
-              linear.degree(),
-              linear.stops().stream()
-                  .map(
-                      stop ->
-                          new CellGradientStopReport(
-                              stop.position(), toCellColorReport(stop.color()).orElseThrow()))
-                  .toList());
-      case ExcelGradientFillSnapshot.Path path ->
-          CellGradientFillReport.path(
-              path.left(),
-              path.right(),
-              path.top(),
-              path.bottom(),
-              path.stops().stream()
-                  .map(
-                      stop ->
-                          new CellGradientStopReport(
-                              stop.position(), toCellColorReport(stop.color()).orElseThrow()))
-                  .toList());
-    };
   }
 }

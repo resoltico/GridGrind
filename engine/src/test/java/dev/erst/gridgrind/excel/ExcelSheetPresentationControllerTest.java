@@ -6,8 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -39,7 +41,7 @@ class ExcelSheetPresentationControllerTest {
 
       ExcelSheetPresentationSnapshot snapshot = controller.presentation(sheet);
       assertEquals(authored.display(), snapshot.display());
-      assertEquals(Optional.of(ExcelColorSnapshot.rgb("#112233")), snapshot.tabColor());
+      assertEquals(Optional.of(CellColorReport.rgb(new RgbHex("#112233"))), snapshot.tabColor());
       assertEquals(authored.outlineSummary(), snapshot.outlineSummary());
       assertEquals(authored.sheetDefaults(), snapshot.sheetDefaults());
       assertEquals(

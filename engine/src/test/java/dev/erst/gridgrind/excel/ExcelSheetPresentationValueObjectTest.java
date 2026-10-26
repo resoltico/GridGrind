@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +48,7 @@ class ExcelSheetPresentationValueObjectTest {
     ExcelSheetPresentationSnapshot snapshot =
         new ExcelSheetPresentationSnapshot(
             presentation.display(),
-            Optional.of(ExcelColorSnapshot.rgb("#112233")),
+            Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
             presentation.outlineSummary(),
             presentation.sheetDefaults(),
             presentation.ignoredErrors());

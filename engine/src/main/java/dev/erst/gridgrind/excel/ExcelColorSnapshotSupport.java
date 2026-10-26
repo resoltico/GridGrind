@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.xssf.model.ThemesTable;
@@ -12,7 +14,7 @@ final class ExcelColorSnapshotSupport {
   private ExcelColorSnapshotSupport() {}
 
   /** Returns one factual snapshot for the supplied workbook color, or empty when absent. */
-  static Optional<ExcelColorSnapshot> snapshot(XSSFColor color) {
+  static Optional<CellColorReport> snapshot(XSSFColor color) {
     if (color == null) {
       return Optional.empty();
     }
@@ -21,13 +23,13 @@ final class ExcelColorSnapshotSupport {
     Integer indexed = color.isIndexed() ? Short.toUnsignedInt(color.getIndexed()) : null;
     Optional<Double> tint = color.hasTint() ? Optional.of(color.getTint()) : Optional.empty();
     if (rgb != null) {
-      return Optional.of(ExcelColorSnapshot.rgb(rgb, tint));
+      return Optional.of(new CellColorReport.Rgb(new RgbHex(rgb), tint));
     }
     if (theme != null) {
-      return Optional.of(ExcelColorSnapshot.theme(theme, tint));
+      return Optional.of(new CellColorReport.Theme(theme, tint));
     }
     if (indexed != null) {
-      return Optional.of(ExcelColorSnapshot.indexed(indexed, tint));
+      return Optional.of(new CellColorReport.Indexed(indexed, tint));
     }
     throw new IllegalStateException(
         "Workbook color could not be normalized: no RGB, theme, or indexed payload was present"
@@ -35,7 +37,7 @@ final class ExcelColorSnapshotSupport {
   }
 
   /** Returns one factual snapshot for the supplied raw workbook color XML, or empty when absent. */
-  static Optional<ExcelColorSnapshot> snapshot(XSSFWorkbook workbook, CTColor color) {
+  static Optional<CellColorReport> snapshot(XSSFWorkbook workbook, CTColor color) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     if (color == null) {
       return Optional.empty();

@@ -176,7 +176,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
             presentation.display().displayRowColHeadings(),
             presentation.display().displayFormulas(),
             presentation.display().rightToLeft()),
-        presentation.tabColor().flatMap(InspectionResultCellReportSupport::toCellColorReport),
+        presentation.tabColor(),
         new SheetOutlineSummaryReport(
             presentation.outlineSummary().rowSumsBelow(),
             presentation.outlineSummary().rowSumsRight()),

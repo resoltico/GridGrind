@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import java.util.ArrayList;
 import java.util.List;
@@ -285,8 +286,7 @@ final class ExcelAutofilterOoxmlSupport {
     return STSortMethod.STROKE;
   }
 
-  static Optional<ExcelColorSnapshot> dxfColor(
-      XSSFWorkbook workbook, long dxfId, boolean cellColor) {
+  static Optional<CellColorReport> dxfColor(XSSFWorkbook workbook, long dxfId, boolean cellColor) {
     return ExcelAutofilterDxfColorSupport.dxfColor(workbook, dxfId, cellColor);
   }
 }

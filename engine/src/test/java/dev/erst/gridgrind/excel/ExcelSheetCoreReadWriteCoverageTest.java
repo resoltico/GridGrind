@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -12,6 +13,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -430,7 +432,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(220, styledValue.style().font().fontHeight().twips());
       assertFalse(styledValue.style().font().underline());
       assertFalse(styledValue.style().font().strikeout());
-      assertEquals(ExcelColorSnapshot.indexed(8), styledValue.style().font().fontColor());
+      assertEquals(CellColorReport.indexed(8), styledValue.style().font().fontColor());
       assertNull(fillForegroundColor(styledValue.style().fill()));
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().top().style());
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().right().style());
@@ -453,7 +455,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(ExcelVerticalAlignment.BOTTOM, cleared.style().alignment().verticalAlignment());
       assertEquals("Calibri", cleared.style().font().fontName());
       assertEquals(220, cleared.style().font().fontHeight().twips());
-      assertEquals(ExcelColorSnapshot.indexed(8), cleared.style().font().fontColor());
+      assertEquals(CellColorReport.indexed(8), cleared.style().font().fontColor());
       assertFalse(cleared.style().font().underline());
       assertFalse(cleared.style().font().strikeout());
       assertNull(fillForegroundColor(cleared.style().fill()));
@@ -769,7 +771,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           new ExcelSheetDisplay(false, false, false, true, true),
           unfrozenLayout.presentation().display());
       assertEquals(
-          Optional.of(ExcelColorSnapshot.rgb("#112233")), unfrozenLayout.presentation().tabColor());
+          Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
+          unfrozenLayout.presentation().tabColor());
       assertEquals(
           new ExcelSheetOutlineSummary(false, false),
           unfrozenLayout.presentation().outlineSummary());

@@ -4,6 +4,9 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -29,11 +32,8 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
@@ -230,7 +230,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
   static ExcelCellStyleSnapshot defaultStyle() {
     return new ExcelCellStyleSnapshot(
         "",
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
         new ExcelCellFontSnapshot(
             false,
@@ -240,12 +240,12 @@ class DefaultGridGrindRequestExecutorCoverageTest
             null,
             false,
             false),
-        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
-        new ExcelCellProtectionSnapshot(true, false));
+        new CellProtectionReport(true, false));
   }
 }

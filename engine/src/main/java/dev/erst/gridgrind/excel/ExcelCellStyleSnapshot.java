@@ -1,15 +1,18 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
 import java.util.Objects;
 
 /** Immutable snapshot of the style currently applied to a cell. */
 public record ExcelCellStyleSnapshot(
     String numberFormat,
-    ExcelCellAlignmentSnapshot alignment,
+    CellAlignmentReport alignment,
     ExcelCellFontSnapshot font,
-    ExcelCellFillSnapshot fill,
+    CellFillReport fill,
     ExcelBorderSnapshot border,
-    ExcelCellProtectionSnapshot protection) {
+    CellProtectionReport protection) {
   public ExcelCellStyleSnapshot {
     Objects.requireNonNull(numberFormat, "numberFormat must not be null");
     Objects.requireNonNull(alignment, "alignment must not be null");

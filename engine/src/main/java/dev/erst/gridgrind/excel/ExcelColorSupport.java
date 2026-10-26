@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import java.util.Objects;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -34,13 +35,13 @@ final class ExcelColorSupport {
     return xssfColor;
   }
 
-  static @Nullable ExcelColor copyOf(@Nullable ExcelColorSnapshot color) {
+  static @Nullable ExcelColor copyOf(@Nullable CellColorReport color) {
     return color == null
         ? null
         : switch (color) {
-          case ExcelColorSnapshot.Rgb rgb -> ExcelColor.rgb(rgb.rgb(), rgb.tint());
-          case ExcelColorSnapshot.Theme theme -> ExcelColor.theme(theme.theme(), theme.tint());
-          case ExcelColorSnapshot.Indexed indexed ->
+          case CellColorReport.Rgb rgb -> ExcelColor.rgb(rgb.rgb().value(), rgb.tint());
+          case CellColorReport.Theme theme -> ExcelColor.theme(theme.theme(), theme.tint());
+          case CellColorReport.Indexed indexed ->
               ExcelColor.indexed(indexed.indexed(), indexed.tint());
         };
   }

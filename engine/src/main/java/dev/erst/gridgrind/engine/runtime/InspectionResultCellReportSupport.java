@@ -2,7 +2,6 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
-import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
@@ -14,7 +13,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelTemporalFormatSupport;
@@ -174,10 +172,6 @@ final class InspectionResultCellReportSupport {
   static Optional<List<RichTextRunReport>> toRichTextRunReports(
       @Nullable ExcelRichTextSnapshot richText) {
     return toRichTextRunReports(Optional.ofNullable(richText));
-  }
-
-  static Optional<CellColorReport> toCellColorReport(@Nullable ExcelColorSnapshot color) {
-    return InspectionResultCellStyleReportSupport.toCellColorReport(color);
   }
 
   private static Optional<String> projectedDisplayValue(

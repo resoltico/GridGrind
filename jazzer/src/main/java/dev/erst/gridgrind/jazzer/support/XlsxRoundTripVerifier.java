@@ -1,22 +1,23 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
-import dev.erst.gridgrind.excel.ExcelGradientStopSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -173,7 +174,7 @@ public final class XlsxRoundTripVerifier {
     XSSFFont font = style.getFont();
     return new ExcelCellStyleSnapshot(
         resolveNumberFormat(style.getDataFormatString()),
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             style.getWrapText(),
             fromPoi(style.getAlignment()),
             fromPoi(style.getVerticalAlignment()),
@@ -201,43 +202,43 @@ public final class XlsxRoundTripVerifier {
             new ExcelBorderSideSnapshot(
                 fromPoi(style.getBorderLeft()),
                 toColorSnapshot(style.getLeftBorderXSSFColor()).orElse(null))),
-        new ExcelCellProtectionSnapshot(style.getLocked(), style.getHidden()));
+        new CellProtectionReport(style.getLocked(), style.getHidden()));
   }
 
-  private static ExcelCellFillSnapshot fillSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {
+  private static CellFillReport fillSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {
     XSSFCellFill fill = workbook.getStylesSource().getFillAt((int) style.getCoreXf().getFillId());
     if (fill.getCTFill().isSetGradientFill()) {
-      return ExcelCellFillSnapshot.gradient(
+      return CellFillReport.gradient(
           gradientFillSnapshot(workbook, fill.getCTFill().getGradientFill()));
     }
     ExcelFillPattern pattern = fromPoi(style.getFillPattern());
     if (pattern == ExcelFillPattern.NONE) {
-      return ExcelCellFillSnapshot.pattern(pattern);
+      return CellFillReport.pattern(pattern);
     }
-    Optional<ExcelColorSnapshot> foreground = toColorSnapshot(style.getFillForegroundColorColor());
-    ExcelColorSnapshot background =
+    Optional<CellColorReport> foreground = toColorSnapshot(style.getFillForegroundColorColor());
+    CellColorReport background =
         pattern == ExcelFillPattern.SOLID
             ? null
             : toColorSnapshot(style.getFillBackgroundColorColor()).orElse(null);
     if (foreground.isPresent() && background != null) {
-      return ExcelCellFillSnapshot.patternColors(pattern, foreground.orElseThrow(), background);
+      return CellFillReport.patternColors(pattern, foreground.orElseThrow(), background);
     }
     if (foreground.isPresent()) {
-      return ExcelCellFillSnapshot.patternForeground(pattern, foreground.orElseThrow());
+      return CellFillReport.patternForeground(pattern, foreground.orElseThrow());
     }
     if (background != null) {
-      return ExcelCellFillSnapshot.patternBackground(pattern, background);
+      return CellFillReport.patternBackground(pattern, background);
     }
-    return ExcelCellFillSnapshot.pattern(pattern);
+    return CellFillReport.pattern(pattern);
   }
 
-  private static ExcelGradientFillSnapshot gradientFillSnapshot(
+  private static CellGradientFillReport gradientFillSnapshot(
       XSSFWorkbook workbook, CTGradientFill fill) {
     Double left = fill.isSetLeft() ? fill.getLeft() : null;
     Double right = fill.isSetRight() ? fill.getRight() : null;
     Double top = fill.isSetTop() ? fill.getTop() : null;
     Double bottom = fill.isSetBottom() ? fill.getBottom() : null;
-    List<ExcelGradientStopSnapshot> stops =
+    List<CellGradientStopReport> stops =
         java.util.Arrays.stream(fill.getStopArray())
             .map(stop -> gradientStopSnapshot(workbook, stop))
             .toList();
@@ -245,11 +246,11 @@ public final class XlsxRoundTripVerifier {
         ExcelGradientFillGeometry.effectiveType(
             fill.isSetType() ? fill.getType().toString() : null, left, right, top, bottom);
     return "PATH".equals(type)
-        ? ExcelGradientFillSnapshot.path(left, right, top, bottom, stops)
-        : ExcelGradientFillSnapshot.linear(fill.isSetDegree() ? fill.getDegree() : null, stops);
+        ? CellGradientFillReport.path(left, right, top, bottom, stops)
+        : CellGradientFillReport.linear(fill.isSetDegree() ? fill.getDegree() : null, stops);
   }
 
-  private static ExcelGradientStopSnapshot gradientStopSnapshot(
+  private static CellGradientStopReport gradientStopSnapshot(
       XSSFWorkbook workbook, CTGradientStop stop) {
     XSSFColor color =
         XSSFColor.from(stop.getColor(), workbook.getStylesSource().getIndexedColors());
@@ -257,11 +258,11 @@ public final class XlsxRoundTripVerifier {
     if (themes != null) {
       themes.inheritFromThemeAsRequired(color);
     }
-    ExcelColorSnapshot snapshot =
+    CellColorReport snapshot =
         java.util.Objects.requireNonNull(
             toColorSnapshot(color).orElse(null),
             "gradient stop color must resolve to one snapshot");
-    return new ExcelGradientStopSnapshot(stop.getPosition(), snapshot);
+    return new CellGradientStopReport(stop.getPosition(), snapshot);
   }
 
   private static void requireColorShape(XSSFColor color, String label) {
@@ -273,7 +274,7 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
-  private static Optional<ExcelColorSnapshot> toColorSnapshot(XSSFColor color) {
+  private static Optional<CellColorReport> toColorSnapshot(XSSFColor color) {
     if (color == null) {
       return Optional.empty();
     }
@@ -295,13 +296,13 @@ public final class XlsxRoundTripVerifier {
       return Optional.empty();
     }
     if (rgbHex != null) {
-      return Optional.of(ExcelColorSnapshot.rgb(rgbHex, tint));
+      return Optional.of(new CellColorReport.Rgb(new RgbHex(rgbHex), tint));
     }
     if (theme != null) {
-      return Optional.of(ExcelColorSnapshot.theme(theme, tint));
+      return Optional.of(new CellColorReport.Theme(theme, tint));
     }
     return Optional.of(
-        ExcelColorSnapshot.indexed(
+        new CellColorReport.Indexed(
             java.util.Objects.requireNonNull(indexed, "indexed color must be present"), tint));
   }
 

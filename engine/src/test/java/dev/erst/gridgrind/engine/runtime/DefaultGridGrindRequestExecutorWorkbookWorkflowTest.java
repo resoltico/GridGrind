@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
@@ -89,7 +90,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
@@ -785,7 +785,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         new ExcelSheetDisplay(false, false, false, true, true),
         reopenedLayout.presentation().display());
     assertEquals(
-        Optional.of(ExcelColorSnapshot.rgb("#112233")), reopenedLayout.presentation().tabColor());
+        Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
+        reopenedLayout.presentation().tabColor());
     assertEquals(
         new ExcelSheetOutlineSummary(false, false), reopenedLayout.presentation().outlineSummary());
     assertEquals(new ExcelSheetDefaults(11, 18.5d), reopenedLayout.presentation().sheetDefaults());

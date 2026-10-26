@@ -2,10 +2,15 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,10 +201,10 @@ class ExcelRichTextSupportTest {
       ExcelRichTextSnapshot snapshot =
           ExcelRichTextSupport.snapshot(workbook, richText, baseFont()).orElseThrow();
 
-      assertEquals(ExcelColorSnapshot.theme(4, -0.20d), snapshot.runs().get(0).font().fontColor());
+      assertEquals(CellColorReport.theme(4, -0.20d), snapshot.runs().get(0).font().fontColor());
       assertEquals(baseFont().fontColor(), snapshot.runs().get(1).font().fontColor());
       assertEquals(
-          ExcelColorSnapshot.indexed(Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex())),
+          CellColorReport.indexed(Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex())),
           snapshot.runs().get(2).font().fontColor());
     }
   }
@@ -260,7 +265,7 @@ class ExcelRichTextSupportTest {
       assertFalse(alpha.font().italic());
       assertEquals("Courier New", alpha.font().fontName());
       assertEquals(ExcelFontHeight.fromPoints(new BigDecimal("14")), alpha.font().fontHeight());
-      assertEquals(ExcelColorSnapshot.rgb("#123456"), alpha.font().fontColor());
+      assertEquals(CellColorReport.rgb(new RgbHex("#123456")), alpha.font().fontColor());
       assertFalse(alpha.font().underline());
       assertTrue(alpha.font().strikeout());
 
@@ -270,7 +275,7 @@ class ExcelRichTextSupportTest {
       assertTrue(beta.font().italic());
       assertEquals(baseFont().fontName(), beta.font().fontName());
       assertEquals(baseFont().fontHeight(), beta.font().fontHeight());
-      assertEquals(ExcelColorSnapshot.rgb("#ABCDEF"), beta.font().fontColor());
+      assertEquals(CellColorReport.rgb(new RgbHex("#ABCDEF")), beta.font().fontColor());
       assertTrue(beta.font().underline());
       assertFalse(beta.font().strikeout());
 
@@ -320,7 +325,7 @@ class ExcelRichTextSupportTest {
       assertTrue(font.italic());
       assertEquals("Fira Code", font.fontName());
       assertEquals(ExcelFontHeight.fromPoints(new BigDecimal("18")), font.fontHeight());
-      assertEquals(ExcelColorSnapshot.rgb("#00AA11"), font.fontColor());
+      assertEquals(CellColorReport.rgb(new RgbHex("#00AA11")), font.fontColor());
       assertTrue(font.underline());
       assertTrue(font.strikeout());
     }
@@ -399,7 +404,8 @@ class ExcelRichTextSupportTest {
       assertEquals(
           ExcelFontHeight.fromPoints(new BigDecimal("13")),
           snapshot.runs().get(1).font().fontHeight());
-      assertEquals(ExcelColorSnapshot.rgb("#ABCDEF"), snapshot.runs().get(2).font().fontColor());
+      assertEquals(
+          CellColorReport.rgb(new RgbHex("#ABCDEF")), snapshot.runs().get(2).font().fontColor());
       assertFalse(snapshot.runs().get(3).font().underline());
       assertTrue(snapshot.runs().get(4).font().strikeout());
     }
@@ -411,7 +417,7 @@ class ExcelRichTextSupportTest {
         true,
         "Aptos",
         ExcelFontHeight.fromPoints(new BigDecimal("11")),
-        ExcelColorSnapshot.rgb("#654321"),
+        CellColorReport.rgb(new RgbHex("#654321")),
         true,
         false);
   }
@@ -419,15 +425,15 @@ class ExcelRichTextSupportTest {
   private static ExcelCellStyleSnapshot defaultStyle() {
     return new ExcelCellStyleSnapshot(
         "",
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
         baseFont(),
-        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
-        new ExcelCellProtectionSnapshot(true, false));
+        new CellProtectionReport(true, false));
   }
 }

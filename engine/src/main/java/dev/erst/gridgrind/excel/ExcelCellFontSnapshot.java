@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -9,7 +10,7 @@ public record ExcelCellFontSnapshot(
     boolean italic,
     String fontName,
     ExcelFontHeight fontHeight,
-    @Nullable ExcelColorSnapshot fontColor,
+    @Nullable CellColorReport fontColor,
     boolean underline,
     boolean strikeout) {
   public ExcelCellFontSnapshot {

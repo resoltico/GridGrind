@@ -90,7 +90,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
@@ -179,21 +178,6 @@ class RuntimeResidualCoverageTest {
     assertEquals(Optional.of(0.25d), color.orElseThrow().tint());
     assertEquals("Prompt title", prompt.orElseThrow().title());
     assertEquals(ExcelDataValidationErrorStyle.WARNING, alert.orElseThrow().style());
-
-    assertEquals(
-        Optional.empty(),
-        InspectionResultCellReportSupport.toCellColorReport((ExcelColorSnapshot) null));
-    assertEquals(
-        Optional.of(
-            dev.erst.gridgrind.core.model.style.CellColorReport.rgb(new RgbHex("#112233"), 0.25d)),
-        InspectionResultCellReportSupport.toCellColorReport(
-            ExcelColorSnapshot.rgb("#112233", 0.25d)));
-    assertEquals(
-        Optional.of(dev.erst.gridgrind.core.model.style.CellColorReport.theme(3)),
-        InspectionResultCellReportSupport.toCellColorReport(ExcelColorSnapshot.theme(3)));
-    assertEquals(
-        Optional.of(dev.erst.gridgrind.core.model.style.CellColorReport.indexed(7, -0.5d)),
-        InspectionResultCellReportSupport.toCellColorReport(ExcelColorSnapshot.indexed(7, -0.5d)));
   }
 
   @Test

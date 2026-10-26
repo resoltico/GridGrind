@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -11,6 +13,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
@@ -1098,12 +1101,12 @@ class ExcelWorkbookTest {
       ExcelCellStyleSnapshot linearStyle =
           reopenedWorkbook.sheet("Budget").cells().snapshotCell("A1").style();
 
-      ExcelGradientFillSnapshot gradient = fillGradient(linearStyle.fill());
+      CellGradientFillReport gradient = fillGradient(linearStyle.fill());
       assertEquals("LINEAR", gradientType(gradient));
       assertEquals(42.5d, gradientDegree(gradient));
       assertNull(gradientLeft(gradient));
-      assertEquals(ExcelColorSnapshot.rgb("#736C00"), gradient.stops().get(0).color());
-      assertEquals(ExcelColorSnapshot.theme(3), gradient.stops().get(1).color());
+      assertEquals(CellColorReport.rgb(new RgbHex("#736C00")), gradient.stops().get(0).color());
+      assertEquals(CellColorReport.theme(3), gradient.stops().get(1).color());
       assertTrue(linearStyle.protection().locked());
       assertTrue(linearStyle.protection().hiddenFormula());
     }
@@ -1378,8 +1381,8 @@ class ExcelWorkbookTest {
         true);
   }
 
-  private static ExcelColorSnapshot rgb(String rgb) {
-    return ExcelColorSnapshot.rgb(rgb);
+  private static CellColorReport rgb(String rgb) {
+    return CellColorReport.rgb(new RgbHex(rgb));
   }
 
   private static boolean columnDefinitionsAreCanonical(XSSFSheet sheet) {

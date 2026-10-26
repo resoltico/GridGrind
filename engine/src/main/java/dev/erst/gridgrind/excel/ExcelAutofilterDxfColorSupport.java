@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import java.util.Optional;
 import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -9,8 +10,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf;
 final class ExcelAutofilterDxfColorSupport {
   private ExcelAutofilterDxfColorSupport() {}
 
-  static Optional<ExcelColorSnapshot> dxfColor(
-      XSSFWorkbook workbook, long dxfId, boolean cellColor) {
+  static Optional<CellColorReport> dxfColor(XSSFWorkbook workbook, long dxfId, boolean cellColor) {
     CTDxf dxf = dxfAt(workbook.getStylesSource(), dxfId).orElse(null);
     if (dxf == null) {
       return Optional.empty();
@@ -18,16 +18,16 @@ final class ExcelAutofilterDxfColorSupport {
     return preferredDxfColor(workbook, dxf, cellColor).or(() -> fallbackDxfColor(workbook, dxf));
   }
 
-  private static Optional<ExcelColorSnapshot> preferredDxfColor(
+  private static Optional<CellColorReport> preferredDxfColor(
       XSSFWorkbook workbook, CTDxf dxf, boolean cellColor) {
     return cellColor ? fillColor(workbook, dxf) : fontColor(workbook, dxf);
   }
 
-  private static Optional<ExcelColorSnapshot> fallbackDxfColor(XSSFWorkbook workbook, CTDxf dxf) {
+  private static Optional<CellColorReport> fallbackDxfColor(XSSFWorkbook workbook, CTDxf dxf) {
     return fillColor(workbook, dxf).or(() -> fontColor(workbook, dxf));
   }
 
-  private static Optional<ExcelColorSnapshot> fillColor(XSSFWorkbook workbook, CTDxf dxf) {
+  private static Optional<CellColorReport> fillColor(XSSFWorkbook workbook, CTDxf dxf) {
     if (!dxf.isSetFill()
         || !dxf.getFill().isSetPatternFill()
         || !dxf.getFill().getPatternFill().isSetFgColor()) {
@@ -37,7 +37,7 @@ final class ExcelAutofilterDxfColorSupport {
         workbook, dxf.getFill().getPatternFill().getFgColor());
   }
 
-  private static Optional<ExcelColorSnapshot> fontColor(XSSFWorkbook workbook, CTDxf dxf) {
+  private static Optional<CellColorReport> fontColor(XSSFWorkbook workbook, CTDxf dxf) {
     if (!dxf.isSetFont() || dxf.getFont().sizeOfColorArray() == 0) {
       return Optional.empty();
     }

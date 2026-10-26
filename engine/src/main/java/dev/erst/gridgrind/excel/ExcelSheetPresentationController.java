@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import java.util.Comparator;
@@ -71,7 +72,7 @@ final class ExcelSheetPresentationController {
     sheet.setTabColor(ExcelColorSupport.toXssfColor(sheet.getWorkbook(), tabColor.orElseThrow()));
   }
 
-  private static Optional<ExcelColorSnapshot> tabColor(XSSFSheet sheet) {
+  private static Optional<CellColorReport> tabColor(XSSFSheet sheet) {
     XSSFColor color = sheet.getTabColor();
     return ExcelColorSnapshotSupport.snapshot(color);
   }

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -11,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdTyp
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
@@ -460,7 +462,7 @@ class ExcelSheetCopyControllerTest {
                           4L,
                           true,
                           new ExcelAutofilterFilterCriterionSnapshot.Color(
-                              false, ExcelColorSnapshot.rgb("#AABBCC"))),
+                              false, CellColorReport.rgb(new RgbHex("#AABBCC")))),
                       new ExcelAutofilterFilterColumnSnapshot(
                           5L,
                           true,
@@ -474,7 +476,7 @@ class ExcelSheetCopyControllerTest {
                               dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.STROKE),
                           List.of(
                               new ExcelAutofilterSortConditionSnapshot.CellColor(
-                                  "A2:A3", true, ExcelColorSnapshot.rgb("#102030")),
+                                  "A2:A3", true, CellColorReport.rgb(new RgbHex("#102030"))),
                               new ExcelAutofilterSortConditionSnapshot.Icon("B2:B3", false, 4)))))),
           autofilterController.sheetOwnedAutofilters(replica.xssfSheet()));
       List<ExcelDataValidationSnapshot> replicaValidations =

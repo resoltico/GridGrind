@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
@@ -29,18 +31,15 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFill;
-import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
@@ -94,7 +93,7 @@ class ExecutorConverterDelegationCoverageTest {
                     false,
                     "Calibri",
                     new ExcelFontHeight(220),
-                    ExcelColorSnapshot.rgb("#112233"),
+                    CellColorReport.rgb(new RgbHex("#112233")),
                     false,
                     false))
             .fontName());
@@ -104,7 +103,7 @@ class ExecutorConverterDelegationCoverageTest {
                 CellBorderSideReport.Colored.class,
                 InspectionResultCellStyleReportSupport.toCellBorderSideReport(
                     new ExcelBorderSideSnapshot(
-                        ExcelBorderStyle.THIN, ExcelColorSnapshot.rgb("#112233"))))
+                        ExcelBorderStyle.THIN, CellColorReport.rgb(new RgbHex("#112233")))))
             .style());
   }
 
@@ -126,18 +125,18 @@ class ExecutorConverterDelegationCoverageTest {
         InspectionResultCellStyleReportSupport.toCellStyleReport(
             new ExcelCellStyleSnapshot(
                 "General",
-                new ExcelCellAlignmentSnapshot(
+                new CellAlignmentReport(
                     false, ExcelHorizontalAlignment.LEFT, ExcelVerticalAlignment.BOTTOM, 0, 0),
                 new ExcelCellFontSnapshot(
                     false, false, "Aptos", new ExcelFontHeight(220), null, false, false),
-                ExcelCellFillSnapshot.patternBackground(
-                    ExcelFillPattern.BRICKS, ExcelColorSnapshot.indexed(10)),
+                CellFillReport.patternBackground(
+                    ExcelFillPattern.BRICKS, CellColorReport.indexed(10)),
                 new ExcelBorderSnapshot(
                     new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
                     new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
                     new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
                     new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
-                new ExcelCellProtectionSnapshot(true, false)));
+                new CellProtectionReport(true, false)));
     CellFillReport.PatternBackground backgroundOnlyFill =
         assertInstanceOf(CellFillReport.PatternBackground.class, backgroundOnlyReport.fill());
 

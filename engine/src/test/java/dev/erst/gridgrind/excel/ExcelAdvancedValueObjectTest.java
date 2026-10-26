@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -11,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
@@ -447,7 +449,7 @@ class ExcelAdvancedValueObjectTest {
                                 false,
                                 "Aptos",
                                 ExcelFontHeight.fromPoints(java.math.BigDecimal.valueOf(11)),
-                                ExcelColorSnapshot.rgb("#112233"),
+                                CellColorReport.rgb(new RgbHex("#112233")),
                                 false,
                                 false))))),
             Optional.of(new ExcelCommentAnchorSnapshot(1, 2, 4, 6)));

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -13,6 +14,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
@@ -383,7 +385,8 @@ class WorkbookCommandExecutorTest {
       WorkbookSheetResult.SheetLayout layout = workbook.sheet("Budget").layout().snapshot();
       assertEquals(presentation.display(), layout.presentation().display());
       assertEquals(
-          Optional.of(ExcelColorSnapshot.rgb("#225577")), layout.presentation().tabColor());
+          Optional.of(CellColorReport.rgb(new RgbHex("#225577"))),
+          layout.presentation().tabColor());
       assertEquals(presentation.outlineSummary(), layout.presentation().outlineSummary());
       assertEquals(presentation.sheetDefaults(), layout.presentation().sheetDefaults());
       assertEquals(

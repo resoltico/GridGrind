@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
@@ -29,17 +30,13 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentAnchorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
@@ -219,10 +216,6 @@ class ReadbackSupportCoverageTest {
     assertEquals(
         Optional.empty(),
         InspectionResultCellReportSupport.toRichTextRunReports((ExcelRichTextSnapshot) null));
-    assertEquals(
-        CellColorReport.rgb(new RgbHex("#112233")),
-        InspectionResultCellReportSupport.toCellColorReport(ExcelColorSnapshot.rgb("#112233"))
-            .orElseThrow());
   }
 
   @Test
@@ -513,12 +506,12 @@ class ReadbackSupportCoverageTest {
     ExcelBorderSideSnapshot emptySide = new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null);
     return new ExcelCellStyleSnapshot(
         numberFormat,
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
         fontSnapshot(),
-        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(emptySide, emptySide, emptySide, emptySide),
-        new ExcelCellProtectionSnapshot(true, false));
+        new CellProtectionReport(true, false));
   }
 
   private static ExcelCellFontSnapshot fontSnapshot() {

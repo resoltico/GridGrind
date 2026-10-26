@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -135,7 +136,7 @@ public final class ExcelRichTextSupport {
             java.math.BigDecimal.valueOf(properties.getSzArray(0).getVal())));
   }
 
-  private static Optional<ExcelColorSnapshot> readFontColor(
+  private static Optional<CellColorReport> readFontColor(
       XSSFWorkbook workbook, CTRPrElt properties) {
     return properties.sizeOfColorArray() > 0
         ? ExcelColorSnapshotSupport.snapshot(workbook, properties.getColorArray(0))
@@ -176,7 +177,7 @@ public final class ExcelRichTextSupport {
       Optional<Boolean> italic,
       Optional<String> fontName,
       Optional<ExcelFontHeight> fontHeight,
-      Optional<ExcelColorSnapshot> fontColor,
+      Optional<CellColorReport> fontColor,
       Optional<Boolean> underline,
       Optional<Boolean> strikeout) {
     private static RunFontPatch empty() {

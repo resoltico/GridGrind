@@ -2,8 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -115,14 +117,14 @@ class ExcelAutofilterControllerTest {
           snapshot.filterColumns().get(3).criterion());
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Color(
-              false, ExcelColorSnapshot.rgb("#AABBCC")),
+              false, CellColorReport.rgb(new RgbHex("#AABBCC"))),
           snapshot.filterColumns().get(4).criterion());
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
           snapshot.filterColumns().get(5).criterion());
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.CellColor(
-              "A2:A3", true, ExcelColorSnapshot.rgb("#102030")),
+              "A2:A3", true, CellColorReport.rgb(new RgbHex("#102030"))),
           snapshot.sortState().orElseThrow().conditions().get(0));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.Icon("B2:B3", false, 4),
@@ -319,7 +321,8 @@ class ExcelAutofilterControllerTest {
           new ExcelAutofilterFilterCriterionSnapshot.Top10(false, true, 10.0d, 8.0d),
           snapshot.filterColumns().get(3).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(true, ExcelColorSnapshot.rgb("#AABBCC")),
+          new ExcelAutofilterFilterCriterionSnapshot.Color(
+              true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
           snapshot.filterColumns().get(4).criterion());
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
@@ -345,11 +348,11 @@ class ExcelAutofilterControllerTest {
       assertEquals(4, sortSnapshot.conditions().size());
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.CellColor(
-              "A2:A5", true, ExcelColorSnapshot.rgb("#AABBCC")),
+              "A2:A5", true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
           sortSnapshot.conditions().get(0));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.FontColor(
-              "B2:B5", false, ExcelColorSnapshot.rgb("#102030")),
+              "B2:B5", false, CellColorReport.rgb(new RgbHex("#102030"))),
           sortSnapshot.conditions().get(1));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.Value("C2:C5", false),
@@ -417,16 +420,16 @@ class ExcelAutofilterControllerTest {
           ExcelAutofilterOoxmlSupport.iconCriterion(icon));
 
       assertEquals(
-          Optional.of(ExcelColorSnapshot.rgb("#AABBCC")),
+          Optional.of(CellColorReport.rgb(new RgbHex("#AABBCC"))),
           ExcelAutofilterOoxmlSupport.dxfColor(workbook, fillDxfId, true));
       assertEquals(
-          Optional.of(ExcelColorSnapshot.rgb("#102030")),
+          Optional.of(CellColorReport.rgb(new RgbHex("#102030"))),
           ExcelAutofilterOoxmlSupport.dxfColor(workbook, fontDxfId, false));
       assertEquals(
-          Optional.of(ExcelColorSnapshot.rgb("#AABBCC")),
+          Optional.of(CellColorReport.rgb(new RgbHex("#AABBCC"))),
           ExcelAutofilterOoxmlSupport.dxfColor(workbook, fillDxfId, false));
       assertEquals(
-          Optional.of(ExcelColorSnapshot.rgb("#102030")),
+          Optional.of(CellColorReport.rgb(new RgbHex("#102030"))),
           ExcelAutofilterOoxmlSupport.dxfColor(workbook, fontDxfId, true));
       assertEquals(
           Optional.empty(), ExcelAutofilterOoxmlSupport.dxfColor(workbook, emptyDxfId, true));
@@ -493,7 +496,8 @@ class ExcelAutofilterControllerTest {
       fillColorFilter.setCellColor(true);
       fillColorFilter.setDxfId(fillDxfId);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(true, ExcelColorSnapshot.rgb("#AABBCC")),
+          new ExcelAutofilterFilterCriterionSnapshot.Color(
+              true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
           ExcelAutofilterOoxmlSupport.colorCriterion(workbook, fillColorFilter));
 
       var fontColorFilter =
@@ -501,14 +505,14 @@ class ExcelAutofilterControllerTest {
       fontColorFilter.setDxfId(fontDxfId);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Color(
-              false, ExcelColorSnapshot.rgb("#102030")),
+              false, CellColorReport.rgb(new RgbHex("#102030"))),
           ExcelAutofilterOoxmlSupport.colorCriterion(workbook, fontColorFilter));
 
       assertEquals(
-          Optional.of(ExcelColorSnapshot.rgb("#214365")),
+          Optional.of(CellColorReport.rgb(new RgbHex("#214365"))),
           ExcelAutofilterOoxmlSupport.dxfColor(workbook, mixedDxfId, true));
       assertEquals(
-          Optional.of(ExcelColorSnapshot.rgb("#FEDCBA")),
+          Optional.of(CellColorReport.rgb(new RgbHex("#FEDCBA"))),
           ExcelAutofilterOoxmlSupport.dxfColor(workbook, mixedDxfId, false));
 
       var autoFilter =
@@ -553,11 +557,11 @@ class ExcelAutofilterControllerTest {
           snapshot.conditions().get(0));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.CellColor(
-              "B2:B5", true, ExcelColorSnapshot.rgb("#AABBCC")),
+              "B2:B5", true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
           snapshot.conditions().get(1));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.FontColor(
-              "C2:C5", false, ExcelColorSnapshot.rgb("#102030")),
+              "C2:C5", false, CellColorReport.rgb(new RgbHex("#102030"))),
           snapshot.conditions().get(2));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.Value("D2:D5", false),

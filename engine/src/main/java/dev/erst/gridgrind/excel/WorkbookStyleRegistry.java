@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.HashMap;
 import java.util.Map;
@@ -232,7 +233,7 @@ public final class WorkbookStyleRegistry {
     borderPatchSupport.applyBorderPatch(cellStyle, border);
   }
 
-  ExcelGradientFillSnapshot gradientFillSnapshot(CTGradientFill fill) {
+  CellGradientFillReport gradientFillSnapshot(CTGradientFill fill) {
     return snapshotSupport.gradientFillSnapshot(fill);
   }
 

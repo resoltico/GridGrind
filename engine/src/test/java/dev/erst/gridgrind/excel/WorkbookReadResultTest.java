@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
@@ -397,7 +400,7 @@ class WorkbookReadResultTest {
   private static ExcelCellStyleSnapshot defaultStyle() {
     return new ExcelCellStyleSnapshot(
         "",
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
         new ExcelCellFontSnapshot(
             false,
@@ -407,13 +410,13 @@ class WorkbookReadResultTest {
             null,
             false,
             false),
-        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
-        new ExcelCellProtectionSnapshot(true, false));
+        new CellProtectionReport(true, false));
   }
 
   private ReadResultFixture createReadResultFixture() {

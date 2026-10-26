@@ -9,11 +9,15 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
@@ -48,6 +52,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
@@ -954,21 +959,21 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
   private static ExcelCellStyleSnapshot advancedStyle() {
     return new ExcelCellStyleSnapshot(
         "0.00",
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             false, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.CENTER, 0, 0),
         advancedFont(),
-        ExcelCellFillSnapshot.gradient(
-            ExcelGradientFillSnapshot.linear(
+        CellFillReport.gradient(
+            CellGradientFillReport.linear(
                 45.0d,
                 List.of(
-                    new ExcelGradientStopSnapshot(0.0d, ExcelColorSnapshot.rgb("#112233")),
-                    new ExcelGradientStopSnapshot(1.0d, ExcelColorSnapshot.theme(4, 0.45d))))),
+                    new CellGradientStopReport(0.0d, CellColorReport.rgb(new RgbHex("#112233"))),
+                    new CellGradientStopReport(1.0d, CellColorReport.theme(4, 0.45d))))),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.THICK, ExcelColorSnapshot.indexed(12)),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.THICK, CellColorReport.indexed(12)),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
-        new ExcelCellProtectionSnapshot(true, false));
+        new CellProtectionReport(true, false));
   }
 
   private static ExcelCellFontSnapshot advancedFont() {
@@ -977,7 +982,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         false,
         "Aptos",
         ExcelFontHeight.fromPoints(new BigDecimal("11")),
-        ExcelColorSnapshot.theme(2, 0.25d),
+        CellColorReport.theme(2, 0.25d),
         false,
         false);
   }
@@ -988,7 +993,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         false,
         "Aptos",
         ExcelFontHeight.fromPoints(new BigDecimal("11")),
-        ExcelColorSnapshot.rgb("#AABBCC"),
+        CellColorReport.rgb(new RgbHex("#AABBCC")),
         false,
         false);
   }
@@ -1025,7 +1030,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         125,
         new ExcelSheetPresentationSnapshot(
             new ExcelSheetDisplay(false, false, true, true, true),
-            Optional.of(ExcelColorSnapshot.rgb("#112233")),
+            Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
             new ExcelSheetOutlineSummary(false, false),
             new ExcelSheetDefaults(12, 18.5d),
             List.of(
@@ -1050,9 +1055,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             java.util.Optional.empty(),
             List.of(
                 new ExcelAutofilterSortConditionSnapshot.CellColor(
-                    "A2:A5", true, ExcelColorSnapshot.rgb("#AABBCC")),
+                    "A2:A5", true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
                 new ExcelAutofilterSortConditionSnapshot.FontColor(
-                    "B2:B5", false, ExcelColorSnapshot.theme(4, 0.15d)),
+                    "B2:B5", false, CellColorReport.theme(4, 0.15d)),
                 new ExcelAutofilterSortConditionSnapshot.Icon("C2:C5", false, 2)));
     List<ExcelAutofilterFilterColumnSnapshot> filterColumns =
         List.of(
@@ -1078,7 +1083,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                 4L,
                 true,
                 new ExcelAutofilterFilterCriterionSnapshot.Color(
-                    false, ExcelColorSnapshot.theme(4, 0.45d))),
+                    false, CellColorReport.theme(4, 0.45d))),
             new ExcelAutofilterFilterColumnSnapshot(
                 5L, true, new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2)));
     return List.of(

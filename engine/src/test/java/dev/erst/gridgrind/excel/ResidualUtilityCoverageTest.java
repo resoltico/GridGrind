@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
@@ -15,6 +16,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
@@ -50,8 +52,8 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
   @Test
   void colorFactoriesShapeKindsAndConditionalFormattingBranchesRemainExplicit() {
     assertEquals(Optional.of(0.25d), ExcelColor.rgb("#112233", 0.25d).tint());
-    assertEquals(Optional.of(0.25d), ExcelColorSnapshot.rgb("#112233", 0.25d).tint());
-    assertEquals(Optional.of(-0.5d), ExcelColorSnapshot.indexed(7, -0.5d).tint());
+    assertEquals(Optional.of(0.25d), CellColorReport.rgb(new RgbHex("#112233"), 0.25d).tint());
+    assertEquals(Optional.of(-0.5d), CellColorReport.indexed(7, -0.5d).tint());
 
     ExcelDrawingAnchor.TwoCell anchor =
         new ExcelDrawingAnchor.TwoCell(

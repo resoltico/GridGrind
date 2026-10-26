@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import java.io.IOException;
 import java.io.InputStream;
@@ -171,7 +172,7 @@ class ExcelSheetCommentRepairSupportTest {
                           false,
                           "Aptos",
                           new ExcelFontHeight(220),
-                          ExcelColorSnapshot.indexed(8),
+                          CellColorReport.indexed(8),
                           false,
                           false))));
       ExcelCommentAnchorSnapshot explicitAnchor = new ExcelCommentAnchorSnapshot(2, 2, 6, 7);

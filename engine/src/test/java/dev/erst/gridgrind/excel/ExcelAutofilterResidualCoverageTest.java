@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -44,7 +46,7 @@ class ExcelAutofilterResidualCoverageTest {
       assertEquals(Optional.of(ExcelAutofilterSortMethod.STROKE), snapshot.sortMethod());
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.FontColor(
-              "B2:B5", true, ExcelColorSnapshot.rgb("#112233")),
+              "B2:B5", true, CellColorReport.rgb(new RgbHex("#112233"))),
           snapshot.conditions().get(0));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot.Icon("C2:C5", false, 3),
@@ -130,7 +132,7 @@ class ExcelAutofilterResidualCoverageTest {
             ExcelAutofilterSortCondition.FontColor.class,
             ExcelSheetCopySupport.copyableSortCondition(
                 new ExcelAutofilterSortConditionSnapshot.FontColor(
-                    "A1:A2", true, ExcelColorSnapshot.rgb("#AABBCC"))));
+                    "A1:A2", true, CellColorReport.rgb(new RgbHex("#AABBCC")))));
     assertEquals("A1:A2", fontColor.range());
     assertTrue(fontColor.descending());
     assertEquals(ExcelColor.rgb("#AABBCC"), fontColor.color());

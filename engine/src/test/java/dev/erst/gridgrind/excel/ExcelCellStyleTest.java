@@ -3,10 +3,13 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -310,26 +313,23 @@ class ExcelCellStyleTest {
     assertThrows(
         NullPointerException.class,
         () -> ExcelCellFill.patternBackground(null, ExcelColor.rgb("#445566")));
-    assertThrows(NullPointerException.class, () -> ExcelCellFillSnapshot.pattern(null));
+    assertThrows(NullPointerException.class, () -> CellFillReport.pattern(null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ExcelCellFillSnapshot.patternForeground(ExcelFillPattern.NONE, rgb("#112233")));
+        () -> CellFillReport.patternForeground(ExcelFillPattern.NONE, rgb("#112233")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ExcelCellFillSnapshot.patternBackground(ExcelFillPattern.NONE, rgb("#112233")));
+        () -> CellFillReport.patternBackground(ExcelFillPattern.NONE, rgb("#112233")));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            ExcelCellFillSnapshot.patternColors(
-                ExcelFillPattern.SOLID, rgb("#112233"), rgb("#445566")));
+        () -> CellFillReport.patternColors(ExcelFillPattern.SOLID, rgb("#112233"), rgb("#445566")));
 
     ExcelCellFill patternedFill =
         ExcelCellFill.patternColors(
             ExcelFillPattern.BRICKS, ExcelColor.rgb("#aa00cc"), ExcelColor.rgb("#00bb11"));
-    ExcelCellFillSnapshot noFillSnapshot = ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE);
-    ExcelCellFillSnapshot patternedSnapshot =
-        ExcelCellFillSnapshot.patternColors(
-            ExcelFillPattern.BRICKS, rgb("#aa00cc"), rgb("#00bb11"));
+    CellFillReport noFillSnapshot = CellFillReport.pattern(ExcelFillPattern.NONE);
+    CellFillReport patternedSnapshot =
+        CellFillReport.patternColors(ExcelFillPattern.BRICKS, rgb("#aa00cc"), rgb("#00bb11"));
     assertEquals(ExcelFillPattern.NONE, fillPattern(noFillSnapshot));
     assertNull(fillForegroundColor(noFillSnapshot));
     assertNull(fillBackgroundColor(noFillSnapshot));
@@ -372,7 +372,7 @@ class ExcelCellStyleTest {
     assertEquals(Optional.empty(), hiddenOnly.locked());
   }
 
-  private static ExcelColorSnapshot rgb(String rgb) {
-    return ExcelColorSnapshot.rgb(rgb);
+  private static CellColorReport rgb(String rgb) {
+    return CellColorReport.rgb(new RgbHex(rgb));
   }
 }

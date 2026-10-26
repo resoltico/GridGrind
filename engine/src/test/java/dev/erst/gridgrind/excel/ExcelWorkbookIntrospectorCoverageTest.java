@@ -3,6 +3,9 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -87,7 +90,7 @@ class ExcelWorkbookIntrospectorCoverageTest {
     ExcelBorderSideSnapshot emptySide = new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null);
     return new ExcelCellStyleSnapshot(
         numberFormat,
-        new ExcelCellAlignmentSnapshot(
+        new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
         new ExcelCellFontSnapshot(
             false,
@@ -97,8 +100,8 @@ class ExcelWorkbookIntrospectorCoverageTest {
             null,
             false,
             false),
-        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(emptySide, emptySide, emptySide, emptySide),
-        new ExcelCellProtectionSnapshot(true, false));
+        new CellProtectionReport(true, false));
   }
 }

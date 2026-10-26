@@ -3,10 +3,14 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -173,7 +177,7 @@ class WorkbookStyleRegistryTest {
                   null,
                   null)));
       assertEquals(
-          ExcelColorSnapshot.theme(6, -0.35d), styleRegistry.snapshot(cell).font().fontColor());
+          CellColorReport.theme(6, -0.35d), styleRegistry.snapshot(cell).font().fontColor());
 
       cell.setCellStyle(
           styleRegistry.mergedStyle(
@@ -193,7 +197,7 @@ class WorkbookStyleRegistryTest {
                   null,
                   null)));
       assertEquals(
-          ExcelColorSnapshot.indexed(Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())),
+          CellColorReport.indexed(Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())),
           styleRegistry.snapshot(cell).font().fontColor());
     }
   }
@@ -241,15 +245,16 @@ class WorkbookStyleRegistryTest {
       assertEquals(
           "#112233",
           assertInstanceOf(
-                  ExcelColorSnapshot.Rgb.class,
+                  CellColorReport.Rgb.class,
                   ExcelColorSnapshotSupport.snapshot(
                           workbook, gradientFill.getStopArray(0).getColor())
                       .orElseThrow())
-              .rgb());
+              .rgb()
+              .value());
       assertEquals(
           5,
           assertInstanceOf(
-                  ExcelColorSnapshot.Indexed.class,
+                  CellColorReport.Indexed.class,
                   ExcelColorSnapshotSupport.snapshot(
                           workbook, gradientFill.getStopArray(1).getColor())
                       .orElseThrow())
@@ -302,11 +307,12 @@ class WorkbookStyleRegistryTest {
       assertEquals(
           "#445566",
           assertInstanceOf(
-                  ExcelColorSnapshot.Rgb.class,
+                  CellColorReport.Rgb.class,
                   ExcelColorSnapshotSupport.snapshot(
                           workbook, mergedFont.getCTFont().getColorArray(0))
                       .orElseThrow())
-              .rgb());
+              .rgb()
+              .value());
       assertNotNull(gradientFill);
       assertFalse(gradientFill.isSetType());
       assertEquals(37.5d, gradientFill.getDegree());
@@ -345,11 +351,12 @@ class WorkbookStyleRegistryTest {
       assertEquals(
           "#102030",
           assertInstanceOf(
-                  ExcelColorSnapshot.Rgb.class,
+                  CellColorReport.Rgb.class,
                   ExcelColorSnapshotSupport.snapshot(
                           workbook, mergedFont.getCTFont().getColorArray(0))
                       .orElseThrow())
-              .rgb());
+              .rgb()
+              .value());
     }
   }
 
@@ -395,7 +402,7 @@ class WorkbookStyleRegistryTest {
 
       assertEquals(ExcelBorderStyle.NONE, snapshot.border().bottom().style());
       assertEquals(
-          ExcelColorSnapshot.indexed((int) IndexedColors.DARK_RED.getIndex()),
+          CellColorReport.indexed((int) IndexedColors.DARK_RED.getIndex()),
           snapshot.border().bottom().color());
     }
   }
@@ -702,7 +709,7 @@ class WorkbookStyleRegistryTest {
         ExcelFillPattern pattern = patterns[columnIndex];
         Cell cell = sheet.createRow(0).createCell(columnIndex);
         cell.setCellStyle(styleRegistry.mergedStyle(cell, fillPatch(fillFor(pattern))));
-        ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+        CellFillReport snapshot = styleRegistry.snapshot(cell).fill();
         assertFillSnapshot(snapshot, pattern, "#102030", "#405060");
       }
     }
@@ -721,11 +728,11 @@ class WorkbookStyleRegistryTest {
                   ExcelCellFill.patternBackground(
                       ExcelFillPattern.BRICKS, ExcelColor.indexed(10)))));
 
-      ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+      CellFillReport snapshot = styleRegistry.snapshot(cell).fill();
 
       assertEquals(ExcelFillPattern.BRICKS, fillPattern(snapshot));
       assertNull(fillForegroundColor(snapshot));
-      assertEquals(ExcelColorSnapshot.indexed(10), fillBackgroundColor(snapshot));
+      assertEquals(CellColorReport.indexed(10), fillBackgroundColor(snapshot));
     }
   }
 
@@ -739,7 +746,7 @@ class WorkbookStyleRegistryTest {
           styleRegistry.mergedStyle(
               cell, fillPatch(ExcelCellFill.pattern(ExcelFillPattern.BRICKS))));
 
-      ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+      CellFillReport snapshot = styleRegistry.snapshot(cell).fill();
 
       assertEquals(ExcelFillPattern.BRICKS, fillPattern(snapshot));
       assertNull(fillForegroundColor(snapshot));
@@ -768,10 +775,10 @@ class WorkbookStyleRegistryTest {
                   ExcelCellFill.patternForeground(
                       ExcelFillPattern.SOLID, ExcelColor.rgb("#AABBCC")))));
 
-      ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+      CellFillReport snapshot = styleRegistry.snapshot(cell).fill();
 
       assertEquals(ExcelFillPattern.SOLID, fillPattern(snapshot));
-      assertEquals(ExcelColorSnapshot.rgb("#AABBCC"), fillForegroundColor(snapshot));
+      assertEquals(CellColorReport.rgb(new RgbHex("#AABBCC")), fillForegroundColor(snapshot));
       assertNull(fillBackgroundColor(snapshot));
     }
   }
@@ -794,10 +801,10 @@ class WorkbookStyleRegistryTest {
           styleRegistry.mergedStyle(
               cell, fillPatch(ExcelCellFill.pattern(ExcelFillPattern.SOLID))));
 
-      ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+      CellFillReport snapshot = styleRegistry.snapshot(cell).fill();
 
       assertEquals(ExcelFillPattern.SOLID, fillPattern(snapshot));
-      assertEquals(ExcelColorSnapshot.rgb("#102030"), fillForegroundColor(snapshot));
+      assertEquals(CellColorReport.rgb(new RgbHex("#102030")), fillForegroundColor(snapshot));
       assertNull(fillBackgroundColor(snapshot));
     }
   }
@@ -820,11 +827,11 @@ class WorkbookStyleRegistryTest {
           styleRegistry.mergedStyle(
               cell, fillPatch(ExcelCellFill.pattern(ExcelFillPattern.FINE_DOTS))));
 
-      ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+      CellFillReport snapshot = styleRegistry.snapshot(cell).fill();
 
       assertEquals(ExcelFillPattern.FINE_DOTS, fillPattern(snapshot));
-      assertEquals(ExcelColorSnapshot.rgb("#102030"), fillForegroundColor(snapshot));
-      assertEquals(ExcelColorSnapshot.rgb("#405060"), fillBackgroundColor(snapshot));
+      assertEquals(CellColorReport.rgb(new RgbHex("#102030")), fillForegroundColor(snapshot));
+      assertEquals(CellColorReport.rgb(new RgbHex("#405060")), fillBackgroundColor(snapshot));
     }
   }
 
@@ -849,16 +856,16 @@ class WorkbookStyleRegistryTest {
       secondStop.addNewColor().setIndexed(10L);
       cell.setCellStyle(style);
 
-      ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+      CellFillReport snapshot = styleRegistry.snapshot(cell).fill();
 
       assertEquals(ExcelFillPattern.NONE, fillPattern(snapshot));
-      ExcelGradientFillSnapshot gradient = fillGradient(snapshot);
+      CellGradientFillReport gradient = fillGradient(snapshot);
       assertNotNull(gradient);
       assertEquals("LINEAR", gradientType(gradient));
       assertEquals(45.0d, gradientDegree(gradient));
       assertEquals(2, gradient.stops().size());
-      assertEquals(ExcelColorSnapshot.rgb("#112233"), gradient.stops().get(0).color());
-      assertEquals(ExcelColorSnapshot.indexed(10), gradient.stops().get(1).color());
+      assertEquals(CellColorReport.rgb(new RgbHex("#112233")), gradient.stops().get(0).color());
+      assertEquals(CellColorReport.indexed(10), gradient.stops().get(1).color());
     }
   }
 
@@ -880,7 +887,7 @@ class WorkbookStyleRegistryTest {
       secondStop.setPosition(1.0d);
       secondStop.addNewColor().setIndexed(5L);
 
-      ExcelGradientFillSnapshot snapshot = styleRegistry.gradientFillSnapshot(gradient);
+      CellGradientFillReport snapshot = styleRegistry.gradientFillSnapshot(gradient);
 
       assertEquals("PATH", gradientType(snapshot));
       assertNull(gradientDegree(snapshot));
@@ -888,8 +895,8 @@ class WorkbookStyleRegistryTest {
       assertEquals(0.2d, gradientRight(snapshot));
       assertEquals(0.3d, gradientTop(snapshot));
       assertEquals(0.4d, gradientBottom(snapshot));
-      assertEquals(ExcelColorSnapshot.theme(2), snapshot.stops().get(0).color());
-      assertEquals(ExcelColorSnapshot.indexed(5), snapshot.stops().get(1).color());
+      assertEquals(CellColorReport.theme(2), snapshot.stops().get(0).color());
+      assertEquals(CellColorReport.indexed(5), snapshot.stops().get(1).color());
     }
   }
 
@@ -910,7 +917,7 @@ class WorkbookStyleRegistryTest {
       secondStop.setPosition(1.0d);
       secondStop.addNewColor().setIndexed(5L);
 
-      ExcelGradientFillSnapshot snapshot = styleRegistry.gradientFillSnapshot(gradient);
+      CellGradientFillReport snapshot = styleRegistry.gradientFillSnapshot(gradient);
 
       assertEquals("PATH", gradientType(snapshot));
       assertNull(gradientDegree(snapshot));
@@ -934,12 +941,12 @@ class WorkbookStyleRegistryTest {
       secondStop.setPosition(1.0d);
       secondStop.addNewColor().setIndexed(10L);
 
-      ExcelGradientFillSnapshot snapshot = styleRegistry.gradientFillSnapshot(gradient);
+      CellGradientFillReport snapshot = styleRegistry.gradientFillSnapshot(gradient);
 
       assertEquals("LINEAR", gradientType(snapshot));
       assertNull(gradientDegree(snapshot));
-      assertEquals(ExcelColorSnapshot.rgb("#112233"), snapshot.stops().get(0).color());
-      assertEquals(ExcelColorSnapshot.indexed(10), snapshot.stops().get(1).color());
+      assertEquals(CellColorReport.rgb(new RgbHex("#112233")), snapshot.stops().get(0).color());
+      assertEquals(CellColorReport.indexed(10), snapshot.stops().get(1).color());
     }
   }
 
@@ -989,7 +996,7 @@ class WorkbookStyleRegistryTest {
 
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
 
-      ExcelGradientFillSnapshot gradient = fillGradient(snapshot.fill());
+      CellGradientFillReport gradient = fillGradient(snapshot.fill());
       assertEquals("PATH", gradientType(gradient));
       assertNull(gradientDegree(gradient));
       assertEquals(0.1d, gradientLeft(gradient));
@@ -1295,7 +1302,7 @@ class WorkbookStyleRegistryTest {
   }
 
   private void assertFillSnapshot(
-      ExcelCellFillSnapshot snapshot,
+      CellFillReport snapshot,
       ExcelFillPattern pattern,
       String foregroundColor,
       String backgroundColor) {
@@ -1313,8 +1320,8 @@ class WorkbookStyleRegistryTest {
     assertEquals(rgb(backgroundColor), fillBackgroundColor(snapshot));
   }
 
-  private static ExcelColorSnapshot rgb(String rgb) {
-    return ExcelColorSnapshot.rgb(rgb);
+  private static CellColorReport rgb(String rgb) {
+    return CellColorReport.rgb(new RgbHex(rgb));
   }
 
   private XSSFCellStyle styledBaseCellStyle(XSSFWorkbook workbook) {

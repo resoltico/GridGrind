@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -113,8 +115,8 @@ class ExcelSheetTestSupport {
     return anchorless;
   }
 
-  static ExcelColorSnapshot rgb(String rgb) {
-    return ExcelColorSnapshot.rgb(rgb);
+  static CellColorReport rgb(String rgb) {
+    return CellColorReport.rgb(new RgbHex(rgb));
   }
 
   /** Local test-only type name that trips missing-workbook classification. */

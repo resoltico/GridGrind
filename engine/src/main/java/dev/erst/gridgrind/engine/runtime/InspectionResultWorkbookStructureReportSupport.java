@@ -35,7 +35,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
-import org.jspecify.annotations.Nullable;
 
 /** Converts workbook structure snapshots such as XML mappings, filters, tables, and pivots. */
 @SuppressWarnings(
@@ -272,8 +271,7 @@ final class InspectionResultWorkbookStructureReportSupport {
           new AutofilterFilterCriterionReport.Top10(
               top10.top(), top10.percent(), top10.value(), top10.filterValue());
       case ExcelAutofilterFilterCriterionSnapshot.Color color ->
-          new AutofilterFilterCriterionReport.Color(
-              color.cellColor(), toCellColorReport(color.color()));
+          new AutofilterFilterCriterionReport.Color(color.cellColor(), color.color());
       case ExcelAutofilterFilterCriterionSnapshot.Icon icon ->
           new AutofilterFilterCriterionReport.Icon(icon.iconSet(), icon.iconId());
     };
@@ -299,14 +297,10 @@ final class InspectionResultWorkbookStructureReportSupport {
               new RangeLabel(value.range()), value.descending());
       case ExcelAutofilterSortConditionSnapshot.CellColor cellColor ->
           new AutofilterSortConditionReport.CellColor(
-              new RangeLabel(cellColor.range()),
-              cellColor.descending(),
-              InspectionResultCellReportSupport.toCellColorReport(cellColor.color()).orElseThrow());
+              new RangeLabel(cellColor.range()), cellColor.descending(), cellColor.color());
       case ExcelAutofilterSortConditionSnapshot.FontColor fontColor ->
           new AutofilterSortConditionReport.FontColor(
-              new RangeLabel(fontColor.range()),
-              fontColor.descending(),
-              InspectionResultCellReportSupport.toCellColorReport(fontColor.color()).orElseThrow());
+              new RangeLabel(fontColor.range()), fontColor.descending(), fontColor.color());
       case ExcelAutofilterSortConditionSnapshot.Icon icon ->
           new AutofilterSortConditionReport.Icon(
               new RangeLabel(icon.range()), icon.descending(), icon.iconId());
@@ -334,11 +328,6 @@ final class InspectionResultWorkbookStructureReportSupport {
               named.showRowStripes(),
               named.showColumnStripes());
     };
-  }
-
-  private static dev.erst.gridgrind.core.model.style.@Nullable CellColorReport toCellColorReport(
-      dev.erst.gridgrind.excel.@Nullable ExcelColorSnapshot color) {
-    return InspectionResultCellReportSupport.toCellColorReport(color).orElse(null);
   }
 
   private static java.util.Optional<String> optionalText(String value) {

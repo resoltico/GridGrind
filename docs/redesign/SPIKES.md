@@ -1534,3 +1534,26 @@ exception above. Workbook-state preconditions remain in static/runtime checks pe
 verified. Next is WP-40's canonical engine model/resolved seam; WP-21's aggregate blank target stays
 open until the scheduled engine/fuzz drains. Do not claim the engine, host, tooling, docs or clean-
 clone WPs are complete from these intake results.
+
+## WP-40 factual style consolidation, first slice
+
+POI extraction and its consumers now use core CellAlignmentReport, CellProtectionReport,
+CellColorReport, CellFillReport, CellGradientFillReport and CellGradientStopReport directly.
+Six duplicate engine records/unions and their identity report construction are deleted.
+RGB facts retain RgbHex normalization; theme/index and tint retain their exact values.
+The authored ExcelColor bridge remains pending its separate core patch migration.
+
+Initial compilation caught the old color package, String/RgbHex and Optional factory consumers;
+they were migrated to canonical constructors, including independent saved-workbook and seed
+replay readers. Full check initially stopped on standard PMD's import count in the independent
+POI fixture. A scoped suppression documents its necessary backend/report correspondence.
+Focused engine tests and all 14 parity scenarios passed (31s); nested deterministic check passed
+(18s, 106 support tests and every retained input in four replay harnesses). No active fuzzing or
+mutation campaign ran; those are deferred until planned implementation is complete per user.
+
+Final ./gradlew check passed in 3m22s: core 329, JSON 348, engine 1498 plus 14 parity, CLI 588,
+architecture 14 plus 12 architecture-rule tests; zero failures/errors/skips. All 143 golden cases
+passed without snapshot changes. Staged inventories: snapshots 51→45, converter lines 4687→4591,
+main Java lines 123345→122963; definitions 13, Support 206, blank checks 436 unchanged. Evidence
+is outside the repo under evidence/wp-40. WP-40 remains open: font/border and other mirrors,
+resolved plan/step/target and command consumers still need migration. Baseline diff remains empty.
