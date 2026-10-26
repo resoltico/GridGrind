@@ -84,8 +84,6 @@ fun localCoverageExecutionData() =
     }
 
 dependencies {
-    // Jackson 3.x still owns annotations via the Jackson 2.x coordinates and package namespace.
-    api(libs.jackson.annotations)
     testImplementation(testFixtures(project(":engine")))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.poi.ooxml)

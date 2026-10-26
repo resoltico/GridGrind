@@ -1,10 +1,8 @@
 package dev.erst.gridgrind.core.model.security;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import java.util.Objects;
@@ -20,26 +18,11 @@ import java.util.Optional;
 public record OoxmlSignatureInput(
     String pkcs12Path,
     SecretReference keystorePasswordRef,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SecretReference> keyPasswordRef,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> alias,
-    @ProtocolField(optional = true) ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> description) {
-  @JsonCreator
-  static OoxmlSignatureInput create(
-      @JsonProperty("pkcs12Path") String pkcs12Path,
-      @JsonProperty("keystorePasswordRef") SecretReference keystorePasswordRef,
-      @JsonProperty("keyPasswordRef") Optional<SecretReference> keyPasswordRef,
-      @JsonProperty("alias") Optional<String> alias,
-      @JsonProperty("digestAlgorithm") ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
-      @JsonProperty("description") Optional<String> description) {
-    return new OoxmlSignatureInput(
-        pkcs12Path,
-        keystorePasswordRef,
-        keyPasswordRef == null ? Optional.empty() : keyPasswordRef,
-        alias == null ? Optional.empty() : alias,
-        digestAlgorithm == null ? ExcelOoxmlSignatureDigestAlgorithm.SHA256 : digestAlgorithm,
-        description == null ? Optional.empty() : description);
-  }
+    Optional<SecretReference> keyPasswordRef,
+    Optional<String> alias,
+    @ProtocolField(optional = true) @WireDefault("SHA256")
+        ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
+    Optional<String> description) {
 
   public OoxmlSignatureInput {
     pkcs12Path = normalizeRequired(pkcs12Path, "pkcs12Path");

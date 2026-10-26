@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.value;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
@@ -40,18 +39,11 @@ public sealed interface CellReport {
           "Factual blank cell report. Only address and type are always present; FORMAT, STYLE, HYPERLINK, and COMMENT project the remaining fields.")
   record BlankReport(
       CellAddress address,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> displayValue,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CellStyleReport> style,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"}) Optional<CellStyleReport> style,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<HyperlinkTarget> hyperlink,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CommentReport> comment)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment)
       implements CellReport {
     public BlankReport {
       Objects.requireNonNull(address, "address must not be null");
@@ -74,23 +66,13 @@ public sealed interface CellReport {
           "Factual text cell report. VALUE projects textValue, RICH_TEXT_RUNS projects runs, and the remaining fields are facet-gated.")
   record TextReport(
       CellAddress address,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> displayValue,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CellStyleReport> style,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"}) Optional<CellStyleReport> style,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<HyperlinkTarget> hyperlink,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> textValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<String> textValue,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"RICH_TEXT_RUNS"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<List<RichTextRunReport>> runs)
       implements CellReport {
     public TextReport {
@@ -124,23 +106,13 @@ public sealed interface CellReport {
           "Factual numeric cell report. VALUE projects numberValue; TEMPORAL adds date, time, or date-time semantics when a numeric Excel value is format-derived rather than a plain number.")
   record NumberReport(
       CellAddress address,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> displayValue,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CellStyleReport> style,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"}) Optional<CellStyleReport> style,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<HyperlinkTarget> hyperlink,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<Double> numberValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<Double> numberValue,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"TEMPORAL"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<CellTemporalReport> temporal)
       implements CellReport {
     public NumberReport {
@@ -166,21 +138,12 @@ public sealed interface CellReport {
           "Factual boolean cell report. VALUE projects booleanValue and the remaining fields are facet-gated.")
   record BooleanReport(
       CellAddress address,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> displayValue,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CellStyleReport> style,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"}) Optional<CellStyleReport> style,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<HyperlinkTarget> hyperlink,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<Boolean> booleanValue)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<Boolean> booleanValue)
       implements CellReport {
     public BooleanReport {
       Objects.requireNonNull(address, "address must not be null");
@@ -204,21 +167,12 @@ public sealed interface CellReport {
           "Factual error cell report. VALUE projects errorValue and the remaining fields are facet-gated.")
   record ErrorReport(
       CellAddress address,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> displayValue,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CellStyleReport> style,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"}) Optional<CellStyleReport> style,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<HyperlinkTarget> hyperlink,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> errorValue)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<String> errorValue)
       implements CellReport {
     public ErrorReport {
       Objects.requireNonNull(address, "address must not be null");
@@ -246,24 +200,13 @@ public sealed interface CellReport {
           "Factual formula cell report with separate projected evaluation. FORMULA projects formula text, VALUE projects evaluation, and the remaining fields are facet-gated.")
   record FormulaReport(
       CellAddress address,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> displayValue,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CellStyleReport> style,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"}) Optional<CellStyleReport> style,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<HyperlinkTarget> hyperlink,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMULA"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> formula,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<CellValueReport> evaluation)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMULA"}) Optional<String> formula,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<CellValueReport> evaluation)
       implements CellReport {
     public FormulaReport {
       Objects.requireNonNull(address, "address must not be null");

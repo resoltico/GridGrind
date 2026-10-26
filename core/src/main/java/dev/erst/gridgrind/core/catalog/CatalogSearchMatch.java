@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.List;
 
 /** One protocol-catalog search hit suitable for CLI and agent-facing discovery. */
@@ -10,10 +10,9 @@ public record CatalogSearchMatch(
     String qualifiedId,
     String kind,
     String summary,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        java.util.Optional<ProtocolStepTemplate> stepTemplate,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> relatedEntryIds,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<CatalogSearchMatch> supportingMatches) {
+    java.util.Optional<ProtocolStepTemplate> stepTemplate,
+    @WireDefault(value = "[]", omit = true) List<String> relatedEntryIds,
+    @WireDefault(value = "[]", omit = true) List<CatalogSearchMatch> supportingMatches) {
   /** Creates one search hit with no related top-level entry ids. */
   public CatalogSearchMatch(
       String catalogGroup, String lookupId, String qualifiedId, String kind, String summary) {

@@ -1,9 +1,6 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
-import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.style.RichTextRunInput;
@@ -20,15 +17,9 @@ import java.util.Optional;
 public record CommentInput(
     TextSourceInput text,
     String author,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-        @WireDefault("false")
-        boolean visible,
-    @com.fasterxml.jackson.annotation.JsonInclude(
-            com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
-        Optional<java.util.List<RichTextRunInput>> runs,
-    @com.fasterxml.jackson.annotation.JsonInclude(
-            com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
-        Optional<CommentAnchorInput> anchor) {
+    @ProtocolField(optional = true) @WireDefault("false") boolean visible,
+    Optional<java.util.List<RichTextRunInput>> runs,
+    Optional<CommentAnchorInput> anchor) {
   /** Creates a hidden plain-text comment payload without rich-text metadata. */
   public static CommentInput hidden(TextSourceInput text, String author) {
     return new CommentInput(text, author, false, Optional.empty(), Optional.empty());
@@ -55,22 +46,6 @@ public record CommentInput(
       validateRunsAgainstInlineText(text, copiedRuns);
       runs = Optional.of(copiedRuns);
     }
-  }
-
-  /** Reads one comment payload with explicit visibility. */
-  @JsonCreator
-  public CommentInput(
-      @JsonProperty("text") TextSourceInput text,
-      @JsonProperty("author") String author,
-      @JsonProperty("visible") Boolean visible,
-      @JsonProperty("runs") Optional<java.util.List<RichTextRunInput>> runs,
-      @JsonProperty("anchor") Optional<CommentAnchorInput> anchor) {
-    this(
-        text,
-        author,
-        ProtocolBooleanDefault.FALSE.resolve(visible),
-        emptyIfNull(runs),
-        emptyIfNull(anchor));
   }
 
   private static void validateRunsAgainstInlineText(
@@ -106,9 +81,5 @@ public record CommentInput(
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
     return value;
-  }
-
-  private static <T> Optional<T> emptyIfNull(Optional<T> value) {
-    return value == null ? Optional.empty() : value;
   }
 }

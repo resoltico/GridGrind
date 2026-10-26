@@ -105,7 +105,11 @@ public final class CatalogFieldMetadataSupport {
         optionalFields.contains(fieldName) ? FieldRequirement.OPTIONAL : FieldRequirement.REQUIRED,
         shape,
         metadataOverride.overrideEnumValues(enumValues(component.getGenericType())),
-        protocolField == null ? Optional.empty() : protocolField.booleanDefault().value(),
+        dev.erst.gridgrind.core.metadata.ModelDefaults.publishedValue(component),
+        Optional.ofNullable(
+                component.getAnnotation(dev.erst.gridgrind.core.metadata.WireDefault.class))
+            .map(dev.erst.gridgrind.core.metadata.WireDefault::from)
+            .filter(value -> !value.isEmpty()),
         metadataOverride.overrideEnumValueDocs(enumValueDocs(component.getGenericType())),
         projectedFieldsByName.getOrDefault(fieldName, List.of()),
         protocolField != null && protocolField.secret());

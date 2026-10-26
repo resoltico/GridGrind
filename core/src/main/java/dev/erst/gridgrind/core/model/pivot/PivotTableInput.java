@@ -1,11 +1,10 @@
 package dev.erst.gridgrind.core.model.pivot;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -32,31 +31,10 @@ public record PivotTableInput(
     SheetName sheetName,
     PivotSourceSpec source,
     Anchor anchor,
-    @ProtocolField(optional = true) List<String> rowLabels,
-    @ProtocolField(optional = true) List<String> columnLabels,
-    @ProtocolField(optional = true) List<String> reportFilters,
+    @ProtocolField(optional = true) @WireDefault("[]") List<String> rowLabels,
+    @ProtocolField(optional = true) @WireDefault("[]") List<String> columnLabels,
+    @ProtocolField(optional = true) @WireDefault("[]") List<String> reportFilters,
     List<DataField> dataFields) {
-  /** Reads a pivot-table payload while defaulting omitted axis lists to empty. */
-  @JsonCreator
-  public static PivotTableInput create(
-      @JsonProperty("name") String name,
-      @JsonProperty("sheetName") SheetName sheetName,
-      @JsonProperty("source") PivotSourceSpec source,
-      @JsonProperty("anchor") Anchor anchor,
-      @JsonProperty("rowLabels") List<String> rowLabels,
-      @JsonProperty("columnLabels") List<String> columnLabels,
-      @JsonProperty("reportFilters") List<String> reportFilters,
-      @JsonProperty("dataFields") List<DataField> dataFields) {
-    return new PivotTableInput(
-        name,
-        sheetName,
-        source,
-        anchor,
-        rowLabels == null ? List.of() : rowLabels,
-        columnLabels == null ? List.of() : columnLabels,
-        reportFilters == null ? List.of() : reportFilters,
-        dataFields);
-  }
 
   public PivotTableInput {
     name = ExcelPivotTableNaming.validateName(name);
@@ -128,21 +106,8 @@ public record PivotTableInput(
   public record DataField(
       String sourceColumnName,
       ExcelPivotDataConsolidateFunction function,
-      @ProtocolField(optional = true) String displayName,
+      @ProtocolField(optional = true) @WireDefault(from = "sourceColumnName") String displayName,
       Optional<String> valueFormat) {
-    /** Reads one pivot data-field while defaulting displayName and valueFormat when omitted. */
-    @JsonCreator
-    public static DataField create(
-        @JsonProperty("sourceColumnName") String sourceColumnName,
-        @JsonProperty("function") ExcelPivotDataConsolidateFunction function,
-        @JsonProperty("displayName") String displayName,
-        @JsonProperty("valueFormat") Optional<String> valueFormat) {
-      return new DataField(
-          sourceColumnName,
-          function,
-          displayName == null ? sourceColumnName : displayName,
-          valueFormat == null ? Optional.empty() : valueFormat);
-    }
 
     public DataField {
       sourceColumnName = requireNonBlank(sourceColumnName, "sourceColumnName");

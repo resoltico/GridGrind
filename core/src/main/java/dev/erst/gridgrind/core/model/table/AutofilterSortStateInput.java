@@ -1,10 +1,6 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
-import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
@@ -21,13 +17,9 @@ import java.util.Optional;
     displayOrder = 57)
 public record AutofilterSortStateInput(
     RangeRef range,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-        @WireDefault("false")
-        boolean caseSensitive,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-        @WireDefault("false")
-        boolean columnSort,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ExcelAutofilterSortMethod> sortMethod,
+    @ProtocolField(optional = true) @WireDefault("false") boolean caseSensitive,
+    @ProtocolField(optional = true) @WireDefault("false") boolean columnSort,
+    Optional<ExcelAutofilterSortMethod> sortMethod,
     List<AutofilterSortConditionInput> conditions) {
   /** Creates a sort-state payload with no explicit sort-method override. */
   public static AutofilterSortStateInput withoutSortMethod(
@@ -48,22 +40,6 @@ public record AutofilterSortStateInput(
     if (conditions.isEmpty()) {
       throw new IllegalArgumentException("conditions must not be empty");
     }
-  }
-
-  /** Reads one sort-state payload with explicit booleans and one typed optional sort method. */
-  @JsonCreator
-  public AutofilterSortStateInput(
-      @JsonProperty("range") RangeRef range,
-      @JsonProperty("caseSensitive") Boolean caseSensitive,
-      @JsonProperty("columnSort") Boolean columnSort,
-      @JsonProperty("sortMethod") Optional<ExcelAutofilterSortMethod> sortMethod,
-      @JsonProperty("conditions") List<AutofilterSortConditionInput> conditions) {
-    this(
-        range,
-        ProtocolBooleanDefault.FALSE.resolve(caseSensitive),
-        ProtocolBooleanDefault.FALSE.resolve(columnSort),
-        sortMethod == null ? Optional.empty() : sortMethod,
-        conditions);
   }
 
   private static List<AutofilterSortConditionInput> copyConditions(

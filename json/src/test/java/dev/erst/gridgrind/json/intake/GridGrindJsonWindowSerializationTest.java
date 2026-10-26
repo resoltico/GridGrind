@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -22,9 +23,10 @@ final class GridGrindJsonWindowSerializationTest {
       "NullOptional") // Deliberately proves the Jackson creator normalizes absent input.
   void getWindowCreatorNormalizesEachOmittedAxisAtTheDeserializationBoundary() {
     SheetIntrospectionQuery.GetWindow defaults =
-        SheetIntrospectionQuery.GetWindow.create(null, null);
+        GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
+            "{\"type\":\"GET_WINDOW\"}", SheetIntrospectionQuery.GetWindow.class);
     SheetIntrospectionQuery.GetWindow dense =
-        SheetIntrospectionQuery.GetWindow.create(Optional.empty(), Boolean.TRUE);
+        new SheetIntrospectionQuery.GetWindow(Optional.empty(), true);
 
     assertEquals(Optional.empty(), defaults.projection());
     assertFalse(defaults.includeBlanks());

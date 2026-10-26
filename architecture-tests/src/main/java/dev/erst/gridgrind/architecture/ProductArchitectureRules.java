@@ -9,6 +9,10 @@ public enum ProductArchitectureRules {
   ;
 
   @ArchTest
+  static final ArchRule CORE_DOES_NOT_DEPEND_ON_WORKBOOK_OR_JSON_LIBRARIES =
+      ProductDependencyArchitectureRules.coreDoesNotDependOnWorkbookOrJsonLibraries();
+
+  @ArchTest
   static final ArchRule WORKBOOK_IMPLEMENTATION_DOES_NOT_DEPEND_ON_EXECUTION_RUNTIME =
       ProductDependencyArchitectureRules.workbookImplementationDoesNotDependOnExecutionRuntime();
 

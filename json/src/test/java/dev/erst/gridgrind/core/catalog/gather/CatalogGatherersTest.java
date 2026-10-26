@@ -2,7 +2,6 @@ package dev.erst.gridgrind.core.catalog.gather;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.catalog.FieldEntry;
 import dev.erst.gridgrind.core.catalog.FieldRequirement;
 import dev.erst.gridgrind.core.catalog.FieldShape;
@@ -114,7 +113,7 @@ class CatalogGatherersTest {
   }
 
   @Test
-  void expandFieldsWithMetadataSkipsCatalogAndJsonIgnoredComponentsAndAccessors() {
+  void expandFieldsWithMetadataSkipsMetadataIgnoredComponentsAndAccessors() {
     List<FieldEntry> actual =
         Arrays.stream(IgnoredCatalogFixture.class.getRecordComponents())
             .gather(CatalogGatherers.expandFieldsWithMetadata(Set.of()))
@@ -151,18 +150,18 @@ class CatalogGatherersTest {
       String visible,
       @CatalogIgnored String hiddenByComponent,
       String hiddenByCatalogAccessor,
-      @JsonIgnore String hiddenByJsonComponent,
-      String hiddenByJsonAccessor) {
+      @CatalogIgnored String hiddenByComponentMetadata,
+      String hiddenByAccessorMetadata) {
     @CatalogIgnored
     @Override
     public String hiddenByCatalogAccessor() {
       return hiddenByCatalogAccessor;
     }
 
-    @JsonIgnore
+    @CatalogIgnored
     @Override
-    public String hiddenByJsonAccessor() {
-      return hiddenByJsonAccessor;
+    public String hiddenByAccessorMetadata() {
+      return hiddenByAccessorMetadata;
     }
   }
 

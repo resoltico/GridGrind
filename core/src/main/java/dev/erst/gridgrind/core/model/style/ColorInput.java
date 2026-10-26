@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -55,7 +54,7 @@ public sealed interface ColorInput
               kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.STRING_PATTERN,
               text = dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.RGB_HEX_PATTERN)
           RgbHex rgb,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
+      Optional<Double> tint)
       implements ColorInput {
     public Rgb {
       java.util.Objects.requireNonNull(rgb, "rgb must not be null");
@@ -67,8 +66,7 @@ public sealed interface ColorInput
   @Variant(
       id = "THEME",
       summary = "Write one workbook theme-slot color reference plus optional tint metadata.")
-  record Theme(int theme, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
-      implements ColorInput {
+  record Theme(int theme, Optional<Double> tint) implements ColorInput {
     public Theme {
       requireNonNegative(theme, "theme");
       tint = requireFinite(tint, "tint");
@@ -79,8 +77,7 @@ public sealed interface ColorInput
   @Variant(
       id = "INDEXED",
       summary = "Write one indexed-palette color reference plus optional tint metadata.")
-  record Indexed(int indexed, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
-      implements ColorInput {
+  record Indexed(int indexed, Optional<Double> tint) implements ColorInput {
     public Indexed {
       requireNonNegative(indexed, "indexed");
       tint = requireFinite(tint, "tint");

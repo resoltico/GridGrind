@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.model.chart.ChartAxisInput;
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
 import dev.erst.gridgrind.core.model.chart.ChartInput;
@@ -107,23 +106,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Covers explicit request constructors, convenience factories, and strict creator branches. */
+/** Covers explicit request constructors, convenience factories, and record omission defaults. */
 class ProtocolDefaultingCoverageTest {
-  @Test
-  void protocolBooleanDefaultsOwnTheirDeclaredWireSemantics() {
-    assertEquals(Optional.empty(), ProtocolBooleanDefault.UNSPECIFIED.value());
-    assertEquals(Optional.of(false), ProtocolBooleanDefault.FALSE.value());
-    assertEquals(Optional.of(true), ProtocolBooleanDefault.TRUE.value());
-    assertFalse(ProtocolBooleanDefault.FALSE.resolve(null));
-    assertTrue(ProtocolBooleanDefault.TRUE.resolve(null));
-    assertFalse(ProtocolBooleanDefault.TRUE.resolve(false));
-    assertEquals(
-        "An unspecified boolean default cannot normalize a value",
-        assertThrows(
-                IllegalStateException.class, () -> ProtocolBooleanDefault.UNSPECIFIED.resolve(null))
-            .getMessage());
-  }
-
   @Test
   void explicitRequestConstructorsPreserveAuthoredValues() {
     JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
@@ -182,7 +166,8 @@ class ProtocolDefaultingCoverageTest {
             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
             Optional.empty());
     OoxmlSignatureInput explicitSignature =
-        OoxmlSignatureInput.create(
+        readOmitted(
+            OoxmlSignatureInput.class,
             "keys/signing.p12",
             new SecretReference("store-pass"),
             Optional.of(new SecretReference("key-pass")),
@@ -241,23 +226,29 @@ class ProtocolDefaultingCoverageTest {
     assertThrows(NullPointerException.class, () -> new ExecutionJournalInput(null));
     assertThrows(NullPointerException.class, () -> new FormulaEnvironmentInput(null, null, null));
     assertThrows(
-        NullPointerException.class, () -> new SheetDisplayInput(null, null, null, null, null));
-    assertThrows(NullPointerException.class, () -> new SheetOutlineSummaryInput(null, null));
-    assertThrows(NullPointerException.class, () -> new SheetDefaultsInput(null, null));
+        tools.jackson.core.JacksonException.class,
+        () -> readOmitted(SheetDisplayInput.class, null, null, null, null, null));
+    assertThrows(
+        tools.jackson.core.JacksonException.class,
+        () -> readOmitted(SheetOutlineSummaryInput.class, null, null));
+    assertThrows(
+        tools.jackson.core.JacksonException.class,
+        () -> readOmitted(SheetDefaultsInput.class, null, null));
     assertTrue(
-        new DataValidationPromptInput(text("Status"), text("Choose one."), (Boolean) null)
+        readOmitted(DataValidationPromptInput.class, text("Status"), text("Choose one."), null)
             .showPromptBox());
     assertTrue(
-        new DataValidationErrorAlertInput(
+        readOmitted(
+                DataValidationErrorAlertInput.class,
                 ExcelDataValidationErrorStyle.STOP,
                 text("Invalid status"),
                 text("Use one of the allowed values."),
-                (Boolean) null)
+                null)
             .showErrorBox());
   }
 
   @Test
-  void requestJsonCreatorsApplyCatalogOwnedOmissionDefaults() {
+  void recordMetadataAppliesCatalogOwnedOmissionDefaults() {
     JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
 
     ExecutionPolicyInput execution = readJson(mapper, "{}", ExecutionPolicyInput.class);
@@ -285,18 +276,20 @@ class ProtocolDefaultingCoverageTest {
             """,
             OoxmlSignatureInput.class);
     OoxmlEncryptionInput explicitEncryption =
-        OoxmlEncryptionInput.create(
+        readOmitted(
+            OoxmlEncryptionInput.class,
             new SecretReference("persist-pass"),
             ExcelOoxmlWriteCipher.AES_192,
             ExcelOoxmlWriteHash.SHA_384);
     OoxmlSignatureInput createdSignatureWithNullOptionals =
-        OoxmlSignatureInput.create(
+        readOmitted(
+            OoxmlSignatureInput.class,
             "keys/signing.p12",
             new SecretReference("store-pass"),
             Optional.of(new SecretReference("key-pass")),
-            nullOptional(),
+            null,
             ExcelOoxmlSignatureDigestAlgorithm.SHA512,
-            nullOptional());
+            null);
 
     assertTrue(execution.isDefault());
     assertTrue(journal.isDefault());
@@ -327,17 +320,17 @@ class ProtocolDefaultingCoverageTest {
     AutofilterSortConditionInput valueCondition =
         new AutofilterSortConditionInput.Value(new RangeRef("A1:A4"), true);
     AutofilterFilterColumnInput visibleButtonColumn =
-        new AutofilterFilterColumnInput(2L, Boolean.TRUE, criterion);
+        new AutofilterFilterColumnInput(2L, true, criterion);
     AutofilterFilterColumnInput hiddenButtonColumn =
-        new AutofilterFilterColumnInput(2L, Boolean.FALSE, criterion);
+        new AutofilterFilterColumnInput(2L, false, criterion);
     AutofilterSortStateInput defaultedSortState =
         AutofilterSortStateInput.withoutSortMethod(
             new RangeRef("A1:B4"), false, false, List.of(valueCondition));
     AutofilterSortStateInput explicitSortState =
         new AutofilterSortStateInput(
             new RangeRef("A1:B4"),
-            Boolean.TRUE,
-            Boolean.TRUE,
+            true,
+            true,
             Optional.of(ExcelAutofilterSortMethod.PINYIN),
             List.of(valueCondition));
     ExecutionModeInput customMode = ExecutionModeInput.eventRead();
@@ -345,11 +338,8 @@ class ProtocolDefaultingCoverageTest {
     ExecutionPolicyInput customPolicy = ExecutionPolicyInput.mode(customMode);
     ExecutionPolicyInput customJournalPolicy =
         ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE));
-    SheetDisplayInput explicitDisplay =
-        new SheetDisplayInput(
-            Boolean.FALSE, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
-    SheetOutlineSummaryInput explicitOutline =
-        new SheetOutlineSummaryInput(Boolean.FALSE, Boolean.TRUE);
+    SheetDisplayInput explicitDisplay = new SheetDisplayInput(false, true, false, true, false);
+    SheetOutlineSummaryInput explicitOutline = new SheetOutlineSummaryInput(false, true);
     SheetDefaultsInput explicitSheetDefaults =
         new SheetDefaultsInput(Integer.valueOf(12), Double.valueOf(18.5d));
     assertTrue(visibleButtonColumn.showButton());
@@ -374,12 +364,13 @@ class ProtocolDefaultingCoverageTest {
     assertTrue(explicitOutline.rowSumsRight());
     assertEquals(12, explicitSheetDefaults.defaultColumnWidth());
     assertEquals(18.5d, explicitSheetDefaults.defaultRowHeightPoints());
-    assertTrue(new AutofilterFilterColumnInput(2L, (Boolean) null, criterion).showButton());
+    assertTrue(readOmitted(AutofilterFilterColumnInput.class, 2L, null, criterion).showButton());
     AutofilterSortStateInput defaultedWireSortState =
-        new AutofilterSortStateInput(
+        readOmitted(
+            AutofilterSortStateInput.class,
             new RangeRef("A1:B4"),
-            (Boolean) null,
-            (Boolean) null,
+            null,
+            null,
             Optional.empty(),
             List.of(valueCondition));
     assertFalse(defaultedWireSortState.caseSensitive());
@@ -388,33 +379,39 @@ class ProtocolDefaultingCoverageTest {
   }
 
   @Test
-  void residualWireCreatorsNormalizeNullOptionalFields() {
+  void residualWireDefaultsHandleOmittedFields() {
     CommentInput comment =
-        new CommentInput(text("Owner note"), "Ada", (Boolean) null, nullOptional(), nullOptional());
+        readOmitted(CommentInput.class, text("Owner note"), "Ada", null, null, null);
     AutofilterSortConditionInput valueCondition =
         new AutofilterSortConditionInput.Value(new RangeRef("A1:A4"), true);
     AutofilterSortStateInput defaultedSortState =
-        new AutofilterSortStateInput(
+        readOmitted(
+            AutofilterSortStateInput.class,
             new RangeRef("A1:B4"),
-            Boolean.FALSE,
-            Boolean.TRUE,
-            nullOptional(),
+            false,
+            true,
+            null,
             List.of(valueCondition));
     WorkbookProtectionInput protection =
-        new WorkbookProtectionInput(null, null, null, nullOptional(), nullOptional());
+        readOmitted(WorkbookProtectionInput.class, null, null, null, null, null);
     PivotTableInput.DataField dataField =
-        PivotTableInput.DataField.create(
-            "Amount", ExcelPivotDataConsolidateFunction.SUM, null, nullOptional());
-    TableColumnInput tableColumn = TableColumnInput.create(0, null, null, null, null);
+        readOmitted(
+            PivotTableInput.DataField.class,
+            "Amount",
+            ExcelPivotDataConsolidateFunction.SUM,
+            null,
+            null);
+    TableColumnInput tableColumn = readOmitted(TableColumnInput.class, 0, null, null, null, null);
     TableColumnInput explicitFactoryColumn =
-        TableColumnInput.create(1, "owner", "Total", " SUM ", "=[@Amount]");
+        readOmitted(TableColumnInput.class, 1, "owner", "Total", " SUM ", "=[@Amount]");
     DataValidationInput validation =
-        new DataValidationInput(
+        readOmitted(
+            DataValidationInput.class,
             new DataValidationRuleInput.ExplicitList(List.of("Ready")),
             null,
             null,
-            nullOptional(),
-            nullOptional());
+            null,
+            null);
 
     assertFalse(comment.visible());
     assertEquals(Optional.empty(), comment.runs());
@@ -469,13 +466,13 @@ class ProtocolDefaultingCoverageTest {
             new TableName("VisibleAutofilterBudget"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C3"),
-            Boolean.FALSE,
-            Boolean.TRUE,
+            false,
+            true,
             new TableStyleInput.None(),
             text(""),
-            Boolean.FALSE,
-            Boolean.FALSE,
-            Boolean.FALSE,
+            false,
+            false,
+            false,
             "",
             "",
             "",
@@ -485,13 +482,13 @@ class ProtocolDefaultingCoverageTest {
             new TableName("TotalsWithoutAutofilterBudget"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C3"),
-            Boolean.TRUE,
-            Boolean.FALSE,
+            true,
+            false,
             new TableStyleInput.None(),
             text(""),
-            Boolean.FALSE,
-            Boolean.FALSE,
-            Boolean.FALSE,
+            false,
+            false,
+            false,
             "",
             "",
             "",
@@ -531,7 +528,8 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(Optional.empty(), defaultedTableReport.presentation().dataCellStyle());
     assertEquals(Optional.empty(), defaultedTableReport.presentation().totalsRowCellStyle());
     TableInput defaultedWireTable =
-        new TableInput(
+        readOmitted(
+            TableInput.class,
             new TableName("Budget"),
             new SheetName("Budget"),
             new RangeRef("A1:B3"),
@@ -566,13 +564,13 @@ class ProtocolDefaultingCoverageTest {
             ExcelDataValidationErrorStyle.STOP,
             text("Invalid"),
             text("Choose an allowed value."),
-            Boolean.TRUE);
+            true);
     DataValidationErrorAlertInput hiddenAlert =
         new DataValidationErrorAlertInput(
             ExcelDataValidationErrorStyle.WARNING,
             text("Caution"),
             text("Review the warning."),
-            Boolean.FALSE);
+            false);
     ChartSeriesInput series =
         new ChartSeriesInput(
             new ChartTitleInput.None(),
@@ -594,7 +592,7 @@ class ProtocolDefaultingCoverageTest {
             new ChartTitleInput.Text(text("Budget")),
             new ChartLegendInput.Hidden(),
             ExcelChartDisplayBlanksAs.SPAN,
-            Boolean.FALSE,
+            false,
             List.of(new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(series))));
     ChartAxisInput defaultedAxis =
         ChartAxisInput.visible(
@@ -606,19 +604,19 @@ class ProtocolDefaultingCoverageTest {
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
-            Boolean.FALSE);
+            false);
     PrintSetupInput defaultedPrintSetup = PrintSetupInput.defaults();
     PrintSetupInput explicitPrintSetup =
         new PrintSetupInput(
             new PrintMarginsInput(0.6d, 0.6d, 0.7d, 0.7d, 0.2d, 0.2d),
-            Boolean.TRUE,
-            Boolean.TRUE,
-            Boolean.TRUE,
+            true,
+            true,
+            true,
             Integer.valueOf(9),
-            Boolean.TRUE,
-            Boolean.TRUE,
+            true,
+            true,
             Integer.valueOf(2),
-            Boolean.TRUE,
+            true,
             Integer.valueOf(7),
             List.of(3),
             List.of(4));
@@ -667,9 +665,10 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(List.of(4), explicitPrintSetup.columnBreaks());
     assertTrue(defaultedSignatureLine.allowComments());
     assertThrows(
-        NullPointerException.class,
+        tools.jackson.core.JacksonException.class,
         () ->
-            new ChartInput(
+            readOmitted(
+                ChartInput.class,
                 "BudgetChart",
                 twoCellAnchor(),
                 null,
@@ -679,18 +678,31 @@ class ProtocolDefaultingCoverageTest {
                 List.of(
                     new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(series)))));
     assertThrows(
-        NullPointerException.class,
+        tools.jackson.core.JacksonException.class,
         () ->
-            new ChartAxisInput(
+            readOmitted(
+                ChartAxisInput.class,
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 null));
     assertThrows(
-        NullPointerException.class,
+        tools.jackson.core.JacksonException.class,
         () ->
-            new PrintSetupInput(
-                null, null, null, null, null, null, null, null, null, null, null, null));
+            readOmitted(
+                PrintSetupInput.class,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null));
   }
 
   @Test
@@ -714,7 +726,8 @@ class ProtocolDefaultingCoverageTest {
             FormulaEnvironmentInput.empty(),
             List.of());
     WorkbookPlan wireDefaultedPlan =
-        new WorkbookPlan(
+        readOmitted(
+            WorkbookPlan.class,
             GridGrindProtocolVersion.current(),
             Optional.empty(),
             new WorkbookPlan.WorkbookSource.New(),
@@ -977,38 +990,53 @@ class ProtocolDefaultingCoverageTest {
   }
 
   @Test
-  void chartPlotWireCreatorsDefaultNullBooleansAndOptionals() {
+  void chartPlotWireDefaultsHandleOmittedBooleansAndOptionals() {
     ChartSeriesInput series = sampleSeries();
     List<ChartAxisInput> axes = sampleAxes();
     ChartPlotInput.Area3D area3D =
-        new ChartPlotInput.Area3D(
-            null, ExcelChartGrouping.STANDARD, nullOptional(), axes, List.of(series));
+        readOmitted(
+            ChartPlotInput.Area3D.class,
+            null,
+            ExcelChartGrouping.STANDARD,
+            null,
+            axes,
+            List.of(series));
     ChartPlotInput.Bar3D bar3D =
-        new ChartPlotInput.Bar3D(
+        readOmitted(
+            ChartPlotInput.Bar3D.class,
             null,
             ExcelChartBarDirection.COLUMN,
             ExcelChartBarGrouping.CLUSTERED,
-            nullOptional(),
-            nullOptional(),
-            nullOptional(),
+            null,
+            null,
+            null,
             axes,
             List.of(series));
     ChartPlotInput.Doughnut doughnut =
-        new ChartPlotInput.Doughnut(null, nullOptional(), nullOptional(), List.of(series));
+        readOmitted(ChartPlotInput.Doughnut.class, null, null, null, List.of(series));
     ChartPlotInput.Line line =
-        new ChartPlotInput.Line(null, ExcelChartGrouping.STANDARD, axes, List.of(series));
+        readOmitted(
+            ChartPlotInput.Line.class, null, ExcelChartGrouping.STANDARD, axes, List.of(series));
     ChartPlotInput.Line3D line3D =
-        new ChartPlotInput.Line3D(
-            null, ExcelChartGrouping.STANDARD, nullOptional(), axes, List.of(series));
-    ChartPlotInput.Pie pie = new ChartPlotInput.Pie(null, nullOptional(), List.of(series));
-    ChartPlotInput.Pie3D pie3D = new ChartPlotInput.Pie3D(null, List.of(series));
+        readOmitted(
+            ChartPlotInput.Line3D.class,
+            null,
+            ExcelChartGrouping.STANDARD,
+            null,
+            axes,
+            List.of(series));
+    ChartPlotInput.Pie pie = readOmitted(ChartPlotInput.Pie.class, null, null, List.of(series));
+    ChartPlotInput.Pie3D pie3D = readOmitted(ChartPlotInput.Pie3D.class, null, List.of(series));
     ChartPlotInput.Radar radar =
-        new ChartPlotInput.Radar(null, ExcelChartRadarStyle.STANDARD, axes, List.of(series));
+        readOmitted(
+            ChartPlotInput.Radar.class, null, ExcelChartRadarStyle.STANDARD, axes, List.of(series));
     ChartPlotInput.Scatter scatter =
-        new ChartPlotInput.Scatter(null, ExcelChartScatterStyle.LINE, axes, List.of(series));
-    ChartPlotInput.Surface surface = new ChartPlotInput.Surface(null, null, axes, List.of(series));
+        readOmitted(
+            ChartPlotInput.Scatter.class, null, ExcelChartScatterStyle.LINE, axes, List.of(series));
+    ChartPlotInput.Surface surface =
+        readOmitted(ChartPlotInput.Surface.class, null, null, axes, List.of(series));
     ChartPlotInput.Surface3D surface3D =
-        new ChartPlotInput.Surface3D(null, null, axes, List.of(series));
+        readOmitted(ChartPlotInput.Surface3D.class, null, null, axes, List.of(series));
 
     assertFalse(area3D.varyColors());
     assertEquals(Optional.empty(), area3D.gapDepth());
@@ -1267,12 +1295,30 @@ class ProtocolDefaultingCoverageTest {
             true));
   }
 
-  @SuppressWarnings("NullOptional")
-  private static <T> Optional<T> nullOptional() {
-    return null;
-  }
-
   private static <T> T readJson(JsonMapper mapper, String json, Class<T> targetType) {
     return mapper.readValue(json, targetType);
+  }
+
+  private static <T> T readOmitted(Class<T> type, Object... values) {
+    var mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
+    var fields = mapper.createObjectNode();
+    var variant = type.getAnnotation(dev.erst.gridgrind.core.metadata.Variant.class);
+    if (variant != null) {
+      fields.put("type", variant.id());
+    }
+    var components = type.getRecordComponents();
+    assertEquals(
+        components.length, values.length, "Fixture supplies a position for every component");
+    for (int index = 0; index < values.length; index++) {
+      if (values[index] != null) {
+        fields.set(
+            components[index].getName(),
+            mapper.readTree(
+                mapper
+                    .writerFor(mapper.constructType(components[index].getGenericType()))
+                    .writeValueAsBytes(values[index])));
+      }
+    }
+    return mapper.readValue(mapper.writeValueAsBytes(fields), type);
   }
 }

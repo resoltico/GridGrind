@@ -1,8 +1,5 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.ArrayList;
@@ -15,7 +12,7 @@ public record AutofilterSortStateReport(
     RangeLabel range,
     boolean caseSensitive,
     boolean columnSort,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ExcelAutofilterSortMethod> sortMethod,
+    Optional<ExcelAutofilterSortMethod> sortMethod,
     List<AutofilterSortConditionReport> conditions) {
   /** Creates a report sort-state with no explicit sort-method override. */
   public static AutofilterSortStateReport withoutSortMethod(
@@ -33,16 +30,6 @@ public record AutofilterSortStateReport(
         Objects.requireNonNull(sortMethod, "sortMethod must not be null");
     sortMethod = normalizedSortMethod;
     conditions = copyConditions(conditions);
-  }
-
-  @JsonCreator
-  static AutofilterSortStateReport create(
-      @JsonProperty("range") RangeLabel range,
-      @JsonProperty("caseSensitive") boolean caseSensitive,
-      @JsonProperty("columnSort") boolean columnSort,
-      @JsonProperty("sortMethod") Optional<ExcelAutofilterSortMethod> sortMethod,
-      @JsonProperty("conditions") List<AutofilterSortConditionReport> conditions) {
-    return new AutofilterSortStateReport(range, caseSensitive, columnSort, sortMethod, conditions);
   }
 
   private static List<AutofilterSortConditionReport> copyConditions(

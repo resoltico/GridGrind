@@ -1,9 +1,6 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
-import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.Objects;
@@ -15,9 +12,7 @@ import java.util.Objects;
     displayOrder = 56)
 public record AutofilterFilterColumnInput(
     long columnId,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.TRUE)
-        @WireDefault("true")
-        boolean showButton,
+    @ProtocolField(optional = true) @WireDefault("true") boolean showButton,
     AutofilterFilterCriterionInput criterion) {
   /** Creates a filter-column payload with an explicit visible button. */
   public static AutofilterFilterColumnInput visibleButton(
@@ -30,14 +25,5 @@ public record AutofilterFilterColumnInput(
       throw new IllegalArgumentException("columnId must not be negative");
     }
     Objects.requireNonNull(criterion, "criterion must not be null");
-  }
-
-  /** Creates a filter-column payload from the authored wire shape. */
-  @JsonCreator
-  public AutofilterFilterColumnInput(
-      @JsonProperty("columnId") long columnId,
-      @JsonProperty("showButton") Boolean showButton,
-      @JsonProperty("criterion") AutofilterFilterCriterionInput criterion) {
-    this(columnId, ProtocolBooleanDefault.TRUE.resolve(showButton), criterion);
   }
 }

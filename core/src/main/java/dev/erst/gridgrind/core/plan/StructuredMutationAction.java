@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
@@ -96,8 +95,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetAutofilter(
-      List<AutofilterFilterColumnInput> criteria,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<AutofilterSortStateInput> sortState)
+      List<AutofilterFilterColumnInput> criteria, Optional<AutofilterSortStateInput> sortState)
       implements StructuredMutationAction {
     /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
     public SetAutofilter() {

@@ -1,9 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.metadata.WireDefault;
@@ -50,9 +46,7 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
         TableCellSelector.ByColumnName.class
       },
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
-  record GetCells(
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection)
-      implements SheetIntrospectionQuery {
+  record GetCells(Optional<CellReadProjection> projection) implements SheetIntrospectionQuery {
     /** Creates a cell-read query that relies on the default cell-read projection. */
     public GetCells() {
       this(Optional.empty());
@@ -77,24 +71,13 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
       targetSelectors = {RangeSelector.RectangularWindow.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetWindow(
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection,
-      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-          @WireDefault(value = "false", omit = true)
+      Optional<CellReadProjection> projection,
+      @ProtocolField(optional = true) @WireDefault(value = "false", omit = true)
           boolean includeBlanks)
       implements SheetIntrospectionQuery {
     /** Creates a sparse window query that relies on the default cell-read projection. */
     public GetWindow() {
       this(Optional.empty(), false);
-    }
-
-    /** Reads a window request while normalizing the omitted sparse-window flag. */
-    @JsonCreator
-    public static GetWindow create(
-        @JsonProperty("projection") Optional<CellReadProjection> projection,
-        @JsonProperty("includeBlanks") Boolean includeBlanks) {
-      return new GetWindow(
-          projection == null ? Optional.empty() : projection,
-          ProtocolBooleanDefault.FALSE.resolve(includeBlanks));
     }
 
     public GetWindow {

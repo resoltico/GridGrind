@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.catalog.gather;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.catalog.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.core.catalog.FieldEntry;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
@@ -65,8 +64,7 @@ public final class CatalogGatherers {
         () -> new FieldMetadataState(optionalFieldSet, projectedFieldMap),
         (state, component, downstream) -> {
           if (component.isAnnotationPresent(CatalogIgnored.class)
-              || component.getAccessor().isAnnotationPresent(CatalogIgnored.class)
-              || component.getAccessor().isAnnotationPresent(JsonIgnore.class)) {
+              || component.getAccessor().isAnnotationPresent(CatalogIgnored.class)) {
             return true;
           }
           downstream.push(

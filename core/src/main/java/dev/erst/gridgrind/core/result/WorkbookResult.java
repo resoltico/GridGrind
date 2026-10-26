@@ -42,9 +42,7 @@ public sealed interface WorkbookResult {
   @Variant(id = "SUCCEEDED", summary = "Successful workbook execution result.")
   record Success(
       GridGrindProtocolVersion protocolVersion,
-      @com.fasterxml.jackson.annotation.JsonInclude(
-              com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
-          Optional<PlanId> planId,
+      Optional<PlanId> planId,
       ExecutionJournal journal,
       CalculationReport calculation,
       PersistenceOutcome persistence,
@@ -75,9 +73,7 @@ public sealed interface WorkbookResult {
   @Variant(id = "FAILED", summary = "Failed workbook execution with a structured problem.")
   record Failure(
       GridGrindProtocolVersion protocolVersion,
-      @com.fasterxml.jackson.annotation.JsonInclude(
-              com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
-          Optional<PlanId> planId,
+      Optional<PlanId> planId,
       ExecutionJournal journal,
       CalculationReport calculation,
       PersistenceOutcome persistence,

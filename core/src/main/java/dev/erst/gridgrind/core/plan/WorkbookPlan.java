@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
@@ -33,7 +32,7 @@ import java.util.Set;
         "Complete GridGrind plan for workbook source, execution policy, formula environment, ordered mutation, assertion, and inspection steps, and persistence.")
 public record WorkbookPlan(
     GridGrindProtocolVersion protocolVersion,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<PlanId> planId,
+    Optional<PlanId> planId,
     WorkbookSource source,
     WorkbookPersistence persistence,
     @ProtocolField(optional = true)
@@ -49,9 +48,8 @@ public record WorkbookPlan(
     Objects.requireNonNull(planId, "planId must not be null");
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(persistence, "persistence must not be null");
-    execution = execution == null ? ExecutionPolicyInput.defaults() : execution;
-    formulaEnvironment =
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment;
+    Objects.requireNonNull(execution, "execution must not be null");
+    Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null");
     steps = copySteps(steps);
   }
 
@@ -196,7 +194,7 @@ public record WorkbookPlan(
                     dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues
                         .WORKBOOK_PATH_SUFFIX)
             String path,
-        @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<OoxmlOpenSecurityInput> security)
+        Optional<OoxmlOpenSecurityInput> security)
         implements WorkbookSource {
       public ExistingFile {
         requireXlsxWorkbookPath(path);
@@ -238,9 +236,7 @@ public record WorkbookPlan(
         summary =
             "Overwrite the opened source workbook at source.path. No path field is accepted on OVERWRITE; the write target is the same path opened by the EXISTING source. persistence.security is required and declares both final OOXML encryption and signature dispositions. The response persistence.type echoes OVERWRITE, includes sourcePath (the original source path string) whenever an EXISTING source path was available, and otherwise omits sourcePath instead of inventing one. It carries write.status=WRITTEN with executionPath after a successful save or write.status=NOT_WRITTEN when the run fails before any file is updated.",
         noteRefs = {"requestOwnedPathRule"})
-    record Overwrite(
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-            Optional<OoxmlPersistenceSecurityInput> security)
+    record Overwrite(Optional<OoxmlPersistenceSecurityInput> security)
         implements WorkbookPersistence {
       public Overwrite {
         security = normalizePersistenceSecurity(security);
@@ -266,8 +262,7 @@ public record WorkbookPlan(
                         .WORKBOOK_PATH_SUFFIX)
             String path,
         IfExists ifExists,
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-            Optional<OoxmlPersistenceSecurityInput> security)
+        Optional<OoxmlPersistenceSecurityInput> security)
         implements WorkbookPersistence {
       public SaveAs {
         requireXlsxWorkbookPath(path);

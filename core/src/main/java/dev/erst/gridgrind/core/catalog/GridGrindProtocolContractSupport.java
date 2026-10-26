@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.WireString;
@@ -41,14 +39,7 @@ public final class GridGrindProtocolContractSupport {
     return effectiveObjectContract(recordType).optionalFields();
   }
 
-  /**
-   * Returns the effective request-object contract declared by one record's JSON creator.
-   *
-   * <p>When a record supplies one {@link com.fasterxml.jackson.annotation.JsonCreator}, its named
-   * parameters own the wire shape; otherwise the visible record components own it. A creator that
-   * disagrees with its record is a program defect, not an ambiguity for request validation to guess
-   * through.
-   */
+  /** Returns the request-object contract declared by canonical components and metadata. */
   public static EffectiveObjectContract effectiveObjectContract(
       Class<? extends Record> recordType) {
     Objects.requireNonNull(recordType, "recordType must not be null");
@@ -71,10 +62,7 @@ public final class GridGrindProtocolContractSupport {
   /** Returns the JSON property name owned by one record component. */
   public static String wireFieldName(RecordComponent component) {
     Objects.requireNonNull(component, "component must not be null");
-    JsonProperty annotation = component.getAccessor().getAnnotation(JsonProperty.class);
-    return annotation == null || annotation.value().isBlank()
-        ? component.getName()
-        : annotation.value();
+    return component.getName();
   }
 
   /** Returns whether one record is reachable from the authored request graph. */
@@ -133,8 +121,9 @@ public final class GridGrindProtocolContractSupport {
   }
 
   private static Optional<Boolean> booleanDefault(RecordComponent component) {
-    ProtocolField field = component.getAnnotation(ProtocolField.class);
-    return field == null ? Optional.empty() : field.booleanDefault().value();
+    return dev.erst.gridgrind.core.metadata.ModelDefaults.publishedValue(component)
+        .filter(Boolean.class::isInstance)
+        .map(Boolean.class::cast);
   }
 
   private static java.util.Set<Class<? extends Record>> discoverRequestRecordTypes() {
@@ -173,11 +162,6 @@ public final class GridGrindProtocolContractSupport {
         collectRequestTypes(subtype, records, visited);
       }
     }
-  }
-
-  static Optional<Class<?>> creatorParameterType(
-      Class<? extends Record> recordType, String fieldName) {
-    return RequestCreatorContractSupport.creatorParameterType(recordType, fieldName);
   }
 
   /** The complete non-overlapping wire-field contract for one request object. */

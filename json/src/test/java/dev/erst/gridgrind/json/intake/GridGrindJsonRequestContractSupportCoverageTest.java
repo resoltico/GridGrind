@@ -2,60 +2,30 @@ package dev.erst.gridgrind.json.intake;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogIgnored;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.problem.MissingRequiredField;
 import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Covers annotation-carrier and discriminator branches for request-contract shape detection. */
+/** Checks canonical field presence before record binding. */
 class GridGrindJsonRequestContractSupportCoverageTest {
-  @Test
-  void missingRequiredComponentDetectionHonorsDiscriminatorsAndRecordAnnotationCarriers() {
-    JsonNode emptyObject = JsonMapper.builder().build().createObjectNode();
+  private record Shape(
+      @CatalogIgnored String ignored, @WireDefault("true") boolean enabled, String required) {}
 
+  @Test
+  void requiredComponentsUseCanonicalNamesAndMetadataDefaults() {
+    var empty = JsonMapper.builder().build().createObjectNode();
     assertEquals(
         "type",
         assertInstanceOf(
                 MissingTypeDiscriminator.class,
                 GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
-                        emptyObject, InspectionQuery.class, "")
-                    .orElseThrow())
-            .jsonPathValue());
-    assertEquals(
-        "visible",
-        assertInstanceOf(
-                MissingRequiredField.class,
-                GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
-                        emptyObject, IgnoredComponentRecord.class, "")
-                    .orElseThrow())
-            .jsonPathValue());
-    assertEquals(
-        "visible",
-        assertInstanceOf(
-                MissingRequiredField.class,
-                GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
-                        emptyObject, IgnoredAccessorRecord.class, "")
-                    .orElseThrow())
-            .jsonPathValue());
-    assertEquals(
-        "componentWire",
-        assertInstanceOf(
-                MissingRequiredField.class,
-                GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
-                        emptyObject, ComponentPropertyRecord.class, "")
-                    .orElseThrow())
-            .jsonPathValue());
-    assertEquals(
-        "componentWire",
-        assertInstanceOf(
-                MissingRequiredField.class,
-                GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
-                        emptyObject, ComponentPropertyRecord.class, "componentWire")
+                        empty, InspectionQuery.class, "")
                     .orElseThrow())
             .jsonPathValue());
     assertEquals(
@@ -63,55 +33,12 @@ class GridGrindJsonRequestContractSupportCoverageTest {
         assertInstanceOf(
                 MissingRequiredField.class,
                 GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
-                        emptyObject, BlankComponentPropertyRecord.class, "")
+                        empty, Shape.class, "")
                     .orElseThrow())
             .jsonPathValue());
-    assertEquals(
-        "accessorWire",
-        assertInstanceOf(
-                MissingRequiredField.class,
-                GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
-                        emptyObject, AccessorPropertyRecord.class, "")
-                    .orElseThrow())
-            .jsonPathValue());
-    assertEquals(
-        "required",
-        assertInstanceOf(
-                MissingRequiredField.class,
-                GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
-                        emptyObject, BlankAccessorPropertyRecord.class, "")
-                    .orElseThrow())
-            .jsonPathValue());
-  }
-
-  private record IgnoredComponentRecord(@JsonIgnore String ignored, String visible) {}
-
-  private record IgnoredAccessorRecord(String ignored, String visible) {
-    @JsonIgnore
-    @SuppressWarnings("UnusedMethod")
-    @Override
-    public String ignored() {
-      return ignored;
-    }
-  }
-
-  private record ComponentPropertyRecord(@JsonProperty("componentWire") String required) {}
-
-  private record BlankComponentPropertyRecord(@JsonProperty("") String required) {}
-
-  private record AccessorPropertyRecord(String required) {
-    @JsonProperty("accessorWire")
-    @Override
-    public String required() {
-      return required;
-    }
-  }
-
-  private record BlankAccessorPropertyRecord(String required) {
-    @JsonProperty("")
-    @Override
-    public String required() {
-      return required;
-    }
+    empty.put("required", "present");
+    assertTrue(
+        GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(empty, Shape.class, "")
+            .isEmpty());
   }
 }

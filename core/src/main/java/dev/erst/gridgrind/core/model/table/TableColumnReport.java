@@ -1,8 +1,5 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
@@ -12,10 +9,10 @@ import java.util.Optional;
 public record TableColumnReport(
     long id,
     String name,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> uniqueName,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> totalsRowLabel,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> totalsRowFunction,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> calculatedColumnFormula) {
+    Optional<String> uniqueName,
+    Optional<String> totalsRowLabel,
+    Optional<String> totalsRowFunction,
+    Optional<String> calculatedColumnFormula) {
   /** Creates a table-column report with no auxiliary metadata. */
   public TableColumnReport(long id, String name) {
     this(id, name, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
@@ -30,18 +27,6 @@ public record TableColumnReport(
     totalsRowLabel = normalizeOptional(totalsRowLabel);
     totalsRowFunction = normalizeOptional(totalsRowFunction);
     calculatedColumnFormula = normalizeOptional(calculatedColumnFormula);
-  }
-
-  @JsonCreator
-  static TableColumnReport create(
-      @JsonProperty("id") long id,
-      @JsonProperty("name") String name,
-      @JsonProperty("uniqueName") Optional<String> uniqueName,
-      @JsonProperty("totalsRowLabel") Optional<String> totalsRowLabel,
-      @JsonProperty("totalsRowFunction") Optional<String> totalsRowFunction,
-      @JsonProperty("calculatedColumnFormula") Optional<String> calculatedColumnFormula) {
-    return new TableColumnReport(
-        id, name, uniqueName, totalsRowLabel, totalsRowFunction, calculatedColumnFormula);
   }
 
   private static Optional<String> normalizeOptional(Optional<String> value) {

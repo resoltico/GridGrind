@@ -97,12 +97,14 @@ class CommandErrorTest {
             GridGrindCliJson.readBytes(
                 json.replace("\"REJECTED\"", "\"FAILED\"").getBytes(StandardCharsets.UTF_8),
                 CommandError.class));
+    var mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
+    var missingStatus = (tools.jackson.databind.node.ObjectNode) mapper.readTree(json);
+    assertEquals("REJECTED", missingStatus.remove("status").asText());
     assertThrows(
         JacksonException.class,
         () ->
             GridGrindCliJson.readBytes(
-                json.replace("\"status\":\"REJECTED\",", "").getBytes(StandardCharsets.UTF_8),
-                CommandError.class));
+                mapper.writeValueAsBytes(missingStatus), CommandError.class));
   }
 
   @Test

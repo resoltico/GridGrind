@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
 import java.util.Objects;
@@ -13,12 +12,12 @@ import java.util.Optional;
         "Style patch applied to a cell or range; at least one field must be set. Colors preserve RGB, theme, indexed, and tint semantics; style subgroups are nested explicitly.",
     displayOrder = 43)
 public record CellStylePatchInput(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> numberFormat,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellAlignmentInput> alignment,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellFontInput> font,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellFillInput> fill,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellBorderInput> border,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellProtectionInput> protection) {
+    Optional<String> numberFormat,
+    Optional<CellAlignmentInput> alignment,
+    Optional<CellFontInput> font,
+    Optional<CellFillInput> fill,
+    Optional<CellBorderInput> border,
+    Optional<CellProtectionInput> protection) {
   public CellStylePatchInput {
     Objects.requireNonNull(numberFormat, "numberFormat must not be null");
     Objects.requireNonNull(alignment, "alignment must not be null");

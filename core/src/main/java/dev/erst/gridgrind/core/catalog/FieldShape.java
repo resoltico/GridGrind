@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +21,7 @@ public sealed interface FieldShape
   @Variant(id = "SCALAR", summary = "Scalar JSON value type such as STRING, NUMBER, or BOOLEAN.")
   record Scalar(
       ScalarType scalarType,
-      @JsonInclude(JsonInclude.Include.NON_EMPTY) List<FieldConstraint> constraints)
+      @WireDefault(value = "[]", omit = true) List<FieldConstraint> constraints)
       implements FieldShape {
     /** Creates an unconstrained scalar field shape. */
     public Scalar(ScalarType scalarType) {

@@ -4,6 +4,12 @@
   "stdout" : {
     "discriminatorField" : "type",
     "fieldMetadataKeys" : [ {
+      "meaning" : "Field omission resolves to this constant JSON value.",
+      "name" : "defaultValue"
+    }, {
+      "meaning" : "Field omission copies the named sibling component's value.",
+      "name" : "defaultFrom"
+    }, {
       "meaning" : "Field is present only when one of the listed read-projection facets is requested.",
       "name" : "projectedByFacets"
     }, {

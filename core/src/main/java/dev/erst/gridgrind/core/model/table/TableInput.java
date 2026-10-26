@@ -1,9 +1,6 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
-import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.source.TextSourceInput;
@@ -30,27 +27,18 @@ public record TableInput(
         TableName name,
     SheetName sheetName,
     RangeRef range,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-        @WireDefault("false")
-        boolean showTotalsRow,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.TRUE)
-        @WireDefault("true")
-        boolean hasAutofilter,
+    @ProtocolField(optional = true) @WireDefault("false") boolean showTotalsRow,
+    @ProtocolField(optional = true) @WireDefault("true") boolean hasAutofilter,
     TableStyleInput style,
-    @ProtocolField(optional = true) TextSourceInput comment,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-        @WireDefault("false")
-        boolean published,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-        @WireDefault("false")
-        boolean insertRow,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-        @WireDefault("false")
-        boolean insertRowShift,
-    @ProtocolField(optional = true) String headerRowCellStyle,
-    @ProtocolField(optional = true) String dataCellStyle,
-    @ProtocolField(optional = true) String totalsRowCellStyle,
-    @ProtocolField(optional = true) java.util.List<TableColumnInput> columns) {
+    @ProtocolField(optional = true) @WireDefault(factory = TextSourceInput.class, method = "empty")
+        TextSourceInput comment,
+    @ProtocolField(optional = true) @WireDefault("false") boolean published,
+    @ProtocolField(optional = true) @WireDefault("false") boolean insertRow,
+    @ProtocolField(optional = true) @WireDefault("false") boolean insertRowShift,
+    @ProtocolField(optional = true) @WireDefault String headerRowCellStyle,
+    @ProtocolField(optional = true) @WireDefault String dataCellStyle,
+    @ProtocolField(optional = true) @WireDefault String totalsRowCellStyle,
+    @ProtocolField(optional = true) @WireDefault("[]") java.util.List<TableColumnInput> columns) {
   /** Creates a table payload with explicit standard metadata. */
   public static TableInput withDefaultMetadata(
       TableName name,
@@ -88,40 +76,5 @@ public record TableInput(
     for (TableColumnInput column : columns) {
       Objects.requireNonNull(column, "columns must not contain null values");
     }
-  }
-
-  /** Creates a table payload from the full authored wire shape. */
-  @JsonCreator
-  @SuppressWarnings("PMD.ExcessiveParameterList")
-  public TableInput(
-      @JsonProperty("name") TableName name,
-      @JsonProperty("sheetName") SheetName sheetName,
-      @JsonProperty("range") RangeRef range,
-      @JsonProperty("showTotalsRow") Boolean showTotalsRow,
-      @JsonProperty("hasAutofilter") Boolean hasAutofilter,
-      @JsonProperty("style") TableStyleInput style,
-      @JsonProperty("comment") TextSourceInput comment,
-      @JsonProperty("published") Boolean published,
-      @JsonProperty("insertRow") Boolean insertRow,
-      @JsonProperty("insertRowShift") Boolean insertRowShift,
-      @JsonProperty("headerRowCellStyle") String headerRowCellStyle,
-      @JsonProperty("dataCellStyle") String dataCellStyle,
-      @JsonProperty("totalsRowCellStyle") String totalsRowCellStyle,
-      @JsonProperty("columns") java.util.List<TableColumnInput> columns) {
-    this(
-        name,
-        sheetName,
-        range,
-        ProtocolBooleanDefault.FALSE.resolve(showTotalsRow),
-        ProtocolBooleanDefault.TRUE.resolve(hasAutofilter),
-        Objects.requireNonNull(style, "style must not be null"),
-        comment == null ? new TextSourceInput.Inline("") : comment,
-        ProtocolBooleanDefault.FALSE.resolve(published),
-        ProtocolBooleanDefault.FALSE.resolve(insertRow),
-        ProtocolBooleanDefault.FALSE.resolve(insertRowShift),
-        headerRowCellStyle == null ? "" : headerRowCellStyle,
-        dataCellStyle == null ? "" : dataCellStyle,
-        totalsRowCellStyle == null ? "" : totalsRowCellStyle,
-        columns == null ? java.util.List.of() : columns);
   }
 }

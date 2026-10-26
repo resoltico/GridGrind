@@ -152,11 +152,7 @@ class AdvancedMutationProtocolTypesTest {
                 Optional.empty(),
                 ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                 Optional.empty()));
-    assertTrue(
-        OoxmlSignatureInput.create(
-                "tmp/signing-material.p12", ref("keystore-pass"), null, null, null, null)
-            .keyPasswordRef()
-            .isEmpty());
+
     assertThrows(NullPointerException.class, () -> new OoxmlPersistenceSecurityInput(null, null));
   }
 

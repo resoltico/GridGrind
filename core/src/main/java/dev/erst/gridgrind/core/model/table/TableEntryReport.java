@@ -1,9 +1,7 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.TableLabel;
@@ -22,8 +20,8 @@ public record TableEntryReport(
     RangeLabel range,
     Structure structure,
     TableStyleReport style,
-    Behavior behavior,
-    Presentation presentation) {
+    @WireDefault(factory = Behavior.class, method = "defaults") Behavior behavior,
+    @WireDefault(factory = Presentation.class, method = "empty") Presentation presentation) {
   /** Creates a table report with defaulted per-column metadata and optional presentation state. */
   public TableEntryReport(
       TableLabel name,
@@ -52,25 +50,6 @@ public record TableEntryReport(
     Objects.requireNonNull(style, "style must not be null");
     Objects.requireNonNull(behavior, "behavior must not be null");
     Objects.requireNonNull(presentation, "presentation must not be null");
-  }
-
-  @JsonCreator
-  static TableEntryReport create(
-      @JsonProperty("name") TableLabel name,
-      @JsonProperty("sheetName") SheetLabel sheetName,
-      @JsonProperty("range") RangeLabel range,
-      @JsonProperty("structure") Structure structure,
-      @JsonProperty("style") TableStyleReport style,
-      @JsonProperty("behavior") Behavior behavior,
-      @JsonProperty("presentation") Presentation presentation) {
-    return new TableEntryReport(
-        name,
-        sheetName,
-        range,
-        Objects.requireNonNull(structure, "structure must not be null"),
-        style,
-        Objects.requireNonNullElseGet(behavior, Behavior::defaults),
-        Objects.requireNonNullElseGet(presentation, Presentation::empty));
   }
 
   /** Structural table facts that must move together to describe one persisted table shape. */
@@ -114,7 +93,8 @@ public record TableEntryReport(
       displayOrder = 93)
   public record Behavior(
       boolean hasAutofilter, boolean published, boolean insertRow, boolean insertRowShift) {
-    static Behavior defaults() {
+    /** Returns the standard persisted table behavior. */
+    public static Behavior defaults() {
       return new Behavior(false, false, false, false);
     }
   }
@@ -125,10 +105,10 @@ public record TableEntryReport(
       summary = "Optional table comment and style labels attached to one persisted workbook table.",
       displayOrder = 94)
   public record Presentation(
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> comment,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> headerRowCellStyle,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> dataCellStyle,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> totalsRowCellStyle) {
+      Optional<String> comment,
+      Optional<String> headerRowCellStyle,
+      Optional<String> dataCellStyle,
+      Optional<String> totalsRowCellStyle) {
     public Presentation {
       comment = normalizeOptional(comment);
       headerRowCellStyle = normalizeOptional(headerRowCellStyle);
@@ -136,7 +116,8 @@ public record TableEntryReport(
       totalsRowCellStyle = normalizeOptional(totalsRowCellStyle);
     }
 
-    static Presentation empty() {
+    /** Returns absent optional table presentation facts. */
+    public static Presentation empty() {
       return new Presentation(
           Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }

@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.validation;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
@@ -33,10 +32,7 @@ public sealed interface ConditionalFormattingRuleReport
       id = "FORMULA_RULE",
       summary = "Formula-driven conditional-formatting rule with one differential-style payload.")
   record FormulaRule(
-      int priority,
-      boolean stopIfTrue,
-      String formula,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleReport> style)
+      int priority, boolean stopIfTrue, String formula, Optional<DifferentialStyleReport> style)
       implements ConditionalFormattingRuleReport {
     public FormulaRule {
       requirePriority(priority);
@@ -58,8 +54,8 @@ public sealed interface ConditionalFormattingRuleReport
       boolean stopIfTrue,
       ExcelComparisonOperator operator,
       String formula1,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleReport> style)
+      Optional<String> formula2,
+      Optional<DifferentialStyleReport> style)
       implements ConditionalFormattingRuleReport {
     public CellValueRule {
       requirePriority(priority);
@@ -101,7 +97,7 @@ public sealed interface ConditionalFormattingRuleReport
   record DataBarRule(
       int priority,
       boolean stopIfTrue,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<RgbHex> color,
+      Optional<RgbHex> color,
       boolean iconOnly,
       int widthMin,
       int widthMax,
@@ -152,7 +148,7 @@ public sealed interface ConditionalFormattingRuleReport
       int rank,
       boolean percent,
       boolean bottom,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleReport> style)
+      Optional<DifferentialStyleReport> style)
       implements ConditionalFormattingRuleReport {
     public Top10Rule {
       requirePriority(priority);

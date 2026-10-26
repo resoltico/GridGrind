@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.core.model.print;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.Objects;
@@ -23,14 +21,6 @@ public record HeaderFooterTextInput(
     Objects.requireNonNull(left, "left must not be null");
     Objects.requireNonNull(center, "center must not be null");
     Objects.requireNonNull(right, "right must not be null");
-  }
-
-  @JsonCreator
-  static HeaderFooterTextInput create(
-      @JsonProperty("left") TextSourceInput left,
-      @JsonProperty("center") TextSourceInput center,
-      @JsonProperty("right") TextSourceInput right) {
-    return new HeaderFooterTextInput(left, center, right);
   }
 
   private static TextSourceInput defaultSegment() {

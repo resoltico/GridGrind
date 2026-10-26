@@ -1,8 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.metadata.WireDefault;
@@ -54,26 +51,12 @@ public sealed interface WorkbookIntrospectionQuery extends InspectionQuery.Intro
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record ExportCustomXmlMapping(
       CustomXmlMappingLocator mapping,
-      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-          @WireDefault("false")
-          boolean validateSchema,
-      @ProtocolField(optional = true) String encoding)
+      @ProtocolField(optional = true) @WireDefault("false") boolean validateSchema,
+      @ProtocolField(optional = true) @WireDefault("UTF-8") String encoding)
       implements WorkbookIntrospectionQuery {
     /** Creates one UTF-8 export request without requiring the caller to pass the encoding. */
     public ExportCustomXmlMapping(CustomXmlMappingLocator mapping, boolean validateSchema) {
       this(mapping, validateSchema, StandardCharsets.UTF_8.name());
-    }
-
-    /** Reads one export request while defaulting omitted flags and encoding. */
-    @JsonCreator
-    public ExportCustomXmlMapping(
-        @JsonProperty("mapping") CustomXmlMappingLocator mapping,
-        @JsonProperty("validateSchema") Boolean validateSchema,
-        @JsonProperty("encoding") String encoding) {
-      this(
-          mapping,
-          ProtocolBooleanDefault.FALSE.resolve(validateSchema),
-          encoding == null ? StandardCharsets.UTF_8.name() : encoding);
     }
 
     public ExportCustomXmlMapping {

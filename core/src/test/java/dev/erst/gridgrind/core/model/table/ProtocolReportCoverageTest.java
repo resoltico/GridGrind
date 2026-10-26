@@ -71,7 +71,7 @@ class ProtocolReportCoverageTest {
             new RangeLabel("A1:A3"), false, CellColorReport.rgb(new RgbHex("#AABBCC")));
 
     AutofilterSortStateReport normalized =
-        AutofilterSortStateReport.create(
+        new AutofilterSortStateReport(
             new RangeLabel("A1:A3"), true, false, Optional.empty(), List.of(reportedFontColor));
 
     assertEquals(Optional.empty(), normalized.sortMethod());

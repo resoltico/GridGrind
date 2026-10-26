@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import org.junit.jupiter.api.Test;
 
-/** Verifies an unannotated record component retains its Java field name. */
-class InputResolutionOriginsDefaultJsonPropertyTest {
+/** Verifies canonical record component names identify resolved source origins. */
+class InputResolutionOriginsFieldNamesTest {
   @Test
-  void retainsTheRecordComponentNameWithoutAJsonProperty() {
+  void usesCanonicalRecordComponentNames() {
     assertEquals(
         "text",
         InputResolutionOrigins.jsonFieldName(

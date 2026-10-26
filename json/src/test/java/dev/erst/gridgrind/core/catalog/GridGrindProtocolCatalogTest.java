@@ -423,8 +423,7 @@ class GridGrindProtocolCatalogTest {
         FieldRequirement.OPTIONAL, getWindow.field("projection").orElseThrow().requirement());
     assertEquals(
         FieldRequirement.OPTIONAL, getWindow.field("includeBlanks").orElseThrow().requirement());
-    assertEquals(
-        Optional.of(false), getWindow.field("includeBlanks").orElseThrow().defaultBoolean());
+    assertEquals(Optional.of(false), getWindow.field("includeBlanks").orElseThrow().defaultValue());
     assertTrue(getWindow.summary().contains("sparse default"));
 
     assertEquals(
@@ -607,6 +606,7 @@ class GridGrindProtocolCatalogTest {
                         new FieldShape.Scalar(ScalarType.STRING),
                         List.of(),
                         Optional.empty(),
+                        Optional.empty(),
                         List.of(),
                         List.of("FORMAT"),
                         false))
@@ -622,12 +622,13 @@ class GridGrindProtocolCatalogTest {
                         new FieldShape.Scalar(ScalarType.STRING),
                         List.of("VALUE", "FORMAT"),
                         Optional.empty(),
+                        Optional.empty(),
                         List.of(new EnumValueDocEntry("FORMAT", "Only format.")),
                         List.of(),
                         false))
             .getMessage());
     assertEquals(
-        "defaultBoolean requires an OPTIONAL BOOLEAN field requirement",
+        "Defaults require an OPTIONAL field requirement",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -637,12 +638,13 @@ class GridGrindProtocolCatalogTest {
                         new FieldShape.Scalar(ScalarType.BOOLEAN),
                         List.of(),
                         Optional.of(false),
+                        Optional.empty(),
                         List.of(),
                         List.of(),
                         false))
             .getMessage());
     assertEquals(
-        "defaultBoolean requires an OPTIONAL BOOLEAN field requirement",
+        "defaultValue must match the field shape",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -652,6 +654,7 @@ class GridGrindProtocolCatalogTest {
                         new FieldShape.Scalar(ScalarType.STRING),
                         List.of(),
                         Optional.of(false),
+                        Optional.empty(),
                         List.of(),
                         List.of(),
                         false))

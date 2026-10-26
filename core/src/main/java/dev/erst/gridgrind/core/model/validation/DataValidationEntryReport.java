@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.validation;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
@@ -44,9 +43,8 @@ public sealed interface DataValidationEntryReport
       DataValidationRuleInput rule,
       boolean allowBlank,
       boolean suppressDropDownArrow,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DataValidationPromptInput> prompt,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<DataValidationErrorAlertInput> errorAlert) {
+      Optional<DataValidationPromptInput> prompt,
+      Optional<DataValidationErrorAlertInput> errorAlert) {
     public DataValidationDefinitionReport {
       Objects.requireNonNull(rule, "rule must not be null");
       Objects.requireNonNull(prompt, "prompt must not be null");

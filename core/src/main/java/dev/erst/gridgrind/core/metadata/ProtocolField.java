@@ -12,9 +12,6 @@ public @interface ProtocolField {
   /** Whether the field may be omitted from an authored request. */
   boolean optional() default false;
 
-  /** The effective default when an optional boolean field is omitted from the wire request. */
-  ProtocolBooleanDefault booleanDefault() default ProtocolBooleanDefault.UNSPECIFIED;
-
   /** Whether diagnostics and telemetry must never reproduce the field value. */
   boolean secret() default false;
 }

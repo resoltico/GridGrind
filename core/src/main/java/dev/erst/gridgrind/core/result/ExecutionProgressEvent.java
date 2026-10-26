@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.result;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -57,10 +56,7 @@ public sealed interface ExecutionProgressEvent
       id = "STARTED",
       summary = "Compact JSONL lifecycle event emitted when one execution phase starts.")
   record Started(
-      String timestamp,
-      Category category,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Integer> stepIndex,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<StepId> stepId)
+      String timestamp, Category category, Optional<Integer> stepIndex, Optional<StepId> stepId)
       implements ExecutionProgressEvent {
     public Started {
       validateCommon(timestamp, category, stepIndex, stepId);
@@ -79,10 +75,7 @@ public sealed interface ExecutionProgressEvent
       id = "SUCCEEDED",
       summary = "Compact JSONL lifecycle event emitted when one execution phase succeeds.")
   record Succeeded(
-      String timestamp,
-      Category category,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Integer> stepIndex,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<StepId> stepId)
+      String timestamp, Category category, Optional<Integer> stepIndex, Optional<StepId> stepId)
       implements ExecutionProgressEvent {
     public Succeeded {
       validateCommon(timestamp, category, stepIndex, stepId);
@@ -105,8 +98,8 @@ public sealed interface ExecutionProgressEvent
       String timestamp,
       Category category,
       GridGrindProblemCode problemCode,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Integer> stepIndex,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<StepId> stepId)
+      Optional<Integer> stepIndex,
+      Optional<StepId> stepId)
       implements ExecutionProgressEvent {
     public Failed {
       validateCommon(timestamp, category, stepIndex, stepId);

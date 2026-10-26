@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.problem;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -122,11 +121,7 @@ public sealed interface ProblemContext
       id = "VALIDATE_REQUEST",
       summary =
           "Context for failures that occur while statically validating bound request fragments.")
-  record ValidateRequest(
-      RequestShape request,
-      @com.fasterxml.jackson.annotation.JsonInclude(
-              com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
-          Optional<JsonLocation> json)
+  record ValidateRequest(RequestShape request, Optional<JsonLocation> json)
       implements RequestShapeContext {
     public ValidateRequest {
       Objects.requireNonNull(request, "request must not be null");
@@ -154,10 +149,7 @@ public sealed interface ProblemContext
   @Variant(
       id = "RESOLVE_INPUTS",
       summary = "Context for failures that occur while resolving source-backed authored inputs.")
-  record ResolveInputs(
-      RequestShape request,
-      InputReference input,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<JsonLocation> json)
+  record ResolveInputs(RequestShape request, InputReference input, Optional<JsonLocation> json)
       implements RequestShapeContext {
     public ResolveInputs {
       Objects.requireNonNull(request, "request must not be null");
@@ -290,7 +282,7 @@ public sealed interface ProblemContext
       RequestShape request,
       StepReference step,
       ProblemLocation location,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<StepReference> surfacedAtStep)
+      Optional<StepReference> surfacedAtStep)
       implements ProblemContext {
     public ExecuteStep {
       Objects.requireNonNull(request, "request must not be null");
@@ -372,9 +364,7 @@ public sealed interface ProblemContext
       summary =
           "Context for failures that occur while persisting the workbook to its destination path.")
   record PersistWorkbook(
-      RequestShape request,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sourceWorkbookPath,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> persistencePath)
+      RequestShape request, Optional<String> sourceWorkbookPath, Optional<String> persistencePath)
       implements ProblemContext {
     public PersistWorkbook {
       Objects.requireNonNull(request, "request must not be null");

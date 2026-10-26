@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.problem;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ public record RequestDoctorReport(
     GridGrindProtocolVersion protocolVersion,
     AnalysisSeverity severity,
     boolean valid,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Summary> summary,
+    Optional<Summary> summary,
     List<RequestWarning> warnings,
     List<GridGrindProblemDetail.Problem> problems) {
   private static final String VALID_SUMMARY_MESSAGE = "valid doctor report requires a summary";

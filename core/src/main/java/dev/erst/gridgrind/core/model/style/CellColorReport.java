@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -50,8 +49,7 @@ public sealed interface CellColorReport
   @Variant(
       id = "RGB",
       summary = "Read one explicit RGB workbook color plus optional tint metadata.")
-  record Rgb(RgbHex rgb, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
-      implements CellColorReport {
+  record Rgb(RgbHex rgb, Optional<Double> tint) implements CellColorReport {
     public Rgb {
       java.util.Objects.requireNonNull(rgb, "rgb must not be null");
       tint = requireFinite(tint, "tint");
@@ -62,8 +60,7 @@ public sealed interface CellColorReport
   @Variant(
       id = "THEME",
       summary = "Read one workbook theme-slot color plus optional tint metadata.")
-  record Theme(int theme, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
-      implements CellColorReport {
+  record Theme(int theme, Optional<Double> tint) implements CellColorReport {
     public Theme {
       requireNonNegative(theme, "theme");
       tint = requireFinite(tint, "tint");
@@ -74,8 +71,7 @@ public sealed interface CellColorReport
   @Variant(
       id = "INDEXED",
       summary = "Read one indexed-palette workbook color plus optional tint metadata.")
-  record Indexed(int indexed, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
-      implements CellColorReport {
+  record Indexed(int indexed, Optional<Double> tint) implements CellColorReport {
     public Indexed {
       requireNonNegative(indexed, "indexed");
       tint = requireFinite(tint, "tint");

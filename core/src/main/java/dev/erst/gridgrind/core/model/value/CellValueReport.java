@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.value;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -31,7 +30,6 @@ public sealed interface CellValueReport {
   record TextValue(
       String textValue,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"RICH_TEXT_RUNS"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<List<RichTextRunReport>> runs)
       implements CellValueReport {
     public TextValue {
@@ -56,7 +54,6 @@ public sealed interface CellValueReport {
   record NumberValue(
       Double numberValue,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"TEMPORAL"})
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<CellTemporalReport> temporal)
       implements CellValueReport {
     public NumberValue {

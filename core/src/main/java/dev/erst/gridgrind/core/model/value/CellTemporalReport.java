@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.value;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
@@ -12,9 +11,7 @@ import java.util.Optional;
         "Projected temporal facet for one numeric cell value, including whether Excel formatting marks it as date-like and any derived DATE, TIME, or DATE_TIME semantic kind.",
     displayOrder = 85)
 public record CellTemporalReport(
-    boolean isDate,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellTemporalKind> kind,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> isoValue) {
+    boolean isDate, Optional<CellTemporalKind> kind, Optional<String> isoValue) {
   public CellTemporalReport {
     kind = Objects.requireNonNullElseGet(kind, Optional::empty);
     isoValue = Objects.requireNonNullElseGet(isoValue, Optional::empty);

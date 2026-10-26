@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.catalog.GridGrindInspectionContractText;
 import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
@@ -26,9 +25,7 @@ public sealed interface InspectionSurfaceQuery extends InspectionQuery.Surface
               + " Omit projection for the default compact VALUE readback.",
       targetSelectors = {RangeSelector.RectangularWindow.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
-  record GetSheetSchema(
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection)
-      implements InspectionSurfaceQuery {
+  record GetSheetSchema(Optional<CellReadProjection> projection) implements InspectionSurfaceQuery {
     /** Creates a schema query that relies on the default cell-read projection. */
     public GetSheetSchema() {
       this(Optional.empty());

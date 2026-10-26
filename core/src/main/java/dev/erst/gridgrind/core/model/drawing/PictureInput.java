@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.Objects;
@@ -15,7 +14,7 @@ public record PictureInput(
     String name,
     PictureDataInput image,
     DrawingAnchorInput anchor,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<TextSourceInput> description) {
+    Optional<TextSourceInput> description) {
   public PictureInput {
     name = requireNonBlank(name, "name");
     Objects.requireNonNull(image, "image must not be null");

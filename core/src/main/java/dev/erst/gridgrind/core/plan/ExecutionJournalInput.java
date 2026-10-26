@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
@@ -26,7 +25,6 @@ public record ExecutionJournalInput(
   }
 
   /** Returns whether this input resolves to the product default journal behavior. */
-  @JsonIgnore
   public boolean isDefault() {
     return level == ExecutionJournalLevel.SUMMARY;
   }

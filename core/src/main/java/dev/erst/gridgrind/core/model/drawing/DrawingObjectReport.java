@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
@@ -156,8 +155,8 @@ public sealed interface DrawingObjectReport
   record SignatureLine(
       String name,
       DrawingAnchorReport anchor,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SignatureSetup> setup,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SignaturePreview> preview)
+      Optional<SignatureSetup> setup,
+      Optional<SignaturePreview> preview)
       implements DrawingObjectReport {
     public SignatureLine {
       validateCommon(name, anchor);
@@ -189,7 +188,7 @@ public sealed interface DrawingObjectReport
       ExcelPictureFormat format,
       String contentType,
       long byteSize,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sha256,
+      Optional<String> sha256,
       Optional<Integer> widthPixels,
       Optional<Integer> heightPixels) {
     public SignaturePreview {

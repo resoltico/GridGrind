@@ -73,6 +73,7 @@ public final class GridGrindJsonMapperSupport {
             .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
             .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
             // RequestStructuralAnalyzer owns V3 field presence. The typed mapper only
             // normalizes already shape-valid fragments, including Optional fields.
             .disable(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)

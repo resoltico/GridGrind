@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
@@ -12,13 +11,13 @@ import java.util.Optional;
         "Font patch for cell styling; at least one field must be set. Colors can use RGB, theme, indexed, and tint semantics.",
     displayOrder = 45)
 public record CellFontInput(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> bold,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> italic,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> fontName,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<FontHeightInput> fontHeight,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ColorInput> fontColor,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> underline,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> strikeout) {
+    Optional<Boolean> bold,
+    Optional<Boolean> italic,
+    Optional<String> fontName,
+    Optional<FontHeightInput> fontHeight,
+    Optional<ColorInput> fontColor,
+    Optional<Boolean> underline,
+    Optional<Boolean> strikeout) {
   public CellFontInput {
     Objects.requireNonNull(bold, "bold must not be null");
     Objects.requireNonNull(italic, "italic must not be null");

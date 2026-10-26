@@ -18,6 +18,22 @@ import org.junit.jupiter.api.Test;
 /** One focused counterexample for each architecture property beyond JPMS enforcement. */
 class ArchitectureNegativeControlsTest {
   @Test
+  void coreRejectsWorkbookAndJsonLibraryDependencies() {
+    AssertionError failure =
+        assertThrows(
+            AssertionError.class,
+            () ->
+                ProductDependencyArchitectureRules.coreDoesNotDependOnWorkbookOrJsonLibraries()
+                    .check(
+                        new ClassFileImporter()
+                            .importClasses(
+                                dev.erst.gridgrind.core.fixture.ArchitectureCoreLibraryLeak
+                                    .class)));
+    assertTrue(failure.getMessage().contains("org.apache.poi.ss.usermodel.Workbook"));
+    assertTrue(failure.getMessage().contains("tools.jackson.databind.JsonNode"));
+  }
+
+  @Test
   void workbookMechanicsRejectRuntimeDependencies() {
     AssertionError failure =
         assertThrows(

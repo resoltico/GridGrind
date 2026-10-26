@@ -24,6 +24,7 @@ dependencies {
     productProjects.forEach { implementation(project(it.path)) }
     testImplementation(testFixtures(project(":engine")))
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.jackson.databind)
     testImplementation(libs.poi.ooxml)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.log4j.core)

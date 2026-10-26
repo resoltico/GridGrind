@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.result;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
@@ -47,9 +46,7 @@ public record ExecutionJournal(
       id = "ExecutionJournalSourceSummary",
       summary = "Journal summary of the authored workbook source.",
       displayOrder = 1)
-  public record SourceSummary(
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> type,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> path) {
+  public record SourceSummary(Optional<String> type, Optional<String> path) {
     public SourceSummary {
       type = normalizeOptional(type, "type");
       path = normalizeOptional(path, "path");
@@ -126,8 +123,7 @@ public record ExecutionJournal(
     @Variant(
         id = "SUCCEEDED",
         summary = "Execution phase that completed successfully and may include one timing payload.")
-    record Succeeded(@JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Timing> timing)
-        implements Phase {
+    record Succeeded(Optional<Timing> timing) implements Phase {
       public Succeeded {
         timing = normalizeOptionalValue(timing, "timing");
       }
@@ -142,8 +138,7 @@ public record ExecutionJournal(
     @Variant(
         id = "FAILED",
         summary = "Execution phase that ended in failure and may include one timing payload.")
-    record Failed(@JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Timing> timing)
-        implements Phase {
+    record Failed(Optional<Timing> timing) implements Phase {
       public Failed {
         timing = normalizeOptionalValue(timing, "timing");
       }
@@ -182,7 +177,7 @@ public record ExecutionJournal(
       List<Target> resolvedTargets,
       Phase phase,
       StepOutcome outcome,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<FailureClassification> failure) {
+      Optional<FailureClassification> failure) {
     public Step {
       if (stepIndex < 0) {
         throw new IllegalArgumentException("stepIndex must be >= 0");
@@ -295,7 +290,7 @@ public record ExecutionJournal(
         int completedStepCount,
         long durationMillis,
         GridGrindProblemCode problemCode,
-        @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<FailureStep> failedStep)
+        Optional<FailureStep> failedStep)
         implements Outcome {
       public Failed {
         validateExecutionOutcomeCounts(plannedStepCount, completedStepCount, durationMillis);

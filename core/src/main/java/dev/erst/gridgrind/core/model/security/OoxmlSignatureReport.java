@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.security;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import java.util.Objects;
@@ -13,9 +12,7 @@ import java.util.Optional;
         "Factual OOXML package-signature report for one signature part. state reflects the currently loaded workbook package, including INVALIDATED_BY_MUTATION for source signatures after in-memory edits.",
     displayOrder = 24)
 public record OoxmlSignatureReport(
-    String packagePartName,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SignerIdentity> signer,
-    ExcelOoxmlSignatureState state) {
+    String packagePartName, Optional<SignerIdentity> signer, ExcelOoxmlSignatureState state) {
   /** Creates a signature report from flat signer facts while preserving grouped signer identity. */
   public OoxmlSignatureReport(
       String packagePartName,

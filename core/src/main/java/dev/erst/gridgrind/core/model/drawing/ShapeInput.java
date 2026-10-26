@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.source.TextSourceInput;
@@ -31,7 +30,7 @@ public sealed interface ShapeInput
       String name,
       DrawingAnchorInput anchor,
       String presetGeometryToken,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<TextSourceInput> text)
+      Optional<TextSourceInput> text)
       implements ShapeInput {
     public SimpleShape {
       name = requireNonBlank(name, "name");

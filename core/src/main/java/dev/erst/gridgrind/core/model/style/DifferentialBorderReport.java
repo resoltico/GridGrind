@@ -1,17 +1,16 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Protocol-facing factual report for one conditional-formatting differential border patch. */
 public record DifferentialBorderReport(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideReport> all,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideReport> top,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideReport> right,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideReport> bottom,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideReport> left) {
+    Optional<DifferentialBorderSideReport> all,
+    Optional<DifferentialBorderSideReport> top,
+    Optional<DifferentialBorderSideReport> right,
+    Optional<DifferentialBorderSideReport> bottom,
+    Optional<DifferentialBorderSideReport> left) {
   public DifferentialBorderReport {
     Objects.requireNonNull(all, "all must not be null");
     Objects.requireNonNull(top, "top must not be null");

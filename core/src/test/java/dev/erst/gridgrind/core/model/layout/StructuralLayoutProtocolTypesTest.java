@@ -395,10 +395,6 @@ class StructuralLayoutProtocolTypesTest {
     assertEquals(SheetDefaultsInput.defaults(), new SheetDefaultsInput(8, 15.0d));
     assertEquals(new SheetDefaultsInput(8, 18.5d), new SheetDefaultsInput(8, 18.5d));
     assertEquals(SheetDefaultsReport.defaults(), new SheetDefaultsReport(8, 15.0d));
-    assertThrows(
-        NullPointerException.class, () -> new SheetDisplayInput(null, null, null, null, null));
-    assertThrows(NullPointerException.class, () -> new SheetOutlineSummaryInput(null, null));
-    assertThrows(NullPointerException.class, () -> new SheetDefaultsInput(null, null));
 
     java.util.List<ExcelIgnoredErrorType> errorTypesWithNull =
         new java.util.ArrayList<>(java.util.Arrays.asList(ExcelIgnoredErrorType.FORMULA, null));

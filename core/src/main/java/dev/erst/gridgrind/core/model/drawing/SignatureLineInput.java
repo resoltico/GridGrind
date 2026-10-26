@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,32 +21,6 @@ public record SignatureLineInput(
     Optional<String> caption,
     Optional<String> invalidStamp,
     Optional<PictureDataInput> plainSignature) {
-  /** Creates a signature-line payload from the authored wire shape. */
-  @JsonCreator
-  @SuppressWarnings("PMD.ExcessiveParameterList")
-  public SignatureLineInput(
-      @JsonProperty("name") String name,
-      @JsonProperty("anchor") DrawingAnchorInput anchor,
-      @JsonProperty("allowComments") Boolean allowComments,
-      @JsonProperty("signingInstructions") Optional<String> signingInstructions,
-      @JsonProperty("suggestedSigner") Optional<String> suggestedSigner,
-      @JsonProperty("suggestedSigner2") Optional<String> suggestedSigner2,
-      @JsonProperty("suggestedSignerEmail") Optional<String> suggestedSignerEmail,
-      @JsonProperty("caption") Optional<String> caption,
-      @JsonProperty("invalidStamp") Optional<String> invalidStamp,
-      @JsonProperty("plainSignature") Optional<PictureDataInput> plainSignature) {
-    this(
-        name,
-        anchor,
-        Objects.requireNonNull(allowComments, "allowComments must not be null").booleanValue(),
-        Objects.requireNonNull(signingInstructions, "signingInstructions must not be null"),
-        Objects.requireNonNull(suggestedSigner, "suggestedSigner must not be null"),
-        Objects.requireNonNull(suggestedSigner2, "suggestedSigner2 must not be null"),
-        Objects.requireNonNull(suggestedSignerEmail, "suggestedSignerEmail must not be null"),
-        Objects.requireNonNull(caption, "caption must not be null"),
-        Objects.requireNonNull(invalidStamp, "invalidStamp must not be null"),
-        Objects.requireNonNull(plainSignature, "plainSignature must not be null"));
-  }
 
   public SignatureLineInput {
     requireNonBlank(name, "name");

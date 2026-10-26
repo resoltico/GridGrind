@@ -46,6 +46,16 @@ enum ProductDependencyArchitectureRules {
         }
       };
 
+  static ArchRule coreDoesNotDependOnWorkbookOrJsonLibraries() {
+    return noClasses()
+        .that()
+        .resideInAPackage("dev.erst.gridgrind.core..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage("org.apache.poi..", "tools.jackson..", "com.fasterxml.jackson..")
+        .because("the canonical model is independent of workbook and wire libraries");
+  }
+
   static ArchRule workbookImplementationDoesNotDependOnExecutionRuntime() {
     return noClasses()
         .that()

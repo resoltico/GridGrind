@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
@@ -18,8 +17,8 @@ public record CommentReport(
     String text,
     String author,
     boolean visible,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<List<RichTextRunReport>> runs,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CommentAnchorReport> anchor) {
+    Optional<List<RichTextRunReport>> runs,
+    Optional<CommentAnchorReport> anchor) {
   /** Creates a plain comment report without rich runs or anchor metadata. */
   public CommentReport(String text, String author, boolean visible) {
     this(text, author, visible, Optional.empty(), Optional.empty());

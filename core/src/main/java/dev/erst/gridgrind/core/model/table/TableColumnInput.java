@@ -1,8 +1,7 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.Locale;
 
 /** Advanced authored table-column metadata applied by ordinal column index. */
@@ -12,25 +11,10 @@ import java.util.Locale;
     displayOrder = 73)
 public record TableColumnInput(
     int columnIndex,
-    String uniqueName,
-    String totalsRowLabel,
-    String totalsRowFunction,
-    String calculatedColumnFormula) {
-  /** Reads a table-column payload while defaulting omitted optional text fields to empty. */
-  @JsonCreator
-  public static TableColumnInput create(
-      @JsonProperty("columnIndex") int columnIndex,
-      @JsonProperty("uniqueName") String uniqueName,
-      @JsonProperty("totalsRowLabel") String totalsRowLabel,
-      @JsonProperty("totalsRowFunction") String totalsRowFunction,
-      @JsonProperty("calculatedColumnFormula") String calculatedColumnFormula) {
-    return new TableColumnInput(
-        columnIndex,
-        defaultEmpty(uniqueName),
-        defaultEmpty(totalsRowLabel),
-        defaultEmpty(totalsRowFunction),
-        defaultEmpty(calculatedColumnFormula));
-  }
+    @WireDefault String uniqueName,
+    @WireDefault String totalsRowLabel,
+    @WireDefault String totalsRowFunction,
+    @WireDefault String calculatedColumnFormula) {
 
   public TableColumnInput {
     if (columnIndex < 0) {
@@ -50,9 +34,5 @@ public record TableColumnInput(
   private static String normalizeTotalsRowFunction(String value) {
     String normalized = value.trim();
     return normalized.isEmpty() ? "" : normalized.toLowerCase(Locale.ROOT);
-  }
-
-  private static String defaultEmpty(String value) {
-    return value == null ? "" : value;
   }
 }

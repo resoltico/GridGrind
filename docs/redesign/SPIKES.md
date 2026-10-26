@@ -942,3 +942,56 @@ main Java 125348 -> 125580, test Java 154930 -> 154931, JSON main files 67 -> 69
 handwritten descriptor lines 0, Support 217 and blank checks 438 unchanged. Evidence is external in
 wp-22/defaults-*.log and defaults-inventories. No mutation or active fuzzing ran. Baseline diff is
 empty and no supplement exists yet. Next: complete all defaults/creator and Jackson-core removal.
+
+### WP-22 / WP-24 canonical records and published defaults
+
+Core is now Jackson-free: removed all creator/property/include/ignore annotations, its annotation
+API dependency, static module requirement and all 21 Jackson-specific opens declarations. Closed
+union identity remains metadata-owned. Secondary wire creators and ProtocolBooleanDefault were
+removed throughout core and the last CLI creator was replaced by canonical status state.
+Record components now own requiredness and wire names; aliases/creator-shape reflection were
+retired. Required primitive omission/null rejection remains enforced by the JSON codec. Java
+WorkbookPlan construction now requires explicit non-null policies; wire omission uses metadata.
+Public table default factories replace inaccessible package-private factories. WireDefault supports
+only the concrete needs found here: literals, no-argument public factories and sibling-derived
+values; unused factory-argument scaffolding was removed.
+
+The catalog replaces defaultBoolean with defaultValue and defaultFrom, publishing enum, string,
+boolean, empty-list, source-object, record and sibling defaults from the same annotations. Published
+value trees defensively copy mutable containers. Tests independently assert actual default values,
+derived-field metadata, defensive copying, omitted/explicit/null inputs and nested policies.
+Former creator/alias-only fixtures were removed; real presence and primitive-boundary checks were
+retained against canonical metadata. Source-origin tests now protect canonical component names.
+An architecture rule rejects POI/Jackson core dependencies, with a negative fixture detecting both;
+Jackson is test-scoped in architecture-tests solely for that negative control.
+
+Named-module verification passed without qualified opens: 14 request round trips, catalog, response
+and twelve domain strings. Intermediate runs exposed a required-marker Boolean/null unboxing bug,
+a package-private default factory, untyped fixture serialization dropping union tags, stale alias
+fixtures, and unused JPMS requirements. Each was corrected and checked in the affected suite before
+full verification. The missing-status rejection test now removes the actual JSON property rather
+than relying on comma position. Named logs retain the outcomes; retired-origin-alias-test-failure.xml
+retains the integration failure for the removed behavior.
+
+Golden review: exactly one snapshot changes, discovery/10-print-protocol-catalog.json. It adds two
+fieldMetadataKeys descriptions for defaultValue and defaultFrom, with no other content change.
+Comparison with the prior committed snapshot and packaged-JAR output proves equality after removing
+those two entries (defaults-catalog-index-review.json). Both launchers' discovery tests pass. The
+initial snapshot-update command continued after an incorrect JAR filename assumption; the complete
+diff was subsequently checked against the prior commit and actual packaged output. No unexpected
+snapshot changes were retained. The final full run passes all 141 golden cases, including the
+behavior-changing negative control, without further recording.
+
+Final ./gradlew check passed in 3m47s: core 328, JSON 333, engine 1511 (including parity), CLI 598,
+architecture 37; no failures, errors or skips. Inventory from the prior checkpoint: main Java
+125580 -> 124461; test Java 154931 -> 154570; creators/default sites -> 0; registrations and manual
+descriptors remain 0; Support 217, blanks 438, engine snapshots 51, definitions 13, converter lines
+4695 remain. Acceptance evidence is external in defaults-delivered-inventories and defaults-*.log.
+Baseline diff is empty; supplement absent. No mutation or active fuzzing ran.
+
+WP-22's core/Jackson and derived catalog requirements now hold. WP-24's creator/default inventories
+are empty; schema default publication is coupled to the scheduled WP-30 schema implementation and
+remains outstanding until that consumer is verified. WP-21's full identifier/blank-check target is
+still outstanding; do not count the checkpoint as its completion. Next: WP-23 vocabulary, then
+schema intake and the remaining engine work; campaigns stay deferred until planned implementation
+is complete, with any justified interim campaign hard-capped at 120 seconds.

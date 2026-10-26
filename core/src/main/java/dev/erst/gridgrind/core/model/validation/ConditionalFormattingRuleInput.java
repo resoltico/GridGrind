@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.validation;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
@@ -35,7 +34,7 @@ public sealed interface ConditionalFormattingRuleInput
               kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
           String formula,
       boolean stopIfTrue,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleInput> style)
+      Optional<DifferentialStyleInput> style)
       implements ConditionalFormattingRuleInput {
     public FormulaRule {
       Objects.requireNonNull(formula, "formula must not be null");
@@ -56,9 +55,9 @@ public sealed interface ConditionalFormattingRuleInput
   record CellValueRule(
       ExcelComparisonOperator operator,
       String formula1,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2,
+      Optional<String> formula2,
       boolean stopIfTrue,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleInput> style)
+      Optional<DifferentialStyleInput> style)
       implements ConditionalFormattingRuleInput {
     public CellValueRule {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -177,7 +176,7 @@ public sealed interface ConditionalFormattingRuleInput
       int rank,
       boolean percent,
       boolean bottom,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleInput> style)
+      Optional<DifferentialStyleInput> style)
       implements ConditionalFormattingRuleInput {
     public Top10Rule {
       Objects.requireNonNull(style, "style must not be null");

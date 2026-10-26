@@ -86,9 +86,6 @@ final class RecordDefaultInstantiators extends SimpleValueInstantiators {
       if (!metadata.from().isEmpty()) {
         resolve(values, ModelDefaults.componentIndex(recordType, metadata.from()), resolving);
       }
-      for (String dependency : metadata.arguments()) {
-        resolve(values, ModelDefaults.componentIndex(recordType, dependency), resolving);
-      }
       Map<String, Object> siblings = new LinkedHashMap<>();
       RecordComponent[] components = recordType.getRecordComponents();
       for (int position = 0; position < components.length; position++) {

@@ -3,17 +3,36 @@ package dev.erst.gridgrind.json.codec;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.cfg.MapperConfig;
 import tools.jackson.databind.introspect.Annotated;
 import tools.jackson.databind.introspect.AnnotatedClass;
+import tools.jackson.databind.introspect.AnnotatedMember;
+import tools.jackson.databind.introspect.AnnotatedParameter;
 import tools.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import tools.jackson.databind.jsontype.NamedType;
 
 /** Derives wire identity from core metadata while host DTOs retain their own annotations. */
 final class CoreMetadataIntrospector extends JacksonAnnotationIntrospector {
   private static final long serialVersionUID = 1L;
+
+  @Override
+  public @Nullable Boolean hasRequiredMarker(MapperConfig<?> config, AnnotatedMember annotated) {
+    if (!(annotated instanceof AnnotatedParameter parameter)) {
+      return super.hasRequiredMarker(config, annotated);
+    }
+    Class<?> owner = parameter.getDeclaringClass();
+    if (!owner.isRecord() || parameter.getIndex() >= owner.getRecordComponents().length) {
+      return super.hasRequiredMarker(config, annotated);
+    }
+    var component = owner.getRecordComponents()[parameter.getIndex()];
+    if (component.getType().isPrimitive()) {
+      return !component.isAnnotationPresent(WireDefault.class);
+    }
+    return super.hasRequiredMarker(config, annotated);
+  }
 
   @Override
   public JsonTypeInfo.@Nullable Value findPolymorphicTypeInfo(

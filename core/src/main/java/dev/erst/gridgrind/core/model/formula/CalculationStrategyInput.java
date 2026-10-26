@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.formula;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
@@ -16,7 +15,6 @@ public sealed interface CalculationStrategyInput {
   String strategyType();
 
   /** Returns whether this strategy is the default no-calculation choice. */
-  @JsonIgnore
   default boolean isDefault() {
     return this instanceof DoNotCalculate;
   }

@@ -1,8 +1,5 @@
 package dev.erst.gridgrind.core.model.formula;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -20,9 +17,7 @@ import java.util.Optional;
         "Structured calculation policy, preflight classification, and execution outcome returned on every success and failure response.",
     displayOrder = 12)
 public record CalculationReport(
-    CalculationPolicyInput policy,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Preflight> preflight,
-    Execution execution) {
+    CalculationPolicyInput policy, Optional<Preflight> preflight, Execution execution) {
   public CalculationReport {
     Objects.requireNonNull(policy, "policy must not be null");
     preflight = Objects.requireNonNullElseGet(preflight, Optional::empty);
@@ -45,14 +40,6 @@ public record CalculationReport(
     return new CalculationReport(
         CalculationPolicyInput.defaults(),
         new Execution(CalculationExecutionStatus.NOT_REQUESTED, 0, false, false, Optional.empty()));
-  }
-
-  @JsonCreator
-  static CalculationReport create(
-      @JsonProperty("policy") CalculationPolicyInput policy,
-      @JsonProperty("preflight") Optional<Preflight> preflight,
-      @JsonProperty("execution") Execution execution) {
-    return new CalculationReport(policy, preflight, execution);
   }
 
   /** Structured preflight report emitted before any server-side calculation attempt. */
@@ -109,8 +96,8 @@ public record CalculationReport(
       FormulaCellTarget cell,
       String formula,
       FormulaCapabilityKind capability,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<GridGrindProblemCode> problemCode,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> message) {
+      Optional<GridGrindProblemCode> problemCode,
+      Optional<String> message) {
     public FormulaCapability {
       Objects.requireNonNull(cell, "cell must not be null");
       WorkbookPlan.requireNonBlank(formula, "formula");
@@ -141,7 +128,7 @@ public record CalculationReport(
       int evaluatedFormulaCount,
       boolean cachesCleared,
       boolean markRecalculateOnOpenApplied,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> message) {
+      Optional<String> message) {
     public Execution {
       Objects.requireNonNull(status, "status must not be null");
       if (evaluatedFormulaCount < 0) {

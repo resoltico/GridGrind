@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
@@ -28,8 +26,7 @@ public sealed interface AutofilterEntryReport
   record SheetOwned(
       RangeLabel range,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
-      @JsonProperty("sortState") @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<AutofilterSortStateReport> sortState)
+      Optional<AutofilterSortStateReport> sortState)
       implements AutofilterEntryReport {
     /** Creates a sheet-owned autofilter report with no persisted criteria or sort state. */
     public SheetOwned(RangeLabel range) {
@@ -49,8 +46,7 @@ public sealed interface AutofilterEntryReport
       RangeLabel range,
       String tableName,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
-      @JsonProperty("sortState") @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<AutofilterSortStateReport> sortState)
+      Optional<AutofilterSortStateReport> sortState)
       implements AutofilterEntryReport {
     /** Creates a table-owned autofilter report with no persisted criteria or sort state. */
     public TableOwned(RangeLabel range, String tableName) {

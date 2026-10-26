@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.formula;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
@@ -52,7 +51,6 @@ public record FormulaEnvironmentInput(
   }
 
   /** Returns whether this environment carries any behavior beyond the default evaluator state. */
-  @JsonIgnore
   public boolean isEmpty() {
     return externalWorkbooks.isEmpty()
         && missingWorkbookPolicy == FormulaMissingWorkbookPolicy.ERROR

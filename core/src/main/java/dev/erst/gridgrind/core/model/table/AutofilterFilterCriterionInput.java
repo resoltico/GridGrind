@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
@@ -51,10 +50,7 @@ public sealed interface AutofilterFilterCriterionInput
   @Variant(
       id = "DYNAMIC",
       summary = "Retain rows using one dynamic-date or moving-window autofilter rule.")
-  record Dynamic(
-      String type,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> value,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> maxValue)
+  record Dynamic(String type, Optional<Double> value, Optional<Double> maxValue)
       implements AutofilterFilterCriterionInput {
     public Dynamic {
       Objects.requireNonNull(type, "type must not be null");

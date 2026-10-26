@@ -18,9 +18,6 @@ public @interface WireDefault {
   /** Static factory method, or an empty string for its public no-argument constructor. */
   String method() default "";
 
-  /** Other component names supplied as factory arguments. */
-  String[] arguments() default {};
-
   /** Whether the effective default is omitted during wire serialization. */
   boolean omit() default false;
 

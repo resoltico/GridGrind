@@ -69,6 +69,10 @@ final class CliCatalogCommandSupport {
             .toList(),
         List.of(
             new ProtocolCatalogFieldMetadataKey(
+                "defaultValue", "Field omission resolves to this constant JSON value."),
+            new ProtocolCatalogFieldMetadataKey(
+                "defaultFrom", "Field omission copies the named sibling component's value."),
+            new ProtocolCatalogFieldMetadataKey(
                 "projectedByFacets",
                 "Field is present only when one of the listed read-projection facets is"
                     + " requested."),

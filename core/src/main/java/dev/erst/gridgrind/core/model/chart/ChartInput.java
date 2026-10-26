@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.core.model.chart;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -24,26 +22,6 @@ public record ChartInput(
     ExcelChartDisplayBlanksAs displayBlanksAs,
     boolean plotOnlyVisibleCells,
     List<ChartPlotInput> plots) {
-  /** Reads one chart definition while applying the documented legend and display defaults. */
-  @JsonCreator
-  public ChartInput(
-      @JsonProperty("name") String name,
-      @JsonProperty("anchor") DrawingAnchorInput anchor,
-      @JsonProperty("title") ChartTitleInput title,
-      @JsonProperty("legend") ChartLegendInput legend,
-      @JsonProperty("displayBlanksAs") ExcelChartDisplayBlanksAs displayBlanksAs,
-      @JsonProperty("plotOnlyVisibleCells") Boolean plotOnlyVisibleCells,
-      @JsonProperty("plots") List<ChartPlotInput> plots) {
-    this(
-        name,
-        anchor,
-        Objects.requireNonNull(title, "title must not be null"),
-        Objects.requireNonNull(legend, "legend must not be null"),
-        Objects.requireNonNull(displayBlanksAs, "displayBlanksAs must not be null"),
-        Objects.requireNonNull(plotOnlyVisibleCells, "plotOnlyVisibleCells must not be null")
-            .booleanValue(),
-        plots);
-  }
 
   /** Creates one chart with the standard visible legend and gap display state. */
   public static ChartInput withStandardDisplay(

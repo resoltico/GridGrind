@@ -33,22 +33,11 @@ public final class ModelDefaults {
         if (metadata.method().isEmpty()) {
           return owner.getConstructor().newInstance();
         }
-        Class<?>[] parameterTypes = new Class<?>[metadata.arguments().length];
-        Object[] values = new Object[parameterTypes.length];
-        for (int index = 0; index < parameterTypes.length; index++) {
-          String name = metadata.arguments()[index];
-          RecordComponent argument =
-              component.getDeclaringRecord()
-                  .getRecordComponents()[componentIndex(component.getDeclaringRecord(), name)];
-          parameterTypes[index] = argument.getType();
-          values[index] = java.util.Objects.requireNonNull(siblings.get(name), name);
-        }
-        var method = owner.getMethod(metadata.method(), parameterTypes);
+        var method = owner.getMethod(metadata.method());
         if (!Modifier.isStatic(method.getModifiers())) {
           throw new IllegalStateException("Wire default factories must be static: " + method);
         }
-        return java.util.Objects.requireNonNull(
-            method.invoke(null, values), "default factory result");
+        return java.util.Objects.requireNonNull(method.invoke(null), "default factory result");
       } catch (ReflectiveOperationException failure) {
         throw new IllegalStateException("Cannot resolve wire default for " + component, failure);
       }
@@ -76,7 +65,7 @@ public final class ModelDefaults {
   /** Returns a constant default as immutable primitive/map/list metadata when it is not derived. */
   public static Optional<Object> publishedValue(RecordComponent component) {
     WireDefault metadata = component.getAnnotation(WireDefault.class);
-    return metadata == null || !metadata.from().isEmpty() || metadata.arguments().length != 0
+    return metadata == null || !metadata.from().isEmpty()
         ? Optional.empty()
         : Optional.of(wireValue(value(component, Map.of())));
   }
@@ -92,9 +81,10 @@ public final class ModelDefaults {
     throw new IllegalStateException("Unknown default component " + name + " in " + recordType);
   }
 
+  /** Converts a declared default to an immutable JSON-compatible value tree. */
   @SuppressWarnings(
       "PMD.UseConcurrentHashMap") // Thread-confined order is the published record order.
-  private static Object wireValue(Object value) {
+  public static Object wireValue(Object value) {
     if (value instanceof WireString text) {
       return text.value();
     }
@@ -103,6 +93,11 @@ public final class ModelDefaults {
     }
     if (value instanceof String || value instanceof Number || value instanceof Boolean) {
       return value;
+    }
+    if (value instanceof Map<?, ?> object) {
+      Map<String, Object> copy = new LinkedHashMap<>();
+      object.forEach((key, field) -> copy.put((String) key, wireValue(field)));
+      return Collections.unmodifiableMap(copy);
     }
     if (value instanceof List<?> list) {
       return list.stream().map(ModelDefaults::wireValue).toList();

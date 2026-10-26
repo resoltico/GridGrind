@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.result;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
@@ -37,9 +36,7 @@ public interface WorkbookResultPersistence {
     @Variant(
         id = "OVERWRITE",
         summary = "Workbook targeted the opened source workbook path for overwrite persistence.")
-    record Overwritten(
-        @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sourcePath,
-        PublicationOutcome publication)
+    record Overwritten(Optional<String> sourcePath, PublicationOutcome publication)
         implements PersistenceOutcome {
       public Overwritten {
         sourcePath = normalizeSourcePath(sourcePath);

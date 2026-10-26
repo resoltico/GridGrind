@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.core.model.layout;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 
 /** Screen-facing sheet display flags authored as part of sheet-presentation state. */
@@ -22,26 +20,4 @@ public record SheetDisplayInput(
   }
 
   public SheetDisplayInput {}
-
-  /** Creates sheet-display settings while applying the documented worksheet-view defaults. */
-  @JsonCreator
-  public SheetDisplayInput(
-      @JsonProperty("displayGridlines") Boolean displayGridlines,
-      @JsonProperty("displayZeros") Boolean displayZeros,
-      @JsonProperty("displayRowColHeadings") Boolean displayRowColHeadings,
-      @JsonProperty("displayFormulas") Boolean displayFormulas,
-      @JsonProperty("rightToLeft") Boolean rightToLeft) {
-    this(
-        java.util.Objects.requireNonNull(displayGridlines, "displayGridlines must not be null")
-            .booleanValue(),
-        java.util.Objects.requireNonNull(displayZeros, "displayZeros must not be null")
-            .booleanValue(),
-        java.util.Objects.requireNonNull(
-                displayRowColHeadings, "displayRowColHeadings must not be null")
-            .booleanValue(),
-        java.util.Objects.requireNonNull(displayFormulas, "displayFormulas must not be null")
-            .booleanValue(),
-        java.util.Objects.requireNonNull(rightToLeft, "rightToLeft must not be null")
-            .booleanValue());
-  }
 }

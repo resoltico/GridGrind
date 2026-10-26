@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -323,7 +322,9 @@ class CatalogEdgeCoverageTest {
 
   /** Record used to verify that ignored record components do not leak into the catalog surface. */
   private record IgnoredFieldRecord(
-      String visible, @CatalogIgnored String hiddenByCatalog, @JsonIgnore String hiddenByJson) {}
+      String visible,
+      @CatalogIgnored String hiddenByCatalog,
+      @CatalogIgnored String hiddenByMetadata) {}
 
   /** Type with no subtype annotations for contract-text validation coverage. */
   private static final class MissingJsonSubtypes {}

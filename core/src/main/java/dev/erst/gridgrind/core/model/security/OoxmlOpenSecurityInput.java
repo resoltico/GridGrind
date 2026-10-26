@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.security;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.source.SecretReference;
 import java.util.Objects;
@@ -12,8 +11,7 @@ import java.util.Optional;
     summary =
         "Optional OOXML package-open settings for encrypted existing workbook sources. password unlocks the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.",
     displayOrder = 19)
-public record OoxmlOpenSecurityInput(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SecretReference> passwordRef) {
+public record OoxmlOpenSecurityInput(Optional<SecretReference> passwordRef) {
   public OoxmlOpenSecurityInput {
     Objects.requireNonNull(passwordRef, "passwordRef must not be null");
   }

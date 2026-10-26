@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import java.util.List;
 import java.util.Objects;
@@ -14,11 +13,11 @@ public record DifferentialStyleReport(
     @Nullable Boolean bold,
     @Nullable Boolean italic,
     @Nullable FontHeightReport fontHeight,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellColorReport> fontColor,
+    Optional<CellColorReport> fontColor,
     @Nullable Boolean underline,
     @Nullable Boolean strikeout,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellColorReport> fillColor,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderReport> border,
+    Optional<CellColorReport> fillColor,
+    Optional<DifferentialBorderReport> border,
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
   public DifferentialStyleReport {
     if (numberFormat != null && numberFormat.isBlank()) {

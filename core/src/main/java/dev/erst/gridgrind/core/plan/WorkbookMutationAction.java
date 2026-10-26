@@ -1,10 +1,8 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.layout.PaneInput;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
 import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
@@ -69,20 +67,13 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
   record CopySheet(
-      SheetName newSheetName, @ProtocolField(optional = true) SheetCopyPosition position)
+      SheetName newSheetName,
+      @ProtocolField(optional = true) @WireDefault(factory = SheetCopyPosition.AppendAtEnd.class)
+          SheetCopyPosition position)
       implements WorkbookMutationAction {
     /** Copies one sheet to the end of the workbook. */
     public CopySheet(SheetName newSheetName) {
       this(newSheetName, new SheetCopyPosition.AppendAtEnd());
-    }
-
-    /** Reads a copy-sheet request while defaulting an omitted position to append-at-end. */
-    @JsonCreator
-    public static CopySheet create(
-        @JsonProperty("newSheetName") SheetName newSheetName,
-        @JsonProperty("position") SheetCopyPosition position) {
-      return new CopySheet(
-          newSheetName, position == null ? new SheetCopyPosition.AppendAtEnd() : position);
     }
 
     public CopySheet {
@@ -131,8 +122,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
   record SetSheetProtection(
       SheetProtectionSettings protection,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<dev.erst.gridgrind.core.source.SecretReference> passwordRef)
+      Optional<dev.erst.gridgrind.core.source.SecretReference> passwordRef)
       implements WorkbookMutationAction {
     /** Enables sheet protection without applying a password hash. */
     public SetSheetProtection(SheetProtectionSettings protection) {
@@ -325,12 +315,6 @@ public sealed interface WorkbookMutationAction extends MutationAction {
     public static GroupRows expanded() {
       return new GroupRows(false);
     }
-
-    /** Reads one row-group payload with explicit collapse state. */
-    @JsonCreator
-    public GroupRows(@JsonProperty("collapsed") Boolean collapsed) {
-      this(Objects.requireNonNull(collapsed, "collapsed must not be null").booleanValue());
-    }
   }
 
   /** Removes outline grouping from the requested inclusive zero-based row band. */
@@ -353,12 +337,6 @@ public sealed interface WorkbookMutationAction extends MutationAction {
     /** Creates one expanded column-group payload explicitly. */
     public static GroupColumns expanded() {
       return new GroupColumns(false);
-    }
-
-    /** Reads one column-group payload with explicit collapse state. */
-    @JsonCreator
-    public GroupColumns(@JsonProperty("collapsed") Boolean collapsed) {
-      this(Objects.requireNonNull(collapsed, "collapsed must not be null").booleanValue());
     }
   }
 

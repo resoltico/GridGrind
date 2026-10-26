@@ -1,8 +1,6 @@
 package dev.erst.gridgrind.core.model.formula;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.metadata.CatalogType;
-import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.Objects;
@@ -20,8 +18,7 @@ public record CalculationPolicyInput(
     @ProtocolField(optional = true)
         @WireDefault(factory = CalculationStrategyInput.DoNotCalculate.class, omit = true)
         CalculationStrategyInput strategy,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-        @WireDefault(value = "false", omit = true)
+    @ProtocolField(optional = true) @WireDefault(value = "false", omit = true)
         boolean markRecalculateOnOpen) {
   /** Returns the default do-not-calculate policy with no open-time recalculation request. */
   public static CalculationPolicyInput defaults() {
@@ -38,31 +35,26 @@ public record CalculationPolicyInput(
   }
 
   /** Returns whether this policy normalizes to the default do-not-calculate behavior. */
-  @JsonIgnore
   public boolean isDefault() {
     return strategy instanceof CalculationStrategyInput.DoNotCalculate && !markRecalculateOnOpen;
   }
 
   /** Returns the normalized strategy after applying GridGrind defaults. */
-  @JsonIgnore
   public CalculationStrategyInput effectiveStrategy() {
     return strategy;
   }
 
   /** Returns whether this policy permits the constrained EVENT_READ execution family. */
-  @JsonIgnore
   public boolean allowsEventRead() {
     return strategy instanceof CalculationStrategyInput.DoNotCalculate && !markRecalculateOnOpen;
   }
 
   /** Returns whether this policy permits the constrained STREAMING_WRITE execution family. */
-  @JsonIgnore
   public boolean allowsStreamingWrite() {
     return strategy instanceof CalculationStrategyInput.DoNotCalculate;
   }
 
   /** Returns whether this policy needs all mutation steps before observation steps. */
-  @JsonIgnore
   public boolean requiresMutationPrefix() {
     return !(strategy instanceof CalculationStrategyInput.DoNotCalculate)
         && !(strategy instanceof CalculationStrategyInput.DeferredCalculation);

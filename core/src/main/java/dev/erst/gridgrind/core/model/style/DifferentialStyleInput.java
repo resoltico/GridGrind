@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
@@ -12,15 +11,15 @@ import java.util.Optional;
         "Differential style payload used by authored conditional-formatting rules. At least one field must be set. Colors preserve RGB, theme, indexed, and tint semantics.",
     displayOrder = 60)
 public record DifferentialStyleInput(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> numberFormat,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> bold,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> italic,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<FontHeightInput> fontHeight,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ColorInput> fontColor,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> underline,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> strikeout,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ColorInput> fillColor,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderInput> border) {
+    Optional<String> numberFormat,
+    Optional<Boolean> bold,
+    Optional<Boolean> italic,
+    Optional<FontHeightInput> fontHeight,
+    Optional<ColorInput> fontColor,
+    Optional<Boolean> underline,
+    Optional<Boolean> strikeout,
+    Optional<ColorInput> fillColor,
+    Optional<DifferentialBorderInput> border) {
   public DifferentialStyleInput {
     Objects.requireNonNull(numberFormat, "numberFormat must not be null");
     Objects.requireNonNull(bold, "bold must not be null");

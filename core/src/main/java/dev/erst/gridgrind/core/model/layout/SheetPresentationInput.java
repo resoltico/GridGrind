@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.core.model.layout;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.style.ColorInput;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorInput;
@@ -44,16 +42,5 @@ public record SheetPresentationInput(
     if (normalizedRanges.size() != new LinkedHashSet<>(normalizedRanges).size()) {
       throw new IllegalArgumentException("ignoredErrors must not contain duplicate ranges");
     }
-  }
-
-  @JsonCreator
-  static SheetPresentationInput create(
-      @JsonProperty("display") SheetDisplayInput display,
-      @JsonProperty("tabColor") Optional<ColorInput> tabColor,
-      @JsonProperty("outlineSummary") SheetOutlineSummaryInput outlineSummary,
-      @JsonProperty("sheetDefaults") SheetDefaultsInput sheetDefaults,
-      @JsonProperty("ignoredErrors") List<IgnoredErrorInput> ignoredErrors) {
-    return new SheetPresentationInput(
-        display, tabColor, outlineSummary, sheetDefaults, ignoredErrors);
   }
 }

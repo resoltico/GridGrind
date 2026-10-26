@@ -1,15 +1,15 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 
 /** Case-insensitive protocol-catalog search result returned by CLI discovery commands. */
-@JsonPropertyOrder({"protocolVersion", "query", "totalCount", "matches"})
 public record CatalogSearchResult(
-    GridGrindProtocolVersion protocolVersion, String query, List<CatalogSearchMatch> matches) {
+    GridGrindProtocolVersion protocolVersion,
+    String query,
+    int totalCount,
+    List<CatalogSearchMatch> matches) {
   public CatalogSearchResult {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     query = CatalogRecordValidation.requireNonBlank(query, "query");
@@ -20,11 +20,14 @@ public record CatalogSearchResult(
       }
     }
     matches = List.copyOf(matches);
+    if (totalCount != matches.size()) {
+      throw new IllegalArgumentException("totalCount must equal matches.size()");
+    }
   }
 
-  /** Total number of matches; always equals {@code matches().size()}. */
-  @JsonProperty
-  public int totalCount() {
-    return matches.size();
+  /** Computes the match count for a search assembled by Java callers. */
+  public CatalogSearchResult(
+      GridGrindProtocolVersion protocolVersion, String query, List<CatalogSearchMatch> matches) {
+    this(protocolVersion, query, matches.size(), matches);
   }
 }

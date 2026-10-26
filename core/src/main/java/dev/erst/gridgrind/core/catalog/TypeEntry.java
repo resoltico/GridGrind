@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.semantics.OperationEffect;
 import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
 import dev.erst.gridgrind.core.semantics.OperationPrecondition;
@@ -14,12 +14,12 @@ public record TypeEntry(
     String summary,
     List<FieldEntry> fields,
     List<TargetSelectorEntry> targetSelectors,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> targetSelectorRule,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> noteRefs,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<OperationPrecondition> preconditions,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<OperationEffect> effects,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<OperationEffectFootprint> effectFootprint,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ProtocolStepTemplate> stepTemplate) {
+    Optional<String> targetSelectorRule,
+    @WireDefault(value = "[]", omit = true) List<String> noteRefs,
+    @WireDefault(value = "[]", omit = true) List<OperationPrecondition> preconditions,
+    @WireDefault(value = "[]", omit = true) List<OperationEffect> effects,
+    Optional<OperationEffectFootprint> effectFootprint,
+    Optional<ProtocolStepTemplate> stepTemplate) {
   /**
    * Creates a type entry without target-selector metadata.
    *

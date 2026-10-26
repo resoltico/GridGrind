@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -8,22 +8,32 @@ import java.util.Optional;
 /**
  * JSON-serializable field descriptor for one record component.
  *
- * <p>{@code defaultBoolean}, when present, is the effective wire default for an optional boolean
- * field. Its absence never implies a default.
+ * <p>A declared default is either an immutable JSON value tree or a sibling component reference.
+ * Absence of both fields never implies a default.
  */
 public record FieldEntry(
     String name,
     FieldRequirement requirement,
     FieldShape shape,
     List<String> enumValues,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> defaultBoolean,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<EnumValueDocEntry> enumValueDocs,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> projectedByFacets,
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean secret) {
+    Optional<Object> defaultValue,
+    Optional<String> defaultFrom,
+    @WireDefault(value = "[]", omit = true) List<EnumValueDocEntry> enumValueDocs,
+    @WireDefault(value = "[]", omit = true) List<String> projectedByFacets,
+    @WireDefault(value = "false", omit = true) boolean secret) {
   /** Creates one field entry with no optional metadata. */
   public FieldEntry(
       String name, FieldRequirement requirement, FieldShape shape, List<String> enumValues) {
-    this(name, requirement, shape, enumValues, Optional.empty(), List.of(), List.of(), false);
+    this(
+        name,
+        requirement,
+        shape,
+        enumValues,
+        Optional.empty(),
+        Optional.empty(),
+        List.of(),
+        List.of(),
+        false);
   }
 
   public FieldEntry {
@@ -31,12 +41,18 @@ public record FieldEntry(
     Objects.requireNonNull(requirement, "requirement must not be null");
     Objects.requireNonNull(shape, "shape must not be null");
     enumValues = CatalogRecordValidation.copyStrings(enumValues, "enumValues");
-    defaultBoolean = Objects.requireNonNullElseGet(defaultBoolean, Optional::empty);
-    boolean isBoolean =
-        shape instanceof FieldShape.Scalar scalar && scalar.scalarType() == ScalarType.BOOLEAN;
-    if (defaultBoolean.isPresent() && (!isBoolean || requirement != FieldRequirement.OPTIONAL)) {
-      throw new IllegalArgumentException(
-          "defaultBoolean requires an OPTIONAL BOOLEAN field requirement");
+    Objects.requireNonNull(defaultValue, "defaultValue must not be null");
+    Objects.requireNonNull(defaultFrom, "defaultFrom must not be null");
+    if ((defaultValue.isPresent() || defaultFrom.isPresent())
+        && requirement != FieldRequirement.OPTIONAL) {
+      throw new IllegalArgumentException("Defaults require an OPTIONAL field requirement");
+    }
+    if (defaultValue.isPresent() && defaultFrom.isPresent()) {
+      throw new IllegalArgumentException("A default cannot be both constant and derived");
+    }
+    defaultValue = defaultValue.map(dev.erst.gridgrind.core.metadata.ModelDefaults::wireValue);
+    if (defaultValue.isPresent() && !matches(shape, defaultValue.orElseThrow())) {
+      throw new IllegalArgumentException("defaultValue must match the field shape");
     }
     enumValueDocs = Objects.requireNonNullElseGet(enumValueDocs, List::of);
     enumValueDocs = CatalogRecordValidation.copyEnumValueDocs(enumValueDocs, "enumValueDocs");
@@ -52,5 +68,20 @@ public record FieldEntry(
       throw new IllegalArgumentException(
           "projectedByFacets require the field requirement to be OPTIONAL");
     }
+  }
+
+  private static boolean matches(FieldShape shape, Object value) {
+    return switch (shape) {
+      case FieldShape.Scalar scalar ->
+          switch (scalar.scalarType()) {
+            case STRING -> value instanceof String;
+            case NUMBER -> value instanceof Number;
+            case BOOLEAN -> value instanceof Boolean;
+          };
+      case FieldShape.ListShape list ->
+          value instanceof List<?> values
+              && values.stream().allMatch(item -> matches(list.elementShape(), item));
+      default -> value instanceof java.util.Map<?, ?>;
+    };
   }
 }

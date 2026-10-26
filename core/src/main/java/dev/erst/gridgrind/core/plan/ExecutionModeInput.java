@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
@@ -32,7 +31,6 @@ public sealed interface ExecutionModeInput {
   String modeType();
 
   /** Returns whether this input resolves to the product default execution mode. */
-  @JsonIgnore
   default boolean isDefault() {
     return this instanceof FullXssf;
   }

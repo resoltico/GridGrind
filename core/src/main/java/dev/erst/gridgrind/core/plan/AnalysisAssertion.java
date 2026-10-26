@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.semantics.ProtocolTargetingMode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -40,8 +39,8 @@ public sealed interface AnalysisAssertion extends Assertion
   record AnalysisFindingPresent(
       InspectionQuery query,
       AnalysisFindingCode code,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<AnalysisSeverity> severity,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> messageContains)
+      Optional<AnalysisSeverity> severity,
+      Optional<String> messageContains)
       implements AnalysisAssertion {
     public AnalysisFindingPresent {
       query = AssertionSupport.requireAnalysisQuery(query, "query");
@@ -68,8 +67,8 @@ public sealed interface AnalysisAssertion extends Assertion
   record AnalysisFindingAbsent(
       InspectionQuery query,
       AnalysisFindingCode code,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<AnalysisSeverity> severity,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> messageContains)
+      Optional<AnalysisSeverity> severity,
+      Optional<String> messageContains)
       implements AnalysisAssertion {
     public AnalysisFindingAbsent {
       query = AssertionSupport.requireAnalysisQuery(query, "query");

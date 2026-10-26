@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
@@ -105,7 +104,6 @@ public record ExecutionPolicyInput(
   /**
    * Returns whether execution mode, journal, and calculation settings normalize to the defaults.
    */
-  @JsonIgnore
   public boolean isDefault() {
     return mode.isDefault()
         && journal.isDefault()
@@ -114,25 +112,21 @@ public record ExecutionPolicyInput(
   }
 
   /** Returns the effective execution mode after applying GridGrind defaults. */
-  @JsonIgnore
   public ExecutionModeInput effectiveMode() {
     return mode;
   }
 
   /** Returns the effective journal level after applying GridGrind defaults. */
-  @JsonIgnore
   public ExecutionJournalLevel effectiveJournalLevel() {
     return journal.level();
   }
 
   /** Returns the effective calculation policy after applying GridGrind defaults. */
-  @JsonIgnore
   public CalculationPolicyInput effectiveCalculation() {
     return calculation;
   }
 
   /** Returns the effective assertion mode after applying GridGrind defaults. */
-  @JsonIgnore
   public AssertionModeInput effectiveAssertionMode() {
     return assertionMode;
   }

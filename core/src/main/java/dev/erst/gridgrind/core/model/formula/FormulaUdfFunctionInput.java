@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.core.model.formula;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -38,21 +36,6 @@ public record FormulaUdfFunctionInput(
   /** Creates a function whose minimum and maximum arity are the same exact count. */
   public FormulaUdfFunctionInput(String name, int exactArgumentCount, String formulaTemplate) {
     this(name, exactArgumentCount, exactArgumentCount, formulaTemplate);
-  }
-
-  /** Creates a UDF definition with explicit minimum and maximum arity. */
-  @JsonCreator
-  public FormulaUdfFunctionInput(
-      @JsonProperty("name") String name,
-      @JsonProperty("minimumArgumentCount") int minimumArgumentCount,
-      @JsonProperty("maximumArgumentCount") Integer maximumArgumentCount,
-      @JsonProperty("formulaTemplate") String formulaTemplate) {
-    this(
-        name,
-        minimumArgumentCount,
-        Objects.requireNonNull(maximumArgumentCount, "maximumArgumentCount must not be null")
-            .intValue(),
-        formulaTemplate);
   }
 
   private static String requireFunctionName(String name) {

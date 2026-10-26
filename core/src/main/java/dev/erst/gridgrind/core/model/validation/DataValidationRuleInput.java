@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.model.validation;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
@@ -59,7 +58,6 @@ public sealed interface DataValidationRuleInput
           String formula1,
       @dev.erst.gridgrind.core.metadata.FieldRule(
               kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<String> formula2)
       implements DataValidationRuleInput {
     public WholeNumber {
@@ -82,7 +80,6 @@ public sealed interface DataValidationRuleInput
           String formula1,
       @dev.erst.gridgrind.core.metadata.FieldRule(
               kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<String> formula2)
       implements DataValidationRuleInput {
     public DecimalNumber {
@@ -104,7 +101,6 @@ public sealed interface DataValidationRuleInput
           String formula1,
       @dev.erst.gridgrind.core.metadata.FieldRule(
               kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<String> formula2)
       implements DataValidationRuleInput {
     public DateRule {
@@ -126,7 +122,6 @@ public sealed interface DataValidationRuleInput
           String formula1,
       @dev.erst.gridgrind.core.metadata.FieldRule(
               kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<String> formula2)
       implements DataValidationRuleInput {
     public TimeRule {
@@ -149,7 +144,6 @@ public sealed interface DataValidationRuleInput
           String formula1,
       @dev.erst.gridgrind.core.metadata.FieldRule(
               kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
-          @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<String> formula2)
       implements DataValidationRuleInput {
     public TextLength {

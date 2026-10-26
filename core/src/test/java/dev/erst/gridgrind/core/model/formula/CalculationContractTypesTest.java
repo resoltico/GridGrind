@@ -179,7 +179,7 @@ class CalculationContractTypesTest {
 
     assertTrue(CalculationReport.notRequested().policy().isDefault());
     assertTrue(
-        CalculationReport.create(
+        new CalculationReport(
                 CalculationPolicyInput.defaults(), java.util.Optional.empty(), execution)
             .policy()
             .isDefault());
@@ -187,7 +187,7 @@ class CalculationContractTypesTest {
         "policy must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> CalculationReport.create(null, java.util.Optional.empty(), execution))
+                () -> new CalculationReport(null, java.util.Optional.empty(), execution))
             .getMessage());
     assertEquals(2, report.preflight().orElseThrow().checkedFormulaCount());
     assertTrue(report.execution().markRecalculateOnOpenApplied());

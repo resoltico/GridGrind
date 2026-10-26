@@ -10,6 +10,10 @@ public sealed interface TextSourceInput
     permits dev.erst.gridgrind.core.source.TextSourceInput.Inline,
         dev.erst.gridgrind.core.source.TextSourceInput.Utf8File,
         dev.erst.gridgrind.core.source.TextSourceInput.StandardInput {
+  /** Returns an explicitly empty inline text source. */
+  static TextSourceInput empty() {
+    return new Inline("");
+  }
 
   /** Returns one inline UTF-8 text source. */
   static Inline inline(String text) {
