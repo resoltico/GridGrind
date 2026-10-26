@@ -53,8 +53,7 @@ class DataValidationEntryReportTest {
                     false,
                     Optional.empty(),
                     Optional.empty())));
-    assertThrows(
-        IllegalArgumentException.class,
+    assertDoesNotThrow(
         () ->
             new DataValidationEntryReport.Unsupported(
                 List.of(new RangeLabel(" ")), "ANY", "detail"));

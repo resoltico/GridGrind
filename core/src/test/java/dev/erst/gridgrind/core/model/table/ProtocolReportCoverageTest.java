@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.table;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -34,9 +35,7 @@ class ProtocolReportCoverageTest {
     assertEquals("A1:A3", authoredFontColor.range().value());
     assertFalse(reportedFontColor.descending());
     assertEquals(CellColorReport.rgb(new RgbHex("#AABBCC")), reportedFontColor.color());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new AutofilterSortConditionReport.Value(new RangeLabel(" "), false));
+    assertDoesNotThrow(() -> new AutofilterSortConditionReport.Value(new RangeLabel(" "), false));
   }
 
   @Test
@@ -75,8 +74,7 @@ class ProtocolReportCoverageTest {
             new RangeLabel("A1:A3"), true, false, Optional.empty(), List.of(reportedFontColor));
 
     assertEquals(Optional.empty(), normalized.sortMethod());
-    assertThrows(
-        IllegalArgumentException.class,
+    assertDoesNotThrow(
         () ->
             new AutofilterSortStateReport(
                 new RangeLabel(" "),

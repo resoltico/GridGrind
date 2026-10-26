@@ -16,6 +16,10 @@ import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
@@ -111,11 +115,11 @@ class WorkbookCommandTest {
 
   @Test
   void buildsWorkbookProtectionAndAdvancedAutofilterCommands() {
-    List<ExcelAutofilterFilterColumn> criteria =
+    List<AutofilterFilterColumnSpec> criteria =
         new ArrayList<>(
             List.of(
-                new ExcelAutofilterFilterColumn(
-                    0L, false, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), true))));
+                new AutofilterFilterColumnSpec(
+                    0L, false, new AutofilterFilterCriterionSpec.Values(List.of("Ada"), true))));
     WorkbookSheetCommand.SetSheetProtection sheetProtection =
         new WorkbookSheetCommand.SetSheetProtection(
             "Budget", protectionSettings(), Optional.of("gridgrind"));
@@ -131,12 +135,14 @@ class WorkbookCommandTest {
             "A1:C4",
             criteria,
             Optional.of(
-                new ExcelAutofilterSortState(
-                    "A1:C4",
+                new AutofilterSortStateSpec(
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:C4"),
                     true,
                     false,
                     Optional.empty(),
-                    List.of(new ExcelAutofilterSortCondition.Value("A2:A4", false)))));
+                    List.of(
+                        new AutofilterSortConditionSpec.Value(
+                            new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A4"), false)))));
 
     criteria.clear();
 

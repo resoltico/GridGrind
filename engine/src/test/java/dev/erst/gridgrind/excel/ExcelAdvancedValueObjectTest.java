@@ -27,6 +27,10 @@ import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
@@ -60,80 +64,114 @@ import org.junit.jupiter.api.Test;
 class ExcelAdvancedValueObjectTest {
   @Test
   void autofilterValueObjectsNormalizeAndValidate() {
-    var customCondition = new ExcelAutofilterFilterCriterion.CustomCondition("equal", "Ada");
+    var customCondition = new AutofilterFilterCriterionSpec.CustomConditionSpec("equal", "Ada");
     var values =
-        new ExcelAutofilterFilterCriterion.Values(new ArrayList<>(List.of("Queued", "")), true);
-    var custom = new ExcelAutofilterFilterCriterion.Custom(true, List.of(customCondition));
-    var dynamic = new ExcelAutofilterFilterCriterion.Dynamic("today", 1.0d, 2.0d);
-    var top10 = new ExcelAutofilterFilterCriterion.Top10(10, false, true);
-    var color = new ExcelAutofilterFilterCriterion.Color(false, ColorSpec.indexed(10, -0.25d));
-    var icon = new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2);
-    var column = new ExcelAutofilterFilterColumn(4L, false, color);
+        new AutofilterFilterCriterionSpec.Values(new ArrayList<>(List.of("Queued", "")), true);
+    var custom = new AutofilterFilterCriterionSpec.Custom(true, List.of(customCondition));
+    var dynamic =
+        new AutofilterFilterCriterionSpec.Dynamic("today", Optional.of(1.0d), Optional.of(2.0d));
+    var top10 = new AutofilterFilterCriterionSpec.Top10(10, false, true);
+    var color = new AutofilterFilterCriterionSpec.Color(false, ColorSpec.indexed(10, -0.25d));
+    var icon = new AutofilterFilterCriterionSpec.Icon("3TrafficLights1", 2);
+    var column = new AutofilterFilterColumnSpec(4L, false, color);
     var sortCondition =
-        new ExcelAutofilterSortCondition.CellColor(
-            "A2:A5", true, ColorSpec.rgb(new RgbHex("#AABBCC")));
+        new AutofilterSortConditionSpec.CellColor(
+            new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A5"),
+            true,
+            ColorSpec.rgb(new RgbHex("#AABBCC")));
     var sortState =
-        new ExcelAutofilterSortState("A1:F5", true, true, Optional.empty(), List.of(sortCondition));
+        new AutofilterSortStateSpec(
+            new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:F5"),
+            true,
+            true,
+            Optional.empty(),
+            List.of(sortCondition));
 
     assertEquals(List.of("Queued", ""), values.values());
     assertEquals(List.of(customCondition), custom.conditions());
-    assertEquals("today", dynamic.type());
+    assertEquals("today", dynamic.dynamicType());
     assertEquals(10, top10.value());
     assertEquals(ColorSpec.indexed(10, -0.25d), color.color());
     assertEquals("3TrafficLights1", icon.iconSet());
     assertEquals(4L, column.columnId());
-    assertInstanceOf(ExcelAutofilterSortCondition.CellColor.class, sortCondition);
+    assertInstanceOf(AutofilterSortConditionSpec.CellColor.class, sortCondition);
     assertEquals(List.of(sortCondition), sortState.conditions());
 
     List<String> valuesWithNull = new ArrayList<>(Arrays.asList("Queued", null));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelAutofilterFilterCriterion.Values(valuesWithNull, false));
+        () -> new AutofilterFilterCriterionSpec.Values(valuesWithNull, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterion.Custom(false, List.of()));
+        () -> new AutofilterFilterCriterionSpec.Custom(false, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterion.Dynamic(" ", null, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterion.Dynamic("today", Double.NaN, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterion.Top10(0, true, false));
-    assertThrows(
-        NullPointerException.class, () -> new ExcelAutofilterFilterCriterion.Color(true, null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelAutofilterFilterCriterion.Icon(" ", 0));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", -1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterion.CustomCondition(" ", "Ada"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterion.CustomCondition("equal", " "));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelAutofilterFilterColumn(-1L, true, values));
-    assertThrows(
-        NullPointerException.class, () -> new ExcelAutofilterSortCondition.Value(null, false));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelAutofilterSortCondition.Value(" ", false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortCondition.Icon("A1", false, -1));
-    assertThrows(
-        NullPointerException.class,
-        () -> new ExcelAutofilterSortState("A1:B2", false, false, null, List.of(sortCondition)));
+        () -> new AutofilterFilterCriterionSpec.Dynamic(" ", Optional.empty(), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelAutofilterSortState(
-                " ", false, false, Optional.empty(), List.of(sortCondition)));
+            new AutofilterFilterCriterionSpec.Dynamic(
+                "today", Optional.of(Double.NaN), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortState("A1:B2", false, false, Optional.empty(), List.of()));
+        () -> new AutofilterFilterCriterionSpec.Top10(0, true, false));
+    assertThrows(
+        NullPointerException.class, () -> new AutofilterFilterCriterionSpec.Color(true, null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new AutofilterFilterCriterionSpec.Icon(" ", 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new AutofilterFilterCriterionSpec.Icon("3TrafficLights1", -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new AutofilterFilterCriterionSpec.CustomConditionSpec(" ", "Ada"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new AutofilterFilterCriterionSpec.CustomConditionSpec("equal", " "));
+    assertThrows(
+        IllegalArgumentException.class, () -> new AutofilterFilterColumnSpec(-1L, true, values));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new AutofilterSortConditionSpec.Value(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef(null), false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new AutofilterSortConditionSpec.Value(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef(" "), false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new AutofilterSortConditionSpec.Icon(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"), false, -1));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new AutofilterSortStateSpec(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
+                false,
+                false,
+                null,
+                List.of(sortCondition)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new AutofilterSortStateSpec(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef(" "),
+                false,
+                false,
+                Optional.empty(),
+                List.of(sortCondition)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new AutofilterSortStateSpec(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
+                false,
+                false,
+                Optional.empty(),
+                List.of()));
   }
 
   @Test

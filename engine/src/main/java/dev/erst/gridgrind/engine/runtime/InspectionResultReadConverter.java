@@ -150,9 +150,7 @@ final class InspectionResultReadConverter {
           new SheetInspectionResult.AutofiltersResult(
               autofilters.stepId(),
               new SheetLabel(autofilters.sheetName()),
-              autofilters.autofilters().stream()
-                  .map(InspectionResultWorkbookStructureReportSupport::toAutofilterEntryReport)
-                  .toList());
+              autofilters.autofilters());
       case dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult tables ->
           new WorkbookAssetInspectionResult.TablesResult(tables.stepId(), tables.tables());
       case dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaSurfaceResult formulaSurface ->

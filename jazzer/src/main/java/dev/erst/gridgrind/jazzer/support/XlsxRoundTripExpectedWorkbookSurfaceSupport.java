@@ -3,10 +3,10 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
@@ -193,9 +193,9 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expected);
   }
 
-  static Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters(ExcelWorkbook workbook) {
+  static Map<String, List<AutofilterEntryReport>> expectedAutofilters(ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
-    LinkedHashMap<String, List<ExcelAutofilterSnapshot>> expected = new LinkedHashMap<>();
+    LinkedHashMap<String, List<AutofilterEntryReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       var result =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilter;
@@ -23,25 +24,23 @@ final class ExcelAutofilterCriterionWriteSupport {
   private ExcelAutofilterCriterionWriteSupport() {}
 
   static void applyCriterion(
-      XSSFWorkbook workbook,
-      CTFilterColumn filterColumn,
-      ExcelAutofilterFilterCriterion criterion) {
+      XSSFWorkbook workbook, CTFilterColumn filterColumn, AutofilterFilterCriterionSpec criterion) {
     switch (criterion) {
-      case ExcelAutofilterFilterCriterion.Values values ->
+      case AutofilterFilterCriterionSpec.Values values ->
           applyValuesCriterion(filterColumn, values);
-      case ExcelAutofilterFilterCriterion.Custom custom ->
+      case AutofilterFilterCriterionSpec.Custom custom ->
           applyCustomCriterion(filterColumn, custom);
-      case ExcelAutofilterFilterCriterion.Dynamic dynamic ->
+      case AutofilterFilterCriterionSpec.Dynamic dynamic ->
           applyDynamicCriterion(filterColumn, dynamic);
-      case ExcelAutofilterFilterCriterion.Top10 top10 -> applyTop10Criterion(filterColumn, top10);
-      case ExcelAutofilterFilterCriterion.Color color ->
+      case AutofilterFilterCriterionSpec.Top10 top10 -> applyTop10Criterion(filterColumn, top10);
+      case AutofilterFilterCriterionSpec.Color color ->
           applyColorCriterion(workbook, filterColumn, color);
-      case ExcelAutofilterFilterCriterion.Icon icon -> applyIconCriterion(filterColumn, icon);
+      case AutofilterFilterCriterionSpec.Icon icon -> applyIconCriterion(filterColumn, icon);
     }
   }
 
   private static void applyValuesCriterion(
-      CTFilterColumn filterColumn, ExcelAutofilterFilterCriterion.Values values) {
+      CTFilterColumn filterColumn, AutofilterFilterCriterionSpec.Values values) {
     CTFilters filters = filterColumn.addNewFilters();
     for (String value : values.values()) {
       filters.addNewFilter().setVal(value);
@@ -52,10 +51,10 @@ final class ExcelAutofilterCriterionWriteSupport {
   }
 
   private static void applyCustomCriterion(
-      CTFilterColumn filterColumn, ExcelAutofilterFilterCriterion.Custom custom) {
+      CTFilterColumn filterColumn, AutofilterFilterCriterionSpec.Custom custom) {
     CTCustomFilters customFilters = filterColumn.addNewCustomFilters();
     customFilters.setAnd(custom.and());
-    for (ExcelAutofilterFilterCriterion.CustomCondition condition : custom.conditions()) {
+    for (AutofilterFilterCriterionSpec.CustomConditionSpec condition : custom.conditions()) {
       CTCustomFilter customFilter = customFilters.addNewCustomFilter();
       customFilter.setOperator(requiredCustomFilterOperator(condition.operator()));
       customFilter.setVal(condition.value());
@@ -71,15 +70,11 @@ final class ExcelAutofilterCriterionWriteSupport {
   }
 
   private static void applyDynamicCriterion(
-      CTFilterColumn filterColumn, ExcelAutofilterFilterCriterion.Dynamic dynamic) {
+      CTFilterColumn filterColumn, AutofilterFilterCriterionSpec.Dynamic dynamic) {
     CTDynamicFilter dynamicFilter = filterColumn.addNewDynamicFilter();
-    dynamicFilter.setType(requiredDynamicFilterType(dynamic.type()));
-    if (dynamic.value() != null) {
-      dynamicFilter.setVal(dynamic.value());
-    }
-    if (dynamic.maxValue() != null) {
-      dynamicFilter.setMaxVal(dynamic.maxValue());
-    }
+    dynamicFilter.setType(requiredDynamicFilterType(dynamic.dynamicType()));
+    dynamic.value().ifPresent(dynamicFilter::setVal);
+    dynamic.maxValue().ifPresent(dynamicFilter::setMaxVal);
   }
 
   private static STDynamicFilterType.Enum requiredDynamicFilterType(String type) {
@@ -91,7 +86,7 @@ final class ExcelAutofilterCriterionWriteSupport {
   }
 
   private static void applyTop10Criterion(
-      CTFilterColumn filterColumn, ExcelAutofilterFilterCriterion.Top10 top10) {
+      CTFilterColumn filterColumn, AutofilterFilterCriterionSpec.Top10 top10) {
     CTTop10 top10Filter = filterColumn.addNewTop10();
     top10Filter.setVal(top10.value());
     top10Filter.setTop(top10.top());
@@ -101,14 +96,14 @@ final class ExcelAutofilterCriterionWriteSupport {
   private static void applyColorCriterion(
       XSSFWorkbook workbook,
       CTFilterColumn filterColumn,
-      ExcelAutofilterFilterCriterion.Color color) {
+      AutofilterFilterCriterionSpec.Color color) {
     CTColorFilter colorFilter = filterColumn.addNewColorFilter();
     colorFilter.setCellColor(color.cellColor());
     colorFilter.setDxfId(putColorDxf(workbook, color.color(), color.cellColor()) - 1L);
   }
 
   private static void applyIconCriterion(
-      CTFilterColumn filterColumn, ExcelAutofilterFilterCriterion.Icon icon) {
+      CTFilterColumn filterColumn, AutofilterFilterCriterionSpec.Icon icon) {
     CTIconFilter iconFilter = filterColumn.addNewIconFilter();
     iconFilter.setIconSet(requiredIconSet(icon.iconSet()));
     iconFilter.setIconId(icon.iconId());

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import java.util.List;
 import java.util.Objects;
@@ -185,13 +186,13 @@ final class ExcelSheetCopyController {
   }
 
   /** Returns the one sheet-owned autofilter snapshot when present. */
-  static Optional<ExcelAutofilterSnapshot.SheetOwned> sheetOwnedAutofilter(
-      List<ExcelAutofilterSnapshot> autofilters) {
+  static Optional<AutofilterEntryReport.SheetOwned> sheetOwnedAutofilter(
+      List<AutofilterEntryReport> autofilters) {
     return ExcelSheetCopySupport.sheetOwnedAutofilter(autofilters);
   }
 
   /** Retained for focused tests around the legacy range-only sheet autofilter path. */
-  static Optional<String> sheetOwnedAutofilterRange(List<ExcelAutofilterSnapshot> autofilters) {
+  static Optional<String> sheetOwnedAutofilterRange(List<AutofilterEntryReport> autofilters) {
     return ExcelSheetCopySupport.sheetOwnedAutofilterRange(autofilters);
   }
 
@@ -205,7 +206,7 @@ final class ExcelSheetCopyController {
       List<CTDataValidation> dataValidations,
       List<org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting>
           conditionalFormattingBlocks,
-      Optional<ExcelAutofilterSnapshot.SheetOwned> sheetAutofilter,
+      Optional<AutofilterEntryReport.SheetOwned> sheetAutofilter,
       List<TableEntryReport> tables) {
     private ExcelSheetCopySnapshot {
       localNamedRanges = List.copyOf(localNamedRanges);

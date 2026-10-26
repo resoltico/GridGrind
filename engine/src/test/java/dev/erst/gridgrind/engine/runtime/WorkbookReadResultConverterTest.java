@@ -36,8 +36,10 @@ import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
 import dev.erst.gridgrind.core.model.table.TableColumnReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
@@ -1090,51 +1092,56 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             new dev.erst.gridgrind.excel.WorkbookSheetResult.RowLayout(0, 20.0d, false, 0, false)));
   }
 
-  private static List<ExcelAutofilterSnapshot> advancedAutofilters() {
-    ExcelAutofilterSortStateSnapshot sortState =
-        new ExcelAutofilterSortStateSnapshot(
-            "A1:F5",
+  private static List<AutofilterEntryReport> advancedAutofilters() {
+    AutofilterSortStateReport sortState =
+        new AutofilterSortStateReport(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F5"),
             true,
             false,
             java.util.Optional.empty(),
             List.of(
-                new ExcelAutofilterSortConditionSnapshot.CellColor(
-                    "A2:A5", true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
-                new ExcelAutofilterSortConditionSnapshot.FontColor(
-                    "B2:B5", false, CellColorReport.theme(4, 0.15d)),
-                new ExcelAutofilterSortConditionSnapshot.Icon("C2:C5", false, 2)));
-    List<ExcelAutofilterFilterColumnSnapshot> filterColumns =
+                new AutofilterSortConditionReport.CellColor(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A5"),
+                    true,
+                    CellColorReport.rgb(new RgbHex("#AABBCC"))),
+                new AutofilterSortConditionReport.FontColor(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("B2:B5"),
+                    false,
+                    CellColorReport.theme(4, 0.15d)),
+                new AutofilterSortConditionReport.Icon(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("C2:C5"), false, 2)));
+    List<AutofilterFilterColumnReport> filterColumns =
         List.of(
-            new ExcelAutofilterFilterColumnSnapshot(
-                0L,
-                false,
-                new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Queued"), true)),
-            new ExcelAutofilterFilterColumnSnapshot(
+            new AutofilterFilterColumnReport(
+                0L, false, new AutofilterFilterCriterionReport.Values(List.of("Queued"), true)),
+            new AutofilterFilterColumnReport(
                 1L,
                 true,
-                new ExcelAutofilterFilterCriterionSnapshot.Custom(
+                new AutofilterFilterCriterionReport.Custom(
                     true,
                     List.of(
-                        new ExcelAutofilterFilterCriterionSnapshot.CustomCondition(
+                        new AutofilterFilterCriterionReport.CustomConditionReport(
                             "equal", "Ada")))),
-            new ExcelAutofilterFilterColumnSnapshot(
-                2L, true, new ExcelAutofilterFilterCriterionSnapshot.Dynamic("TODAY", 1.0d, 2.0d)),
-            new ExcelAutofilterFilterColumnSnapshot(
-                3L,
-                true,
-                new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 10.0d, 8.0d)),
-            new ExcelAutofilterFilterColumnSnapshot(
+            new AutofilterFilterColumnReport(
+                2L, true, new AutofilterFilterCriterionReport.Dynamic("TODAY", 1.0d, 2.0d)),
+            new AutofilterFilterColumnReport(
+                3L, true, new AutofilterFilterCriterionReport.Top10(true, false, 10.0d, 8.0d)),
+            new AutofilterFilterColumnReport(
                 4L,
                 true,
-                new ExcelAutofilterFilterCriterionSnapshot.Color(
-                    false, CellColorReport.theme(4, 0.45d))),
-            new ExcelAutofilterFilterColumnSnapshot(
-                5L, true, new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2)));
+                new AutofilterFilterCriterionReport.Color(false, CellColorReport.theme(4, 0.45d))),
+            new AutofilterFilterColumnReport(
+                5L, true, new AutofilterFilterCriterionReport.Icon("3TrafficLights1", 2)));
     return List.of(
-        new ExcelAutofilterSnapshot.SheetOwned(
-            "A1:F5", filterColumns, java.util.Optional.of(sortState)),
-        new ExcelAutofilterSnapshot.TableOwned(
-            "H1:I5", "QueueTable", List.of(), java.util.Optional.of(sortState)));
+        new AutofilterEntryReport.SheetOwned(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F5"),
+            filterColumns,
+            java.util.Optional.of(sortState)),
+        new AutofilterEntryReport.TableOwned(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("H1:I5"),
+            "QueueTable",
+            List.of(),
+            java.util.Optional.of(sortState)));
   }
 
   private static TableEntryReport advancedTable() {

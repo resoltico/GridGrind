@@ -12,6 +12,11 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
 import dev.erst.gridgrind.core.model.table.TableColumnReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
@@ -310,49 +315,58 @@ class AdvancedReadEngineTypesTest {
 
   @Test
   void autofilterAndTableSnapshotsValidateAdvancedCriteriaAndSortShapes() {
-    ExcelAutofilterFilterCriterionSnapshot.Values values =
-        new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Queued", "Blocked"), true);
-    ExcelAutofilterFilterCriterionSnapshot.Custom custom =
-        new ExcelAutofilterFilterCriterionSnapshot.Custom(
+    AutofilterFilterCriterionReport.Values values =
+        new AutofilterFilterCriterionReport.Values(List.of("Queued", "Blocked"), true);
+    AutofilterFilterCriterionReport.Custom custom =
+        new AutofilterFilterCriterionReport.Custom(
             true,
-            List.of(new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Ada")));
-    ExcelAutofilterFilterCriterionSnapshot.Dynamic dynamic =
-        new ExcelAutofilterFilterCriterionSnapshot.Dynamic("TODAY", 1.0d, 2.0d);
-    ExcelAutofilterFilterCriterionSnapshot.Top10 top10 =
-        new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 10.0d, 8.0d);
-    ExcelAutofilterFilterCriterionSnapshot.Color color =
-        new ExcelAutofilterFilterCriterionSnapshot.Color(false, CellColorReport.theme(4, 0.45d));
-    ExcelAutofilterFilterCriterionSnapshot.Icon icon =
-        new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2);
-    ExcelAutofilterSortConditionSnapshot sortCondition =
-        new ExcelAutofilterSortConditionSnapshot.CellColor("A2:A5", true, rgb("#AABBCC"));
-    ExcelAutofilterSortStateSnapshot sortState =
-        new ExcelAutofilterSortStateSnapshot(
-            "A1:F5", true, false, java.util.Optional.empty(), List.of(sortCondition));
-    ExcelAutofilterSnapshot.SheetOwned sheetOwned =
-        new ExcelAutofilterSnapshot.SheetOwned(
-            "A1:F5",
+            List.of(new AutofilterFilterCriterionReport.CustomConditionReport("equal", "Ada")));
+    AutofilterFilterCriterionReport.Dynamic dynamic =
+        new AutofilterFilterCriterionReport.Dynamic("TODAY", 1.0d, 2.0d);
+    AutofilterFilterCriterionReport.Top10 top10 =
+        new AutofilterFilterCriterionReport.Top10(true, false, 10.0d, 8.0d);
+    AutofilterFilterCriterionReport.Color color =
+        new AutofilterFilterCriterionReport.Color(false, CellColorReport.theme(4, 0.45d));
+    AutofilterFilterCriterionReport.Icon icon =
+        new AutofilterFilterCriterionReport.Icon("3TrafficLights1", 2);
+    AutofilterSortConditionReport sortCondition =
+        new AutofilterSortConditionReport.CellColor(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A5"), true, rgb("#AABBCC"));
+    AutofilterSortStateReport sortState =
+        new AutofilterSortStateReport(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F5"),
+            true,
+            false,
+            java.util.Optional.empty(),
+            List.of(sortCondition));
+    AutofilterEntryReport.SheetOwned sheetOwned =
+        new AutofilterEntryReport.SheetOwned(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F5"),
             List.of(
-                new ExcelAutofilterFilterColumnSnapshot(0L, false, values),
-                new ExcelAutofilterFilterColumnSnapshot(1L, true, custom),
-                new ExcelAutofilterFilterColumnSnapshot(2L, true, dynamic),
-                new ExcelAutofilterFilterColumnSnapshot(3L, true, top10),
-                new ExcelAutofilterFilterColumnSnapshot(4L, true, color),
-                new ExcelAutofilterFilterColumnSnapshot(5L, true, icon)),
+                new AutofilterFilterColumnReport(0L, false, values),
+                new AutofilterFilterColumnReport(1L, true, custom),
+                new AutofilterFilterColumnReport(2L, true, dynamic),
+                new AutofilterFilterColumnReport(3L, true, top10),
+                new AutofilterFilterColumnReport(4L, true, color),
+                new AutofilterFilterColumnReport(5L, true, icon)),
             java.util.Optional.of(sortState));
-    ExcelAutofilterSnapshot.TableOwned tableOwned =
-        new ExcelAutofilterSnapshot.TableOwned(
-            "H1:I5", "QueueTable", List.of(), java.util.Optional.of(sortState));
-    ExcelAutofilterSnapshot.TableOwned tableOwnedWithColumn =
-        new ExcelAutofilterSnapshot.TableOwned(
-            "N1:O5",
+    AutofilterEntryReport.TableOwned tableOwned =
+        new AutofilterEntryReport.TableOwned(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("H1:I5"),
+            "QueueTable",
+            List.of(),
+            java.util.Optional.of(sortState));
+    AutofilterEntryReport.TableOwned tableOwnedWithColumn =
+        new AutofilterEntryReport.TableOwned(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("N1:O5"),
             "QueueMirror",
-            List.of(new ExcelAutofilterFilterColumnSnapshot(9L, true, values)),
+            List.of(new AutofilterFilterColumnReport(9L, true, values)),
             java.util.Optional.of(sortState));
-    ExcelAutofilterSnapshot.TableOwned defaultTableOwned =
-        new ExcelAutofilterSnapshot.TableOwned("L1:M4", "AuditTable");
-    ExcelAutofilterFilterCriterionSnapshot.Values emptyValues =
-        new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false);
+    AutofilterEntryReport.TableOwned defaultTableOwned =
+        new AutofilterEntryReport.TableOwned(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("L1:M4"), "AuditTable");
+    AutofilterFilterCriterionReport.Values emptyValues =
+        new AutofilterFilterCriterionReport.Values(List.of(), false);
 
     assertEquals(java.util.Optional.of(sortState), sheetOwned.sortState());
     assertEquals("QueueTable", tableOwned.tableName());
@@ -360,73 +374,74 @@ class AdvancedReadEngineTypesTest {
     assertEquals(List.of(), emptyValues.values());
     assertEquals(List.of(), defaultTableOwned.filterColumns());
     assertTrue(defaultTableOwned.sortState().isEmpty());
-    assertInstanceOf(ExcelAutofilterSortConditionSnapshot.CellColor.class, sortCondition);
+    assertInstanceOf(AutofilterSortConditionReport.CellColor.class, sortCondition);
     assertEquals(java.util.Optional.empty(), sortState.sortMethod());
 
     assertThrows(
         NullPointerException.class,
-        () ->
-            new ExcelAutofilterFilterCriterionSnapshot.Values(
-                Arrays.asList("Queued", null), false));
+        () -> new AutofilterFilterCriterionReport.Values(Arrays.asList("Queued", null), false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.Custom(true, List.of()));
+        () -> new AutofilterFilterCriterionReport.Custom(true, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.CustomCondition(" ", "Ada"));
+        () -> new AutofilterFilterCriterionReport.CustomConditionReport(" ", "Ada"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", " "));
+        () -> new AutofilterFilterCriterionReport.CustomConditionReport("equal", " "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.Dynamic(" ", 1.0d, null));
+        () -> new AutofilterFilterCriterionReport.Dynamic(" ", 1.0d, null));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelAutofilterFilterCriterionSnapshot.Dynamic(
-                "TODAY", Double.POSITIVE_INFINITY, null));
+        () -> new AutofilterFilterCriterionReport.Dynamic("TODAY", Double.POSITIVE_INFINITY, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.Dynamic("TODAY", 1.0d, Double.NaN));
+        () -> new AutofilterFilterCriterionReport.Dynamic("TODAY", 1.0d, Double.NaN));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, -1.0d, null));
+        () -> new AutofilterFilterCriterionReport.Top10(true, false, -1.0d, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, Double.NaN, null));
+        () -> new AutofilterFilterCriterionReport.Top10(true, false, Double.NaN, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelAutofilterFilterCriterionSnapshot.Top10(
+            new AutofilterFilterCriterionReport.Top10(
                 true, false, 10.0d, Double.NEGATIVE_INFINITY));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.Icon(" ", 0));
+        IllegalArgumentException.class, () -> new AutofilterFilterCriterionReport.Icon(" ", 0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", -1));
+        () -> new AutofilterFilterCriterionReport.Icon("3TrafficLights1", -1));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterFilterColumnSnapshot(-1L, true, values));
+        IllegalArgumentException.class, () -> new AutofilterFilterColumnReport(-1L, true, values));
     assertInstanceOf(
-        ExcelAutofilterSortConditionSnapshot.CellColor.class,
-        new ExcelAutofilterSortConditionSnapshot.CellColor("A2:A5", false, rgb("#AABBCC")));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortConditionSnapshot.Icon("A2:A5", true, -1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortConditionSnapshot.Value(" ", false));
+        AutofilterSortConditionReport.CellColor.class,
+        new AutofilterSortConditionReport.CellColor(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A5"), false, rgb("#AABBCC")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelAutofilterSortStateSnapshot(
-                " ", true, false, java.util.Optional.empty(), List.of(sortCondition)));
+            new AutofilterSortConditionReport.Icon(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A5"), true, -1));
+    assertDoesNotThrow(
+        () ->
+            new AutofilterSortConditionReport.Value(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel(" "), false));
+    assertDoesNotThrow(
+        () ->
+            new AutofilterSortStateReport(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel(" "),
+                true,
+                false,
+                java.util.Optional.empty(),
+                List.of(sortCondition)));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelAutofilterSortStateSnapshot(
-                "A1:F5",
+            new AutofilterSortStateReport(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F5"),
                 true,
                 false,
                 java.util.Optional.empty(),
@@ -434,8 +449,8 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelAutofilterSnapshot.TableOwned(
-                "A1:F5",
+            new AutofilterEntryReport.TableOwned(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F5"),
                 "QueueTable",
                 Arrays.asList(sheetOwned.filterColumns().getFirst(), null),
                 java.util.Optional.of(sortState)));

@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
@@ -487,11 +488,13 @@ class WorkbookReadResultTest {
                             new ResolvedValidationPrompt(
                                 "Reason", "Use 20 characters or fewer.", true)),
                         Optional.empty()))));
-    List<ExcelAutofilterSnapshot> autofilters =
+    List<AutofilterEntryReport> autofilters =
         new ArrayList<>(
             List.of(
-                new ExcelAutofilterSnapshot.SheetOwned("E1:F4"),
-                new ExcelAutofilterSnapshot.TableOwned("A1:C4", "BudgetTable")));
+                new AutofilterEntryReport.SheetOwned(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("E1:F4")),
+                new AutofilterEntryReport.TableOwned(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:C4"), "BudgetTable")));
     List<TableEntryReport> tables =
         new ArrayList<>(
             List.of(
@@ -618,7 +621,7 @@ class WorkbookReadResultTest {
     assertEquals(
         "conditionalFormattingHealth",
         fixture.conditionalFormattingHealthResult().stepId().value());
-    assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range());
+    assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range().value());
     assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name().value());
     assertEquals(1, fixture.formulaSurfaceResult().surface().totalFormulaCellCount());
     assertEquals("TEXT", fixture.sheetSchemaResult().surface().columns().getFirst().dominantType());
@@ -638,7 +641,7 @@ class WorkbookReadResultTest {
       List<WorkbookSheetResult.ColumnLayout> columns,
       List<WorkbookSheetResult.RowLayout> resultRows,
       List<ExcelDataValidationSnapshot> validations,
-      List<ExcelAutofilterSnapshot> autofilters,
+      List<AutofilterEntryReport> autofilters,
       List<TableEntryReport> tables,
       List<WorkbookSurfaceResult.FormulaPattern> formulas,
       List<WorkbookSurfaceResult.SchemaColumn> schemaColumns,

@@ -2177,3 +2177,30 @@ unchanged; no snapshots re-recorded. No active mutation/fuzz campaign. Inventory
 snapshots 25, definitions 2, converter lines 3374, Support 205, blank checks 409, main Java 119283.
 Baseline diff empty. This corrects the verified codec defect consistently with D5 discriminator
 ownership under the user's delegated QA authority; autofilter model consolidation follows.
+
+## WP-40 direct autofilter specs and reports; factual range labels
+
+Deleted four authored autofilter mirrors (column/criterion/sort-state/sort-condition) and five factual
+snapshot models. POI adapters accept existing core specs and produce existing core reports directly.
+Removed request/report conversions; copy materialization remains an explicit report-to-authored
+boundary. Sort ranges unwrap only at OOXML/parser boundaries, dynamic optional numeric values use
+ifPresent, and fuzz generators no longer name deleted Excel models. Compiles found six production
+boundaries, one obsolete converter-only assertion and nine unnecessary nullable wrappers around
+primitive fixtures; corrected those and retained behavior/health/copy tests.
+
+Challenge: the existing real workbook test preserves a blank stored autofilter reference, while
+RangeLabel rejected blank text despite its factual role. Corrected RangeLabel to retain all nonnull
+stored text, including blank/malformed references; authored RangeRef remains strict. Added core
+regressions for both contracts, extended JSON scalar roundtrips to blank labels (retaining null and
+non-string rejection), updated vocabulary, and corrected only obsolete factual blank-rejection
+assertions. Core/JSON range-authoring rejection checks remain. Initial engine run had nine stale
+scalar assertions including this genuine mismatch (26s). Subsequent runs surfaced the old generated
+invalid-label assumption and three other blank-report expectations, then one stream-built label
+expectation (28s); corrected those against the observed workbook contract. Final focused test passes
+(11s); deterministic check/all retained seeds pass (15s).
+
+Final ./gradlew check passes (2m56s): core 365, JSON 351, engine 1463 plus 14 parity, CLI 588, zero
+failures/errors/skips; all 143 golden cases unchanged. No active mutation/fuzz campaign. Inventories:
+snapshots 25→20, converter lines 3374→3188, blank checks 409→396, main Java 119283→118644; definitions
+2 and Support 205 remain. Baseline diff empty. WP-40's remaining factual models, source-free
+named-range/block definitions and real resolved plan/step/target execution cutover remain open.

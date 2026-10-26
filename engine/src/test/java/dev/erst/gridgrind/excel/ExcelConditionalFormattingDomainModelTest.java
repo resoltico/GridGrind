@@ -361,8 +361,7 @@ class ExcelConditionalFormattingDomainModelTest {
     assertThrows(
         NullPointerException.class,
         () -> new ExcelConditionalFormattingBlockDefinition(List.of("A1:A3"), List.of(rule, null)));
-    assertThrows(
-        IllegalArgumentException.class,
+    assertDoesNotThrow(
         () ->
             new ConditionalFormattingEntryReport(
                 List.of(" ").stream()

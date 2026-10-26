@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
@@ -27,8 +29,8 @@ public sealed interface WorkbookTabularCommand extends WorkbookCommand
   record SetAutofilter(
       String sheetName,
       String range,
-      List<ExcelAutofilterFilterColumn> criteria,
-      Optional<ExcelAutofilterSortState> sortState)
+      List<AutofilterFilterColumnSpec> criteria,
+      Optional<AutofilterSortStateSpec> sortState)
       implements WorkbookTabularCommand {
     /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
     public SetAutofilter(String sheetName, String range) {
@@ -46,7 +48,7 @@ public sealed interface WorkbookTabularCommand extends WorkbookCommand
       if (range.isBlank()) {
         throw new IllegalArgumentException("range must not be blank");
       }
-      for (ExcelAutofilterFilterColumn criterion : criteria) {
+      for (AutofilterFilterColumnSpec criterion : criteria) {
         Objects.requireNonNull(criterion, "criteria must not contain null values");
       }
     }

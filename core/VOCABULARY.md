@@ -11,7 +11,8 @@ required operands for that operation.
 
 `Report` names observed effective state. Authored identifiers and observed labels have distinct
 contracts: for example, `SheetName` enforces worksheet-authoring rules while `SheetLabel` preserves
-an observed name, and `RangeLabel` can retain an unsupported stored reference such as `#REF!`.
+an observed name, and `RangeLabel` preserves blank stored text and unsupported references such as `#REF!`.
+Authored `RangeRef` still rejects blank and malformed coordinates.
 
 Model types do not use `Input`, `Dto`, `Snapshot` or `Definition` as generic suffixes. Materialized
 source-bearing specifications use the `Resolved` prefix where a separate resolved form is necessary.

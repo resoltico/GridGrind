@@ -4,10 +4,10 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
@@ -68,7 +68,7 @@ final class XlsxRoundTripExpectedStateSupport {
       Map<String, ExpectedSheetLayoutState> expectedSheetLayouts,
       Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations,
       Map<String, List<ConditionalFormattingEntryReport>> expectedConditionalFormatting,
-      Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
+      Map<String, List<AutofilterEntryReport>> expectedAutofilters,
       Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects,
       Map<String, List<ExcelChartSnapshot>> expectedCharts,
       List<PivotTableReport> expectedPivots,

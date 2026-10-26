@@ -25,6 +25,15 @@ import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
@@ -521,52 +530,56 @@ class ExcelSheetCopyControllerTest {
           replica.annotations().comments(new ExcelCellSelection.Selected(List.of("E2"))));
       assertEquals(
           List.of(
-              new ExcelAutofilterSnapshot.SheetOwned(
-                  "A1:F3",
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F3"),
                   List.of(
-                      new ExcelAutofilterFilterColumnSnapshot(
+                      new AutofilterFilterColumnReport(
                           0L,
                           false,
-                          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Ada"), true)),
-                      new ExcelAutofilterFilterColumnSnapshot(
+                          new AutofilterFilterCriterionReport.Values(List.of("Ada"), true)),
+                      new AutofilterFilterColumnReport(
                           1L,
                           true,
-                          new ExcelAutofilterFilterCriterionSnapshot.Custom(
+                          new AutofilterFilterCriterionReport.Custom(
                               true,
                               List.of(
-                                  new ExcelAutofilterFilterCriterionSnapshot.CustomCondition(
+                                  new AutofilterFilterCriterionReport.CustomConditionReport(
                                       "greaterThan", "1"),
-                                  new ExcelAutofilterFilterCriterionSnapshot.CustomCondition(
+                                  new AutofilterFilterCriterionReport.CustomConditionReport(
                                       "equal", "Queue")))),
-                      new ExcelAutofilterFilterColumnSnapshot(
+                      new AutofilterFilterColumnReport(
                           2L,
                           true,
-                          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("today", 1.0d, 2.0d)),
-                      new ExcelAutofilterFilterColumnSnapshot(
+                          new AutofilterFilterCriterionReport.Dynamic("today", 1.0d, 2.0d)),
+                      new AutofilterFilterColumnReport(
                           3L,
                           true,
-                          new ExcelAutofilterFilterCriterionSnapshot.Top10(
-                              false, true, 10.0d, null)),
-                      new ExcelAutofilterFilterColumnSnapshot(
+                          new AutofilterFilterCriterionReport.Top10(false, true, 10.0d, null)),
+                      new AutofilterFilterColumnReport(
                           4L,
                           true,
-                          new ExcelAutofilterFilterCriterionSnapshot.Color(
+                          new AutofilterFilterCriterionReport.Color(
                               false, CellColorReport.rgb(new RgbHex("#AABBCC")))),
-                      new ExcelAutofilterFilterColumnSnapshot(
+                      new AutofilterFilterColumnReport(
                           5L,
                           true,
-                          new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2))),
+                          new AutofilterFilterCriterionReport.Icon("3TrafficLights1", 2))),
                   java.util.Optional.of(
-                      new ExcelAutofilterSortStateSnapshot(
-                          "A1:F3",
+                      new AutofilterSortStateReport(
+                          new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F3"),
                           true,
                           true,
                           java.util.Optional.of(
                               dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.STROKE),
                           List.of(
-                              new ExcelAutofilterSortConditionSnapshot.CellColor(
-                                  "A2:A3", true, CellColorReport.rgb(new RgbHex("#102030"))),
-                              new ExcelAutofilterSortConditionSnapshot.Icon("B2:B3", false, 4)))))),
+                              new AutofilterSortConditionReport.CellColor(
+                                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A3"),
+                                  true,
+                                  CellColorReport.rgb(new RgbHex("#102030"))),
+                              new AutofilterSortConditionReport.Icon(
+                                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("B2:B3"),
+                                  false,
+                                  4)))))),
           autofilterController.sheetOwnedAutofilters(replica.xssfSheet()));
       List<ExcelDataValidationSnapshot> replicaValidations =
           replica.metadata().dataValidations(new ExcelRangeSelection.All());
@@ -707,8 +720,8 @@ class ExcelSheetCopyControllerTest {
           .setAutofilter(
               "A1:B3",
               List.of(
-                  new ExcelAutofilterFilterColumn(
-                      0L, true, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), false))),
+                  new AutofilterFilterColumnSpec(
+                      0L, true, new AutofilterFilterCriterionSpec.Values(List.of("Ada"), false))),
               Optional.empty());
       var rawValidations = source.xssfSheet().getCTWorksheet().addNewDataValidations();
       CTDataValidation rawValidation = rawValidations.addNewDataValidation();
@@ -779,14 +792,13 @@ class ExcelSheetCopyControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelAutofilterSnapshot.SheetOwned(
-                  "A1:B3",
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                   List.of(
-                      new ExcelAutofilterFilterColumnSnapshot(
+                      new AutofilterFilterColumnReport(
                           0L,
                           true,
-                          new ExcelAutofilterFilterCriterionSnapshot.Values(
-                              List.of("Ada"), false))),
+                          new AutofilterFilterCriterionReport.Values(List.of("Ada"), false))),
                   java.util.Optional.empty())),
           autofilterController.sheetOwnedAutofilters(workbook.sheet("Replica").xssfSheet()));
       assertEquals(
@@ -1018,20 +1030,28 @@ class ExcelSheetCopyControllerTest {
   void sheetOwnedAutofilterRangeHandlesEmptySheetOwnedAndInvalidTableOwnedStates() {
     assertEquals(Optional.empty(), ExcelSheetCopyController.sheetOwnedAutofilter(List.of()));
     assertEquals(
-        Optional.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3")),
+        Optional.of(
+            new AutofilterEntryReport.SheetOwned(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"))),
         ExcelSheetCopyController.sheetOwnedAutofilter(
-            List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3"))));
+            List.of(
+                new AutofilterEntryReport.SheetOwned(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3")))));
     assertEquals(Optional.empty(), ExcelSheetCopyController.sheetOwnedAutofilterRange(List.of()));
     assertEquals(
         Optional.of("A1:B3"),
         ExcelSheetCopyController.sheetOwnedAutofilterRange(
-            List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3"))));
+            List.of(
+                new AutofilterEntryReport.SheetOwned(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3")))));
     IllegalStateException failure =
         assertThrows(
             IllegalStateException.class,
             () ->
                 ExcelSheetCopyController.sheetOwnedAutofilterRange(
-                    List.of(new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Ops"))));
+                    List.of(
+                        new AutofilterEntryReport.TableOwned(
+                            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"), "Ops"))));
     assertEquals(
         "sheetOwnedAutofilters must not return table-owned autofilter snapshots",
         failure.getMessage());
@@ -1206,40 +1226,46 @@ class ExcelSheetCopyControllerTest {
     return source;
   }
 
-  private static List<ExcelAutofilterFilterColumn> advancedAutofilterCriteria() {
+  private static List<AutofilterFilterColumnSpec> advancedAutofilterCriteria() {
     return List.of(
-        new ExcelAutofilterFilterColumn(
-            0L, false, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), true)),
-        new ExcelAutofilterFilterColumn(
+        new AutofilterFilterColumnSpec(
+            0L, false, new AutofilterFilterCriterionSpec.Values(List.of("Ada"), true)),
+        new AutofilterFilterColumnSpec(
             1L,
             true,
-            new ExcelAutofilterFilterCriterion.Custom(
+            new AutofilterFilterCriterionSpec.Custom(
                 true,
                 List.of(
-                    new ExcelAutofilterFilterCriterion.CustomCondition("greaterThan", "1"),
-                    new ExcelAutofilterFilterCriterion.CustomCondition("equal", "Queue")))),
-        new ExcelAutofilterFilterColumn(
-            2L, true, new ExcelAutofilterFilterCriterion.Dynamic("today", 1.0d, 2.0d)),
-        new ExcelAutofilterFilterColumn(
-            3L, true, new ExcelAutofilterFilterCriterion.Top10(10, false, true)),
-        new ExcelAutofilterFilterColumn(
+                    new AutofilterFilterCriterionSpec.CustomConditionSpec("greaterThan", "1"),
+                    new AutofilterFilterCriterionSpec.CustomConditionSpec("equal", "Queue")))),
+        new AutofilterFilterColumnSpec(
+            2L,
+            true,
+            new AutofilterFilterCriterionSpec.Dynamic(
+                "today", Optional.of(1.0d), Optional.of(2.0d))),
+        new AutofilterFilterColumnSpec(
+            3L, true, new AutofilterFilterCriterionSpec.Top10(10, false, true)),
+        new AutofilterFilterColumnSpec(
             4L,
             true,
-            new ExcelAutofilterFilterCriterion.Color(false, ColorSpec.rgb(new RgbHex("#AABBCC")))),
-        new ExcelAutofilterFilterColumn(
-            5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2)));
+            new AutofilterFilterCriterionSpec.Color(false, ColorSpec.rgb(new RgbHex("#AABBCC")))),
+        new AutofilterFilterColumnSpec(
+            5L, true, new AutofilterFilterCriterionSpec.Icon("3TrafficLights1", 2)));
   }
 
-  private static ExcelAutofilterSortState advancedAutofilterSortState() {
-    return new ExcelAutofilterSortState(
-        "A1:F3",
+  private static AutofilterSortStateSpec advancedAutofilterSortState() {
+    return new AutofilterSortStateSpec(
+        new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:F3"),
         true,
         true,
         java.util.Optional.of(dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.STROKE),
         List.of(
-            new ExcelAutofilterSortCondition.CellColor(
-                "A2:A3", true, ColorSpec.rgb(new RgbHex("#102030"))),
-            new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4)));
+            new AutofilterSortConditionSpec.CellColor(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A3"),
+                true,
+                ColorSpec.rgb(new RgbHex("#102030"))),
+            new AutofilterSortConditionSpec.Icon(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:B3"), false, 4)));
   }
 
   private static DifferentialStylePatch supportedStyle() {

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
@@ -122,11 +123,11 @@ final class ExcelTableController {
   }
 
   /** Returns table-owned autofilter metadata present on one sheet. */
-  List<ExcelAutofilterSnapshot> tableOwnedAutofilters(ExcelWorkbook workbook, String sheetName) {
+  List<AutofilterEntryReport> tableOwnedAutofilters(ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
 
-    List<ExcelAutofilterSnapshot> autofilters = new ArrayList<>();
+    List<AutofilterEntryReport> autofilters = new ArrayList<>();
     for (TableHandle tableHandle : allTables(workbook)) {
       if (!tableHandle.sheetName().equals(sheetName)) {
         continue;
@@ -136,8 +137,9 @@ final class ExcelTableController {
       }
       var autoFilter = tableHandle.table().getCTTable().getAutoFilter();
       autofilters.add(
-          new ExcelAutofilterSnapshot.TableOwned(
-              Objects.requireNonNullElse(autoFilter.getRef(), ""),
+          new AutofilterEntryReport.TableOwned(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel(
+                  Objects.requireNonNullElse(autoFilter.getRef(), "")),
               tableHandle.table().getName(),
               ExcelAutofilterOoxmlSupport.filterColumns(workbook.xssfWorkbook(), autoFilter),
               ExcelAutofilterOoxmlSupport.sortState(workbook.xssfWorkbook(), autoFilter)));

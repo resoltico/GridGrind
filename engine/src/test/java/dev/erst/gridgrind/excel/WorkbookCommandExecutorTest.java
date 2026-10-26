@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
@@ -224,8 +225,10 @@ class WorkbookCommandExecutorTest {
                           new StepId("tables"), new ExcelTableSelection.All())));
       assertEquals(
           List.of(
-              new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
-              new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("D1:E3")),
+              new AutofilterEntryReport.TableOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"), "Queue")),
           autofilters.autofilters());
       assertEquals(
           List.of("Queue"), tables.tables().stream().map(table -> table.name().value()).toList());
@@ -276,8 +279,10 @@ class WorkbookCommandExecutorTest {
                           new StepId("tables"), new ExcelTableSelection.All())));
       assertEquals(
           List.of(
-              new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
-              new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("D1:E3")),
+              new AutofilterEntryReport.TableOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"), "Queue")),
           autofilters.autofilters());
       assertEquals(1, tables.tables().size());
       assertEquals("Queue", tables.tables().getFirst().name().value());
@@ -1054,7 +1059,10 @@ class WorkbookCommandExecutorTest {
                       workbook,
                       new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget")));
       assertEquals(
-          List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B2")), autofilters.autofilters());
+          List.of(
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"))),
+          autofilters.autofilters());
     }
   }
 

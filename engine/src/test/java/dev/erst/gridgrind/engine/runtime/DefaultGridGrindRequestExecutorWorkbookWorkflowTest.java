@@ -88,7 +88,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelIgnoredError;
 import dev.erst.gridgrind.excel.ExcelSheetDefaults;
 import dev.erst.gridgrind.excel.ExcelSheetDisplay;
@@ -1589,8 +1588,10 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
       assertEquals(
           List.of(
-              new ExcelAutofilterSnapshot.SheetOwned("E1:F3"),
-              new ExcelAutofilterSnapshot.TableOwned("A1:C4", "BudgetTable")),
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("E1:F3")),
+              new AutofilterEntryReport.TableOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:C4"), "BudgetTable")),
           reopenedFilters.autofilters());
       assertEquals(
           List.of(

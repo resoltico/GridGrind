@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.drawing;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -803,14 +804,10 @@ class DtoEdgeCoverageTest {
                             Optional.empty())))
             .getMessage());
 
-    assertEquals(
-        "range must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new IgnoredErrorReport(
-                        new RangeLabel(" "), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))
-            .getMessage());
+    assertDoesNotThrow(
+        () ->
+            new IgnoredErrorReport(
+                new RangeLabel(" "), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)));
     assertEquals(
         "errorTypes must not contain duplicates",
         assertThrows(

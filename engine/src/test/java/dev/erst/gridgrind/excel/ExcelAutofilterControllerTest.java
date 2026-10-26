@@ -4,6 +4,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -40,7 +49,9 @@ class ExcelAutofilterControllerTest {
       controller.setSheetAutofilter(sheet, "A1:B3");
 
       assertEquals(
-          List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3")),
+          List.of(
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"))),
           controller.sheetOwnedAutofilters(sheet));
       assertEquals(1, controller.sheetAutofilterCount(sheet));
 
@@ -50,7 +61,9 @@ class ExcelAutofilterControllerTest {
           new XSSFWorkbook(new ByteArrayInputStream(output.toByteArray()))) {
         XSSFSheet reopenedSheet = reopened.getSheet("Ops");
         assertEquals(
-            List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3")),
+            List.of(
+                new AutofilterEntryReport.SheetOwned(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"))),
             controller.sheetOwnedAutofilters(reopenedSheet));
       }
     }
@@ -65,73 +78,83 @@ class ExcelAutofilterControllerTest {
           sheet,
           "A1:F3",
           List.of(
-              new ExcelAutofilterFilterColumn(
-                  0L, false, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), true)),
-              new ExcelAutofilterFilterColumn(
+              new AutofilterFilterColumnSpec(
+                  0L, false, new AutofilterFilterCriterionSpec.Values(List.of("Ada"), true)),
+              new AutofilterFilterColumnSpec(
                   1L,
                   true,
-                  new ExcelAutofilterFilterCriterion.Custom(
+                  new AutofilterFilterCriterionSpec.Custom(
                       true,
                       List.of(
-                          new ExcelAutofilterFilterCriterion.CustomCondition("greaterThan", "1"),
-                          new ExcelAutofilterFilterCriterion.CustomCondition("equal", "Queue")))),
-              new ExcelAutofilterFilterColumn(
-                  2L, true, new ExcelAutofilterFilterCriterion.Dynamic("today", 1.0d, 2.0d)),
-              new ExcelAutofilterFilterColumn(
-                  3L, true, new ExcelAutofilterFilterCriterion.Top10(10, false, true)),
-              new ExcelAutofilterFilterColumn(
+                          new AutofilterFilterCriterionSpec.CustomConditionSpec("greaterThan", "1"),
+                          new AutofilterFilterCriterionSpec.CustomConditionSpec(
+                              "equal", "Queue")))),
+              new AutofilterFilterColumnSpec(
+                  2L,
+                  true,
+                  new AutofilterFilterCriterionSpec.Dynamic(
+                      "today", Optional.of(1.0d), Optional.of(2.0d))),
+              new AutofilterFilterColumnSpec(
+                  3L, true, new AutofilterFilterCriterionSpec.Top10(10, false, true)),
+              new AutofilterFilterColumnSpec(
                   4L,
                   true,
-                  new ExcelAutofilterFilterCriterion.Color(
+                  new AutofilterFilterCriterionSpec.Color(
                       false, ColorSpec.rgb(new RgbHex("#AABBCC")))),
-              new ExcelAutofilterFilterColumn(
-                  5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2))),
+              new AutofilterFilterColumnSpec(
+                  5L, true, new AutofilterFilterCriterionSpec.Icon("3TrafficLights1", 2))),
           Optional.of(
-              new ExcelAutofilterSortState(
-                  "A1:F3",
+              new AutofilterSortStateSpec(
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:F3"),
                   true,
                   true,
                   Optional.of(ExcelAutofilterSortMethod.STROKE),
                   List.of(
-                      new ExcelAutofilterSortCondition.CellColor(
-                          "A2:A3", true, ColorSpec.rgb(new RgbHex("#102030"))),
-                      new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4)))));
+                      new AutofilterSortConditionSpec.CellColor(
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A3"),
+                          true,
+                          ColorSpec.rgb(new RgbHex("#102030"))),
+                      new AutofilterSortConditionSpec.Icon(
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:B3"), false, 4)))));
 
-      ExcelAutofilterSnapshot.SheetOwned snapshot =
+      AutofilterEntryReport.SheetOwned snapshot =
           assertInstanceOf(
-              ExcelAutofilterSnapshot.SheetOwned.class,
+              AutofilterEntryReport.SheetOwned.class,
               controller.sheetOwnedAutofilters(sheet).getFirst());
 
-      assertEquals("A1:F3", snapshot.range());
+      assertEquals("A1:F3", snapshot.range().value());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Ada"), true),
+          new AutofilterFilterCriterionReport.Values(List.of("Ada"), true),
           snapshot.filterColumns().get(0).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Custom(
+          new AutofilterFilterCriterionReport.Custom(
               true,
               List.of(
-                  new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("greaterThan", "1"),
-                  new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Queue"))),
+                  new AutofilterFilterCriterionReport.CustomConditionReport("greaterThan", "1"),
+                  new AutofilterFilterCriterionReport.CustomConditionReport("equal", "Queue"))),
           snapshot.filterColumns().get(1).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("today", 1.0d, 2.0d),
+          new AutofilterFilterCriterionReport.Dynamic("today", 1.0d, 2.0d),
           snapshot.filterColumns().get(2).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Top10(false, true, 10.0d, null),
+          new AutofilterFilterCriterionReport.Top10(false, true, 10.0d, null),
           snapshot.filterColumns().get(3).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(
+          new AutofilterFilterCriterionReport.Color(
               false, CellColorReport.rgb(new RgbHex("#AABBCC"))),
           snapshot.filterColumns().get(4).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
+          new AutofilterFilterCriterionReport.Icon("3TrafficLights1", 2),
           snapshot.filterColumns().get(5).criterion());
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.CellColor(
-              "A2:A3", true, CellColorReport.rgb(new RgbHex("#102030"))),
+          new AutofilterSortConditionReport.CellColor(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A3"),
+              true,
+              CellColorReport.rgb(new RgbHex("#102030"))),
           snapshot.sortState().orElseThrow().conditions().get(0));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Icon("B2:B3", false, 4),
+          new AutofilterSortConditionReport.Icon(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("B2:B3"), false, 4),
           snapshot.sortState().orElseThrow().conditions().get(1));
     }
   }
@@ -150,13 +173,13 @@ class ExcelAutofilterControllerTest {
                           sheet,
                           "A1:F3",
                           List.of(
-                              new ExcelAutofilterFilterColumn(
+                              new AutofilterFilterColumnSpec(
                                   0L,
                                   true,
-                                  new ExcelAutofilterFilterCriterion.Custom(
+                                  new AutofilterFilterCriterionSpec.Custom(
                                       false,
                                       List.of(
-                                          new ExcelAutofilterFilterCriterion.CustomCondition(
+                                          new AutofilterFilterCriterionSpec.CustomConditionSpec(
                                               "nope", "1"))))),
                           Optional.empty()))
               .getMessage());
@@ -169,11 +192,11 @@ class ExcelAutofilterControllerTest {
                           sheet,
                           "A1:F3",
                           List.of(
-                              new ExcelAutofilterFilterColumn(
+                              new AutofilterFilterColumnSpec(
                                   0L,
                                   true,
-                                  new ExcelAutofilterFilterCriterion.Dynamic(
-                                      "tomorrowish", null, null))),
+                                  new AutofilterFilterCriterionSpec.Dynamic(
+                                      "tomorrowish", Optional.empty(), Optional.empty()))),
                           Optional.empty()))
               .getMessage());
       assertEquals(
@@ -185,8 +208,8 @@ class ExcelAutofilterControllerTest {
                           sheet,
                           "A1:F3",
                           List.of(
-                              new ExcelAutofilterFilterColumn(
-                                  0L, true, new ExcelAutofilterFilterCriterion.Icon("unknown", 0))),
+                              new AutofilterFilterColumnSpec(
+                                  0L, true, new AutofilterFilterCriterionSpec.Icon("unknown", 0))),
                           Optional.empty()))
               .getMessage());
     }
@@ -263,7 +286,9 @@ class ExcelAutofilterControllerTest {
       sheet.getCTWorksheet().addNewAutoFilter().setRef("");
 
       assertEquals(
-          List.of(new ExcelAutofilterSnapshot.SheetOwned("")),
+          List.of(
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel(""))),
           controller.sheetOwnedAutofilters(sheet));
     }
   }
@@ -285,17 +310,13 @@ class ExcelAutofilterControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelAutofilterSnapshot.SheetOwned(
-                  "A1:B3",
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                   List.of(
-                      new ExcelAutofilterFilterColumnSnapshot(
-                          0L,
-                          false,
-                          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false)),
-                      new ExcelAutofilterFilterColumnSnapshot(
-                          1L,
-                          true,
-                          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false))),
+                      new AutofilterFilterColumnReport(
+                          0L, false, new AutofilterFilterCriterionReport.Values(List.of(), false)),
+                      new AutofilterFilterColumnReport(
+                          1L, true, new AutofilterFilterCriterionReport.Values(List.of(), false))),
                   java.util.Optional.empty())),
           controller.sheetOwnedAutofilters(sheet));
     }
@@ -304,38 +325,38 @@ class ExcelAutofilterControllerTest {
   @Test
   void sheetOwnedAutofilters_readsPersistedCriteriaDetails() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      ExcelAutofilterSnapshot.SheetOwned snapshot = persistedAutofilterSnapshot(workbook);
+      AutofilterEntryReport.SheetOwned snapshot = persistedAutofilterSnapshot(workbook);
 
-      assertEquals("A1:H5", snapshot.range());
+      assertEquals("A1:H5", snapshot.range().value());
       assertEquals(8, snapshot.filterColumns().size());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Queued", ""), true),
+          new AutofilterFilterCriterionReport.Values(List.of("Queued", ""), true),
           snapshot.filterColumns().get(0).criterion());
-      ExcelAutofilterFilterCriterionSnapshot.Custom custom =
+      AutofilterFilterCriterionReport.Custom custom =
           assertInstanceOf(
-              ExcelAutofilterFilterCriterionSnapshot.Custom.class,
+              AutofilterFilterCriterionReport.Custom.class,
               snapshot.filterColumns().get(1).criterion());
       assertTrue(custom.and());
       assertEquals("lessThan", custom.conditions().getFirst().operator());
       assertEquals("equal", custom.conditions().get(1).operator());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("today", 1.0d, 2.0d),
+          new AutofilterFilterCriterionReport.Dynamic("today", 1.0d, 2.0d),
           snapshot.filterColumns().get(2).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Top10(false, true, 10.0d, 8.0d),
+          new AutofilterFilterCriterionReport.Top10(false, true, 10.0d, 8.0d),
           snapshot.filterColumns().get(3).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(
+          new AutofilterFilterCriterionReport.Color(
               true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
           snapshot.filterColumns().get(4).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
+          new AutofilterFilterCriterionReport.Icon("3TrafficLights1", 2),
           snapshot.filterColumns().get(5).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false),
+          new AutofilterFilterCriterionReport.Values(List.of(), false),
           snapshot.filterColumns().get(6).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(false, null),
+          new AutofilterFilterCriterionReport.Color(false, null),
           snapshot.filterColumns().get(7).criterion());
     }
   }
@@ -343,26 +364,32 @@ class ExcelAutofilterControllerTest {
   @Test
   void sheetOwnedAutofilters_readsPersistedSortStateDetails() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      ExcelAutofilterSnapshot.SheetOwned snapshot = persistedAutofilterSnapshot(workbook);
-      ExcelAutofilterSortStateSnapshot sortSnapshot = snapshot.sortState().orElseThrow();
-      assertEquals("A1:H5", sortSnapshot.range());
+      AutofilterEntryReport.SheetOwned snapshot = persistedAutofilterSnapshot(workbook);
+      AutofilterSortStateReport sortSnapshot = snapshot.sortState().orElseThrow();
+      assertEquals("A1:H5", sortSnapshot.range().value());
       assertTrue(sortSnapshot.caseSensitive());
       assertTrue(sortSnapshot.columnSort());
       assertEquals(Optional.of(ExcelAutofilterSortMethod.STROKE), sortSnapshot.sortMethod());
       assertEquals(4, sortSnapshot.conditions().size());
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.CellColor(
-              "A2:A5", true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
+          new AutofilterSortConditionReport.CellColor(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A5"),
+              true,
+              CellColorReport.rgb(new RgbHex("#AABBCC"))),
           sortSnapshot.conditions().get(0));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.FontColor(
-              "B2:B5", false, CellColorReport.rgb(new RgbHex("#102030"))),
+          new AutofilterSortConditionReport.FontColor(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("B2:B5"),
+              false,
+              CellColorReport.rgb(new RgbHex("#102030"))),
           sortSnapshot.conditions().get(1));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Value("C2:C5", false),
+          new AutofilterSortConditionReport.Value(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("C2:C5"), false),
           sortSnapshot.conditions().get(2));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Icon("D2:D5", false, 3),
+          new AutofilterSortConditionReport.Icon(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("D2:D5"), false, 3),
           sortSnapshot.conditions().get(3));
     }
   }
@@ -393,34 +420,34 @@ class ExcelAutofilterControllerTest {
       var values =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilters.Factory.newInstance();
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false),
+          new AutofilterFilterCriterionReport.Values(List.of(), false),
           ExcelAutofilterOoxmlSupport.valuesCriterion(values));
 
       var customFilters =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilters.Factory.newInstance();
       customFilters.addNewCustomFilter().setVal("Ada");
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Custom(
+          new AutofilterFilterCriterionReport.Custom(
               false,
-              List.of(new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Ada"))),
+              List.of(new AutofilterFilterCriterionReport.CustomConditionReport("equal", "Ada"))),
           ExcelAutofilterOoxmlSupport.customCriterion(customFilters));
 
       var dynamic =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDynamicFilter.Factory.newInstance();
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("UNKNOWN", null, null),
+          new AutofilterFilterCriterionReport.Dynamic("UNKNOWN", null, null),
           ExcelAutofilterOoxmlSupport.dynamicCriterion(dynamic));
 
       var top10 = org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
       top10.setVal(5.0d);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 5.0d, null),
+          new AutofilterFilterCriterionReport.Top10(true, false, 5.0d, null),
           ExcelAutofilterOoxmlSupport.top10Criterion(top10));
 
       var icon =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTIconFilter.Factory.newInstance();
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Icon("UNKNOWN", 0),
+          new AutofilterFilterCriterionReport.Icon("UNKNOWN", 0),
           ExcelAutofilterOoxmlSupport.iconCriterion(icon));
 
       assertEquals(
@@ -471,9 +498,9 @@ class ExcelAutofilterControllerTest {
       var sortState = autoFilter.addNewSortState();
       autoFilter.setRef("A1:A5");
       sortState.addNewSortCondition().setRef("A2:A5");
-      ExcelAutofilterSortStateSnapshot sortSnapshot =
+      AutofilterSortStateReport sortSnapshot =
           ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter).orElseThrow();
-      assertEquals("A1:A5", sortSnapshot.range());
+      assertEquals("A1:A5", sortSnapshot.range().value());
       assertEquals(Optional.empty(), sortSnapshot.sortMethod());
     }
   }
@@ -492,7 +519,7 @@ class ExcelAutofilterControllerTest {
       var absentColorFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(false, null),
+          new AutofilterFilterCriterionReport.Color(false, null),
           ExcelAutofilterOoxmlSupport.colorCriterion(workbook, absentColorFilter));
 
       var fillColorFilter =
@@ -500,7 +527,7 @@ class ExcelAutofilterControllerTest {
       fillColorFilter.setCellColor(true);
       fillColorFilter.setDxfId(fillDxfId);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(
+          new AutofilterFilterCriterionReport.Color(
               true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
           ExcelAutofilterOoxmlSupport.colorCriterion(workbook, fillColorFilter));
 
@@ -508,7 +535,7 @@ class ExcelAutofilterControllerTest {
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
       fontColorFilter.setDxfId(fontDxfId);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(
+          new AutofilterFilterCriterionReport.Color(
               false, CellColorReport.rgb(new RgbHex("#102030"))),
           ExcelAutofilterOoxmlSupport.colorCriterion(workbook, fontColorFilter));
 
@@ -549,29 +576,36 @@ class ExcelAutofilterControllerTest {
       iconOnlySort.setSortBy(STSortBy.ICON);
       iconOnlySort.setIconId(4L);
 
-      ExcelAutofilterSortStateSnapshot snapshot =
+      AutofilterSortStateReport snapshot =
           ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter).orElseThrow();
-      assertEquals("A1:E5", snapshot.range());
+      assertEquals("A1:E5", snapshot.range().value());
       assertFalse(snapshot.caseSensitive());
       assertFalse(snapshot.columnSort());
       assertEquals(Optional.empty(), snapshot.sortMethod());
       assertEquals(5, snapshot.conditions().size());
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Value("A2:A5", false),
+          new AutofilterSortConditionReport.Value(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A5"), false),
           snapshot.conditions().get(0));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.CellColor(
-              "B2:B5", true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
+          new AutofilterSortConditionReport.CellColor(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("B2:B5"),
+              true,
+              CellColorReport.rgb(new RgbHex("#AABBCC"))),
           snapshot.conditions().get(1));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.FontColor(
-              "C2:C5", false, CellColorReport.rgb(new RgbHex("#102030"))),
+          new AutofilterSortConditionReport.FontColor(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("C2:C5"),
+              false,
+              CellColorReport.rgb(new RgbHex("#102030"))),
           snapshot.conditions().get(2));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Value("D2:D5", false),
+          new AutofilterSortConditionReport.Value(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("D2:D5"), false),
           snapshot.conditions().get(3));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Icon("E2:E5", false, 4),
+          new AutofilterSortConditionReport.Icon(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("E2:E5"), false, 4),
           snapshot.conditions().get(4));
 
       var reflectedIconSort =
@@ -580,7 +614,8 @@ class ExcelAutofilterControllerTest {
       reflectedIconSort.setSortBy(STSortBy.ICON);
       reflectedIconSort.setIconId(2L);
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Icon("F2:F5", false, 2),
+          new AutofilterSortConditionReport.Icon(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("F2:F5"), false, 2),
           ExcelAutofilterOoxmlSupport.sortConditionSnapshot(workbook, reflectedIconSort));
     }
   }
@@ -600,12 +635,14 @@ class ExcelAutofilterControllerTest {
 
       assertEquals(
           Optional.of(
-              new ExcelAutofilterSortStateSnapshot(
-                  "A1:B3",
+              new AutofilterSortStateReport(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                   false,
                   false,
                   Optional.empty(),
-                  List.of(new ExcelAutofilterSortConditionSnapshot.Value("A2:A3", false)))),
+                  List.of(
+                      new AutofilterSortConditionReport.Value(
+                          new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A3"), false)))),
           ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter));
 
       var values =
@@ -613,7 +650,7 @@ class ExcelAutofilterControllerTest {
       values.addNewFilter().setVal("Ada");
       values.setBlank(false);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Ada"), false),
+          new AutofilterFilterCriterionReport.Values(List.of("Ada"), false),
           ExcelAutofilterOoxmlSupport.valuesCriterion(values));
 
       var customFilters =
@@ -621,10 +658,9 @@ class ExcelAutofilterControllerTest {
       customFilters.setAnd(false);
       customFilters.addNewCustomFilter().setVal("Queue");
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Custom(
+          new AutofilterFilterCriterionReport.Custom(
               false,
-              List.of(
-                  new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Queue"))),
+              List.of(new AutofilterFilterCriterionReport.CustomConditionReport("equal", "Queue"))),
           ExcelAutofilterOoxmlSupport.customCriterion(customFilters));
 
       var top10 = org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
@@ -632,14 +668,14 @@ class ExcelAutofilterControllerTest {
       top10.setPercent(false);
       top10.setVal(10d);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Top10(false, false, 10d, null),
+          new AutofilterFilterCriterionReport.Top10(false, false, 10d, null),
           ExcelAutofilterOoxmlSupport.top10Criterion(top10));
 
       var defaultTop =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
       defaultTop.setVal(5d);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 5d, null),
+          new AutofilterFilterCriterionReport.Top10(true, false, 5d, null),
           ExcelAutofilterOoxmlSupport.top10Criterion(defaultTop));
 
       var explicitTop =
@@ -647,7 +683,7 @@ class ExcelAutofilterControllerTest {
       explicitTop.setTop(true);
       explicitTop.setVal(7d);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 7d, null),
+          new AutofilterFilterCriterionReport.Top10(true, false, 7d, null),
           ExcelAutofilterOoxmlSupport.top10Criterion(explicitTop));
 
       var percentTop =
@@ -656,7 +692,7 @@ class ExcelAutofilterControllerTest {
       percentTop.setVal(3d);
       percentTop.setFilterVal(2d);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Top10(true, true, 3d, 2d),
+          new AutofilterFilterCriterionReport.Top10(true, true, 3d, 2d),
           ExcelAutofilterOoxmlSupport.top10Criterion(percentTop));
     }
   }
@@ -671,17 +707,20 @@ class ExcelAutofilterControllerTest {
           "A1:B3",
           List.of(),
           Optional.of(
-              new ExcelAutofilterSortState(
-                  "A1:B3",
+              new AutofilterSortStateSpec(
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"),
                   false,
                   false,
                   Optional.empty(),
-                  List.of(new ExcelAutofilterSortCondition.Value("A2:A3", false)))));
+                  List.of(
+                      new AutofilterSortConditionSpec.Value(
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A3"), false)))));
 
       var snapshot = controller.sheetOwnedAutofilters(sheet).getFirst();
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Value("A2:A3", false),
-          assertInstanceOf(ExcelAutofilterSnapshot.SheetOwned.class, snapshot)
+          new AutofilterSortConditionReport.Value(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A3"), false),
+          assertInstanceOf(AutofilterEntryReport.SheetOwned.class, snapshot)
               .sortState()
               .orElseThrow()
               .conditions()
@@ -698,16 +737,19 @@ class ExcelAutofilterControllerTest {
           sheet,
           "A1:C3",
           List.of(
-              new ExcelAutofilterFilterColumn(
-                  0L, true, new ExcelAutofilterFilterCriterion.Dynamic("today", null, null))),
+              new AutofilterFilterColumnSpec(
+                  0L,
+                  true,
+                  new AutofilterFilterCriterionSpec.Dynamic(
+                      "today", Optional.empty(), Optional.empty()))),
           Optional.empty());
 
-      ExcelAutofilterSnapshot.SheetOwned snapshot =
+      AutofilterEntryReport.SheetOwned snapshot =
           assertInstanceOf(
-              ExcelAutofilterSnapshot.SheetOwned.class,
+              AutofilterEntryReport.SheetOwned.class,
               controller.sheetOwnedAutofilters(sheet).getFirst());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("today", null, null),
+          new AutofilterFilterCriterionReport.Dynamic("today", null, null),
           snapshot.filterColumns().getFirst().criterion());
     }
   }
@@ -829,7 +871,9 @@ class ExcelAutofilterControllerTest {
       controller.setSheetAutofilter(sheet, "A1:B3");
 
       assertEquals(
-          List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3")),
+          List.of(
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"))),
           controller.sheetOwnedAutofilters(sheet));
     }
   }
@@ -849,7 +893,9 @@ class ExcelAutofilterControllerTest {
       controller.setSheetAutofilter(sheet, "A1:B3");
 
       assertEquals(
-          List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3")),
+          List.of(
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"))),
           controller.sheetOwnedAutofilters(sheet));
     }
   }
@@ -933,7 +979,7 @@ class ExcelAutofilterControllerTest {
     return workbook.getStylesSource().putDxf(dxf) - 1L;
   }
 
-  private ExcelAutofilterSnapshot.SheetOwned persistedAutofilterSnapshot(XSSFWorkbook workbook) {
+  private AutofilterEntryReport.SheetOwned persistedAutofilterSnapshot(XSSFWorkbook workbook) {
     XSSFSheet sheet = populatedSheet(workbook);
     long fillDxfId = putFillDxf(workbook, new byte[] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC});
     long fontDxfId = putFontDxf(workbook, new byte[] {0x10, 0x20, 0x30});
@@ -942,8 +988,7 @@ class ExcelAutofilterControllerTest {
     addPersistedFilterColumns(autoFilter, fillDxfId);
     addPersistedSortState(autoFilter, fillDxfId, fontDxfId);
     return assertInstanceOf(
-        ExcelAutofilterSnapshot.SheetOwned.class,
-        controller.sheetOwnedAutofilters(sheet).getFirst());
+        AutofilterEntryReport.SheetOwned.class, controller.sheetOwnedAutofilters(sheet).getFirst());
   }
 
   private static void addPersistedFilterColumns(

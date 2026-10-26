@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.drawing;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -419,18 +420,14 @@ class AdvancedDtoCoverageTest {
     assertEquals("D2", report.topLeftAddress().value());
     assertEquals("B2:B4*C2:C4", report.formula());
     assertFalse(report.singleCell());
-    assertEquals(
-        "range must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ArrayFormulaReport(
-                        new SheetLabel("Calc"),
-                        new RangeLabel(" "),
-                        new CellAddress("D2"),
-                        "SUM(B2:C2)",
-                        true))
-            .getMessage());
+    assertDoesNotThrow(
+        () ->
+            new ArrayFormulaReport(
+                new SheetLabel("Calc"),
+                new RangeLabel(" "),
+                new CellAddress("D2"),
+                "SUM(B2:C2)",
+                true));
   }
 
   @Test

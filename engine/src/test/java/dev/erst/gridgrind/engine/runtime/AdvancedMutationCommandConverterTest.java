@@ -70,10 +70,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
-import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
-import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
-import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -810,36 +806,46 @@ class AdvancedMutationCommandConverterTest {
         Optional.empty());
   }
 
-  private static List<ExcelAutofilterFilterColumn> expectedAutofilterCriteria() {
+  private static List<AutofilterFilterColumnSpec> expectedAutofilterCriteria() {
     return List.of(
-        new ExcelAutofilterFilterColumn(
-            0L, true, new ExcelAutofilterFilterCriterion.Values(List.of("Queued", "Ready"), true)),
-        new ExcelAutofilterFilterColumn(
+        new AutofilterFilterColumnSpec(
+            0L, true, new AutofilterFilterCriterionSpec.Values(List.of("Queued", "Ready"), true)),
+        new AutofilterFilterColumnSpec(
             1L,
             false,
-            new ExcelAutofilterFilterCriterion.Custom(
+            new AutofilterFilterCriterionSpec.Custom(
                 true,
-                List.of(new ExcelAutofilterFilterCriterion.CustomCondition("greaterThan", "5")))),
-        new ExcelAutofilterFilterColumn(
-            2L, true, new ExcelAutofilterFilterCriterion.Dynamic("TODAY", 1.0d, 2.0d)),
-        new ExcelAutofilterFilterColumn(
-            3L, true, new ExcelAutofilterFilterCriterion.Top10(10, true, false)),
-        new ExcelAutofilterFilterColumn(
-            4L, true, new ExcelAutofilterFilterCriterion.Color(false, ColorSpec.theme(3, 0.25d))),
-        new ExcelAutofilterFilterColumn(
-            5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2)));
+                List.of(
+                    new AutofilterFilterCriterionSpec.CustomConditionSpec("greaterThan", "5")))),
+        new AutofilterFilterColumnSpec(
+            2L,
+            true,
+            new AutofilterFilterCriterionSpec.Dynamic(
+                "TODAY", Optional.of(1.0d), Optional.of(2.0d))),
+        new AutofilterFilterColumnSpec(
+            3L, true, new AutofilterFilterCriterionSpec.Top10(10, true, false)),
+        new AutofilterFilterColumnSpec(
+            4L, true, new AutofilterFilterCriterionSpec.Color(false, ColorSpec.theme(3, 0.25d))),
+        new AutofilterFilterColumnSpec(
+            5L, true, new AutofilterFilterCriterionSpec.Icon("3TrafficLights1", 2)));
   }
 
-  private static ExcelAutofilterSortState expectedAutofilterSortState() {
-    return new ExcelAutofilterSortState(
-        "A2:F9",
+  private static AutofilterSortStateSpec expectedAutofilterSortState() {
+    return new AutofilterSortStateSpec(
+        new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:F9"),
         false,
         true,
         java.util.Optional.empty(),
         List.of(
-            new ExcelAutofilterSortCondition.CellColor(
-                "B2:B9", true, ColorSpec.rgb(new RgbHex("#AABBCC"))),
-            new ExcelAutofilterSortCondition.FontColor("C2:C9", false, ColorSpec.theme(4, 0.15d)),
-            new ExcelAutofilterSortCondition.Icon("C2:C9", false, 2)));
+            new AutofilterSortConditionSpec.CellColor(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:B9"),
+                true,
+                ColorSpec.rgb(new RgbHex("#AABBCC"))),
+            new AutofilterSortConditionSpec.FontColor(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C9"),
+                false,
+                ColorSpec.theme(4, 0.15d)),
+            new AutofilterSortConditionSpec.Icon(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C9"), false, 2)));
   }
 }

@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
@@ -218,7 +219,7 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
       icon.setSortBy(STSortBy.ICON);
       icon.setIconId(3L);
       assertInstanceOf(
-          ExcelAutofilterSortConditionSnapshot.Icon.class,
+          AutofilterSortConditionReport.Icon.class,
           ExcelAutofilterOoxmlSupport.sortConditionSnapshot(workbook, icon));
 
       var printSheet = workbook.createSheet("Print");

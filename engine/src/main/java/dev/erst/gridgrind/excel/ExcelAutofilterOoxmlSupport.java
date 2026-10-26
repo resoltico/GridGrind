@@ -1,6 +1,14 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +35,11 @@ final class ExcelAutofilterOoxmlSupport {
   private ExcelAutofilterOoxmlSupport() {}
 
   static void replaceFilterColumns(
-      XSSFWorkbook workbook, CTAutoFilter autoFilter, List<ExcelAutofilterFilterColumn> criteria) {
+      XSSFWorkbook workbook, CTAutoFilter autoFilter, List<AutofilterFilterColumnSpec> criteria) {
     while (autoFilter.sizeOfFilterColumnArray() > 0) {
       autoFilter.removeFilterColumn(0);
     }
-    for (ExcelAutofilterFilterColumn column : criteria) {
+    for (AutofilterFilterColumnSpec column : criteria) {
       CTFilterColumn filterColumn = autoFilter.addNewFilterColumn();
       filterColumn.setColId(column.columnId());
       if (!column.showButton()) {
@@ -42,16 +50,12 @@ final class ExcelAutofilterOoxmlSupport {
   }
 
   private static void applyCriterion(
-      XSSFWorkbook workbook,
-      CTFilterColumn filterColumn,
-      ExcelAutofilterFilterCriterion criterion) {
+      XSSFWorkbook workbook, CTFilterColumn filterColumn, AutofilterFilterCriterionSpec criterion) {
     ExcelAutofilterCriterionWriteSupport.applyCriterion(workbook, filterColumn, criterion);
   }
 
   static void replaceSortState(
-      XSSFWorkbook workbook,
-      CTAutoFilter autoFilter,
-      Optional<ExcelAutofilterSortState> sortState) {
+      XSSFWorkbook workbook, CTAutoFilter autoFilter, Optional<AutofilterSortStateSpec> sortState) {
     if (autoFilter.isSetSortState()) {
       autoFilter.unsetSortState();
     }
@@ -59,16 +63,16 @@ final class ExcelAutofilterOoxmlSupport {
       return;
     }
     CTSortState ctSortState = autoFilter.addNewSortState();
-    ExcelAutofilterSortState authoredSortState = sortState.orElseThrow();
+    AutofilterSortStateSpec authoredSortState = sortState.orElseThrow();
     applySortStateSettings(ctSortState, authoredSortState);
-    for (ExcelAutofilterSortCondition condition : authoredSortState.conditions()) {
+    for (AutofilterSortConditionSpec condition : authoredSortState.conditions()) {
       applySortCondition(workbook, ctSortState, condition);
     }
   }
 
   private static void applySortStateSettings(
-      CTSortState ctSortState, ExcelAutofilterSortState sortState) {
-    ctSortState.setRef(sortState.range());
+      CTSortState ctSortState, AutofilterSortStateSpec sortState) {
+    ctSortState.setRef(sortState.range().value());
     if (sortState.caseSensitive()) {
       ctSortState.setCaseSensitive(true);
     }
@@ -81,36 +85,36 @@ final class ExcelAutofilterOoxmlSupport {
   }
 
   private static void applySortCondition(
-      XSSFWorkbook workbook, CTSortState ctSortState, ExcelAutofilterSortCondition condition) {
+      XSSFWorkbook workbook, CTSortState ctSortState, AutofilterSortConditionSpec condition) {
     CTSortCondition sortCondition = ctSortState.addNewSortCondition();
-    sortCondition.setRef(condition.range());
+    sortCondition.setRef(condition.range().value());
     if (condition.descending()) {
       sortCondition.setDescending(true);
     }
     switch (condition) {
-      case ExcelAutofilterSortCondition.Value _ -> {
+      case AutofilterSortConditionSpec.Value _ -> {
         // SpreadsheetML uses VALUE semantics when no explicit sortBy discriminator is present.
       }
-      case ExcelAutofilterSortCondition.CellColor cellColor -> {
+      case AutofilterSortConditionSpec.CellColor cellColor -> {
         sortCondition.setSortBy(STSortBy.CELL_COLOR);
         sortCondition.setDxfId(
             ExcelAutofilterCriterionWriteSupport.putColorDxf(workbook, cellColor.color(), true)
                 - 1L);
       }
-      case ExcelAutofilterSortCondition.FontColor fontColor -> {
+      case AutofilterSortConditionSpec.FontColor fontColor -> {
         sortCondition.setSortBy(STSortBy.FONT_COLOR);
         sortCondition.setDxfId(
             ExcelAutofilterCriterionWriteSupport.putColorDxf(workbook, fontColor.color(), false)
                 - 1L);
       }
-      case ExcelAutofilterSortCondition.Icon icon -> {
+      case AutofilterSortConditionSpec.Icon icon -> {
         sortCondition.setSortBy(STSortBy.ICON);
         sortCondition.setIconId(icon.iconId());
       }
     }
   }
 
-  static List<ExcelAutofilterFilterColumnSnapshot> filterColumns(
+  static List<AutofilterFilterColumnReport> filterColumns(
       XSSFWorkbook workbook, CTAutoFilter autoFilter) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(autoFilter, "autoFilter must not be null");
@@ -119,7 +123,7 @@ final class ExcelAutofilterOoxmlSupport {
         .toList();
   }
 
-  static Optional<ExcelAutofilterSortStateSnapshot> sortState(
+  static Optional<AutofilterSortStateReport> sortState(
       XSSFWorkbook workbook, CTAutoFilter autoFilter) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(autoFilter, "autoFilter must not be null");
@@ -135,8 +139,8 @@ final class ExcelAutofilterOoxmlSupport {
       throw new IllegalArgumentException("autofilter sort state is missing ref");
     }
     return Optional.of(
-        new ExcelAutofilterSortStateSnapshot(
-            range,
+        new AutofilterSortStateReport(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel(range),
             sortState.isSetCaseSensitive() && sortState.getCaseSensitive(),
             sortState.isSetColumnSort() && sortState.getColumnSort(),
             sortState.isSetSortMethod()
@@ -147,9 +151,9 @@ final class ExcelAutofilterOoxmlSupport {
                 .toList()));
   }
 
-  private static ExcelAutofilterFilterColumnSnapshot filterColumnSnapshot(
+  private static AutofilterFilterColumnReport filterColumnSnapshot(
       XSSFWorkbook workbook, CTFilterColumn filterColumn) {
-    return new ExcelAutofilterFilterColumnSnapshot(
+    return new AutofilterFilterColumnReport(
         filterColumn.getColId(),
         showButton(filterColumn),
         criterionSnapshot(workbook, filterColumn));
@@ -162,7 +166,7 @@ final class ExcelAutofilterOoxmlSupport {
     return !filterColumn.isSetHiddenButton() || !filterColumn.getHiddenButton();
   }
 
-  private static ExcelAutofilterFilterCriterionSnapshot criterionSnapshot(
+  private static AutofilterFilterCriterionReport criterionSnapshot(
       XSSFWorkbook workbook, CTFilterColumn filterColumn) {
     if (filterColumn.isSetFilters()) {
       return valuesCriterion(filterColumn.getFilters());
@@ -182,52 +186,52 @@ final class ExcelAutofilterOoxmlSupport {
     if (filterColumn.isSetIconFilter()) {
       return iconCriterion(filterColumn.getIconFilter());
     }
-    return new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false);
+    return new AutofilterFilterCriterionReport.Values(List.of(), false);
   }
 
-  static ExcelAutofilterFilterCriterionSnapshot valuesCriterion(CTFilters filters) {
+  static AutofilterFilterCriterionReport valuesCriterion(CTFilters filters) {
     List<String> values = new ArrayList<>();
     for (CTFilter filter : filters.getFilterArray()) {
       values.add(Objects.requireNonNullElse(filter.getVal(), ""));
     }
-    return new ExcelAutofilterFilterCriterionSnapshot.Values(
+    return new AutofilterFilterCriterionReport.Values(
         List.copyOf(values), filters.isSetBlank() && filters.getBlank());
   }
 
-  static ExcelAutofilterFilterCriterionSnapshot customCriterion(CTCustomFilters customFilters) {
-    return new ExcelAutofilterFilterCriterionSnapshot.Custom(
+  static AutofilterFilterCriterionReport customCriterion(CTCustomFilters customFilters) {
+    return new AutofilterFilterCriterionReport.Custom(
         customFilters.isSetAnd() && customFilters.getAnd(),
         java.util.Arrays.stream(customFilters.getCustomFilterArray())
             .map(ExcelAutofilterOoxmlSupport::customCondition)
             .toList());
   }
 
-  private static ExcelAutofilterFilterCriterionSnapshot.CustomCondition customCondition(
+  private static AutofilterFilterCriterionReport.CustomConditionReport customCondition(
       CTCustomFilter customFilter) {
     String operator =
         customFilter.isSetOperator() ? customFilter.getOperator().toString() : "equal";
-    return new ExcelAutofilterFilterCriterionSnapshot.CustomCondition(
+    return new AutofilterFilterCriterionReport.CustomConditionReport(
         operator, Objects.requireNonNullElse(customFilter.getVal(), ""));
   }
 
-  static ExcelAutofilterFilterCriterionSnapshot dynamicCriterion(CTDynamicFilter dynamicFilter) {
-    return new ExcelAutofilterFilterCriterionSnapshot.Dynamic(
+  static AutofilterFilterCriterionReport dynamicCriterion(CTDynamicFilter dynamicFilter) {
+    return new AutofilterFilterCriterionReport.Dynamic(
         dynamicFilter.getType() == null ? "UNKNOWN" : dynamicFilter.getType().toString(),
         dynamicFilter.isSetVal() ? dynamicFilter.getVal() : null,
         dynamicFilter.isSetMaxVal() ? dynamicFilter.getMaxVal() : null);
   }
 
-  static ExcelAutofilterFilterCriterionSnapshot top10Criterion(CTTop10 top10) {
-    return new ExcelAutofilterFilterCriterionSnapshot.Top10(
+  static AutofilterFilterCriterionReport top10Criterion(CTTop10 top10) {
+    return new AutofilterFilterCriterionReport.Top10(
         !top10.isSetTop() || top10.getTop(),
         top10.isSetPercent() && top10.getPercent(),
         top10.getVal(),
         top10.isSetFilterVal() ? top10.getFilterVal() : null);
   }
 
-  static ExcelAutofilterFilterCriterionSnapshot colorCriterion(
+  static AutofilterFilterCriterionReport colorCriterion(
       XSSFWorkbook workbook, CTColorFilter colorFilter) {
-    return new ExcelAutofilterFilterCriterionSnapshot.Color(
+    return new AutofilterFilterCriterionReport.Color(
         colorFilter.isSetCellColor() && colorFilter.getCellColor(),
         colorFilter.isSetDxfId()
             ? dxfColor(
@@ -238,13 +242,13 @@ final class ExcelAutofilterOoxmlSupport {
             : null);
   }
 
-  static ExcelAutofilterFilterCriterionSnapshot iconCriterion(CTIconFilter iconFilter) {
-    return new ExcelAutofilterFilterCriterionSnapshot.Icon(
+  static AutofilterFilterCriterionReport iconCriterion(CTIconFilter iconFilter) {
+    return new AutofilterFilterCriterionReport.Icon(
         iconFilter.getIconSet() == null ? "UNKNOWN" : iconFilter.getIconSet().toString(),
         iconFilter.isSetIconId() ? Math.toIntExact(iconFilter.getIconId()) : 0);
   }
 
-  static ExcelAutofilterSortConditionSnapshot sortConditionSnapshot(
+  static AutofilterSortConditionReport sortConditionSnapshot(
       XSSFWorkbook workbook, CTSortCondition sortCondition) {
     String range = Objects.requireNonNullElse(sortCondition.getRef(), "");
     if (range.isBlank()) {
@@ -253,11 +257,12 @@ final class ExcelAutofilterOoxmlSupport {
     boolean descending = sortCondition.isSetDescending() && sortCondition.getDescending();
     STSortBy.Enum sortBy = sortCondition.getSortBy();
     if (!sortCondition.isSetSortBy() || sortBy == STSortBy.VALUE) {
-      return new ExcelAutofilterSortConditionSnapshot.Value(range, descending);
+      return new AutofilterSortConditionReport.Value(
+          new dev.erst.gridgrind.core.vocabulary.RangeLabel(range), descending);
     }
     if (sortBy == STSortBy.CELL_COLOR) {
-      return new ExcelAutofilterSortConditionSnapshot.CellColor(
-          range,
+      return new AutofilterSortConditionReport.CellColor(
+          new dev.erst.gridgrind.core.vocabulary.RangeLabel(range),
           descending,
           dxfColor(workbook, sortCondition.getDxfId(), true)
               .orElseThrow(
@@ -266,8 +271,8 @@ final class ExcelAutofilterOoxmlSupport {
                           "autofilter cell-color sort condition is missing dxf color")));
     }
     if (sortBy == STSortBy.FONT_COLOR) {
-      return new ExcelAutofilterSortConditionSnapshot.FontColor(
-          range,
+      return new AutofilterSortConditionReport.FontColor(
+          new dev.erst.gridgrind.core.vocabulary.RangeLabel(range),
           descending,
           dxfColor(workbook, sortCondition.getDxfId(), false)
               .orElseThrow(
@@ -275,8 +280,10 @@ final class ExcelAutofilterOoxmlSupport {
                       new IllegalArgumentException(
                           "autofilter font-color sort condition is missing dxf color")));
     }
-    return new ExcelAutofilterSortConditionSnapshot.Icon(
-        range, descending, Math.toIntExact(sortCondition.getIconId()));
+    return new AutofilterSortConditionReport.Icon(
+        new dev.erst.gridgrind.core.vocabulary.RangeLabel(range),
+        descending,
+        Math.toIntExact(sortCondition.getIconId()));
   }
 
   private static STSortMethod.Enum toOoxmlSortMethod(ExcelAutofilterSortMethod sortMethod) {

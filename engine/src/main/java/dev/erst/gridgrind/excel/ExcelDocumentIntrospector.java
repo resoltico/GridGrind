@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
@@ -66,12 +67,12 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
-  List<ExcelAutofilterSnapshot> autofilters(ExcelWorkbook workbook, String sheetName) {
+  List<AutofilterEntryReport> autofilters(ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
 
     ExcelSheet sheet = workbook.sheet(sheetName);
-    List<ExcelAutofilterSnapshot> autofilters = new java.util.ArrayList<>();
+    List<AutofilterEntryReport> autofilters = new java.util.ArrayList<>();
     autofilters.addAll(autofilterController.sheetOwnedAutofilters(sheet.xssfSheet()));
     autofilters.addAll(tableController.tableOwnedAutofilters(workbook, sheetName));
     return List.copyOf(autofilters);

@@ -8,6 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.List;
@@ -29,40 +33,48 @@ class ExcelAutofilterResidualCoverageTest {
       ExcelAutofilterOoxmlSupport.replaceSortState(workbook, autoFilter, Optional.empty());
       assertFalse(autoFilter.isSetSortState());
 
-      ExcelAutofilterSortState sortState =
-          new ExcelAutofilterSortState(
-              "A1:C5",
+      AutofilterSortStateSpec sortState =
+          new AutofilterSortStateSpec(
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:C5"),
               false,
               false,
               Optional.of(ExcelAutofilterSortMethod.STROKE),
               List.of(
-                  new ExcelAutofilterSortCondition.FontColor(
-                      "B2:B5", true, ColorSpec.rgb(new RgbHex("#112233"))),
-                  new ExcelAutofilterSortCondition.Icon("C2:C5", false, 3)));
+                  new AutofilterSortConditionSpec.FontColor(
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:B5"),
+                      true,
+                      ColorSpec.rgb(new RgbHex("#112233"))),
+                  new AutofilterSortConditionSpec.Icon(
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C5"), false, 3)));
 
       ExcelAutofilterOoxmlSupport.replaceSortState(workbook, autoFilter, Optional.of(sortState));
 
-      ExcelAutofilterSortStateSnapshot snapshot =
+      AutofilterSortStateReport snapshot =
           ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter).orElseThrow();
       assertEquals(Optional.of(ExcelAutofilterSortMethod.STROKE), snapshot.sortMethod());
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.FontColor(
-              "B2:B5", true, CellColorReport.rgb(new RgbHex("#112233"))),
+          new AutofilterSortConditionReport.FontColor(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("B2:B5"),
+              true,
+              CellColorReport.rgb(new RgbHex("#112233"))),
           snapshot.conditions().get(0));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Icon("C2:C5", false, 3),
+          new AutofilterSortConditionReport.Icon(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("C2:C5"), false, 3),
           snapshot.conditions().get(1));
 
       ExcelAutofilterOoxmlSupport.replaceSortState(
           workbook,
           autoFilter,
           Optional.of(
-              new ExcelAutofilterSortState(
-                  "A1:B3",
+              new AutofilterSortStateSpec(
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"),
                   false,
                   false,
                   Optional.of(ExcelAutofilterSortMethod.PINYIN),
-                  List.of(new ExcelAutofilterSortCondition.Value("A2:A3", false)))));
+                  List.of(
+                      new AutofilterSortConditionSpec.Value(
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A3"), false)))));
       assertEquals(
           Optional.of(ExcelAutofilterSortMethod.PINYIN),
           ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter).orElseThrow().sortMethod());
@@ -121,37 +133,42 @@ class ExcelAutofilterResidualCoverageTest {
       explicitValueSort.setRef("C1:C3");
       explicitValueSort.setSortBy(STSortBy.VALUE);
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot.Value("C1:C3", false),
+          new AutofilterSortConditionReport.Value(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("C1:C3"), false),
           ExcelAutofilterOoxmlSupport.sortConditionSnapshot(workbook, explicitValueSort));
     }
   }
 
   @Test
   void sheetCopySupportCopiesFontColorAndIconSortConditions() {
-    ExcelAutofilterSortCondition.FontColor fontColor =
+    AutofilterSortConditionSpec.FontColor fontColor =
         assertInstanceOf(
-            ExcelAutofilterSortCondition.FontColor.class,
+            AutofilterSortConditionSpec.FontColor.class,
             ExcelSheetCopySupport.copyableSortCondition(
-                new ExcelAutofilterSortConditionSnapshot.FontColor(
-                    "A1:A2", true, CellColorReport.rgb(new RgbHex("#AABBCC")))));
-    assertEquals("A1:A2", fontColor.range());
+                new AutofilterSortConditionReport.FontColor(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:A2"),
+                    true,
+                    CellColorReport.rgb(new RgbHex("#AABBCC")))));
+    assertEquals("A1:A2", fontColor.range().value());
     assertTrue(fontColor.descending());
     assertEquals(ColorSpec.rgb(new RgbHex("#AABBCC")), fontColor.color());
 
-    ExcelAutofilterSortCondition.Value value =
+    AutofilterSortConditionSpec.Value value =
         assertInstanceOf(
-            ExcelAutofilterSortCondition.Value.class,
+            AutofilterSortConditionSpec.Value.class,
             ExcelSheetCopySupport.copyableSortCondition(
-                new ExcelAutofilterSortConditionSnapshot.Value("A1:A2", false)));
-    assertEquals("A1:A2", value.range());
+                new AutofilterSortConditionReport.Value(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:A2"), false)));
+    assertEquals("A1:A2", value.range().value());
     assertFalse(value.descending());
 
-    ExcelAutofilterSortCondition.Icon icon =
+    AutofilterSortConditionSpec.Icon icon =
         assertInstanceOf(
-            ExcelAutofilterSortCondition.Icon.class,
+            AutofilterSortConditionSpec.Icon.class,
             ExcelSheetCopySupport.copyableSortCondition(
-                new ExcelAutofilterSortConditionSnapshot.Icon("B1:B2", false, 4)));
-    assertEquals("B1:B2", icon.range());
+                new AutofilterSortConditionReport.Icon(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("B1:B2"), false, 4)));
+    assertEquals("B1:B2", icon.range().value());
     assertFalse(icon.descending());
     assertEquals(4, icon.iconId());
   }

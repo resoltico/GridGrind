@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -126,8 +127,10 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals(0, results.namedRangeSurface().surface().formulaBackedCount());
       assertEquals(
           List.of(
-              new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
-              new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("D1:E3")),
+              new AutofilterEntryReport.TableOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"), "Queue")),
           results.autofilters().autofilters());
       assertEquals(1, results.tables().tables().size());
       assertEquals("Queue", results.tables().tables().getFirst().name().value());

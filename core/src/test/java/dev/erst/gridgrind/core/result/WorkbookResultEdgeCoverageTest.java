@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.result;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -304,11 +305,7 @@ class WorkbookResultEdgeCoverageTest {
                         new WindowDimensionsReport(1, 1),
                         List.of()))
             .getMessage());
-    assertEquals(
-        "range must not be blank",
-        assertThrows(
-                IllegalArgumentException.class, () -> new MergedRegionReport(new RangeLabel(" ")))
-            .getMessage());
+    assertDoesNotThrow(() -> new MergedRegionReport(new RangeLabel(" ")));
     assertEquals(
         "address must not be blank",
         assertThrows(

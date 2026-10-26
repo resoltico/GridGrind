@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -44,8 +45,7 @@ public sealed interface WorkbookRuleResult extends WorkbookReadIntrospectionResu
   }
 
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
-  record AutofiltersResult(
-      StepId stepId, String sheetName, List<ExcelAutofilterSnapshot> autofilters)
+  record AutofiltersResult(StepId stepId, String sheetName, List<AutofilterEntryReport> autofilters)
       implements WorkbookRuleResult {
     public AutofiltersResult {
 

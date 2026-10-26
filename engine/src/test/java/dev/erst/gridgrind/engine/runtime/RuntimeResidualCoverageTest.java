@@ -127,7 +127,6 @@ class RuntimeResidualCoverageTest {
     assertTrue(WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(null).isEmpty());
     assertTrue(
         WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(null).isEmpty());
-    assertTrue(WorkbookCommandStructuredInputConverter.toExcelAutofilterSortState(null).isEmpty());
 
     Optional<FontHeightReport> fontHeight =
         WorkbookCommandCellValueSpecConverter.toFontHeightReport(

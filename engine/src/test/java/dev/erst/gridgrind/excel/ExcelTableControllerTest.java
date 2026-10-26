@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
@@ -49,13 +50,17 @@ class ExcelTableControllerTest {
               new TableStyleSpec.None()));
 
       List<TableEntryReport> tables = controller.tables(workbook, new ExcelTableSelection.All());
-      List<ExcelAutofilterSnapshot> autofilters = controller.tableOwnedAutofilters(workbook, "Ops");
+      List<AutofilterEntryReport> autofilters = controller.tableOwnedAutofilters(workbook, "Ops");
 
       assertEquals(1, tables.size());
       assertEquals("Queue", tables.getFirst().name().value());
       assertTrue(tables.getFirst().behavior().hasAutofilter());
       assertFalse(workbook.sheet("Ops").xssfSheet().getCTWorksheet().isSetAutoFilter());
-      assertEquals(List.of(new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")), autofilters);
+      assertEquals(
+          List.of(
+              new AutofilterEntryReport.TableOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"), "Queue")),
+          autofilters);
     }
   }
 
@@ -91,7 +96,9 @@ class ExcelTableControllerTest {
       assertEquals(0, tables.getFirst().structure().totalsRowCount());
       assertInstanceOf(TableStyleReport.None.class, tables.getFirst().style());
       assertEquals(
-          List.of(new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
+          List.of(
+              new AutofilterEntryReport.TableOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"), "Queue")),
           controller.tableOwnedAutofilters(workbook, "Ops"));
     }
   }
@@ -724,7 +731,8 @@ class ExcelTableControllerTest {
 
       TableEntryReport table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
-      assertEquals("A1:B3", controller.tableOwnedAutofilters(workbook, "Ops").getFirst().range());
+      assertEquals(
+          "A1:B3", controller.tableOwnedAutofilters(workbook, "Ops").getFirst().range().value());
       assertEquals("A1:B3", ExcelTableStructureSupport.expectedAutofilterRangeText(table));
       assertEquals(
           List.of(), controller.tableHealthFindings(workbook, new ExcelTableSelection.All()));
@@ -752,7 +760,9 @@ class ExcelTableControllerTest {
               new TableStyleSpec.None()));
 
       assertEquals(
-          List.of(new ExcelAutofilterSnapshot.SheetOwned("D1:D3")),
+          List.of(
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("D1:D3"))),
           new ExcelAutofilterController().sheetOwnedAutofilters(workbook.sheet("Ops").xssfSheet()));
     }
   }

@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
@@ -73,8 +75,8 @@ final class ExcelSheetMetadataSupport {
 
   ExcelSheet setAutofilter(
       String range,
-      List<ExcelAutofilterFilterColumn> criteria,
-      Optional<ExcelAutofilterSortState> sortState,
+      List<AutofilterFilterColumnSpec> criteria,
+      Optional<AutofilterSortStateSpec> sortState,
       ExcelSheet owner) {
     requireNonBlank(range, "range");
     Objects.requireNonNull(criteria, "criteria must not be null");

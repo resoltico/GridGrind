@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.layout;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -181,8 +182,7 @@ class StructuralLayoutProtocolTypesTest {
     assertEquals(
         new PrintAreaReport.Range(new RangeLabel("A1:B20")),
         new PrintAreaReport.Range(new RangeLabel("A1:B20")));
-    assertThrows(
-        IllegalArgumentException.class, () -> new PrintAreaReport.Range(new RangeLabel(" ")));
+    assertDoesNotThrow(() -> new PrintAreaReport.Range(new RangeLabel(" ")));
     assertEquals(new PrintScalingReport.Automatic(), new PrintScalingReport.Automatic());
     assertEquals(new PrintTitleRowsReport.None(), new PrintTitleRowsReport.None());
     assertEquals(new PrintTitleColumnsReport.None(), new PrintTitleColumnsReport.None());
@@ -420,8 +420,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () -> new IgnoredErrorReport(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
-    assertThrows(
-        IllegalArgumentException.class,
+    assertDoesNotThrow(
         () ->
             new IgnoredErrorReport(
                 new RangeLabel(" "), java.util.List.of(ExcelIgnoredErrorType.FORMULA)));

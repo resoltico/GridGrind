@@ -69,12 +69,8 @@ final class WorkbookCommandStructuredMutationConverter {
         yield new WorkbookTabularCommand.SetAutofilter(
             selector.sheetName().value(),
             selector.range().value(),
-            setAutofilter.criteria().stream()
-                .map(WorkbookCommandStructuredInputConverter::toExcelAutofilterFilterColumn)
-                .toList(),
-            setAutofilter
-                .sortState()
-                .flatMap(WorkbookCommandStructuredInputConverter::toExcelAutofilterSortState));
+            setAutofilter.criteria(),
+            setAutofilter.sortState());
       }
       case StructuredMutationAction.ClearAutofilter _ ->
           new WorkbookTabularCommand.ClearAutofilter(

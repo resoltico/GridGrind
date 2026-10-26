@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,11 +23,11 @@ final class ExcelAutofilterController {
   void setSheetAutofilter(
       XSSFSheet sheet,
       String range,
-      List<ExcelAutofilterFilterColumn> criteria,
-      Optional<ExcelAutofilterSortState> sortState) {
+      List<AutofilterFilterColumnSpec> criteria,
+      Optional<AutofilterSortStateSpec> sortState) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(range, "range must not be null");
-    List<ExcelAutofilterFilterColumn> filterCriteria =
+    List<AutofilterFilterColumnSpec> filterCriteria =
         List.copyOf(Objects.requireNonNull(criteria, "criteria must not be null"));
     Objects.requireNonNull(sortState, "sortState must not be null");
 
@@ -62,15 +65,16 @@ final class ExcelAutofilterController {
   }
 
   /** Returns the sheet-owned autofilter metadata present on one sheet. */
-  List<ExcelAutofilterSnapshot> sheetOwnedAutofilters(XSSFSheet sheet) {
+  List<AutofilterEntryReport> sheetOwnedAutofilters(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     if (!sheet.getCTWorksheet().isSetAutoFilter()) {
       return List.of();
     }
     CTAutoFilter autoFilter = sheet.getCTWorksheet().getAutoFilter();
     return List.of(
-        new ExcelAutofilterSnapshot.SheetOwned(
-            Objects.requireNonNullElse(autoFilter.getRef(), ""),
+        new AutofilterEntryReport.SheetOwned(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel(
+                Objects.requireNonNullElse(autoFilter.getRef(), "")),
             ExcelAutofilterOoxmlSupport.filterColumns(sheet.getWorkbook(), autoFilter),
             ExcelAutofilterOoxmlSupport.sortState(sheet.getWorkbook(), autoFilter)));
   }

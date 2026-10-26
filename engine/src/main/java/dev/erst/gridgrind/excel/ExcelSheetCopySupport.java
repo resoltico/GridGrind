@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import java.util.List;
 import java.util.Objects;
@@ -74,7 +77,7 @@ final class ExcelSheetCopySupport {
   }
 
   static void replaceAutofilter(
-      Optional<ExcelAutofilterSnapshot.SheetOwned> sheetAutofilter, ExcelSheet targetSheet) {
+      Optional<AutofilterEntryReport.SheetOwned> sheetAutofilter, ExcelSheet targetSheet) {
     ExcelSheetCopyAutofilterSupport.replaceAutofilter(sheetAutofilter, targetSheet);
   }
 
@@ -112,17 +115,17 @@ final class ExcelSheetCopySupport {
     return ExcelSheetCopyValidationSupport.copiedDataValidations(sourcePoiSheet);
   }
 
-  static Optional<ExcelAutofilterSnapshot.SheetOwned> sheetOwnedAutofilter(
-      List<ExcelAutofilterSnapshot> autofilters) {
+  static Optional<AutofilterEntryReport.SheetOwned> sheetOwnedAutofilter(
+      List<AutofilterEntryReport> autofilters) {
     return ExcelSheetCopyAutofilterSupport.sheetOwnedAutofilter(autofilters);
   }
 
-  static Optional<String> sheetOwnedAutofilterRange(List<ExcelAutofilterSnapshot> autofilters) {
+  static Optional<String> sheetOwnedAutofilterRange(List<AutofilterEntryReport> autofilters) {
     return ExcelSheetCopyAutofilterSupport.sheetOwnedAutofilterRange(autofilters);
   }
 
-  static ExcelAutofilterSortCondition copyableSortCondition(
-      ExcelAutofilterSortConditionSnapshot condition) {
+  static AutofilterSortConditionSpec copyableSortCondition(
+      AutofilterSortConditionReport condition) {
     return ExcelSheetCopyAutofilterSupport.copyableSortCondition(condition);
   }
 

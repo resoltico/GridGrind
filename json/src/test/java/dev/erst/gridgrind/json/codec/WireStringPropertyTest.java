@@ -273,8 +273,8 @@ class WireStringPropertyTest {
         new Domain(
             RangeLabel.class,
             RangeLabel::new,
-            List.of("A1:B2", "#REF!", "'Sheet 1'!A1", "A:A", "future-range"),
-            invalidPlans),
+            List.of("", " ", "A1:B2", "#REF!", "'Sheet 1'!A1", "A:A", "future-range"),
+            List.of()),
         new Domain(DefinedName.class, DefinedName::new, names, invalidNames),
         new Domain(
             DefinedNameLabel.class,

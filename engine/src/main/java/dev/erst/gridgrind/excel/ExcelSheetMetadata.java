@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
@@ -52,8 +54,8 @@ public final class ExcelSheetMetadata {
   /** Creates or replaces one sheet-level autofilter range plus authored criteria and sort state. */
   public ExcelSheetMetadata setAutofilter(
       String range,
-      List<ExcelAutofilterFilterColumn> criteria,
-      Optional<ExcelAutofilterSortState> sortState) {
+      List<AutofilterFilterColumnSpec> criteria,
+      Optional<AutofilterSortStateSpec> sortState) {
     metadataSupport.setAutofilter(range, criteria, sortState, sheet);
     return this;
   }

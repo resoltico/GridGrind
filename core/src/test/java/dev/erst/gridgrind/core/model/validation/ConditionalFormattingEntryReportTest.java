@@ -30,8 +30,7 @@ class ConditionalFormattingEntryReportTest {
                     List.of("FORMULA_RULE@Ops!A1:A3"))));
 
     assertEquals(3, report.checkedConditionalFormattingBlockCount());
-    assertThrows(
-        IllegalArgumentException.class,
+    assertDoesNotThrow(
         () ->
             new ConditionalFormattingEntryReport(
                 List.of(new RangeLabel(" ")),

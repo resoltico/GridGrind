@@ -3,11 +3,11 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -470,15 +470,14 @@ final class XlsxRoundTripExpectationVerification {
   }
 
   static void requireExpectedAutofilters(
-      Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters, Path workbookPath)
+      Map<String, List<AutofilterEntryReport>> expectedAutofilters, Path workbookPath)
       throws IOException {
     if (expectedAutofilters.isEmpty()) {
       return;
     }
     try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
-      for (Map.Entry<String, List<ExcelAutofilterSnapshot>> entry :
-          expectedAutofilters.entrySet()) {
+      for (Map.Entry<String, List<AutofilterEntryReport>> entry : expectedAutofilters.entrySet()) {
         var actual =
             ((dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
                     readExecutor
