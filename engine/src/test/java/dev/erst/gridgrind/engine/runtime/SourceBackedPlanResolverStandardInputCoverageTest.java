@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -293,7 +294,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
         requiresStandardInputFor(
             new StructuredMutationAction.SetTable(
                 new TableInput(
-                    "BudgetTable",
+                    new TableName("BudgetTable"),
                     new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                     new RangeRef("A1:B2"),
                     false,
@@ -351,14 +352,14 @@ class SourceBackedPlanResolverStandardInputCoverageTest
     TableCellSelector.ByColumnName standardInputTarget =
         new TableCellSelector.ByColumnName(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Text(new TextSourceInput.StandardInput())),
             "Amount");
     TableCellSelector.ByColumnName inlineTarget =
         new TableCellSelector.ByColumnName(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Text(TextSourceInput.inline("Hosting"))),
             "Amount");

@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 
 /** Published task recipe for structured worksheet reporting workflows. */
@@ -155,7 +156,7 @@ final class TabularReportTaskRecipe {
             ExampleSelectors.table("QuarterlyReport", "Report"),
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "QuarterlyReport",
+                    new TableName("QuarterlyReport"),
                     new SheetName("Report"),
                     new RangeRef("A1:C4"),
                     false,

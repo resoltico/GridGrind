@@ -822,3 +822,35 @@ main Java 126,622 -> 126,670; test Java 155,238 -> 155,391; Support classes 219 
 model/subtype counts unchanged. External evidence `defined-name-*.log`, inventories, failure XML,
 migration logs and the name observation probe. No baseline/supplement or golden snapshot changes.
 Next: table-name values and factual empty table labels, then the remaining WP-21 inventory.
+
+### WP-21 table identifiers and factual empty labels
+
+Table selectors, table specs, pivot table sources and fluent table identities now carry
+`TableName`. Shared Excel-name validation produces the structured problem for both authored
+name value constructors; removed duplicate primitive rendering and obsolete selector validators.
+The initial broad Tables edit also changed style names; compilation caught that distinct
+contract, and style fields/factory calls were restored before delivery. Table styles are not
+table identifiers. Independent parity and diagnostic consumers project scalar text as needed.
+
+The successful reopened-name probe established that GET_TABLES reports an empty stored table
+name. `TableLabel` preserves exactly the former nonnull-only factual contract, including empty,
+whitespace, malformed and Unicode strings; constructor null and non-string wire tokens are the
+invalid domain. Generated properties reflect that contract rather than inventing syntax rules.
+A persisted product regression writes an empty CTTable name, reopens it, asserts the empty
+label, and verifies response round-trip (so the required empty String is not silently omitted).
+Updated Java examples and typed list tests; no compatibility overloads or aliases.
+
+Focused checks caught stale scalar/list parity/test expectations; all were corrected while
+retaining independent literal facts and mutable-input copy assurance. Fuzz conditional input
+construction now uses TableName; nested support/replay passed (21s). Native mutation report
+passed (18s): core 291/291 killed, engine 82/82 killed, none uncovered. The smaller selected
+core set reflects deleted primitive rendering and verification-only factory branches. Named
+modules passed 14 requests, catalog, response and twelve scalars.
+
+The first full check found one stale CLI table-name assertion; focused repair passed (6s).
+Final `./gradlew check` passed (2m58s): all tests green, all 141 golden cases unchanged. Inventories:
+blank checks 439 -> 438; main Java 126,670 -> 126,665; test Java 155,391 -> 155,574; Support classes
+219 unchanged, other model/subtype counts unchanged. External evidence: `table-name-*.log`,
+inventories, failure XML, migration logs and `name-observations/`. Baseline diff empty; no
+supplement. The named-range surface report and other remaining domain names still need review
+against the WP-21 inventory; this is not completion of WP-21 or the foundations redesign.

@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.Optional;
 
 /** Builds bounded mutation steps for protocol-workflow Jazzer generation. */
@@ -276,7 +277,8 @@ final class OperationSequenceMutationFactory {
                         nextTableInput(data, targetSheet, tableName, validRange)));
             case 0x3 ->
                 mutate(
-                    new TableSelector.ByNameOnSheet(tableName, new SheetName(targetSheet)),
+                    new TableSelector.ByNameOnSheet(
+                        new TableName(tableName), new SheetName(targetSheet)),
                     new StructuredMutationAction.DeleteTable());
             case 0x4 ->
                 mutate(

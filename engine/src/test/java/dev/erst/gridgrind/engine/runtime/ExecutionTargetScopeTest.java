@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -49,20 +50,23 @@ class ExecutionTargetScopeTest {
             new DrawingObjectSelector.ByName(new SheetName("Budget"), "Logo"),
             new ChartSelector.AllOnSheet(new SheetName("Budget")),
             new ChartSelector.ByName(new SheetName("Budget"), "Revenue"),
-            new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")),
+            new TableSelector.ByNameOnSheet(new TableName("Ledger"), new SheetName("Budget")),
             new PivotTableSelector.ByNameOnSheet("Pivot", new SheetName("Budget")),
             new NamedRangeSelector.SheetScope(new DefinedName("Total"), new SheetName("Budget")),
             new TableRowSelector.AllRows(
-                new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget"))),
+                new TableSelector.ByNameOnSheet(new TableName("Ledger"), new SheetName("Budget"))),
             new TableRowSelector.ByIndex(
-                new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")), 0),
+                new TableSelector.ByNameOnSheet(new TableName("Ledger"), new SheetName("Budget")),
+                0),
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")),
+                new TableSelector.ByNameOnSheet(new TableName("Ledger"), new SheetName("Budget")),
                 "Owner",
                 new CellInput.Blank()),
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByIndex(
-                    new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")), 0),
+                    new TableSelector.ByNameOnSheet(
+                        new TableName("Ledger"), new SheetName("Budget")),
+                    0),
                 "Amount"));
 
     for (Selector selector : budgetSelectors) {
@@ -76,8 +80,8 @@ class ExecutionTargetScopeTest {
         List.of(
             new SheetSelector.All(),
             new TableSelector.All(),
-            new TableSelector.ByName("Ledger"),
-            new TableSelector.ByNames(List.of("Ledger")),
+            new TableSelector.ByName(new TableName("Ledger")),
+            new TableSelector.ByNames(List.of(new TableName("Ledger"))),
             new PivotTableSelector.All(),
             new PivotTableSelector.ByName("Pivot"),
             new PivotTableSelector.ByNames(List.of("Pivot")),

@@ -67,6 +67,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
@@ -432,7 +433,7 @@ class AdvancedMutationCommandConverterTest {
                     new PivotTableInput(
                         "Table Source Pivot",
                         new SheetName("Report"),
-                        new PivotTableInput.Source.Table("SalesTable2026"),
+                        new PivotTableInput.Source.Table(new TableName("SalesTable2026")),
                         new PivotTableInput.Anchor(new CellAddress("G4")),
                         List.of("Region"),
                         List.of(),

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,8 @@ class TableSelectionTest {
         SelectorConverter.toExcelTableSelection(new TableSelector.All()));
     assertEquals(
         new ExcelTableSelection.ByNames(List.of("BudgetTable")),
-        SelectorConverter.toExcelTableSelection(new TableSelector.ByNames(List.of("BudgetTable"))));
+        SelectorConverter.toExcelTableSelection(
+            new TableSelector.ByNames(List.of(new TableName("BudgetTable")))));
   }
 
   @Test
@@ -24,8 +26,11 @@ class TableSelectionTest {
     assertThrows(IllegalArgumentException.class, () -> new TableSelector.ByNames(List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new TableSelector.ByNames(List.of("BudgetTable", "budgettable")));
+        () ->
+            new TableSelector.ByNames(
+                List.of(new TableName("BudgetTable"), new TableName("budgettable"))));
     assertThrows(
-        NullPointerException.class, () -> new TableSelector.ByNames(List.of("BudgetTable", null)));
+        NullPointerException.class,
+        () -> new TableSelector.ByNames(List.of(new TableName("BudgetTable"), null)));
   }
 }

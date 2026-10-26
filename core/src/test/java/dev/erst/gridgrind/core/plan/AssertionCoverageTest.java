@@ -46,6 +46,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -310,7 +311,7 @@ class AssertionCoverageTest {
 
   private static TableEntryReport tableReport() {
     return new TableEntryReport(
-        "BudgetTable",
+        new TableLabel("BudgetTable"),
         new SheetLabel("Budget"),
         new RangeLabel("A1:B2"),
         1,

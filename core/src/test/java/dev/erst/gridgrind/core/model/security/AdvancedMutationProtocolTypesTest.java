@@ -83,6 +83,7 @@ import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -1244,7 +1245,7 @@ class AdvancedMutationProtocolTypesTest {
 
     TableInput defaultedTable =
         new TableInput(
-            "BudgetTable",
+            new TableName("BudgetTable"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C4"),
             false,
@@ -1260,7 +1261,7 @@ class AdvancedMutationProtocolTypesTest {
             List.of());
     TableInput explicitTable =
         new TableInput(
-            "BudgetTable",
+            new TableName("BudgetTable"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C4"),
             false,
@@ -1286,7 +1287,7 @@ class AdvancedMutationProtocolTypesTest {
         NullPointerException.class,
         () ->
             new TableInput(
-                "BudgetTable",
+                new TableName("BudgetTable"),
                 new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                 new RangeRef("A1:C4"),
                 false,
@@ -1373,7 +1374,7 @@ class AdvancedMutationProtocolTypesTest {
         new PivotTableInput(
             "Sales Table Pivot",
             new SheetName("Report"),
-            new PivotTableInput.Source.Table("SalesTable2026"),
+            new PivotTableInput.Source.Table(new TableName("SalesTable2026")),
             new PivotTableInput.Anchor(new CellAddress("D7")),
             List.of(),
             List.of(),
@@ -1395,7 +1396,8 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(List.of(), tableSourceInput.columnLabels());
     assertEquals(List.of(), tableSourceInput.reportFilters());
     assertEquals(
-        "SalesTable2026", ((PivotTableInput.Source.Table) tableSourceInput.source()).name());
+        "SalesTable2026",
+        ((PivotTableInput.Source.Table) tableSourceInput.source()).name().value());
     assertEquals("B12", ProtocolCellAddressValidation.validateAddress("B12"));
     assertThrows(
         IllegalArgumentException.class,
@@ -1407,7 +1409,8 @@ class AdvancedMutationProtocolTypesTest {
         IllegalArgumentException.class,
         () -> new PivotTableInput.Source.NamedRange(new DefinedName("Sales Pivot 2026")));
     assertThrows(
-        IllegalArgumentException.class, () -> new PivotTableInput.Source.Table("Sales Table"));
+        IllegalArgumentException.class,
+        () -> new PivotTableInput.Source.Table(new TableName("Sales Table")));
     assertThrows(
         NullPointerException.class,
         () -> new PivotTableInput.Source.Range(new SheetName("Data"), null));

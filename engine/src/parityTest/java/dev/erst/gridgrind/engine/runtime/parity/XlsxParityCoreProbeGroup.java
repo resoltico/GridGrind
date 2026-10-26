@@ -43,6 +43,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
 import java.nio.file.Path;
@@ -421,6 +422,7 @@ final class XlsxParityCoreProbeGroup {
           .tables()
           .getFirst()
           .name()
+          .value()
           .equals(observation.direct().tableName())) {
         mismatches.add(
             "tableName=%s direct=%s"
@@ -1252,7 +1254,9 @@ final class XlsxParityCoreProbeGroup {
         XlsxParityOracle.comment(copiedPath, "Advanced Replica", "E2"),
         XlsxParityOracle.advancedPrint(copiedPath, "Advanced Replica"),
         XlsxParityOracle.autofilter(copiedPath, "Advanced Replica"),
-        copiedTable == null ? null : XlsxParityOracle.table(copiedPath, copiedTable.name()));
+        copiedTable == null
+            ? null
+            : XlsxParityOracle.table(copiedPath, copiedTable.name().value()));
   }
 
   private static void compareSheetCopyWorkbook(
@@ -1810,7 +1814,8 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new TableSelector.ByNameOnSheet("AdvancedTable", new SheetName("Advanced")),
+                        new TableSelector.ByNameOnSheet(
+                            new TableName("AdvancedTable"), new SheetName("Advanced")),
                         new StructuredMutationAction.DeleteTable())),
                 inspect(
                     "tables",

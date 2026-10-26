@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -165,7 +166,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable",
+                    new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:C4"),
                     false,
@@ -177,7 +178,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+            new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget")),
             new StructuredMutationAction.DeleteTable()),
         exception,
         "Budget",
@@ -467,13 +468,14 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new StructuredMutationAction.SetTable(
                     TableInput.withDefaultMetadata(
-                        "BudgetTable",
+                        new TableName("BudgetTable"),
                         new SheetName("Budget"),
                         new RangeRef("A1:C4"),
                         false,
                         new TableStyleInput.None()))),
             mutate(
-                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+                new TableSelector.ByNameOnSheet(
+                    new TableName("BudgetTable"), new SheetName("Budget")),
                 new StructuredMutationAction.DeleteTable()),
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),

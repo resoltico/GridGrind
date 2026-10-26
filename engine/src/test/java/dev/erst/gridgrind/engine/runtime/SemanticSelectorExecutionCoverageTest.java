@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -105,7 +106,7 @@ class SemanticSelectorExecutionCoverageTest {
                             "inspect-duplicate-table-cell",
                             new TableCellSelector.ByColumnName(
                                 new TableRowSelector.ByKeyCell(
-                                    new TableSelector.ByName("BudgetTable"),
+                                    new TableSelector.ByName(new TableName("BudgetTable")),
                                     "Item",
                                     textCell("Hosting")),
                                 "Amount"),
@@ -118,7 +119,7 @@ class SemanticSelectorExecutionCoverageTest {
   private static TableCellSelector.ByColumnName missingAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("BudgetTable"), "Item", textCell("Missing")),
+            new TableSelector.ByName(new TableName("BudgetTable")), "Item", textCell("Missing")),
         "Amount");
   }
 
@@ -143,7 +144,7 @@ class SemanticSelectorExecutionCoverageTest {
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable",
+                    new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B3"),
                     false,
@@ -173,7 +174,7 @@ class SemanticSelectorExecutionCoverageTest {
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable",
+                    new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B4"),
                     false,

@@ -31,6 +31,7 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -385,7 +386,7 @@ class ExecutorGuardCoverageTest {
     StructuredMutationAction.SetTable setTable =
         new StructuredMutationAction.SetTable(
             dev.erst.gridgrind.core.model.table.TableInput.withDefaultMetadata(
-                "BudgetTable",
+                new TableName("BudgetTable"),
                 new SheetName("Budget"),
                 new RangeRef("A1:B5"),
                 false,
@@ -436,7 +437,7 @@ class ExecutorGuardCoverageTest {
     ExecutionJournal.Target blankTarget =
         ExecutionJournalTargetResolver.summaryTarget(
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
-                new dev.erst.gridgrind.core.plan.TableSelector.ByName("BudgetTable"),
+                new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Blank()));
     assertEquals("Row where Item=Blank[] in Table BudgetTable", blankTarget.label());
@@ -444,7 +445,7 @@ class ExecutorGuardCoverageTest {
     ExecutionJournal.Target fileTextTarget =
         ExecutionJournalTargetResolver.summaryTarget(
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
-                new dev.erst.gridgrind.core.plan.TableSelector.ByName("BudgetTable"),
+                new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Text(TextSourceInput.utf8File("title.txt"))));
     assertTrue(fileTextTarget.label().contains("Text[path=title.txt]"));
@@ -452,7 +453,7 @@ class ExecutorGuardCoverageTest {
     ExecutionJournal.Target stdinTextTarget =
         ExecutionJournalTargetResolver.summaryTarget(
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
-                new dev.erst.gridgrind.core.plan.TableSelector.ByName("BudgetTable"),
+                new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Formula(TextSourceInput.standardInput())));
     assertTrue(stdinTextTarget.label().contains("Formula[source=STANDARD_INPUT]"));
@@ -460,7 +461,8 @@ class ExecutorGuardCoverageTest {
     assertTrue(
         ExecutionJournalTargetResolver.summaryTarget(
                 new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
-                    new dev.erst.gridgrind.core.plan.TableSelector.ByName("BudgetTable"),
+                    new dev.erst.gridgrind.core.plan.TableSelector.ByName(
+                        new TableName("BudgetTable")),
                     "Item",
                     new CellInput.NumberValue(42.0d)))
             .label()
@@ -468,7 +470,8 @@ class ExecutorGuardCoverageTest {
     assertTrue(
         ExecutionJournalTargetResolver.summaryTarget(
                 new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
-                    new dev.erst.gridgrind.core.plan.TableSelector.ByName("BudgetTable"),
+                    new dev.erst.gridgrind.core.plan.TableSelector.ByName(
+                        new TableName("BudgetTable")),
                     "Item",
                     new CellInput.BooleanValue(true)))
             .label()
@@ -477,7 +480,7 @@ class ExecutorGuardCoverageTest {
         IllegalArgumentException.class,
         () ->
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
-                new dev.erst.gridgrind.core.plan.TableSelector.ByName("BudgetTable"),
+                new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.RichText(
                     java.util.List.of(
@@ -487,14 +490,14 @@ class ExecutorGuardCoverageTest {
         IllegalArgumentException.class,
         () ->
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
-                new dev.erst.gridgrind.core.plan.TableSelector.ByName("BudgetTable"),
+                new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Date(LocalDate.of(2026, 4, 18))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
-                new dev.erst.gridgrind.core.plan.TableSelector.ByName("BudgetTable"),
+                new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
   }

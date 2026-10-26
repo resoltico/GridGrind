@@ -1,5 +1,6 @@
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.core.authoring.GridGrindPlan;
 import dev.erst.gridgrind.core.authoring.ExpectedValues;
 import dev.erst.gridgrind.core.authoring.Tables;
@@ -42,28 +43,28 @@ final class JavaAuthoringWorkflowExample {
                         Values.row(Values.text("Hosting"), Values.number(100.0)),
                         Values.row(Values.text("Travel"), Values.number(50.0)))))
         .mutate(
-            Targets.tableOnSheet("BudgetTable", new SheetName("Budget"))
+            Targets.tableOnSheet(new TableName("BudgetTable"), new SheetName("Budget"))
                 .define(
                     Tables.define(
-                        "BudgetTable",
+                        new TableName("BudgetTable"),
                         new SheetName("Budget"),
                         new RangeRef("A1:B3"),
                         false,
                         Tables.noStyle())))
         .mutate(
-            Targets.table("BudgetTable")
+            Targets.table(new TableName("BudgetTable"))
                 .rowByKey(
                     "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
                 .set(Values.number(125.0)))
         .inspect(
-            Targets.table("BudgetTable")
+            Targets.table(new TableName("BudgetTable"))
                 .rowByKey(
                     "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
                 .read())
         .assertThat(
-            Targets.table("BudgetTable")
+            Targets.table(new TableName("BudgetTable"))
                 .rowByKey(
                     "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")

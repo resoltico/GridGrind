@@ -78,6 +78,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
 import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
@@ -1409,7 +1410,7 @@ public final class XlsxParityScenarios {
                 mutate(
                     new StructuredMutationAction.SetTable(
                         TableInput.withDefaultMetadata(
-                            "QueueTable",
+                            new TableName("QueueTable"),
                             new SheetName("Queue"),
                             new RangeRef("A1:B3"),
                             false,
@@ -1661,7 +1662,7 @@ public final class XlsxParityScenarios {
                 mutate(
                     new StructuredMutationAction.SetTable(
                         TableInput.withDefaultMetadata(
-                            "SalesTable",
+                            new TableName("SalesTable"),
                             new SheetName("Data"),
                             new RangeRef("A1:D5"),
                             false,
@@ -1694,7 +1695,7 @@ public final class XlsxParityScenarios {
                         new PivotTableInput(
                             "Table Pivot",
                             new SheetName("TableReport"),
-                            new PivotTableInput.Source.Table("SalesTable"),
+                            new PivotTableInput.Source.Table(new TableName("SalesTable")),
                             new PivotTableInput.Anchor(new CellAddress("F4")),
                             List.of("Stage"),
                             List.of(),

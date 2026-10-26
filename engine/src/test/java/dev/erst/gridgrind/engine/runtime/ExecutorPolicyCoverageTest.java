@@ -50,6 +50,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.CellNotFoundException;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -101,10 +102,11 @@ class ExecutorPolicyCoverageTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookCommandConverter.toCommand(
-                    new TableSelector.ByNameOnSheet("OtherTable", new SheetName("Budget")),
+                    new TableSelector.ByNameOnSheet(
+                        new TableName("OtherTable"), new SheetName("Budget")),
                     new StructuredMutationAction.SetTable(
                         TableInput.withDefaultMetadata(
-                            "BudgetTable",
+                            new TableName("BudgetTable"),
                             new SheetName("Budget"),
                             new RangeRef("A1:B2"),
                             false,
@@ -117,10 +119,11 @@ class ExecutorPolicyCoverageTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookCommandConverter.toCommand(
-                    new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Archive")),
+                    new TableSelector.ByNameOnSheet(
+                        new TableName("BudgetTable"), new SheetName("Archive")),
                     new StructuredMutationAction.SetTable(
                         TableInput.withDefaultMetadata(
-                            "BudgetTable",
+                            new TableName("BudgetTable"),
                             new SheetName("Budget"),
                             new RangeRef("A1:B2"),
                             false,
@@ -629,7 +632,7 @@ class ExecutorPolicyCoverageTest {
     StructuredMutationAction.SetPivotTable pivotFromNamedRange =
         pivotTableAction(new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")));
     StructuredMutationAction.SetPivotTable pivotFromTable =
-        pivotTableAction(new PivotTableInput.Source.Table("BudgetTable"));
+        pivotTableAction(new PivotTableInput.Source.Table(new TableName("BudgetTable")));
     StructuredMutationAction.SetNamedRange sheetScopedNamedRange =
         new StructuredMutationAction.SetNamedRange(
             new DefinedName("LocalTotal"),
@@ -718,15 +721,18 @@ class ExecutorPolicyCoverageTest {
         ExecutionSelectorDiagnosticFields.sheetNameFor(new TableSelector.All()));
     assertEquals(
         java.util.Optional.empty(),
-        ExecutionSelectorDiagnosticFields.sheetNameFor(new TableSelector.ByName("BudgetTable")));
+        ExecutionSelectorDiagnosticFields.sheetNameFor(
+            new TableSelector.ByName(new TableName("BudgetTable"))));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
-            new TableSelector.ByNames(List.of("BudgetTable", "ForecastTable"))));
+            new TableSelector.ByNames(
+                List.of(new TableName("BudgetTable"), new TableName("ForecastTable")))));
     assertEquals(
         java.util.Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
-            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget"))));
+            new TableSelector.ByNameOnSheet(
+                new TableName("BudgetTable"), new SheetName("Budget"))));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionSelectorDiagnosticFields.sheetNameFor(new PivotTableSelector.All()));
@@ -767,18 +773,22 @@ class ExecutorPolicyCoverageTest {
         java.util.Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
             new TableRowSelector.AllRows(
-                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")))));
+                new TableSelector.ByNameOnSheet(
+                    new TableName("BudgetTable"), new SheetName("Budget")))));
     assertEquals(
         java.util.Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
             new TableRowSelector.ByIndex(
-                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")), 0)));
+                new TableSelector.ByNameOnSheet(
+                    new TableName("BudgetTable"), new SheetName("Budget")),
+                0)));
     assertEquals(
         java.util.Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByKeyCell(
-                    new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+                    new TableSelector.ByNameOnSheet(
+                        new TableName("BudgetTable"), new SheetName("Budget")),
                     "Item",
                     textCell("Hosting")),
                 "Amount")));

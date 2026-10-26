@@ -89,7 +89,8 @@ final class WorkbookCommandStructuredMutationConverter {
       case StructuredMutationAction.DeleteTable _ -> {
         TableSelector.ByNameOnSheet selector =
             WorkbookCommandSelectorSupport.tableByNameOnSheet(target, action);
-        yield new WorkbookTabularCommand.DeleteTable(selector.name(), selector.sheetName().value());
+        yield new WorkbookTabularCommand.DeleteTable(
+            selector.name().value(), selector.sheetName().value());
       }
       case StructuredMutationAction.DeletePivotTable _ -> {
         PivotTableSelector.ByNameOnSheet selector =

@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -62,7 +63,7 @@ class RuntimeResidualCoverageSupplementTest {
 
   @Test
   void executionJournalTargetLabelsCoverResidualCellKindsAndSourceShapes() {
-    TableSelector.ByName table = new TableSelector.ByName("BudgetTable");
+    TableSelector.ByName table = new TableSelector.ByName(new TableName("BudgetTable"));
 
     ExecutionJournal.Target fileFormulaTarget =
         ExecutionJournalTargetResolver.summaryTarget(

@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
+import dev.erst.gridgrind.core.problem.FieldValidationProblemMappers;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,7 +17,14 @@ public final class ProtocolDefinedNameValidation {
     violation(name)
         .ifPresent(
             violation -> {
-              throw new IllegalArgumentException(renderViolation(violation));
+              var mapped = FieldValidationProblemMappers.definedName("name", violation);
+              throw new InvalidRequestException(
+                  new FieldValidationProblem(
+                      mapped.fieldName(), Optional.empty(), mapped.rule(), mapped.operands()),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  null);
             });
     return name;
   }
@@ -81,19 +91,6 @@ public final class ProtocolDefinedNameValidation {
     return switch (Character.getType(codePoint)) {
       case Character.DECIMAL_DIGIT_NUMBER, Character.LETTER_NUMBER, Character.OTHER_NUMBER -> true;
       default -> false;
-    };
-  }
-
-  private static String renderViolation(Violation violation) {
-    return switch (violation) {
-      case BLANK -> "name must not be blank";
-      case TOO_LONG -> "name must not exceed 255 Unicode code points";
-      case SYNTAX ->
-          "name must start with a letter, underscore, or backslash and contain only Unicode"
-              + " letters, Unicode numbers, underscore, period, or backslash";
-      case RESERVED_PREFIX -> "name must not use the reserved _xlnm. prefix";
-      case A1_COLLISION -> "name must not collide with A1-style cell reference syntax";
-      case R1C1_COLLISION -> "name must not collide with R1C1-style cell reference syntax";
     };
   }
 

@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,6 @@ class SelectorValidationSupportTest {
   @Test
   void selectorSupportValidatesScalarFieldsAndA1Geometry() {
     assertEquals("Budget", SelectorValueValidation.requireNonBlank("Budget", "field"));
-    assertEquals(
-        "Budget_Total", SelectorValueValidation.requireDefinedName("Budget_Total", "selector"));
     assertEquals(
         "Sales Pivot 2026",
         SelectorValueValidation.requirePivotTableName("Sales Pivot 2026", "selector"));
@@ -68,18 +67,6 @@ class SelectorValidationSupportTest {
         assertThrows(
                 NullPointerException.class,
                 () -> SelectorValueValidation.requireNonBlank(null, "field"))
-            .getMessage());
-    assertTrue(
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> SelectorValueValidation.requireDefinedName("1bad", "selector"))
-            .getMessage()
-            .startsWith("selector "));
-    assertEquals(
-        "name must start with a letter, underscore, or backslash and contain only Unicode letters, Unicode numbers, underscore, period, or backslash",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> SelectorValueValidation.requireDefinedName("1bad", "name"))
             .getMessage());
     assertTrue(
         assertThrows(
@@ -166,7 +153,11 @@ class SelectorValidationSupportTest {
             .toList());
     assertEquals(
         List.of("BudgetTotal"),
-        SelectorListValidation.copyDistinctDefinedNames(List.of("BudgetTotal"), "names"));
+        SelectorListValidation.copyDistinctTableNames(
+                List.of(new TableName("BudgetTotal")), "names")
+            .stream()
+            .map(TableName::value)
+            .toList());
     assertEquals(
         List.of("Sales Pivot 2026"),
         SelectorListValidation.copyDistinctPivotTableNames(List.of("Sales Pivot 2026"), "names"));
@@ -213,8 +204,9 @@ class SelectorValidationSupportTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    SelectorListValidation.copyDistinctDefinedNames(
-                        List.of("BudgetTotal", "BudgetTotal"), "names"))
+                    SelectorListValidation.copyDistinctTableNames(
+                        List.of(new TableName("BudgetTotal"), new TableName("BudgetTotal")),
+                        "names"))
             .getMessage());
     assertEquals(
         "names must not contain duplicates",

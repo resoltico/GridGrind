@@ -554,7 +554,7 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
             namedRange.range().value(), "pivot named-range source range");
       }
       case PivotTableReport.Source.Table table -> {
-        WorkbookInvariantChecks.requireNonBlank(table.name(), "pivot table source name");
+        WorkbookInvariantChecks.requireNonBlank(table.name().value(), "pivot table source name");
         WorkbookInvariantChecks.requireNonBlank(
             table.sheetName().value(), "pivot table source sheetName");
         WorkbookInvariantChecks.requireNonBlank(table.range().value(), "pivot table source range");

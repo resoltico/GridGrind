@@ -68,6 +68,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -137,10 +138,11 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new NamedRangeScope.Workbook(),
                             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("F2")))),
                     mutate(
-                        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+                        new TableSelector.ByNameOnSheet(
+                            new TableName("BudgetTable"), new SheetName("Budget")),
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
-                                "BudgetTable",
+                                new TableName("BudgetTable"),
                                 new SheetName("Budget"),
                                 new RangeRef("A1:B2"),
                                 false,
@@ -185,7 +187,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookIntrospectionQuery.GetNamedRanges()),
                         inspect(
                             "tables",
-                            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+                            new TableSelector.ByNameOnSheet(
+                                new TableName("BudgetTable"), new SheetName("Budget")),
                             new WorkbookAssetIntrospectionQuery.GetTables()),
                         inspect(
                             "formulaHealth",
@@ -264,7 +267,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new PresenceAssertion.NamedRangeAbsent()),
                         assertThat(
                             "present-table",
-                            new TableSelector.ByName("BudgetTable"),
+                            new TableSelector.ByName(new TableName("BudgetTable")),
                             new PresenceAssertion.TablePresent()),
                         assertThat(
                             "cell-text",
@@ -345,7 +348,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookFactAssertion.NamedRangeFacts(namedRanges.namedRanges())),
                         assertThat(
                             "table-facts",
-                            new TableSelector.ByName("BudgetTable"),
+                            new TableSelector.ByName(new TableName("BudgetTable")),
                             new WorkbookFactAssertion.TableFacts(tables.tables())),
                         assertThat(
                             "analysis-max-severity",
@@ -487,10 +490,11 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new NamedRangeScope.Workbook(),
                             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("F2")))),
                     mutate(
-                        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+                        new TableSelector.ByNameOnSheet(
+                            new TableName("BudgetTable"), new SheetName("Budget")),
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
-                                "BudgetTable",
+                                new TableName("BudgetTable"),
                                 new SheetName("Budget"),
                                 new RangeRef("A1:B2"),
                                 false,
@@ -528,7 +532,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookIntrospectionQuery.GetNamedRanges()),
                         inspect(
                             "tables",
-                            new TableSelector.ByName("BudgetTable"),
+                            new TableSelector.ByName(new TableName("BudgetTable")),
                             new WorkbookAssetIntrospectionQuery.GetTables()),
                         inspect(
                             "formulaHealth",
@@ -598,7 +602,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "absent-table",
-            new TableSelector.ByName("BudgetTable"),
+            new TableSelector.ByName(new TableName("BudgetTable")),
             new PresenceAssertion.TableAbsent());
     assertTrue(absentTable.problem().message().contains("EXPECT_TABLE_ABSENT"));
 
@@ -680,7 +684,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "table-facts-mismatch",
-            new TableSelector.ByName("BudgetTable"),
+            new TableSelector.ByName(new TableName("BudgetTable")),
             new WorkbookFactAssertion.TableFacts(List.of()));
     assertTrue(tableMismatch.problem().message().contains("EXPECT_TABLE_FACTS"));
     assertEquals(
@@ -1491,7 +1495,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   private static TableCellSelector.ByColumnName missingAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("BudgetTable"), "Item", textCell("Missing")),
+            new TableSelector.ByName(new TableName("BudgetTable")), "Item", textCell("Missing")),
         "Amount");
   }
 
@@ -1512,7 +1516,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable",
+                    new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B3"),
                     false,

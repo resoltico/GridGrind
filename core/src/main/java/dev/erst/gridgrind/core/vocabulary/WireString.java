@@ -10,6 +10,7 @@ public sealed interface WireString
         DefinedName,
         DefinedNameLabel,
         TableName,
+        TableLabel,
         RgbHex,
         StepId,
         PlanId {

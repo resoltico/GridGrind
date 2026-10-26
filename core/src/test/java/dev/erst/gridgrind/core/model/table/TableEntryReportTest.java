@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ class TableEntryReportTest {
 
     TableEntryReport report =
         new TableEntryReport(
-            "BudgetTable",
+            new TableLabel("BudgetTable"),
             new SheetLabel("Budget"),
             new RangeLabel("A1:B4"),
             1,
@@ -31,7 +32,7 @@ class TableEntryReportTest {
         IllegalArgumentException.class,
         () ->
             new TableEntryReport(
-                "BudgetTable",
+                new TableLabel("BudgetTable"),
                 new SheetLabel(" "),
                 new RangeLabel("A1:B4"),
                 1,
@@ -43,7 +44,7 @@ class TableEntryReportTest {
         IllegalArgumentException.class,
         () ->
             new TableEntryReport(
-                "BudgetTable",
+                new TableLabel("BudgetTable"),
                 new SheetLabel("Budget"),
                 new RangeLabel("A1:B4"),
                 -1,
@@ -55,7 +56,7 @@ class TableEntryReportTest {
         IllegalArgumentException.class,
         () ->
             new TableEntryReport(
-                "BudgetTable",
+                new TableLabel("BudgetTable"),
                 new SheetLabel("Budget"),
                 new RangeLabel("A1:B4"),
                 1,
@@ -67,7 +68,7 @@ class TableEntryReportTest {
         NullPointerException.class,
         () ->
             new TableEntryReport(
-                "BudgetTable",
+                new TableLabel("BudgetTable"),
                 new SheetLabel("Budget"),
                 new RangeLabel("A1:B4"),
                 1,

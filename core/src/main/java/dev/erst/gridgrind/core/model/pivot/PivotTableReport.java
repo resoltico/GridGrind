@@ -6,9 +6,9 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
-import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -90,9 +90,9 @@ public sealed interface PivotTableReport
     }
 
     /** Table-backed source plus the currently resolved table range. */
-    record Table(String name, SheetName sheetName, RangeLabel range) implements Source {
+    record Table(TableName name, SheetName sheetName, RangeLabel range) implements Source {
       public Table {
-        name = ProtocolDefinedNameValidation.validateName(name);
+        java.util.Objects.requireNonNull(name, "name must not be null");
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         java.util.Objects.requireNonNull(range, "range must not be null");
       }

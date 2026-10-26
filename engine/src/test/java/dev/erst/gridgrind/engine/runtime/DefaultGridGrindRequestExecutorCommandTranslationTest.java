@@ -38,6 +38,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -336,7 +337,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
             mutate(
                 new StructuredMutationAction.SetTable(
                     TableInput.withDefaultMetadata(
-                        "BudgetTable",
+                        new TableName("BudgetTable"),
                         new SheetName("Budget"),
                         new RangeRef("A1:B4"),
                         false,
@@ -345,7 +346,8 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookTabularCommand.DeleteTable.class,
         command(
             mutate(
-                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+                new TableSelector.ByNameOnSheet(
+                    new TableName("BudgetTable"), new SheetName("Budget")),
                 new StructuredMutationAction.DeleteTable())));
     assertInstanceOf(
         WorkbookCellCommand.AppendRow.class,
@@ -508,7 +510,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "tables",
-                new TableSelector.ByNames(List.of("BudgetTable")),
+                new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
                 new WorkbookAssetIntrospectionQuery.GetTables()));
     WorkbookReadCommand formulaSurface =
         readCommand(
@@ -605,7 +607,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "tableHealth",
-                new TableSelector.ByNames(List.of("BudgetTable")),
+                new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
                 new InspectionAnalysisQuery.AnalyzeTableHealth()));
     WorkbookReadCommand hyperlinkHealth =
         readCommand(

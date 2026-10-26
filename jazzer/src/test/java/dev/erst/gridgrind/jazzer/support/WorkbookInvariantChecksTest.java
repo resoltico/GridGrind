@@ -147,6 +147,7 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
@@ -578,7 +579,7 @@ class WorkbookInvariantChecksTest {
                     new StepId("tables"),
                     List.of(
                         new TableEntryReport(
-                            "BudgetTable",
+                            new TableLabel("BudgetTable"),
                             new SheetLabel("Budget"),
                             new RangeLabel("A1:C4"),
                             1,
@@ -636,7 +637,7 @@ class WorkbookInvariantChecksTest {
                     new StepId("tables"),
                     List.of(
                         new TableEntryReport(
-                            "BudgetTable",
+                            new TableLabel("BudgetTable"),
                             new SheetLabel("Budget"),
                             new RangeLabel("A1:C4"),
                             1,
@@ -895,7 +896,7 @@ class WorkbookInvariantChecksTest {
                     new StepId("tables"),
                     List.of(
                         new TableEntryReport(
-                            "BudgetTable",
+                            new TableLabel("BudgetTable"),
                             new SheetLabel("Budget"),
                             new RangeLabel("A1:C5"),
                             new TableEntryReport.Structure(

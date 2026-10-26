@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.table.TableInput;
 import dev.erst.gridgrind.core.model.table.TableStyleInput;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
@@ -19,7 +20,7 @@ class TableInputTest {
   void validatesAndConvertsToWorkbookDefinition() {
     TableInput input =
         TableInput.withDefaultMetadata(
-            "BudgetTable",
+            new TableName("BudgetTable"),
             new SheetName("Budget"),
             new RangeRef("A1:C4"),
             true,
@@ -38,7 +39,7 @@ class TableInputTest {
         IllegalArgumentException.class,
         () ->
             TableInput.withDefaultMetadata(
-                "BudgetTable",
+                new TableName("BudgetTable"),
                 new SheetName(" "),
                 new RangeRef("A1:C4"),
                 false,
@@ -47,7 +48,7 @@ class TableInputTest {
         IllegalArgumentException.class,
         () ->
             TableInput.withDefaultMetadata(
-                "BudgetTable",
+                new TableName("BudgetTable"),
                 new SheetName("12345678901234567890123456789012"),
                 new RangeRef("A1:C4"),
                 false,
@@ -56,7 +57,7 @@ class TableInputTest {
         IllegalArgumentException.class,
         () ->
             TableInput.withDefaultMetadata(
-                "BudgetTable",
+                new TableName("BudgetTable"),
                 new SheetName("Budget"),
                 new RangeRef(" "),
                 false,
@@ -65,14 +66,18 @@ class TableInputTest {
         NullPointerException.class,
         () ->
             TableInput.withDefaultMetadata(
-                "BudgetTable", new SheetName("Budget"), new RangeRef("A1:C4"), false, null));
+                new TableName("BudgetTable"),
+                new SheetName("Budget"),
+                new RangeRef("A1:C4"),
+                false,
+                null));
   }
 
   @Test
   void explicitDefaultMetadataPreservesTotalsRowFlagFalse() {
     TableInput input =
         TableInput.withDefaultMetadata(
-            "BudgetTable",
+            new TableName("BudgetTable"),
             new SheetName("Budget"),
             new RangeRef("A1:C4"),
             false,
@@ -89,7 +94,7 @@ class TableInputTest {
   void normalizesTotalsRowFunctionsToLowercaseForProtocolWrites() {
     TableInput input =
         new TableInput(
-            "BudgetTable",
+            new TableName("BudgetTable"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C4"),
             true,

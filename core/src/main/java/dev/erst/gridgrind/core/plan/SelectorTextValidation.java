@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.FieldValidationProblemMappers;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
-import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -20,16 +19,6 @@ final class SelectorTextValidation {
       throw invalidField(
           FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_BLANK));
     }
-    return value;
-  }
-
-  static String requireDefinedName(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    ProtocolDefinedNameValidation.violation(value)
-        .ifPresent(
-            violation -> {
-              throw invalidField(FieldValidationProblemMappers.definedName(fieldName, violation));
-            });
     return value;
   }
 

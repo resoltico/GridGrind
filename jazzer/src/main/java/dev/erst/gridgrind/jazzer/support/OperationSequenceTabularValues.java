@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.*;
@@ -23,7 +24,7 @@ final class OperationSequenceTabularValues {
   static TableInput nextTableInput(
       GridGrindFuzzData data, String sheetName, String tableName, boolean validRange) {
     return TableInput.withDefaultMetadata(
-        tableName,
+        new TableName(tableName),
         new SheetName(sheetName),
         new dev.erst.gridgrind.core.vocabulary.RangeRef(
             validRange ? "A1:B3" : FuzzDataDecoders.nextNonBlankRange(data, false)),
@@ -74,9 +75,10 @@ final class OperationSequenceTabularValues {
       default ->
           new TableSelector.ByNames(
               List.of(
-                  data.consumeBoolean()
-                      ? nextTableName(data, true, primarySheet)
-                      : nextTableName(data, true, secondarySheet)));
+                  new TableName(
+                      data.consumeBoolean()
+                          ? nextTableName(data, true, primarySheet)
+                          : nextTableName(data, true, secondarySheet))));
     };
   }
 
@@ -144,7 +146,8 @@ final class OperationSequenceTabularValues {
                   validName ? namedRangeName : nextNamedRangeName(data, false)));
       default ->
           new PivotTableInput.Source.Table(
-              validName ? tableName : nextTableName(data, false, targetSheet));
+              new dev.erst.gridgrind.core.vocabulary.TableName(
+                  validName ? tableName : nextTableName(data, false, targetSheet)));
     };
   }
 

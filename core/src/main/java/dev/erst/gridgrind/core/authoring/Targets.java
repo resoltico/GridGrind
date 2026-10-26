@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 
 /** Selector builders for the fluent Java authoring API. */
 public final class Targets {
@@ -45,12 +46,12 @@ public final class Targets {
   }
 
   /** Returns one exact table target by table name. */
-  public static TableTarget table(String name) {
+  public static TableTarget table(TableName name) {
     return new TableTarget(new TableSelector.ByName(name));
   }
 
   /** Returns one exact table target by table name plus sheet ownership. */
-  public static TableTarget tableOnSheet(String name, SheetName sheetName) {
+  public static TableTarget tableOnSheet(TableName name, SheetName sheetName) {
     return new TableTarget(new TableSelector.ByNameOnSheet(name, sheetName));
   }
 

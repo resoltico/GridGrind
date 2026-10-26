@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +25,9 @@ final class ExamplePivotInputs {
   static PivotTableInput regionalTotalsPivotFromTable(
       String pivotName, String reportSheetName, String sourceTableName) {
     return regionalTotalsPivot(
-        pivotName, reportSheetName, new PivotTableInput.Source.Table(sourceTableName));
+        pivotName,
+        reportSheetName,
+        new PivotTableInput.Source.Table(new TableName(sourceTableName)));
   }
 
   private static PivotTableInput regionalTotalsPivot(

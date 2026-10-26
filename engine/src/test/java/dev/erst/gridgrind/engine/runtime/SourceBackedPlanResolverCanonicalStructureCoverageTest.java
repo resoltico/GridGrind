@@ -42,6 +42,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -101,7 +102,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new StepId("inspect-inline"),
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByKeyCell(
-                    new TableSelector.ByName("BudgetTable"),
+                    new TableSelector.ByName(new TableName("BudgetTable")),
                     "Item",
                     new CellInput.Text(TextSourceInput.inline("Hosting"))),
                 "Amount"),
@@ -111,7 +112,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new StepId("assert-inline"),
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByKeyCell(
-                    new TableSelector.ByName("BudgetTable"),
+                    new TableSelector.ByName(new TableName("BudgetTable")),
                     "Item",
                     new CellInput.Text(TextSourceInput.inline("Hosting"))),
                 "Amount"),
@@ -190,10 +191,10 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep tableStep =
         new MutationStep(
             new StepId("table-inline"),
-            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+            new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget")),
             new StructuredMutationAction.SetTable(
                 new TableInput(
-                    "BudgetTable",
+                    new TableName("BudgetTable"),
                     new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                     new RangeRef("A1:B2"),
                     false,
@@ -468,7 +469,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new StepId("target-and-action-changed"),
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByKeyCell(
-                    new TableSelector.ByName("BudgetTable"),
+                    new TableSelector.ByName(new TableName("BudgetTable")),
                     "Item",
                     new CellInput.Text(TextSourceInput.utf8File("item.txt"))),
                 "Amount"),

@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 
 /** Published task recipe for pivot-table reporting workflows. */
@@ -161,7 +162,7 @@ final class PivotReportTaskRecipe {
             ExampleSelectors.table("PivotSource", "Data"),
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "PivotSource",
+                    new TableName("PivotSource"),
                     new SheetName("Data"),
                     new RangeRef("A1:D5"),
                     false,

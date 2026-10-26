@@ -66,6 +66,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
@@ -287,7 +288,7 @@ class SequenceIntrospectionTest {
             mutate(
                 new StructuredMutationAction.SetTable(
                     TableInput.withDefaultMetadata(
-                        "BudgetTable",
+                        new TableName("BudgetTable"),
                         new SheetName("Budget"),
                         new RangeRef("A1:C4"),
                         false,
@@ -297,7 +298,8 @@ class SequenceIntrospectionTest {
         "DELETE_TABLE",
         mutationKind(
             mutate(
-                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+                new TableSelector.ByNameOnSheet(
+                    new TableName("BudgetTable"), new SheetName("Budget")),
                 new StructuredMutationAction.DeleteTable())));
     assertEquals(
         "DELETE_PIVOT_TABLE",

@@ -35,6 +35,46 @@ class ExampleExecutionFixturesTest {
   @TempDir Path tempDir;
 
   @Test
+  void observedTableLabelsMayBeEmptyWithoutBecomingAuthoredIdentifiers() throws IOException {
+    Path source = tempDir.resolve("observed-table-name.xlsx");
+    try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Data");
+      sheet.createRow(0).createCell(0).setCellValue("Item");
+      sheet.createRow(1).createCell(0).setCellValue("Observed");
+      var table =
+          sheet.createTable(
+              new org.apache.poi.ss.util.AreaReference(
+                  "A1:A2", org.apache.poi.ss.SpreadsheetVersion.EXCEL2007));
+      table.setName("ValidTable");
+      table.setDisplayName("ValidTable");
+      table.getCTTable().setName("");
+      try (OutputStream output = Files.newOutputStream(source)) {
+        workbook.write(output);
+      }
+    }
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-table-name.xlsx"},
+        "persistence":{"type":"NONE"},"steps":[{"stepId":"tables","target":{"type":"TABLE_ALL"},
+        "query":{"type":"GET_TABLES"}}]}
+        """);
+    var result =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            new DefaultGridGrindRequestExecutor()
+                .execute(request, bindingsForExample(tempDir, request)));
+    var tables =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
+            result.inspections().getFirst());
+    assertEquals("", tables.tables().getFirst().name().value());
+    assertEquals(
+        result,
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(result)));
+  }
+
+  @Test
   void observedDefinedNameLabelsDoNotAcquireAuthoringRestrictions() throws IOException {
     Path source = tempDir.resolve("observed-defined-name.xlsx");
     try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
@@ -165,7 +205,7 @@ class ExampleExecutionFixturesTest {
         assertInstanceOf(
             dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
             result.inspections().get(1));
-    assertEquals("ObservedTable", tables.tables().getFirst().name());
+    assertEquals("ObservedTable", tables.tables().getFirst().name().value());
     assertEquals("invalid[]", tables.tables().getFirst().sheetName().value());
     var reopened =
         GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(result));

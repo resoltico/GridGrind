@@ -41,6 +41,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -95,14 +96,14 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     mutate(
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
-                                "BudgetTable",
+                                new TableName("BudgetTable"),
                                 new SheetName("Budget"),
                                 new RangeRef("A1:B2"),
                                 false,
                                 new TableStyleInput.None())))),
                 inspect(
                     "tables",
-                    new TableSelector.ByNames(List.of("BudgetTable")),
+                    new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
                     new WorkbookAssetIntrospectionQuery.GetTables())));
 
     WorkbookAssetInspectionResult.TablesResult tables =

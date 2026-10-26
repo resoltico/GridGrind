@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -93,15 +94,18 @@ class SelectorTypesTest {
 
     assertEquals(SelectorCardinality.ANY_NUMBER, new TableSelector.All().cardinality());
     assertEquals(
-        SelectorCardinality.EXACTLY_ONE, new TableSelector.ByName("BudgetTable").cardinality());
+        SelectorCardinality.EXACTLY_ONE,
+        new TableSelector.ByName(new TableName("BudgetTable")).cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
-        new TableSelector.ByNames(List.of("BudgetTable", "OpsTable")).cardinality());
+        new TableSelector.ByNames(List.of(new TableName("BudgetTable"), new TableName("OpsTable")))
+            .cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")).cardinality());
+        new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget"))
+            .cardinality());
 
-    TableSelector.ByName table = new TableSelector.ByName("BudgetTable");
+    TableSelector.ByName table = new TableSelector.ByName(new TableName("BudgetTable"));
     assertEquals(SelectorCardinality.ANY_NUMBER, new TableRowSelector.AllRows(table).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE, new TableRowSelector.ByIndex(table, 2).cardinality());
@@ -239,10 +243,13 @@ class SelectorTypesTest {
   @Test
   void tablePivotAndNamedRangeSelectorsValidateScopeAwareIdentity() {
     assertEquals(new TableSelector.All(), new TableSelector.All());
-    assertEquals(List.of("BudgetTable"), new TableSelector.ByNames(List.of("BudgetTable")).names());
     assertEquals(
-        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
-        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")));
+        List.of("BudgetTable"),
+        new TableSelector.ByNames(List.of(new TableName("BudgetTable")))
+            .names().stream().map(TableName::value).toList());
+    assertEquals(
+        new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget")),
+        new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget")));
     assertThrows(IllegalArgumentException.class, () -> new TableSelector.ByNames(List.of()));
 
     PivotTableSelector.ByNames pivots =
@@ -271,7 +278,7 @@ class SelectorTypesTest {
 
   @Test
   void tableRowAndCellSelectorsValidateComposition() {
-    TableSelector.ByName table = new TableSelector.ByName("BudgetTable");
+    TableSelector.ByName table = new TableSelector.ByName(new TableName("BudgetTable"));
     TableRowSelector.ByKeyCell row =
         new TableRowSelector.ByKeyCell(table, "Item", new CellInput.Text(text("Laptop")));
     TableCellSelector.ByColumnName cell = new TableCellSelector.ByColumnName(row, "Amount");
@@ -303,7 +310,9 @@ class SelectorTypesTest {
         IllegalArgumentException.class,
         () ->
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByNames(List.of("BudgetTable")), "Item", new CellInput.Blank()));
+                new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
+                "Item",
+                new CellInput.Blank()));
     assertThrows(
         IllegalArgumentException.class,
         () ->

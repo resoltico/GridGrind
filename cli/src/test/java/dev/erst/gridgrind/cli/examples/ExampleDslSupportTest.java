@@ -25,7 +25,7 @@ class ExampleDslSupportTest {
   void tableHelperBuildsSheetOwnedTableSelectors() {
     TableSelector.ByNameOnSheet selector = ExampleSelectors.table(BUDGET_TABLE, BUDGET_SHEET);
 
-    assertEquals(BUDGET_TABLE, selector.name());
+    assertEquals(BUDGET_TABLE, selector.name().value());
     assertEquals(BUDGET_SHEET, selector.sheetName().value());
   }
 

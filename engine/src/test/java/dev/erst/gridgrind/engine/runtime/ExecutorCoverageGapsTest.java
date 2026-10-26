@@ -37,6 +37,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import java.io.IOException;
@@ -55,12 +56,13 @@ class ExecutorCoverageGapsTest {
     WorkbookSelector.Current workbookSelector = new WorkbookSelector.Current();
     TableRowSelector.ByKeyCell keyedRow =
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("BudgetTable"),
+            new TableSelector.ByName(new TableName("BudgetTable")),
             "Owner",
             new CellInput.Text(TextSourceInput.inline("Ada")));
     TableCellSelector.ByColumnName tableCell =
         new TableCellSelector.ByColumnName(
-            new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 0), "Owner");
+            new TableRowSelector.ByIndex(new TableSelector.ByName(new TableName("BudgetTable")), 0),
+            "Owner");
     ExecutionInputBindings bindings = ExecutionInputBindingsFixtureSupport.bindings(tempDir);
     List<Selector> passThroughSelectors =
         List.of(
@@ -83,8 +85,8 @@ class ExecutorCoverageGapsTest {
             new ChartSelector.AllOnSheet(new SheetName("Budget")),
             new ChartSelector.ByName(new SheetName("Budget"), "OpsChart"),
             new TableSelector.All(),
-            new TableSelector.ByName("BudgetTable"),
-            new TableSelector.ByNames(List.of("BudgetTable")),
+            new TableSelector.ByName(new TableName("BudgetTable")),
+            new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
             new PivotTableSelector.All(),
             new PivotTableSelector.ByName("BudgetPivot"),
             new PivotTableSelector.ByNames(List.of("BudgetPivot")),
@@ -97,8 +99,8 @@ class ExecutorCoverageGapsTest {
                     new NamedRangeSelector.ByName(new DefinedName("BudgetTotal")),
                     new NamedRangeSelector.SheetScope(
                         new DefinedName("OpsTotal"), new SheetName("Ops")))),
-            new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
-            new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 0),
+            new TableRowSelector.AllRows(new TableSelector.ByName(new TableName("BudgetTable"))),
+            new TableRowSelector.ByIndex(new TableSelector.ByName(new TableName("BudgetTable")), 0),
             keyedRow,
             tableCell);
     for (Selector selector : passThroughSelectors) {
@@ -132,11 +134,13 @@ class ExecutorCoverageGapsTest {
     TableCellSelector.ByColumnName tableCell =
         new TableCellSelector.ByColumnName(
             new TableRowSelector.ByIndex(
-                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")), 0),
+                new TableSelector.ByNameOnSheet(
+                    new TableName("BudgetTable"), new SheetName("Budget")),
+                0),
             "Owner");
     TableRowSelector.ByKeyCell keyedRow =
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("BudgetTable"),
+            new TableSelector.ByName(new TableName("BudgetTable")),
             "Owner",
             new CellInput.Text(TextSourceInput.inline("Ada")));
     List<Selector> summarySelectors =
@@ -159,8 +163,8 @@ class ExecutorCoverageGapsTest {
             new ChartSelector.AllOnSheet(new SheetName("Budget")),
             new ChartSelector.ByName(new SheetName("Budget"), "OpsChart"),
             new TableSelector.All(),
-            new TableSelector.ByName("BudgetTable"),
-            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+            new TableSelector.ByName(new TableName("BudgetTable")),
+            new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget")),
             new PivotTableSelector.All(),
             new PivotTableSelector.ByName("BudgetPivot"),
             new PivotTableSelector.ByNameOnSheet("BudgetPivot", new SheetName("Budget")),
@@ -169,8 +173,8 @@ class ExecutorCoverageGapsTest {
             new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
             new NamedRangeSelector.SheetScope(
                 new DefinedName("BudgetTotal"), new SheetName("Budget")),
-            new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
-            new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 0),
+            new TableRowSelector.AllRows(new TableSelector.ByName(new TableName("BudgetTable"))),
+            new TableRowSelector.ByIndex(new TableSelector.ByName(new TableName("BudgetTable")), 0),
             keyedRow,
             tableCell);
     List<Selector> expandedSelectors =
@@ -180,7 +184,8 @@ class ExecutorCoverageGapsTest {
                 new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("B2"))),
             new RangeSelector.ByRanges(
                 new SheetName("Budget"), List.of(new RangeRef("A1:B2"), new RangeRef("C1:D2"))),
-            new TableSelector.ByNames(List.of("BudgetTable", "OpsTable")),
+            new TableSelector.ByNames(
+                List.of(new TableName("BudgetTable"), new TableName("OpsTable"))),
             new PivotTableSelector.ByNames(List.of("BudgetPivot", "OpsPivot")),
             new NamedRangeSelector.ByNames(
                 List.of(new DefinedName("BudgetTotal"), new DefinedName("OpsTotal"))),

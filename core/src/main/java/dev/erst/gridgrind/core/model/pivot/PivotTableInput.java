@@ -9,9 +9,9 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
-import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -89,9 +89,9 @@ public record PivotTableInput(
     }
 
     /** Existing workbook-global table source. */
-    record Table(String name) implements Source {
+    record Table(TableName name) implements Source {
       public Table {
-        name = ProtocolDefinedNameValidation.validateName(name);
+        java.util.Objects.requireNonNull(name, "name must not be null");
       }
     }
   }

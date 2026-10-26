@@ -553,7 +553,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     PivotTableReport.Unsupported unsupported =
         assertInstanceOf(PivotTableReport.Unsupported.class, pivotTables.pivotTables().get(1));
 
-    assertEquals("SalesTable", ((PivotTableReport.Source.Table) supported.source()).name());
+    assertEquals("SalesTable", ((PivotTableReport.Source.Table) supported.source()).name().value());
     assertEquals("Amount", supported.dataFields().getFirst().sourceColumnName());
     assertTrue(supported.valuesAxisOnColumns());
     assertEquals("Pivot cache source no longer resolves cleanly.", unsupported.detail());

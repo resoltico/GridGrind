@@ -79,6 +79,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -425,7 +426,7 @@ final class XlsxParityProbeRegistry {
 
   static TableInput advancedTableInput() {
     return new TableInput(
-        "AdvancedTable",
+        new TableName("AdvancedTable"),
         new dev.erst.gridgrind.core.vocabulary.SheetName("Advanced"),
         new RangeRef("H1:J5"),
         true,
@@ -522,7 +523,10 @@ final class XlsxParityProbeRegistry {
   }
 
   static TableEntryReport findTable(List<TableEntryReport> tables, String name) {
-    return tables.stream().filter(table -> name.equals(table.name())).findFirst().orElse(null);
+    return tables.stream()
+        .filter(table -> name.equals(table.name().value()))
+        .findFirst()
+        .orElse(null);
   }
 
   static TableEntryReport findTableOnSheet(List<TableEntryReport> tables, String sheetName) {
@@ -538,7 +542,7 @@ final class XlsxParityProbeRegistry {
       String expectedName,
       String expectedSheetName) {
     return observed != null
-        && (expectedName == null || observed.name().equals(expectedName))
+        && (expectedName == null || observed.name().value().equals(expectedName))
         && (expectedSheetName == null || observed.sheetName().value().equals(expectedSheetName))
         && observed.range().equals(expected.range())
         && observed.structure().headerRowCount() == expected.structure().headerRowCount()

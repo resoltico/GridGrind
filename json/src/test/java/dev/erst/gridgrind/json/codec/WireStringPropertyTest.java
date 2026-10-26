@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.util.ArrayList;
@@ -281,6 +282,11 @@ class WireStringPropertyTest {
             List.of("Budget_Total", "1invalid", "_xlnm.Print_Area", "原始名称"),
             invalidPlans),
         new Domain(TableName.class, TableName::new, names, invalidNames),
+        new Domain(
+            TableLabel.class,
+            TableLabel::new,
+            List.of("", "BudgetTable", "1invalid", " ", "原始表"),
+            List.of()),
         new Domain(RgbHex.class, RgbHex::new, colors, invalidColors),
         new Domain(StepId.class, StepId::new, steps, invalidSteps),
         new Domain(PlanId.class, PlanId::new, plans, invalidPlans));

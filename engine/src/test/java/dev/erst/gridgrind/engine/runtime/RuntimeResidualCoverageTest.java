@@ -86,6 +86,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelColor;
@@ -473,20 +474,20 @@ class RuntimeResidualCoverageTest {
         SourceBackedInputRequirements.requiresStandardInput(
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByKeyCell(
-                    new TableSelector.ByName("BudgetTable"),
+                    new TableSelector.ByName(new TableName("BudgetTable")),
                     "Owner",
                     new CellInput.Text(TextSourceInput.standardInput())),
                 "Amount")));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Owner",
                 new CellInput.Text(TextSourceInput.standardInput()))));
     List<Selector> noInputSelectors =
         List.of(
-            new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
-            new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 1),
+            new TableRowSelector.AllRows(new TableSelector.ByName(new TableName("BudgetTable"))),
+            new TableRowSelector.ByIndex(new TableSelector.ByName(new TableName("BudgetTable")), 1),
             new WorkbookSelector.Current(),
             new SheetSelector.ByName(new SheetName("Budget")),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
@@ -495,7 +496,7 @@ class RuntimeResidualCoverageTest {
             new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
             new DrawingObjectSelector.ByName(new SheetName("Budget"), "Banner"),
             new ChartSelector.ByName(new SheetName("Budget"), "LoadChart"),
-            new TableSelector.ByName("BudgetTable"),
+            new TableSelector.ByName(new TableName("BudgetTable")),
             new PivotTableSelector.ByName("Sales Pivot"),
             new NamedRangeSelector.ByName(new DefinedName("BudgetRange")));
     for (Selector selector : noInputSelectors) {
@@ -617,7 +618,7 @@ class RuntimeResidualCoverageTest {
 
   private static TableInput table(TextSourceInput comment) {
     return new TableInput(
-        "BudgetTable",
+        new TableName("BudgetTable"),
         new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
         new RangeRef("A1:C4"),
         false,

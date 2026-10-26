@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
@@ -73,15 +74,18 @@ class SelectorConverterTest {
         SelectorConverter.toExcelTableSelection(new TableSelector.All()));
     assertEquals(
         new ExcelTableSelection.ByNames(List.of("BudgetTable")),
-        SelectorConverter.toExcelTableSelection(new TableSelector.ByName("BudgetTable")));
+        SelectorConverter.toExcelTableSelection(
+            new TableSelector.ByName(new TableName("BudgetTable"))));
     assertEquals(
         new ExcelTableSelection.ByNames(List.of("BudgetTable", "OpsTable")),
         SelectorConverter.toExcelTableSelection(
-            new TableSelector.ByNames(List.of("BudgetTable", "OpsTable"))));
+            new TableSelector.ByNames(
+                List.of(new TableName("BudgetTable"), new TableName("OpsTable")))));
     assertEquals(
         new ExcelTableSelection.ByNames(List.of("BudgetTable")),
         SelectorConverter.toExcelTableSelection(
-            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget"))));
+            new TableSelector.ByNameOnSheet(
+                new TableName("BudgetTable"), new SheetName("Budget"))));
 
     assertEquals(
         new ExcelPivotTableSelection.All(),
@@ -211,7 +215,8 @@ class SelectorConverterTest {
     assertEquals(
         "Budget",
         SelectorConverter.toSheetName(
-            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget"))));
+            new TableSelector.ByNameOnSheet(
+                new TableName("BudgetTable"), new SheetName("Budget"))));
     assertEquals(
         "Report",
         SelectorConverter.toSheetName(

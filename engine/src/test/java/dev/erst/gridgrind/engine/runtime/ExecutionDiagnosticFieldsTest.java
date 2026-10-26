@@ -31,6 +31,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -110,7 +111,7 @@ class ExecutionDiagnosticFieldsTest {
     StructuredMutationAction.SetTable table =
         new StructuredMutationAction.SetTable(
             TableInput.withDefaultMetadata(
-                "BudgetTable",
+                new TableName("BudgetTable"),
                 new SheetName("Budget"),
                 new RangeRef("A1:B4"),
                 false,
@@ -222,10 +223,10 @@ class ExecutionDiagnosticFieldsTest {
     MutationStep tableStep =
         new MutationStep(
             new StepId("set-table"),
-            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+            new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget")),
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable",
+                    new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B4"),
                     false,

@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 
 /** Shared selector helpers for shipped example workbook plans. */
 final class ExampleSelectors {
@@ -26,7 +27,7 @@ final class ExampleSelectors {
   }
 
   static TableSelector.ByNameOnSheet table(String name, String sheetName) {
-    return new TableSelector.ByNameOnSheet(name, new SheetName(sheetName));
+    return new TableSelector.ByNameOnSheet(new TableName(name), new SheetName(sheetName));
   }
 
   static CellSelector.ByAddress cell(String sheetName, String address) {

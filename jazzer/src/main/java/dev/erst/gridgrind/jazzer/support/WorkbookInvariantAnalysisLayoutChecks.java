@@ -169,7 +169,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
   }
 
   static void requireTableEntryShape(TableEntryReport table) {
-    WorkbookInvariantChecks.requireNonBlank(table.name(), "table name");
+    WorkbookInvariantChecks.requireNonBlank(table.name().value(), "table name");
     WorkbookInvariantChecks.requireNonBlank(table.sheetName().value(), "table sheetName");
     WorkbookInvariantChecks.requireNonBlank(table.range().value(), "table range");
     WorkbookInvariantChecks.require(

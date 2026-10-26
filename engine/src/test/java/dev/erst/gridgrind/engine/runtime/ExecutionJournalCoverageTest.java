@@ -45,6 +45,7 @@ import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.ArrayList;
 import java.util.List;
@@ -152,15 +153,19 @@ class ExecutionJournalCoverageTest {
         summaryTarget(new ChartSelector.ByName(new SheetName("Budget"), "Revenue")));
     assertEquals(
         new ExecutionJournal.Target("TABLE", "Tables [BudgetTable, OpsTable]"),
-        summaryTarget(new TableSelector.ByNames(List.of("BudgetTable", "OpsTable"))));
+        summaryTarget(
+            new TableSelector.ByNames(
+                List.of(new TableName("BudgetTable"), new TableName("OpsTable")))));
     assertEquals(
         new ExecutionJournal.Target("TABLE", "All tables"), summaryTarget(new TableSelector.All()));
     assertEquals(
         new ExecutionJournal.Target("TABLE", "Table BudgetTable"),
-        summaryTarget(new TableSelector.ByName("BudgetTable")));
+        summaryTarget(new TableSelector.ByName(new TableName("BudgetTable"))));
     assertEquals(
         new ExecutionJournal.Target("TABLE", "Table Budget!BudgetTable"),
-        summaryTarget(new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget"))));
+        summaryTarget(
+            new TableSelector.ByNameOnSheet(
+                new TableName("BudgetTable"), new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("PIVOT_TABLE", "Pivot tables [RevenuePivot, CostPivot]"),
         summaryTarget(new PivotTableSelector.ByNames(List.of("RevenuePivot", "CostPivot"))));
@@ -206,29 +211,34 @@ class ExecutionJournalCoverageTest {
 
     assertEquals(
         new ExecutionJournal.Target("TABLE_ROW", "All rows in Table BudgetTable"),
-        summaryTarget(new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable"))));
+        summaryTarget(
+            new TableRowSelector.AllRows(new TableSelector.ByName(new TableName("BudgetTable")))));
     assertEquals(
         new ExecutionJournal.Target("TABLE_ROW", "Row 3 in Table BudgetTable"),
-        summaryTarget(new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 3)));
+        summaryTarget(
+            new TableRowSelector.ByIndex(
+                new TableSelector.ByName(new TableName("BudgetTable")), 3)));
     assertEquals(
         new ExecutionJournal.Target(
             "TABLE_ROW", "Row where Item=Text[text=Hosting] in Table BudgetTable"),
         summaryTarget(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Text(text("Hosting")))));
     assertEquals(
         new ExecutionJournal.Target("TABLE_ROW", "Row where Item=Blank[] in Table BudgetTable"),
         summaryTarget(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"), "Item", new CellInput.Blank())));
+                new TableSelector.ByName(new TableName("BudgetTable")),
+                "Item",
+                new CellInput.Blank())));
     assertEquals(
         new ExecutionJournal.Target(
             "TABLE_ROW", "Row where Item=Number[number=42.0] in Table BudgetTable"),
         summaryTarget(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.NumberValue(42.0d))));
     assertEquals(
@@ -236,7 +246,7 @@ class ExecutionJournalCoverageTest {
             "TABLE_ROW", "Row where Item=Boolean[value=true] in Table BudgetTable"),
         summaryTarget(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.BooleanValue(true))));
     assertEquals(
@@ -244,14 +254,15 @@ class ExecutionJournalCoverageTest {
             "TABLE_ROW", "Row where Item=Formula[text=A1*2] in Table BudgetTable"),
         summaryTarget(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Formula(text("A1*2")))));
     assertEquals(
         new ExecutionJournal.Target("TABLE_CELL", "Column Amount in Row 3 in Table BudgetTable"),
         summaryTarget(
             new TableCellSelector.ByColumnName(
-                new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 3),
+                new TableRowSelector.ByIndex(
+                    new TableSelector.ByName(new TableName("BudgetTable")), 3),
                 "Amount")));
 
     List<ExecutionJournal.Target> expandedPivotNames =
@@ -289,7 +300,9 @@ class ExecutionJournalCoverageTest {
 
     assertEquals(
         List.of(new ExecutionJournal.Target("TABLE_ROW", "Row 3 in Table BudgetTable")),
-        expandedTargets(new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 3)));
+        expandedTargets(
+            new TableRowSelector.ByIndex(
+                new TableSelector.ByName(new TableName("BudgetTable")), 3)));
   }
 
   @Test
@@ -313,7 +326,7 @@ class ExecutionJournalCoverageTest {
     InspectionStep failedWithoutCalculation =
         new InspectionStep(
             new StepId("step-2"),
-            new TableSelector.ByName("BudgetTable"),
+            new TableSelector.ByName(new TableName("BudgetTable")),
             new WorkbookAssetIntrospectionQuery.GetTables());
     recorder
         .beginStep(1, failedWithoutCalculation)

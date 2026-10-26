@@ -106,10 +106,21 @@ final class SelectorConverter {
   static ExcelTableSelection toExcelTableSelection(TableSelector selector) {
     return switch (selector) {
       case TableSelector.All _ -> new ExcelTableSelection.All();
-      case TableSelector.ByName byName -> new ExcelTableSelection.ByNames(List.of(byName.name()));
-      case TableSelector.ByNames byNames -> new ExcelTableSelection.ByNames(byNames.names());
+      case TableSelector.ByName byName ->
+          new ExcelTableSelection.ByNames(
+              List.of(byName.name()).stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                  .toList());
+      case TableSelector.ByNames byNames ->
+          new ExcelTableSelection.ByNames(
+              byNames.names().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                  .toList());
       case TableSelector.ByNameOnSheet byNameOnSheet ->
-          new ExcelTableSelection.ByNames(List.of(byNameOnSheet.name()));
+          new ExcelTableSelection.ByNames(
+              List.of(byNameOnSheet.name()).stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                  .toList());
     };
   }
 

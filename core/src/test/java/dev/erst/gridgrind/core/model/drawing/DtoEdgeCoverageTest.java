@@ -52,6 +52,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Base64;
@@ -740,7 +741,7 @@ class DtoEdgeCoverageTest {
 
     TableEntryReport table =
         new TableEntryReport(
-            "BudgetTable",
+            new TableLabel("BudgetTable"),
             new SheetLabel("Budget"),
             new RangeLabel("A1:B2"),
             new TableEntryReport.Structure(
@@ -769,7 +770,7 @@ class DtoEdgeCoverageTest {
                 NullPointerException.class,
                 () ->
                     new TableEntryReport(
-                        "BudgetTable",
+                        new TableLabel("BudgetTable"),
                         new SheetLabel("Budget"),
                         new RangeLabel("A1:B2"),
                         new TableEntryReport.Structure(
@@ -788,7 +789,7 @@ class DtoEdgeCoverageTest {
                 NullPointerException.class,
                 () ->
                     new TableEntryReport(
-                        "BudgetTable",
+                        new TableLabel("BudgetTable"),
                         new SheetLabel("Budget"),
                         new RangeLabel("A1:B2"),
                         new TableEntryReport.Structure(

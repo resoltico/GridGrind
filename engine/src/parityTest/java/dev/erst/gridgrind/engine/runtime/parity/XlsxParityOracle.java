@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -777,7 +778,7 @@ final class XlsxParityOracle {
               + "' to resolve to a named range or table.");
     }
     return new PivotTableReport.Source.Table(
-        sourceName,
+        new TableName(sourceName),
         new SheetName(table.getSheetName()),
         new RangeLabel(
             normalizeArea(

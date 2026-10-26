@@ -100,6 +100,8 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableLabel;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -441,14 +443,14 @@ class ProtocolDefaultingCoverageTest {
   void tableWireConstructorsCoverExplicitAndDefaultedBranches() {
     TableInput defaultedTable =
         TableInput.withDefaultMetadata(
-            "Budget",
+            new TableName("Budget"),
             new SheetName("Budget"),
             new RangeRef("A1:B3"),
             false,
             new TableStyleInput.None());
     TableInput explicitTable =
         new TableInput(
-            "StyledBudget",
+            new TableName("StyledBudget"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C3"),
             true,
@@ -464,7 +466,7 @@ class ProtocolDefaultingCoverageTest {
             List.of(new TableColumnInput(0, "owner", "total", "sum", "=[@Amount]")));
     TableInput explicitAutofilterTable =
         new TableInput(
-            "VisibleAutofilterBudget",
+            new TableName("VisibleAutofilterBudget"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C3"),
             Boolean.FALSE,
@@ -480,7 +482,7 @@ class ProtocolDefaultingCoverageTest {
             List.of());
     TableInput explicitTotalsAndNoAutofilterTable =
         new TableInput(
-            "TotalsWithoutAutofilterBudget",
+            new TableName("TotalsWithoutAutofilterBudget"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C3"),
             Boolean.TRUE,
@@ -496,7 +498,7 @@ class ProtocolDefaultingCoverageTest {
             List.of());
     TableEntryReport defaultedTableReport =
         new TableEntryReport(
-            "BudgetTable",
+            new TableLabel("BudgetTable"),
             new SheetLabel("Budget"),
             new RangeLabel("A1:B3"),
             new TableEntryReport.Structure(
@@ -530,7 +532,7 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(Optional.empty(), defaultedTableReport.presentation().totalsRowCellStyle());
     TableInput defaultedWireTable =
         new TableInput(
-            "Budget",
+            new TableName("Budget"),
             new SheetName("Budget"),
             new RangeRef("A1:B3"),
             null,

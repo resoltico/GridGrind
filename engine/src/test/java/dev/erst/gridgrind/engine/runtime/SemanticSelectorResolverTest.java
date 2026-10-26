@@ -24,6 +24,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
@@ -54,7 +55,8 @@ class SemanticSelectorResolverTest {
               resolver.resolveMutationTarget(
                   workbook,
                   new TableCellSelector.ByColumnName(
-                      new TableRowSelector.ByIndex(new TableSelector.ByName("TextTable"), 0),
+                      new TableRowSelector.ByIndex(
+                          new TableSelector.ByName(new TableName("TextTable")), 0),
                       "Amount"),
                   new CellMutationAction.SetCell(textCell("Updated"))));
       assertEquals("Texts", indexedRowTarget.sheetName().value());
@@ -102,7 +104,9 @@ class SemanticSelectorResolverTest {
       TableCellSelector.ByColumnName missingTarget =
           new TableCellSelector.ByColumnName(
               new TableRowSelector.ByKeyCell(
-                  new TableSelector.ByName("TextTable"), "Item", textCell("Missing")),
+                  new TableSelector.ByName(new TableName("TextTable")),
+                  "Item",
+                  textCell("Missing")),
               "Amount");
 
       SemanticSelectorResolver.ResolvedInspectionTarget cellsResult =
@@ -160,7 +164,9 @@ class SemanticSelectorResolverTest {
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
-                          new TableSelector.ByName("NumberTable"), "Item", textCell("Hosting")),
+                          new TableSelector.ByName(new TableName("NumberTable")),
+                          "Item",
+                          textCell("Hosting")),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -171,7 +177,9 @@ class SemanticSelectorResolverTest {
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
-                          new TableSelector.ByName("TextTable"), "Item", new CellInput.Blank()),
+                          new TableSelector.ByName(new TableName("TextTable")),
+                          "Item",
+                          new CellInput.Blank()),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -182,7 +190,7 @@ class SemanticSelectorResolverTest {
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
-                          new TableSelector.ByName("NumberTable"),
+                          new TableSelector.ByName(new TableName("NumberTable")),
                           "Item",
                           new CellInput.NumberValue(99.0d)),
                       "Amount"),
@@ -195,7 +203,7 @@ class SemanticSelectorResolverTest {
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
-                          new TableSelector.ByName("BooleanTable"),
+                          new TableSelector.ByName(new TableName("BooleanTable")),
                           "Item",
                           new CellInput.BooleanValue(false)),
                       "Amount"),
@@ -208,7 +216,9 @@ class SemanticSelectorResolverTest {
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
-                          new TableSelector.ByName("TextTable"), "Item", formulaCell("2+2")),
+                          new TableSelector.ByName(new TableName("TextTable")),
+                          "Item",
+                          formulaCell("2+2")),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -219,7 +229,9 @@ class SemanticSelectorResolverTest {
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
-                          new TableSelector.ByName("FormulaTable"), "Item", formulaCell("1+1")),
+                          new TableSelector.ByName(new TableName("FormulaTable")),
+                          "Item",
+                          formulaCell("1+1")),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -230,7 +242,7 @@ class SemanticSelectorResolverTest {
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
-                          new TableSelector.ByName("TextTable"),
+                          new TableSelector.ByName(new TableName("TextTable")),
                           "Item",
                           new CellInput.NumberValue(42.0d)),
                       "Amount"),
@@ -243,7 +255,7 @@ class SemanticSelectorResolverTest {
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
-                          new TableSelector.ByName("TextTable"),
+                          new TableSelector.ByName(new TableName("TextTable")),
                           "Item",
                           new CellInput.BooleanValue(true)),
                       "Amount"),
@@ -263,7 +275,9 @@ class SemanticSelectorResolverTest {
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
-                              new TableSelector.ByName("TextTable"), "Item", textCell("Missing")),
+                              new TableSelector.ByName(new TableName("TextTable")),
+                              "Item",
+                              textCell("Missing")),
                           "Amount"),
                       new CellMutationAction.SetCell(textCell("Updated"))));
       assertTrue(missingRow.getMessage().contains("matched no rows"));
@@ -275,7 +289,8 @@ class SemanticSelectorResolverTest {
                   resolver.resolveAssertionTarget(
                       workbook,
                       new TableCellSelector.ByColumnName(
-                          new TableRowSelector.ByIndex(new TableSelector.ByName("TextTable"), 4),
+                          new TableRowSelector.ByIndex(
+                              new TableSelector.ByName(new TableName("TextTable")), 4),
                           "Amount"),
                       new CellAssertion.DisplayValue("100")));
       assertTrue(outOfRange.getMessage().contains("outside the data-row bounds"));
@@ -289,7 +304,7 @@ class SemanticSelectorResolverTest {
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
-                              new TableSelector.ByName("MissingTable"),
+                              new TableSelector.ByName(new TableName("MissingTable")),
                               "Item",
                               textCell("Hosting")),
                           "Amount"),
@@ -305,7 +320,8 @@ class SemanticSelectorResolverTest {
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
-                              new TableSelector.ByNameOnSheet("TextTable", new SheetName("Budget")),
+                              new TableSelector.ByNameOnSheet(
+                                  new TableName("TextTable"), new SheetName("Budget")),
                               "Item",
                               textCell("Hosting")),
                           "Amount"),
@@ -323,7 +339,7 @@ class SemanticSelectorResolverTest {
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
                               new TableSelector.ByNameOnSheet(
-                                  "MissingTable", new SheetName("Budget")),
+                                  new TableName("MissingTable"), new SheetName("Budget")),
                               "Item",
                               textCell("Hosting")),
                           "Amount"),
@@ -341,7 +357,7 @@ class SemanticSelectorResolverTest {
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
-                              new TableSelector.ByName("TextTable"),
+                              new TableSelector.ByName(new TableName("TextTable")),
                               "MissingColumn",
                               textCell("Hosting")),
                           "Amount"),
@@ -356,7 +372,7 @@ class SemanticSelectorResolverTest {
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
-                              new TableSelector.ByName("TextTable"),
+                              new TableSelector.ByName(new TableName("TextTable")),
                               "Item",
                               new CellInput.Text(TextSourceInput.utf8File("item.txt"))),
                           "Amount"),
@@ -522,14 +538,14 @@ class SemanticSelectorResolverTest {
   private static TableCellSelector.ByColumnName textAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("TextTable"), "Item", textCell("Hosting")),
+            new TableSelector.ByName(new TableName("TextTable")), "Item", textCell("Hosting")),
         "Amount");
   }
 
   private static TableCellSelector.ByColumnName textAmountCellTargetOnSheet() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByNameOnSheet("TextTable", new SheetName("Texts")),
+            new TableSelector.ByNameOnSheet(new TableName("TextTable"), new SheetName("Texts")),
             "Item",
             textCell("Hosting")),
         "Amount");
@@ -538,35 +554,39 @@ class SemanticSelectorResolverTest {
   private static TableCellSelector.ByColumnName blankAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("BlankTable"), "Item", new CellInput.Blank()),
+            new TableSelector.ByName(new TableName("BlankTable")), "Item", new CellInput.Blank()),
         "Amount");
   }
 
   private static TableCellSelector.ByColumnName numberAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("NumberTable"), "Item", new CellInput.NumberValue(42.0d)),
+            new TableSelector.ByName(new TableName("NumberTable")),
+            "Item",
+            new CellInput.NumberValue(42.0d)),
         "Amount");
   }
 
   private static TableCellSelector.ByColumnName booleanAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("BooleanTable"), "Item", new CellInput.BooleanValue(true)),
+            new TableSelector.ByName(new TableName("BooleanTable")),
+            "Item",
+            new CellInput.BooleanValue(true)),
         "Amount");
   }
 
   private static TableCellSelector.ByColumnName formulaAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("FormulaTable"), "Item", formulaCell("2+2")),
+            new TableSelector.ByName(new TableName("FormulaTable")), "Item", formulaCell("2+2")),
         "Amount");
   }
 
   private static TableCellSelector.ByColumnName wideAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("WideTable"), "Item", textCell("Hosting")),
+            new TableSelector.ByName(new TableName("WideTable")), "Item", textCell("Hosting")),
         "Amount");
   }
 

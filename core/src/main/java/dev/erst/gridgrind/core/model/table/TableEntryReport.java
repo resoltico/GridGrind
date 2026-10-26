@@ -5,13 +5,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing factual report for one table loaded from a workbook. */
 public record TableEntryReport(
-    String name,
+    TableLabel name,
     SheetLabel sheetName,
     RangeLabel range,
     Structure structure,
@@ -20,7 +21,7 @@ public record TableEntryReport(
     Presentation presentation) {
   /** Creates a table report with defaulted per-column metadata and optional presentation state. */
   public TableEntryReport(
-      String name,
+      TableLabel name,
       SheetLabel sheetName,
       RangeLabel range,
       int headerRowCount,
@@ -50,7 +51,7 @@ public record TableEntryReport(
 
   @JsonCreator
   static TableEntryReport create(
-      @JsonProperty("name") String name,
+      @JsonProperty("name") TableLabel name,
       @JsonProperty("sheetName") SheetLabel sheetName,
       @JsonProperty("range") RangeLabel range,
       @JsonProperty("structure") Structure structure,

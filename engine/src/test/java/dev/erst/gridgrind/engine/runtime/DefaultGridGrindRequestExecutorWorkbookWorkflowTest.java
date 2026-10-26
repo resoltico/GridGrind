@@ -85,6 +85,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -1087,7 +1088,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         mutate(
                             new StructuredMutationAction.SetTable(
                                 TableInput.withDefaultMetadata(
-                                    "BudgetTable",
+                                    new TableName("BudgetTable"),
                                     new SheetName("Budget"),
                                     new RangeRef("A1:B3"),
                                     false,
@@ -1491,7 +1492,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
-                                "BudgetTable",
+                                new TableName("BudgetTable"),
                                 new SheetName("Budget"),
                                 new RangeRef("A1:C4"),
                                 false,
@@ -1538,7 +1539,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         filters.autofilters());
     assertEquals(1, tables.tables().size());
     TableEntryReport table = tables.tables().getFirst();
-    assertEquals("BudgetTable", table.name());
+    assertEquals("BudgetTable", table.name().value());
     assertEquals(List.of("Item", "Amount", "Billable"), table.structure().columnNames());
     assertEquals(
         new TableStyleReport.Named("TableStyleMedium2", false, false, true, false), table.style());

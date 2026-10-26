@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.source.TextSourceInput;
-import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.Objects;
 
 /** Protocol-facing table definition attached to one table authoring request. */
 public record TableInput(
-    String name,
+    TableName name,
     SheetName sheetName,
     RangeRef range,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
@@ -33,7 +33,7 @@ public record TableInput(
     @ProtocolField(optional = true) java.util.List<TableColumnInput> columns) {
   /** Creates a table payload with explicit standard metadata. */
   public static TableInput withDefaultMetadata(
-      String name,
+      TableName name,
       SheetName sheetName,
       RangeRef range,
       boolean showTotalsRow,
@@ -56,7 +56,7 @@ public record TableInput(
   }
 
   public TableInput {
-    name = ProtocolDefinedNameValidation.validateName(name);
+    java.util.Objects.requireNonNull(name, "name must not be null");
     java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(style, "style must not be null");
@@ -74,7 +74,7 @@ public record TableInput(
   @JsonCreator
   @SuppressWarnings("PMD.ExcessiveParameterList")
   public TableInput(
-      @JsonProperty("name") String name,
+      @JsonProperty("name") TableName name,
       @JsonProperty("sheetName") SheetName sheetName,
       @JsonProperty("range") RangeRef range,
       @JsonProperty("showTotalsRow") Boolean showTotalsRow,

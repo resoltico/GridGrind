@@ -26,6 +26,7 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -45,10 +46,11 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(
         RangeSelector.RectangularWindow.class,
         Targets.window(new SheetName("Budget"), new CellAddress("A1"), 5, 3).selector());
-    assertInstanceOf(TableSelector.ByName.class, Targets.table("BudgetTable").selector());
+    assertInstanceOf(
+        TableSelector.ByName.class, Targets.table(new TableName("BudgetTable")).selector());
     assertInstanceOf(
         TableSelector.ByNameOnSheet.class,
-        Targets.tableOnSheet("BudgetTable", new SheetName("Budget")).selector());
+        Targets.tableOnSheet(new TableName("BudgetTable"), new SheetName("Budget")).selector());
     assertInstanceOf(
         NamedRangeSelector.ByName.class,
         Targets.namedRange(new DefinedName("BudgetRange")).selector());
@@ -200,8 +202,9 @@ class AuthoringTargetCoverageTest {
 
   @Test
   void tableNamedRangeChartAndPivotTargetsCoverTheirSurface() {
-    TableTarget table = Targets.table("BudgetTable");
-    TableTarget tableOnSheet = Targets.tableOnSheet("BudgetTable", new SheetName("Budget"));
+    TableTarget table = Targets.table(new TableName("BudgetTable"));
+    TableTarget tableOnSheet =
+        Targets.tableOnSheet(new TableName("BudgetTable"), new SheetName("Budget"));
     assertInstanceOf(TableSelector.ByName.class, table.selector());
     assertInstanceOf(TableSelector.ByNameOnSheet.class, tableOnSheet.selector());
     assertInstanceOf(TableRowSelector.ByIndex.class, table.row(2).selector());
@@ -213,7 +216,7 @@ class AuthoringTargetCoverageTest {
         tableOnSheet
             .define(
                 Tables.define(
-                    "BudgetTable",
+                    new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B3"),
                     false,

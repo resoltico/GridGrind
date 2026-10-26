@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.plan;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 
 /** Selects one or more tables by workbook-global identity. */
@@ -28,9 +29,9 @@ public sealed interface TableSelector extends Selector
   }
 
   /** Selects one table by workbook-global name. */
-  record ByName(String name) implements TableSelector {
+  record ByName(TableName name) implements TableSelector {
     public ByName {
-      name = SelectorValueValidation.requireDefinedName(name, "name");
+      java.util.Objects.requireNonNull(name, "name must not be null");
     }
 
     @Override
@@ -40,9 +41,9 @@ public sealed interface TableSelector extends Selector
   }
 
   /** Selects one or more tables by workbook-global names. */
-  record ByNames(List<String> names) implements TableSelector {
+  record ByNames(List<TableName> names) implements TableSelector {
     public ByNames {
-      names = SelectorListValidation.copyDistinctDefinedNames(names, "names");
+      names = SelectorListValidation.copyDistinctTableNames(names, "names");
     }
 
     @Override
@@ -52,9 +53,9 @@ public sealed interface TableSelector extends Selector
   }
 
   /** Selects one workbook-global table and asserts its expected owning sheet. */
-  record ByNameOnSheet(String name, SheetName sheetName) implements TableSelector {
+  record ByNameOnSheet(TableName name, SheetName sheetName) implements TableSelector {
     public ByNameOnSheet {
-      name = SelectorValueValidation.requireDefinedName(name, "name");
+      java.util.Objects.requireNonNull(name, "name must not be null");
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 

@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -125,7 +126,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             readType(
                 inspect(
                     "tables",
-                    new TableSelector.ByNames(List.of("BudgetTable")),
+                    new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
                     new WorkbookAssetIntrospectionQuery.GetTables())),
             readType(
                 inspect(
@@ -267,7 +268,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep tables =
         inspect(
             "tables",
-            new TableSelector.ByNames(List.of("BudgetTable")),
+            new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
             new WorkbookAssetIntrospectionQuery.GetTables());
     InspectionStep formula =
         inspect("formula", new SheetSelector.All(), new InspectionSurfaceQuery.GetFormulaSurface());
@@ -305,7 +306,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep tableHealth =
         inspect(
             "table-health",
-            new TableSelector.ByNames(List.of("BudgetTable")),
+            new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
             new InspectionAnalysisQuery.AnalyzeTableHealth());
     InspectionStep hyperlinkHealth =
         inspect(

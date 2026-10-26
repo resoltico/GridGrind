@@ -42,6 +42,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -226,10 +227,10 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                 new MutationStep(
                     new StepId("step-09-set-table"),
                     new dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet(
-                        "BudgetTable", new SheetName("Budget")),
+                        new TableName("BudgetTable"), new SheetName("Budget")),
                     new StructuredMutationAction.SetTable(
                         new TableInput(
-                            "BudgetTable",
+                            new TableName("BudgetTable"),
                             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                             new RangeRef("A1:B2"),
                             false,

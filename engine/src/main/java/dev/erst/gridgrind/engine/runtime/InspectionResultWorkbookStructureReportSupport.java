@@ -19,6 +19,8 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableLabel;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
@@ -149,7 +151,7 @@ final class InspectionResultWorkbookStructureReportSupport {
 
   static TableEntryReport toTableEntryReport(ExcelTableSnapshot snapshot) {
     return new TableEntryReport(
-        snapshot.name(),
+        new TableLabel(snapshot.name()),
         new SheetLabel(snapshot.sheetName()),
         new RangeLabel(snapshot.range()),
         new TableEntryReport.Structure(
@@ -235,7 +237,9 @@ final class InspectionResultWorkbookStructureReportSupport {
               new RangeLabel(namedRange.range()));
       case ExcelPivotTableSnapshot.Source.Table table ->
           new PivotTableReport.Source.Table(
-              table.name(), new SheetName(table.sheetName()), new RangeLabel(table.range()));
+              new TableName(table.name()),
+              new SheetName(table.sheetName()),
+              new RangeLabel(table.range()));
     };
   }
 

@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -70,25 +71,8 @@ final class SelectorListValidation {
     return copyDistinctCaseInsensitive(names, fieldName);
   }
 
-  static List<String> copyDistinctDefinedNames(List<String> names, String fieldName) {
-    Objects.requireNonNull(names, fieldName + " must not be null");
-    List<String> copy = new ArrayList<>(names);
-    if (copy.isEmpty()) {
-      throw SelectorTextValidation.invalidField(
-          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
-    }
-    Set<String> unique = new LinkedHashSet<>();
-    for (int index = 0; index < copy.size(); index++) {
-      String indexedFieldName = fieldName + "[" + index + "]";
-      String validated =
-          SelectorValueValidation.requireDefinedName(copy.get(index), indexedFieldName);
-      String key = validated.toUpperCase(Locale.ROOT);
-      if (!unique.add(key)) {
-        throw SelectorTextValidation.invalidField(
-            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
-      }
-    }
-    return List.copyOf(copy);
+  static List<TableName> copyDistinctTableNames(List<TableName> names, String fieldName) {
+    return copyDistinctCaseInsensitive(names, fieldName);
   }
 
   static List<String> copyDistinctPivotTableNames(List<String> names, String fieldName) {

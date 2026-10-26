@@ -40,6 +40,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -260,7 +261,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     TableCellSelector.ByColumnName selector =
         new TableCellSelector.ByColumnName(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
                 new CellInput.Text(new TextSourceInput.Utf8File("item.txt"))),
             "Amount");

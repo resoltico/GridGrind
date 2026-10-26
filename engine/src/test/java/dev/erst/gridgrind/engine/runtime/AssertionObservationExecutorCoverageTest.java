@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -96,7 +97,8 @@ class AssertionObservationExecutorCoverageTest {
         assertInstanceOf(
                 WorkbookAssetInspectionResult.TablesResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
-                    new StepId("missing-table"), new TableSelector.ByName("MissingTable")))
+                    new StepId("missing-table"),
+                    new TableSelector.ByName(new TableName("MissingTable"))))
             .tables());
     assertEquals(
         List.of(),
