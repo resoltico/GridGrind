@@ -31,7 +31,6 @@ import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -278,7 +277,7 @@ final class OperationSequenceValueFactory {
         data, targetSheet, namedRangeName, tableName, validName, validRange);
   }
 
-  static ExcelPivotTableDefinition nextExcelPivotTableDefinition(
+  static PivotTableSpec nextPivotTableSpec(
       GridGrindFuzzData data,
       String targetSheet,
       String pivotTableName,
@@ -286,18 +285,18 @@ final class OperationSequenceValueFactory {
       String tableName,
       boolean validName,
       boolean validRange) {
-    return OperationSequenceTabularValues.nextExcelPivotTableDefinition(
+    return OperationSequenceTabularValues.nextPivotTableSpec(
         data, targetSheet, pivotTableName, namedRangeName, tableName, validName, validRange);
   }
 
-  static ExcelPivotTableDefinition.Source nextExcelPivotTableSource(
+  static PivotTableSpec.PivotSourceSpec nextPivotSource(
       GridGrindFuzzData data,
       String targetSheet,
       String namedRangeName,
       String tableName,
       boolean validName,
       boolean validRange) {
-    return OperationSequenceTabularValues.nextExcelPivotTableSource(
+    return OperationSequenceTabularValues.nextPivotSource(
         data, targetSheet, namedRangeName, tableName, validName, validRange);
   }
 

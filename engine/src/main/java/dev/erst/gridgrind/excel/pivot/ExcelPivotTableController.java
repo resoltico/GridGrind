@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.pivot;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.PoiRelationRemoval;
@@ -36,13 +37,13 @@ public final class ExcelPivotTableController {
   }
 
   /** Creates or replaces one workbook-global pivot-table definition. */
-  public void setPivotTable(ExcelWorkbook workbook, ExcelPivotTableDefinition definition) {
+  public void setPivotTable(ExcelWorkbook workbook, PivotTableSpec definition) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
     Optional<PivotHandle> existing = pivotByName(workbook, definition.name());
     if (existing.isPresent()
-        && !existing.orElseThrow().sheetName().equals(definition.sheetName())) {
+        && !existing.orElseThrow().sheetName().equals(definition.sheetName().value())) {
       throw new IllegalArgumentException(
           "pivot table name already exists on a different sheet: " + definition.name());
     }
@@ -52,7 +53,7 @@ public final class ExcelPivotTableController {
     SourceColumns columns =
         ExcelPivotTableSourceSupport.sourceColumns(
             source.sheet(), source.area(), source.description());
-    CellReference anchor = new CellReference(definition.anchor().topLeftAddress());
+    CellReference anchor = new CellReference(definition.anchor().topLeftAddress().value());
     requireSupportedReportFilterAnchor(definition, anchor);
 
     if (existing.isPresent()) {
@@ -72,8 +73,7 @@ public final class ExcelPivotTableController {
     }
   }
 
-  private void requireSupportedReportFilterAnchor(
-      ExcelPivotTableDefinition definition, CellReference anchor) {
+  private void requireSupportedReportFilterAnchor(PivotTableSpec definition, CellReference anchor) {
     if (!definition.reportFilters().isEmpty() && anchor.getRow() < 2) {
       throw new IllegalArgumentException(
           "pivot tables with reportFilters require anchor.topLeftAddress on row 3 or lower because Apache POI moves page filters below the first two rows");
@@ -81,7 +81,7 @@ public final class ExcelPivotTableController {
   }
 
   private void applyPivotFields(
-      XSSFPivotTable pivotTable, ExcelPivotTableDefinition definition, SourceColumns columns) {
+      XSSFPivotTable pivotTable, PivotTableSpec definition, SourceColumns columns) {
     for (String rowLabel : definition.rowLabels()) {
       pivotTable.addRowLabel(columns.relativeIndex(rowLabel));
     }
@@ -91,7 +91,7 @@ public final class ExcelPivotTableController {
     for (String reportFilter : definition.reportFilters()) {
       pivotTable.addReportFilter(columns.relativeIndex(reportFilter));
     }
-    for (ExcelPivotTableDefinition.DataField dataField : definition.dataFields()) {
+    for (PivotTableSpec.DataField dataField : definition.dataFields()) {
       pivotTable.addColumnLabel(
           ExcelPivotDataPoiBridge.toPoi(dataField.function()),
           columns.relativeIndex(dataField.sourceColumnName()),
@@ -147,7 +147,7 @@ public final class ExcelPivotTableController {
 
   public XSSFPivotTable createPivotTable(
       ExcelWorkbook workbook,
-      ExcelPivotTableDefinition definition,
+      PivotTableSpec definition,
       ResolvedAuthoringSource source,
       CellReference anchor) {
     Objects.requireNonNull(workbook, "workbook must not be null");
@@ -155,7 +155,8 @@ public final class ExcelPivotTableController {
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(anchor, "anchor must not be null");
 
-    var sheet = ExcelPivotTableSourceSupport.requiredSheet(workbook, definition.sheetName());
+    var sheet =
+        ExcelPivotTableSourceSupport.requiredSheet(workbook, definition.sheetName().value());
     ExcelPivotTableSourceSupport.sourceColumns(source.sheet(), source.area(), source.description());
     return switch (source) {
       case ResolvedAuthoringSource.Range range ->

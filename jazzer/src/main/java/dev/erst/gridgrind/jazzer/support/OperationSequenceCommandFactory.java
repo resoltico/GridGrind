@@ -173,7 +173,7 @@ final class OperationSequenceCommandFactory {
             case 0x3 -> new WorkbookTabularCommand.DeleteTable(tableName, targetSheet);
             case 0x4 ->
                 new WorkbookTabularCommand.SetPivotTable(
-                    nextExcelPivotTableDefinition(
+                    nextPivotTableSpec(
                         data,
                         targetSheet,
                         pivotTableName,

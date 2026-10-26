@@ -2,8 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
@@ -76,7 +76,9 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
           definition(
               "Filter Pivot",
               "Report",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "C5",
               List.of("Owner"),
               List.of(),
@@ -104,7 +106,8 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
           definition(
               "Named Read Pivot",
               "Report",
-              new ExcelPivotTableDefinition.Source.NamedRange("DupReadSource"),
+              new PivotTableSpec.PivotSourceSpec.NamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("DupReadSource")),
               "C5",
               List.of(),
               List.of("Region"),

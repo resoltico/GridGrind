@@ -83,7 +83,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -436,26 +435,30 @@ class AdvancedMutationCommandConverterTest {
                 new StructuredMutationAction.DeletePivotTable()));
 
     assertEquals(
-        new ExcelPivotTableDefinition(
+        new PivotTableSpec(
             "Sales Pivot 2026",
-            "Report",
-            new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-            new ExcelPivotTableDefinition.Anchor("C5"),
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+            new PivotTableSpec.PivotSourceSpec.Range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
+            new PivotTableSpec.Anchor(new dev.erst.gridgrind.core.vocabulary.CellAddress("C5")),
             List.of("Region"),
             List.of("Stage"),
             List.of("Owner"),
             List.of(
-                new ExcelPivotTableDefinition.DataField(
+                new PivotTableSpec.DataField(
                     "Amount",
                     ExcelPivotDataConsolidateFunction.SUM,
                     "Amount",
                     Optional.of("#,##0.00")))),
         setPivotTable.definition());
     assertEquals(
-        new ExcelPivotTableDefinition.Source.NamedRange("PivotSource"),
+        new PivotTableSpec.PivotSourceSpec.NamedRange(
+            new dev.erst.gridgrind.core.vocabulary.DefinedName("PivotSource")),
         setPivotTableFromNamedRange.definition().source());
     assertEquals(
-        new ExcelPivotTableDefinition.Source.Table("SalesTable2026"),
+        new PivotTableSpec.PivotSourceSpec.Table(
+            new dev.erst.gridgrind.core.vocabulary.TableName("SalesTable2026")),
         setPivotTableFromTable.definition().source());
     assertEquals("Sales Pivot 2026", deletePivotTable.name());
     assertEquals("Report", deletePivotTable.sheetName());

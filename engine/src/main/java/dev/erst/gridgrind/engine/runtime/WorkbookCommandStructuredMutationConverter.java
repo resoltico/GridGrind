@@ -25,9 +25,7 @@ final class WorkbookCommandStructuredMutationConverter {
                   importCustomXmlMapping.mapping()));
       case StructuredMutationAction.SetPivotTable setPivotTable -> {
         WorkbookCommandSelectorSupport.ensurePivotTableIdentity(target, setPivotTable);
-        yield new WorkbookTabularCommand.SetPivotTable(
-            WorkbookCommandTabularInputConverter.toExcelPivotTableDefinition(
-                setPivotTable.pivotTable()));
+        yield new WorkbookTabularCommand.SetPivotTable(setPivotTable.pivotTable());
       }
       case StructuredMutationAction.SetDataValidation setDataValidation -> {
         RangeSelector.ByRange selector =

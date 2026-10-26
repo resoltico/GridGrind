@@ -89,7 +89,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -899,17 +898,19 @@ class SequenceIntrospectionTest {
             true));
   }
 
-  private static ExcelPivotTableDefinition excelPivotTableDefinition() {
-    return new ExcelPivotTableDefinition(
+  private static PivotTableSpec excelPivotTableDefinition() {
+    return new PivotTableSpec(
         "OpsPivot",
-        "Budget",
-        new ExcelPivotTableDefinition.Source.Range("Budget", "A1:C4"),
-        new ExcelPivotTableDefinition.Anchor("F4"),
+        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+        new PivotTableSpec.PivotSourceSpec.Range(
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+            new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:C4")),
+        new PivotTableSpec.Anchor(new dev.erst.gridgrind.core.vocabulary.CellAddress("F4")),
         List.of("Month"),
         List.of(),
         List.of(),
         List.of(
-            new ExcelPivotTableDefinition.DataField(
+            new PivotTableSpec.DataField(
                 "Actual",
                 ExcelPivotDataConsolidateFunction.SUM,
                 "Total Actual",

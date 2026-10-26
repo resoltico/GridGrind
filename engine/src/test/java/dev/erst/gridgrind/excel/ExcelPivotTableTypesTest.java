@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotDataPoiBridge;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.ArrayList;
@@ -29,59 +28,6 @@ class ExcelPivotTableTypesTest {
         IllegalArgumentException.class,
         () ->
             new ExcelPivotTableSelection.ByNames(List.of("Sales Pivot 2026", "sales pivot 2026")));
-
-    ExcelPivotTableDefinition definition =
-        new ExcelPivotTableDefinition(
-            "Sales Pivot 2026",
-            "Report",
-            new ExcelPivotTableDefinition.Source.Table("SalesTable"),
-            new ExcelPivotTableDefinition.Anchor("C5"),
-            List.of("Region"),
-            List.of("Stage"),
-            List.of("Owner"),
-            List.of(
-                new ExcelPivotTableDefinition.DataField(
-                    "Amount",
-                    ExcelPivotDataConsolidateFunction.SUM,
-                    null,
-                    Optional.of("#,##0.00"))));
-
-    assertEquals("Sales Pivot 2026", definition.name());
-    assertEquals("Amount", definition.dataFields().getFirst().displayName());
-    assertEquals(Optional.of("#,##0.00"), definition.dataFields().getFirst().valueFormat());
-    assertEquals(
-        "Amount",
-        new ExcelPivotTableDefinition.DataField(
-                "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", Optional.empty())
-            .displayName());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelPivotTableDefinition.Source.NamedRange("Sales Pivot 2026"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelPivotTableDefinition.Source.Table("Sales Table With Spaces"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelPivotTableDefinition(
-                "Sales Pivot 2026",
-                "Report",
-                new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                new ExcelPivotTableDefinition.Anchor("A1"),
-                List.of("Region"),
-                List.of("Stage"),
-                List.of("Owner"),
-                List.of(
-                    new ExcelPivotTableDefinition.DataField(
-                        "Region",
-                        ExcelPivotDataConsolidateFunction.SUM,
-                        "Total",
-                        Optional.empty()))));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelPivotTableDefinition.DataField(
-                "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.of(" ")));
 
     ExcelPivotTableSnapshot.Supported supported =
         new ExcelPivotTableSnapshot.Supported(
@@ -133,130 +79,6 @@ class ExcelPivotTableTypesTest {
 
   @Test
   void pivotTypesRejectAdditionalInvalidInputs() {
-    assertThrows(NullPointerException.class, () -> new ExcelPivotTableDefinition.Anchor(null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelPivotTableDefinition.Anchor(" "));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelPivotTableDefinition.Source.Range("Data", " "));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new ExcelPivotTableDefinition.DataField(
-                null, ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.empty()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelPivotTableDefinition.DataField(
-                " ", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.empty()));
-    assertThrows(
-        NullPointerException.class,
-        () -> new ExcelPivotTableDefinition.DataField("Amount", null, "Total", Optional.empty()));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new ExcelPivotTableDefinition(
-                "Missing Data",
-                "Report",
-                new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                new ExcelPivotTableDefinition.Anchor("A3"),
-                null,
-                null,
-                null,
-                null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelPivotTableDefinition(
-                "Empty Data",
-                "Report",
-                new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                new ExcelPivotTableDefinition.Anchor("A3"),
-                null,
-                null,
-                null,
-                List.of()));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new ExcelPivotTableDefinition(
-                "Null Data Field",
-                "Report",
-                new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                new ExcelPivotTableDefinition.Anchor("A3"),
-                null,
-                null,
-                null,
-                new ArrayList<>(
-                    java.util.Arrays.asList((ExcelPivotTableDefinition.DataField) null))));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelPivotTableDefinition(
-                "Axis Clash",
-                "Report",
-                new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                new ExcelPivotTableDefinition.Anchor("A3"),
-                List.of("Owner"),
-                List.of("Region"),
-                List.of("region"),
-                List.of(
-                    new ExcelPivotTableDefinition.DataField(
-                        "Amount",
-                        ExcelPivotDataConsolidateFunction.SUM,
-                        "Total",
-                        Optional.empty()))));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelPivotTableDefinition(
-                "Duplicate Axis Names",
-                "Report",
-                new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                new ExcelPivotTableDefinition.Anchor("A3"),
-                List.of(),
-                List.of("Region", "region"),
-                List.of(),
-                List.of(
-                    new ExcelPivotTableDefinition.DataField(
-                        "Amount",
-                        ExcelPivotDataConsolidateFunction.SUM,
-                        "Total",
-                        Optional.empty()))));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new ExcelPivotTableDefinition(
-                "Null Axis Name",
-                "Report",
-                new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                new ExcelPivotTableDefinition.Anchor("A3"),
-                new ArrayList<>(java.util.Arrays.asList((String) null)),
-                List.of(),
-                List.of(),
-                List.of(
-                    new ExcelPivotTableDefinition.DataField(
-                        "Amount",
-                        ExcelPivotDataConsolidateFunction.SUM,
-                        "Total",
-                        Optional.empty()))));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelPivotTableDefinition(
-                "Blank Axis",
-                "Report",
-                new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                new ExcelPivotTableDefinition.Anchor("A3"),
-                List.of(" "),
-                List.of(),
-                List.of(),
-                List.of(
-                    new ExcelPivotTableDefinition.DataField(
-                        "Amount",
-                        ExcelPivotDataConsolidateFunction.SUM,
-                        "Total",
-                        Optional.empty()))));
-
     assertThrows(NullPointerException.class, () -> new ExcelPivotTableSelection.ByNames(null));
     assertThrows(
         IllegalArgumentException.class, () -> new ExcelPivotTableSelection.ByNames(List.of()));

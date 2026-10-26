@@ -45,6 +45,7 @@ import dev.erst.gridgrind.core.model.layout.WindowReport;
 import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
@@ -160,7 +161,6 @@ import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -1196,16 +1196,19 @@ class WorkbookInvariantChecksTest {
               workbook,
               List.of(
                   new WorkbookTabularCommand.SetPivotTable(
-                      new ExcelPivotTableDefinition(
+                      new PivotTableSpec(
                           "OpsPivot",
-                          "Pivot",
-                          new ExcelPivotTableDefinition.Source.Range("Budget", "A1:B4"),
-                          new ExcelPivotTableDefinition.Anchor("C5"),
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Pivot"),
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B4")),
+                          new PivotTableSpec.Anchor(
+                              new dev.erst.gridgrind.core.vocabulary.CellAddress("C5")),
                           List.of("Month"),
                           List.of(),
                           List.of(),
                           List.of(
-                              new ExcelPivotTableDefinition.DataField(
+                              new PivotTableSpec.DataField(
                                   "Actual",
                                   ExcelPivotDataConsolidateFunction.SUM,
                                   "Total Actual",

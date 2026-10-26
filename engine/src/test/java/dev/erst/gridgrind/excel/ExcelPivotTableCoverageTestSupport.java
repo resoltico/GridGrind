@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
@@ -9,7 +10,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.pivot.ColumnAxisSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableAnalysisSupport;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableIdentitySupport;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshotSupport;
@@ -47,7 +47,9 @@ class ExcelPivotTableCoverageTestSupport {
         definition(
             "Second Pivot",
             "SecondReport",
-            new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+            new PivotTableSpec.PivotSourceSpec.Range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
             "C5",
             List.of(),
             List.of("Stage"),
@@ -64,7 +66,9 @@ class ExcelPivotTableCoverageTestSupport {
         definition(
             "Sales Pivot",
             "Report",
-            new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+            new PivotTableSpec.PivotSourceSpec.Range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
             "C5",
             List.of(),
             List.of("Region"),
@@ -72,24 +76,24 @@ class ExcelPivotTableCoverageTestSupport {
     return workbook;
   }
 
-  ExcelPivotTableDefinition definition(
+  PivotTableSpec definition(
       String name,
       String sheetName,
-      ExcelPivotTableDefinition.Source source,
+      PivotTableSpec.PivotSourceSpec source,
       String anchor,
       List<String> reportFilters,
       List<String> rowLabels,
       List<String> columnLabels) {
-    return new ExcelPivotTableDefinition(
+    return new PivotTableSpec(
         name,
-        sheetName,
+        new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName),
         source,
-        new ExcelPivotTableDefinition.Anchor(anchor),
+        new PivotTableSpec.Anchor(new dev.erst.gridgrind.core.vocabulary.CellAddress(anchor)),
         rowLabels,
         columnLabels,
         reportFilters,
         List.of(
-            new ExcelPivotTableDefinition.DataField(
+            new PivotTableSpec.DataField(
                 "Amount",
                 ExcelPivotDataConsolidateFunction.SUM,
                 "Total Amount",

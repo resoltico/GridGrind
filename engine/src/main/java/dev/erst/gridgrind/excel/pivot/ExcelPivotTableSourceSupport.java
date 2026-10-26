@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.pivot;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
@@ -23,30 +24,32 @@ public final class ExcelPivotTableSourceSupport {
   private ExcelPivotTableSourceSupport() {}
 
   public static ResolvedAuthoringSource resolveAuthoringSource(
-      ExcelWorkbook workbook, ExcelPivotTableDefinition.Source source) {
+      ExcelWorkbook workbook, PivotTableSpec.PivotSourceSpec source) {
     return switch (source) {
-      case ExcelPivotTableDefinition.Source.Range range -> {
-        XSSFSheet sheet = requiredSheet(workbook, range.sheetName());
-        AreaReference area = ExcelPivotTableIdentitySupport.contiguousArea(range.range(), "range");
+      case PivotTableSpec.PivotSourceSpec.Range range -> {
+        XSSFSheet sheet = requiredSheet(workbook, range.sheetName().value());
+        AreaReference area =
+            ExcelPivotTableIdentitySupport.contiguousArea(range.range().value(), "range");
         yield ResolvedAuthoringSource.range(sheet, area);
       }
-      case ExcelPivotTableDefinition.Source.NamedRange namedRange -> {
-        List<Name> matches = matchingNamedRanges(workbook.xssfWorkbook(), namedRange.name(), null);
+      case PivotTableSpec.PivotSourceSpec.NamedRange namedRange -> {
+        List<Name> matches =
+            matchingNamedRanges(workbook.xssfWorkbook(), namedRange.name().value(), null);
         if (matches.isEmpty()) {
           throw new IllegalArgumentException(
-              "pivot source named range not found: " + namedRange.name());
+              "pivot source named range not found: " + namedRange.name().value());
         }
         if (matches.size() > 1) {
           throw new IllegalArgumentException(
-              "pivot source named range is ambiguous: " + namedRange.name());
+              "pivot source named range is ambiguous: " + namedRange.name().value());
         }
         Name resolved = matches.getFirst();
         AreaReference area = namedRangeArea(resolved);
         XSSFSheet sheet = requiredSheet(workbook, sourceSheetName(area, resolved, null));
         yield ResolvedAuthoringSource.namedRange(sheet, area, resolved);
       }
-      case ExcelPivotTableDefinition.Source.Table table -> {
-        XSSFTable resolved = requiredTableByName(workbook, table.name());
+      case PivotTableSpec.PivotSourceSpec.Table table -> {
+        XSSFTable resolved = requiredTableByName(workbook, table.name().value());
         XSSFSheet sheet = requiredSheet(workbook, resolved.getSheetName());
         yield ResolvedAuthoringSource.table(
             sheet,

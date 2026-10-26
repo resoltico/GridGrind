@@ -481,7 +481,7 @@ class OperationSequenceValueFactoryTest {
                     (boolean) args[4],
                     (boolean) args[5])),
         new CoverageCase(
-            "nextExcelPivotTableDefinition",
+            "nextPivotTableSpec",
             List.of(
                 CoverageParameterKind.DATA,
                 CoverageParameterKind.STRING,
@@ -492,7 +492,7 @@ class OperationSequenceValueFactoryTest {
                 CoverageParameterKind.BOOLEAN),
             false,
             args ->
-                OperationSequenceValueFactory.nextExcelPivotTableDefinition(
+                OperationSequenceValueFactory.nextPivotTableSpec(
                     (GridGrindFuzzData) args[0],
                     (String) args[1],
                     (String) args[2],
@@ -501,7 +501,7 @@ class OperationSequenceValueFactoryTest {
                     (boolean) args[5],
                     (boolean) args[6])),
         new CoverageCase(
-            "nextExcelPivotTableSource",
+            "nextPivotSource",
             List.of(
                 CoverageParameterKind.DATA,
                 CoverageParameterKind.STRING,
@@ -511,7 +511,7 @@ class OperationSequenceValueFactoryTest {
                 CoverageParameterKind.BOOLEAN),
             false,
             args ->
-                OperationSequenceValueFactory.nextExcelPivotTableSource(
+                OperationSequenceValueFactory.nextPivotSource(
                     (GridGrindFuzzData) args[0],
                     (String) args[1],
                     (String) args[2],
@@ -608,8 +608,8 @@ class OperationSequenceValueFactoryTest {
       CoverageCase coverageCase, int booleanIndex, int selector) {
     return switch (coverageCase.name()) {
       case "nextAutofilterRange",
-          "nextExcelPivotTableDefinition",
-          "nextExcelPivotTableSource",
+          "nextPivotTableSpec",
+          "nextPivotSource",
           "nextExcelRangeSelection",
           "nextExcelTableDefinition",
           "nextPivotTableInput",

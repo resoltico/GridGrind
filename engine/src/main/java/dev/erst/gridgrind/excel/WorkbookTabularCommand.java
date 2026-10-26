@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,7 +17,7 @@ public sealed interface WorkbookTabularCommand extends WorkbookCommand
         WorkbookTabularCommand.DeletePivotTable {
 
   /** Creates or replaces one workbook-global pivot-table definition. */
-  record SetPivotTable(ExcelPivotTableDefinition definition) implements WorkbookTabularCommand {
+  record SetPivotTable(PivotTableSpec definition) implements WorkbookTabularCommand {
     public SetPivotTable {
       Objects.requireNonNull(definition, "definition must not be null");
     }
@@ -83,7 +83,7 @@ public sealed interface WorkbookTabularCommand extends WorkbookCommand
   /** Deletes one existing pivot table by workbook-global name and expected sheet. */
   record DeletePivotTable(String name, String sheetName) implements WorkbookTabularCommand {
     public DeletePivotTable {
-      name = ExcelPivotTableDefinition.validateName(name);
+      name = dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming.validateName(name);
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");

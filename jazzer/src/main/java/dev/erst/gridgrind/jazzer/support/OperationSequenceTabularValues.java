@@ -14,7 +14,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -154,7 +153,7 @@ final class OperationSequenceTabularValues {
     };
   }
 
-  static ExcelPivotTableDefinition nextExcelPivotTableDefinition(
+  static PivotTableSpec nextPivotTableSpec(
       GridGrindFuzzData data,
       String targetSheet,
       String pivotTableName,
@@ -162,24 +161,25 @@ final class OperationSequenceTabularValues {
       String tableName,
       boolean validName,
       boolean validRange) {
-    return new ExcelPivotTableDefinition(
+    return new PivotTableSpec(
         validName ? pivotTableName : nextPivotTableName(data, false),
-        targetSheet,
-        nextExcelPivotTableSource(
-            data, targetSheet, namedRangeName, tableName, validName, validRange),
-        new ExcelPivotTableDefinition.Anchor(data.consumeBoolean() ? "F4" : "A6"),
+        new dev.erst.gridgrind.core.vocabulary.SheetName(targetSheet),
+        nextPivotSource(data, targetSheet, namedRangeName, tableName, validName, validRange),
+        new PivotTableSpec.Anchor(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                data.consumeBoolean() ? "F4" : "A6")),
         List.of("Month"),
         List.of(),
         List.of(),
         List.of(
-            new ExcelPivotTableDefinition.DataField(
+            new PivotTableSpec.DataField(
                 "Actual",
                 ExcelPivotDataConsolidateFunction.SUM,
                 "Total Actual",
                 Optional.empty())));
   }
 
-  static ExcelPivotTableDefinition.Source nextExcelPivotTableSource(
+  static PivotTableSpec.PivotSourceSpec nextPivotSource(
       GridGrindFuzzData data,
       String targetSheet,
       String namedRangeName,
@@ -188,14 +188,18 @@ final class OperationSequenceTabularValues {
       boolean validRange) {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
       case 0 ->
-          new ExcelPivotTableDefinition.Source.Range(
-              targetSheet, validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false));
+          new PivotTableSpec.PivotSourceSpec.Range(
+              new dev.erst.gridgrind.core.vocabulary.SheetName(targetSheet),
+              new dev.erst.gridgrind.core.vocabulary.RangeRef(
+                  validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false)));
       case 1 ->
-          new ExcelPivotTableDefinition.Source.NamedRange(
-              validName ? namedRangeName : nextNamedRangeName(data, false));
+          new PivotTableSpec.PivotSourceSpec.NamedRange(
+              new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                  validName ? namedRangeName : nextNamedRangeName(data, false)));
       default ->
-          new ExcelPivotTableDefinition.Source.Table(
-              validName ? tableName : nextTableName(data, false, targetSheet));
+          new PivotTableSpec.PivotSourceSpec.Table(
+              new dev.erst.gridgrind.core.vocabulary.TableName(
+                  validName ? tableName : nextTableName(data, false, targetSheet)));
     };
   }
 

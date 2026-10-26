@@ -2,8 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.pivot.PivotHandle;
 import dev.erst.gridgrind.excel.pivot.ResolvedAuthoringSource;
@@ -98,7 +98,8 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
               definition(
                   "NamedRange Pivot",
                   "Report",
-                  new ExcelPivotTableDefinition.Source.NamedRange("BudgetRange"),
+                  new PivotTableSpec.PivotSourceSpec.NamedRange(
+                      new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetRange")),
                   "D4",
                   List.of(),
                   List.of("Region"),
@@ -112,7 +113,8 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
               definition(
                   "Table Pivot",
                   "Report",
-                  new ExcelPivotTableDefinition.Source.Table("BudgetTable"),
+                  new PivotTableSpec.PivotSourceSpec.Table(
+                      new dev.erst.gridgrind.core.vocabulary.TableName("BudgetTable")),
                   "D7",
                   List.of(),
                   List.of("Region"),
@@ -141,7 +143,8 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
                       definition(
                           "NamedRange Pivot",
                           "Report",
-                          new ExcelPivotTableDefinition.Source.NamedRange("BudgetRange"),
+                          new PivotTableSpec.PivotSourceSpec.NamedRange(
+                              new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetRange")),
                           "D4",
                           List.of(),
                           List.of("Region"),

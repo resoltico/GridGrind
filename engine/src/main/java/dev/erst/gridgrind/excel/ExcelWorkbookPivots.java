@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.Objects;
 
 /** Workbook-global pivot-table authoring operations. */
@@ -13,7 +13,7 @@ public final class ExcelWorkbookPivots {
   }
 
   /** Creates or replaces one workbook-global pivot-table definition. */
-  public ExcelWorkbook setPivotTable(ExcelPivotTableDefinition definition) {
+  public ExcelWorkbook setPivotTable(PivotTableSpec definition) {
     Objects.requireNonNull(definition, "definition must not be null");
     new ExcelPivotTableController().setPivotTable(workbook, definition);
     return workbook;

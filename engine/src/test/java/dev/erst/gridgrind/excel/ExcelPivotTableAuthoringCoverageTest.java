@@ -2,8 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
@@ -23,7 +23,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           definition(
               "Sales Pivot",
               "Report",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "C5",
               List.of(),
               List.of("Region"),
@@ -33,7 +35,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           definition(
               "Sales Pivot",
               "Report",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "E5",
               List.of("Owner"),
               List.of("Stage"),
@@ -57,7 +61,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       definition(
                           "Sales Pivot",
                           "OtherReport",
-                          new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
                           "C5",
                           List.of(),
                           List.of("Region"),
@@ -72,7 +78,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                   definition(
                       "Missing Report",
                       "MissingReport",
-                      new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+                      new PivotTableSpec.PivotSourceSpec.Range(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
                       "C5",
                       List.of(),
                       List.of("Region"),
@@ -85,7 +93,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                   definition(
                       "Missing Column",
                       "Report",
-                      new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+                      new PivotTableSpec.PivotSourceSpec.Range(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
                       "C5",
                       List.of(),
                       List.of("Missing"),
@@ -114,7 +124,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                   definition(
                       "Missing Named Range",
                       "Report",
-                      new ExcelPivotTableDefinition.Source.NamedRange("MissingSource"),
+                      new PivotTableSpec.PivotSourceSpec.NamedRange(
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName("MissingSource")),
                       "C5",
                       List.of(),
                       List.of("Region"),
@@ -128,7 +139,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       definition(
                           "Ambiguous Named Range",
                           "Report",
-                          new ExcelPivotTableDefinition.Source.NamedRange("AmbiguousSource"),
+                          new PivotTableSpec.PivotSourceSpec.NamedRange(
+                              new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                                  "AmbiguousSource")),
                           "C5",
                           List.of(),
                           List.of("Region"),
@@ -143,7 +156,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                   definition(
                       "Missing Table",
                       "Report",
-                      new ExcelPivotTableDefinition.Source.Table("MissingTable"),
+                      new PivotTableSpec.PivotSourceSpec.Table(
+                          new dev.erst.gridgrind.core.vocabulary.TableName("MissingTable")),
                       "C5",
                       List.of(),
                       List.of("Region"),
@@ -169,7 +183,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       definition(
                           "One Row",
                           "Report",
-                          new ExcelPivotTableDefinition.Source.Range("OneRow", "A1:D1"),
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("OneRow"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D1")),
                           "C5",
                           List.of(),
                           List.of("Region"),
@@ -188,7 +204,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       definition(
                           "Missing Header",
                           "Report",
-                          new ExcelPivotTableDefinition.Source.Range("MissingHeader", "A2:B3"),
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("MissingHeader"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:B3")),
                           "C5",
                           List.of(),
                           List.of("North"),
@@ -212,7 +230,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       definition(
                           "Numeric Header",
                           "Report",
-                          new ExcelPivotTableDefinition.Source.Range("NumericHeader", "A1:B2"),
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("NumericHeader"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
                           "C5",
                           List.of(),
                           List.of("Amount"),
@@ -235,7 +255,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                   definition(
                       "Blank Header",
                       "Report",
-                      new ExcelPivotTableDefinition.Source.Range("BlankHeader", "A1:B2"),
+                      new PivotTableSpec.PivotSourceSpec.Range(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("BlankHeader"),
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
                       "C5",
                       List.of(),
                       List.of("Amount"),
@@ -255,7 +277,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                   definition(
                       "Missing Header Cell",
                       "Report",
-                      new ExcelPivotTableDefinition.Source.Range("MissingHeaderCell", "A1:C2"),
+                      new PivotTableSpec.PivotSourceSpec.Range(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("MissingHeaderCell"),
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:C2")),
                       "C5",
                       List.of(),
                       List.of("Region"),
@@ -278,7 +302,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       definition(
                           "Duplicate Header",
                           "Report",
-                          new ExcelPivotTableDefinition.Source.Range("DuplicateHeader", "A1:B2"),
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("DuplicateHeader"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
                           "C5",
                           List.of(),
                           List.of("Region"),
@@ -302,7 +328,9 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       definition(
                           "Blank Header",
                           "Report",
-                          new ExcelPivotTableDefinition.Source.Range("BlankHeader", "A1:B2"),
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("BlankHeader"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
                           "C5",
                           List.of(),
                           List.of("Region"),

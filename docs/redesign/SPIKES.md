@@ -1979,3 +1979,20 @@ Root ./gradlew check passes (3m36s), including all 143 unchanged golden cases; n
 mutation campaign ran. Core has 353 passing tests, JSON 348, engine 1477 plus 14 parity.
 Inventories: snapshots 36→35, converter lines 4032→3971, main Java 121109→121047; definitions 3,
 Support 206 and blank checks 424 remain open. Baseline diff empty. WP-40 remains in progress.
+
+## WP-40 direct authored pivot model
+
+Deleted ExcelPivotTableDefinition and its source/anchor/data-field hierarchy. The actual pivot
+adapter accepts PivotTableSpec directly, retaining SheetName/RangeRef/DefinedName/TableName/
+CellAddress until the POI boundary. Removed all pivot model conversion methods; source-free
+payloads do not get artificial resolved duplicates. Retained workbook lifecycle, health, roundtrip
+and POI mapping checks. Moved authored constraints to core tests; explicit empty axis lists isolate
+data-field failures and explicit display names replace the deleted engine null/blank convenience.
+
+The first migration script stopped after its mechanical rename because that rename also changed
+the converter method name; the initial compile showed six typed scalar boundary errors. Completed
+the direct-use edit and scalar unwrapping; all source sets compiled (31s). Focused core/engine,
+14 parity and static checks pass (51s); nested deterministic check and all retained seeds pass (18s).
+Root ./gradlew check passes (2m58s), all 143 golden cases unchanged, no active mutation/fuzz campaign.
+Inventories: definitions 3→2, converter lines 3971→3931, blank checks 424→420, main Java
+121047→120840. Snapshots 35 and Support 206 remain open; baseline diff empty. WP-40 remains open.

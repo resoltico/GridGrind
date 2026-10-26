@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -13,7 +14,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -82,16 +82,19 @@ class WorkbookAnalyzerTest {
       workbook
           .pivots()
           .setPivotTable(
-              new ExcelPivotTableDefinition(
+              new PivotTableSpec(
                   "Queue Pivot",
-                  "PivotReport",
-                  new ExcelPivotTableDefinition.Source.Range("Budget", "D1:E3"),
-                  new ExcelPivotTableDefinition.Anchor("A3"),
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("PivotReport"),
+                  new PivotTableSpec.PivotSourceSpec.Range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("D1:E3")),
+                  new PivotTableSpec.Anchor(
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("A3")),
                   List.of("Owner"),
                   List.of(),
                   List.of(),
                   List.of(
-                      new ExcelPivotTableDefinition.DataField(
+                      new PivotTableSpec.DataField(
                           "Task",
                           ExcelPivotDataConsolidateFunction.COUNT,
                           "Task Count",

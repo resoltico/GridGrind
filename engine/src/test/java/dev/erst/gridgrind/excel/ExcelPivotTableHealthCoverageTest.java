@@ -2,9 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
@@ -28,7 +28,9 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
           definition(
               "Alpha Pivot",
               "Report",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "C5",
               List.of(),
               List.of("Region"),
@@ -38,7 +40,9 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
           definition(
               "Beta Pivot",
               "OtherReport",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "C5",
               List.of(),
               List.of("Stage"),

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
@@ -37,7 +38,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -232,16 +232,18 @@ class WorkbookCommandTest {
                 new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false))),
         new WorkbookTabularCommand.DeleteTable("BudgetTable", "Budget"),
         new WorkbookTabularCommand.SetPivotTable(
-            new ExcelPivotTableDefinition(
+            new PivotTableSpec(
                 "Budget Pivot",
-                "Budget",
-                new ExcelPivotTableDefinition.Source.Range("Budget", "A1:C4"),
-                new ExcelPivotTableDefinition.Anchor("E3"),
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                new PivotTableSpec.PivotSourceSpec.Range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:C4")),
+                new PivotTableSpec.Anchor(new dev.erst.gridgrind.core.vocabulary.CellAddress("E3")),
                 List.of("Item"),
                 List.of(),
                 List.of(),
                 List.of(
-                    new ExcelPivotTableDefinition.DataField(
+                    new PivotTableSpec.DataField(
                         "Tax",
                         ExcelPivotDataConsolidateFunction.SUM,
                         "Total Tax",

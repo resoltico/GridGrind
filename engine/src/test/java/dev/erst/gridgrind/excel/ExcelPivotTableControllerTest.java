@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.io.IOException;
@@ -40,7 +40,9 @@ class ExcelPivotTableControllerTest {
           definition(
               "Sales Pivot 2026",
               "Report",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "C5",
               List.of(),
               List.of("Region"),
@@ -126,7 +128,8 @@ class ExcelPivotTableControllerTest {
           definition(
               "Named Pivot",
               "NamedReport",
-              new ExcelPivotTableDefinition.Source.NamedRange("PivotSource"),
+              new PivotTableSpec.PivotSourceSpec.NamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("PivotSource")),
               "A3",
               List.of("Owner"),
               List.of("Region"),
@@ -136,7 +139,8 @@ class ExcelPivotTableControllerTest {
           definition(
               "Table Pivot",
               "TableReport",
-              new ExcelPivotTableDefinition.Source.Table("SalesTable"),
+              new PivotTableSpec.PivotSourceSpec.Table(
+                  new dev.erst.gridgrind.core.vocabulary.TableName("SalesTable")),
               "F3",
               List.of(),
               List.of("Stage"),
@@ -177,7 +181,9 @@ class ExcelPivotTableControllerTest {
           definition(
               "Alpha Pivot",
               "ReportA",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "A3",
               List.of(),
               List.of("Region"),
@@ -187,7 +193,9 @@ class ExcelPivotTableControllerTest {
           definition(
               "Beta Pivot",
               "ReportB",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "A3",
               List.of(),
               List.of("Stage"),
@@ -203,7 +211,9 @@ class ExcelPivotTableControllerTest {
           definition(
               "Gamma Pivot",
               "ReportC",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "A3",
               List.of(),
               List.of("Owner"),
@@ -236,7 +246,9 @@ class ExcelPivotTableControllerTest {
           definition(
               "Source Pivot",
               "Report",
-              new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
               "A3",
               List.of(),
               List.of("Region"),
@@ -287,7 +299,9 @@ class ExcelPivotTableControllerTest {
                       definition(
                           "Filter Pivot",
                           "Report",
-                          new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
                           "A1",
                           List.of("Owner"),
                           List.of("Region"),
@@ -297,24 +311,24 @@ class ExcelPivotTableControllerTest {
     }
   }
 
-  private ExcelPivotTableDefinition definition(
+  private PivotTableSpec definition(
       String name,
       String sheetName,
-      ExcelPivotTableDefinition.Source source,
+      PivotTableSpec.PivotSourceSpec source,
       String anchor,
       List<String> reportFilters,
       List<String> rowLabels,
       List<String> columnLabels) {
-    return new ExcelPivotTableDefinition(
+    return new PivotTableSpec(
         name,
-        sheetName,
+        new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName),
         source,
-        new ExcelPivotTableDefinition.Anchor(anchor),
+        new PivotTableSpec.Anchor(new dev.erst.gridgrind.core.vocabulary.CellAddress(anchor)),
         rowLabels,
         columnLabels,
         reportFilters,
         List.of(
-            new ExcelPivotTableDefinition.DataField(
+            new PivotTableSpec.DataField(
                 "Amount",
                 ExcelPivotDataConsolidateFunction.SUM,
                 "Total Amount",

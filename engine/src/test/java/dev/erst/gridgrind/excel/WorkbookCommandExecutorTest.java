@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
@@ -47,7 +48,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
@@ -486,16 +486,19 @@ class WorkbookCommandExecutorTest {
                       new CellValue.Text("Lin"),
                       new CellValue.NumberValue(12)))),
           new WorkbookTabularCommand.SetPivotTable(
-              new ExcelPivotTableDefinition(
+              new PivotTableSpec(
                   "Ops Pivot",
-                  "Report",
-                  new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
-                  new ExcelPivotTableDefinition.Anchor("A3"),
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+                  new PivotTableSpec.PivotSourceSpec.Range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
+                  new PivotTableSpec.Anchor(
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("A3")),
                   List.of("Region"),
                   List.of("Stage"),
                   List.of(),
                   List.of(
-                      new ExcelPivotTableDefinition.DataField(
+                      new PivotTableSpec.DataField(
                           "Amount",
                           ExcelPivotDataConsolidateFunction.SUM,
                           "Total Amount",
