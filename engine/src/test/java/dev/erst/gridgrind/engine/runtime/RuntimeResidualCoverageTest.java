@@ -41,6 +41,8 @@ import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -83,8 +85,6 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -124,21 +124,21 @@ class RuntimeResidualCoverageTest {
   @Test
   void converterNullBranchesAndResolvedPromptFieldsStayTyped() {
     assertTrue(WorkbookCommandCellValueSpecConverter.toFontHeightReport(null).isEmpty());
-    assertTrue(WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(null).isEmpty());
+    assertTrue(WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(null).isEmpty());
     assertTrue(
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(null).isEmpty());
+        WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(null).isEmpty());
     assertTrue(WorkbookCommandStructuredInputConverter.toExcelAutofilterSortState(null).isEmpty());
 
     Optional<FontHeightReport> fontHeight =
         WorkbookCommandCellValueSpecConverter.toFontHeightReport(
             new dev.erst.gridgrind.core.model.style.FontHeightSpec.Points(
                 BigDecimal.valueOf(12.5d)));
-    Optional<ExcelDataValidationPrompt> prompt =
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(
+    Optional<ResolvedValidationPrompt> prompt =
+        WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(
             new DataValidationPromptSpec(
                 TextSourceSpec.inline("Prompt title"), TextSourceSpec.inline("Prompt text"), true));
-    Optional<ExcelDataValidationErrorAlert> alert =
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(
+    Optional<ResolvedValidationErrorAlert> alert =
+        WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(
             new DataValidationErrorAlertSpec(
                 ExcelDataValidationErrorStyle.WARNING,
                 TextSourceSpec.inline("Alert title"),

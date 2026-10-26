@@ -10,6 +10,9 @@ import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -21,9 +24,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -462,13 +462,16 @@ class WorkbookReadResultTest {
             List.of(
                 new ExcelDataValidationSnapshot.Supported(
                     List.of("A2:A5"),
-                    new ExcelDataValidationDefinition(
-                        new ExcelDataValidationRule.TextLength(
-                            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
+                    new ResolvedDataValidation(
+                        new DataValidationRuleSpec.TextLength(
+                            ExcelComparisonOperator.LESS_OR_EQUAL,
+                            ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+                            ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                                Optional.empty(), "formula2")),
                         true,
                         false,
                         Optional.of(
-                            new ExcelDataValidationPrompt(
+                            new ResolvedValidationPrompt(
                                 "Reason", "Use 20 characters or fewer.", true)),
                         Optional.empty()))));
     List<ExcelAutofilterSnapshot> autofilters =

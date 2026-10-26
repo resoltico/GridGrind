@@ -21,6 +21,8 @@ import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -35,8 +37,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -375,9 +375,12 @@ class ExcelWorkbookTest {
           .metadata()
           .setDataValidation(
               "C2:C4",
-              new ExcelDataValidationDefinition(
-                  new ExcelDataValidationRule.WholeNumber(
-                      ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
+              new ResolvedDataValidation(
+                  new DataValidationRuleSpec.WholeNumber(
+                      ExcelComparisonOperator.GREATER_OR_EQUAL,
+                      ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                      ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                          Optional.empty(), "formula2")),
                   false,
                   false,
                   Optional.empty(),
@@ -457,9 +460,12 @@ class ExcelWorkbookTest {
         List.of(
             new ExcelDataValidationSnapshot.Supported(
                 List.of("C2:C4"),
-                new ExcelDataValidationDefinition(
-                    new ExcelDataValidationRule.WholeNumber(
-                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
+                new ResolvedDataValidation(
+                    new DataValidationRuleSpec.WholeNumber(
+                        ExcelComparisonOperator.GREATER_OR_EQUAL,
+                        ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                        ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                            Optional.empty(), "formula2")),
                     false,
                     true,
                     Optional.empty(),

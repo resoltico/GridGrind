@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 import java.util.Objects;
@@ -18,8 +18,7 @@ public final class ExcelSheetMetadata {
   }
 
   /** Creates or replaces one data-validation rule over the requested sheet range. */
-  public ExcelSheetMetadata setDataValidation(
-      String range, ExcelDataValidationDefinition validation) {
+  public ExcelSheetMetadata setDataValidation(String range, ResolvedDataValidation validation) {
     metadataSupport.setDataValidation(range, validation, sheet);
     return this;
   }

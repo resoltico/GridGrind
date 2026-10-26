@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import java.util.Objects;
 
 /** Formatting-rule commands for styles, validations, and conditional formatting. */
@@ -28,7 +28,7 @@ public sealed interface WorkbookFormattingCommand extends WorkbookCommand
   }
 
   /** Creates or replaces one data-validation rule over the requested sheet range. */
-  record SetDataValidation(String sheetName, String range, ExcelDataValidationDefinition validation)
+  record SetDataValidation(String sheetName, String range, ResolvedDataValidation validation)
       implements WorkbookFormattingCommand {
     public SetDataValidation {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

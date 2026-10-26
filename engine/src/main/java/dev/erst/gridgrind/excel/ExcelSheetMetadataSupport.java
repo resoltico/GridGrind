@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 import java.util.Objects;
@@ -40,8 +40,7 @@ final class ExcelSheetMetadataSupport {
         Objects.requireNonNull(autofilterController, "autofilterController must not be null");
   }
 
-  ExcelSheet setDataValidation(
-      String range, ExcelDataValidationDefinition validation, ExcelSheet owner) {
+  ExcelSheet setDataValidation(String range, ResolvedDataValidation validation, ExcelSheet owner) {
     requireNonBlank(range, "range");
     Objects.requireNonNull(validation, "validation must not be null");
     dataValidationController.setDataValidation(xssfSheet(), range, validation);

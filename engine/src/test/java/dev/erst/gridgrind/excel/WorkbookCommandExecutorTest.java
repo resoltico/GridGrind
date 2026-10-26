@@ -15,6 +15,10 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -37,10 +41,6 @@ import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -1038,14 +1038,14 @@ class WorkbookCommandExecutorTest {
     }
   }
 
-  private static ExcelDataValidationDefinition validationDefinition() {
-    return new ExcelDataValidationDefinition(
-        new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+  private static ResolvedDataValidation validationDefinition() {
+    return new ResolvedDataValidation(
+        new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
         true,
         false,
-        Optional.of(new ExcelDataValidationPrompt("Status", "Pick one workflow state.", true)),
+        Optional.of(new ResolvedValidationPrompt("Status", "Pick one workflow state.", true)),
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.STOP,
                 "Invalid status",
                 "Use one of the allowed values.",

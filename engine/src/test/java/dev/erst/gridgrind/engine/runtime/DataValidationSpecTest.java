@@ -7,12 +7,12 @@ import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the top-level data-validation transport model. */
@@ -33,20 +33,23 @@ class DataValidationSpecTest {
                 null));
 
     assertEquals(
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.DateRule(
-                ExcelComparisonOperator.GREATER_OR_EQUAL, "TODAY()", java.util.Optional.empty()),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.DateRule(
+                ExcelComparisonOperator.GREATER_OR_EQUAL,
+                ExcelComparisonFormulaSupport.normalizeFormula("TODAY()", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    java.util.Optional.empty(), "formula2")),
             false,
             false,
             java.util.Optional.of(
-                new ExcelDataValidationPrompt("Ship date", "Use today or later.", true)),
+                new ResolvedValidationPrompt("Ship date", "Use today or later.", true)),
             java.util.Optional.of(
-                new ExcelDataValidationErrorAlert(
+                new ResolvedValidationErrorAlert(
                     ExcelDataValidationErrorStyle.WARNING,
                     "Invalid date",
                     "Date must be today or later.",
                     true))),
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationDefinition(input));
+        WorkbookCommandStructuredInputConverter.toResolvedDataValidation(input));
   }
 
   @Test
@@ -70,19 +73,19 @@ class DataValidationSpecTest {
   @Test
   void nestedPromptAndErrorInputsDefaultAndPreserveVisibilityFlags() {
     assertEquals(
-        new ExcelDataValidationPrompt("Ship date", "Use today or later.", true),
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(
+        new ResolvedValidationPrompt("Ship date", "Use today or later.", true),
+        WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(
                 prompt("Ship date", "Use today or later.", null))
             .orElseThrow());
     assertEquals(
-        new ExcelDataValidationPrompt("Ship date", "Use today or later.", false),
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(
+        new ResolvedValidationPrompt("Ship date", "Use today or later.", false),
+        WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(
                 prompt("Ship date", "Use today or later.", false))
             .orElseThrow());
     assertEquals(
-        new ExcelDataValidationErrorAlert(
+        new ResolvedValidationErrorAlert(
             ExcelDataValidationErrorStyle.INFORMATION, "Invalid date", "Pick a real date.", true),
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(
+        WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(
                 errorAlert(
                     ExcelDataValidationErrorStyle.INFORMATION,
                     "Invalid date",
@@ -90,9 +93,9 @@ class DataValidationSpecTest {
                     null))
             .orElseThrow());
     assertEquals(
-        new ExcelDataValidationErrorAlert(
+        new ResolvedValidationErrorAlert(
             ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false),
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(
+        WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(
                 errorAlert(
                     ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false))
             .orElseThrow());

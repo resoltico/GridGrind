@@ -42,6 +42,12 @@ public final class ExcelComparisonFormulaSupport {
     return normalized;
   }
 
+  /** Normalizes each present formula without changing operand presence semantics. */
+  public static Optional<String> normalizeOptionalFormula(
+      Optional<String> value, String fieldName) {
+    return value.map(formula -> normalizeFormula(formula, fieldName));
+  }
+
   /** Normalizes the optional second comparison operand when the operator requires it. */
   public static Optional<String> normalizeOptionalComparisonUpperBound(
       ExcelComparisonOperator operator, Optional<String> formula2) {

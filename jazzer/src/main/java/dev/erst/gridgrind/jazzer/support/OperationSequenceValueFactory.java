@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -30,7 +31,6 @@ import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -181,7 +181,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceRuleValues.nextDataValidationInput(data);
   }
 
-  static ExcelDataValidationDefinition nextExcelDataValidationDefinition(GridGrindFuzzData data) {
+  static ResolvedDataValidation nextExcelDataValidationDefinition(GridGrindFuzzData data) {
     return OperationSequenceRuleValues.nextExcelDataValidationDefinition(data);
   }
 

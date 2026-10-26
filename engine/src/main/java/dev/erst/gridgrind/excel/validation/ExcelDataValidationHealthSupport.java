@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.ExcelRange;
@@ -32,7 +33,7 @@ public final class ExcelDataValidationHealthSupport {
     WorkbookAnalysis.AnalysisLocation.Range location =
         new WorkbookAnalysis.AnalysisLocation.Range(sheetName, supported.ranges().getFirst());
     switch (supported.validation().rule()) {
-      case ExcelDataValidationRule.ExplicitList explicitList -> {
+      case DataValidationRuleSpec.ExplicitList explicitList -> {
         if (explicitList.values().isEmpty()) {
           findings.add(
               new WorkbookAnalysis.AnalysisFinding(
@@ -44,10 +45,10 @@ public final class ExcelDataValidationHealthSupport {
                   supported.ranges()));
         }
       }
-      case ExcelDataValidationRule.FormulaList formulaList ->
+      case DataValidationRuleSpec.FormulaList formulaList ->
           addBrokenFormulaFindingIfNeeded(
               findings, location, Optional.of(formulaList.formula()), "list validation formula");
-      case ExcelDataValidationRule.WholeNumber wholeNumber -> {
+      case DataValidationRuleSpec.WholeNumber wholeNumber -> {
         addBrokenFormulaFindingIfNeeded(
             findings,
             location,
@@ -56,7 +57,7 @@ public final class ExcelDataValidationHealthSupport {
         addBrokenFormulaFindingIfNeeded(
             findings, location, wholeNumber.formula2(), "whole-number validation formula");
       }
-      case ExcelDataValidationRule.DecimalNumber decimalNumber -> {
+      case DataValidationRuleSpec.DecimalNumber decimalNumber -> {
         addBrokenFormulaFindingIfNeeded(
             findings,
             location,
@@ -65,19 +66,19 @@ public final class ExcelDataValidationHealthSupport {
         addBrokenFormulaFindingIfNeeded(
             findings, location, decimalNumber.formula2(), "decimal validation formula");
       }
-      case ExcelDataValidationRule.DateRule dateRule -> {
+      case DataValidationRuleSpec.DateRule dateRule -> {
         addBrokenFormulaFindingIfNeeded(
             findings, location, Optional.of(dateRule.formula1()), "date validation formula");
         addBrokenFormulaFindingIfNeeded(
             findings, location, dateRule.formula2(), "date validation formula");
       }
-      case ExcelDataValidationRule.TimeRule timeRule -> {
+      case DataValidationRuleSpec.TimeRule timeRule -> {
         addBrokenFormulaFindingIfNeeded(
             findings, location, Optional.of(timeRule.formula1()), "time validation formula");
         addBrokenFormulaFindingIfNeeded(
             findings, location, timeRule.formula2(), "time validation formula");
       }
-      case ExcelDataValidationRule.TextLength textLength -> {
+      case DataValidationRuleSpec.TextLength textLength -> {
         addBrokenFormulaFindingIfNeeded(
             findings,
             location,
@@ -86,7 +87,7 @@ public final class ExcelDataValidationHealthSupport {
         addBrokenFormulaFindingIfNeeded(
             findings, location, textLength.formula2(), "text-length validation formula");
       }
-      case ExcelDataValidationRule.CustomFormula customFormula ->
+      case DataValidationRuleSpec.CustomFormula customFormula ->
           addBrokenFormulaFindingIfNeeded(
               findings,
               location,

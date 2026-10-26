@@ -1,10 +1,10 @@
-package dev.erst.gridgrind.excel.validation;
+package dev.erst.gridgrind.core.model.validation;
 
 import java.util.Objects;
 
-/** Prompt-box configuration attached to one data-validation rule. */
-public record ExcelDataValidationPrompt(String title, String text, boolean showPromptBox) {
-  public ExcelDataValidationPrompt {
+/** Materialized prompt text attached to a data-validation rule. */
+public record ResolvedValidationPrompt(String title, String text, boolean showPromptBox) {
+  public ResolvedValidationPrompt {
     title = requireNonBlank(title, "title");
     text = requireNonBlank(text, "text");
   }

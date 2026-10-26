@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
@@ -40,6 +41,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -79,6 +81,7 @@ import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -87,10 +90,7 @@ import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -415,7 +415,7 @@ class SequenceIntrospectionTest {
         "IMPORT_CUSTOM_XML_MAPPING",
         SequenceIntrospection.commandKind(
             new WorkbookMetadataCommand.ImportCustomXmlMapping(
-                new ExcelCustomXmlImportDefinition(
+                new ResolvedCustomXmlImport(
                     new CustomXmlMappingLocator(
                         java.util.Optional.of(1L), java.util.Optional.of("BudgetMap")),
                     "<Budget><Owner>Ada</Owner></Budget>"))));
@@ -451,9 +451,12 @@ class SequenceIntrospectionTest {
             new WorkbookFormattingCommand.SetDataValidation(
                 "Budget",
                 "A2:A5",
-                new ExcelDataValidationDefinition(
-                    new ExcelDataValidationRule.WholeNumber(
-                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
+                new ResolvedDataValidation(
+                    new DataValidationRuleSpec.WholeNumber(
+                        ExcelComparisonOperator.GREATER_OR_EQUAL,
+                        ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                        ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                            Optional.empty(), "formula2")),
                     false,
                     false,
                     Optional.empty(),

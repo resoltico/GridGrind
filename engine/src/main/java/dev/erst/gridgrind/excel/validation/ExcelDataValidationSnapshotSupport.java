@@ -1,7 +1,12 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSqrefSupport;
 import java.util.ArrayList;
@@ -96,8 +101,8 @@ public final class ExcelDataValidationSnapshotSupport {
               : List.of(explicitValues);
       return new ExcelDataValidationSnapshot.Supported(
           ranges,
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.ExplicitList(explicitListValues),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.ExplicitList(explicitListValues),
               validation.getEmptyCellAllowed(),
               validation.getSuppressDropDownArrow(),
               prompt(validation),
@@ -112,8 +117,9 @@ public final class ExcelDataValidationSnapshotSupport {
     }
     return new ExcelDataValidationSnapshot.Supported(
         ranges,
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.FormulaList(formula1),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.FormulaList(
+                ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula")),
             validation.getEmptyCellAllowed(),
             validation.getSuppressDropDownArrow(),
             prompt(validation),
@@ -129,18 +135,20 @@ public final class ExcelDataValidationSnapshotSupport {
           "MISSING_FORMULA",
           "List validation is missing both explicit values and formula1.");
     }
-    ExcelDataValidationRule rule;
+    DataValidationRuleSpec rule;
     if ("\"\"".equals(formula1)) {
-      rule = new ExcelDataValidationRule.ExplicitList(List.of());
+      rule = new DataValidationRuleSpec.ExplicitList(List.of());
     } else if (formula1.length() >= 2 && formula1.startsWith("\"") && formula1.endsWith("\"")) {
       String rawValues = formula1.substring(1, formula1.length() - 1);
-      rule = new ExcelDataValidationRule.ExplicitList(Arrays.asList(rawValues.split(",")));
+      rule = new DataValidationRuleSpec.ExplicitList(Arrays.asList(rawValues.split(",")));
     } else {
-      rule = new ExcelDataValidationRule.FormulaList(formula1);
+      rule =
+          new DataValidationRuleSpec.FormulaList(
+              ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula"));
     }
     return new ExcelDataValidationSnapshot.Supported(
         ranges,
-        new ExcelDataValidationDefinition(
+        new ResolvedDataValidation(
             rule,
             validation.isSetAllowBlank() && validation.getAllowBlank(),
             suppressDropDownArrow(validation),
@@ -174,10 +182,10 @@ public final class ExcelDataValidationSnapshotSupport {
           "MISSING_FORMULA",
           family.label + " validation is missing formula2 for " + operatorLabel(operator) + ".");
     }
-    ExcelDataValidationRule rule = comparisonRule(family, operator, formula1, formula2);
+    DataValidationRuleSpec rule = comparisonRule(family, operator, formula1, formula2);
     return new ExcelDataValidationSnapshot.Supported(
         ranges,
-        new ExcelDataValidationDefinition(
+        new ResolvedDataValidation(
             rule,
             validation.getEmptyCellAllowed(),
             validation.getSuppressDropDownArrow(),
@@ -209,10 +217,10 @@ public final class ExcelDataValidationSnapshotSupport {
           "MISSING_FORMULA",
           family.label + " validation is missing formula2 for " + operatorLabel(operator) + ".");
     }
-    ExcelDataValidationRule rule = comparisonRule(family, operator, formula1, formula2);
+    DataValidationRuleSpec rule = comparisonRule(family, operator, formula1, formula2);
     return new ExcelDataValidationSnapshot.Supported(
         ranges,
-        new ExcelDataValidationDefinition(
+        new ResolvedDataValidation(
             rule,
             validation.isSetAllowBlank() && validation.getAllowBlank(),
             suppressDropDownArrow(validation),
@@ -229,8 +237,9 @@ public final class ExcelDataValidationSnapshotSupport {
     }
     return new ExcelDataValidationSnapshot.Supported(
         ranges,
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.CustomFormula(formula1),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.CustomFormula(
+                ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula")),
             validation.getEmptyCellAllowed(),
             validation.getSuppressDropDownArrow(),
             prompt(validation),
@@ -246,36 +255,37 @@ public final class ExcelDataValidationSnapshotSupport {
     }
     return new ExcelDataValidationSnapshot.Supported(
         ranges,
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.CustomFormula(formula1),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.CustomFormula(
+                ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula")),
             validation.isSetAllowBlank() && validation.getAllowBlank(),
             suppressDropDownArrow(validation),
             prompt(validation),
             errorAlert(validation)));
   }
 
-  static java.util.Optional<ExcelDataValidationPrompt> prompt(XSSFDataValidation validation) {
+  static java.util.Optional<ResolvedValidationPrompt> prompt(XSSFDataValidation validation) {
     String title = validation.getPromptBoxTitle();
     String text = validation.getPromptBoxText();
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
       return java.util.Optional.empty();
     }
     return java.util.Optional.of(
-        new ExcelDataValidationPrompt(title, text, validation.getShowPromptBox()));
+        new ResolvedValidationPrompt(title, text, validation.getShowPromptBox()));
   }
 
-  static java.util.Optional<ExcelDataValidationPrompt> prompt(CTDataValidation validation) {
+  static java.util.Optional<ResolvedValidationPrompt> prompt(CTDataValidation validation) {
     String title = validation.isSetPromptTitle() ? validation.getPromptTitle() : null;
     String text = validation.isSetPrompt() ? validation.getPrompt() : null;
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
       return java.util.Optional.empty();
     }
     return java.util.Optional.of(
-        new ExcelDataValidationPrompt(
+        new ResolvedValidationPrompt(
             title, text, validation.isSetShowInputMessage() && validation.getShowInputMessage()));
   }
 
-  static java.util.Optional<ExcelDataValidationErrorAlert> errorAlert(
+  static java.util.Optional<ResolvedValidationErrorAlert> errorAlert(
       XSSFDataValidation validation) {
     String title = validation.getErrorBoxTitle();
     String text = validation.getErrorBoxText();
@@ -283,21 +293,21 @@ public final class ExcelDataValidationSnapshotSupport {
       return java.util.Optional.empty();
     }
     return java.util.Optional.of(
-        new ExcelDataValidationErrorAlert(
+        new ResolvedValidationErrorAlert(
             ExcelDataValidationPoiBridge.fromPoiErrorStyle(validation.getErrorStyle()),
             title,
             text,
             validation.getShowErrorBox()));
   }
 
-  static java.util.Optional<ExcelDataValidationErrorAlert> errorAlert(CTDataValidation validation) {
+  static java.util.Optional<ResolvedValidationErrorAlert> errorAlert(CTDataValidation validation) {
     String title = validation.isSetErrorTitle() ? validation.getErrorTitle() : null;
     String text = validation.isSetError() ? validation.getError() : null;
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
       return java.util.Optional.empty();
     }
     return java.util.Optional.of(
-        new ExcelDataValidationErrorAlert(
+        new ResolvedValidationErrorAlert(
             errorStyle(validation),
             title,
             text,
@@ -334,17 +344,37 @@ public final class ExcelDataValidationSnapshotSupport {
     };
   }
 
-  private static ExcelDataValidationRule comparisonRule(
+  private static DataValidationRuleSpec comparisonRule(
       ComparisonFamily family,
       ExcelComparisonOperator operator,
       String formula1,
       Optional<String> formula2) {
     return switch (family) {
-      case INTEGER -> new ExcelDataValidationRule.WholeNumber(operator, formula1, formula2);
-      case DECIMAL -> new ExcelDataValidationRule.DecimalNumber(operator, formula1, formula2);
-      case DATE -> new ExcelDataValidationRule.DateRule(operator, formula1, formula2);
-      case TIME -> new ExcelDataValidationRule.TimeRule(operator, formula1, formula2);
-      case TEXT_LENGTH -> new ExcelDataValidationRule.TextLength(operator, formula1, formula2);
+      case INTEGER ->
+          new DataValidationRuleSpec.WholeNumber(
+              operator,
+              ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1"),
+              ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
+      case DECIMAL ->
+          new DataValidationRuleSpec.DecimalNumber(
+              operator,
+              ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1"),
+              ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
+      case DATE ->
+          new DataValidationRuleSpec.DateRule(
+              operator,
+              ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1"),
+              ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
+      case TIME ->
+          new DataValidationRuleSpec.TimeRule(
+              operator,
+              ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1"),
+              ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
+      case TEXT_LENGTH ->
+          new DataValidationRuleSpec.TextLength(
+              operator,
+              ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1"),
+              ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
     };
   }
 

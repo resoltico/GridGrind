@@ -18,6 +18,8 @@ import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
@@ -34,8 +36,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -508,11 +508,12 @@ class ExcelSheetCopyControllerTest {
       ExcelDataValidationSnapshot.Supported formulaList =
           assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(0));
       assertEquals(
-          new ExcelDataValidationRule.FormulaList("Replica!$J$2:$J$3"),
+          new DataValidationRuleSpec.FormulaList(
+              ExcelComparisonFormulaSupport.normalizeFormula("Replica!$J$2:$J$3", "formula")),
           formulaList.validation().rule());
       ExcelDataValidationSnapshot.Supported wholeNumber =
           assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(1));
-      assertInstanceOf(ExcelDataValidationRule.WholeNumber.class, wholeNumber.validation().rule());
+      assertInstanceOf(DataValidationRuleSpec.WholeNumber.class, wholeNumber.validation().rule());
       List<CTDataValidation> rawReplicaValidations =
           List.of(
               replica.xssfSheet().getCTWorksheet().getDataValidations().getDataValidationArray());
@@ -858,8 +859,10 @@ class ExcelSheetCopyControllerTest {
           .metadata()
           .setDataValidation(
               "A1:A3",
-              new ExcelDataValidationDefinition(
-                  new ExcelDataValidationRule.FormulaList("Source!$D$1:$D$3"),
+              new ResolvedDataValidation(
+                  new DataValidationRuleSpec.FormulaList(
+                      ExcelComparisonFormulaSupport.normalizeFormula(
+                          "Source!$D$1:$D$3", "formula")),
                   false,
                   false,
                   Optional.empty(),
@@ -877,12 +880,13 @@ class ExcelSheetCopyControllerTest {
       ExcelDataValidationSnapshot.Supported formulaList =
           assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(0));
       assertEquals(
-          new ExcelDataValidationRule.FormulaList("Replica!$D$1:$D$3"),
+          new DataValidationRuleSpec.FormulaList(
+              ExcelComparisonFormulaSupport.normalizeFormula("Replica!$D$1:$D$3", "formula")),
           formulaList.validation().rule());
       ExcelDataValidationSnapshot.Supported emptyExplicitList =
           assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(1));
       assertEquals(
-          new ExcelDataValidationRule.ExplicitList(List.of()),
+          new DataValidationRuleSpec.ExplicitList(List.of()),
           emptyExplicitList.validation().rule());
       assertEquals(
           new ExcelDataValidationSnapshot.Unsupported(
@@ -1183,8 +1187,9 @@ class ExcelSheetCopyControllerTest {
         .metadata()
         .setDataValidation(
             "G2:G3",
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.FormulaList("Source!$J$2:$J$3"),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.FormulaList(
+                    ExcelComparisonFormulaSupport.normalizeFormula("Source!$J$2:$J$3", "formula")),
                 false,
                 false,
                 Optional.empty(),
@@ -1193,9 +1198,12 @@ class ExcelSheetCopyControllerTest {
         .metadata()
         .setDataValidation(
             "H2:H3",
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.WholeNumber(
-                    ExcelComparisonOperator.BETWEEN, "1", Optional.of("SUM(Source!$B$2:$B$3)")),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.WholeNumber(
+                    ExcelComparisonOperator.BETWEEN,
+                    ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                    ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                        Optional.of("SUM(Source!$B$2:$B$3)"), "formula2")),
                 false,
                 false,
                 Optional.empty(),

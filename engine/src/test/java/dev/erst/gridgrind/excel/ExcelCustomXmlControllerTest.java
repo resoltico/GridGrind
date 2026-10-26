@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import java.io.IOException;
 import java.util.List;
@@ -75,7 +75,7 @@ class ExcelCustomXmlControllerTest {
       workbook
           .customXml()
           .importCustomXmlMapping(
-              new ExcelCustomXmlImportDefinition(
+              new ResolvedCustomXmlImport(
                   new CustomXmlMappingLocator(
                       java.util.Optional.empty(), java.util.Optional.of("CORSO_mapping")),
                   "<CORSO><NOME>Grid</NOME><DOCENTE>Grind</DOCENTE><TUTOR>Agent</TUTOR>"
@@ -181,7 +181,7 @@ class ExcelCustomXmlControllerTest {
               () ->
                   ioFailingController.importMapping(
                       workbook.xssfWorkbook(),
-                      new ExcelCustomXmlImportDefinition(
+                      new ResolvedCustomXmlImport(
                           new CustomXmlMappingLocator(
                               java.util.Optional.of(1L), java.util.Optional.empty()),
                           "<CORSO/>")));
@@ -199,7 +199,7 @@ class ExcelCustomXmlControllerTest {
               () ->
                   invalidXmlController.importMapping(
                       workbook.xssfWorkbook(),
-                      new ExcelCustomXmlImportDefinition(
+                      new ResolvedCustomXmlImport(
                           new CustomXmlMappingLocator(
                               java.util.Optional.of(1L), java.util.Optional.empty()),
                           "<CORSO/>")));

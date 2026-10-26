@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
@@ -82,7 +83,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Optional;
@@ -357,7 +357,7 @@ class AdvancedMutationCommandConverterTest {
                         text("<CORSO><NOME>Grid</NOME></CORSO>")))));
 
     assertEquals(
-        new ExcelCustomXmlImportDefinition(
+        new ResolvedCustomXmlImport(
             new CustomXmlMappingLocator(
                 java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
             "<CORSO><NOME>Grid</NOME></CORSO>"),

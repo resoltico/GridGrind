@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
+import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
@@ -18,15 +19,13 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.source.BinaryContent;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 
 /** Converts drawing-oriented structured contract inputs. */
 final class WorkbookCommandDrawingInputConverter {
   private WorkbookCommandDrawingInputConverter() {}
 
-  static ExcelCustomXmlImportDefinition toExcelCustomXmlImportDefinition(
-      CustomXmlImportSpec input) {
-    return new ExcelCustomXmlImportDefinition(
+  static ResolvedCustomXmlImport toResolvedCustomXmlImport(CustomXmlImportSpec input) {
+    return new ResolvedCustomXmlImport(
         input.locator(), WorkbookCommandSourceSupport.inlineText(input.xml(), "custom XML"));
   }
 

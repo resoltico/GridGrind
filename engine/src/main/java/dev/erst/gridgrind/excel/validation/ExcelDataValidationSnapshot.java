@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -11,7 +12,7 @@ public sealed interface ExcelDataValidationSnapshot
   List<String> ranges();
 
   /** Fully supported data-validation structure. */
-  record Supported(List<String> ranges, ExcelDataValidationDefinition validation)
+  record Supported(List<String> ranges, ResolvedDataValidation validation)
       implements ExcelDataValidationSnapshot {
     public Supported {
       ranges = copyRanges(ranges);

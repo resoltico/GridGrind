@@ -2,13 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,15 +28,14 @@ class ExcelDataValidationWorkflowTest {
   void introspectionPreservesDefinitionsAndSelectedClearSplitsCoverage() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      ExcelDataValidationDefinition definition =
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+      ResolvedDataValidation definition =
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
               true,
               false,
+              Optional.of(new ResolvedValidationPrompt("Status", "Pick one workflow state.", true)),
               Optional.of(
-                  new ExcelDataValidationPrompt("Status", "Pick one workflow state.", true)),
-              Optional.of(
-                  new ExcelDataValidationErrorAlert(
+                  new ResolvedValidationErrorAlert(
                       ExcelDataValidationErrorStyle.STOP,
                       "Invalid status",
                       "Use one of the allowed values.",

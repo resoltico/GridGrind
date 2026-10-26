@@ -3,8 +3,8 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -32,8 +32,8 @@ class ExcelSheetMetadataSupportTest {
               () ->
                   support.setDataValidation(
                       " ",
-                      new ExcelDataValidationDefinition(
-                          new ExcelDataValidationRule.ExplicitList(List.of("Open")),
+                      new ResolvedDataValidation(
+                          new DataValidationRuleSpec.ExplicitList(List.of("Open")),
                           false,
                           false,
                           Optional.empty(),

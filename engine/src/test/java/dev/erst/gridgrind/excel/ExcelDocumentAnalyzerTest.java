@@ -4,14 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -29,8 +29,9 @@ class ExcelDocumentAnalyzerTest {
           .metadata()
           .setDataValidation(
               "A1:A3",
-              new ExcelDataValidationDefinition(
-                  new ExcelDataValidationRule.FormulaList("#REF!"),
+              new ResolvedDataValidation(
+                  new DataValidationRuleSpec.FormulaList(
+                      ExcelComparisonFormulaSupport.normalizeFormula("#REF!", "formula")),
                   false,
                   false,
                   Optional.empty(),
@@ -40,8 +41,8 @@ class ExcelDocumentAnalyzerTest {
           .metadata()
           .setDataValidation(
               "A1:A3",
-              new ExcelDataValidationDefinition(
-                  new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+              new ResolvedDataValidation(
+                  new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
                   false,
                   false,
                   Optional.empty(),

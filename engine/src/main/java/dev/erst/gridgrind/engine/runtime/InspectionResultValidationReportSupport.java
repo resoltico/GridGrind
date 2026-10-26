@@ -10,7 +10,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdRe
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -19,8 +19,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.Optional;
 
@@ -44,9 +42,9 @@ final class InspectionResultValidationReportSupport {
   }
 
   static DataValidationEntryReport.DataValidationDefinitionReport toDataValidationDefinitionReport(
-      ExcelDataValidationDefinition definition) {
+      ResolvedDataValidation definition) {
     return new DataValidationEntryReport.DataValidationDefinitionReport(
-        toDataValidationRuleInput(definition.rule()),
+        definition.rule(),
         definition.allowBlank(),
         definition.suppressDropDownArrow(),
         promptInput(definition),
@@ -178,8 +176,7 @@ final class InspectionResultValidationReportSupport {
                 side.color().flatMap(InspectionResultCellStyleReportSupport::toCellColorReport)));
   }
 
-  private static Optional<DataValidationPromptSpec> promptInput(
-      ExcelDataValidationDefinition definition) {
+  private static Optional<DataValidationPromptSpec> promptInput(ResolvedDataValidation definition) {
     return definition
         .prompt()
         .map(
@@ -191,7 +188,7 @@ final class InspectionResultValidationReportSupport {
   }
 
   private static Optional<DataValidationErrorAlertSpec> errorAlertInput(
-      ExcelDataValidationDefinition definition) {
+      ResolvedDataValidation definition) {
     return definition
         .errorAlert()
         .map(
@@ -201,31 +198,5 @@ final class InspectionResultValidationReportSupport {
                     new TextSourceSpec.Inline(errorAlert.title()),
                     new TextSourceSpec.Inline(errorAlert.text()),
                     errorAlert.showErrorBox()));
-  }
-
-  private static DataValidationRuleSpec toDataValidationRuleInput(ExcelDataValidationRule rule) {
-    return switch (rule) {
-      case ExcelDataValidationRule.ExplicitList explicitList ->
-          new DataValidationRuleSpec.ExplicitList(explicitList.values());
-      case ExcelDataValidationRule.FormulaList formulaList ->
-          new DataValidationRuleSpec.FormulaList(formulaList.formula());
-      case ExcelDataValidationRule.WholeNumber wholeNumber ->
-          new DataValidationRuleSpec.WholeNumber(
-              wholeNumber.operator(), wholeNumber.formula1(), wholeNumber.formula2());
-      case ExcelDataValidationRule.DecimalNumber decimalNumber ->
-          new DataValidationRuleSpec.DecimalNumber(
-              decimalNumber.operator(), decimalNumber.formula1(), decimalNumber.formula2());
-      case ExcelDataValidationRule.DateRule dateRule ->
-          new DataValidationRuleSpec.DateRule(
-              dateRule.operator(), dateRule.formula1(), dateRule.formula2());
-      case ExcelDataValidationRule.TimeRule timeRule ->
-          new DataValidationRuleSpec.TimeRule(
-              timeRule.operator(), timeRule.formula1(), timeRule.formula2());
-      case ExcelDataValidationRule.TextLength textLength ->
-          new DataValidationRuleSpec.TextLength(
-              textLength.operator(), textLength.formula1(), textLength.formula2());
-      case ExcelDataValidationRule.CustomFormula customFormula ->
-          new DataValidationRuleSpec.CustomFormula(customFormula.formula());
-    };
   }
 }

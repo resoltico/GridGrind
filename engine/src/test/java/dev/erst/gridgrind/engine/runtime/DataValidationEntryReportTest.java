@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -72,75 +72,92 @@ class DataValidationEntryReportTest {
   void fromExcelCoversEveryRuleFamilyAndNestedMetadata() {
     DataValidationEntryReport.DataValidationDefinitionReport explicitList =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
                 true,
                 false,
                 Optional.of(
-                    new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true)),
+                    new ResolvedValidationPrompt("Status", "Choose one workflow state.", true)),
                 Optional.of(
-                    new ExcelDataValidationErrorAlert(
+                    new ResolvedValidationErrorAlert(
                         ExcelDataValidationErrorStyle.STOP,
                         "Invalid status",
                         "Use one of the allowed values.",
                         true))));
     DataValidationEntryReport.DataValidationDefinitionReport formulaList =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.FormulaList("Statuses"),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.FormulaList(
+                    ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
                 false,
                 false,
                 Optional.empty(),
                 Optional.empty()));
     DataValidationEntryReport.DataValidationDefinitionReport wholeNumber =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.WholeNumber(
-                    ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty()),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.WholeNumber(
+                    ExcelComparisonOperator.GREATER_THAN,
+                    ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                    ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                        Optional.empty(), "formula2")),
                 false,
                 false,
                 Optional.empty(),
                 Optional.empty()));
     DataValidationEntryReport.DataValidationDefinitionReport decimal =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.DecimalNumber(
-                    ExcelComparisonOperator.GREATER_THAN, "0.5", Optional.empty()),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.DecimalNumber(
+                    ExcelComparisonOperator.GREATER_THAN,
+                    ExcelComparisonFormulaSupport.normalizeFormula("0.5", "formula1"),
+                    ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                        Optional.empty(), "formula2")),
                 false,
                 false,
                 Optional.empty(),
                 Optional.empty()));
     DataValidationEntryReport.DataValidationDefinitionReport date =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.DateRule(
-                    ExcelComparisonOperator.GREATER_OR_EQUAL, "TODAY()", Optional.empty()),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.DateRule(
+                    ExcelComparisonOperator.GREATER_OR_EQUAL,
+                    ExcelComparisonFormulaSupport.normalizeFormula("TODAY()", "formula1"),
+                    ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                        Optional.empty(), "formula2")),
                 false,
                 false,
                 Optional.empty(),
                 Optional.empty()));
     DataValidationEntryReport.DataValidationDefinitionReport time =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.TimeRule(
-                    ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", Optional.empty()),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.TimeRule(
+                    ExcelComparisonOperator.GREATER_THAN,
+                    ExcelComparisonFormulaSupport.normalizeFormula("TIME(9,0,0)", "formula1"),
+                    ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                        Optional.empty(), "formula2")),
                 false,
                 false,
                 Optional.empty(),
                 Optional.empty()));
     DataValidationEntryReport.DataValidationDefinitionReport textLength =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.TextLength(
-                    ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.TextLength(
+                    ExcelComparisonOperator.LESS_OR_EQUAL,
+                    ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+                    ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                        Optional.empty(), "formula2")),
                 false,
                 false,
                 Optional.empty(),
                 Optional.empty()));
     DataValidationEntryReport.DataValidationDefinitionReport custom =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.CustomFormula("LEN(A1)>0"),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.CustomFormula(
+                    ExcelComparisonFormulaSupport.normalizeFormula("LEN(A1)>0", "formula")),
                 false,
                 false,
                 Optional.empty(),
@@ -165,8 +182,8 @@ class DataValidationEntryReportTest {
   void fromExcelPreservesEmptyExplicitLists() {
     DataValidationEntryReport.DataValidationDefinitionReport report =
         reportFor(
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.ExplicitList(List.of()),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.ExplicitList(List.of()),
                 false,
                 false,
                 Optional.empty(),
@@ -178,7 +195,7 @@ class DataValidationEntryReportTest {
   }
 
   private static DataValidationEntryReport.DataValidationDefinitionReport reportFor(
-      ExcelDataValidationDefinition definition) {
+      ResolvedDataValidation definition) {
     return InspectionResultValidationReportSupport.toDataValidationDefinitionReport(definition);
   }
 }

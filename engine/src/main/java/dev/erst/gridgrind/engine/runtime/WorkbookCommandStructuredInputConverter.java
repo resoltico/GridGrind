@@ -11,8 +11,10 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
@@ -21,10 +23,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,63 +30,36 @@ import java.util.Optional;
 final class WorkbookCommandStructuredInputConverter {
   private WorkbookCommandStructuredInputConverter() {}
 
-  static ExcelDataValidationDefinition toExcelDataValidationDefinition(
-      DataValidationSpec validation) {
-    return new ExcelDataValidationDefinition(
-        toExcelDataValidationRule(validation.rule()),
+  static ResolvedDataValidation toResolvedDataValidation(DataValidationSpec validation) {
+    return new ResolvedDataValidation(
+        validation.rule(),
         validation.allowBlank(),
         validation.suppressDropDownArrow(),
         validation
             .prompt()
-            .flatMap(WorkbookCommandStructuredInputConverter::toExcelDataValidationPrompt),
+            .flatMap(WorkbookCommandStructuredInputConverter::toResolvedValidationPrompt),
         validation
             .errorAlert()
-            .flatMap(WorkbookCommandStructuredInputConverter::toExcelDataValidationErrorAlert));
+            .flatMap(WorkbookCommandStructuredInputConverter::toResolvedValidationErrorAlert));
   }
 
-  static ExcelDataValidationRule toExcelDataValidationRule(DataValidationRuleSpec rule) {
-    return switch (rule) {
-      case DataValidationRuleSpec.ExplicitList explicitList ->
-          new ExcelDataValidationRule.ExplicitList(explicitList.values());
-      case DataValidationRuleSpec.FormulaList formulaList ->
-          new ExcelDataValidationRule.FormulaList(formulaList.formula());
-      case DataValidationRuleSpec.WholeNumber wholeNumber ->
-          new ExcelDataValidationRule.WholeNumber(
-              wholeNumber.operator(), wholeNumber.formula1(), wholeNumber.formula2());
-      case DataValidationRuleSpec.DecimalNumber decimalNumber ->
-          new ExcelDataValidationRule.DecimalNumber(
-              decimalNumber.operator(), decimalNumber.formula1(), decimalNumber.formula2());
-      case DataValidationRuleSpec.DateRule dateRule ->
-          new ExcelDataValidationRule.DateRule(
-              dateRule.operator(), dateRule.formula1(), dateRule.formula2());
-      case DataValidationRuleSpec.TimeRule timeRule ->
-          new ExcelDataValidationRule.TimeRule(
-              timeRule.operator(), timeRule.formula1(), timeRule.formula2());
-      case DataValidationRuleSpec.TextLength textLength ->
-          new ExcelDataValidationRule.TextLength(
-              textLength.operator(), textLength.formula1(), textLength.formula2());
-      case DataValidationRuleSpec.CustomFormula customFormula ->
-          new ExcelDataValidationRule.CustomFormula(customFormula.formula());
-    };
-  }
-
-  static Optional<ExcelDataValidationPrompt> toExcelDataValidationPrompt(
+  static Optional<ResolvedValidationPrompt> toResolvedValidationPrompt(
       DataValidationPromptSpec prompt) {
     return prompt == null
         ? Optional.empty()
         : Optional.of(
-            new ExcelDataValidationPrompt(
+            new ResolvedValidationPrompt(
                 WorkbookCommandSourceSupport.inlineText(prompt.title(), "validation prompt title"),
                 WorkbookCommandSourceSupport.inlineText(prompt.text(), "validation prompt text"),
                 prompt.showPromptBox()));
   }
 
-  static Optional<ExcelDataValidationErrorAlert> toExcelDataValidationErrorAlert(
+  static Optional<ResolvedValidationErrorAlert> toResolvedValidationErrorAlert(
       DataValidationErrorAlertSpec errorAlert) {
     return errorAlert == null
         ? Optional.empty()
         : Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 errorAlert.style(),
                 WorkbookCommandSourceSupport.inlineText(
                     errorAlert.title(), "validation error title"),

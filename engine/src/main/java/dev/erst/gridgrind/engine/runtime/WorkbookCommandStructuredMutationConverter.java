@@ -21,7 +21,7 @@ final class WorkbookCommandStructuredMutationConverter {
     return switch (action) {
       case StructuredMutationAction.ImportCustomXmlMapping importCustomXmlMapping ->
           new WorkbookMetadataCommand.ImportCustomXmlMapping(
-              WorkbookCommandDrawingInputConverter.toExcelCustomXmlImportDefinition(
+              WorkbookCommandDrawingInputConverter.toResolvedCustomXmlImport(
                   importCustomXmlMapping.mapping()));
       case StructuredMutationAction.SetPivotTable setPivotTable -> {
         WorkbookCommandSelectorSupport.ensurePivotTableIdentity(target, setPivotTable);
@@ -35,7 +35,7 @@ final class WorkbookCommandStructuredMutationConverter {
         yield new WorkbookFormattingCommand.SetDataValidation(
             selector.sheetName().value(),
             selector.range().value(),
-            WorkbookCommandStructuredInputConverter.toExcelDataValidationDefinition(
+            WorkbookCommandStructuredInputConverter.toResolvedDataValidation(
                 setDataValidation.validation()));
       }
       case StructuredMutationAction.ClearDataValidations _ -> {

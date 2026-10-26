@@ -9,13 +9,13 @@ import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
@@ -77,8 +77,7 @@ class ExcelResidualValidationCoverageTest {
         IllegalArgumentException.class,
         () -> new WorkbookDrawingCommand.SetSignatureLine(" ", signatureDefinition(anchor)));
 
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelCustomXmlImportDefinition(locator, " "));
+    assertThrows(IllegalArgumentException.class, () -> new ResolvedCustomXmlImport(locator, " "));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelCustomXmlExportSnapshot(mapping, " ", false, "<CORSO/>"));

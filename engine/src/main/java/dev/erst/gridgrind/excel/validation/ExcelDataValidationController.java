@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
@@ -23,7 +26,7 @@ public final class ExcelDataValidationController {
 
   /** Creates or replaces one data-validation rule over the requested sheet range. */
   public void setDataValidation(
-      XSSFSheet sheet, String range, ExcelDataValidationDefinition validationDefinition) {
+      XSSFSheet sheet, String range, ResolvedDataValidation validationDefinition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(validationDefinition, "validationDefinition must not be null");
@@ -71,19 +74,19 @@ public final class ExcelDataValidationController {
     return ExcelDataValidationSnapshotSupport.toSnapshot(validation, ranges);
   }
 
-  public static Optional<ExcelDataValidationPrompt> prompt(XSSFDataValidation validation) {
+  public static Optional<ResolvedValidationPrompt> prompt(XSSFDataValidation validation) {
     return ExcelDataValidationSnapshotSupport.prompt(validation);
   }
 
-  public static Optional<ExcelDataValidationPrompt> prompt(CTDataValidation validation) {
+  public static Optional<ResolvedValidationPrompt> prompt(CTDataValidation validation) {
     return ExcelDataValidationSnapshotSupport.prompt(validation);
   }
 
-  public static Optional<ExcelDataValidationErrorAlert> errorAlert(XSSFDataValidation validation) {
+  public static Optional<ResolvedValidationErrorAlert> errorAlert(XSSFDataValidation validation) {
     return ExcelDataValidationSnapshotSupport.errorAlert(validation);
   }
 
-  public static Optional<ExcelDataValidationErrorAlert> errorAlert(CTDataValidation validation) {
+  public static Optional<ResolvedValidationErrorAlert> errorAlert(CTDataValidation validation) {
     return ExcelDataValidationSnapshotSupport.errorAlert(validation);
   }
 

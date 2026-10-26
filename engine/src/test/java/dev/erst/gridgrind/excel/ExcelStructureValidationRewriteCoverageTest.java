@@ -2,9 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 import java.util.Optional;
@@ -29,8 +29,9 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
           .setDataValidation(
               formulaSheet,
               "A2:A4",
-              new ExcelDataValidationDefinition(
-                  new ExcelDataValidationRule.CustomFormula("LEN(A2)>0"),
+              new ResolvedDataValidation(
+                  new DataValidationRuleSpec.CustomFormula(
+                      ExcelComparisonFormulaSupport.normalizeFormula("LEN(A2)>0", "formula")),
                   false,
                   false,
                   Optional.empty(),
@@ -47,7 +48,9 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
                   .getFirst());
       assertEquals(List.of("A3:A5"), supported.ranges());
       assertEquals(
-          new ExcelDataValidationRule.CustomFormula("LEN(A3)>0"), supported.validation().rule());
+          new DataValidationRuleSpec.CustomFormula(
+              ExcelComparisonFormulaSupport.normalizeFormula("LEN(A3)>0", "formula")),
+          supported.validation().rule());
     }
   }
 
@@ -66,8 +69,9 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
           .setDataValidation(
               formulaSheet,
               "A1:A3",
-              new ExcelDataValidationDefinition(
-                  new ExcelDataValidationRule.CustomFormula("LEN(A1)>0"),
+              new ResolvedDataValidation(
+                  new DataValidationRuleSpec.CustomFormula(
+                      ExcelComparisonFormulaSupport.normalizeFormula("LEN(A1)>0", "formula")),
                   false,
                   false,
                   Optional.empty(),
@@ -83,7 +87,9 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
                   .getFirst());
       assertEquals(List.of("B1:B3"), supported.ranges());
       assertEquals(
-          new ExcelDataValidationRule.CustomFormula("LEN(B1)>0"), supported.validation().rule());
+          new DataValidationRuleSpec.CustomFormula(
+              ExcelComparisonFormulaSupport.normalizeFormula("LEN(B1)>0", "formula")),
+          supported.validation().rule());
     }
   }
 }

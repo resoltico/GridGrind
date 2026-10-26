@@ -2,13 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPoiBridge;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,45 @@ import org.junit.jupiter.api.Test;
 
 /** Tests for data-validation enums and immutable model records. */
 class ExcelDataValidationModelTest {
+  @Test
+  void poiStorageNormalizesRuleFormulasBeforeReplacingExistingValidation() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      var sheet = workbook.getOrCreateSheet("Rules");
+      sheet
+          .metadata()
+          .setDataValidation(
+              "A1",
+              new ResolvedDataValidation(
+                  new DataValidationRuleSpec.WholeNumber(
+                      ExcelComparisonOperator.BETWEEN, " =1 ", Optional.of(" =10 ")),
+                  false,
+                  false,
+                  Optional.empty(),
+                  Optional.empty()));
+      var validations = workbook.xssfWorkbook().getSheet("Rules").getDataValidations();
+      assertEquals("1", validations.getFirst().getValidationConstraint().getFormula1());
+      assertEquals("10", validations.getFirst().getValidationConstraint().getFormula2());
+
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet
+                  .metadata()
+                  .setDataValidation(
+                      "A1",
+                      new ResolvedDataValidation(
+                          new DataValidationRuleSpec.FormulaList(" = "),
+                          false,
+                          false,
+                          Optional.empty(),
+                          Optional.empty())));
+      validations = workbook.xssfWorkbook().getSheet("Rules").getDataValidations();
+      assertEquals(1, validations.size());
+      assertEquals("1", validations.getFirst().getValidationConstraint().getFormula1());
+      assertEquals("10", validations.getFirst().getValidationConstraint().getFormula2());
+    }
+  }
+
   @Test
   void comparisonOperatorRoundTripsPoiConstants() {
     assertEquals(
@@ -127,23 +166,23 @@ class ExcelDataValidationModelTest {
   @Test
   void promptAndAlertRejectBlankValues() {
     assertThrows(
-        NullPointerException.class, () -> new ExcelDataValidationPrompt(null, "Text", true));
+        NullPointerException.class, () -> new ResolvedValidationPrompt(null, "Text", true));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelDataValidationPrompt(" ", "Text", true));
+        IllegalArgumentException.class, () -> new ResolvedValidationPrompt(" ", "Text", true));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelDataValidationPrompt("Title", " ", true));
+        IllegalArgumentException.class, () -> new ResolvedValidationPrompt("Title", " ", true));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelDataValidationErrorAlert(null, "Title", "Text", true));
+        () -> new ResolvedValidationErrorAlert(null, "Title", "Text", true));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.STOP, " ", "Text", true));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.STOP, "Title", " ", true));
   }
 
@@ -151,68 +190,104 @@ class ExcelDataValidationModelTest {
   void explicitListCopiesValuesAndRejectsInvalidCollections() {
     List<String> values = new ArrayList<>(List.of("Queued", "Done"));
 
-    ExcelDataValidationRule.ExplicitList explicitList =
-        new ExcelDataValidationRule.ExplicitList(values);
+    DataValidationRuleSpec.ExplicitList explicitList =
+        new DataValidationRuleSpec.ExplicitList(values);
     values.clear();
 
     assertEquals(List.of("Queued", "Done"), explicitList.values());
-    assertEquals(List.of(), new ExcelDataValidationRule.ExplicitList(List.of()).values());
+    assertEquals(List.of(), new DataValidationRuleSpec.ExplicitList(List.of()).values());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelDataValidationRule.ExplicitList(List.of("Queued", " ")));
+        () -> new DataValidationRuleSpec.ExplicitList(List.of("Queued", " ")));
   }
 
   @Test
   void listAndCustomRulesNormalizeLeadingEqualsSigns() {
     assertEquals(
-        new ExcelDataValidationRule.FormulaList("Statuses"),
-        new ExcelDataValidationRule.FormulaList("=Statuses"));
+        new DataValidationRuleSpec.FormulaList(
+            ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
+        new DataValidationRuleSpec.FormulaList(
+            ExcelComparisonFormulaSupport.normalizeFormula("=Statuses", "formula")));
     assertEquals(
-        new ExcelDataValidationRule.CustomFormula("LEN(A1)>0"),
-        new ExcelDataValidationRule.CustomFormula("=LEN(A1)>0"));
+        new DataValidationRuleSpec.CustomFormula(
+            ExcelComparisonFormulaSupport.normalizeFormula("LEN(A1)>0", "formula")),
+        new DataValidationRuleSpec.CustomFormula(
+            ExcelComparisonFormulaSupport.normalizeFormula("=LEN(A1)>0", "formula")));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelDataValidationRule.FormulaList(" = "));
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleSpec.FormulaList(
+                ExcelComparisonFormulaSupport.normalizeFormula(" = ", "formula")));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelDataValidationRule.CustomFormula(" "));
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleSpec.CustomFormula(
+                ExcelComparisonFormulaSupport.normalizeFormula(" ", "formula")));
   }
 
   @Test
   void comparisonRulesNormalizeFormulasAcrossFamilies() {
     assertEquals(
-        new ExcelDataValidationRule.WholeNumber(
-            ExcelComparisonOperator.BETWEEN, "1", Optional.of("10")),
-        new ExcelDataValidationRule.WholeNumber(
-            ExcelComparisonOperator.BETWEEN, "=1", Optional.of(" =10 ")));
+        new DataValidationRuleSpec.WholeNumber(
+            ExcelComparisonOperator.BETWEEN,
+            ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.of("10"), "formula2")),
+        new DataValidationRuleSpec.WholeNumber(
+            ExcelComparisonOperator.BETWEEN,
+            ExcelComparisonFormulaSupport.normalizeFormula("=1", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                Optional.of(" =10 "), "formula2")));
     assertEquals(
-        new ExcelDataValidationRule.WholeNumber(
-            ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of("10")),
-        new ExcelDataValidationRule.WholeNumber(
-            ExcelComparisonOperator.NOT_BETWEEN, "=1", Optional.of(" =10 ")));
+        new DataValidationRuleSpec.WholeNumber(
+            ExcelComparisonOperator.NOT_BETWEEN,
+            ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.of("10"), "formula2")),
+        new DataValidationRuleSpec.WholeNumber(
+            ExcelComparisonOperator.NOT_BETWEEN,
+            ExcelComparisonFormulaSupport.normalizeFormula("=1", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                Optional.of(" =10 "), "formula2")));
     assertEquals(
-        new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "0.5", Optional.empty()),
-        new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "=0.5", Optional.empty()));
+        new DataValidationRuleSpec.DecimalNumber(
+            ExcelComparisonOperator.GREATER_THAN,
+            ExcelComparisonFormulaSupport.normalizeFormula("0.5", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
+        new DataValidationRuleSpec.DecimalNumber(
+            ExcelComparisonOperator.GREATER_THAN,
+            ExcelComparisonFormulaSupport.normalizeFormula("=0.5", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleSpec.DecimalNumber(
+                ExcelComparisonOperator.GREATER_THAN, "0.5", Optional.of("   ")));
     assertEquals(
-        new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "0.5", Optional.empty()),
-        new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "=0.5", Optional.of("   ")));
+        new DataValidationRuleSpec.DateRule(
+            ExcelComparisonOperator.EQUAL,
+            ExcelComparisonFormulaSupport.normalizeFormula("DATE(2026,4,1)", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
+        new DataValidationRuleSpec.DateRule(
+            ExcelComparisonOperator.EQUAL,
+            ExcelComparisonFormulaSupport.normalizeFormula("=DATE(2026,4,1)", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")));
     assertEquals(
-        new ExcelDataValidationRule.DateRule(
-            ExcelComparisonOperator.EQUAL, "DATE(2026,4,1)", Optional.empty()),
-        new ExcelDataValidationRule.DateRule(
-            ExcelComparisonOperator.EQUAL, "=DATE(2026,4,1)", Optional.empty()));
+        new DataValidationRuleSpec.TimeRule(
+            ExcelComparisonOperator.GREATER_THAN,
+            ExcelComparisonFormulaSupport.normalizeFormula("TIME(9,0,0)", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
+        new DataValidationRuleSpec.TimeRule(
+            ExcelComparisonOperator.GREATER_THAN,
+            ExcelComparisonFormulaSupport.normalizeFormula("=TIME(9,0,0)", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")));
     assertEquals(
-        new ExcelDataValidationRule.TimeRule(
-            ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", Optional.empty()),
-        new ExcelDataValidationRule.TimeRule(
-            ExcelComparisonOperator.GREATER_THAN, "=TIME(9,0,0)", Optional.empty()));
-    assertEquals(
-        new ExcelDataValidationRule.TextLength(
-            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
-        new ExcelDataValidationRule.TextLength(
-            ExcelComparisonOperator.LESS_OR_EQUAL, "=20", Optional.empty()));
+        new DataValidationRuleSpec.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL,
+            ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
+        new DataValidationRuleSpec.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL,
+            ExcelComparisonFormulaSupport.normalizeFormula("=20", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")));
   }
 
   @Test
@@ -220,37 +295,53 @@ class ExcelDataValidationModelTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDataValidationRule.WholeNumber(
-                ExcelComparisonOperator.BETWEEN, "1", Optional.empty()));
+            new DataValidationRuleSpec.WholeNumber(
+                ExcelComparisonOperator.BETWEEN,
+                ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDataValidationRule.DecimalNumber(
-                ExcelComparisonOperator.GREATER_THAN, "1", Optional.of("2")));
+            new DataValidationRuleSpec.DecimalNumber(
+                ExcelComparisonOperator.GREATER_THAN,
+                ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.of("2"), "formula2")));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelDataValidationRule.DateRule(null, "DATE(2026,4,1)", Optional.empty()));
+        () ->
+            new DataValidationRuleSpec.DateRule(
+                null,
+                ExcelComparisonFormulaSupport.normalizeFormula("DATE(2026,4,1)", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDataValidationRule.TimeRule(
-                ExcelComparisonOperator.EQUAL, " ", Optional.empty()));
+            new DataValidationRuleSpec.TimeRule(
+                ExcelComparisonOperator.EQUAL,
+                ExcelComparisonFormulaSupport.normalizeFormula(" ", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDataValidationRule.TextLength(
-                ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of(" ")));
+            new DataValidationRuleSpec.TextLength(
+                ExcelComparisonOperator.NOT_BETWEEN,
+                ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.of(" "), "formula2")));
   }
 
   @Test
   void snapshotVariantsValidateRangesAndFields() {
-    ExcelDataValidationDefinition definition =
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+    ResolvedDataValidation definition =
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
             true,
             false,
-            Optional.of(
-                new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true)),
+            Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", true)),
             Optional.empty());
 
     ExcelDataValidationSnapshot.Supported supported =

@@ -11,6 +11,9 @@ import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
@@ -18,10 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -57,22 +57,25 @@ final class OperationSequenceRuleValues {
             : Optional.empty());
   }
 
-  static ExcelDataValidationDefinition nextExcelDataValidationDefinition(GridGrindFuzzData data) {
-    return new ExcelDataValidationDefinition(
+  static ResolvedDataValidation nextExcelDataValidationDefinition(GridGrindFuzzData data) {
+    return new ResolvedDataValidation(
         data.consumeBoolean()
-            ? new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done"))
-            : new ExcelDataValidationRule.WholeNumber(
-                ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
+            ? new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done"))
+            : new DataValidationRuleSpec.WholeNumber(
+                ExcelComparisonOperator.GREATER_OR_EQUAL,
+                ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")),
         data.consumeBoolean(),
         data.consumeBoolean(),
         data.consumeBoolean()
             ? Optional.of(
-                new ExcelDataValidationPrompt(
+                new ResolvedValidationPrompt(
                     "Status", "Use an allowed value.", data.consumeBoolean()))
             : Optional.empty(),
         data.consumeBoolean()
             ? Optional.of(
-                new ExcelDataValidationErrorAlert(
+                new ResolvedValidationErrorAlert(
                     ExcelDataValidationErrorStyle.STOP,
                     "Invalid",
                     "Use an allowed value.",

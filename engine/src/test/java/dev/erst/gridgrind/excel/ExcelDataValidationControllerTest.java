@@ -2,14 +2,14 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.util.List;
@@ -40,8 +40,9 @@ class ExcelDataValidationControllerTest {
   void roundTripsFormulaListValidation() throws IOException {
     assertRoundTrip(
         "B1:B3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.FormulaList("=Statuses"),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.FormulaList(
+                ExcelComparisonFormulaSupport.normalizeFormula("=Statuses", "formula")),
             false,
             true,
             Optional.empty(),
@@ -52,9 +53,12 @@ class ExcelDataValidationControllerTest {
   void roundTripsWholeNumberValidation() throws IOException {
     assertRoundTrip(
         "C1:C3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.WholeNumber(
-                ExcelComparisonOperator.GREATER_THAN, "=1", Optional.empty()),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.WholeNumber(
+                ExcelComparisonOperator.GREATER_THAN,
+                ExcelComparisonFormulaSupport.normalizeFormula("=1", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")),
             false,
             false,
             Optional.empty(),
@@ -65,9 +69,12 @@ class ExcelDataValidationControllerTest {
   void roundTripsDecimalValidation() throws IOException {
     assertRoundTrip(
         "D1:D3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.DecimalNumber(
-                ExcelComparisonOperator.GREATER_THAN, "=0.5", Optional.empty()),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.DecimalNumber(
+                ExcelComparisonOperator.GREATER_THAN,
+                ExcelComparisonFormulaSupport.normalizeFormula("=0.5", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")),
             false,
             false,
             Optional.empty(),
@@ -78,9 +85,12 @@ class ExcelDataValidationControllerTest {
   void roundTripsDateValidation() throws IOException {
     assertRoundTrip(
         "E1:E3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.DateRule(
-                ExcelComparisonOperator.EQUAL, "=DATE(2026,4,1)", Optional.empty()),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.DateRule(
+                ExcelComparisonOperator.EQUAL,
+                ExcelComparisonFormulaSupport.normalizeFormula("=DATE(2026,4,1)", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")),
             false,
             false,
             Optional.empty(),
@@ -91,9 +101,12 @@ class ExcelDataValidationControllerTest {
   void roundTripsTimeValidation() throws IOException {
     assertRoundTrip(
         "F1:F3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.TimeRule(
-                ExcelComparisonOperator.GREATER_THAN, "=TIME(9,0,0)", Optional.empty()),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.TimeRule(
+                ExcelComparisonOperator.GREATER_THAN,
+                ExcelComparisonFormulaSupport.normalizeFormula("=TIME(9,0,0)", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")),
             false,
             false,
             Optional.empty(),
@@ -104,9 +117,12 @@ class ExcelDataValidationControllerTest {
   void roundTripsTextLengthValidation() throws IOException {
     assertRoundTrip(
         "G1:G3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.TextLength(
-                ExcelComparisonOperator.GREATER_THAN, "=20", Optional.empty()),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.TextLength(
+                ExcelComparisonOperator.GREATER_THAN,
+                ExcelComparisonFormulaSupport.normalizeFormula("=20", "formula1"),
+                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                    Optional.empty(), "formula2")),
             false,
             false,
             Optional.empty(),
@@ -117,8 +133,9 @@ class ExcelDataValidationControllerTest {
   void roundTripsCustomFormulaValidation() throws IOException {
     assertRoundTrip(
         "H1:H3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.CustomFormula("=LEN(H1)>0"),
+        new ResolvedDataValidation(
+            new DataValidationRuleSpec.CustomFormula(
+                ExcelComparisonFormulaSupport.normalizeFormula("=LEN(H1)>0", "formula")),
             false,
             false,
             Optional.empty(),
@@ -133,9 +150,12 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "C1:C3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.TextLength(
-                  ExcelComparisonOperator.GREATER_THAN, "20", Optional.empty()),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.TextLength(
+                  ExcelComparisonOperator.GREATER_THAN,
+                  ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                      Optional.empty(), "formula2")),
               false,
               false,
               Optional.empty(),
@@ -149,9 +169,12 @@ class ExcelDataValidationControllerTest {
               new ExcelDataValidationSnapshot.Supported(
                   List.of("C1:C3"),
                   expectedRoundTripDefinition(
-                      new ExcelDataValidationDefinition(
-                          new ExcelDataValidationRule.TextLength(
-                              ExcelComparisonOperator.GREATER_THAN, "20", Optional.empty()),
+                      new ResolvedDataValidation(
+                          new DataValidationRuleSpec.TextLength(
+                              ExcelComparisonOperator.GREATER_THAN,
+                              ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+                              ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                                  Optional.empty(), "formula2")),
                           false,
                           false,
                           Optional.empty(),
@@ -279,8 +302,8 @@ class ExcelDataValidationControllerTest {
     assertEquals(
         new ExcelDataValidationSnapshot.Supported(
             List.of("C0"),
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.ExplicitList(List.of()),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.ExplicitList(List.of()),
                 false,
                 true,
                 Optional.empty(),
@@ -292,8 +315,8 @@ class ExcelDataValidationControllerTest {
     assertEquals(
         new ExcelDataValidationSnapshot.Supported(
             List.of("C0b"),
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.ExplicitList(List.of()),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.ExplicitList(List.of()),
                 false,
                 true,
                 Optional.empty(),
@@ -321,8 +344,9 @@ class ExcelDataValidationControllerTest {
     assertEquals(
         new ExcelDataValidationSnapshot.Supported(
             List.of("C3"),
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.FormulaList("Statuses"),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.FormulaList(
+                    ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
                 false,
                 true,
                 Optional.empty(),
@@ -452,7 +476,7 @@ class ExcelDataValidationControllerTest {
         Optional.empty(),
         ExcelDataValidationController.prompt(xssfListStub().overridePrompt("Status", " ", true)));
     assertEquals(
-        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false)),
+        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(
             xssfListStub().overridePrompt("Status", "Choose one workflow state.", false)));
 
@@ -480,7 +504,7 @@ class ExcelDataValidationControllerTest {
                 .overrideError("Invalid status", " ", true, DataValidation.ErrorStyle.STOP)));
     assertEquals(
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.INFORMATION,
                 "Heads up",
                 "Use an allowed value.",
@@ -509,14 +533,15 @@ class ExcelDataValidationControllerTest {
                         DataValidation.ErrorStyle.WARNING),
                 List.of("C1:C3")));
     assertEquals(
-        new ExcelDataValidationRule.FormulaList("Statuses"),
+        new DataValidationRuleSpec.FormulaList(
+            ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
         formulaListSnapshot.validation().rule());
     assertEquals(
-        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false)),
+        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", false)),
         formulaListSnapshot.validation().prompt());
     assertEquals(
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.WARNING,
                 "Heads up",
                 "Read the allowed values.",
@@ -542,7 +567,8 @@ class ExcelDataValidationControllerTest {
                         DataValidation.ErrorStyle.STOP),
                 List.of("D1")));
     assertEquals(
-        new ExcelDataValidationRule.CustomFormula("LEN(D1)>0"),
+        new DataValidationRuleSpec.CustomFormula(
+            ExcelComparisonFormulaSupport.normalizeFormula("LEN(D1)>0", "formula")),
         customFormulaSnapshot.validation().rule());
   }
 
@@ -552,7 +578,7 @@ class ExcelDataValidationControllerTest {
     promptDefaults.setPromptTitle("Status");
     promptDefaults.setPrompt("Choose one workflow state.");
     assertEquals(
-        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false)),
+        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(promptDefaults));
 
     CTDataValidation promptExplicitFalse =
@@ -561,7 +587,7 @@ class ExcelDataValidationControllerTest {
     promptExplicitFalse.setPrompt("Choose one workflow state.");
     promptExplicitFalse.setShowInputMessage(false);
     assertEquals(
-        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false)),
+        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(promptExplicitFalse));
 
     CTDataValidation promptBlankTitle =
@@ -585,7 +611,7 @@ class ExcelDataValidationControllerTest {
     errorDefaults.setError("Use one of the allowed values.");
     assertEquals(
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.STOP,
                 "Invalid status",
                 "Use one of the allowed values.",
@@ -600,7 +626,7 @@ class ExcelDataValidationControllerTest {
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.WARNING);
     assertEquals(
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.WARNING, "Warning", "Watch this value.", true)),
         ExcelDataValidationController.errorAlert(warningError));
 
@@ -611,7 +637,7 @@ class ExcelDataValidationControllerTest {
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.INFORMATION);
     assertEquals(
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.INFORMATION, "Info", "Read the list.", false)),
         ExcelDataValidationController.errorAlert(infoError));
 
@@ -622,7 +648,7 @@ class ExcelDataValidationControllerTest {
     explicitFalseError.setShowErrorMessage(false);
     assertEquals(
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.STOP, "Explicit false", "Stay false.", false)),
         ExcelDataValidationController.errorAlert(explicitFalseError));
 
@@ -776,8 +802,10 @@ class ExcelDataValidationControllerTest {
                     null),
                 List.of("A1")));
     assertEquals(
-        new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "0.5", Optional.empty()),
+        new DataValidationRuleSpec.DecimalNumber(
+            ExcelComparisonOperator.GREATER_THAN,
+            ExcelComparisonFormulaSupport.normalizeFormula("0.5", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         decimalSnapshot.validation().rule());
 
     ExcelDataValidationSnapshot.Supported dateSnapshot =
@@ -792,8 +820,10 @@ class ExcelDataValidationControllerTest {
                     null),
                 List.of("B1")));
     assertEquals(
-        new ExcelDataValidationRule.DateRule(
-            ExcelComparisonOperator.EQUAL, "DATE(2026,4,1)", Optional.empty()),
+        new DataValidationRuleSpec.DateRule(
+            ExcelComparisonOperator.EQUAL,
+            ExcelComparisonFormulaSupport.normalizeFormula("DATE(2026,4,1)", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         dateSnapshot.validation().rule());
 
     ExcelDataValidationSnapshot.Supported timeSnapshot =
@@ -808,8 +838,10 @@ class ExcelDataValidationControllerTest {
                     null),
                 List.of("C1")));
     assertEquals(
-        new ExcelDataValidationRule.TimeRule(
-            ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", Optional.empty()),
+        new DataValidationRuleSpec.TimeRule(
+            ExcelComparisonOperator.GREATER_THAN,
+            ExcelComparisonFormulaSupport.normalizeFormula("TIME(9,0,0)", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         timeSnapshot.validation().rule());
 
     ExcelDataValidationSnapshot.Supported textLengthSnapshot =
@@ -824,8 +856,10 @@ class ExcelDataValidationControllerTest {
                     null),
                 List.of("D1")));
     assertEquals(
-        new ExcelDataValidationRule.TextLength(
-            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
+        new DataValidationRuleSpec.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL,
+            ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         textLengthSnapshot.validation().rule());
 
     ExcelDataValidationSnapshot.Supported wholeBetweenSnapshot =
@@ -840,8 +874,10 @@ class ExcelDataValidationControllerTest {
                     "9"),
                 List.of("E1")));
     assertEquals(
-        new ExcelDataValidationRule.WholeNumber(
-            ExcelComparisonOperator.BETWEEN, "1", Optional.of("9")),
+        new DataValidationRuleSpec.WholeNumber(
+            ExcelComparisonOperator.BETWEEN,
+            ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.of("9"), "formula2")),
         wholeBetweenSnapshot.validation().rule());
     assertEquals(
         new ExcelDataValidationSnapshot.Unsupported(
@@ -935,8 +971,9 @@ class ExcelDataValidationControllerTest {
     assertEquals(
         new ExcelDataValidationSnapshot.Supported(
             List.of("L1"),
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.FormulaList("\"Queued"),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.FormulaList(
+                    ExcelComparisonFormulaSupport.normalizeFormula("\"Queued", "formula")),
                 false,
                 true,
                 Optional.empty(),
@@ -946,8 +983,9 @@ class ExcelDataValidationControllerTest {
     assertEquals(
         new ExcelDataValidationSnapshot.Supported(
             List.of("L2"),
-            new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.FormulaList("\""),
+            new ResolvedDataValidation(
+                new DataValidationRuleSpec.FormulaList(
+                    ExcelComparisonFormulaSupport.normalizeFormula("\"", "formula")),
                 false,
                 true,
                 Optional.empty(),
@@ -988,10 +1026,10 @@ class ExcelDataValidationControllerTest {
             ExcelDataValidationSnapshot.Supported.class,
             ExcelDataValidationController.toSnapshot(explicitList, List.of("A1:A3")));
     assertEquals(
-        new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+        new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
         explicitListSnapshot.validation().rule());
     assertEquals(
-        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true)),
+        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", true)),
         explicitListSnapshot.validation().prompt());
     assertEquals(
         ExcelDataValidationErrorStyle.WARNING,
@@ -1014,7 +1052,8 @@ class ExcelDataValidationControllerTest {
             ExcelDataValidationSnapshot.Supported.class,
             ExcelDataValidationController.toSnapshot(formulaList, List.of("B1:B3")));
     assertEquals(
-        new ExcelDataValidationRule.FormulaList("Statuses"),
+        new DataValidationRuleSpec.FormulaList(
+            ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
         formulaListSnapshot.validation().rule());
     assertFalse(formulaListSnapshot.validation().suppressDropDownArrow());
     assertEquals(
@@ -1065,7 +1104,9 @@ class ExcelDataValidationControllerTest {
             ExcelDataValidationSnapshot.Supported.class,
             ExcelDataValidationController.toSnapshot(custom, List.of("C1:C3")));
     assertEquals(
-        new ExcelDataValidationRule.CustomFormula("LEN(C1)>0"), customSnapshot.validation().rule());
+        new DataValidationRuleSpec.CustomFormula(
+            ExcelComparisonFormulaSupport.normalizeFormula("LEN(C1)>0", "formula")),
+        customSnapshot.validation().rule());
   }
 
   @Test
@@ -1093,8 +1134,9 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "A1:A3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.FormulaList("#REF!"),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.FormulaList(
+                  ExcelComparisonFormulaSupport.normalizeFormula("#REF!", "formula")),
               false,
               false,
               Optional.empty(),
@@ -1102,9 +1144,12 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "B1:B3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.WholeNumber(
-                  ExcelComparisonOperator.BETWEEN, "#REF!", Optional.of("#REF!")),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.WholeNumber(
+                  ExcelComparisonOperator.BETWEEN,
+                  ExcelComparisonFormulaSupport.normalizeFormula("#REF!", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                      Optional.of("#REF!"), "formula2")),
               false,
               false,
               Optional.empty(),
@@ -1112,9 +1157,12 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "C1:C3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.DecimalNumber(
-                  ExcelComparisonOperator.GREATER_THAN, "#REF!", Optional.empty()),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.DecimalNumber(
+                  ExcelComparisonOperator.GREATER_THAN,
+                  ExcelComparisonFormulaSupport.normalizeFormula("#REF!", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                      Optional.empty(), "formula2")),
               false,
               false,
               Optional.empty(),
@@ -1122,9 +1170,12 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "D1:D3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.DateRule(
-                  ExcelComparisonOperator.GREATER_THAN, "#REF!", Optional.empty()),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.DateRule(
+                  ExcelComparisonOperator.GREATER_THAN,
+                  ExcelComparisonFormulaSupport.normalizeFormula("#REF!", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                      Optional.empty(), "formula2")),
               false,
               false,
               Optional.empty(),
@@ -1132,9 +1183,12 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "E1:E3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.TimeRule(
-                  ExcelComparisonOperator.GREATER_THAN, "#REF!", Optional.empty()),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.TimeRule(
+                  ExcelComparisonOperator.GREATER_THAN,
+                  ExcelComparisonFormulaSupport.normalizeFormula("#REF!", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                      Optional.empty(), "formula2")),
               false,
               false,
               Optional.empty(),
@@ -1142,9 +1196,12 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "F1:F3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.TextLength(
-                  ExcelComparisonOperator.GREATER_THAN, "#REF!", Optional.empty()),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.TextLength(
+                  ExcelComparisonOperator.GREATER_THAN,
+                  ExcelComparisonFormulaSupport.normalizeFormula("#REF!", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                      Optional.empty(), "formula2")),
               false,
               false,
               Optional.empty(),
@@ -1152,8 +1209,9 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "G1:G3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.CustomFormula("#REF!"),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.CustomFormula(
+                  ExcelComparisonFormulaSupport.normalizeFormula("#REF!", "formula")),
               false,
               false,
               Optional.empty(),
@@ -1178,9 +1236,12 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "A1:A3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.WholeNumber(
-                  ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty()),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.WholeNumber(
+                  ExcelComparisonOperator.GREATER_THAN,
+                  ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                      Optional.empty(), "formula2")),
               false,
               false,
               Optional.empty(),
@@ -1188,8 +1249,9 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "B1:B3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.FormulaList("Statuses"),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.FormulaList(
+                  ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
               false,
               true,
               Optional.empty(),
@@ -1197,8 +1259,9 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(
           sheet,
           "C1:C3",
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.CustomFormula("LEN(C1)>0"),
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.CustomFormula(
+                  ExcelComparisonFormulaSupport.normalizeFormula("LEN(C1)>0", "formula")),
               false,
               false,
               Optional.empty(),
@@ -1231,7 +1294,7 @@ class ExcelDataValidationControllerTest {
           assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, snapshots.get(0));
       assertEquals(List.of("E2"), emptyExplicitList.ranges());
       assertEquals(
-          new ExcelDataValidationRule.ExplicitList(List.of()),
+          new DataValidationRuleSpec.ExplicitList(List.of()),
           emptyExplicitList.validation().rule());
       assertEquals(
           new ExcelDataValidationSnapshot.Unsupported(
@@ -1242,7 +1305,7 @@ class ExcelDataValidationControllerTest {
       ExcelDataValidationSnapshot.Supported textLength =
           assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, snapshots.get(2));
       assertEquals(List.of("G2"), textLength.ranges());
-      assertInstanceOf(ExcelDataValidationRule.TextLength.class, textLength.validation().rule());
+      assertInstanceOf(DataValidationRuleSpec.TextLength.class, textLength.validation().rule());
       assertEquals(
           List.of(
               AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
@@ -1279,9 +1342,9 @@ class ExcelDataValidationControllerTest {
   void setDataValidationRoundTripsEmptyExplicitListsAndReportsHealth() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
-      ExcelDataValidationDefinition definition =
-          new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.ExplicitList(List.of()),
+      ResolvedDataValidation definition =
+          new ResolvedDataValidation(
+              new DataValidationRuleSpec.ExplicitList(List.of()),
               true,
               false,
               Optional.empty(),
@@ -1296,8 +1359,8 @@ class ExcelDataValidationControllerTest {
           List.of(
               new ExcelDataValidationSnapshot.Supported(
                   List.of("E2:E4"),
-                  new ExcelDataValidationDefinition(
-                      new ExcelDataValidationRule.ExplicitList(List.of()),
+                  new ResolvedDataValidation(
+                      new DataValidationRuleSpec.ExplicitList(List.of()),
                       true,
                       false,
                       Optional.empty(),
@@ -1315,22 +1378,22 @@ class ExcelDataValidationControllerTest {
     }
   }
 
-  private static ExcelDataValidationDefinition explicitListValidation() {
-    return new ExcelDataValidationDefinition(
-        new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+  private static ResolvedDataValidation explicitListValidation() {
+    return new ResolvedDataValidation(
+        new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
         true,
         false,
-        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true)),
+        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", true)),
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.STOP,
                 "Invalid status",
                 "Use one of the allowed values.",
                 true)));
   }
 
-  private static ExcelDataValidationErrorAlert warningAlert() {
-    return new ExcelDataValidationErrorAlert(
+  private static ResolvedValidationErrorAlert warningAlert() {
+    return new ResolvedValidationErrorAlert(
         ExcelDataValidationErrorStyle.WARNING,
         "Outside range",
         "Use a value greater than 0.5.",
@@ -1364,26 +1427,26 @@ class ExcelDataValidationControllerTest {
             ExcelDataValidationSnapshot.Supported.class,
             ExcelDataValidationController.toSnapshot(validation, List.of("Z1")));
 
-    ExcelDataValidationRule rule = snapshot.validation().rule();
+    DataValidationRuleSpec rule = snapshot.validation().rule();
     ExcelComparisonOperator actualOperator =
         switch (rule) {
-          case ExcelDataValidationRule.WholeNumber wholeNumber -> wholeNumber.operator();
-          case ExcelDataValidationRule.DecimalNumber decimalNumber -> decimalNumber.operator();
-          case ExcelDataValidationRule.DateRule dateRule -> dateRule.operator();
-          case ExcelDataValidationRule.TimeRule timeRule -> timeRule.operator();
-          case ExcelDataValidationRule.TextLength textLength -> textLength.operator();
+          case DataValidationRuleSpec.WholeNumber wholeNumber -> wholeNumber.operator();
+          case DataValidationRuleSpec.DecimalNumber decimalNumber -> decimalNumber.operator();
+          case DataValidationRuleSpec.DateRule dateRule -> dateRule.operator();
+          case DataValidationRuleSpec.TimeRule timeRule -> timeRule.operator();
+          case DataValidationRuleSpec.TextLength textLength -> textLength.operator();
           default -> throw new AssertionError("unexpected rule type: " + rule);
         };
     assertEquals(expectedOperator, actualOperator);
   }
 
-  private static ExcelDataValidationDefinition expectedRoundTripDefinition(
-      ExcelDataValidationDefinition definition) {
+  private static ResolvedDataValidation expectedRoundTripDefinition(
+      ResolvedDataValidation definition) {
     boolean suppressDropDownArrow = true;
-    if (definition.rule() instanceof ExcelDataValidationRule.ExplicitList) {
+    if (definition.rule() instanceof DataValidationRuleSpec.ExplicitList) {
       suppressDropDownArrow = definition.suppressDropDownArrow();
     }
-    return new ExcelDataValidationDefinition(
+    return new ResolvedDataValidation(
         definition.rule(),
         definition.allowBlank(),
         suppressDropDownArrow,
@@ -1391,8 +1454,7 @@ class ExcelDataValidationControllerTest {
         definition.errorAlert());
   }
 
-  private void assertRoundTrip(String range, ExcelDataValidationDefinition definition)
-      throws IOException {
+  private void assertRoundTrip(String range, ResolvedDataValidation definition) throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
       controller.setDataValidation(sheet, range, definition);

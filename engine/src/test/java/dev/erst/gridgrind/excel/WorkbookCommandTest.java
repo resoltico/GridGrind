@@ -8,6 +8,10 @@ import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
@@ -26,10 +30,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -946,15 +946,17 @@ class WorkbookCommandTest {
         IllegalArgumentException.class, () -> new WorkbookLayoutCommand.AutoSizeColumns(" "));
   }
 
-  private static ExcelDataValidationDefinition validationDefinition() {
-    return new ExcelDataValidationDefinition(
-        new ExcelDataValidationRule.TextLength(
-            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
+  private static ResolvedDataValidation validationDefinition() {
+    return new ResolvedDataValidation(
+        new DataValidationRuleSpec.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL,
+            ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+            ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         true,
         false,
-        Optional.of(new ExcelDataValidationPrompt("Reason", "Use 20 characters or fewer.", true)),
+        Optional.of(new ResolvedValidationPrompt("Reason", "Use 20 characters or fewer.", true)),
         Optional.of(
-            new ExcelDataValidationErrorAlert(
+            new ResolvedValidationErrorAlert(
                 ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true)));
   }
 

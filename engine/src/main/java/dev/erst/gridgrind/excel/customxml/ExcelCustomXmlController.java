@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel.customxml;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -31,7 +32,8 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /** Workbook custom-XML mapping inspect/import/export support built on POI XSSF. */
-@SuppressWarnings("PMD.CommentRequired")
+@SuppressWarnings({"PMD.CommentRequired", "PMD.ExcessiveImports"})
+// Mapping, linked-cell/table and XML import operations share this POI feature boundary.
 public final class ExcelCustomXmlController {
   private final ExcelCustomXmlExporter exporter;
   private final ExcelCustomXmlImporter importer;
@@ -89,11 +91,11 @@ public final class ExcelCustomXmlController {
         snapshot(mapping), charset.name(), validateSchema, output.toString(charset));
   }
 
-  public void importMapping(XSSFWorkbook workbook, ExcelCustomXmlImportDefinition definition) {
+  public void importMapping(XSSFWorkbook workbook, ResolvedCustomXmlImport definition) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    XSSFMap mapping = requireMapping(workbook, definition.mapping());
+    XSSFMap mapping = requireMapping(workbook, definition.locator());
     try {
       importer.importXml(mapping, definition.xml());
     } catch (IOException exception) {

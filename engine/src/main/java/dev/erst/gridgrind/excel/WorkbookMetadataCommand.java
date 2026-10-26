@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
+import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import java.util.Objects;
 
 /** Workbook-global metadata commands such as custom XML and named ranges. */
@@ -10,7 +10,7 @@ public sealed interface WorkbookMetadataCommand extends WorkbookCommand
         WorkbookMetadataCommand.DeleteNamedRange {
 
   /** Imports one XML document into one existing workbook custom-XML mapping. */
-  record ImportCustomXmlMapping(ExcelCustomXmlImportDefinition mapping)
+  record ImportCustomXmlMapping(ResolvedCustomXmlImport mapping)
       implements WorkbookMetadataCommand {
     public ImportCustomXmlMapping {
       Objects.requireNonNull(mapping, "mapping must not be null");

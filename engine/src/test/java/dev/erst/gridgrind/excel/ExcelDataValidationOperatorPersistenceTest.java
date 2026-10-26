@@ -3,10 +3,10 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -109,49 +109,68 @@ class ExcelDataValidationOperatorPersistenceTest {
     }
   }
 
-  private static ExcelDataValidationDefinition definition(
+  private static ResolvedDataValidation definition(
       Family family, ExcelComparisonOperator operator) {
     Optional<String> formula2 =
         switch (operator) {
           case BETWEEN, NOT_BETWEEN -> Optional.of(family.secondFormula());
           default -> Optional.empty();
         };
-    ExcelDataValidationRule rule =
+    DataValidationRuleSpec rule =
         switch (family) {
-          case WHOLE_NUMBER -> new ExcelDataValidationRule.WholeNumber(operator, "10", formula2);
-          case DECIMAL -> new ExcelDataValidationRule.DecimalNumber(operator, "10.5", formula2);
-          case DATE -> new ExcelDataValidationRule.DateRule(operator, "DATE(2026,1,1)", formula2);
-          case TIME -> new ExcelDataValidationRule.TimeRule(operator, "TIME(9,0,0)", formula2);
-          case TEXT_LENGTH -> new ExcelDataValidationRule.TextLength(operator, "5", formula2);
+          case WHOLE_NUMBER ->
+              new DataValidationRuleSpec.WholeNumber(
+                  operator,
+                  ExcelComparisonFormulaSupport.normalizeFormula("10", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
+          case DECIMAL ->
+              new DataValidationRuleSpec.DecimalNumber(
+                  operator,
+                  ExcelComparisonFormulaSupport.normalizeFormula("10.5", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
+          case DATE ->
+              new DataValidationRuleSpec.DateRule(
+                  operator,
+                  ExcelComparisonFormulaSupport.normalizeFormula("DATE(2026,1,1)", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
+          case TIME ->
+              new DataValidationRuleSpec.TimeRule(
+                  operator,
+                  ExcelComparisonFormulaSupport.normalizeFormula("TIME(9,0,0)", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
+          case TEXT_LENGTH ->
+              new DataValidationRuleSpec.TextLength(
+                  operator,
+                  ExcelComparisonFormulaSupport.normalizeFormula("5", "formula1"),
+                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(formula2, "formula2"));
         };
-    return new ExcelDataValidationDefinition(
-        rule, false, false, Optional.empty(), Optional.empty());
+    return new ResolvedDataValidation(rule, false, false, Optional.empty(), Optional.empty());
   }
 
-  private static ExcelComparisonOperator operatorOf(ExcelDataValidationRule rule) {
+  private static ExcelComparisonOperator operatorOf(DataValidationRuleSpec rule) {
     return switch (rule) {
-      case ExcelDataValidationRule.WholeNumber wholeNumber -> wholeNumber.operator();
-      case ExcelDataValidationRule.DecimalNumber decimalNumber -> decimalNumber.operator();
-      case ExcelDataValidationRule.DateRule dateRule -> dateRule.operator();
-      case ExcelDataValidationRule.TimeRule timeRule -> timeRule.operator();
-      case ExcelDataValidationRule.TextLength textLength -> textLength.operator();
-      case ExcelDataValidationRule.ExplicitList _,
-          ExcelDataValidationRule.FormulaList _,
-          ExcelDataValidationRule.CustomFormula _ ->
+      case DataValidationRuleSpec.WholeNumber wholeNumber -> wholeNumber.operator();
+      case DataValidationRuleSpec.DecimalNumber decimalNumber -> decimalNumber.operator();
+      case DataValidationRuleSpec.DateRule dateRule -> dateRule.operator();
+      case DataValidationRuleSpec.TimeRule timeRule -> timeRule.operator();
+      case DataValidationRuleSpec.TextLength textLength -> textLength.operator();
+      case DataValidationRuleSpec.ExplicitList _,
+          DataValidationRuleSpec.FormulaList _,
+          DataValidationRuleSpec.CustomFormula _ ->
           throw new AssertionError("Expected one comparison validation rule");
     };
   }
 
-  private static Optional<String> formula2Of(ExcelDataValidationRule rule) {
+  private static Optional<String> formula2Of(DataValidationRuleSpec rule) {
     return switch (rule) {
-      case ExcelDataValidationRule.WholeNumber wholeNumber -> wholeNumber.formula2();
-      case ExcelDataValidationRule.DecimalNumber decimalNumber -> decimalNumber.formula2();
-      case ExcelDataValidationRule.DateRule dateRule -> dateRule.formula2();
-      case ExcelDataValidationRule.TimeRule timeRule -> timeRule.formula2();
-      case ExcelDataValidationRule.TextLength textLength -> textLength.formula2();
-      case ExcelDataValidationRule.ExplicitList _,
-          ExcelDataValidationRule.FormulaList _,
-          ExcelDataValidationRule.CustomFormula _ ->
+      case DataValidationRuleSpec.WholeNumber wholeNumber -> wholeNumber.formula2();
+      case DataValidationRuleSpec.DecimalNumber decimalNumber -> decimalNumber.formula2();
+      case DataValidationRuleSpec.DateRule dateRule -> dateRule.formula2();
+      case DataValidationRuleSpec.TimeRule timeRule -> timeRule.formula2();
+      case DataValidationRuleSpec.TextLength textLength -> textLength.formula2();
+      case DataValidationRuleSpec.ExplicitList _,
+          DataValidationRuleSpec.FormulaList _,
+          DataValidationRuleSpec.CustomFormula _ ->
           throw new AssertionError("Expected one comparison validation rule");
     };
   }

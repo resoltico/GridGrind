@@ -1904,3 +1904,34 @@ Inventories: definitions 7→5, converter lines 4201→4176, blank checks 428→
 121602→121534. Snapshots 38 and Support 206 remain open. Baseline diff empty. The engine
 selection/query mirrors, remaining factual models and resolved-plan/step/target cutover are still
 required; this does not claim WP-40 completion.
+
+## WP-40 resolved XML and validation text; shared validation rules
+
+Deleted engine XML-import and data-validation definitions, prompt/error records and the rule
+hierarchy. Core ResolvedCustomXmlImport uses the canonical locator and materialized XML text;
+ResolvedDataValidation/ResolvedValidationPrompt/ResolvedValidationErrorAlert carry materialized
+text. Source-free DataValidationRuleSpec is reused directly and both rule identity converters are
+deleted. Existing public report shapes remain intact. Model bounds/list-copy checks moved to core;
+sole type-conversion checks were retired.
+
+Challenge found storage normalization in the deleted engine rule constructors. Preserved trimming
+and leading-equals removal at POI write/read boundaries using the existing comparison normalization
+owner; optional normalization preserves operand presence so the core comparison contract remains
+authoritative. The old non-BETWEEN blank-upper-bound convenience is not retained: core requires
+omission, and the obsolete expectation now checks that constraint. XML mapping import accessors
+use locator consistently. A scoped import suppression was combined with the XML adapter's existing
+annotation after the first repair exposed a nonrepeatable annotation; full failures are retained.
+
+A new real POI boundary regression verifies normalized BETWEEN formulas and that an invalid
+replacement formula does not remove the existing validation. Constraint construction now precedes
+overlap mutation, preserving the protection formerly supplied by engine model construction. All
+source sets compiled first pass (35s); final focused core/JSON/engine/14 parity/static checks pass
+(48s), deterministic check and all retained seeds pass (19s). ./gradlew check passes (3m22s):
+core 352, JSON 348, engine 1477 plus 14 parity, CLI 588, architecture 14 plus 12 rule tests, zero
+failures/errors/skips. All 143 golden cases are unchanged. No active mutation/fuzz campaign ran.
+
+Inventories: definitions 5→3, converter lines 4176→4117, blank checks 426→425, main Java
+121534→121422. Snapshots 38 and Support 206 remain open. Baseline diff empty. Remaining
+definitions are source-free named-range/pivot/conditional-formatting models; they must be removed
+by direct core use, not moved into artificial resolved copies. Print and protection source-bearing
+forms and the actual resolved plan/step/target/command cutover remain open.

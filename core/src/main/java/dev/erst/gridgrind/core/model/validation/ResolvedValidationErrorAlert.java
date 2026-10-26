@@ -1,12 +1,12 @@
-package dev.erst.gridgrind.excel.validation;
+package dev.erst.gridgrind.core.model.validation;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import java.util.Objects;
 
-/** Error-box configuration attached to one data-validation rule. */
-public record ExcelDataValidationErrorAlert(
+/** Materialized error-box text attached to a data-validation rule. */
+public record ResolvedValidationErrorAlert(
     ExcelDataValidationErrorStyle style, String title, String text, boolean showErrorBox) {
-  public ExcelDataValidationErrorAlert {
+  public ResolvedValidationErrorAlert {
     Objects.requireNonNull(style, "style must not be null");
     title = requireNonBlank(title, "title");
     text = requireNonBlank(text, "text");
