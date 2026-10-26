@@ -108,7 +108,7 @@ final class WorkbookSampleFixtures {
             false,
             StandardCharsets.UTF_8.name()),
         new WorkbookReadCommand.GetNamedRanges(
-            new StepId("ranges"), new ExcelNamedRangeSelection.All()),
+            new StepId("ranges"), new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()),
         new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget"),
         WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1")),
         WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 1, 1),

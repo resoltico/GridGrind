@@ -170,13 +170,13 @@ final class WorkbookAnalyzer {
   }
 
   NamedRangeHealthReport namedRangeHealth(
-      ExcelWorkbook workbook, ExcelNamedRangeSelection selection) {
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.NamedRangeSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<NamedRangeReport> namedRanges =
         workbookIntrospector.selectNamedRanges(workbook, selection);
-    if (selection instanceof ExcelNamedRangeSelection.All
+    if (selection instanceof dev.erst.gridgrind.core.plan.NamedRangeSelector.All
         && !workbook.wasMutatedSinceOpenInternal()) {
       List<NamedRangeReport> combined = new ArrayList<>(namedRanges);
       combined.addAll(ExcelWorkbookNamedRangeSupport.unmodeledObservedNamedRanges(workbook));
@@ -200,7 +200,9 @@ final class WorkbookAnalyzer {
     combined.addAll(pivotTableHealth(workbook, new PivotTableSelector.All()).findings());
     combined.addAll(
         hyperlinkHealth(workbook, workbookLocation, new SheetSelector.All()).findings());
-    combined.addAll(namedRangeHealth(workbook, new ExcelNamedRangeSelection.All()).findings());
+    combined.addAll(
+        namedRangeHealth(workbook, new dev.erst.gridgrind.core.plan.NamedRangeSelector.All())
+            .findings());
 
     List<AnalysisFindingReport> findings =
         List.copyOf(new ArrayList<>(new LinkedHashSet<>(combined)));

@@ -144,7 +144,8 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeNamedRangeHealth(
-                      new StepId("namedRangeHealth"), new ExcelNamedRangeSelection.All())));
+                      new StepId("namedRangeHealth"),
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.All())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult autofilterHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult.class,
@@ -316,8 +317,10 @@ class WorkbookAnalyzerTest {
       NamedRangeHealthReport namedRangeHealth =
           analyzer.namedRangeHealth(
               workbook,
-              new ExcelNamedRangeSelection.Selected(
-                  List.of(new ExcelNamedRangeSelector.WorkbookScope("BudgetTotal"))));
+              new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
+                  List.of(
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal")))));
       assertEquals(1, namedRangeHealth.checkedNamedRangeCount());
       assertEquals(
           0,
@@ -361,7 +364,9 @@ class WorkbookAnalyzerTest {
         NullPointerException.class, () -> analyzer.hyperlinkHealth(ExcelWorkbooks.create(), null));
     assertThrows(
         NullPointerException.class,
-        () -> analyzer.namedRangeHealth(null, new ExcelNamedRangeSelection.All()));
+        () ->
+            analyzer.namedRangeHealth(
+                null, new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()));
     assertThrows(
         NullPointerException.class, () -> analyzer.namedRangeHealth(ExcelWorkbooks.create(), null));
   }
@@ -476,7 +481,9 @@ class WorkbookAnalyzerTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       NamedRangeHealthReport analysis =
-          new WorkbookAnalyzer().namedRangeHealth(workbook, new ExcelNamedRangeSelection.All());
+          new WorkbookAnalyzer()
+              .namedRangeHealth(
+                  workbook, new dev.erst.gridgrind.core.plan.NamedRangeSelector.All());
 
       assertEquals(3, analysis.checkedNamedRangeCount());
       assertEquals(0, analysis.summary().warningCount());
@@ -538,7 +545,9 @@ class WorkbookAnalyzerTest {
             patchedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
 
       NamedRangeHealthReport analysis =
-          new WorkbookAnalyzer().namedRangeHealth(workbook, new ExcelNamedRangeSelection.All());
+          new WorkbookAnalyzer()
+              .namedRangeHealth(
+                  workbook, new dev.erst.gridgrind.core.plan.NamedRangeSelector.All());
 
       assertEquals(10, analysis.checkedNamedRangeCount());
       assertEquals(

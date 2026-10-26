@@ -19,7 +19,7 @@ class WorkbookReadCommandTest {
         new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"));
     WorkbookReadCommand.GetNamedRanges namedRanges =
         new WorkbookReadCommand.GetNamedRanges(
-            new StepId("ranges"), new ExcelNamedRangeSelection.All());
+            new StepId("ranges"), new dev.erst.gridgrind.core.plan.NamedRangeSelector.All());
     WorkbookReadCommand.GetSheetSummary sheetSummary =
         new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget");
     WorkbookReadCommand.GetCells cells =
@@ -56,7 +56,7 @@ class WorkbookReadCommandTest {
         WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 3, 2);
     WorkbookReadCommand.GetNamedRangeSurface namedRangeSurface =
         new WorkbookReadCommand.GetNamedRangeSurface(
-            new StepId("surface"), new ExcelNamedRangeSelection.All());
+            new StepId("surface"), new dev.erst.gridgrind.core.plan.NamedRangeSelector.All());
     WorkbookReadCommand.AnalyzeFormulaHealth formulaHealth =
         new WorkbookReadCommand.AnalyzeFormulaHealth(
             new StepId("formulaHealth"), new SheetSelector.All());
@@ -85,12 +85,14 @@ class WorkbookReadCommandTest {
             new StepId("hyperlinkHealth"), new SheetSelector.All());
     WorkbookReadCommand.AnalyzeNamedRangeHealth namedRangeHealth =
         new WorkbookReadCommand.AnalyzeNamedRangeHealth(
-            new StepId("namedRangeHealth"), new ExcelNamedRangeSelection.All());
+            new StepId("namedRangeHealth"),
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.All());
     WorkbookReadCommand.AnalyzeWorkbookFindings workbookFindings =
         new WorkbookReadCommand.AnalyzeWorkbookFindings(new StepId("workbookFindings"));
 
     assertEquals("workbook", workbookSummary.stepId().value());
-    assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRanges.selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.core.plan.NamedRangeSelector.All.class, namedRanges.selection());
     assertEquals("Budget", sheetSummary.sheetName());
     assertEquals(List.of("A1"), cells.addresses());
     assertEquals("A1", window.window().topLeftAddress());
@@ -104,7 +106,8 @@ class WorkbookReadCommandTest {
     assertInstanceOf(PivotTableSelector.All.class, pivotTables.selection());
     assertInstanceOf(SheetSelector.ByNames.class, formulaSurface.selection());
     assertEquals(3, schema.window().rowCount());
-    assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeSurface.selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.core.plan.NamedRangeSelector.All.class, namedRangeSurface.selection());
     assertInstanceOf(SheetSelector.All.class, formulaHealth.selection());
     assertInstanceOf(SheetSelector.All.class, dataValidationHealth.selection());
     assertInstanceOf(SheetSelector.All.class, conditionalFormattingHealth.selection());
@@ -112,7 +115,8 @@ class WorkbookReadCommandTest {
     assertInstanceOf(TableSelector.ByNames.class, tableHealth.selection());
     assertInstanceOf(PivotTableSelector.ByNames.class, pivotTableHealth.selection());
     assertInstanceOf(SheetSelector.All.class, hyperlinkHealth.selection());
-    assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeHealth.selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.core.plan.NamedRangeSelector.All.class, namedRangeHealth.selection());
     assertEquals("workbookFindings", workbookFindings.stepId().value());
   }
 

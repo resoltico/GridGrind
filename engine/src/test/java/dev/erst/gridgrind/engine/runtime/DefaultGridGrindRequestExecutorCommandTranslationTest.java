@@ -157,7 +157,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     assertInstanceOf(WorkbookReadCommand.GetSheetSchema.class, schema);
     assertInstanceOf(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface);
     assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelNamedRangeSelection.Selected.class,
+        dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf.class,
         cast(WorkbookReadCommand.GetNamedRanges.class, namedRanges).selection());
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelCellSelection.AllUsedCells.class,
@@ -179,7 +179,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         dev.erst.gridgrind.core.plan.SheetSelector.ByNames.class,
         cast(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface).selection());
     assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelNamedRangeSelection.All.class,
+        dev.erst.gridgrind.core.plan.NamedRangeSelector.All.class,
         cast(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface).selection());
   }
 

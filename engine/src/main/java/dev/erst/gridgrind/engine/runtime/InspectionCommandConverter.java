@@ -46,8 +46,7 @@ final class InspectionCommandConverter {
               exportCustomXmlMapping.validateSchema(),
               exportCustomXmlMapping.encoding());
       case WorkbookIntrospectionQuery.GetNamedRanges _ ->
-          new WorkbookReadCommand.GetNamedRanges(
-              stepId, SelectorConverter.toExcelNamedRangeSelection((NamedRangeSelector) target));
+          new WorkbookReadCommand.GetNamedRanges(stepId, (NamedRangeSelector) target);
       case SheetIntrospectionQuery.GetSheetSummary _ ->
           new WorkbookReadCommand.GetSheetSummary(
               stepId, SelectorConverter.toSheetName((SheetSelector.ByName) target));
@@ -139,8 +138,7 @@ final class InspectionCommandConverter {
             getSheetSchema.resolvedProjection());
       }
       case InspectionSurfaceQuery.GetNamedRangeSurface _ ->
-          new WorkbookReadCommand.GetNamedRangeSurface(
-              stepId, SelectorConverter.toExcelNamedRangeSelection((NamedRangeSelector) target));
+          new WorkbookReadCommand.GetNamedRangeSurface(stepId, (NamedRangeSelector) target);
       case InspectionAnalysisQuery.AnalyzeFormulaHealth _ ->
           new WorkbookReadCommand.AnalyzeFormulaHealth(stepId, (SheetSelector) target);
       case InspectionAnalysisQuery.AnalyzeDataValidationHealth _ ->
@@ -157,8 +155,7 @@ final class InspectionCommandConverter {
       case InspectionAnalysisQuery.AnalyzeHyperlinkHealth _ ->
           new WorkbookReadCommand.AnalyzeHyperlinkHealth(stepId, (SheetSelector) target);
       case InspectionAnalysisQuery.AnalyzeNamedRangeHealth _ ->
-          new WorkbookReadCommand.AnalyzeNamedRangeHealth(
-              stepId, SelectorConverter.toExcelNamedRangeSelection((NamedRangeSelector) target));
+          new WorkbookReadCommand.AnalyzeNamedRangeHealth(stepId, (NamedRangeSelector) target);
       case InspectionAnalysisQuery.AnalyzeWorkbookFindings _ ->
           new WorkbookReadCommand.AnalyzeWorkbookFindings(stepId);
     };

@@ -3,7 +3,6 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
-import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
@@ -12,8 +11,6 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelCellSelection;
-import dev.erst.gridgrind.excel.ExcelNamedRangeSelection;
-import dev.erst.gridgrind.excel.ExcelNamedRangeSelector;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import java.util.List;
 
@@ -31,49 +28,6 @@ final class SelectorConverter {
 
   static String toSheetName(DrawingObjectSelector.ByName selector) {
     return selector.sheetName().value();
-  }
-
-  static ExcelNamedRangeSelection toExcelNamedRangeSelection(NamedRangeSelector selector) {
-    return switch (selector) {
-      case NamedRangeSelector.All _ -> new ExcelNamedRangeSelection.All();
-      case NamedRangeSelector.AnyOf anyOf ->
-          new ExcelNamedRangeSelection.Selected(
-              anyOf.selectors().stream()
-                  .map(SelectorConverter::toExcelNamedRangeSelector)
-                  .toList());
-      case NamedRangeSelector.ByName byName ->
-          new ExcelNamedRangeSelection.Selected(
-              List.of(new ExcelNamedRangeSelector.ByName(byName.name().value())));
-      case NamedRangeSelector.ByNames byNames ->
-          new ExcelNamedRangeSelection.Selected(
-              byNames.names().stream()
-                  .map(
-                      name ->
-                          (ExcelNamedRangeSelector)
-                              new ExcelNamedRangeSelector.ByName(name.value()))
-                  .toList());
-      case NamedRangeSelector.WorkbookScope workbookScope ->
-          new ExcelNamedRangeSelection.Selected(
-              List.of(new ExcelNamedRangeSelector.WorkbookScope(workbookScope.name().value())));
-      case NamedRangeSelector.SheetScope sheetScope ->
-          new ExcelNamedRangeSelection.Selected(
-              List.of(
-                  new ExcelNamedRangeSelector.SheetScope(
-                      sheetScope.name().value(), sheetScope.sheetName().value())));
-    };
-  }
-
-  private static ExcelNamedRangeSelector toExcelNamedRangeSelector(
-      NamedRangeSelector.Ref selector) {
-    return switch (selector) {
-      case NamedRangeSelector.ByName byName ->
-          new ExcelNamedRangeSelector.ByName(byName.name().value());
-      case NamedRangeSelector.WorkbookScope workbookScope ->
-          new ExcelNamedRangeSelector.WorkbookScope(workbookScope.name().value());
-      case NamedRangeSelector.SheetScope sheetScope ->
-          new ExcelNamedRangeSelector.SheetScope(
-              sheetScope.name().value(), sheetScope.sheetName().value());
-    };
   }
 
   static SheetLocalCellSelection toSheetLocalCellSelection(CellSelector selector) {

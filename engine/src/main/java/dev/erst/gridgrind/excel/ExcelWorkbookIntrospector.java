@@ -219,22 +219,35 @@ final class ExcelWorkbookIntrospector {
 
   /** Returns the named ranges selected by the provided workbook-core named-range selection. */
   List<NamedRangeReport> selectNamedRanges(
-      ExcelWorkbook workbook, ExcelNamedRangeSelection selection) {
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.NamedRangeSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<NamedRangeReport> namedRanges = workbook.names().namedRanges();
     return switch (selection) {
-      case ExcelNamedRangeSelection.All _ -> namedRanges;
-      case ExcelNamedRangeSelection.Selected selected ->
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.All _ -> namedRanges;
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf selected ->
           selectNamedRanges(namedRanges, selected.selectors());
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.ByNames selected ->
+          selectNamedRanges(
+              namedRanges,
+              selected.names().stream()
+                  .map(dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName::new)
+                  .toList());
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName selected ->
+          matchSelector(namedRanges, selected);
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope selected ->
+          matchSelector(namedRanges, selected);
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope selected ->
+          matchSelector(namedRanges, selected);
     };
   }
 
   private List<NamedRangeReport> selectNamedRanges(
-      List<NamedRangeReport> namedRanges, List<ExcelNamedRangeSelector> selectors) {
+      List<NamedRangeReport> namedRanges,
+      List<? extends dev.erst.gridgrind.core.plan.NamedRangeSelector.Ref> selectors) {
     Set<NamedRangeReport> matched = new LinkedHashSet<>();
-    for (ExcelNamedRangeSelector selector : selectors) {
+    for (dev.erst.gridgrind.core.plan.NamedRangeSelector.Ref selector : selectors) {
       matched.addAll(matchSelector(namedRanges, selector));
     }
     return List.copyOf(matched);
@@ -242,7 +255,8 @@ final class ExcelWorkbookIntrospector {
 
   /** Returns the named ranges matched by one exact selector or throws when none match. */
   static List<NamedRangeReport> matchSelector(
-      List<NamedRangeReport> namedRanges, ExcelNamedRangeSelector selector) {
+      List<NamedRangeReport> namedRanges,
+      dev.erst.gridgrind.core.plan.NamedRangeSelector.Ref selector) {
     List<NamedRangeReport> matches = new ArrayList<>();
     for (NamedRangeReport namedRange : namedRanges) {
       if (matchesSelector(namedRange, selector)) {
@@ -256,16 +270,16 @@ final class ExcelWorkbookIntrospector {
   }
 
   private static boolean matchesSelector(
-      NamedRangeReport namedRange, ExcelNamedRangeSelector selector) {
+      NamedRangeReport namedRange, dev.erst.gridgrind.core.plan.NamedRangeSelector.Ref selector) {
     return switch (selector) {
-      case ExcelNamedRangeSelector.ByName byName ->
-          namedRange.name().value().equalsIgnoreCase(byName.name());
-      case ExcelNamedRangeSelector.WorkbookScope workbookScope ->
-          namedRange.name().value().equalsIgnoreCase(workbookScope.name())
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName byName ->
+          namedRange.name().value().equalsIgnoreCase(byName.name().value());
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope workbookScope ->
+          namedRange.name().value().equalsIgnoreCase(workbookScope.name().value())
               && namedRange.scope() instanceof NamedRangeScopeReport.Workbook;
-      case ExcelNamedRangeSelector.SheetScope sheetScope ->
-          namedRange.name().value().equalsIgnoreCase(sheetScope.name())
-              && matchesSheetScope(namedRange.scope(), sheetScope.sheetName());
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope sheetScope ->
+          namedRange.name().value().equalsIgnoreCase(sheetScope.name().value())
+              && matchesSheetScope(namedRange.scope(), sheetScope.sheetName().value());
     };
   }
 
@@ -274,18 +288,21 @@ final class ExcelWorkbookIntrospector {
         && namedRangeScope.sheetName().value().equals(sheetName);
   }
 
-  private static NamedRangeNotFoundException notFound(ExcelNamedRangeSelector selector) {
+  private static NamedRangeNotFoundException notFound(
+      dev.erst.gridgrind.core.plan.NamedRangeSelector.Ref selector) {
     return switch (selector) {
-      case ExcelNamedRangeSelector.ByName byName ->
-          new NamedRangeNotFoundException(byName.name(), new NamedRangeScopeReport.Workbook());
-      case ExcelNamedRangeSelector.WorkbookScope workbookScope ->
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName byName ->
           new NamedRangeNotFoundException(
-              workbookScope.name(), new NamedRangeScopeReport.Workbook());
-      case ExcelNamedRangeSelector.SheetScope sheetScope ->
+              byName.name().value(), new NamedRangeScopeReport.Workbook());
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope workbookScope ->
           new NamedRangeNotFoundException(
-              sheetScope.name(),
+              workbookScope.name().value(), new NamedRangeScopeReport.Workbook());
+      case dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope sheetScope ->
+          new NamedRangeNotFoundException(
+              sheetScope.name().value(),
               new NamedRangeScopeReport.Sheet(
-                  new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetScope.sheetName())));
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+                      sheetScope.sheetName().value())));
     };
   }
 
@@ -430,7 +447,7 @@ final class ExcelWorkbookIntrospector {
 
   /** Summarizes the scope and backing kind of selected named ranges. */
   NamedRangeSurfaceReport namedRangeSurface(
-      ExcelWorkbook workbook, ExcelNamedRangeSelection selection) {
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.NamedRangeSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 

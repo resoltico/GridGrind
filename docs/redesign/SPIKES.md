@@ -2707,3 +2707,21 @@ JSON retained externally. Nested check/all94 retained seeds passes16s. Final ./g
 cases unchanged. No active campaigns. Inventories: converters586→554, blank286→285,
 main113018→112925, tests151099→151100; Support194, definitions0, snapshots2(runtime) unchanged.
 Baseline diff empty. WP-40 remains open for ResolvedPlan and name/cell/range/query consolidation.
+
+## WP-40 canonical named-range selectors
+
+Deleted ExcelNamedRangeSelection and ExcelNamedRangeSelector, their translator methods and DTO-only
+constructor tests. Native named-range inspection, surfaces and health consume NamedRangeSelector/Ref
+directly. Single names, name lists, workbook/sheet scope, ordered union and ALL retain their matching,
+deduplication and not-found behavior. No replacement alias was introduced; unwrapping names happens
+at the existing matcher/error boundary. Canonical core selector validation remains independently
+covered by SelectorTypesTest/SelectorValidationSupportTest and real native/public workflow tests.
+
+Main compilation passes14s. Focused checks identified a retired DTO's String-vs-value-object assertion
+and an empty converter test left after its assertions were removed; deleted that obsolete scaffolding.
+Failure XML retained externally. Core/engine/parity/PMD checks pass28s. Nested check/all94 retained
+seeds passes17s. Final ./gradlew check passes3m43s: core385, JSON353, engine1385 plus14 parity, CLI588,
+zero failures/errors/skips; all143 golden cases unchanged. No active campaigns. Inventories:
+converters554→505, blank285→284, main112925→112818, tests151100→151011; Support194, definitions0,
+snapshots2(runtime) unchanged. Baseline diff empty. WP-40 remains open for ResolvedPlan and the final
+cell/range/read-command seam; the other selection mirrors are gone.

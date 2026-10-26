@@ -108,7 +108,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Returns named ranges selected by exact selector or workbook-wide selection. */
-  record GetNamedRanges(StepId stepId, ExcelNamedRangeSelection selection)
+  record GetNamedRanges(StepId stepId, dev.erst.gridgrind.core.plan.NamedRangeSelector selection)
       implements Introspection {
     public GetNamedRanges {
 
@@ -323,8 +323,8 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Summarizes the scope and backing kind of selected named ranges. */
-  record GetNamedRangeSurface(StepId stepId, ExcelNamedRangeSelection selection)
-      implements Surface {
+  record GetNamedRangeSurface(
+      StepId stepId, dev.erst.gridgrind.core.plan.NamedRangeSelector selection) implements Surface {
     public GetNamedRangeSurface {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -397,7 +397,8 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Reports named-range findings such as broken references and scope shadowing. */
-  record AnalyzeNamedRangeHealth(StepId stepId, ExcelNamedRangeSelection selection)
+  record AnalyzeNamedRangeHealth(
+      StepId stepId, dev.erst.gridgrind.core.plan.NamedRangeSelector selection)
       implements Analysis {
     public AnalyzeNamedRangeHealth {
 

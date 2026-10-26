@@ -194,15 +194,20 @@ class ExcelWorkbookIntrospectorTest {
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
 
       List<NamedRangeReport> all =
-          introspector.selectNamedRanges(workbook, new ExcelNamedRangeSelection.All());
+          introspector.selectNamedRanges(
+              workbook, new dev.erst.gridgrind.core.plan.NamedRangeSelector.All());
       List<NamedRangeReport> selected =
           introspector.selectNamedRanges(
               workbook,
-              new ExcelNamedRangeSelection.Selected(
+              new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                   List.of(
-                      new ExcelNamedRangeSelector.ByName("budgetrollup"),
-                      new ExcelNamedRangeSelector.WorkbookScope("BudgetRollup"),
-                      new ExcelNamedRangeSelector.SheetScope("LocalItem", "Budget"))));
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName(
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName("budgetrollup")),
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetRollup")),
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName("LocalItem"),
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")))));
       assertEquals(2, all.size());
       assertEquals(List.of(all.getFirst(), all.get(1)), selected);
       NamedRangeNotFoundException missing =
@@ -211,8 +216,11 @@ class ExcelWorkbookIntrospectorTest {
               () ->
                   introspector.selectNamedRanges(
                       workbook,
-                      new ExcelNamedRangeSelection.Selected(
-                          List.of(new ExcelNamedRangeSelector.ByName("MissingRange")))));
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
+                          List.of(
+                              new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName(
+                                  new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                                      "MissingRange"))))));
       assertEquals("MissingRange", missing.name());
 
       NamedRangeNotFoundException missingWorkbookScope =
@@ -221,8 +229,11 @@ class ExcelWorkbookIntrospectorTest {
               () ->
                   introspector.selectNamedRanges(
                       workbook,
-                      new ExcelNamedRangeSelection.Selected(
-                          List.of(new ExcelNamedRangeSelector.WorkbookScope("MissingWorkbook")))));
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
+                          List.of(
+                              new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                                  new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                                      "MissingWorkbook"))))));
       assertEquals("MissingWorkbook", missingWorkbookScope.name());
       assertInstanceOf(NamedRangeScopeReport.Workbook.class, missingWorkbookScope.scope());
 
@@ -232,9 +243,11 @@ class ExcelWorkbookIntrospectorTest {
               () ->
                   introspector.selectNamedRanges(
                       workbook,
-                      new ExcelNamedRangeSelection.Selected(
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                           List.of(
-                              new ExcelNamedRangeSelector.SheetScope("SharedName", "Budget")))));
+                              new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
+                                  new dev.erst.gridgrind.core.vocabulary.DefinedName("SharedName"),
+                                  new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"))))));
       assertEquals("SharedName", missingSheetScope.name());
       NamedRangeScopeReport.Sheet scope =
           assertInstanceOf(NamedRangeScopeReport.Sheet.class, missingSheetScope.scope());
@@ -264,10 +277,15 @@ class ExcelWorkbookIntrospectorTest {
 
     List<NamedRangeReport> workbookScoped =
         ExcelWorkbookIntrospector.matchSelector(
-            namedRanges, new ExcelNamedRangeSelector.WorkbookScope("SharedName"));
+            namedRanges,
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("SharedName")));
     List<NamedRangeReport> sheetScoped =
         ExcelWorkbookIntrospector.matchSelector(
-            namedRanges, new ExcelNamedRangeSelector.SheetScope("SharedName", "Forecast"));
+            namedRanges,
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("SharedName"),
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Forecast")));
 
     assertEquals(1, workbookScoped.size());
     assertInstanceOf(NamedRangeScopeReport.Workbook.class, workbookScoped.getFirst().scope());
@@ -281,7 +299,9 @@ class ExcelWorkbookIntrospectorTest {
             NamedRangeNotFoundException.class,
             () ->
                 ExcelWorkbookIntrospector.matchSelector(
-                    namedRanges, new ExcelNamedRangeSelector.WorkbookScope("Missing")));
+                    namedRanges,
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                        new dev.erst.gridgrind.core.vocabulary.DefinedName("Missing"))));
     assertEquals("Missing", missingWorkbookSelector.name());
 
     NamedRangeNotFoundException wrongSheetSelector =
@@ -289,7 +309,10 @@ class ExcelWorkbookIntrospectorTest {
             NamedRangeNotFoundException.class,
             () ->
                 ExcelWorkbookIntrospector.matchSelector(
-                    namedRanges, new ExcelNamedRangeSelector.SheetScope("SharedName", "Budget")));
+                    namedRanges,
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
+                        new dev.erst.gridgrind.core.vocabulary.DefinedName("SharedName"),
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"))));
     assertEquals("SharedName", wrongSheetSelector.name());
   }
 
@@ -401,7 +424,9 @@ class ExcelWorkbookIntrospectorTest {
                 ExcelWorkbooks.create(), (WorkbookReadCommand.Introspection) null));
     assertThrows(
         NullPointerException.class,
-        () -> introspector.selectNamedRanges(null, new ExcelNamedRangeSelection.All()));
+        () ->
+            introspector.selectNamedRanges(
+                null, new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()));
     assertThrows(
         NullPointerException.class,
         () -> introspector.selectNamedRanges(ExcelWorkbooks.create(), null));
@@ -471,11 +496,16 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetNamedRangeSurface(
                           new StepId("namedRangeSurface"),
-                          new ExcelNamedRangeSelection.Selected(
+                          new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                               List.of(
-                                  new ExcelNamedRangeSelector.WorkbookScope("BudgetRollup"),
-                                  new ExcelNamedRangeSelector.SheetScope(
-                                      "LocalItem", "Budget"))))));
+                                  new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                                      new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                                          "BudgetRollup")),
+                                  new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
+                                      new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                                          "LocalItem"),
+                                      new dev.erst.gridgrind.core.vocabulary.SheetName(
+                                          "Budget")))))));
       assertEquals(1, namedRangeSurface.surface().workbookScopedCount());
       assertEquals(1, namedRangeSurface.surface().sheetScopedCount());
       assertEquals(1, namedRangeSurface.surface().formulaBackedCount());
@@ -705,7 +735,8 @@ class ExcelWorkbookIntrospectorTest {
             introspector.execute(
                 workbook,
                 new WorkbookReadCommand.GetNamedRanges(
-                    new StepId("ranges"), new ExcelNamedRangeSelection.All()))),
+                    new StepId("ranges"),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult.class,
             introspector.execute(
@@ -763,7 +794,8 @@ class ExcelWorkbookIntrospectorTest {
             introspector.execute(
                 workbook,
                 new WorkbookReadCommand.GetNamedRangeSurface(
-                    new StepId("namedRangeSurface"), new ExcelNamedRangeSelection.All()))),
+                    new StepId("namedRangeSurface"),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult.class,
             introspector.execute(

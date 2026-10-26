@@ -103,7 +103,7 @@ class WorkbookReadExecutorTest {
               new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
               WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1")),
               new WorkbookReadCommand.GetNamedRangeSurface(
-                  new StepId("ranges"), new ExcelNamedRangeSelection.All()));
+                  new StepId("ranges"), new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()));
       List<InspectionResult> iterableResults =
           executor.apply(
               workbook,

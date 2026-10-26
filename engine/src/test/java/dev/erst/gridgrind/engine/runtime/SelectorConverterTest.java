@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
-import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -17,48 +16,6 @@ import org.junit.jupiter.api.Test;
 
 /** Direct coverage for selector-first executor conversion seams. */
 class SelectorConverterTest {
-  @Test
-  void convertsWorkbookSheetNamedRangeTableAndPivotSelectors() {
-
-    assertEquals(
-        new ExcelNamedRangeSelection.All(),
-        SelectorConverter.toExcelNamedRangeSelection(new NamedRangeSelector.All()));
-    assertEquals(
-        new ExcelNamedRangeSelection.Selected(
-            List.of(new ExcelNamedRangeSelector.ByName("BudgetTotal"))),
-        SelectorConverter.toExcelNamedRangeSelection(
-            new NamedRangeSelector.ByName(new DefinedName("BudgetTotal"))));
-    assertEquals(
-        new ExcelNamedRangeSelection.Selected(
-            List.of(
-                new ExcelNamedRangeSelector.ByName("BudgetTotal"),
-                new ExcelNamedRangeSelector.ByName("OpsTotal"))),
-        SelectorConverter.toExcelNamedRangeSelection(
-            new NamedRangeSelector.ByNames(
-                List.of(new DefinedName("BudgetTotal"), new DefinedName("OpsTotal")))));
-    assertEquals(
-        new ExcelNamedRangeSelection.Selected(
-            List.of(new ExcelNamedRangeSelector.WorkbookScope("BudgetTotal"))),
-        SelectorConverter.toExcelNamedRangeSelection(
-            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
-    assertEquals(
-        new ExcelNamedRangeSelection.Selected(
-            List.of(new ExcelNamedRangeSelector.SheetScope("LocalItem", "Budget"))),
-        SelectorConverter.toExcelNamedRangeSelection(
-            new NamedRangeSelector.SheetScope(
-                new DefinedName("LocalItem"), new SheetName("Budget"))));
-    assertEquals(
-        new ExcelNamedRangeSelection.Selected(
-            List.of(
-                new ExcelNamedRangeSelector.WorkbookScope("BudgetTotal"),
-                new ExcelNamedRangeSelector.SheetScope("LocalItem", "Budget"))),
-        SelectorConverter.toExcelNamedRangeSelection(
-            new NamedRangeSelector.AnyOf(
-                List.of(
-                    new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
-                    new NamedRangeSelector.SheetScope(
-                        new DefinedName("LocalItem"), new SheetName("Budget"))))));
-  }
 
   @Test
   void convertsCellAndRangeSelectorsAndRejectsUnsupportedShapes() {
