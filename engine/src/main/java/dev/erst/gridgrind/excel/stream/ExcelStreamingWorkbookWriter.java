@@ -6,6 +6,10 @@ import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.excel.ExcelCellErrorLiteralSupport;
 import dev.erst.gridgrind.excel.ExcelCellTextLimits;
 import dev.erst.gridgrind.excel.ExcelDeterministicWorkbookArtifactSupport;
@@ -70,6 +74,27 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
     }
   }
 
+  /** Applies a materialized core mutation to the streaming session. */
+  public void apply(ResolvedStep step) {
+    String sheetName = ((SheetSelector.ByName) step.target()).name().value();
+    switch (step.action()) {
+      case WorkbookMutationAction.EnsureSheet _ ->
+          sheets.computeIfAbsent(
+              sheetName,
+              name -> {
+                nextRowIndexes.put(name, 0);
+                return workbook.createSheet(name);
+              });
+      case ResolvedMutationAction.AppendRow action ->
+          appendValues(requiredSheet(sheetName), sheetName, action.values());
+      default ->
+          throw new IllegalArgumentException(
+              "execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: "
+                  + dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames
+                      .mutationActionTypeName(step.action().authoredType()));
+    }
+  }
+
   /** Marks the streamed workbook to recalculate formulas on the next Excel-compatible open. */
   public void markRecalculateOnOpen() {
     workbook.setForceFormulaRecalculation(true);
@@ -104,11 +129,15 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
   }
 
   private void appendRow(SXSSFSheet sheet, WorkbookCellCommand.AppendRow appendRow) {
-    int rowIndex =
-        nextRowIndexes.compute(appendRow.sheetName(), (_, nextRowIndex) -> nextRowIndex + 1) - 1;
+    appendValues(sheet, appendRow.sheetName(), appendRow.values());
+  }
+
+  private void appendValues(
+      SXSSFSheet sheet, String sheetName, java.util.List<ResolvedCellWrite> values) {
+    int rowIndex = nextRowIndexes.compute(sheetName, (_, nextRowIndex) -> nextRowIndex + 1) - 1;
     SXSSFRow row = sheet.createRow(rowIndex);
-    for (int columnIndex = 0; columnIndex < appendRow.values().size(); columnIndex++) {
-      writeCellValue(row.createCell(columnIndex), appendRow.values().get(columnIndex));
+    for (int columnIndex = 0; columnIndex < values.size(); columnIndex++) {
+      writeCellValue(row.createCell(columnIndex), values.get(columnIndex));
     }
   }
 

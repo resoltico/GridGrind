@@ -42,7 +42,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Clear all cell values and styles within the selected range.",
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record ClearRange() implements CellMutationAction {
+  record ClearRange() implements CellMutationAction, ResolvedMutationAction {
     public ClearRange {}
   }
 
@@ -64,7 +64,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Remove the stored array-formula group targeted by any member cell.",
       targetSelectors = {CellSelector.ByAddress.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record ClearArrayFormula() implements CellMutationAction {
+  record ClearArrayFormula() implements CellMutationAction, ResolvedMutationAction {
     public ClearArrayFormula {}
   }
 
@@ -74,7 +74,8 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Replace the hyperlink attached to a single cell.",
       targetSelectors = {CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record SetHyperlink(HyperlinkTarget target) implements CellMutationAction {
+  record SetHyperlink(HyperlinkTarget target)
+      implements CellMutationAction, ResolvedMutationAction {
     public SetHyperlink {
       Objects.requireNonNull(target, "target must not be null");
     }
@@ -86,7 +87,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Remove any hyperlink attached to a single existing cell.",
       targetSelectors = {CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record ClearHyperlink() implements CellMutationAction {
+  record ClearHyperlink() implements CellMutationAction, ResolvedMutationAction {
     public ClearHyperlink {}
   }
 
@@ -108,7 +109,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Remove any comment attached to a single existing cell.",
       targetSelectors = {CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record ClearComment() implements CellMutationAction {
+  record ClearComment() implements CellMutationAction, ResolvedMutationAction {
     public ClearComment {}
   }
 
@@ -118,7 +119,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Apply a style patch to every cell in the selected range.",
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record ApplyStyle(CellStylePatch style) implements CellMutationAction {
+  record ApplyStyle(CellStylePatch style) implements CellMutationAction, ResolvedMutationAction {
     public ApplyStyle {
       Objects.requireNonNull(style, "style must not be null");
     }

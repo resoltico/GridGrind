@@ -19,7 +19,7 @@ public sealed interface RangeSelector extends Selector
   @Variant(
       id = "RANGE_ALL_ON_SHEET",
       summary = "Select every matching range-backed structure on one sheet.")
-  record AllOnSheet(SheetName sheetName) implements RangeSelector {
+  record AllOnSheet(SheetName sheetName) implements RangeSelector, ResolvedTarget {
     public AllOnSheet {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
@@ -32,7 +32,7 @@ public sealed interface RangeSelector extends Selector
 
   /** Selects one exact rectangular range on one sheet. */
   @Variant(id = "RANGE_BY_RANGE", summary = "Select one exact rectangular range on one sheet.")
-  record ByRange(SheetName sheetName, RangeRef range) implements RangeSelector {
+  record ByRange(SheetName sheetName, RangeRef range) implements RangeSelector, ResolvedTarget {
     public ByRange {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       range = SelectorValueValidation.requireOrderedRange(range, "range");
@@ -64,7 +64,8 @@ public sealed interface RangeSelector extends Selector
   @Variant(
       id = "RANGE_BY_RANGES",
       summary = "Select one or more exact rectangular ranges on one sheet.")
-  record ByRanges(SheetName sheetName, List<RangeRef> ranges) implements RangeSelector {
+  record ByRanges(SheetName sheetName, List<RangeRef> ranges)
+      implements RangeSelector, ResolvedTarget {
     public ByRanges {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       ranges = SelectorListValidation.copyDistinctRanges(ranges, "ranges");
@@ -82,7 +83,7 @@ public sealed interface RangeSelector extends Selector
       summary = "Select one rectangular window anchored at one top-left cell.")
   record RectangularWindow(
       SheetName sheetName, CellAddress topLeftAddress, int rowCount, int columnCount)
-      implements RangeSelector {
+      implements RangeSelector, ResolvedTarget {
     public RectangularWindow {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       java.util.Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");

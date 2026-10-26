@@ -12,7 +12,8 @@ public sealed interface RowBandSelector extends Selector
 
   /** Selects one inclusive zero-based row span on one sheet. */
   @Variant(id = "ROW_BAND_SPAN", summary = "Select one inclusive zero-based row span on one sheet.")
-  record Span(SheetName sheetName, int firstRowIndex, int lastRowIndex) implements RowBandSelector {
+  record Span(SheetName sheetName, int firstRowIndex, int lastRowIndex)
+      implements RowBandSelector, ResolvedTarget {
     public Span {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       firstRowIndex =
@@ -35,7 +36,7 @@ public sealed interface RowBandSelector extends Selector
       id = "ROW_BAND_INSERTION",
       summary = "Select one row insertion point plus row count on one sheet.")
   record Insertion(SheetName sheetName, int beforeRowIndex, int rowCount)
-      implements RowBandSelector {
+      implements RowBandSelector, ResolvedTarget {
     public Insertion {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       beforeRowIndex =

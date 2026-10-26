@@ -14,7 +14,7 @@ public sealed interface DrawingObjectSelector extends Selector
   @Variant(
       id = "DRAWING_OBJECT_ALL_ON_SHEET",
       summary = "Select every drawing object on one sheet.")
-  record AllOnSheet(SheetName sheetName) implements DrawingObjectSelector {
+  record AllOnSheet(SheetName sheetName) implements DrawingObjectSelector, ResolvedTarget {
     public AllOnSheet {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
@@ -29,7 +29,8 @@ public sealed interface DrawingObjectSelector extends Selector
   @Variant(
       id = "DRAWING_OBJECT_BY_NAME",
       summary = "Select one drawing object by exact sheet-local object name.")
-  record ByName(SheetName sheetName, String objectName) implements DrawingObjectSelector {
+  record ByName(SheetName sheetName, String objectName)
+      implements DrawingObjectSelector, ResolvedTarget {
     public ByName {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       objectName = SelectorValueValidation.requireNonBlank(objectName, "objectName");

@@ -16,7 +16,7 @@ public sealed interface TableSelector extends Selector
 
   /** Selects every table in workbook order. */
   @Variant(id = "TABLE_ALL", summary = "Select every table in workbook order.")
-  record All() implements TableSelector {
+  record All() implements TableSelector, ResolvedTarget {
     @Override
     public SelectorCardinality cardinality() {
       return SelectorCardinality.ANY_NUMBER;
@@ -25,7 +25,7 @@ public sealed interface TableSelector extends Selector
 
   /** Selects one table by workbook-global name. */
   @Variant(id = "TABLE_BY_NAME", summary = "Select one workbook-global table by exact name.")
-  record ByName(TableName name) implements TableSelector {
+  record ByName(TableName name) implements TableSelector, ResolvedTarget {
     public ByName {
       java.util.Objects.requireNonNull(name, "name must not be null");
     }
@@ -40,7 +40,7 @@ public sealed interface TableSelector extends Selector
   @Variant(
       id = "TABLE_BY_NAMES",
       summary = "Select one or more workbook-global tables by exact name.")
-  record ByNames(List<TableName> names) implements TableSelector {
+  record ByNames(List<TableName> names) implements TableSelector, ResolvedTarget {
     public ByNames {
       names = SelectorListValidation.copyDistinctTableNames(names, "names");
     }
@@ -55,7 +55,8 @@ public sealed interface TableSelector extends Selector
   @Variant(
       id = "TABLE_BY_NAME_ON_SHEET",
       summary = "Select one workbook-global table by exact name and expected owning sheet.")
-  record ByNameOnSheet(TableName name, SheetName sheetName) implements TableSelector {
+  record ByNameOnSheet(TableName name, SheetName sheetName)
+      implements TableSelector, ResolvedTarget {
     public ByNameOnSheet {
       java.util.Objects.requireNonNull(name, "name must not be null");
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");

@@ -12,7 +12,7 @@ public sealed interface ChartSelector extends Selector
 
   /** Selects every chart on one sheet. */
   @Variant(id = "CHART_ALL_ON_SHEET", summary = "Select every chart on one sheet.")
-  record AllOnSheet(SheetName sheetName) implements ChartSelector {
+  record AllOnSheet(SheetName sheetName) implements ChartSelector, ResolvedTarget {
     public AllOnSheet {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
@@ -25,7 +25,7 @@ public sealed interface ChartSelector extends Selector
 
   /** Selects one chart by sheet-local chart name. */
   @Variant(id = "CHART_BY_NAME", summary = "Select one chart by exact sheet-local chart name.")
-  record ByName(SheetName sheetName, String chartName) implements ChartSelector {
+  record ByName(SheetName sheetName, String chartName) implements ChartSelector, ResolvedTarget {
     public ByName {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       chartName = SelectorValueValidation.requireNonBlank(chartName, "chartName");

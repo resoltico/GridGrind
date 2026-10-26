@@ -43,7 +43,7 @@ final class ExecutionStepSupport {
     this.tempFileFactory =
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
     this.mutationStepExecutor =
-        new FormulaAwareMutationStepExecutor(this.workbookEngine, this.selectorResolver, bindings);
+        new FormulaAwareMutationStepExecutor(this.selectorResolver, bindings);
   }
 
   ExecutionStepSupport(

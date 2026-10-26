@@ -15,7 +15,7 @@ public sealed interface PivotTableSelector extends Selector
 
   /** Selects every pivot table in workbook order. */
   @Variant(id = "PIVOT_TABLE_ALL", summary = "Select every pivot table in workbook order.")
-  record All() implements PivotTableSelector {
+  record All() implements PivotTableSelector, ResolvedTarget {
     @Override
     public SelectorCardinality cardinality() {
       return SelectorCardinality.ANY_NUMBER;
@@ -26,7 +26,7 @@ public sealed interface PivotTableSelector extends Selector
   @Variant(
       id = "PIVOT_TABLE_BY_NAME",
       summary = "Select one workbook-global pivot table by exact name.")
-  record ByName(String name) implements PivotTableSelector {
+  record ByName(String name) implements PivotTableSelector, ResolvedTarget {
     public ByName {
       name = SelectorValueValidation.requirePivotTableName(name, "name");
     }
@@ -41,7 +41,7 @@ public sealed interface PivotTableSelector extends Selector
   @Variant(
       id = "PIVOT_TABLE_BY_NAMES",
       summary = "Select one or more workbook-global pivot tables by exact name.")
-  record ByNames(List<String> names) implements PivotTableSelector {
+  record ByNames(List<String> names) implements PivotTableSelector, ResolvedTarget {
     public ByNames {
       names = SelectorListValidation.copyDistinctPivotTableNames(names, "names");
     }
@@ -56,7 +56,8 @@ public sealed interface PivotTableSelector extends Selector
   @Variant(
       id = "PIVOT_TABLE_BY_NAME_ON_SHEET",
       summary = "Select one workbook-global pivot table by exact name and expected owning sheet.")
-  record ByNameOnSheet(String name, SheetName sheetName) implements PivotTableSelector {
+  record ByNameOnSheet(String name, SheetName sheetName)
+      implements PivotTableSelector, ResolvedTarget {
     public ByNameOnSheet {
       name = SelectorValueValidation.requirePivotTableName(name, "name");
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");

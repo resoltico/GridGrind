@@ -36,7 +36,8 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Create or replace one workbook-global pivot-table definition.",
       targetSelectors = {PivotTableSelector.ByNameOnSheet.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record SetPivotTable(PivotTableSpec pivotTable) implements StructuredMutationAction {
+  record SetPivotTable(PivotTableSpec pivotTable)
+      implements StructuredMutationAction, ResolvedMutationAction {
     public SetPivotTable {
       Objects.requireNonNull(pivotTable, "pivotTable must not be null");
     }
@@ -60,7 +61,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Remove data-validation structures on the sheet that match the range selection.",
       targetSelectors = {RangeSelector.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record ClearDataValidations() implements StructuredMutationAction {
+  record ClearDataValidations() implements StructuredMutationAction, ResolvedMutationAction {
     public ClearDataValidations {}
   }
 
@@ -72,7 +73,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       targetSelectors = {RangeSelector.ByRange.class, RangeSelector.ByRanges.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetConditionalFormatting(ConditionalFormattingSpec conditionalFormatting)
-      implements StructuredMutationAction {
+      implements StructuredMutationAction, ResolvedMutationAction {
     public SetConditionalFormatting {
       Objects.requireNonNull(conditionalFormatting, "conditionalFormatting must not be null");
     }
@@ -84,7 +85,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Remove conditional-formatting blocks on the sheet that match the range selection.",
       targetSelectors = {RangeSelector.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record ClearConditionalFormatting() implements StructuredMutationAction {
+  record ClearConditionalFormatting() implements StructuredMutationAction, ResolvedMutationAction {
     public ClearConditionalFormatting {}
   }
 
@@ -96,7 +97,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetAutofilter(
       List<AutofilterFilterColumnSpec> criteria, Optional<AutofilterSortStateSpec> sortState)
-      implements StructuredMutationAction {
+      implements StructuredMutationAction, ResolvedMutationAction {
     /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
     public SetAutofilter() {
       this(List.of(), Optional.empty());
@@ -126,7 +127,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Clear the sheet-level autofilter range on one sheet.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record ClearAutofilter() implements StructuredMutationAction {
+  record ClearAutofilter() implements StructuredMutationAction, ResolvedMutationAction {
     public ClearAutofilter {}
   }
 
@@ -148,7 +149,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Delete one existing table by workbook-global name and expected sheet.",
       targetSelectors = {TableSelector.ByNameOnSheet.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record DeleteTable() implements StructuredMutationAction {
+  record DeleteTable() implements StructuredMutationAction, ResolvedMutationAction {
     public DeleteTable {}
   }
 
@@ -158,7 +159,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Delete one existing pivot table by workbook-global name and expected sheet.",
       targetSelectors = {PivotTableSelector.ByNameOnSheet.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record DeletePivotTable() implements StructuredMutationAction {
+  record DeletePivotTable() implements StructuredMutationAction, ResolvedMutationAction {
     public DeletePivotTable {}
   }
 
@@ -185,7 +186,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
           DefinedName name,
       NamedRangeScope scope,
       NamedRangeTarget target)
-      implements StructuredMutationAction {
+      implements StructuredMutationAction, ResolvedMutationAction {
     public SetNamedRange {
       Objects.requireNonNull(scope, "scope must not be null");
       Objects.requireNonNull(target, "target must not be null");
@@ -202,7 +203,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
         NamedRangeSelector.SheetScope.class
       },
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record DeleteNamedRange() implements StructuredMutationAction {
+  record DeleteNamedRange() implements StructuredMutationAction, ResolvedMutationAction {
     public DeleteNamedRange {}
   }
 }

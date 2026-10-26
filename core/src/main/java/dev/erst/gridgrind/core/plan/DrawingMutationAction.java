@@ -77,7 +77,8 @@ public sealed interface DrawingMutationAction extends MutationAction {
       summary = "Move one existing drawing object by replacing its anchor authoritatively.",
       targetSelectors = {DrawingObjectSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.DRAWING_MUTATION)
-  record SetDrawingObjectAnchor(DrawingAnchorSpec anchor) implements DrawingMutationAction {
+  record SetDrawingObjectAnchor(DrawingAnchorSpec anchor)
+      implements DrawingMutationAction, ResolvedMutationAction {
     public SetDrawingObjectAnchor {
       Objects.requireNonNull(anchor, "anchor must not be null");
     }
@@ -89,7 +90,7 @@ public sealed interface DrawingMutationAction extends MutationAction {
       summary = "Delete one existing drawing object by sheet-local name.",
       targetSelectors = {DrawingObjectSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.DRAWING_MUTATION)
-  record DeleteDrawingObject() implements DrawingMutationAction {
+  record DeleteDrawingObject() implements DrawingMutationAction, ResolvedMutationAction {
     public DeleteDrawingObject {}
   }
 }

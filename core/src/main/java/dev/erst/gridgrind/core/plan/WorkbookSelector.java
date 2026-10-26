@@ -10,7 +10,7 @@ public sealed interface WorkbookSelector extends Selector
 
   /** Targets the only workbook currently in execution. */
   @Variant(id = "WORKBOOK_CURRENT", summary = "Target the workbook currently being executed.")
-  record Current() implements WorkbookSelector {
+  record Current() implements WorkbookSelector, ResolvedTarget {
     @Override
     public SelectorCardinality cardinality() {
       return SelectorCardinality.EXACTLY_ONE;

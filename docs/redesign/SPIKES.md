@@ -2433,3 +2433,31 @@ fuzz or mutation campaign. Final ./gradlew check passes (2m57s): core377, JSON35
 definitions1→0, snapshots2 unchanged (runtime concepts justified above), converter lines2289→2283,
 main Java116301→116274, blank364 and Support201 unchanged. Baseline diff empty. WP-40 remains open
 for resolved execution and removal of command/query/selector translation.
+
+## WP-40 executable core mutation seam
+
+Introduced ResolvedStep, ResolvedTarget and a closed ResolvedMutationAction. Shared49 source-free
+action records and33 source-free selector records with the authored model; semantic table-row/cell
+selectors remain outside the executable target seam. Only16 source-bearing mutations have distinct
+resolved records, containing existing materialized core operands. Operation identity derives from
+authored metadata rather than another discriminator table. ResolvedStep enforces target compatibility
+and table/pivot/named-range identity; resolved grids own both collection levels and remain nonempty
+and rectangular. Sheet-protection debug output redacts materialized credentials.
+
+Production full-XSSF mutation execution now applies canonical actions directly. Streaming execution
+uses the same resolved step; table-cell targets still resolve at each mutation against current
+workbook state, before materialization, and secrets still resolve at the original operation stage.
+Formula-origin tracking consumes resolved operands/coordinates; its real workbook tests now exercise
+the new dispatcher, retaining normal/raw formula, overwrite, clear, array and append behavior.
+
+Compile retries corrected an injected constructor call and unused match variables. Standard PMD's
+NCSS rule is suppressed only on the one exhaustive65-variant dispatch, preserving one direct adapter
+switch without introducing arbitrary grouping types. The initial new credential test assumed a
+nonexistent defaults factory; corrected to the actual record constructor, with failure evidence kept.
+Focused core/engine/parity/static checks pass (32s); new core ownership/target/redaction tests pass6s.
+Final ./gradlew check passes (2m51s): core380, JSON353, engine1447 plus14 parity, CLI588, zero failures,
+errors/skips; all143 golden cases unchanged. Nested check/all retained seeds passes16s. No active
+mutation/fuzz campaign. Inventories: definitions0, snapshots2(runtime), converter2283, blank364,
+Support201 unchanged; main Java116274→117070 during the execution cutover. The superseded command API
+and its test/generator consumers remain to be deleted in the next batch; they no longer drive public
+mutation execution. WP-40 is open, including ResolvedPlan and the read-side cutover. Baseline diff empty.

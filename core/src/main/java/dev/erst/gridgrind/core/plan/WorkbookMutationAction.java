@@ -22,7 +22,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Create the sheet if it does not already exist.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record EnsureSheet() implements WorkbookMutationAction {
+  record EnsureSheet() implements WorkbookMutationAction, ResolvedMutationAction {
     public EnsureSheet {}
   }
 
@@ -32,7 +32,8 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Rename an existing sheet.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record RenameSheet(SheetName newSheetName) implements WorkbookMutationAction {
+  record RenameSheet(SheetName newSheetName)
+      implements WorkbookMutationAction, ResolvedMutationAction {
     public RenameSheet {
       java.util.Objects.requireNonNull(newSheetName, "newSheetName must not be null");
     }
@@ -44,7 +45,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Delete an existing sheet.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record DeleteSheet() implements WorkbookMutationAction {
+  record DeleteSheet() implements WorkbookMutationAction, ResolvedMutationAction {
     public DeleteSheet {}
   }
 
@@ -54,7 +55,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Move a sheet to a zero-based workbook position.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record MoveSheet(int targetIndex) implements WorkbookMutationAction {
+  record MoveSheet(int targetIndex) implements WorkbookMutationAction, ResolvedMutationAction {
     public MoveSheet {
       MutationAction.Validation.requireNonNegative(targetIndex, "targetIndex");
     }
@@ -70,7 +71,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       SheetName newSheetName,
       @ProtocolField(optional = true) @WireDefault(factory = SheetCopyPosition.AppendAtEnd.class)
           SheetCopyPosition position)
-      implements WorkbookMutationAction {
+      implements WorkbookMutationAction, ResolvedMutationAction {
     /** Copies one sheet to the end of the workbook. */
     public CopySheet(SheetName newSheetName) {
       this(newSheetName, new SheetCopyPosition.AppendAtEnd());
@@ -88,7 +89,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Set the active sheet and ensure it is selected.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetActiveSheet() implements WorkbookMutationAction {
+  record SetActiveSheet() implements WorkbookMutationAction, ResolvedMutationAction {
     public SetActiveSheet {}
   }
 
@@ -98,7 +99,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Set the selected visible sheet set.",
       targetSelectors = {SheetSelector.ByNames.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetSelectedSheets() implements WorkbookMutationAction {
+  record SetSelectedSheets() implements WorkbookMutationAction, ResolvedMutationAction {
     public SetSelectedSheets {}
   }
 
@@ -108,7 +109,8 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Set one sheet visibility state.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetSheetVisibility(ExcelSheetVisibility visibility) implements WorkbookMutationAction {
+  record SetSheetVisibility(ExcelSheetVisibility visibility)
+      implements WorkbookMutationAction, ResolvedMutationAction {
     public SetSheetVisibility {
       Objects.requireNonNull(visibility, "visibility must not be null");
     }
@@ -141,7 +143,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Disable sheet protection entirely.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record ClearSheetProtection() implements WorkbookMutationAction {
+  record ClearSheetProtection() implements WorkbookMutationAction, ResolvedMutationAction {
     public ClearSheetProtection {}
   }
 
@@ -164,7 +166,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Clear workbook-level protection and stored workbook passwords.",
       targetSelectors = {WorkbookSelector.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record ClearWorkbookProtection() implements WorkbookMutationAction {
+  record ClearWorkbookProtection() implements WorkbookMutationAction, ResolvedMutationAction {
     public ClearWorkbookProtection {}
   }
 
@@ -174,7 +176,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Merge a rectangular A1-style range.",
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record MergeCells() implements WorkbookMutationAction {
+  record MergeCells() implements WorkbookMutationAction, ResolvedMutationAction {
     public MergeCells {}
   }
 
@@ -184,7 +186,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Remove one merged region by exact range match.",
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record UnmergeCells() implements WorkbookMutationAction {
+  record UnmergeCells() implements WorkbookMutationAction, ResolvedMutationAction {
     public UnmergeCells {}
   }
 
@@ -194,7 +196,8 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Set one or more column widths in Excel character units.",
       targetSelectors = {ColumnBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetColumnWidth(double widthCharacters) implements WorkbookMutationAction {
+  record SetColumnWidth(double widthCharacters)
+      implements WorkbookMutationAction, ResolvedMutationAction {
     public SetColumnWidth {
       MutationAction.Validation.requireColumnWidthCharacters(widthCharacters);
     }
@@ -206,7 +209,8 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Set one or more row heights in Excel point units.",
       targetSelectors = {RowBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetRowHeight(double heightPoints) implements WorkbookMutationAction {
+  record SetRowHeight(double heightPoints)
+      implements WorkbookMutationAction, ResolvedMutationAction {
     public SetRowHeight {
       MutationAction.Validation.requireRowHeightPoints(heightPoints);
     }
@@ -218,7 +222,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Insert one or more blank rows before rowIndex.",
       targetSelectors = {RowBandSelector.Insertion.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record InsertRows() implements WorkbookMutationAction {
+  record InsertRows() implements WorkbookMutationAction, ResolvedMutationAction {
     public InsertRows {}
   }
 
@@ -228,7 +232,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Delete one inclusive zero-based row band.",
       targetSelectors = {RowBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record DeleteRows() implements WorkbookMutationAction {
+  record DeleteRows() implements WorkbookMutationAction, ResolvedMutationAction {
     public DeleteRows {}
   }
 
@@ -238,7 +242,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Move one inclusive zero-based row band by delta rows.",
       targetSelectors = {RowBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record ShiftRows(int delta) implements WorkbookMutationAction {
+  record ShiftRows(int delta) implements WorkbookMutationAction, ResolvedMutationAction {
     public ShiftRows {
       MutationAction.Validation.requireNonZero(delta, "delta");
     }
@@ -254,7 +258,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
         dev.erst.gridgrind.core.semantics.OperationPrecondition.ColumnEditsBeforeFormulaAuthoring
             .class
       })
-  record InsertColumns() implements WorkbookMutationAction {
+  record InsertColumns() implements WorkbookMutationAction, ResolvedMutationAction {
     public InsertColumns {}
   }
 
@@ -268,7 +272,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
         dev.erst.gridgrind.core.semantics.OperationPrecondition.ColumnEditsBeforeFormulaAuthoring
             .class
       })
-  record DeleteColumns() implements WorkbookMutationAction {
+  record DeleteColumns() implements WorkbookMutationAction, ResolvedMutationAction {
     public DeleteColumns {}
   }
 
@@ -282,7 +286,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
         dev.erst.gridgrind.core.semantics.OperationPrecondition.ColumnEditsBeforeFormulaAuthoring
             .class
       })
-  record ShiftColumns(int delta) implements WorkbookMutationAction {
+  record ShiftColumns(int delta) implements WorkbookMutationAction, ResolvedMutationAction {
     public ShiftColumns {
       MutationAction.Validation.requireNonZero(delta, "delta");
     }
@@ -294,7 +298,8 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Set the hidden state for one inclusive zero-based row band.",
       targetSelectors = {RowBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetRowVisibility(boolean hidden) implements WorkbookMutationAction {}
+  record SetRowVisibility(boolean hidden)
+      implements WorkbookMutationAction, ResolvedMutationAction {}
 
   /** Sets the hidden state for the requested inclusive zero-based column band. */
   @Variant(
@@ -302,7 +307,8 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Set the hidden state for one inclusive zero-based column band.",
       targetSelectors = {ColumnBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetColumnVisibility(boolean hidden) implements WorkbookMutationAction {}
+  record SetColumnVisibility(boolean hidden)
+      implements WorkbookMutationAction, ResolvedMutationAction {}
 
   /** Applies one outline group to the requested inclusive zero-based row band. */
   @Variant(
@@ -310,7 +316,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Apply one outline group to an inclusive zero-based row band.",
       targetSelectors = {RowBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record GroupRows(boolean collapsed) implements WorkbookMutationAction {
+  record GroupRows(boolean collapsed) implements WorkbookMutationAction, ResolvedMutationAction {
     /** Creates one expanded row-group payload explicitly. */
     public static GroupRows expanded() {
       return new GroupRows(false);
@@ -323,7 +329,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Remove outline grouping from one inclusive zero-based row band.",
       targetSelectors = {RowBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record UngroupRows() implements WorkbookMutationAction {
+  record UngroupRows() implements WorkbookMutationAction, ResolvedMutationAction {
     public UngroupRows {}
   }
 
@@ -333,7 +339,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Apply one outline group to an inclusive zero-based column band.",
       targetSelectors = {ColumnBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record GroupColumns(boolean collapsed) implements WorkbookMutationAction {
+  record GroupColumns(boolean collapsed) implements WorkbookMutationAction, ResolvedMutationAction {
     /** Creates one expanded column-group payload explicitly. */
     public static GroupColumns expanded() {
       return new GroupColumns(false);
@@ -346,7 +352,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Remove outline grouping from one inclusive zero-based column band.",
       targetSelectors = {ColumnBandSelector.Span.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record UngroupColumns() implements WorkbookMutationAction {
+  record UngroupColumns() implements WorkbookMutationAction, ResolvedMutationAction {
     public UngroupColumns {}
   }
 
@@ -356,7 +362,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Apply one explicit pane state to a sheet.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetSheetPane(PaneSpec pane) implements WorkbookMutationAction {
+  record SetSheetPane(PaneSpec pane) implements WorkbookMutationAction, ResolvedMutationAction {
     public SetSheetPane {
       Objects.requireNonNull(pane, "pane must not be null");
     }
@@ -368,7 +374,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Set the sheet zoom percentage.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetSheetZoom(int zoomPercent) implements WorkbookMutationAction {
+  record SetSheetZoom(int zoomPercent) implements WorkbookMutationAction, ResolvedMutationAction {
     public SetSheetZoom {
       MutationAction.Validation.requireZoomPercent(zoomPercent);
     }
@@ -381,7 +387,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
   record SetSheetPresentation(SheetPresentationSpec presentation)
-      implements WorkbookMutationAction {
+      implements WorkbookMutationAction, ResolvedMutationAction {
     public SetSheetPresentation {
       Objects.requireNonNull(presentation, "presentation must not be null");
     }
@@ -405,7 +411,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Clear the supported print-layout state from a sheet.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record ClearPrintLayout() implements WorkbookMutationAction {
+  record ClearPrintLayout() implements WorkbookMutationAction, ResolvedMutationAction {
     public ClearPrintLayout {}
   }
 
@@ -415,7 +421,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Auto-size all populated columns on the sheet to fit their content.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record AutoSizeColumns() implements WorkbookMutationAction {
+  record AutoSizeColumns() implements WorkbookMutationAction, ResolvedMutationAction {
     public AutoSizeColumns {}
   }
 }

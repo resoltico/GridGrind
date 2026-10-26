@@ -15,7 +15,7 @@ public sealed interface ColumnBandSelector extends Selector
       id = "COLUMN_BAND_SPAN",
       summary = "Select one inclusive zero-based column span on one sheet.")
   record Span(SheetName sheetName, int firstColumnIndex, int lastColumnIndex)
-      implements ColumnBandSelector {
+      implements ColumnBandSelector, ResolvedTarget {
     public Span {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       firstColumnIndex =
@@ -41,7 +41,7 @@ public sealed interface ColumnBandSelector extends Selector
       id = "COLUMN_BAND_INSERTION",
       summary = "Select one column insertion point plus column count on one sheet.")
   record Insertion(SheetName sheetName, int beforeColumnIndex, int columnCount)
-      implements ColumnBandSelector {
+      implements ColumnBandSelector, ResolvedTarget {
     public Insertion {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       beforeColumnIndex =

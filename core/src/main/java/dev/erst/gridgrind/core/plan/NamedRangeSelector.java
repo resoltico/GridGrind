@@ -17,7 +17,7 @@ public sealed interface NamedRangeSelector extends Selector
 
   /** Selects every user-facing named range. */
   @Variant(id = "NAMED_RANGE_ALL", summary = "Select every user-facing named range.")
-  record All() implements NamedRangeSelector {
+  record All() implements NamedRangeSelector, ResolvedTarget {
     @Override
     public SelectorCardinality cardinality() {
       return SelectorCardinality.ANY_NUMBER;
@@ -28,7 +28,7 @@ public sealed interface NamedRangeSelector extends Selector
   @Variant(
       id = "NAMED_RANGE_ANY_OF",
       summary = "Select the union of one or more explicit named-range references.")
-  record AnyOf(List<Ref> selectors) implements NamedRangeSelector {
+  record AnyOf(List<Ref> selectors) implements NamedRangeSelector, ResolvedTarget {
     public AnyOf {
       selectors = SelectorListValidation.copyDistinctNamedRangeRefs(selectors, "selectors");
     }
@@ -43,7 +43,7 @@ public sealed interface NamedRangeSelector extends Selector
   @Variant(
       id = "NAMED_RANGE_BY_NAME",
       summary = "Match a named range reference across all scopes by exact name.")
-  record ByName(DefinedName name) implements NamedRangeSelector, Ref {
+  record ByName(DefinedName name) implements NamedRangeSelector, Ref, ResolvedTarget {
     public ByName {
       java.util.Objects.requireNonNull(name, "name must not be null");
     }
@@ -58,7 +58,7 @@ public sealed interface NamedRangeSelector extends Selector
   @Variant(
       id = "NAMED_RANGE_BY_NAMES",
       summary = "Match named ranges across all scopes by exact name set.")
-  record ByNames(List<DefinedName> names) implements NamedRangeSelector {
+  record ByNames(List<DefinedName> names) implements NamedRangeSelector, ResolvedTarget {
     public ByNames {
       names = SelectorListValidation.copyDistinctNamedRangeNames(names, "names");
     }
@@ -73,7 +73,7 @@ public sealed interface NamedRangeSelector extends Selector
   @Variant(
       id = "NAMED_RANGE_WORKBOOK_SCOPE",
       summary = "Match one workbook-scoped named range reference by exact name.")
-  record WorkbookScope(DefinedName name) implements ScopedExact, Ref {
+  record WorkbookScope(DefinedName name) implements ScopedExact, Ref, ResolvedTarget {
     public WorkbookScope {
       java.util.Objects.requireNonNull(name, "name must not be null");
     }
@@ -88,7 +88,8 @@ public sealed interface NamedRangeSelector extends Selector
   @Variant(
       id = "NAMED_RANGE_SHEET_SCOPE",
       summary = "Match one sheet-scoped named range reference on one sheet.")
-  record SheetScope(DefinedName name, SheetName sheetName) implements ScopedExact, Ref {
+  record SheetScope(DefinedName name, SheetName sheetName)
+      implements ScopedExact, Ref, ResolvedTarget {
     public SheetScope {
       java.util.Objects.requireNonNull(name, "name must not be null");
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");

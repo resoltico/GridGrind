@@ -2,10 +2,14 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookCellCommand;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,25 +26,29 @@ import org.apache.poi.ss.util.CellReference;
 final class FormulaOriginTracker {
   private final Map<CellKey, StepReference> origins = new ConcurrentHashMap<>();
 
-  FormulaWrites plannedWrites(ExcelWorkbook workbook, WorkbookCommand command) {
+  FormulaWrites plannedWrites(ExcelWorkbook workbook, ResolvedStep step) {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    Objects.requireNonNull(command, "command must not be null");
-    return switch (command) {
-      case WorkbookCellCommand.SetCell setCell ->
+    Objects.requireNonNull(step, "step must not be null");
+    return switch (step.action()) {
+      case ResolvedMutationAction.SetCell setCell ->
           new FormulaWrites(
               Map.of(
-                  new CellCoordinate(setCell.sheetName(), setCell.address()),
+                  new CellCoordinate(
+                      ((CellSelector.ByAddress) step.target()).sheetName().value(),
+                      ((CellSelector.ByAddress) step.target()).address().value()),
                   formulaFor(setCell.value())));
-      case WorkbookCellCommand.SetRange setRange -> rangeWrites(setRange);
-      case WorkbookCellCommand.SetArrayFormula setArrayFormula ->
-          arrayFormulaWrites(setArrayFormula);
-      case WorkbookCellCommand.ClearRange clearRange -> clearRangeWrites(clearRange);
-      case WorkbookCellCommand.ClearArrayFormula clearArrayFormula ->
+      case ResolvedMutationAction.SetRange setRange -> rangeWrites(step, setRange);
+      case ResolvedMutationAction.SetArrayFormula setArrayFormula ->
+          arrayFormulaWrites(step, setArrayFormula);
+      case CellMutationAction.ClearRange _ -> clearRangeWrites(step);
+      case CellMutationAction.ClearArrayFormula _ ->
           new FormulaWrites(
               Map.of(
-                  new CellCoordinate(clearArrayFormula.sheetName(), clearArrayFormula.address()),
+                  new CellCoordinate(
+                      ((CellSelector.ByAddress) step.target()).sheetName().value(),
+                      ((CellSelector.ByAddress) step.target()).address().value()),
                   Optional.empty()));
-      case WorkbookCellCommand.AppendRow appendRow -> appendWrites(workbook, appendRow);
+      case ResolvedMutationAction.AppendRow appendRow -> appendWrites(workbook, step, appendRow);
       default -> FormulaWrites.none();
     };
   }
@@ -78,8 +86,9 @@ final class FormulaOriginTracker {
         .findFirst();
   }
 
-  private FormulaWrites rangeWrites(WorkbookCellCommand.SetRange setRange) {
-    CellRangeAddress range = CellRangeAddress.valueOf(setRange.range());
+  private FormulaWrites rangeWrites(ResolvedStep step, ResolvedMutationAction.SetRange setRange) {
+    CellRangeAddress range =
+        CellRangeAddress.valueOf(((RangeSelector.ByRange) step.target()).range().value());
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
     for (int rowOffset = 0; rowOffset < setRange.rows().size(); rowOffset++) {
       for (int columnOffset = 0;
@@ -87,7 +96,7 @@ final class FormulaOriginTracker {
           columnOffset++) {
         writes.put(
             coordinate(
-                setRange.sheetName(),
+                ((RangeSelector.ByRange) step.target()).sheetName().value(),
                 range.getFirstRow() + rowOffset,
                 range.getFirstColumn() + columnOffset),
             formulaFor(setRange.rows().get(rowOffset).get(columnOffset)));
@@ -96,8 +105,10 @@ final class FormulaOriginTracker {
     return new FormulaWrites(writes);
   }
 
-  private FormulaWrites arrayFormulaWrites(WorkbookCellCommand.SetArrayFormula setArrayFormula) {
-    CellRangeAddress range = CellRangeAddress.valueOf(setArrayFormula.range());
+  private FormulaWrites arrayFormulaWrites(
+      ResolvedStep step, ResolvedMutationAction.SetArrayFormula setArrayFormula) {
+    CellRangeAddress range =
+        CellRangeAddress.valueOf(((RangeSelector.ByRange) step.target()).range().value());
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
     IntStream.rangeClosed(range.getFirstRow(), range.getLastRow())
         .forEach(
@@ -106,13 +117,17 @@ final class FormulaOriginTracker {
                     .forEach(
                         column ->
                             writes.put(
-                                coordinate(setArrayFormula.sheetName(), row, column),
+                                coordinate(
+                                    ((RangeSelector.ByRange) step.target()).sheetName().value(),
+                                    row,
+                                    column),
                                 Optional.of(setArrayFormula.formula().formula()))));
     return new FormulaWrites(writes);
   }
 
-  private FormulaWrites clearRangeWrites(WorkbookCellCommand.ClearRange clearRange) {
-    CellRangeAddress range = CellRangeAddress.valueOf(clearRange.range());
+  private FormulaWrites clearRangeWrites(ResolvedStep step) {
+    CellRangeAddress range =
+        CellRangeAddress.valueOf(((RangeSelector.ByRange) step.target()).range().value());
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
     IntStream.rangeClosed(range.getFirstRow(), range.getLastRow())
         .forEach(
@@ -121,19 +136,23 @@ final class FormulaOriginTracker {
                     .forEach(
                         column ->
                             writes.put(
-                                coordinate(clearRange.sheetName(), row, column),
+                                coordinate(
+                                    ((RangeSelector.ByRange) step.target()).sheetName().value(),
+                                    row,
+                                    column),
                                 Optional.empty())));
     return new FormulaWrites(writes);
   }
 
   private FormulaWrites appendWrites(
-      ExcelWorkbook workbook, WorkbookCellCommand.AppendRow appendRow) {
-    Sheet sheet = workbook.xssfWorkbook().getSheet(appendRow.sheetName());
+      ExcelWorkbook workbook, ResolvedStep step, ResolvedMutationAction.AppendRow appendRow) {
+    Sheet sheet =
+        workbook.xssfWorkbook().getSheet(((SheetSelector.ByName) step.target()).name().value());
     int rowIndex = nextAppendRowIndex(sheet);
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
     for (int column = 0; column < appendRow.values().size(); column++) {
       writes.put(
-          coordinate(appendRow.sheetName(), rowIndex, column),
+          coordinate(((SheetSelector.ByName) step.target()).name().value(), rowIndex, column),
           formulaFor(appendRow.values().get(column)));
     }
     return new FormulaWrites(writes);
