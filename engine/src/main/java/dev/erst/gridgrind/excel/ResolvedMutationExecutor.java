@@ -248,6 +248,7 @@ public final class ResolvedMutationExecutor {
       case RangeSelector.ByRange range -> range.sheetName().value();
       case RangeSelector.ByRanges ranges -> ranges.sheetName().value();
       case RangeSelector.AllOnSheet all -> all.sheetName().value();
+      case RangeSelector.RectangularWindow window -> window.sheetName().value();
       case RowBandSelector.Span rows -> rows.sheetName().value();
       case RowBandSelector.Insertion rows -> rows.sheetName().value();
       case ColumnBandSelector.Span columns -> columns.sheetName().value();
@@ -288,11 +289,18 @@ public final class ResolvedMutationExecutor {
   }
 
   private static ExcelRangeSelection selection(ResolvedTarget target) {
-    return target instanceof RangeSelector.AllOnSheet
-        ? new ExcelRangeSelection.All()
-        : new ExcelRangeSelection.Selected(
-            ranges(target).stream()
-                .map(dev.erst.gridgrind.core.vocabulary.RangeRef::value)
-                .toList());
+    return switch (target) {
+      case RangeSelector.AllOnSheet _ -> new ExcelRangeSelection.All();
+      case RangeSelector.ByRange range ->
+          new ExcelRangeSelection.Selected(List.of(range.range().value()));
+      case RangeSelector.ByRanges ranges ->
+          new ExcelRangeSelection.Selected(
+              ranges.ranges().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::value)
+                  .toList());
+      case RangeSelector.RectangularWindow window ->
+          new ExcelRangeSelection.Selected(List.of(window.range().value()));
+      default -> throw new IllegalArgumentException("Clear operation requires a range target");
+    };
   }
 }

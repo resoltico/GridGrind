@@ -2725,3 +2725,20 @@ zero failures/errors/skips; all143 golden cases unchanged. No active campaigns. 
 converters554→505, blank285→284, main112925→112818, tests151100→151011; Support194, definitions0,
 snapshots2(runtime) unchanged. Baseline diff empty. WP-40 remains open for ResolvedPlan and the final
 cell/range/read-command seam; the other selection mirrors are gone.
+
+## WP-40 correct rectangular-window clear dispatch
+
+Review of the remaining range seam found a regression introduced in the resolved mutation dispatcher:
+both clear contracts accept RangeSelector.class, but sheet extraction omitted RectangularWindow and
+clear selection reused the narrower SET_CONDITIONAL_FORMATTING target helper. Two real negative
+controls created validation/formatting rules then cleared their full rectangular window; both failed
+with Target has no single sheet. Failure log/XML retained externally. Corrected sheet extraction and
+made clear selection explicitly handle ALL, one range, range lists and rectangular windows. Kept the
+formatting-authoring target constraint separate. This fixes our implementation against the existing
+core contract; no requirement or compatibility handling changed.
+
+Both new regressions pass30s. Nested check/all94 retained seeds passes27s. Final ./gradlew check
+passes4m3s: core385, JSON353, engine1387 plus14 parity, CLI588, zero failures/errors/skips; all143 golden
+cases unchanged. No active campaigns. Inventories: main112818→112826, tests151011→151077;
+converters505, blank284, Support194, definitions0, snapshots2(runtime) unchanged. Baseline diff empty.
+The new controls will remain while cell/range/read-command translation is removed next.
