@@ -1,5 +1,11 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -41,18 +47,18 @@ final class ExcelSheetCopyTableSupport {
     }
   }
 
-  private static ExcelTableDefinition copiedTableDefinition(
+  private static ResolvedTable copiedTableDefinition(
       ExcelWorkbook workbook, String targetSheetName, ExcelTableSnapshot table) {
-    return new ExcelTableDefinition(
-        uniqueCopiedTableName(workbook, table.name()),
-        targetSheetName,
-        table.range(),
+    return new ResolvedTable(
+        new TableName(uniqueCopiedTableName(workbook, table.name())),
+        new SheetName(targetSheetName),
+        new RangeRef(table.range()),
         table.structure().totalsRowCount() > 0,
         table.behavior().hasAutofilter(),
         switch (table.style()) {
-          case ExcelTableStyleSnapshot.None _ -> new ExcelTableStyle.None();
+          case ExcelTableStyleSnapshot.None _ -> new TableStyleSpec.None();
           case ExcelTableStyleSnapshot.Named named ->
-              new ExcelTableStyle.Named(
+              new TableStyleSpec.Named(
                   named.name(),
                   named.showFirstColumn(),
                   named.showLastColumn(),
@@ -69,7 +75,7 @@ final class ExcelSheetCopyTableSupport {
         table.structure().columns().stream()
             .map(
                 column ->
-                    new ExcelTableColumnDefinition(
+                    new TableColumnSpec(
                         Math.toIntExact(column.id() - 1L),
                         column.uniqueName(),
                         column.totalsRowLabel(),

@@ -2,9 +2,14 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.io.IOException;
@@ -72,8 +77,12 @@ class ExcelDocumentAnalyzerTest {
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "BudgetQueue", "Budget", "A1:B3", false, new ExcelTableStyle.None()));
+              new ResolvedTable(
+                  new TableName("BudgetQueue"),
+                  new SheetName("Budget"),
+                  new RangeRef("A1:B3"),
+                  false,
+                  new TableStyleSpec.None()));
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("A1:B2");
 
       ExcelSheet archive = workbook.getOrCreateSheet("Archive");

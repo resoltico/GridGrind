@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import java.util.Objects;
 
 /** Workbook-global table authoring operations. */
@@ -11,7 +12,7 @@ public final class ExcelWorkbookTables {
   }
 
   /** Creates or replaces one workbook-global table definition. */
-  public ExcelWorkbook setTable(ExcelTableDefinition definition) {
+  public ExcelWorkbook setTable(ResolvedTable definition) {
     Objects.requireNonNull(definition, "definition must not be null");
     new ExcelTableController().setTable(workbook, definition);
     return workbook;

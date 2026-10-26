@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -25,11 +27,10 @@ import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelTableDefinition;
-import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.IOException;
@@ -641,8 +642,12 @@ class SemanticSelectorResolverTest {
     workbook
         .tables()
         .setTable(
-            new ExcelTableDefinition(
-                tableName, sheetName, "A1:B2", false, new ExcelTableStyle.None()));
+            new ResolvedTable(
+                new TableName(tableName),
+                new SheetName(sheetName),
+                new RangeRef("A1:B2"),
+                false,
+                new TableStyleSpec.None()));
   }
 
   private static void addWideTable(ExcelWorkbook workbook) {
@@ -654,7 +659,11 @@ class SemanticSelectorResolverTest {
     workbook
         .tables()
         .setTable(
-            new ExcelTableDefinition(
-                "WideTable", "Wide", "AA1:AB2", false, new ExcelTableStyle.None()));
+            new ResolvedTable(
+                new TableName("WideTable"),
+                new SheetName("Wide"),
+                new RangeRef("AA1:AB2"),
+                false,
+                new TableStyleSpec.None()));
   }
 }

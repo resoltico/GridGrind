@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -66,18 +67,18 @@ final class ExcelTableStructureSupport {
   }
 
   /** Applies one GridGrind table-style definition to a mutable XSSF table. */
-  static void applyStyle(XSSFTable table, ExcelTableStyle style) {
+  static void applyStyle(XSSFTable table, TableStyleSpec style) {
     Objects.requireNonNull(table, "table must not be null");
     Objects.requireNonNull(style, "style must not be null");
 
     CTTable ctTable = table.getCTTable();
     switch (style) {
-      case ExcelTableStyle.None _ -> {
+      case TableStyleSpec.None _ -> {
         if (ctTable.isSetTableStyleInfo()) {
           ctTable.unsetTableStyleInfo();
         }
       }
-      case ExcelTableStyle.Named named -> {
+      case TableStyleSpec.Named named -> {
         CTTableStyleInfo styleInfo =
             ctTable.isSetTableStyleInfo()
                 ? ctTable.getTableStyleInfo()

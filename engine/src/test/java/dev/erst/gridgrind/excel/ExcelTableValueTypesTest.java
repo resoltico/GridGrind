@@ -2,6 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -12,37 +17,62 @@ class ExcelTableValueTypesTest {
   void tableDefinitionAndSnapshotValidateAndCopyCollections() {
     List<String> columnNames = new ArrayList<>(List.of("Owner", "Task"));
 
-    ExcelTableDefinition definition =
-        new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None());
+    ResolvedTable definition =
+        new ResolvedTable(
+            new TableName("Queue"),
+            new SheetName("Ops"),
+            new RangeRef("A1:B3"),
+            false,
+            new TableStyleSpec.None());
     ExcelTableSnapshot snapshot =
         new ExcelTableSnapshot(
             "Queue", "Ops", "A1:B3", 1, 0, columnNames, new ExcelTableStyleSnapshot.None(), true);
     columnNames.clear();
 
-    assertEquals("Queue", definition.name());
+    assertEquals(new TableName("Queue"), definition.name());
     assertEquals(List.of("Owner", "Task"), snapshot.structure().columnNames());
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelTableDefinition("Queue", " ", "A1:B2", false, new ExcelTableStyle.None()));
+        () ->
+            new ResolvedTable(
+                new TableName("Queue"),
+                new SheetName(" "),
+                new RangeRef("A1:B2"),
+                false,
+                new TableStyleSpec.None()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelTableDefinition(
-                "Queue",
-                "12345678901234567890123456789012",
-                "A1:B2",
+            new ResolvedTable(
+                new TableName("Queue"),
+                new SheetName("12345678901234567890123456789012"),
+                new RangeRef("A1:B2"),
                 false,
-                new ExcelTableStyle.None()));
+                new TableStyleSpec.None()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelTableDefinition("Queue", "Ops", " ", false, new ExcelTableStyle.None()));
+        () ->
+            new ResolvedTable(
+                new TableName("Queue"),
+                new SheetName("Ops"),
+                new RangeRef(" "),
+                false,
+                new TableStyleSpec.None()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelTableDefinition("Queue", "Ops", null, false, new ExcelTableStyle.None()));
+        () ->
+            new ResolvedTable(
+                new TableName("Queue"),
+                new SheetName("Ops"),
+                new RangeRef(null),
+                false,
+                new TableStyleSpec.None()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelTableDefinition("Queue", "Ops", "A1:B2", false, null));
+        () ->
+            new ResolvedTable(
+                new TableName("Queue"), new SheetName("Ops"), new RangeRef("A1:B2"), false, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -98,8 +128,8 @@ class ExcelTableValueTypesTest {
 
   @Test
   void tableStyleAndSelectionValidateNamesAndDuplicates() {
-    ExcelTableStyle.Named style =
-        new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false);
+    TableStyleSpec.Named style =
+        new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false);
     ExcelTableSelection.ByNames selection = new ExcelTableSelection.ByNames(List.of("Queue"));
 
     assertEquals("TableStyleMedium2", style.name());
@@ -107,10 +137,10 @@ class ExcelTableValueTypesTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelTableStyle.Named(" ", false, false, true, false));
+        () -> new TableStyleSpec.Named(" ", false, false, true, false));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelTableStyle.Named(null, false, false, true, false));
+        () -> new TableStyleSpec.Named(null, false, false, true, false));
     assertThrows(IllegalArgumentException.class, () -> new ExcelTableSelection.ByNames(List.of()));
     assertThrows(
         IllegalArgumentException.class,

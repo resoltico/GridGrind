@@ -3,8 +3,8 @@ package dev.erst.gridgrind.excel.pivot;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetNames;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
-import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -77,7 +77,7 @@ public sealed interface ExcelPivotTableSnapshot
     /** Table-backed source plus the currently resolved table range. */
     record Table(String name, String sheetName, String range) implements Source {
       public Table {
-        name = ExcelTableDefinition.validateName(name);
+        name = new TableName(name).value();
         ExcelSheetNames.requireValid(sheetName, "sheetName");
         range = requireNonBlank(range, "range");
       }

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
@@ -78,7 +79,7 @@ class ExcelTableCatalogSupportTest {
       table.setName("Queue");
       ExcelTableStructureSupport.applyAutofilter(table, ExcelRange.parse("A1:B3"), false);
       ExcelTableStructureSupport.applyStyle(
-          table, new ExcelTableStyle.Named("TableStyleMedium2", true, false, true, false));
+          table, new TableStyleSpec.Named("TableStyleMedium2", true, false, true, false));
       table.getCTTable().setComment("Queue comment");
       table.getCTTable().setPublished(true);
       table.getCTTable().setInsertRow(true);

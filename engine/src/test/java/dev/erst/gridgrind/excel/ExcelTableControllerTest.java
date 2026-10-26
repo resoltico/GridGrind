@@ -4,9 +4,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,7 +39,12 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       List<ExcelTableSnapshot> tables = controller.tables(workbook, new ExcelTableSelection.All());
       List<ExcelAutofilterSnapshot> autofilters = controller.tableOwnedAutofilters(workbook, "Ops");
@@ -56,15 +67,20 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "Queue",
-              "Ops",
-              "A1:B4",
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
               true,
-              new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false)));
+              new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false)));
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       List<ExcelTableSnapshot> tables = controller.tables(workbook, new ExcelTableSelection.All());
 
@@ -88,13 +104,13 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "Queue",
-              "Ops",
-              "A1:B4",
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
               true,
               false,
-              new ExcelTableStyle.None(),
+              new TableStyleSpec.None(),
               "",
               false,
               false,
@@ -102,7 +118,7 @@ class ExcelTableControllerTest {
               "",
               "",
               "",
-              List.of(new ExcelTableColumnDefinition(1, "", "", "SUM", ""))));
+              List.of(new TableColumnSpec(1, "", "", "SUM", ""))));
 
       ExcelTableSnapshot table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
@@ -121,13 +137,13 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "Queue",
-              "Ops",
-              "A1:B4",
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
               true,
               false,
-              new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false),
+              new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false),
               "Office queue",
               true,
               true,
@@ -136,8 +152,8 @@ class ExcelTableControllerTest {
               "Data",
               "Totals",
               List.of(
-                  new ExcelTableColumnDefinition(0, "OwnerKey", "Total", "", ""),
-                  new ExcelTableColumnDefinition(1, "", "", "SUM", "UPPER([@Task])"))));
+                  new TableColumnSpec(0, "OwnerKey", "Total", "", ""),
+                  new TableColumnSpec(1, "", "", "SUM", "UPPER([@Task])"))));
 
       ExcelTableSnapshot authored =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
@@ -157,13 +173,13 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "Queue",
-              "Ops",
-              "A1:B4",
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
               true,
               true,
-              new ExcelTableStyle.None(),
+              new TableStyleSpec.None(),
               "Updated queue",
               false,
               false,
@@ -172,8 +188,8 @@ class ExcelTableControllerTest {
               "Data2",
               "Totals2",
               List.of(
-                  new ExcelTableColumnDefinition(0, "OwnerKey2", "Overall", "", ""),
-                  new ExcelTableColumnDefinition(1, "", "", "AVERAGE", "LOWER([@Task])"))));
+                  new TableColumnSpec(0, "OwnerKey2", "Overall", "", ""),
+                  new TableColumnSpec(1, "", "", "AVERAGE", "LOWER([@Task])"))));
 
       ExcelTableSnapshot updated =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
@@ -190,13 +206,13 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "Queue",
-              "Ops",
-              "A1:B4",
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
               true,
               true,
-              new ExcelTableStyle.None(),
+              new TableStyleSpec.None(),
               "",
               false,
               false,
@@ -205,8 +221,7 @@ class ExcelTableControllerTest {
               "",
               "",
               List.of(
-                  new ExcelTableColumnDefinition(0, "", "", "", ""),
-                  new ExcelTableColumnDefinition(1, "", "", "", ""))));
+                  new TableColumnSpec(0, "", "", "", ""), new TableColumnSpec(1, "", "", "", ""))));
 
       ExcelTableSnapshot cleared =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
@@ -234,13 +249,13 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "Queue",
-              "Ops",
-              "A1:B4",
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
               true,
               true,
-              new ExcelTableStyle.None(),
+              new TableStyleSpec.None(),
               "",
               false,
               false,
@@ -258,13 +273,13 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "Queue",
-              "Ops",
-              "A1:B4",
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
               true,
               false,
-              new ExcelTableStyle.None(),
+              new TableStyleSpec.None(),
               "",
               false,
               false,
@@ -297,13 +312,13 @@ class ExcelTableControllerTest {
               () ->
                   controller.setTable(
                       workbook,
-                      new ExcelTableDefinition(
-                          "Queue",
-                          "Ops",
-                          "A1:B3",
+                      new ResolvedTable(
+                          new TableName("Queue"),
+                          new SheetName("Ops"),
+                          new RangeRef("A1:B3"),
                           false,
                           true,
-                          new ExcelTableStyle.None(),
+                          new TableStyleSpec.None(),
                           "",
                           false,
                           false,
@@ -311,7 +326,7 @@ class ExcelTableControllerTest {
                           "",
                           "",
                           "",
-                          List.of(new ExcelTableColumnDefinition(2, "", "", "", "")))));
+                          List.of(new TableColumnSpec(2, "", "", "", "")))));
       assertEquals(
           "table columnIndex is outside the table range: 2", outOfRangeFailure.getMessage());
 
@@ -321,13 +336,13 @@ class ExcelTableControllerTest {
               () ->
                   controller.setTable(
                       workbook,
-                      new ExcelTableDefinition(
-                          "Queue",
-                          "Ops",
-                          "A1:B3",
+                      new ResolvedTable(
+                          new TableName("Queue"),
+                          new SheetName("Ops"),
+                          new RangeRef("A1:B3"),
                           false,
                           true,
-                          new ExcelTableStyle.None(),
+                          new TableStyleSpec.None(),
                           "",
                           false,
                           false,
@@ -335,7 +350,7 @@ class ExcelTableControllerTest {
                           "",
                           "",
                           "",
-                          List.of(new ExcelTableColumnDefinition(1, "", "", "mystery", "")))));
+                          List.of(new TableColumnSpec(1, "", "", "mystery", "")))));
       assertEquals(
           "unsupported table totalsRowFunction: mystery", unsupportedFunctionFailure.getMessage());
     }
@@ -354,7 +369,12 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       ExcelTableSnapshot table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
@@ -375,11 +395,20 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "ArchiveQueue", "Archive", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("ArchiveQueue"),
+              new SheetName("Archive"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       List<ExcelTableSnapshot> selected =
           controller.tables(
@@ -406,8 +435,12 @@ class ExcelTableControllerTest {
               () ->
                   controller.setTable(
                       workbook,
-                      new ExcelTableDefinition(
-                          "Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None())));
+                      new ResolvedTable(
+                          new TableName("Queue"),
+                          new SheetName("Ops"),
+                          new RangeRef("A1:B3"),
+                          false,
+                          new TableStyleSpec.None())));
 
       assertEquals("table header cells must not be blank", failure.getMessage());
     }
@@ -425,8 +458,12 @@ class ExcelTableControllerTest {
               () ->
                   controller.setTable(
                       workbook,
-                      new ExcelTableDefinition(
-                          "Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None())));
+                      new ResolvedTable(
+                          new TableName("Queue"),
+                          new SheetName("Ops"),
+                          new RangeRef("A1:B3"),
+                          false,
+                          new TableStyleSpec.None())));
 
       assertEquals(
           "table header cells must be unique (case-insensitive): owner", failure.getMessage());
@@ -450,7 +487,12 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       IllegalArgumentException overlapFailure =
           assertThrows(
@@ -458,8 +500,12 @@ class ExcelTableControllerTest {
               () ->
                   controller.setTable(
                       workbook,
-                      new ExcelTableDefinition(
-                          "RegionDesk", "Ops", "B1:C3", false, new ExcelTableStyle.None())));
+                      new ResolvedTable(
+                          new TableName("RegionDesk"),
+                          new SheetName("Ops"),
+                          new RangeRef("B1:C3"),
+                          false,
+                          new TableStyleSpec.None())));
 
       assertEquals(
           "table range must not overlap an existing table: Queue@A1:B3",
@@ -483,8 +529,12 @@ class ExcelTableControllerTest {
               () ->
                   controller.setTable(
                       workbook,
-                      new ExcelTableDefinition(
-                          "Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None())));
+                      new ResolvedTable(
+                          new TableName("Queue"),
+                          new SheetName("Ops"),
+                          new RangeRef("A1:B3"),
+                          false,
+                          new TableStyleSpec.None())));
 
       assertEquals(
           "table name must not conflict with an existing defined name: Queue",
@@ -505,30 +555,43 @@ class ExcelTableControllerTest {
           () ->
               controller.setTable(
                   workbook,
-                  new ExcelTableDefinition(
-                      "Queue", "Ops", "A1:B1", false, new ExcelTableStyle.None())));
-      assertThrows(
-          IllegalArgumentException.class,
-          () ->
-              controller.setTable(
-                  workbook,
-                  new ExcelTableDefinition(
-                      "Queue", "Ops", "A1:B2", true, new ExcelTableStyle.None())));
-      assertThrows(
-          IllegalArgumentException.class,
-          () ->
-              controller.setTable(
-                  workbook,
-                  new ExcelTableDefinition(
-                      "Queue",
-                      "Ops",
-                      "A1:B3",
+                  new ResolvedTable(
+                      new TableName("Queue"),
+                      new SheetName("Ops"),
+                      new RangeRef("A1:B1"),
                       false,
-                      new ExcelTableStyle.Named("MissingStyle", false, false, true, false))));
+                      new TableStyleSpec.None())));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              controller.setTable(
+                  workbook,
+                  new ResolvedTable(
+                      new TableName("Queue"),
+                      new SheetName("Ops"),
+                      new RangeRef("A1:B2"),
+                      true,
+                      new TableStyleSpec.None())));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              controller.setTable(
+                  workbook,
+                  new ResolvedTable(
+                      new TableName("Queue"),
+                      new SheetName("Ops"),
+                      new RangeRef("A1:B3"),
+                      false,
+                      new TableStyleSpec.Named("MissingStyle", false, false, true, false))));
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       IllegalArgumentException crossSheetFailure =
           assertThrows(
@@ -536,8 +599,12 @@ class ExcelTableControllerTest {
               () ->
                   controller.setTable(
                       workbook,
-                      new ExcelTableDefinition(
-                          "Queue", "Archive", "A1:B3", false, new ExcelTableStyle.None())));
+                      new ResolvedTable(
+                          new TableName("Queue"),
+                          new SheetName("Archive"),
+                          new RangeRef("A1:B3"),
+                          false,
+                          new TableStyleSpec.None())));
       assertEquals(
           "table name already exists on a different sheet: Queue", crossSheetFailure.getMessage());
     }
@@ -550,7 +617,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       IllegalArgumentException failure =
           assertThrows(
@@ -567,7 +639,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       controller.deleteTable(workbook, "Queue", "Ops");
 
@@ -632,12 +709,12 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "Queue",
-              "Ops",
-              "A1:B4",
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
               true,
-              new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false)));
+              new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false)));
 
       ExcelTableSnapshot table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
@@ -661,7 +738,12 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       assertEquals(
           List.of(new ExcelAutofilterSnapshot.SheetOwned("D1:D3")),
@@ -678,7 +760,12 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       assertEquals(
           "A0:B3", workbook.sheet("Ops").xssfSheet().getCTWorksheet().getAutoFilter().getRef());
@@ -719,7 +806,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       table.getCTTable().setRef("A0:B3");
@@ -739,7 +831,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       table.getCTTable().getAutoFilter().setRef("A1:B2");
@@ -759,7 +856,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       table.getCTTable().getAutoFilter().setRef("A0:B3");
@@ -777,7 +879,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
       sheet.cells().setCell("A1", new CellValue.Blank());
       sheet.cells().setCell("B1", new CellValue.Blank());
 
@@ -797,7 +904,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       table.getCTTable().setRef("A0:B3");
@@ -848,7 +960,7 @@ class ExcelTableControllerTest {
       XSSFTable table = sheet.createTable(new AreaReference("A1:B2", SpreadsheetVersion.EXCEL2007));
       table.getCTTable().addNewTableStyleInfo().setName("TableStyleMedium2");
 
-      ExcelTableStructureSupport.applyStyle(table, new ExcelTableStyle.None());
+      ExcelTableStructureSupport.applyStyle(table, new TableStyleSpec.None());
 
       assertFalse(table.getCTTable().isSetTableStyleInfo());
     }
@@ -875,7 +987,12 @@ class ExcelTableControllerTest {
       populateTableCells(ops, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
       workbook.sheet("Ops").xssfSheet().getTables().getFirst().getCTTable().unsetAutoFilter();
 
       assertEquals(List.of(), controller.tableOwnedAutofilters(workbook, "Ops"));
@@ -889,7 +1006,12 @@ class ExcelTableControllerTest {
       populateTableCells(ops, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
       workbook.sheet("Ops").xssfSheet().getTables().getFirst().getCTTable().unsetAutoFilter();
 
       assertEquals(List.of(), controller.tableAutofilterHealthFindings(workbook, "Ops"));
@@ -923,7 +1045,12 @@ class ExcelTableControllerTest {
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       assertEquals(
           List.of("Legacy", "Queue"),
@@ -956,15 +1083,29 @@ class ExcelTableControllerTest {
                   ExcelNamedRangeTarget.range("Ops", "H1")));
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "RegionLead", "Ops", "E1:F3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("RegionLead"),
+              new SheetName("Ops"),
+              new RangeRef("E1:F3"),
+              false,
+              new TableStyleSpec.None()));
 
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:C3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:C3"),
+              false,
+              new TableStyleSpec.None()));
 
       List<ExcelTableSnapshot> tables = controller.tables(workbook, new ExcelTableSelection.All());
       assertEquals(2, tables.size());
@@ -993,8 +1134,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "c]cc", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "BudgetTable", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("BudgetTable"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       sheet.cells().setCell("A1", new CellValue.Text("QQQQq"));
@@ -1038,7 +1183,12 @@ class ExcelTableControllerTest {
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       sheet
@@ -1100,12 +1250,12 @@ class ExcelTableControllerTest {
       sheet.cells().setCell("B3", new CellValue.Text("Done"));
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "OpsTable",
-              "V",
-              "A1:B3",
+          new ResolvedTable(
+              new TableName("OpsTable"),
+              new SheetName("V"),
+              new RangeRef("A1:B3"),
               true,
-              new ExcelTableStyle.Named("TableStyleMedium2", true, true, true, true)));
+              new TableStyleSpec.Named("TableStyleMedium2", true, true, true, true)));
 
       XSSFTable table = workbook.sheet("V").xssfSheet().getTables().getFirst();
       assertEquals(
@@ -1172,12 +1322,12 @@ class ExcelTableControllerTest {
       sheet.cells().setCell("B3", new CellValue.Text("Done"));
       controller.setTable(
           workbook,
-          new ExcelTableDefinition(
-              "OpsTable",
-              "V",
-              "A1:B3",
+          new ResolvedTable(
+              new TableName("OpsTable"),
+              new SheetName("V"),
+              new RangeRef("A1:B3"),
               true,
-              new ExcelTableStyle.Named("TableStyleMedium2", true, true, true, true)));
+              new TableStyleSpec.Named("TableStyleMedium2", true, true, true, true)));
 
       XSSFTable table = workbook.sheet("V").xssfSheet().getTables().getFirst();
       var headerCell = workbook.sheet("V").xssfSheet().getRow(0).getCell(0);

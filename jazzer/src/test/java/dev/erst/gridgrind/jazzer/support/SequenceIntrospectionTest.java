@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
@@ -85,8 +86,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
-import dev.erst.gridgrind.excel.ExcelTableDefinition;
-import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
@@ -502,12 +501,12 @@ class SequenceIntrospectionTest {
         "SET_TABLE",
         SequenceIntrospection.commandKind(
             new WorkbookTabularCommand.SetTable(
-                new ExcelTableDefinition(
-                    "BudgetTable",
-                    "Budget",
-                    "A1:C4",
+                new ResolvedTable(
+                    new TableName("BudgetTable"),
+                    new SheetName("Budget"),
+                    new RangeRef("A1:C4"),
                     false,
-                    new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false)))));
+                    new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false)))));
     assertEquals(
         "DELETE_TABLE",
         SequenceIntrospection.commandKind(

@@ -84,7 +84,7 @@ final class WorkbookCommandStructuredMutationConverter {
       case StructuredMutationAction.SetTable setTable -> {
         WorkbookCommandSelectorSupport.ensureTableIdentity(target, setTable);
         yield new WorkbookTabularCommand.SetTable(
-            WorkbookCommandTabularInputConverter.toExcelTableDefinition(setTable.table()));
+            WorkbookCommandTabularInputConverter.toResolvedTable(setTable.table()));
       }
       case StructuredMutationAction.DeleteTable _ -> {
         TableSelector.ByNameOnSheet selector =

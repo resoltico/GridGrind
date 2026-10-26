@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Objects;
@@ -84,18 +85,18 @@ class ExcelTableStructureSupportTest {
       XSSFTable table = createTable(workbook, "Ops", "A1:B3");
 
       ExcelTableStructureSupport.applyStyle(
-          table, new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false));
+          table, new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false));
       assertEquals("TableStyleMedium2", table.getCTTable().getTableStyleInfo().getName());
       assertTrue(table.getCTTable().isSetTableStyleInfo());
 
       ExcelTableStructureSupport.applyStyle(
-          table, new ExcelTableStyle.Named("TableStyleMedium2", true, true, false, true));
+          table, new TableStyleSpec.Named("TableStyleMedium2", true, true, false, true));
       assertTrue(table.getCTTable().getTableStyleInfo().getShowFirstColumn());
       assertTrue(table.getCTTable().getTableStyleInfo().getShowLastColumn());
       assertFalse(table.getCTTable().getTableStyleInfo().getShowRowStripes());
       assertTrue(table.getCTTable().getTableStyleInfo().getShowColumnStripes());
 
-      ExcelTableStructureSupport.applyStyle(table, new ExcelTableStyle.None());
+      ExcelTableStructureSupport.applyStyle(table, new TableStyleSpec.None());
       assertFalse(table.getCTTable().isSetTableStyleInfo());
     }
   }

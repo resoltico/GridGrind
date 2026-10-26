@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +15,8 @@ public sealed interface ExcelTableSelection
 
   /** Select only the supplied workbook-global table names. */
   record ByNames(List<String> names) implements ExcelTableSelection {
+    // Each selected identifier requires its own canonical value validation.
+    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     public ByNames {
       Objects.requireNonNull(names, "names must not be null");
       names = List.copyOf(names);
@@ -22,7 +25,7 @@ public sealed interface ExcelTableSelection
       }
       Set<String> unique = new LinkedHashSet<>();
       for (String name : names) {
-        String normalized = ExcelTableDefinition.validateName(name);
+        String normalized = new TableName(name).value();
         String key = normalized.toUpperCase(java.util.Locale.ROOT);
         if (!unique.add(key)) {
           throw new IllegalArgumentException("names must not contain duplicates");

@@ -4,11 +4,13 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
@@ -33,12 +35,12 @@ final class OperationSequenceTabularValues {
         nextTableStyleInput(data));
   }
 
-  static ExcelTableDefinition nextExcelTableDefinition(
+  static ResolvedTable nextExcelTableDefinition(
       GridGrindFuzzData data, String sheetName, String tableName, boolean validRange) {
-    return new ExcelTableDefinition(
-        tableName,
-        sheetName,
-        validRange ? "A1:B3" : FuzzDataDecoders.nextNonBlankRange(data, false),
+    return new ResolvedTable(
+        new TableName(tableName),
+        new SheetName(sheetName),
+        new RangeRef(validRange ? "A1:B3" : FuzzDataDecoders.nextNonBlankRange(data, false)),
         data.consumeBoolean(),
         nextExcelTableStyle(data));
   }
@@ -56,11 +58,11 @@ final class OperationSequenceTabularValues {
     };
   }
 
-  static ExcelTableStyle nextExcelTableStyle(GridGrindFuzzData data) {
+  static TableStyleSpec nextExcelTableStyle(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new ExcelTableStyle.None();
+      case 0 -> new TableStyleSpec.None();
       default ->
-          new ExcelTableStyle.Named(
+          new TableStyleSpec.Named(
               data.consumeBoolean() ? "TableStyleMedium2" : "TableStyleLight9",
               data.consumeBoolean(),
               data.consumeBoolean(),

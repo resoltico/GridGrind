@@ -19,6 +19,8 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -28,7 +30,10 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
@@ -531,8 +536,12 @@ class ExcelWorkbookTest {
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "OpsTable", "Tables", "A1:B2", false, new ExcelTableStyle.None()));
+              new ResolvedTable(
+                  new TableName("OpsTable"),
+                  new SheetName("Tables"),
+                  new RangeRef("A1:B2"),
+                  false,
+                  new TableStyleSpec.None()));
 
       workbook
           .sheets()

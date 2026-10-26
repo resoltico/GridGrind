@@ -3,11 +3,16 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
@@ -66,8 +71,12 @@ class WorkbookAnalyzerTest {
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "Queue", "Budget", "D1:E3", false, new ExcelTableStyle.None()));
+              new ResolvedTable(
+                  new TableName("Queue"),
+                  new SheetName("Budget"),
+                  new RangeRef("D1:E3"),
+                  false,
+                  new TableStyleSpec.None()));
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("D1:E2");
       workbook.getOrCreateSheet("PivotReport");
       workbook

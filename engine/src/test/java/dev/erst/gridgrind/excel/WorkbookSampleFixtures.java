@@ -16,6 +16,8 @@ import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.BinaryContent;
@@ -33,7 +35,10 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -261,12 +266,12 @@ final class WorkbookSampleFixtures {
                     List.of(new ExcelAutofilterSortCondition.Value("A2:A4", false))))),
         new WorkbookTabularCommand.ClearAutofilter("Budget"),
         new WorkbookTabularCommand.SetTable(
-            new ExcelTableDefinition(
-                "BudgetTable",
-                "Budget",
-                "A1:C4",
+            new ResolvedTable(
+                new TableName("BudgetTable"),
+                new SheetName("Budget"),
+                new RangeRef("A1:C4"),
                 true,
-                new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
+                new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false))),
         new WorkbookTabularCommand.DeleteTable("BudgetTable", "Budget"),
         new WorkbookTabularCommand.DeletePivotTable("Budget Pivot", "Budget"),
         new WorkbookMetadataCommand.SetNamedRange(

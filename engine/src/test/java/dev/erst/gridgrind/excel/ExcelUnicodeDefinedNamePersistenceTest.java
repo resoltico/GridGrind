@@ -3,7 +3,12 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -108,8 +113,12 @@ class ExcelUnicodeDefinedNamePersistenceTest {
     workbook
         .tables()
         .setTable(
-            new ExcelTableDefinition(
-                fixture.tableName(), "Data", fixture.range(), false, new ExcelTableStyle.None()));
+            new ResolvedTable(
+                new TableName(fixture.tableName()),
+                new SheetName("Data"),
+                new RangeRef(fixture.range()),
+                false,
+                new TableStyleSpec.None()));
   }
 
   private static void authorObservedFixture(

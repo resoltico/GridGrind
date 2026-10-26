@@ -2,9 +2,14 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -109,8 +114,12 @@ class ExcelPivotTableControllerTest {
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "SalesTable", "Data", "A1:D5", false, new ExcelTableStyle.None()));
+              new ResolvedTable(
+                  new TableName("SalesTable"),
+                  new SheetName("Data"),
+                  new RangeRef("A1:D5"),
+                  false,
+                  new TableStyleSpec.None()));
 
       controller.setPivotTable(
           workbook,

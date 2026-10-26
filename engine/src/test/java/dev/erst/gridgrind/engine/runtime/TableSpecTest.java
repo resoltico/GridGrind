@@ -2,15 +2,13 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
-import dev.erst.gridgrind.excel.ExcelTableDefinition;
-import dev.erst.gridgrind.excel.ExcelTableStyle;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -27,13 +25,13 @@ class TableSpecTest {
             new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false));
 
     assertEquals(
-        new ExcelTableDefinition(
-            "BudgetTable",
-            "Budget",
-            "A1:C4",
+        new ResolvedTable(
+            new TableName("BudgetTable"),
+            new SheetName("Budget"),
+            new RangeRef("A1:C4"),
             true,
-            new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false)),
-        WorkbookCommandTabularInputConverter.toExcelTableDefinition(input));
+            new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false)),
+        WorkbookCommandTabularInputConverter.toResolvedTable(input));
 
     assertThrows(
         IllegalArgumentException.class,
@@ -85,9 +83,13 @@ class TableSpecTest {
 
     assertFalse(input.showTotalsRow());
     assertEquals(
-        new ExcelTableDefinition(
-            "BudgetTable", "Budget", "A1:C4", false, new ExcelTableStyle.None()),
-        WorkbookCommandTabularInputConverter.toExcelTableDefinition(input));
+        new ResolvedTable(
+            new TableName("BudgetTable"),
+            new SheetName("Budget"),
+            new RangeRef("A1:C4"),
+            false,
+            new TableStyleSpec.None()),
+        WorkbookCommandTabularInputConverter.toResolvedTable(input));
   }
 
   @Test
@@ -110,13 +112,13 @@ class TableSpecTest {
             List.of(new TableColumnSpec(1, "", "Total", " SUM ", "")));
 
     assertEquals(
-        new ExcelTableDefinition(
-            "BudgetTable",
-            "Budget",
-            "A1:C4",
+        new ResolvedTable(
+            new TableName("BudgetTable"),
+            new SheetName("Budget"),
+            new RangeRef("A1:C4"),
             true,
             true,
-            new ExcelTableStyle.None(),
+            new TableStyleSpec.None(),
             "",
             false,
             false,
@@ -124,7 +126,7 @@ class TableSpecTest {
             "",
             "",
             "",
-            List.of(new ExcelTableColumnDefinition(1, "", "Total", "sum", ""))),
-        WorkbookCommandTabularInputConverter.toExcelTableDefinition(input));
+            List.of(new TableColumnSpec(1, "", "Total", "sum", ""))),
+        WorkbookCommandTabularInputConverter.toResolvedTable(input));
   }
 }

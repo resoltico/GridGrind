@@ -2,8 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
@@ -213,13 +218,21 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "SalesTableA", "TableDataA", "A1:D5", false, new ExcelTableStyle.None()));
+              new ResolvedTable(
+                  new TableName("SalesTableA"),
+                  new SheetName("TableDataA"),
+                  new RangeRef("A1:D5"),
+                  false,
+                  new TableStyleSpec.None()));
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "SalesTableB", "TableDataB", "A1:D5", false, new ExcelTableStyle.None()));
+              new ResolvedTable(
+                  new TableName("SalesTableB"),
+                  new SheetName("TableDataB"),
+                  new RangeRef("A1:D5"),
+                  false,
+                  new TableStyleSpec.None()));
       XSSFTable duplicateTable =
           workbook.xssfWorkbook().getSheet("TableDataB").getTables().getFirst();
       duplicateTable.setName("SalesTableA");
@@ -228,8 +241,12 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "SheetTableA", "TableDataC", "A1:D5", false, new ExcelTableStyle.None()));
+              new ResolvedTable(
+                  new TableName("SheetTableA"),
+                  new SheetName("TableDataC"),
+                  new RangeRef("A1:D5"),
+                  false,
+                  new TableStyleSpec.None()));
       workbook
           .getOrCreateSheet("TableDataC")
           .cells()
@@ -264,8 +281,12 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "SheetTableB", "TableDataC", "F1:I5", false, new ExcelTableStyle.None()));
+              new ResolvedTable(
+                  new TableName("SheetTableB"),
+                  new SheetName("TableDataC"),
+                  new RangeRef("F1:I5"),
+                  false,
+                  new TableStyleSpec.None()));
       XSSFTable sameSheetDuplicate =
           workbook.xssfWorkbook().getSheet("TableDataC").getTables().get(1);
       sameSheetDuplicate.setName("SheetTableA");

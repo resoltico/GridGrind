@@ -6,6 +6,8 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
@@ -20,6 +22,9 @@ import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
@@ -211,12 +216,12 @@ class WorkbookCommandTest {
         new WorkbookTabularCommand.SetAutofilter("Budget", "A1:C4"),
         new WorkbookTabularCommand.ClearAutofilter("Budget"),
         new WorkbookTabularCommand.SetTable(
-            new ExcelTableDefinition(
-                "BudgetTable",
-                "Budget",
-                "A1:C4",
+            new ResolvedTable(
+                new TableName("BudgetTable"),
+                new SheetName("Budget"),
+                new RangeRef("A1:C4"),
                 true,
-                new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
+                new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false))),
         new WorkbookTabularCommand.DeleteTable("BudgetTable", "Budget"),
         new WorkbookTabularCommand.SetPivotTable(
             new ExcelPivotTableDefinition(
@@ -285,7 +290,7 @@ class WorkbookCommandTest {
             .ranges());
     assertEquals("A1:C4", commands.setAutofilter().range());
     assertEquals("Budget", commands.clearAutofilter().sheetName());
-    assertEquals("BudgetTable", commands.setTable().definition().name());
+    assertEquals("BudgetTable", commands.setTable().definition().name().value());
     assertEquals("Budget", commands.deleteTable().sheetName());
     assertEquals("Budget Pivot", commands.setPivotTable().definition().name());
     assertEquals("Budget", commands.deletePivotTable().sheetName());
@@ -899,8 +904,12 @@ class WorkbookCommandTest {
         IllegalArgumentException.class,
         () ->
             new WorkbookTabularCommand.SetTable(
-                new ExcelTableDefinition(
-                    "A1", "Budget", "A1:B2", false, new ExcelTableStyle.None())));
+                new ResolvedTable(
+                    new TableName("A1"),
+                    new SheetName("Budget"),
+                    new RangeRef("A1:B2"),
+                    false,
+                    new TableStyleSpec.None())));
     assertThrows(NullPointerException.class, () -> new WorkbookMetadataCommand.SetNamedRange(null));
     assertThrows(
         NullPointerException.class,

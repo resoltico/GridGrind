@@ -15,6 +15,9 @@ import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
@@ -26,7 +29,10 @@ import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdTyp
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
@@ -692,13 +698,13 @@ class ExcelSheetCopyControllerTest {
       workbook
           .tables()
           .setTable(
-              new ExcelTableDefinition(
-                  "Queue",
-                  "Source",
-                  "E1:F4",
+              new ResolvedTable(
+                  new TableName("Queue"),
+                  new SheetName("Source"),
+                  new RangeRef("E1:F4"),
                   true,
                   false,
-                  new ExcelTableStyle.None(),
+                  new TableStyleSpec.None(),
                   "",
                   false,
                   false,
@@ -1233,13 +1239,13 @@ class ExcelSheetCopyControllerTest {
     workbook
         .tables()
         .setTable(
-            new ExcelTableDefinition(
-                "ReplicaTable",
-                "Source",
-                "L1:M3",
+            new ResolvedTable(
+                new TableName("ReplicaTable"),
+                new SheetName("Source"),
+                new RangeRef("L1:M3"),
                 false,
                 true,
-                new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false),
+                new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false),
                 "replica table",
                 true,
                 true,
@@ -1248,8 +1254,8 @@ class ExcelSheetCopyControllerTest {
                 "DataStyle",
                 "TotalsStyle",
                 List.of(
-                    new ExcelTableColumnDefinition(0, "Region", "", "", ""),
-                    new ExcelTableColumnDefinition(1, "Desk", "", "", "UPPER([@Desk])"))));
+                    new TableColumnSpec(0, "Region", "", "", ""),
+                    new TableColumnSpec(1, "Desk", "", "", "UPPER([@Desk])"))));
     workbook
         .sheets()
         .setSheetProtection("Source", protectionSettings(), Optional.of("gridgrind-copy"));

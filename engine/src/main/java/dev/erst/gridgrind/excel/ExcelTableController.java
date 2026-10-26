@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,23 +34,23 @@ final class ExcelTableController {
   }
 
   /** Creates or replaces one workbook-global table definition. */
-  void setTable(ExcelWorkbook workbook, ExcelTableDefinition definition) {
+  void setTable(ExcelWorkbook workbook, ResolvedTable definition) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    ExcelRange targetRange = ExcelRange.parse(definition.range());
+    ExcelRange targetRange = ExcelRange.parse(definition.range().value());
     ExcelTableStructureSupport.requireSupportedTableShape(targetRange, definition.showTotalsRow());
-    XSSFSheet sheet = requiredSheet(workbook, definition.sheetName());
+    XSSFSheet sheet = requiredSheet(workbook, definition.sheetName().value());
     List<String> headerNames = ExcelTableStructureSupport.headerNames(sheet, targetRange);
     requireHeaders(headerNames);
 
-    Optional<TableHandle> existingByName = tableByName(workbook, definition.name());
+    Optional<TableHandle> existingByName = tableByName(workbook, definition.name().value());
     if (existingByName.isPresent()
-        && !existingByName.orElseThrow().sheetName().equals(definition.sheetName())) {
+        && !existingByName.orElseThrow().sheetName().equals(definition.sheetName().value())) {
       throw new IllegalArgumentException(
-          "table name already exists on a different sheet: " + definition.name());
+          "table name already exists on a different sheet: " + definition.name().value());
     }
-    requireNamedRangeNameAvailable(workbook, definition.name());
+    requireNamedRangeNameAvailable(workbook, definition.name().value());
     requireNoOverlappingOtherTables(workbook, definition, targetRange, existingByName);
     validateStyle(workbook, definition.style());
 
@@ -66,8 +70,8 @@ final class ExcelTableController {
     ctTable.setHeaderRowCount(1);
     ctTable.setTotalsRowCount(definition.showTotalsRow() ? 1 : 0);
     ctTable.setTotalsRowShown(definition.showTotalsRow());
-    table.setDisplayName(definition.name());
-    table.setName(definition.name());
+    table.setDisplayName(definition.name().value());
+    table.setName(definition.name().value());
     ExcelTableStructureSupport.applyStyle(table, definition.style());
     table.updateHeaders();
     applyTableMetadata(ctTable, definition);
@@ -83,7 +87,7 @@ final class ExcelTableController {
   /** Deletes one existing table by workbook-global name and expected sheet name. */
   void deleteTable(ExcelWorkbook workbook, String name, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    String validatedName = ExcelTableDefinition.validateName(name);
+    String validatedName = new TableName(name).value();
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     if (sheetName.isBlank()) {
       throw new IllegalArgumentException("sheetName must not be blank");
@@ -193,12 +197,12 @@ final class ExcelTableController {
 
   private void requireNoOverlappingOtherTables(
       ExcelWorkbook workbook,
-      ExcelTableDefinition definition,
+      ResolvedTable definition,
       ExcelRange targetRange,
       Optional<TableHandle> existingByName) {
     List<String> overlaps = new ArrayList<>();
     for (TableHandle tableHandle : allTables(workbook)) {
-      if (!tableHandle.sheetName().equals(definition.sheetName())) {
+      if (!tableHandle.sheetName().equals(definition.sheetName().value())) {
         continue;
       }
       if (existingByName.isPresent()
@@ -242,10 +246,10 @@ final class ExcelTableController {
     }
   }
 
-  private void validateStyle(ExcelWorkbook workbook, ExcelTableStyle style) {
+  private void validateStyle(ExcelWorkbook workbook, TableStyleSpec style) {
     switch (style) {
-      case ExcelTableStyle.None _ -> {}
-      case ExcelTableStyle.Named named -> {
+      case TableStyleSpec.None _ -> {}
+      case TableStyleSpec.Named named -> {
         if (workbook.xssfWorkbook().getStylesSource().getTableStyle(named.name()) == null) {
           throw new IllegalArgumentException("unknown table style: " + named.name());
         }
@@ -253,7 +257,7 @@ final class ExcelTableController {
     }
   }
 
-  private static void applyTableMetadata(CTTable ctTable, ExcelTableDefinition definition) {
+  private static void applyTableMetadata(CTTable ctTable, ResolvedTable definition) {
     setOrUnset(
         definition.comment(),
         ctTable::setComment,
@@ -291,9 +295,8 @@ final class ExcelTableController {
         });
   }
 
-  private static void applyColumnMetadata(
-      XSSFTable table, List<ExcelTableColumnDefinition> columns) {
-    for (ExcelTableColumnDefinition definition : columns) {
+  private static void applyColumnMetadata(XSSFTable table, List<TableColumnSpec> columns) {
+    for (TableColumnSpec definition : columns) {
       CTTableColumn column = requiredColumn(table, definition.columnIndex());
       applyColumnUniqueName(column, definition.uniqueName());
       applyTotalsRowLabel(column, definition.totalsRowLabel());

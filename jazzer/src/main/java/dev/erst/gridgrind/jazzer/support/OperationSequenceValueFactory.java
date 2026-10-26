@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
@@ -224,7 +225,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceTabularValues.nextTableInput(data, sheetName, tableName, validRange);
   }
 
-  static ExcelTableDefinition nextExcelTableDefinition(
+  static ResolvedTable nextExcelTableDefinition(
       GridGrindFuzzData data, String sheetName, String tableName, boolean validRange) {
     return OperationSequenceTabularValues.nextExcelTableDefinition(
         data, sheetName, tableName, validRange);
@@ -234,7 +235,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceTabularValues.nextTableStyleInput(data);
   }
 
-  static ExcelTableStyle nextExcelTableStyle(GridGrindFuzzData data) {
+  static TableStyleSpec nextExcelTableStyle(GridGrindFuzzData data) {
     return OperationSequenceTabularValues.nextExcelTableStyle(data);
   }
 

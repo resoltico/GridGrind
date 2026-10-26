@@ -13,6 +13,8 @@ import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -26,8 +28,11 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -123,15 +128,19 @@ class WorkbookCommandExecutorTest {
                       List.of(new CellValue.Text("Ship"), new CellValue.Text("Ops")))),
               new WorkbookTabularCommand.SetAutofilter("Ops", "D1:E3"),
               new WorkbookTabularCommand.SetTable(
-                  new ExcelTableDefinition(
-                      "Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None())),
-              new WorkbookTabularCommand.SetTable(
-                  new ExcelTableDefinition(
-                      "Stages",
-                      "Ops",
-                      "G1:H3",
+                  new ResolvedTable(
+                      new TableName("Queue"),
+                      new SheetName("Ops"),
+                      new RangeRef("A1:B3"),
                       false,
-                      new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
+                      new TableStyleSpec.None())),
+              new WorkbookTabularCommand.SetTable(
+                  new ResolvedTable(
+                      new TableName("Stages"),
+                      new SheetName("Ops"),
+                      new RangeRef("G1:H3"),
+                      false,
+                      new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false))),
               new WorkbookTabularCommand.DeleteTable("Stages", "Ops"),
               new WorkbookSheetCommand.RenameSheet("Archive", "History"),
               new WorkbookSheetCommand.MoveSheet("History", 0),
@@ -376,8 +385,12 @@ class WorkbookCommandExecutorTest {
               executor.apply(
                   workbook,
                   new WorkbookTabularCommand.SetTable(
-                      new ExcelTableDefinition(
-                          "Queue", "Missing", "A1:B2", false, new ExcelTableStyle.None()))));
+                      new ResolvedTable(
+                          new TableName("Queue"),
+                          new SheetName("Missing"),
+                          new RangeRef("A1:B2"),
+                          false,
+                          new TableStyleSpec.None()))));
       assertThrows(
           IllegalArgumentException.class,
           () ->

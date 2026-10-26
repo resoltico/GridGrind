@@ -2,7 +2,12 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the table-header metadata synchronization support seam. */
@@ -16,7 +21,12 @@ class ExcelTableHeaderSyncSupportTest {
       populateTableCells(sheet, "Owner", "Task");
       tableController.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       var poiSheet = workbook.sheet("Ops").xssfSheet();
       var table = poiSheet.getTables().getFirst();
@@ -35,7 +45,12 @@ class ExcelTableHeaderSyncSupportTest {
       populateTableCells(sheet, "Owner", "Task");
       tableController.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       var poiSheet = workbook.sheet("Ops").xssfSheet();
       var table = poiSheet.getTables().getFirst();
@@ -54,7 +69,12 @@ class ExcelTableHeaderSyncSupportTest {
       populateTableCells(sheet, "Owner", "Task");
       tableController.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       var poiSheet = workbook.sheet("Ops").xssfSheet();
       var table = poiSheet.getTables().getFirst();
@@ -81,7 +101,12 @@ class ExcelTableHeaderSyncSupportTest {
       populateTableCells(sheet, "Owner", "Task");
       tableController.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B3"),
+              false,
+              new TableStyleSpec.None()));
 
       var table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       workbook.sheet("Ops").xssfSheet().getRow(0).getCell(0).setCellValue("Desk");

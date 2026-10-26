@@ -2,8 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
@@ -126,7 +131,12 @@ class ExcelTableAnalysisSupportTest {
       ExcelTableController controller = new ExcelTableController();
       controller.setTable(
           workbook,
-          new ExcelTableDefinition("Queue", "Ops", "A1:B4", true, new ExcelTableStyle.None()));
+          new ResolvedTable(
+              new TableName("Queue"),
+              new SheetName("Ops"),
+              new RangeRef("A1:B4"),
+              true,
+              new TableStyleSpec.None()));
 
       XSSFSheet poiSheet = workbook.sheet("Ops").xssfSheet();
       XSSFTable healthyTable = poiSheet.getTables().getFirst();

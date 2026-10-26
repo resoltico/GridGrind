@@ -2,7 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -213,13 +219,13 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
     workbook
         .tables()
         .setTable(
-            new ExcelTableDefinition(
-                tableName,
-                sheetName,
-                "A1:D4",
+            new ResolvedTable(
+                new TableName(tableName),
+                new SheetName(sheetName),
+                new RangeRef("A1:D4"),
                 true,
                 true,
-                new ExcelTableStyle.None(),
+                new TableStyleSpec.None(),
                 "",
                 false,
                 false,
@@ -228,9 +234,9 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
                 "",
                 "",
                 List.of(
-                    new ExcelTableColumnDefinition(1, "", "", "sum", ""),
-                    new ExcelTableColumnDefinition(2, "", "", "sum", ""),
-                    new ExcelTableColumnDefinition(3, "", "", "sum", "[@Actual]-[@Budget]"))));
+                    new TableColumnSpec(1, "", "", "sum", ""),
+                    new TableColumnSpec(2, "", "", "sum", ""),
+                    new TableColumnSpec(3, "", "", "sum", "[@Actual]-[@Budget]"))));
   }
 
   private static void seedCanonicalizerWorksheet(XSSFSheet sheet) {

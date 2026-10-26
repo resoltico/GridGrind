@@ -9,12 +9,17 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -617,7 +622,12 @@ class ExcelWorkbookIntrospectorTest {
     workbook
         .tables()
         .setTable(
-            new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+            new ResolvedTable(
+                new TableName("Queue"),
+                new SheetName("Ops"),
+                new RangeRef("A1:B3"),
+                false,
+                new TableStyleSpec.None()));
   }
 
   private IntrospectionReadResults readEveryIntrospectionResult(

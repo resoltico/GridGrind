@@ -24,6 +24,9 @@ import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
@@ -33,7 +36,10 @@ import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
@@ -484,21 +490,21 @@ class ExcelAdvancedValueObjectTest {
             Optional.of(new CommentAnchorReport(1, 2, 4, 6)));
     var formulaTarget = ExcelNamedRangeTarget.formula("SUM(Ops!$B$2:$B$5)");
     var table =
-        new ExcelTableDefinition(
-            "Queue",
-            "Ops",
-            "A1:B4",
+        new ResolvedTable(
+            new TableName("Queue"),
+            new SheetName("Ops"),
+            new RangeRef("A1:B4"),
             true,
             true,
-            new ExcelTableStyle.None(),
-            null,
+            new TableStyleSpec.None(),
+            "",
             true,
             true,
             false,
-            null,
-            null,
-            null,
-            List.of(new ExcelTableColumnDefinition(1, null, null, " SUM ", "B2*2")));
+            "",
+            "",
+            "",
+            List.of(new TableColumnSpec(1, "", "", " SUM ", "B2*2")));
     var protection =
         new ExcelWorkbookProtectionSettings(
             true, false, true, Optional.of("book"), Optional.of("review"));
@@ -570,42 +576,40 @@ class ExcelAdvancedValueObjectTest {
         () ->
             new ExcelWorkbookProtectionSettings(
                 false, false, false, Optional.empty(), Optional.of(" ")));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelTableColumnDefinition(-1, "", "", "", ""));
-    ExcelTableColumnDefinition normalizedColumn =
-        new ExcelTableColumnDefinition(0, null, null, null, null);
+    assertThrows(IllegalArgumentException.class, () -> new TableColumnSpec(-1, "", "", "", ""));
+    TableColumnSpec normalizedColumn = new TableColumnSpec(0, "", "", "", "");
     assertEquals("", normalizedColumn.uniqueName());
     assertEquals("", normalizedColumn.totalsRowLabel());
     assertEquals("", normalizedColumn.totalsRowFunction());
     assertEquals("", normalizedColumn.calculatedColumnFormula());
-    ExcelTableDefinition normalizedTable =
-        new ExcelTableDefinition(
-            "Queue",
-            "Ops",
-            "A1:B2",
+    ResolvedTable normalizedTable =
+        new ResolvedTable(
+            new TableName("Queue"),
+            new SheetName("Ops"),
+            new RangeRef("A1:B2"),
             false,
             true,
-            new ExcelTableStyle.None(),
-            null,
+            new TableStyleSpec.None(),
+            "",
             false,
             false,
             false,
-            null,
-            null,
-            null,
-            null);
+            "",
+            "",
+            "",
+            java.util.List.of());
     assertEquals("", normalizedTable.comment());
     assertEquals(List.of(), normalizedTable.columns());
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelTableDefinition(
-                "Queue",
-                "Ops",
-                "A1:B2",
+            new ResolvedTable(
+                new TableName("Queue"),
+                new SheetName("Ops"),
+                new RangeRef("A1:B2"),
                 false,
                 true,
-                new ExcelTableStyle.None(),
+                new TableStyleSpec.None(),
                 "",
                 false,
                 false,
@@ -613,7 +617,7 @@ class ExcelAdvancedValueObjectTest {
                 "",
                 "",
                 "",
-                Arrays.asList((ExcelTableColumnDefinition) null)));
+                Arrays.asList((TableColumnSpec) null)));
   }
 
   @Test

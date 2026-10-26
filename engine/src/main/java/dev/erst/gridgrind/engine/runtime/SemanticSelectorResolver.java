@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.CellAssertion;

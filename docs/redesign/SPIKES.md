@@ -1881,3 +1881,26 @@ Inventories: definitions 9→7, converter lines 4203→4201, blank checks 432→
 121635→121602. Snapshots 38 and Support 206 remain open. Baseline diff empty. Next review
 confirmed table columns/styles are source-free and should be reused directly; only table comment
 text makes the table payload source-bearing. Do not create resolved column/style mirrors.
+
+## WP-40 typed resolved tables and shared table metadata
+
+Deleted engine table, table-column and table-style model classes. Core ResolvedTable materializes
+only comment text; columns and styles reuse TableColumnSpec/TableStyleSpec directly. TableName,
+SheetName and RangeRef remain typed in the resolved record, with string unwrapping at POI/workbook
+lookup boundaries. Removed column/style identity conversions and the obsolete engine name validator;
+remaining selection/pivot references delegate to the canonical TableName constructor. Null-as-empty
+record defaults are not carried into the new resolved contract: fixture omissions are explicit.
+
+Initial source compilation exposed only deleted style-converter tests (36s); their identity checks
+were retired and named-style validation moved to core. Standard PMD required a scoped allocation
+explanation where each name in the still-pending engine selection needs canonical validation. Three
+behavioral fixture repairs used typed expected names and explicit empty metadata. Focused
+core/JSON/engine/14 parity/static checks passed (38s), deterministic check and all retained seed
+replay passed (30s), ./gradlew check passed (4m1s): core 348, JSON 348, engine 1481 plus 14
+parity, CLI 588, architecture 14 plus 12 rule tests, zero failures/errors/skips. All 143 golden
+cases are unchanged. No mutation or active fuzz campaign ran.
+
+Inventories: definitions 7→5, converter lines 4201→4176, blank checks 428→426, main Java
+121602→121534. Snapshots 38 and Support 206 remain open. Baseline diff empty. The engine
+selection/query mirrors, remaining factual models and resolved-plan/step/target cutover are still
+required; this does not claim WP-40 completion.

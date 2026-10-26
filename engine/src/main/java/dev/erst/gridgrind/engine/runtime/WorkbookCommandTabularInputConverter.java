@@ -1,25 +1,22 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableSpec;
-import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
-import dev.erst.gridgrind.excel.ExcelTableDefinition;
-import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 
 /** Converts table and pivot-table contract inputs. */
 final class WorkbookCommandTabularInputConverter {
   private WorkbookCommandTabularInputConverter() {}
 
-  static ExcelTableDefinition toExcelTableDefinition(TableSpec table) {
-    return new ExcelTableDefinition(
-        table.name().value(),
-        table.sheetName().value(),
-        table.range().value(),
+  static ResolvedTable toResolvedTable(TableSpec table) {
+    return new ResolvedTable(
+        table.name(),
+        table.sheetName(),
+        table.range(),
         table.showTotalsRow(),
         table.hasAutofilter(),
-        toExcelTableStyle(table.style()),
+        table.style(),
         WorkbookCommandSourceSupport.inlineText(table.comment(), "table comment"),
         table.published(),
         table.insertRow(),
@@ -27,16 +24,7 @@ final class WorkbookCommandTabularInputConverter {
         table.headerRowCellStyle(),
         table.dataCellStyle(),
         table.totalsRowCellStyle(),
-        table.columns().stream()
-            .map(
-                column ->
-                    new ExcelTableColumnDefinition(
-                        column.columnIndex(),
-                        column.uniqueName(),
-                        column.totalsRowLabel(),
-                        column.totalsRowFunction(),
-                        column.calculatedColumnFormula()))
-            .toList());
+        table.columns());
   }
 
   static ExcelPivotTableDefinition toExcelPivotTableDefinition(PivotTableSpec pivotTable) {
@@ -51,19 +39,6 @@ final class WorkbookCommandTabularInputConverter {
         pivotTable.dataFields().stream()
             .map(WorkbookCommandTabularInputConverter::toExcelPivotTableDataField)
             .toList());
-  }
-
-  static ExcelTableStyle toExcelTableStyle(TableStyleSpec style) {
-    return switch (style) {
-      case TableStyleSpec.None _ -> new ExcelTableStyle.None();
-      case TableStyleSpec.Named named ->
-          new ExcelTableStyle.Named(
-              named.name(),
-              named.showFirstColumn(),
-              named.showLastColumn(),
-              named.showRowStripes(),
-              named.showColumnStripes());
-    };
   }
 
   private static ExcelPivotTableDefinition.Source toExcelPivotTableSource(
