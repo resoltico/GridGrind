@@ -140,9 +140,9 @@ class DefaultGridGrindRequestExecutorReadSupport {
   }
 
   static dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult excelSheetSchemaResult(
-      String stepId, dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchema surface) {
+      String stepId, dev.erst.gridgrind.core.model.table.SheetSchemaReport surface) {
     return new dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult(
-        new StepId(stepId), surface, projection(), false);
+        new StepId(stepId), surface);
   }
 
   static CellReport.BlankReport blankReadCell(

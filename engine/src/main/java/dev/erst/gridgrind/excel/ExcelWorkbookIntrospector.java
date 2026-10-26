@@ -1,11 +1,20 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.formula.FormulaPatternReport;
+import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceEntryReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.SheetFormulaSurfaceReport;
+import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
+import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.result.TypeCountReport;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -184,9 +193,7 @@ final class ExcelWorkbookIntrospector {
                   getSheetSchema.window().rowCount(),
                   getSheetSchema.window().columnCount(),
                   getSheetSchema.projection(),
-                  workbook.xssfWorkbook().isDate1904()),
-              getSheetSchema.projection(),
-              workbook.xssfWorkbook().isDate1904());
+                  workbook.xssfWorkbook().isDate1904()));
       case WorkbookReadCommand.GetNamedRangeSurface getNamedRangeSurface ->
           new WorkbookSurfaceResult.NamedRangeSurfaceResult(
               getNamedRangeSurface.stepId(),
@@ -268,13 +275,12 @@ final class ExcelWorkbookIntrospector {
 
   /** Groups formulas by exact expression across the selected sheets. */
   @SuppressWarnings({"PMD.AvoidInstantiatingObjectsInLoops", "PMD.UseConcurrentHashMap"})
-  WorkbookSurfaceResult.FormulaSurface formulaSurface(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  FormulaSurfaceReport formulaSurface(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<String> sheetNames = selectSheets(workbook, selection);
-    List<WorkbookSurfaceResult.SheetFormulaSurface> sheets = new ArrayList<>(sheetNames.size());
+    List<SheetFormulaSurfaceReport> sheets = new ArrayList<>(sheetNames.size());
     int totalFormulaCellCount = 0;
     for (String sheetName : sheetNames) {
       ExcelSheet sheet = workbook.sheet(sheetName);
@@ -285,18 +291,25 @@ final class ExcelWorkbookIntrospector {
             .computeIfAbsent(formulaCell.formula(), _ -> new ArrayList<>())
             .add(formulaCell.address());
       }
-      List<WorkbookSurfaceResult.FormulaPattern> patterns = new ArrayList<>(formulas.size());
+      List<FormulaPatternReport> patterns = new ArrayList<>(formulas.size());
       for (Map.Entry<String, List<String>> entry : formulas.entrySet()) {
         patterns.add(
-            new WorkbookSurfaceResult.FormulaPattern(
-                entry.getKey(), entry.getValue().size(), List.copyOf(entry.getValue())));
+            new FormulaPatternReport(
+                entry.getKey(),
+                entry.getValue().size(),
+                List.copyOf(entry.getValue()).stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                    .toList()));
       }
       totalFormulaCellCount += formulaCells.size();
       sheets.add(
-          new WorkbookSurfaceResult.SheetFormulaSurface(
-              sheetName, formulaCells.size(), patterns.size(), List.copyOf(patterns)));
+          new SheetFormulaSurfaceReport(
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
+              formulaCells.size(),
+              patterns.size(),
+              List.copyOf(patterns)));
     }
-    return new WorkbookSurfaceResult.FormulaSurface(totalFormulaCellCount, List.copyOf(sheets));
+    return new FormulaSurfaceReport(totalFormulaCellCount, List.copyOf(sheets));
   }
 
   private List<ArrayFormulaReport> arrayFormulas(
@@ -314,7 +327,7 @@ final class ExcelWorkbookIntrospector {
 
   /** Infers a simple schema from the provided sheet window. */
   @SuppressWarnings({"PMD.AvoidInstantiatingObjectsInLoops", "PMD.UseConcurrentHashMap"})
-  WorkbookSurfaceResult.SheetSchema sheetSchema(
+  SheetSchemaReport sheetSchema(
       ExcelWorkbook workbook,
       String sheetName,
       String topLeftAddress,
@@ -337,7 +350,7 @@ final class ExcelWorkbookIntrospector {
             .allMatch(CellReport.BlankReport.class::isInstance);
     int dataRowCount = headerRowIsBlank ? 0 : Math.max(0, rowCount - 1);
 
-    List<WorkbookSurfaceResult.SchemaColumn> columns = new ArrayList<>(columnCount);
+    List<SchemaColumnReport> columns = new ArrayList<>(columnCount);
     for (int columnOffset = 0; columnOffset < columnCount; columnOffset++) {
       CellReport headerCell = window.rows().getFirst().cells().get(columnOffset);
       Map<String, Integer> typeCounts = new LinkedHashMap<>();
@@ -373,13 +386,13 @@ final class ExcelWorkbookIntrospector {
         }
       }
 
-      List<WorkbookSurfaceResult.TypeCount> observedTypes = new ArrayList<>(typeCounts.size());
+      List<TypeCountReport> observedTypes = new ArrayList<>(typeCounts.size());
       for (Map.Entry<String, Integer> entry : typeCounts.entrySet()) {
-        observedTypes.add(new WorkbookSurfaceResult.TypeCount(entry.getKey(), entry.getValue()));
+        observedTypes.add(new TypeCountReport(entry.getKey(), entry.getValue()));
       }
 
       columns.add(
-          new WorkbookSurfaceResult.SchemaColumn(
+          new SchemaColumnReport(
               topLeftColumn + columnOffset,
               new CellReference(
                       new CellReference(topLeftAddress).getRow(), topLeftColumn + columnOffset)
@@ -391,12 +404,17 @@ final class ExcelWorkbookIntrospector {
               dominantType(typeCounts)));
     }
 
-    return new WorkbookSurfaceResult.SheetSchema(
-        sheetName, topLeftAddress, rowCount, columnCount, dataRowCount, List.copyOf(columns));
+    return new SheetSchemaReport(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
+        new dev.erst.gridgrind.core.vocabulary.CellAddress(topLeftAddress),
+        rowCount,
+        columnCount,
+        dataRowCount,
+        List.copyOf(columns));
   }
 
   /** Summarizes the scope and backing kind of selected named ranges. */
-  WorkbookSurfaceResult.NamedRangeSurface namedRangeSurface(
+  NamedRangeSurfaceReport namedRangeSurface(
       ExcelWorkbook workbook, ExcelNamedRangeSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
@@ -406,17 +424,16 @@ final class ExcelWorkbookIntrospector {
     int sheetScopedCount = 0;
     int rangeBackedCount = 0;
     int formulaBackedCount = 0;
-    List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> entries =
-        new ArrayList<>(namedRanges.size());
+    List<NamedRangeSurfaceEntryReport> entries = new ArrayList<>(namedRanges.size());
     for (NamedRangeReport namedRange : namedRanges) {
-      WorkbookSurfaceResult.NamedRangeBackingKind kind;
+      NamedRangeBackingKind kind;
       switch (namedRange) {
         case NamedRangeReport.RangeReport _ -> {
-          kind = WorkbookSurfaceResult.NamedRangeBackingKind.RANGE;
+          kind = NamedRangeBackingKind.RANGE;
           rangeBackedCount++;
         }
         case NamedRangeReport.FormulaReport _ -> {
-          kind = WorkbookSurfaceResult.NamedRangeBackingKind.FORMULA;
+          kind = NamedRangeBackingKind.FORMULA;
           formulaBackedCount++;
         }
       }
@@ -425,10 +442,10 @@ final class ExcelWorkbookIntrospector {
         case NamedRangeScopeReport.Sheet _ -> sheetScopedCount++;
       }
       entries.add(
-          new WorkbookSurfaceResult.NamedRangeSurfaceEntry(
+          new NamedRangeSurfaceEntryReport(
               namedRange.name().value(), namedRange.scope(), namedRange.refersToFormula(), kind));
     }
-    return new WorkbookSurfaceResult.NamedRangeSurface(
+    return new NamedRangeSurfaceReport(
         workbookScopedCount,
         sheetScopedCount,
         rangeBackedCount,

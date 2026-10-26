@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -50,8 +51,7 @@ final class WorkbookReadTestSupport {
   }
 
   static WorkbookSurfaceResult.SheetSchemaResult sheetSchemaResult(
-      String stepId, WorkbookSurfaceResult.SheetSchema surface) {
-    return new WorkbookSurfaceResult.SheetSchemaResult(
-        new StepId(stepId), surface, projection(), false);
+      String stepId, SheetSchemaReport surface) {
+    return new WorkbookSurfaceResult.SheetSchemaResult(new StepId(stepId), surface);
   }
 }

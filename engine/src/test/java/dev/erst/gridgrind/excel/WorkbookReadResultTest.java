@@ -4,9 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.formula.FormulaPatternReport;
+import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceEntryReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.formula.SheetFormulaSurfaceReport;
 import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
 import dev.erst.gridgrind.core.model.layout.PaneReport;
@@ -34,6 +39,8 @@ import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
+import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
@@ -48,6 +55,7 @@ import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.TypeCountReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
@@ -58,6 +66,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -206,88 +215,87 @@ class WorkbookReadResultTest {
         () -> new RowLayoutReport(0, Double.POSITIVE_INFINITY, false, 0, false));
     assertThrows(
         IllegalArgumentException.class, () -> new RowLayoutReport(0, 1.0, false, -1, false));
+    assertThrows(IllegalArgumentException.class, () -> new FormulaSurfaceReport(-1, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.FormulaSurface(-1, List.of()));
+        () ->
+            new SheetFormulaSurfaceReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"), -1, 0, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.SheetFormulaSurface("Budget", -1, 0, List.of()));
+        () ->
+            new SheetFormulaSurfaceReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"), 0, -1, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.SheetFormulaSurface("Budget", 0, -1, List.of()));
+        () ->
+            new FormulaPatternReport(
+                "SUM(B2:B3)",
+                0,
+                List.of("B4").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                    .toList()));
+    assertThrows(NullPointerException.class, () -> new FormulaPatternReport("SUM(B2:B3)", 1, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.FormulaPattern("SUM(B2:B3)", 0, List.of("B4")));
+        () ->
+            new SheetSchemaReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                0,
+                1,
+                0,
+                List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SheetSchemaReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                1,
+                0,
+                0,
+                List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SheetSchemaReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                1,
+                1,
+                -1,
+                List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SchemaColumnReport(
+                -1, "A1", "Item", 0, 0, List.of(new TypeCountReport("TEXT", 1)), "TEXT"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SchemaColumnReport(
+                0, "A1", "Item", -1, 0, List.of(new TypeCountReport("TEXT", 1)), "TEXT"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SchemaColumnReport(
+                0, "A1", "Item", 0, -1, List.of(new TypeCountReport("TEXT", 1)), "TEXT"));
+    assertThrows(IllegalArgumentException.class, () -> new TypeCountReport("TEXT", 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new NamedRangeSurfaceReport(-1, 0, 0, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new NamedRangeSurfaceReport(0, -1, 0, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new NamedRangeSurfaceReport(0, 0, -1, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new NamedRangeSurfaceReport(0, 0, 0, -1, List.of()));
+    assertThrows(NullPointerException.class, () -> new NamedRangeSurfaceReport(0, 0, 0, 0, null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookSurfaceResult.FormulaPattern("SUM(B2:B3)", 1, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 0, 1, 0, List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 1, 0, 0, List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 1, 1, -1, List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
         () ->
-            new WorkbookSurfaceResult.SchemaColumn(
-                -1,
-                "A1",
-                "Item",
-                0,
-                0,
-                List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 1)),
-                "TEXT"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookSurfaceResult.SchemaColumn(
-                0,
-                "A1",
-                "Item",
-                -1,
-                0,
-                List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 1)),
-                "TEXT"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookSurfaceResult.SchemaColumn(
-                0,
-                "A1",
-                "Item",
-                0,
-                -1,
-                List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 1)),
-                "TEXT"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookSurfaceResult.TypeCount("TEXT", 0));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.NamedRangeSurface(-1, 0, 0, 0, List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.NamedRangeSurface(0, -1, 0, 0, List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.NamedRangeSurface(0, 0, -1, 0, List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSurfaceResult.NamedRangeSurface(0, 0, 0, -1, List.of()));
-    assertThrows(
-        NullPointerException.class,
-        () -> new WorkbookSurfaceResult.NamedRangeSurface(0, 0, 0, 0, null));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new WorkbookSurfaceResult.NamedRangeSurfaceEntry(
-                "BudgetTotal",
-                null,
-                "Budget!$B$4",
-                WorkbookSurfaceResult.NamedRangeBackingKind.RANGE));
+            new NamedRangeSurfaceEntryReport(
+                "BudgetTotal", null, "Budget!$B$4", NamedRangeBackingKind.RANGE));
   }
 
   @Test
@@ -357,21 +365,6 @@ class WorkbookReadResultTest {
             () -> new WorkbookSheetResult.WindowRow(-1, List.of(blank)));
     assertTrue(windowRowFailure.getMessage().contains("rowIndex -1"));
     assertTrue(windowRowFailure.getMessage().contains("Excel row 1"));
-
-    IllegalArgumentException schemaColumnFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                new WorkbookSurfaceResult.SchemaColumn(
-                    -1,
-                    "A1",
-                    "Item",
-                    0,
-                    0,
-                    List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 1)),
-                    "TEXT"));
-    assertTrue(schemaColumnFailure.getMessage().contains("columnIndex -1"));
-    assertTrue(schemaColumnFailure.getMessage().contains("Excel column A"));
 
     IllegalArgumentException lastRowFailure =
         assertThrows(
@@ -508,28 +501,28 @@ class WorkbookReadResultTest {
                     List.of("Item", "Amount", "Billable"),
                     new TableStyleReport.Named("TableStyleMedium2", false, false, true, false),
                     true)));
-    List<WorkbookSurfaceResult.FormulaPattern> formulas =
-        new ArrayList<>(
-            List.of(new WorkbookSurfaceResult.FormulaPattern("SUM(B2:B3)", 1, List.of("B4"))));
-    List<WorkbookSurfaceResult.SchemaColumn> schemaColumns =
+    List<FormulaPatternReport> formulas =
         new ArrayList<>(
             List.of(
-                new WorkbookSurfaceResult.SchemaColumn(
-                    0,
-                    "A1",
-                    "Item",
-                    2,
-                    0,
-                    List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 2)),
-                    "TEXT")));
-    List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> namedRangeEntries =
+                new FormulaPatternReport(
+                    "SUM(B2:B3)",
+                    1,
+                    List.of("B4").stream()
+                        .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                        .toList())));
+    List<SchemaColumnReport> schemaColumns =
         new ArrayList<>(
             List.of(
-                new WorkbookSurfaceResult.NamedRangeSurfaceEntry(
+                new SchemaColumnReport(
+                    0, "A1", "Item", 2, 0, List.of(new TypeCountReport("TEXT", 2)), "TEXT")));
+    List<NamedRangeSurfaceEntryReport> namedRangeEntries =
+        new ArrayList<>(
+            List.of(
+                new NamedRangeSurfaceEntryReport(
                     "BudgetTotal",
                     new NamedRangeScopeReport.Workbook(),
                     "Budget!$B$4",
-                    WorkbookSurfaceResult.NamedRangeBackingKind.RANGE)));
+                    NamedRangeBackingKind.RANGE)));
 
     return new ReadResultFixture(
         sheetNames,
@@ -597,15 +590,25 @@ class WorkbookReadResultTest {
         new WorkbookRuleResult.TablesResult(new StepId("tables"), tables),
         new WorkbookSurfaceResult.FormulaSurfaceResult(
             new StepId("formula"),
-            new WorkbookSurfaceResult.FormulaSurface(
+            new FormulaSurfaceReport(
                 1,
-                List.of(new WorkbookSurfaceResult.SheetFormulaSurface("Budget", 1, 1, formulas)))),
+                List.of(
+                    new SheetFormulaSurfaceReport(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                        1,
+                        1,
+                        formulas)))),
         WorkbookReadTestSupport.sheetSchemaResult(
             "schema",
-            new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 3, 2, 2, schemaColumns)),
+            new SheetSchemaReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                3,
+                2,
+                2,
+                schemaColumns)),
         new WorkbookSurfaceResult.NamedRangeSurfaceResult(
-            new StepId("surface"),
-            new WorkbookSurfaceResult.NamedRangeSurface(1, 0, 1, 0, namedRangeEntries)));
+            new StepId("surface"), new NamedRangeSurfaceReport(1, 0, 1, 0, namedRangeEntries)));
   }
 
   private void assertCopiedFixture(ReadResultFixture fixture) {
@@ -644,7 +647,7 @@ class WorkbookReadResultTest {
     assertEquals(1, fixture.formulaSurfaceResult().surface().totalFormulaCellCount());
     assertEquals("TEXT", fixture.sheetSchemaResult().surface().columns().getFirst().dominantType());
     assertEquals(
-        WorkbookSurfaceResult.NamedRangeBackingKind.RANGE,
+        NamedRangeBackingKind.RANGE,
         fixture.namedRangeSurfaceResult().surface().namedRanges().getFirst().kind());
   }
 
@@ -661,9 +664,9 @@ class WorkbookReadResultTest {
       List<DataValidationEntryReport> validations,
       List<AutofilterEntryReport> autofilters,
       List<TableEntryReport> tables,
-      List<WorkbookSurfaceResult.FormulaPattern> formulas,
-      List<WorkbookSurfaceResult.SchemaColumn> schemaColumns,
-      List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> namedRangeEntries,
+      List<FormulaPatternReport> formulas,
+      List<SchemaColumnReport> schemaColumns,
+      List<NamedRangeSurfaceEntryReport> namedRangeEntries,
       WorkbookCoreResult.WorkbookSummaryResult workbookSummary,
       WorkbookCoreResult.NamedRangesResult namedRangesResult,
       WorkbookSheetResult.SheetSummaryResult sheetSummary,

@@ -2613,3 +2613,23 @@ core384, JSON353, engine1412 plus14 parity, CLI588, zero failures/errors/skips; 
 unchanged. No active campaigns. Inventories: converters1083→927, Support198→197, blank288→287,
 main Java114469→114102, tests153631→153526; definitions0 and snapshots2(runtime) unchanged. Baseline
 diff empty. WP-40 remains open for ResolvedPlan, surface/window facts and the read query/result seam.
+
+## WP-40 canonical formula, schema and named-range surfaces
+
+Deleted eight nested engine surface records and the duplicate NamedRangeBackingKind enum. Native
+formula grouping, schema inference and named-range classification now construct the existing core
+reports and enum directly; typed sheet labels and formula-cell addresses are created at read
+boundaries. Deleted the surface report converter. Removed unused projection/date-system fields from
+SheetSchemaResult; the producer still consumes the requested projection and resolves cell temporal
+facts before inference. No schema counts, grouping/classification or selection algorithm changed.
+
+Main compilation passes14s. Test compilation found one qualified type split across lines; corrected
+that stale reference. Focused behavior found two String/label assertions and the deleted native
+schema-column wrapper's wording checks. Preserved the exact expected values and retired those
+wording-only assertions; canonical schema invariants remain in WorkbookResultEdgeCoverageTest.
+Failure traces retained in surface-facts-fixture-failures.json. Final focused fixture checks, PMD,
+parity and nested check/all94 seeds pass. No active campaigns. Final ./gradlew check passes3m38s:
+core384, JSON353, engine1412 plus14 parity, CLI588, zero failures/errors/skips; all143 golden cases
+unchanged. Inventories: converters927→829, Support197→196, main114102→113870, tests153526→153527;
+blank287, definitions0, snapshots2(runtime) unchanged. Baseline diff empty. WP-40 remains open for
+ResolvedPlan, physical windows and the remaining read query/result/selection seam.

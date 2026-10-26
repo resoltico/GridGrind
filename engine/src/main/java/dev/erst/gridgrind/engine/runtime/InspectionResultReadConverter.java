@@ -98,20 +98,14 @@ final class InspectionResultReadConverter {
           new WorkbookAssetInspectionResult.TablesResult(tables.stepId(), tables.tables());
       case dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaSurfaceResult formulaSurface ->
           new WorkbookSurfaceInspectionResult.FormulaSurfaceResult(
-              formulaSurface.stepId(),
-              InspectionResultSurfaceReportSupport.toFormulaSurfaceReport(
-                  formulaSurface.surface()));
+              formulaSurface.stepId(), formulaSurface.surface());
       case dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult sheetSchema ->
           new WorkbookSurfaceInspectionResult.SheetSchemaResult(
-              sheetSchema.stepId(),
-              InspectionResultSurfaceReportSupport.toSheetSchemaReport(
-                  sheetSchema.surface(), sheetSchema.projection(), sheetSchema.date1904()));
+              sheetSchema.stepId(), sheetSchema.surface());
       case dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceResult
               namedRangeSurface ->
           new WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult(
-              namedRangeSurface.stepId(),
-              InspectionResultSurfaceReportSupport.toNamedRangeSurfaceReport(
-                  namedRangeSurface.surface()));
+              namedRangeSurface.stepId(), namedRangeSurface.surface());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.FormulaHealthResult formulaHealth ->
           new WorkbookAnalysisResult.FormulaHealthResult(
               formulaHealth.stepId(), formulaHealth.analysis());

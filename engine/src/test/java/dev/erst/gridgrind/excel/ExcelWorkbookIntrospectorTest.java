@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -138,7 +139,7 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals(
           "SUM(B2:B3)",
           results.formulaSurface().surface().sheets().getFirst().formulas().getFirst().formula());
-      assertEquals("Budget", results.schema().surface().sheetName());
+      assertEquals("Budget", results.schema().surface().sheetName().value());
       assertEquals(4, results.schema().surface().dataRowCount());
       assertEquals(1, results.namedRangeSurface().surface().rangeBackedCount());
       assertEquals(0, results.namedRangeSurface().surface().formulaBackedCount());
@@ -436,7 +437,7 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals(
           List.of("Forecast"),
           formulaSurface.surface().sheets().stream()
-              .map(WorkbookSurfaceResult.SheetFormulaSurface::sheetName)
+              .map(sheet -> sheet.sheetName().value())
               .toList());
 
       WorkbookSurfaceResult.NamedRangeSurfaceResult namedRangeSurface =
@@ -536,7 +537,7 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       WorkbookReadTestSupport.getSheetSchema("schema", "Data", "A1", 3, 1)));
 
-      WorkbookSurfaceResult.SchemaColumn column = schema.surface().columns().getFirst();
+      SchemaColumnReport column = schema.surface().columns().getFirst();
       assertEquals(1, column.observedTypes().size());
       assertEquals("NUMBER", column.observedTypes().getFirst().type());
       assertEquals("NUMBER", column.dominantType());
@@ -576,10 +577,10 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       WorkbookReadTestSupport.getSheetSchema("schema", "Data", "A1", 3, 2)));
 
-      WorkbookSurfaceResult.SchemaColumn boolCol = schema.surface().columns().get(0);
+      SchemaColumnReport boolCol = schema.surface().columns().get(0);
       assertEquals("BOOLEAN", boolCol.dominantType());
 
-      WorkbookSurfaceResult.SchemaColumn errCol = schema.surface().columns().get(1);
+      SchemaColumnReport errCol = schema.surface().columns().get(1);
       assertEquals("ERROR", errCol.dominantType());
     }
   }

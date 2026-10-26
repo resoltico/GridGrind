@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -143,20 +144,16 @@ class CellReportReadbackTest {
                   false);
       assertEquals(
           List.of("DATE", "TIME", "DATE_TIME", "NUMBER"),
-          schema.columns().stream().map(WorkbookSurfaceResult.SchemaColumn::dominantType).toList());
+          schema.columns().stream().map(SchemaColumnReport::dominantType).toList());
       assertEquals(
           List.of("Date", "Time", "DateTime", "Number"),
-          schema.columns().stream()
-              .map(WorkbookSurfaceResult.SchemaColumn::headerDisplayValue)
-              .toList());
+          schema.columns().stream().map(SchemaColumnReport::headerDisplayValue).toList());
       var numeric =
           new ExcelWorkbookIntrospector()
               .sheetSchema(workbook, "Data", "A1", 2, 4, CellReadProjection.defaults(), false);
       assertEquals(
           List.of("NUMBER", "NUMBER", "NUMBER", "NUMBER"),
-          numeric.columns().stream()
-              .map(WorkbookSurfaceResult.SchemaColumn::dominantType)
-              .toList());
+          numeric.columns().stream().map(SchemaColumnReport::dominantType).toList());
       assertEquals(
           42d,
           assertInstanceOf(CellReport.NumberReport.class, sheet.cells().snapshotCell("D2"))

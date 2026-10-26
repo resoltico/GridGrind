@@ -214,53 +214,54 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaSurfaceResult(
                 new StepId("formula"),
-                new dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaSurface(
+                new dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport(
                     1,
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetFormulaSurface(
-                            "Budget",
+                        new dev.erst.gridgrind.core.model.formula.SheetFormulaSurfaceReport(
+                            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
                             1,
                             1,
                             List.of(
-                                new dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaPattern(
-                                    "SUM(B2:B3)", 1, List.of("B4"))))))));
+                                new dev.erst.gridgrind.core.model.formula.FormulaPatternReport(
+                                    "SUM(B2:B3)",
+                                    1,
+                                    List.of("B4").stream()
+                                        .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                                        .toList())))))));
     InspectionResult schema =
         InspectionResultConverter.toReadResult(
             excelSheetSchemaResult(
                 "schema",
-                new dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchema(
-                    "Budget",
-                    "A1",
+                new dev.erst.gridgrind.core.model.table.SheetSchemaReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
                     3,
                     2,
                     2,
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookSurfaceResult.SchemaColumn(
+                        new dev.erst.gridgrind.core.model.table.SchemaColumnReport(
                             0,
                             "A1",
                             "Item",
                             2,
                             0,
-                            List.of(
-                                new dev.erst.gridgrind.excel.WorkbookSurfaceResult.TypeCount(
-                                    "TEXT", 2)),
+                            List.of(new dev.erst.gridgrind.core.result.TypeCountReport("TEXT", 2)),
                             "TEXT")))));
     InspectionResult namedRangeSurface =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceResult(
                 new StepId("surface"),
-                new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurface(
+                new dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport(
                     1,
                     0,
                     1,
                     0,
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceEntry(
+                        new dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceEntryReport(
                             "BudgetTotal",
                             new NamedRangeScopeReport.Workbook(),
                             "Budget!$B$4",
-                            dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeBackingKind
-                                .RANGE)))));
+                            dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind.RANGE)))));
     InspectionResult formulaHealth =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.FormulaHealthResult(
@@ -529,19 +530,18 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceResult(
                     new StepId("surface"),
-                    new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurface(
+                    new dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport(
                         0,
                         1,
                         0,
                         1,
                         List.of(
-                            new dev.erst.gridgrind.excel.WorkbookSurfaceResult
-                                .NamedRangeSurfaceEntry(
+                            new dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceEntryReport(
                                 "BudgetRollup",
                                 new NamedRangeScopeReport.Sheet(
                                     new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                                 "SUM(Budget!$B$2:$B$3)",
-                                dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeBackingKind
+                                dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind
                                     .FORMULA))))));
 
     assertEquals(NamedRangeBackingKind.FORMULA, surface.surface().namedRanges().getFirst().kind());
