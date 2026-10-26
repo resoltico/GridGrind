@@ -98,7 +98,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceLayoutValues.nextProtocolSheetProtectionSettings(data);
   }
 
-  static ExcelSheetProtectionSettings nextSheetProtectionSettings(GridGrindFuzzData data) {
+  static SheetProtectionSettings nextSheetProtectionSettings(GridGrindFuzzData data) {
     return OperationSequenceLayoutValues.nextSheetProtectionSettings(data);
   }
 

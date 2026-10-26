@@ -15,6 +15,9 @@ import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
@@ -596,17 +599,17 @@ class WorkbookCommandExecutorTest {
       executor.apply(
           workbook,
           new WorkbookSheetCommand.SetWorkbookProtection(
-              new ExcelWorkbookProtectionSettings(
+              new ResolvedWorkbookProtection(
                   true, false, true, Optional.of("secret"), Optional.of("review"))));
 
       assertEquals(
-          new ExcelWorkbookProtectionSnapshot(true, false, true, true, true),
+          new WorkbookProtectionReport(true, false, true, true, true),
           workbook.workbookProtection());
 
       executor.apply(workbook, new WorkbookSheetCommand.ClearWorkbookProtection());
 
       assertEquals(
-          new ExcelWorkbookProtectionSnapshot(false, false, false, false, false),
+          new WorkbookProtectionReport(false, false, false, false, false),
           workbook.workbookProtection());
     }
   }
@@ -1058,8 +1061,8 @@ class WorkbookCommandExecutorTest {
                 true)));
   }
 
-  private static ExcelSheetProtectionSettings protectionSettings() {
-    return new ExcelSheetProtectionSettings(
+  private static SheetProtectionSettings protectionSettings() {
+    return new SheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
   }

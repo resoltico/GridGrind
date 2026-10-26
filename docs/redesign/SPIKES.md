@@ -1962,3 +1962,20 @@ Inventories: snapshots 38→36, converter lines 4117→4032, blank checks 425→
 121422→121109. Definitions 3 and Support 206 remain open. Baseline diff empty. Workbook/
 sheet secret materialization, the source-free definition drains, remaining factual models and the
 actual ResolvedPlan/ResolvedStep/ResolvedTarget command cutover still remain WP-40.
+
+## WP-40 canonical protection facts and resolved credentials
+
+Deleted engine sheet-protection settings and workbook-protection settings/snapshot mirrors.
+The adapter now accepts core SheetProtectionSettings and returns WorkbookProtectionReport directly;
+the 15-field and five-field identity conversions are gone. ResolvedWorkbookProtection carries
+materialized optional credentials with unchanged blank/presence validation and secret binding timing.
+Its debug rendering redacts credentials; an independent sentinel regression verifies both redaction
+and retained lock state/accessors. Existing real workbook protection roundtrip/clear/hash checks remain.
+
+The first focused run found a now-unnecessary import suppression (58s); removed it. Focused
+core/JSON/engine/14 parity/static checks then pass (45s). Nested deterministic check initially stopped
+on formatting (6s), corrected with its own Spotless task; check and retained seed replay pass (19s).
+Root ./gradlew check passes (3m36s), including all 143 unchanged golden cases; no active fuzz or
+mutation campaign ran. Core has 353 passing tests, JSON 348, engine 1477 plus 14 parity.
+Inventories: snapshots 36→35, converter lines 4032→3971, main Java 121109→121047; definitions 3,
+Support 206 and blank checks 424 remain open. Baseline diff empty. WP-40 remains in progress.

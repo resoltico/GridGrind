@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
@@ -1410,8 +1411,8 @@ class ExcelWorkbookTest {
     }
   }
 
-  private static ExcelSheetProtectionSettings protectionSettings() {
-    return new ExcelSheetProtectionSettings(
+  private static SheetProtectionSettings protectionSettings() {
+    return new SheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
   }

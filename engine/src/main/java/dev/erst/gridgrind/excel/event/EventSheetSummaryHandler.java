@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.event;
 
-import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.excel.WorkbookSheetResult;
 import org.apache.poi.ss.util.CellReference;
 import org.xml.sax.Attributes;
@@ -59,7 +59,7 @@ public final class EventSheetSummaryHandler extends DefaultHandler {
       return new WorkbookSheetResult.SheetProtection.Unprotected();
     }
     return new WorkbookSheetResult.SheetProtection.Protected(
-        new ExcelSheetProtectionSettings(
+        new SheetProtectionSettings(
             booleanAttribute(attributes, "autoFilter"),
             booleanAttribute(attributes, "deleteColumns"),
             booleanAttribute(attributes, "deleteRows"),

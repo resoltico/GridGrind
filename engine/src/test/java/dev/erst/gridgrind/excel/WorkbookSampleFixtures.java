@@ -20,6 +20,8 @@ import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
@@ -130,7 +132,7 @@ final class WorkbookSampleFixtures {
         new WorkbookSheetCommand.SetSheetProtection("Budget", protectionSettings()),
         new WorkbookSheetCommand.ClearSheetProtection("Budget"),
         new WorkbookSheetCommand.SetWorkbookProtection(
-            new ExcelWorkbookProtectionSettings(
+            new ResolvedWorkbookProtection(
                 true, false, true, Optional.of("book"), Optional.of("review"))),
         new WorkbookSheetCommand.ClearWorkbookProtection(),
         new WorkbookStructureCommand.MergeCells("Budget", "A1:B2"),
@@ -364,8 +366,8 @@ final class WorkbookSampleFixtures {
         new HeaderFooterTextReport("Footer Left", "", "Footer Right"));
   }
 
-  private static ExcelSheetProtectionSettings protectionSettings() {
-    return new ExcelSheetProtectionSettings(
+  private static SheetProtectionSettings protectionSettings() {
+    return new SheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
   }

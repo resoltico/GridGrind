@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -514,7 +515,7 @@ class ExcelAdvancedValueObjectTest {
             "",
             List.of(new TableColumnSpec(1, "", "", " SUM ", "B2*2")));
     var protection =
-        new ExcelWorkbookProtectionSettings(
+        new ResolvedWorkbookProtection(
             true, false, true, Optional.of("book"), Optional.of("review"));
     ResolvedComment copiedComment = commentSnapshot.toAuthoringComment();
 
@@ -577,12 +578,12 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelWorkbookProtectionSettings(
+            new ResolvedWorkbookProtection(
                 false, false, false, Optional.of(" "), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelWorkbookProtectionSettings(
+            new ResolvedWorkbookProtection(
                 false, false, false, Optional.empty(), Optional.of(" ")));
     assertThrows(IllegalArgumentException.class, () -> new TableColumnSpec(-1, "", "", "", ""));
     TableColumnSpec normalizedColumn = new TableColumnSpec(0, "", "", "", "");

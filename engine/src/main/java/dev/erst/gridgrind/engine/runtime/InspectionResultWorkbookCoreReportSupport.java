@@ -2,7 +2,6 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
@@ -14,7 +13,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSnapshot;
 
 /** Converts workbook-global security, summary, protection, and named-range snapshots. */
 final class InspectionResultWorkbookCoreReportSupport {
@@ -109,15 +107,5 @@ final class InspectionResultWorkbookCoreReportSupport {
       case ExcelNamedRangeScope.SheetScope sheetScope ->
           new NamedRangeScope.Sheet(new SheetName(sheetScope.sheetName()));
     };
-  }
-
-  static WorkbookProtectionReport toWorkbookProtectionReport(
-      ExcelWorkbookProtectionSnapshot protection) {
-    return new WorkbookProtectionReport(
-        protection.structureLocked(),
-        protection.windowsLocked(),
-        protection.revisionsLocked(),
-        protection.workbookPasswordHashPresent(),
-        protection.revisionsPasswordHashPresent());
   }
 }

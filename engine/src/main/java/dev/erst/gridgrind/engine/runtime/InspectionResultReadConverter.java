@@ -29,9 +29,7 @@ final class InspectionResultReadConverter {
                   packageSecurity.security()));
       case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult protection ->
           new WorkbookInspectionResult.WorkbookProtectionResult(
-              protection.stepId(),
-              InspectionResultWorkbookCoreReportSupport.toWorkbookProtectionReport(
-                  protection.protection()));
+              protection.stepId(), protection.protection());
       case dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlMappingsResult customXmlMappings ->
           new WorkbookInspectionResult.CustomXmlMappingsResult(
               customXmlMappings.stepId(),

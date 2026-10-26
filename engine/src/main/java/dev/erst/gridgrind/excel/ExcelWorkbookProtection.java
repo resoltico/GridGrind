@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import java.util.Objects;
 
 /** Workbook-level protection operations. */
@@ -11,7 +12,7 @@ public final class ExcelWorkbookProtection {
   }
 
   /** Enables workbook-level protection and password hashes with authoritative settings. */
-  public ExcelWorkbook setWorkbookProtection(ExcelWorkbookProtectionSettings protection) {
+  public ExcelWorkbook setWorkbookProtection(ResolvedWorkbookProtection protection) {
     return new ExcelSheetStateController().setWorkbookProtection(workbook, protection);
   }
 

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Objects;
@@ -58,13 +59,13 @@ public final class ExcelWorkbookSheets {
 
   /** Enables sheet protection with the exact supported lock flags. */
   public ExcelWorkbookSheets setSheetProtection(
-      String sheetName, ExcelSheetProtectionSettings protection) {
+      String sheetName, SheetProtectionSettings protection) {
     return setSheetProtection(sheetName, protection, Optional.empty());
   }
 
   /** Enables sheet protection with the exact supported lock flags and optional password. */
   public ExcelWorkbookSheets setSheetProtection(
-      String sheetName, ExcelSheetProtectionSettings protection, Optional<String> password) {
+      String sheetName, SheetProtectionSettings protection, Optional<String> password) {
     new ExcelSheetStateController().setSheetProtection(workbook, sheetName, protection, password);
     return this;
   }

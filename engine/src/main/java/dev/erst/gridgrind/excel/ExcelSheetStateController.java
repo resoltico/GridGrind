@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -52,14 +55,14 @@ final class ExcelSheetStateController {
   }
 
   /** Returns workbook-level protection facts including password-hash presence. */
-  ExcelWorkbookProtectionSnapshot workbookProtection(ExcelWorkbook workbook) {
+  WorkbookProtectionReport workbookProtection(ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
 
     Optional<CTWorkbookProtection> protection =
         workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection()
             ? Optional.of(workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection())
             : Optional.empty();
-    return new ExcelWorkbookProtectionSnapshot(
+    return new WorkbookProtectionReport(
         workbook.xssfWorkbook().isStructureLocked(),
         workbook.xssfWorkbook().isWindowsLocked(),
         workbook.xssfWorkbook().isRevisionLocked(),
@@ -204,7 +207,7 @@ final class ExcelSheetStateController {
   ExcelWorkbook setSheetProtection(
       ExcelWorkbook workbook,
       String sheetName,
-      ExcelSheetProtectionSettings protection,
+      SheetProtectionSettings protection,
       Optional<String> password) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
@@ -232,7 +235,7 @@ final class ExcelSheetStateController {
 
   /** Applies workbook-level protection and password hashes authoritatively. */
   ExcelWorkbook setWorkbookProtection(
-      ExcelWorkbook workbook, ExcelWorkbookProtectionSettings protection) {
+      ExcelWorkbook workbook, ResolvedWorkbookProtection protection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(protection, "protection must not be null");
 

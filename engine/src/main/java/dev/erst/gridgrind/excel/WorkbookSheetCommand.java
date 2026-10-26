@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Objects;
@@ -126,10 +128,10 @@ public sealed interface WorkbookSheetCommand extends WorkbookCommand
 
   /** Enables sheet protection with the exact supported lock flags. */
   record SetSheetProtection(
-      String sheetName, ExcelSheetProtectionSettings protection, Optional<String> password)
+      String sheetName, SheetProtectionSettings protection, Optional<String> password)
       implements WorkbookSheetCommand {
     /** Enables sheet protection without applying a password hash. */
-    public SetSheetProtection(String sheetName, ExcelSheetProtectionSettings protection) {
+    public SetSheetProtection(String sheetName, SheetProtectionSettings protection) {
       this(sheetName, protection, Optional.empty());
     }
 
@@ -160,7 +162,7 @@ public sealed interface WorkbookSheetCommand extends WorkbookCommand
   }
 
   /** Enables workbook-level protection and password hashes with authoritative settings. */
-  record SetWorkbookProtection(ExcelWorkbookProtectionSettings protection)
+  record SetWorkbookProtection(ResolvedWorkbookProtection protection)
       implements WorkbookSheetCommand {
     public SetWorkbookProtection {
       Objects.requireNonNull(protection, "protection must not be null");

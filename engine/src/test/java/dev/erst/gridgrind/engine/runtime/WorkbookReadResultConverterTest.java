@@ -199,21 +199,15 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
   }
 
   @Test
-  void convertsPlainCommentAndWorkbookProtectionFactsDirectly() {
+  void convertsPlainCommentFactsDirectly() {
     assertTrue(InspectionResultCellReportSupport.toCommentReport((ResolvedComment) null).isEmpty());
     CommentReport plainComment =
         InspectionResultCellReportSupport.toCommentReport(
                 new ResolvedComment("Review", "GridGrind", false))
             .orElseThrow();
-    WorkbookProtectionReport protection =
-        InspectionResultWorkbookCoreReportSupport.toWorkbookProtectionReport(
-            new ExcelWorkbookProtectionSnapshot(true, false, true, true, false));
-
     assertEquals("Review", plainComment.text());
     assertEquals("GridGrind", plainComment.author());
     assertEquals(java.util.Optional.empty(), plainComment.runs());
-    assertTrue(protection.structureLocked());
-    assertTrue(protection.revisionsLocked());
   }
 
   @Test
@@ -235,7 +229,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult(
                     new StepId("workbook-protection"),
-                    new ExcelWorkbookProtectionSnapshot(true, false, true, true, false))));
+                    new WorkbookProtectionReport(true, false, true, true, false))));
     assertTrue(protection.protection().structureLocked());
   }
 

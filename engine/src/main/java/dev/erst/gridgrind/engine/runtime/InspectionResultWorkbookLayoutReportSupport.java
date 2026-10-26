@@ -19,7 +19,6 @@ import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
-import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -28,13 +27,10 @@ import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot;
-import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Converts sheet/window/layout/readback snapshots into protocol report records. */
-@SuppressWarnings(
-    "PMD.ExcessiveImports") // Corresponding backend and report types define this adapter.
 final class InspectionResultWorkbookLayoutReportSupport {
   private InspectionResultWorkbookLayoutReportSupport() {}
 
@@ -44,7 +40,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
       case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Unprotected _ ->
           new SheetProtectionReport.Unprotected();
       case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Protected protectedState ->
-          new SheetProtectionReport.Protected(toSheetProtectionSettings(protectedState.settings()));
+          new SheetProtectionReport.Protected(protectedState.settings());
     };
   }
 
@@ -218,25 +214,5 @@ final class InspectionResultWorkbookLayoutReportSupport {
       case PrintTitleColumnsSpec.Band band ->
           new PrintTitleColumnsReport.Band(band.firstColumnIndex(), band.lastColumnIndex());
     };
-  }
-
-  private static SheetProtectionSettings toSheetProtectionSettings(
-      ExcelSheetProtectionSettings settings) {
-    return new SheetProtectionSettings(
-        settings.autoFilterLocked(),
-        settings.deleteColumnsLocked(),
-        settings.deleteRowsLocked(),
-        settings.formatCellsLocked(),
-        settings.formatColumnsLocked(),
-        settings.formatRowsLocked(),
-        settings.insertColumnsLocked(),
-        settings.insertHyperlinksLocked(),
-        settings.insertRowsLocked(),
-        settings.objectsLocked(),
-        settings.pivotTablesLocked(),
-        settings.scenariosLocked(),
-        settings.selectLockedCellsLocked(),
-        settings.selectUnlockedCellsLocked(),
-        settings.sortLocked());
   }
 }

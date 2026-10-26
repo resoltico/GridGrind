@@ -157,7 +157,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -1544,8 +1543,8 @@ class WorkbookInvariantChecksTest {
         false);
   }
 
-  private static ExcelSheetProtectionSettings protectionSettings() {
-    return new ExcelSheetProtectionSettings(
+  private static SheetProtectionSettings protectionSettings() {
+    return new SheetProtectionSettings(
         false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
   }

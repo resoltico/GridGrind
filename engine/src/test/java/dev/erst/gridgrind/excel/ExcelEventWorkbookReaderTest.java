@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -46,7 +47,7 @@ class ExcelEventWorkbookReaderTest {
           .sheets()
           .setSheetProtection(
               "Ops",
-              new ExcelSheetProtectionSettings(
+              new SheetProtectionSettings(
                   true, false, false, false, false, false, false, false, false, true, false, false,
                   true, true, false),
               Optional.of("secret"));

@@ -210,8 +210,8 @@ final class OperationSequenceLayoutValues {
         data.consumeBoolean());
   }
 
-  static ExcelSheetProtectionSettings nextSheetProtectionSettings(GridGrindFuzzData data) {
-    return new ExcelSheetProtectionSettings(
+  static SheetProtectionSettings nextSheetProtectionSettings(GridGrindFuzzData data) {
+    return new SheetProtectionSettings(
         data.consumeBoolean(),
         data.consumeBoolean(),
         data.consumeBoolean(),

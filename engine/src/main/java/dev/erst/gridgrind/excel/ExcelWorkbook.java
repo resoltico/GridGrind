@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -142,7 +143,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Returns the workbook-level protection facts currently stored in the workbook. */
-  ExcelWorkbookProtectionSnapshot workbookProtection() {
+  WorkbookProtectionReport workbookProtection() {
     return new ExcelSheetStateController().workbookProtection(this);
   }
 

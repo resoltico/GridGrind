@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
@@ -37,7 +38,6 @@ import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSnapshot;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
@@ -204,7 +204,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult(
                     new StepId("step-01-protection"),
-                    new ExcelWorkbookProtectionSnapshot(true, false, true, true, false))));
+                    new WorkbookProtectionReport(true, false, true, true, false))));
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class,

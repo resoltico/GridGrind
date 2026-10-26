@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -163,7 +164,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
     record Unprotected() implements SheetProtection {}
 
     /** Sheet protection is enabled with the reported supported lock flags. */
-    record Protected(ExcelSheetProtectionSettings settings) implements SheetProtection {
+    record Protected(SheetProtectionSettings settings) implements SheetProtection {
       public Protected {
         Objects.requireNonNull(settings, "settings must not be null");
       }

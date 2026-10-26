@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
 import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
@@ -315,8 +316,8 @@ class AdvancedReadEngineTypesTest {
                 Arrays.asList(10, null),
                 List.of(2)));
 
-    ExcelWorkbookProtectionSnapshot protection =
-        new ExcelWorkbookProtectionSnapshot(true, false, true, true, false);
+    WorkbookProtectionReport protection =
+        new WorkbookProtectionReport(true, false, true, true, false);
     WorkbookReadCommand.GetWorkbookProtection read =
         new WorkbookReadCommand.GetWorkbookProtection(new StepId("workbook-protection"));
     WorkbookCoreResult.WorkbookProtectionResult result =
@@ -340,8 +341,7 @@ class AdvancedReadEngineTypesTest {
         IllegalArgumentException.class,
         () ->
             new WorkbookCoreResult.WorkbookProtectionResult(
-                new StepId(" "),
-                new ExcelWorkbookProtectionSnapshot(true, false, true, true, false)));
+                new StepId(" "), new WorkbookProtectionReport(true, false, true, true, false)));
   }
 
   @Test

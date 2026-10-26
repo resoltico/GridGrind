@@ -281,8 +281,8 @@ class DefaultGridGrindRequestExecutorReadSupport {
     return CellColorReport.rgb(new RgbHex(rgb));
   }
 
-  static ExcelSheetProtectionSettings excelProtectionSettings() {
-    return new ExcelSheetProtectionSettings(
+  static SheetProtectionSettings excelProtectionSettings() {
+    return new SheetProtectionSettings(
         false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
   }

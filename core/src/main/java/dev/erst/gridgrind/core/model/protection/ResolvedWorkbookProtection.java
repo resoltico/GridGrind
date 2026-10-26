@@ -1,16 +1,16 @@
-package dev.erst.gridgrind.excel;
+package dev.erst.gridgrind.core.model.protection;
 
 import java.util.Objects;
 import java.util.Optional;
 
-/** Mutable-workbook protection payload covering workbook and revisions locks plus passwords. */
-public record ExcelWorkbookProtectionSettings(
+/** Materialized workbook/revision protection credentials and lock settings. */
+public record ResolvedWorkbookProtection(
     boolean structureLocked,
     boolean windowsLocked,
     boolean revisionsLocked,
     Optional<String> workbookPassword,
     Optional<String> revisionsPassword) {
-  public ExcelWorkbookProtectionSettings {
+  public ResolvedWorkbookProtection {
     Objects.requireNonNull(workbookPassword, "workbookPassword must not be null");
     Objects.requireNonNull(revisionsPassword, "revisionsPassword must not be null");
     workbookPassword.ifPresent(
@@ -25,5 +25,21 @@ public record ExcelWorkbookProtectionSettings(
             throw new IllegalArgumentException("revisionsPassword must not be blank");
           }
         });
+  }
+
+  /** Renders lock state without exposing materialized credentials. */
+  @Override
+  public String toString() {
+    return "ResolvedWorkbookProtection[structureLocked="
+        + structureLocked
+        + ", windowsLocked="
+        + windowsLocked
+        + ", revisionsLocked="
+        + revisionsLocked
+        + ", workbookPassword="
+        + (workbookPassword.isPresent() ? "redacted" : "absent")
+        + ", revisionsPassword="
+        + (revisionsPassword.isPresent() ? "redacted" : "absent")
+        + "]";
   }
 }

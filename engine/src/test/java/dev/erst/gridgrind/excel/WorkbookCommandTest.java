@@ -9,6 +9,8 @@ import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
@@ -116,7 +118,7 @@ class WorkbookCommandTest {
             "Budget", protectionSettings(), Optional.of("gridgrind"));
     WorkbookSheetCommand.SetWorkbookProtection workbookProtection =
         new WorkbookSheetCommand.SetWorkbookProtection(
-            new ExcelWorkbookProtectionSettings(
+            new ResolvedWorkbookProtection(
                 true, false, true, Optional.of("book"), Optional.of("review")));
     WorkbookSheetCommand.ClearWorkbookProtection clearWorkbookProtection =
         new WorkbookSheetCommand.ClearWorkbookProtection();
@@ -1043,8 +1045,8 @@ class WorkbookCommandTest {
         new HeaderFooterTextReport("Footer Left", "", "Footer Right"));
   }
 
-  private static ExcelSheetProtectionSettings protectionSettings() {
-    return new ExcelSheetProtectionSettings(
+  private static SheetProtectionSettings protectionSettings() {
+    return new SheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
   }

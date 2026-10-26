@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
@@ -124,7 +125,7 @@ public final class XlsxRoundTrip {
             return new WorkbookSheetResult.SheetProtection.Unprotected();
           }
           return new WorkbookSheetResult.SheetProtection.Protected(
-              new ExcelSheetProtectionSettings(
+              new SheetProtectionSettings(
                   sheet.isAutoFilterLocked(),
                   sheet.isDeleteColumnsLocked(),
                   sheet.isDeleteRowsLocked(),

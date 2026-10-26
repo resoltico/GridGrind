@@ -109,7 +109,7 @@ class RuntimeResidualCoverageTest {
     assertThrows(
         IllegalStateException.class,
         () ->
-            WorkbookCommandLayoutInputConverter.toExcelWorkbookProtectionSettings(
+            WorkbookCommandLayoutInputConverter.toResolvedWorkbookProtection(
                 workbookProtection, null));
     assertThrows(
         IllegalStateException.class,

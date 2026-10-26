@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.validateCommonWorkbookSummaryFields;
 
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
@@ -42,7 +43,7 @@ public sealed interface WorkbookCoreResult extends WorkbookReadIntrospectionResu
   }
 
   /** Returns workbook-level protection facts. */
-  record WorkbookProtectionResult(StepId stepId, ExcelWorkbookProtectionSnapshot protection)
+  record WorkbookProtectionResult(StepId stepId, WorkbookProtectionReport protection)
       implements WorkbookCoreResult {
     public WorkbookProtectionResult {
 

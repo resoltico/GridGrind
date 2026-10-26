@@ -31,6 +31,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
@@ -88,8 +89,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
-import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
-import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Map;
@@ -522,7 +521,7 @@ class SequenceIntrospectionTest {
         "SET_WORKBOOK_PROTECTION",
         SequenceIntrospection.commandKind(
             new WorkbookSheetCommand.SetWorkbookProtection(
-                new ExcelWorkbookProtectionSettings(
+                new ResolvedWorkbookProtection(
                     true, false, false, Optional.empty(), Optional.empty()))));
     assertEquals(
         "CLEAR_WORKBOOK_PROTECTION",
@@ -715,8 +714,8 @@ class SequenceIntrospectionTest {
         false);
   }
 
-  private static ExcelSheetProtectionSettings excelProtectionSettings() {
-    return new ExcelSheetProtectionSettings(
+  private static SheetProtectionSettings excelProtectionSettings() {
+    return new SheetProtectionSettings(
         false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
   }

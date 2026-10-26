@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
@@ -1319,8 +1320,8 @@ class ExcelSheetCopyControllerTest {
         "0.00", null, null, null, null, null, null, null, null, List.of());
   }
 
-  private static ExcelSheetProtectionSettings protectionSettings() {
-    return new ExcelSheetProtectionSettings(
+  private static SheetProtectionSettings protectionSettings() {
+    return new SheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
   }

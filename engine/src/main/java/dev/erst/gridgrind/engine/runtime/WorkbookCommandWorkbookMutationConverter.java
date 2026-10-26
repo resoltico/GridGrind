@@ -52,15 +52,14 @@ final class WorkbookCommandWorkbookMutationConverter {
       case WorkbookMutationAction.SetSheetProtection setSheetProtection ->
           new WorkbookSheetCommand.SetSheetProtection(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
-              WorkbookCommandLayoutInputConverter.toExcelSheetProtectionSettings(
-                  setSheetProtection.protection()),
+              setSheetProtection.protection(),
               resolveOptionalSecret(setSheetProtection.passwordRef(), bindings));
       case WorkbookMutationAction.ClearSheetProtection _ ->
           new WorkbookSheetCommand.ClearSheetProtection(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());
       case WorkbookMutationAction.SetWorkbookProtection setWorkbookProtection ->
           new WorkbookSheetCommand.SetWorkbookProtection(
-              WorkbookCommandLayoutInputConverter.toExcelWorkbookProtectionSettings(
+              WorkbookCommandLayoutInputConverter.toResolvedWorkbookProtection(
                   setWorkbookProtection.protection(), bindings));
       case WorkbookMutationAction.ClearWorkbookProtection _ ->
           new WorkbookSheetCommand.ClearWorkbookProtection();

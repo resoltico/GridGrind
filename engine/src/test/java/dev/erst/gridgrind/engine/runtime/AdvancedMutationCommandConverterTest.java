@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
@@ -82,7 +83,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Optional;
@@ -132,7 +132,7 @@ class AdvancedMutationCommandConverterTest {
                     new WorkbookProtectionSpec(
                         false, true, false, Optional.empty(), Optional.empty()))));
     assertEquals(
-        new ExcelWorkbookProtectionSettings(false, true, false, Optional.empty(), Optional.empty()),
+        new ResolvedWorkbookProtection(false, true, false, Optional.empty(), Optional.empty()),
         protectionCommand.protection());
 
     assertInstanceOf(

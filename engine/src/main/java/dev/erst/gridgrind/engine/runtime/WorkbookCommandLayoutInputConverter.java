@@ -5,7 +5,7 @@ import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
-import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
@@ -14,8 +14,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
-import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
-import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import java.util.Optional;
 
 /** Converts named-range, protection, pane, and print/presentation contract inputs. */
@@ -61,29 +59,9 @@ final class WorkbookCommandLayoutInputConverter {
     };
   }
 
-  static ExcelSheetProtectionSettings toExcelSheetProtectionSettings(
-      SheetProtectionSettings settings) {
-    return new ExcelSheetProtectionSettings(
-        settings.autoFilterLocked(),
-        settings.deleteColumnsLocked(),
-        settings.deleteRowsLocked(),
-        settings.formatCellsLocked(),
-        settings.formatColumnsLocked(),
-        settings.formatRowsLocked(),
-        settings.insertColumnsLocked(),
-        settings.insertHyperlinksLocked(),
-        settings.insertRowsLocked(),
-        settings.objectsLocked(),
-        settings.pivotTablesLocked(),
-        settings.scenariosLocked(),
-        settings.selectLockedCellsLocked(),
-        settings.selectUnlockedCellsLocked(),
-        settings.sortLocked());
-  }
-
-  static ExcelWorkbookProtectionSettings toExcelWorkbookProtectionSettings(
+  static ResolvedWorkbookProtection toResolvedWorkbookProtection(
       WorkbookProtectionSpec protection, ExecutionInputBindings bindings) {
-    return new ExcelWorkbookProtectionSettings(
+    return new ResolvedWorkbookProtection(
         protection.structureLocked(),
         protection.windowsLocked(),
         protection.revisionsLocked(),

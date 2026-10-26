@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -18,13 +19,13 @@ final class ExcelSheetProtectionSupport {
   }
 
   /** Returns the supported protection settings when sheet protection is enabled. */
-  static Optional<ExcelSheetProtectionSettings> settings(XSSFSheet sheet) {
+  static Optional<SheetProtectionSettings> settings(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     if (!sheet.getProtect()) {
       return Optional.empty();
     }
     return Optional.of(
-        new ExcelSheetProtectionSettings(
+        new SheetProtectionSettings(
             sheet.isAutoFilterLocked(),
             sheet.isDeleteColumnsLocked(),
             sheet.isDeleteRowsLocked(),
@@ -43,7 +44,7 @@ final class ExcelSheetProtectionSupport {
   }
 
   /** Applies the supported protection flags after protection has been enabled on the sheet. */
-  static void apply(XSSFSheet sheet, ExcelSheetProtectionSettings protection) {
+  static void apply(XSSFSheet sheet, SheetProtectionSettings protection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(protection, "protection must not be null");
     sheet.lockAutoFilter(protection.autoFilterLocked());

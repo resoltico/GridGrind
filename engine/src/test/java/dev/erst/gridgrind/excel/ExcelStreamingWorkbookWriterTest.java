@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -129,7 +130,7 @@ class ExcelStreamingWorkbookWriterTest {
     assertEquals(
         "SET_WORKBOOK_PROTECTION",
         new WorkbookSheetCommand.SetWorkbookProtection(
-                new ExcelWorkbookProtectionSettings(
+                new ResolvedWorkbookProtection(
                     true, false, false, Optional.empty(), Optional.empty()))
             .commandType());
   }
