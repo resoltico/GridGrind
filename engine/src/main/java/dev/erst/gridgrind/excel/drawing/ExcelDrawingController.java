@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel.drawing;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
@@ -51,22 +52,23 @@ public final class ExcelDrawingController {
         Objects.requireNonNull(signatureLineController, "signatureLineController must not be null");
   }
 
-  public List<ExcelDrawingObjectSnapshot> drawingObjects(XSSFSheet sheet) {
+  public List<DrawingObjectReport> drawingObjects(XSSFSheet sheet) {
     return drawingObjects(sheet, null);
   }
 
-  public List<ExcelDrawingObjectSnapshot> drawingObjects(
+  public List<DrawingObjectReport> drawingObjects(
       XSSFSheet sheet, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    List<ExcelDrawingObjectSnapshot> snapshots = new ArrayList<>();
+    List<DrawingObjectReport> snapshots = new ArrayList<>();
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing != null) {
       for (XSSFShape shape : drawing.getShapes()) {
         snapshots.add(snapshot(drawing, shape, formulaRuntime));
       }
     }
-    for (ExcelSignatureLineSnapshot signatureLine : signatureLineController.signatureLines(sheet)) {
-      snapshots.add(toDrawingObjectSnapshot(signatureLine));
+    for (DrawingObjectReport.SignatureLine signatureLine :
+        signatureLineController.signatureLines(sheet)) {
+      snapshots.add(signatureLine);
     }
     return List.copyOf(snapshots);
   }
@@ -295,18 +297,9 @@ public final class ExcelDrawingController {
     // drawing part over emitting a corrupt package.
   }
 
-  private ExcelDrawingObjectSnapshot snapshot(
+  private DrawingObjectReport snapshot(
       XSSFDrawing drawing, XSSFShape shape, @Nullable ExcelFormulaRuntime formulaRuntime) {
     return ExcelDrawingSnapshotSupport.snapshot(drawing, shape, formulaRuntime);
-  }
-
-  private ExcelDrawingObjectSnapshot.SignatureLine toDrawingObjectSnapshot(
-      ExcelSignatureLineSnapshot signatureLine) {
-    return new ExcelDrawingObjectSnapshot.SignatureLine(
-        signatureLine.name(),
-        signatureLine.anchor(),
-        signatureLine.setup(),
-        signatureLine.preview());
   }
 
   private void deleteNamedShapeIfPresent(XSSFSheet sheet, String objectName) {

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
@@ -18,7 +19,6 @@ import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -211,9 +211,8 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expected);
   }
 
-  static Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects(
-      ExcelWorkbook workbook) {
-    LinkedHashMap<String, List<ExcelDrawingObjectSnapshot>> expected = new LinkedHashMap<>();
+  static Map<String, List<DrawingObjectReport>> expectedDrawingObjects(ExcelWorkbook workbook) {
+    LinkedHashMap<String, List<DrawingObjectReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).drawings().drawingObjects()));
     }

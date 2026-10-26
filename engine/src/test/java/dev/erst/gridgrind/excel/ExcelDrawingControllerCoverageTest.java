@@ -3,12 +3,12 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
@@ -59,22 +59,21 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
       XSSFObjectData embeddedObject =
           createEmbeddedObject(workbook, drawing, "OpsEmbed", 16, 0, 19, 4);
 
-      List<ExcelDrawingObjectSnapshot> snapshots = controller.drawingObjects(sheet);
+      List<DrawingObjectReport> snapshots = controller.drawingObjects(sheet);
       String chartName =
           snapshots.stream()
-              .filter(ExcelDrawingObjectSnapshot.Chart.class::isInstance)
-              .map(ExcelDrawingObjectSnapshot.Chart.class::cast)
-              .map(ExcelDrawingObjectSnapshot.Chart::name)
+              .filter(DrawingObjectReport.Chart.class::isInstance)
+              .map(DrawingObjectReport.Chart.class::cast)
+              .map(DrawingObjectReport.Chart::name)
               .findFirst()
               .orElseThrow();
       assertEquals(6, snapshots.size());
       assertEquals(
-          1L,
-          snapshots.stream().filter(ExcelDrawingObjectSnapshot.Chart.class::isInstance).count());
+          1L, snapshots.stream().filter(DrawingObjectReport.Chart.class::isInstance).count());
       assertTrue(
           snapshots.stream()
-              .filter(ExcelDrawingObjectSnapshot.Shape.class::isInstance)
-              .map(ExcelDrawingObjectSnapshot.Shape.class::cast)
+              .filter(DrawingObjectReport.Shape.class::isInstance)
+              .map(DrawingObjectReport.Shape.class::cast)
               .anyMatch(snapshot -> snapshot.kind() == ExcelDrawingShapeKind.GROUP));
 
       assertThrows(
@@ -87,8 +86,8 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
       assertEquals(
           DrawingGeometryFixtures.report(anchor(1, 1, 2, 2)),
           controller.drawingObjects(sheet).stream()
-              .filter(ExcelDrawingObjectSnapshot.Chart.class::isInstance)
-              .map(ExcelDrawingObjectSnapshot.Chart.class::cast)
+              .filter(DrawingObjectReport.Chart.class::isInstance)
+              .map(DrawingObjectReport.Chart.class::cast)
               .filter(snapshot -> snapshot.name().equals(chartName))
               .findFirst()
               .orElseThrow()
@@ -124,7 +123,7 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
       simpleShape.getCTShape().getSpPr().unsetPrstGeom();
       simpleShape.getCTShape().getNvSpPr().getCNvPr().setName("");
       assertNull(
-          invoke(controller, "snapshotShape", ExcelDrawingObjectSnapshot.Shape.class, simpleShape)
+          invoke(controller, "snapshotShape", DrawingObjectReport.Shape.class, simpleShape)
               .presetGeometryToken());
       assertTrue(
           invoke(controller, "resolvedName", String.class, simpleShape).startsWith("Shape-"));
@@ -133,7 +132,7 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
           controller.drawingObjects(sheet).stream()
               .noneMatch(
                   snapshot ->
-                      snapshot instanceof ExcelDrawingObjectSnapshot.Chart chart
+                      snapshot instanceof DrawingObjectReport.Chart chart
                           && chart.name().equals(chartName)));
 
       simpleShape.getCTShape().getNvSpPr().getCNvPr().setName("Duplicate");
@@ -155,7 +154,7 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
       controller.deleteDrawingObject(sheet, group.getShapeName());
       List<String> remainingNames =
           controller.drawingObjects(sheet).stream()
-              .map(ExcelDrawingObjectSnapshot::name)
+              .map(DrawingObjectReport::name)
               .filter(
                   name ->
                       !List.of("OpsEmbed", "OpsPicture", "OpsShape", "OpsConnector").contains(name))

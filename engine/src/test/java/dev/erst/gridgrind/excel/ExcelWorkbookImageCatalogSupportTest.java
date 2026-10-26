@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -119,7 +119,7 @@ class ExcelWorkbookImageCatalogSupportTest {
       assertEquals(
           List.of("OpsPicture", "OpsEmbed", "OpsSignature"),
           workbook.sheet("Ops").drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
+              .map(DrawingObjectReport::name)
               .toList());
     }
   }
@@ -158,9 +158,7 @@ class ExcelWorkbookImageCatalogSupportTest {
           ExcelWorkbookImageCatalogSupport.packageImagePartNames(workbook.xssfWorkbook()));
       assertEquals(
           List.of("OpsEmbed", "OpsPicture2"),
-          sheet.drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
-              .toList());
+          sheet.drawings().drawingObjects().stream().map(DrawingObjectReport::name).toList());
     }
   }
 

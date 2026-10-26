@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -25,11 +26,11 @@ import org.jspecify.annotations.Nullable;
 public final class ExcelDrawingBinarySupport {
   private ExcelDrawingBinarySupport() {}
 
-  public static ExcelDrawingObjectSnapshot.EmbeddedObject snapshotEmbeddedObject(
+  public static DrawingObjectReport.EmbeddedObject snapshotEmbeddedObject(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     String objectName = ExcelDrawingAnchorSupport.resolvedName(objectData);
     EmbeddedObjectReadback readback = embeddedObjectReadback(objectName, objectData);
-    return new ExcelDrawingObjectSnapshot.EmbeddedObject(
+    return new DrawingObjectReport.EmbeddedObject(
         objectName,
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(objectData)),
         readback.packagingKind(),

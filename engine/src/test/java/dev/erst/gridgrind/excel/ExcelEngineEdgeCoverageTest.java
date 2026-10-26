@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
@@ -32,7 +33,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
 import java.io.IOException;
 import java.util.List;
@@ -355,7 +355,7 @@ class ExcelEngineEdgeCoverageTest {
                 400,
                 -1));
 
-    ExcelDrawingObjectSnapshot.SignatureLine drawingSignature =
+    DrawingObjectReport.SignatureLine drawingSignature =
         assertDoesNotThrow(
             () ->
                 drawingSignatureLine(

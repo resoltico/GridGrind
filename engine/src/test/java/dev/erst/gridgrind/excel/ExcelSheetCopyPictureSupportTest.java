@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingPictureSupport;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -93,7 +93,7 @@ class ExcelSheetCopyPictureSupportTest {
       assertEquals(
           List.of("OpsPicture1", "OpsPicture2"),
           workbook.sheet("Replica").drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
+              .map(DrawingObjectReport::name)
               .filter(name -> name.startsWith("OpsPicture"))
               .toList());
 
@@ -110,7 +110,7 @@ class ExcelSheetCopyPictureSupportTest {
       assertEquals(
           List.of("OpsPicture1", "OpsPicture2"),
           reopened.sheet("Replica").drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
+              .map(DrawingObjectReport::name)
               .filter(name -> name.startsWith("OpsPicture"))
               .toList());
       ExcelDrawingObjectPayload.Picture payload =

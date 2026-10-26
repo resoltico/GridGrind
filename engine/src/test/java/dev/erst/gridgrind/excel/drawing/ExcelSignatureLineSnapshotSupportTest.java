@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.office.office.CTSignatureLine;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -95,7 +96,7 @@ class ExcelSignatureLineSnapshotSupportTest {
                   ExcelPictureFormat.PNG, previewPart, null, dimensions)
               .isEmpty());
 
-      ExcelSignatureLineSnapshot.Preview preview =
+      DrawingObjectReport.SignaturePreview preview =
           ExcelSignatureLineSnapshotSupport.signatureLinePreview(
                   ExcelPictureFormat.PNG, previewPart, previewBytes, dimensions)
               .orElseThrow();

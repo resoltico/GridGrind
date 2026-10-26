@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
@@ -51,7 +52,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -415,8 +415,8 @@ class ExcelAdvancedValueObjectTest {
             ExcelPictureFormat.PNG,
             binary,
             twoCell);
-    ExcelDrawingObjectSnapshot.Shape groupSnapshot =
-        new ExcelDrawingObjectSnapshot.Shape(
+    DrawingObjectReport.Shape groupSnapshot =
+        new DrawingObjectReport.Shape(
             "OpsGroup",
             new DrawingAnchorReport.Absolute(1L, 2L, 10L, 20L, null),
             ExcelDrawingShapeKind.GROUP,

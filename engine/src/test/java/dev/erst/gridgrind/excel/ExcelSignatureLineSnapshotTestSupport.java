@@ -1,9 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
@@ -12,7 +11,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
   private ExcelSignatureLineSnapshotTestSupport() {}
 
   @SuppressWarnings("PMD.ExcessiveParameterList")
-  static ExcelSignatureLineSnapshot signatureLineSnapshot(
+  static DrawingObjectReport.SignatureLine signatureLineSnapshot(
       String name,
       DrawingAnchorSpec.TwoCell anchor,
       @Nullable String setupId,
@@ -27,7 +26,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
       @Nullable String previewSha256,
       @Nullable Integer previewWidthPixels,
       @Nullable Integer previewHeightPixels) {
-    return new ExcelSignatureLineSnapshot(
+    return new DrawingObjectReport.SignatureLine(
         name,
         DrawingGeometryFixtures.report(anchor),
         signatureSetup(
@@ -47,7 +46,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
   }
 
   @SuppressWarnings("PMD.ExcessiveParameterList")
-  static ExcelDrawingObjectSnapshot.SignatureLine drawingSignatureLine(
+  static DrawingObjectReport.SignatureLine drawingSignatureLine(
       String name,
       DrawingAnchorSpec.TwoCell anchor,
       @Nullable String setupId,
@@ -62,7 +61,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
       @Nullable String previewSha256,
       @Nullable Integer previewWidthPixels,
       @Nullable Integer previewHeightPixels) {
-    return new ExcelDrawingObjectSnapshot.SignatureLine(
+    return new DrawingObjectReport.SignatureLine(
         name,
         DrawingGeometryFixtures.report(anchor),
         signatureSetup(
@@ -81,7 +80,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
             previewHeightPixels));
   }
 
-  private static Optional<ExcelSignatureLineSnapshot.Setup> signatureSetup(
+  private static Optional<DrawingObjectReport.SignatureSetup> signatureSetup(
       @Nullable String setupId,
       @Nullable Boolean allowComments,
       @Nullable String signingInstructions,
@@ -97,7 +96,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
       return Optional.empty();
     }
     return Optional.of(
-        new ExcelSignatureLineSnapshot.Setup(
+        new DrawingObjectReport.SignatureSetup(
             Optional.ofNullable(setupId),
             Optional.ofNullable(allowComments),
             Optional.ofNullable(signingInstructions),
@@ -106,7 +105,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
             Optional.ofNullable(suggestedSignerEmail)));
   }
 
-  private static Optional<ExcelSignatureLineSnapshot.Preview> signaturePreview(
+  private static Optional<DrawingObjectReport.SignaturePreview> signaturePreview(
       @Nullable ExcelPictureFormat previewFormat,
       @Nullable String previewContentType,
       @Nullable Long previewByteSize,
@@ -131,7 +130,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
       throw new IllegalArgumentException("previewByteSize must not be null when preview exists");
     }
     return Optional.of(
-        new ExcelSignatureLineSnapshot.Preview(
+        new DrawingObjectReport.SignaturePreview(
             previewFormat,
             previewContentType,
             previewByteSize,

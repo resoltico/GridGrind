@@ -6,6 +6,7 @@ import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -29,14 +30,14 @@ import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STTrueFalse;
 public final class ExcelSignatureLineController {
   private static final Pattern VML_ANCHOR_SEPARATOR = Pattern.compile("\\s*,\\s*");
 
-  public List<ExcelSignatureLineSnapshot> signatureLines(XSSFSheet sheet) {
+  public List<DrawingObjectReport.SignatureLine> signatureLines(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
     if (vmlDrawing == null) {
       return List.of();
     }
 
-    List<ExcelSignatureLineSnapshot> snapshots = new ArrayList<>();
+    List<DrawingObjectReport.SignatureLine> snapshots = new ArrayList<>();
     int index = 1;
     for (CTShape shape : ExcelSignatureLineSnapshotSupport.signatureShapes(vmlDrawing)) {
       int currentIndex = index;
@@ -104,7 +105,8 @@ public final class ExcelSignatureLineController {
     return find(sheet, objectName).isPresent();
   }
 
-  private ExcelSignatureLineSnapshot snapshot(XSSFVMLDrawing vmlDrawing, CTShape shape, int index) {
+  private DrawingObjectReport.SignatureLine snapshot(
+      XSSFVMLDrawing vmlDrawing, CTShape shape, int index) {
     String objectName = ExcelSignatureLineSnapshotSupport.resolvedName(shape, index);
     PackagePart previewPart = previewPart(vmlDrawing, shape);
     ExcelPictureFormat previewFormat =
@@ -118,7 +120,7 @@ public final class ExcelSignatureLineController {
             ? ExcelDrawingSnapshotSupport.RasterDimensions.none()
             : ExcelDrawingSnapshotSupport.rasterDimensions(previewBytes);
     CTSignatureLine signatureLine = shape.getSignaturelineArray(0);
-    return new ExcelSignatureLineSnapshot(
+    return new DrawingObjectReport.SignatureLine(
         objectName,
         anchor(shape, objectName),
         ExcelSignatureLineSnapshotSupport.signatureLineSetup(

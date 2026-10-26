@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.source.BinaryContent;
@@ -15,7 +16,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -227,7 +227,7 @@ class ExcelSignatureLineControllerTest {
       ExcelSignatureLineController.applyImageTitle(shape, "LeanSignature");
       shape.getSignaturelineArray(0).unsetAllowcomments();
 
-      ExcelSignatureLineSnapshot snapshot = controller.signatureLines(sheet).getFirst();
+      DrawingObjectReport.SignatureLine snapshot = controller.signatureLines(sheet).getFirst();
       assertTrue(snapshot.setup().orElseThrow().allowComments().isEmpty());
       assertEquals("LeanSignature", snapshot.name());
       assertTrue(controller.hasNamedSignatureLine(sheet, "LeanSignature"));

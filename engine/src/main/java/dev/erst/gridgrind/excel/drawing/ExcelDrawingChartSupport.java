@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel.drawing;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.excel.ExcelChartMutationSupport;
 import dev.erst.gridgrind.excel.ExcelChartRelationSupport;
 import dev.erst.gridgrind.excel.ExcelChartSnapshotSupport;
@@ -17,12 +18,12 @@ import org.jspecify.annotations.Nullable;
 public final class ExcelDrawingChartSupport {
   private ExcelDrawingChartSupport() {}
 
-  public static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
+  public static DrawingObjectReport.Chart snapshotChartDrawingObject(
       XSSFChart chart, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
     return snapshotChartDrawingObject(chart, graphicFrame, null);
   }
 
-  public static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
+  public static DrawingObjectReport.Chart snapshotChartDrawingObject(
       XSSFChart chart,
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
       @Nullable ExcelFormulaRuntime formulaRuntime) {

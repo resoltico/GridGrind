@@ -2347,3 +2347,18 @@ references; corrected those. Core/engine/14 parity/static checks pass (53s), det
 retained seeds pass (17s). ./gradlew check passes (2m53s), all 143 golden cases unchanged, no active
 mutation/fuzz campaign. Inventories: snapshots 7→6, converter lines 2843→2640, blank checks 382→379,
 main Java 117727→117154; definition 1 and Support 203 remain. Baseline diff empty. WP-40 remains open.
+
+## WP-40 direct drawing and signature-line reports
+
+Deleted drawing-object and signature-line snapshots, including their signature setup/preview mirrors.
+POI drawing and VML signature readers return DrawingObjectReport and its nested contracts directly;
+removed the runtime drawing conversion and signature inventory identity construction. The actual
+producer still reports its stored anchor shape; no authored geometry substitution or compatibility
+model was introduced. Binary payload extraction remains a separate next step.
+
+All source sets compile without repair. Core/engine/14 parity/static checks pass (42s), deterministic
+check/all retained seeds pass (16s). ./gradlew check passes (3m21s), all 143 golden cases unchanged.
+No active mutation/fuzz campaign. Inventories: snapshots 6→4, converter lines 2640→2565, blank checks
+379→369, main Java 117154→116807; definition 1 and Support 203 remain. Remaining snapshots are the
+genuine HostAcceptanceSnapshot/ColumnAxisSnapshot runtime concepts and the cell/metadata mirrors.
+Baseline diff empty. WP-40 remains open.

@@ -4,10 +4,10 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,7 +20,7 @@ public sealed interface WorkbookDrawingResult extends WorkbookReadIntrospectionR
 
   /** Returns factual drawing-object metadata for one sheet. */
   record DrawingObjectsResult(
-      StepId stepId, String sheetName, List<ExcelDrawingObjectSnapshot> drawingObjects)
+      StepId stepId, String sheetName, List<DrawingObjectReport> drawingObjects)
       implements WorkbookDrawingResult {
     public DrawingObjectsResult {
 

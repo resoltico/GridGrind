@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -452,8 +452,8 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Payload",
                 " "));
 
-    ExcelDrawingObjectSnapshot.Picture pictureSnapshot =
-        new ExcelDrawingObjectSnapshot.Picture(
+    DrawingObjectReport.Picture pictureSnapshot =
+        new DrawingObjectReport.Picture(
             "Picture",
             DrawingGeometryFixtures.report(twoCell),
             ExcelPictureFormat.PNG,
@@ -465,7 +465,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
             "preview");
     assertEquals(10L, pictureSnapshot.byteSize());
     assertNull(
-        new ExcelDrawingObjectSnapshot.Picture(
+        new DrawingObjectReport.Picture(
                 "NullDescPicSnap",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -479,7 +479,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 null,
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -492,7 +492,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 "Picture",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -505,7 +505,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 "Picture",
                 null,
                 ExcelPictureFormat.PNG,
@@ -518,7 +518,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 "Picture",
                 DrawingGeometryFixtures.report(twoCell),
                 null,
@@ -530,7 +530,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 null));
     assertEquals(
         0L,
-        new ExcelDrawingObjectSnapshot.Picture(
+        new DrawingObjectReport.Picture(
                 "Picture",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -544,7 +544,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 "Picture",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -557,7 +557,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 "Picture",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -570,7 +570,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 "Picture",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -583,7 +583,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 "Picture",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -596,7 +596,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Picture(
+            new DrawingObjectReport.Picture(
                 "Picture",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelPictureFormat.PNG,
@@ -607,8 +607,8 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 null,
                 " "));
 
-    ExcelDrawingObjectSnapshot.Shape shapeSnapshot =
-        new ExcelDrawingObjectSnapshot.Shape(
+    DrawingObjectReport.Shape shapeSnapshot =
+        new DrawingObjectReport.Shape(
             "Shape",
             DrawingGeometryFixtures.report(twoCell),
             ExcelDrawingShapeKind.SIMPLE_SHAPE,
@@ -619,7 +619,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Shape(
+            new DrawingObjectReport.Shape(
                 null,
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelDrawingShapeKind.SIMPLE_SHAPE,
@@ -629,12 +629,12 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Shape(
+            new DrawingObjectReport.Shape(
                 "Shape", DrawingGeometryFixtures.report(twoCell), null, null, null, 0));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Shape(
+            new DrawingObjectReport.Shape(
                 "Shape",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelDrawingShapeKind.SIMPLE_SHAPE,
@@ -644,7 +644,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Shape(
+            new DrawingObjectReport.Shape(
                 "Shape",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelDrawingShapeKind.SIMPLE_SHAPE,
@@ -654,7 +654,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.Shape(
+            new DrawingObjectReport.Shape(
                 "Shape",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelDrawingShapeKind.SIMPLE_SHAPE,
@@ -662,8 +662,8 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 null,
                 -1));
 
-    ExcelDrawingObjectSnapshot.EmbeddedObject embeddedSnapshot =
-        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+    DrawingObjectReport.EmbeddedObject embeddedSnapshot =
+        new DrawingObjectReport.EmbeddedObject(
             "Embed",
             DrawingGeometryFixtures.report(twoCell),
             ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -678,7 +678,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
             "def456");
     assertEquals(1L, embeddedSnapshot.previewByteSize());
     assertNull(
-        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+        new DrawingObjectReport.EmbeddedObject(
                 "NullOptEmbedSnap",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -695,7 +695,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 null,
@@ -711,7 +711,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -727,7 +727,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -743,7 +743,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -758,7 +758,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 null));
     assertEquals(
         0L,
-        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+        new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -775,7 +775,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -791,7 +791,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -806,7 +806,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 null));
     assertEquals(
         0L,
-        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+        new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -823,7 +823,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -839,7 +839,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
@@ -855,7 +855,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.EmbeddedObject(
+            new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,

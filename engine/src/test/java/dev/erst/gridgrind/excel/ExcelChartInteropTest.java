@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -107,9 +107,9 @@ class ExcelChartInteropTest {
           Optional.of(75),
           ExcelChartTestSupport.singlePlot(literalPie, ChartReport.Pie.class).firstSliceAngle());
 
-      ExcelDrawingObjectSnapshot.Chart uncachedFormulaDrawingObject =
+      DrawingObjectReport.Chart uncachedFormulaDrawingObject =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.Chart.class,
+              DrawingObjectReport.Chart.class,
               sheet.drawings().drawingObjects().stream()
                   .filter(snapshot -> "FormulaNoCache".equals(snapshot.name()))
                   .findFirst()

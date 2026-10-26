@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +69,7 @@ final class XlsxRoundTripExpectedStateSupport {
       Map<String, List<DataValidationEntryReport>> expectedDataValidations,
       Map<String, List<ConditionalFormattingEntryReport>> expectedConditionalFormatting,
       Map<String, List<AutofilterEntryReport>> expectedAutofilters,
-      Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects,
+      Map<String, List<DrawingObjectReport>> expectedDrawingObjects,
       Map<String, List<ChartReport>> expectedCharts,
       List<PivotTableReport> expectedPivots,
       List<TableEntryReport> expectedTables) {}

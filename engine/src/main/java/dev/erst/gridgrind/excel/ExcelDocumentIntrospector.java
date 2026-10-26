@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
@@ -93,7 +93,7 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns factual drawing-object metadata for one sheet. */
-  List<ExcelDrawingObjectSnapshot> drawingObjects(ExcelWorkbook workbook, String sheetName) {
+  List<DrawingObjectReport> drawingObjects(ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     return workbook.sheet(sheetName).drawings().drawingObjects();

@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -23,7 +24,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -297,9 +297,9 @@ class ExcelChartFamilyCoverageTest {
               ExcelChartTestSupport.chart(charts, "Surface3DOps"), ChartReport.Surface3D.class);
       assertFalse(surface3D.wireframe());
 
-      List<ExcelDrawingObjectSnapshot.Chart> drawingCharts =
+      List<DrawingObjectReport.Chart> drawingCharts =
           sheet.drawings().drawingObjects().stream()
-              .map(snapshot -> assertInstanceOf(ExcelDrawingObjectSnapshot.Chart.class, snapshot))
+              .map(snapshot -> assertInstanceOf(DrawingObjectReport.Chart.class, snapshot))
               .toList();
       assertEquals(13, drawingCharts.size());
       assertTrue(

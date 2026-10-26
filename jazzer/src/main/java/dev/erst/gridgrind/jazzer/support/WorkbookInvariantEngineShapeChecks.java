@@ -87,20 +87,20 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineDrawingObjectShape(
-      dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot drawingObject) {
+      dev.erst.gridgrind.core.model.drawing.DrawingObjectReport drawingObject) {
     WorkbookInvariantChecks.require(
         drawingObject != null, "engine drawing object must not be null");
     WorkbookInvariantChecks.requireNonBlank(drawingObject.name(), "engine drawing object name");
     requireEngineDrawingAnchorShape(drawingObject.anchor());
     switch (drawingObject) {
-      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.Picture picture -> {
+      case dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.Picture picture -> {
         WorkbookInvariantChecks.requireNonBlank(
             picture.contentType(), "engine picture contentType");
         WorkbookInvariantChecks.requireNonBlank(picture.sha256(), "engine picture sha256");
         WorkbookInvariantChecks.require(
             picture.byteSize() >= 0L, "engine picture byteSize must not be negative");
       }
-      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.Chart chart -> {
+      case dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.Chart chart -> {
         WorkbookInvariantChecks.require(
             chart.plotTypeTokens() != null, "engine chart plotTypeTokens must not be null");
         chart
@@ -111,7 +111,7 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.require(
             chart.title() != null, "engine chart title must not be null");
       }
-      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.Shape shape -> {
+      case dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.Shape shape -> {
         if (shape.presetGeometryToken() != null) {
           WorkbookInvariantChecks.require(
               !shape.presetGeometryToken().isBlank(),
@@ -124,7 +124,7 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.require(
             shape.childCount() >= 0, "engine shape childCount must not be negative");
       }
-      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.EmbeddedObject
+      case dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.EmbeddedObject
               embeddedObject -> {
         WorkbookInvariantChecks.requireNonBlank(
             embeddedObject.contentType(), "engine embedded contentType");
@@ -132,8 +132,7 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.require(
             embeddedObject.byteSize() >= 0L, "engine embedded byteSize must not be negative");
       }
-      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.SignatureLine
-              signatureLine ->
+      case dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.SignatureLine signatureLine ->
           requireEngineSignatureLineDrawingObjectShape(signatureLine);
     }
   }
@@ -150,7 +149,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineSignatureLineDrawingObjectShape(
-      dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.SignatureLine signatureLine) {
+      dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.SignatureLine signatureLine) {
     signatureLine
         .setup()
         .ifPresent(

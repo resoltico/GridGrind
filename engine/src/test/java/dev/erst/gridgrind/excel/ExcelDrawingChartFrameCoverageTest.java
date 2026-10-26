@@ -2,10 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -56,9 +56,9 @@ class ExcelDrawingChartFrameCoverageTest extends ExcelDrawingCoverageTestSupport
                   .findFirst()
                   .orElseThrow());
       assertNull(ExcelDrawingChartSupport.chartForGraphicFrame(drawing, orphanFrame));
-      ExcelDrawingObjectSnapshot.Shape orphanSnapshot =
+      DrawingObjectReport.Shape orphanSnapshot =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.Shape.class,
+              DrawingObjectReport.Shape.class,
               controller.drawingObjects(sheet).stream()
                   .filter(snapshot -> "OrphanFrame".equals(snapshot.name()))
                   .findFirst()

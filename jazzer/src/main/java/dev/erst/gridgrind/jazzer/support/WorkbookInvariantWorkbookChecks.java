@@ -82,7 +82,7 @@ final class WorkbookInvariantWorkbookChecks {
   }
 
   private static void requireEngineDrawingObjectShape(
-      dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot drawingObject) {
+      dev.erst.gridgrind.core.model.drawing.DrawingObjectReport drawingObject) {
     WorkbookInvariantEngineShapeChecks.requireEngineDrawingObjectShape(drawingObject);
   }
 

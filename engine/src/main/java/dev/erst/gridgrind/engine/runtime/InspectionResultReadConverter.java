@@ -92,9 +92,7 @@ final class InspectionResultReadConverter {
           new WorkbookAssetInspectionResult.DrawingObjectsResult(
               drawingObjects.stepId(),
               new SheetLabel(drawingObjects.sheetName()),
-              drawingObjects.drawingObjects().stream()
-                  .map(InspectionResultDrawingReportSupport::toDrawingObjectReport)
-                  .toList());
+              drawingObjects.drawingObjects());
       case dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult charts ->
           new WorkbookAssetInspectionResult.ChartsResult(
               charts.stepId(), new SheetLabel(charts.sheetName()), charts.charts());

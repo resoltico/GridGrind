@@ -11,10 +11,10 @@ import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingSnapshotSupport;
 import java.io.IOException;
 import java.lang.reflect.Proxy;
@@ -80,7 +80,7 @@ class ExcelChartWrapperCoverageTest {
           "OpsChart",
           ExcelDrawingChartSupport.snapshotChartDrawingObject(chart, graphicFrame).name());
       assertInstanceOf(
-          ExcelDrawingObjectSnapshot.Chart.class,
+          DrawingObjectReport.Chart.class,
           ExcelDrawingSnapshotSupport.snapshot(drawing, graphicFrame));
     }
   }

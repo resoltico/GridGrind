@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel.drawing;
 import com.microsoft.schemas.office.office.CTSignatureLine;
 import com.microsoft.schemas.vml.CTImageData;
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +63,7 @@ final class ExcelSignatureLineSnapshotSupport {
     }
   }
 
-  static Optional<ExcelSignatureLineSnapshot.Setup> signatureLineSetup(
+  static Optional<DrawingObjectReport.SignatureSetup> signatureLineSetup(
       CTSignatureLine signatureLine, @Nullable String signingInstructions) {
     Optional<String> setupId = ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getId());
     Optional<Boolean> allowComments =
@@ -85,7 +86,7 @@ final class ExcelSignatureLineSnapshotSupport {
       return Optional.empty();
     }
     return Optional.of(
-        new ExcelSignatureLineSnapshot.Setup(
+        new DrawingObjectReport.SignatureSetup(
             setupId,
             allowComments,
             signingInstructionsValue,
@@ -94,7 +95,7 @@ final class ExcelSignatureLineSnapshotSupport {
             suggestedSignerEmail));
   }
 
-  static Optional<ExcelSignatureLineSnapshot.Preview> signatureLinePreview(
+  static Optional<DrawingObjectReport.SignaturePreview> signatureLinePreview(
       @Nullable ExcelPictureFormat previewFormat,
       @Nullable PackagePart previewPart,
       byte @Nullable [] previewBytes,
@@ -103,7 +104,7 @@ final class ExcelSignatureLineSnapshotSupport {
       return Optional.empty();
     }
     return Optional.of(
-        new ExcelSignatureLineSnapshot.Preview(
+        new DrawingObjectReport.SignaturePreview(
             previewFormat,
             previewPart.getContentType(),
             previewBytes.length,

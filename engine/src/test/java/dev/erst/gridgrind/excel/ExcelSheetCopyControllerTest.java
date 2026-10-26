@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
@@ -64,7 +65,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -286,12 +286,10 @@ class ExcelSheetCopyControllerTest {
       ExcelSheet replica = workbook.sheet("Replica");
       assertEquals(
           List.of("OpsPicture", "OpsChart"),
-          replica.drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
-              .toList());
-      ExcelDrawingObjectSnapshot.Picture copiedPicture =
+          replica.drawings().drawingObjects().stream().map(DrawingObjectReport::name).toList());
+      DrawingObjectReport.Picture copiedPicture =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.Picture.class,
+              DrawingObjectReport.Picture.class,
               replica.drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
                   .findFirst()
@@ -329,9 +327,7 @@ class ExcelSheetCopyControllerTest {
       ExcelSheet replica = reopened.sheet("Replica");
       assertEquals(
           List.of("OpsPicture", "OpsChart"),
-          replica.drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
-              .toList());
+          replica.drawings().drawingObjects().stream().map(DrawingObjectReport::name).toList());
       ChartReport copiedChart = replica.drawings().charts().getFirst();
       ChartReport.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
@@ -389,9 +385,7 @@ class ExcelSheetCopyControllerTest {
           replica.drawings().charts().stream().map(ChartReport::name).toList());
       assertEquals(
           List.of("OpsBar", "OpsLine"),
-          replica.drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
-              .toList());
+          replica.drawings().drawingObjects().stream().map(DrawingObjectReport::name).toList());
 
       XSSFDrawing drawing = replica.xssfSheet().getDrawingPatriarch();
       assertNotNull(drawing);

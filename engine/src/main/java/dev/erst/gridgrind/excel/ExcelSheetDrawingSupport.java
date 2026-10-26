@@ -3,13 +3,13 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -84,7 +84,7 @@ final class ExcelSheetDrawingSupport {
     return owner;
   }
 
-  List<ExcelDrawingObjectSnapshot> drawingObjects() {
+  List<DrawingObjectReport> drawingObjects() {
     return drawingController.drawingObjects(xssfSheet(), formulaRuntime);
   }
 

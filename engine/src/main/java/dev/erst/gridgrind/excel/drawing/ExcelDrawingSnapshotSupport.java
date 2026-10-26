@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelFormulaRuntime;
 import java.awt.image.BufferedImage;
@@ -17,11 +18,11 @@ import org.openxmlformats.schemas.drawingml.x2006.main.STShapeType;
 public final class ExcelDrawingSnapshotSupport {
   private ExcelDrawingSnapshotSupport() {}
 
-  public static ExcelDrawingObjectSnapshot snapshot(XSSFDrawing drawing, XSSFShape shape) {
+  public static DrawingObjectReport snapshot(XSSFDrawing drawing, XSSFShape shape) {
     return snapshot(drawing, shape, null);
   }
 
-  public static ExcelDrawingObjectSnapshot snapshot(
+  public static DrawingObjectReport snapshot(
       XSSFDrawing drawing, XSSFShape shape, @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (shape instanceof XSSFPicture picture) {
       return ExcelDrawingPictureSupport.snapshotPicture(picture);
@@ -49,13 +50,13 @@ public final class ExcelDrawingSnapshotSupport {
         "Unsupported drawing shape type: " + shape.getClass().getName());
   }
 
-  public static ExcelDrawingObjectSnapshot.Shape snapshotShape(
+  public static DrawingObjectReport.Shape snapshotShape(
       org.apache.poi.xssf.usermodel.XSSFSimpleShape shape) {
     STShapeType.Enum preset =
         !shape.getCTShape().getSpPr().isSetPrstGeom()
             ? null
             : shape.getCTShape().getSpPr().getPrstGeom().getPrst();
-    return new ExcelDrawingObjectSnapshot.Shape(
+    return new DrawingObjectReport.Shape(
         ExcelDrawingAnchorSupport.resolvedName(shape),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(shape)),
         ExcelDrawingShapeKind.SIMPLE_SHAPE,
@@ -64,9 +65,9 @@ public final class ExcelDrawingSnapshotSupport {
         0);
   }
 
-  private static ExcelDrawingObjectSnapshot.Shape snapshotConnector(
+  private static DrawingObjectReport.Shape snapshotConnector(
       org.apache.poi.xssf.usermodel.XSSFConnector connector) {
-    return new ExcelDrawingObjectSnapshot.Shape(
+    return new DrawingObjectReport.Shape(
         ExcelDrawingAnchorSupport.resolvedName(connector),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(connector)),
         ExcelDrawingShapeKind.CONNECTOR,
@@ -75,9 +76,9 @@ public final class ExcelDrawingSnapshotSupport {
         0);
   }
 
-  private static ExcelDrawingObjectSnapshot.Shape snapshotGroup(
+  private static DrawingObjectReport.Shape snapshotGroup(
       XSSFDrawing drawing, org.apache.poi.xssf.usermodel.XSSFShapeGroup group) {
-    return new ExcelDrawingObjectSnapshot.Shape(
+    return new DrawingObjectReport.Shape(
         ExcelDrawingAnchorSupport.resolvedName(group),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(group)),
         ExcelDrawingShapeKind.GROUP,
@@ -86,9 +87,9 @@ public final class ExcelDrawingSnapshotSupport {
         drawing.getShapes(group).size());
   }
 
-  public static ExcelDrawingObjectSnapshot.Shape snapshotGraphicFrame(
+  public static DrawingObjectReport.Shape snapshotGraphicFrame(
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
-    return new ExcelDrawingObjectSnapshot.Shape(
+    return new DrawingObjectReport.Shape(
         ExcelDrawingAnchorSupport.resolvedName(graphicFrame),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(graphicFrame)),
         ExcelDrawingShapeKind.GRAPHIC_FRAME,

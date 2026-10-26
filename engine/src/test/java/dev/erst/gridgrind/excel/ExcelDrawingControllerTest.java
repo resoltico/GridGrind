@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
@@ -35,7 +36,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -106,20 +106,20 @@ class ExcelDrawingControllerTest {
                   new BinaryContent(PNG_PIXEL_BYTES),
                   anchor(12, 1, 15, 6)));
 
-      List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawings().drawingObjects();
+      List<DrawingObjectReport> snapshots = sheet.drawings().drawingObjects();
       assertEquals(
           List.of("OpsPicture", "OpsShape", "OpsConnector", "OpsEmbed"),
-          snapshots.stream().map(ExcelDrawingObjectSnapshot::name).toList());
-      ExcelDrawingObjectSnapshot.Picture pictureSnapshot =
-          assertInstanceOf(ExcelDrawingObjectSnapshot.Picture.class, snapshots.getFirst());
+          snapshots.stream().map(DrawingObjectReport::name).toList());
+      DrawingObjectReport.Picture pictureSnapshot =
+          assertInstanceOf(DrawingObjectReport.Picture.class, snapshots.getFirst());
       assertEquals(1, pictureSnapshot.widthPixels());
       assertEquals(1, pictureSnapshot.heightPixels());
       assertEquals(
           ExcelDrawingShapeKind.SIMPLE_SHAPE,
-          assertInstanceOf(ExcelDrawingObjectSnapshot.Shape.class, snapshots.get(1)).kind());
+          assertInstanceOf(DrawingObjectReport.Shape.class, snapshots.get(1)).kind());
       assertEquals(
           ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-          assertInstanceOf(ExcelDrawingObjectSnapshot.EmbeddedObject.class, snapshots.get(3))
+          assertInstanceOf(DrawingObjectReport.EmbeddedObject.class, snapshots.get(3))
               .packagingKind());
 
       ExcelDrawingObjectPayload.Picture picturePayload =
@@ -135,9 +135,9 @@ class ExcelDrawingControllerTest {
 
       DrawingAnchorSpec.TwoCell movedAnchor = anchor(6, 2, 10, 7);
       sheet.drawings().setDrawingObjectAnchor("OpsShape", movedAnchor);
-      ExcelDrawingObjectSnapshot.Shape movedShape =
+      DrawingObjectReport.Shape movedShape =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.Shape.class,
+              DrawingObjectReport.Shape.class,
               sheet.drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsShape".equals(snapshot.name()))
                   .findFirst()
@@ -165,9 +165,9 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelDrawingObjectSnapshot.Picture pictureSnapshot =
+      DrawingObjectReport.Picture pictureSnapshot =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.Picture.class,
+              DrawingObjectReport.Picture.class,
               reopened.sheet("Ops").drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
                   .findFirst()
@@ -200,12 +200,11 @@ class ExcelDrawingControllerTest {
                   Optional.of(ExcelPictureFormat.PNG),
                   Optional.of(new BinaryContent(PNG_PIXEL_BYTES))));
 
-      List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawings().drawingObjects();
+      List<DrawingObjectReport> snapshots = sheet.drawings().drawingObjects();
       assertEquals(
-          List.of("OpsSignature"),
-          snapshots.stream().map(ExcelDrawingObjectSnapshot::name).toList());
-      ExcelDrawingObjectSnapshot.SignatureLine signatureLine =
-          assertInstanceOf(ExcelDrawingObjectSnapshot.SignatureLine.class, snapshots.getFirst());
+          List.of("OpsSignature"), snapshots.stream().map(DrawingObjectReport::name).toList());
+      DrawingObjectReport.SignatureLine signatureLine =
+          assertInstanceOf(DrawingObjectReport.SignatureLine.class, snapshots.getFirst());
       assertFalse(signatureLine.setup().orElseThrow().allowComments().orElseThrow());
       assertEquals(
           "Review the numbers before signing.",
@@ -223,9 +222,9 @@ class ExcelDrawingControllerTest {
       assertTrue(noPayload.getMessage().contains("does not expose a binary payload"));
 
       sheet.drawings().setDrawingObjectAnchor("OpsSignature", movedAnchor);
-      ExcelDrawingObjectSnapshot.SignatureLine movedSignature =
+      DrawingObjectReport.SignatureLine movedSignature =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.SignatureLine.class,
+              DrawingObjectReport.SignatureLine.class,
               sheet.drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
                   .findFirst()
@@ -251,9 +250,9 @@ class ExcelDrawingControllerTest {
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = reopened.sheet("Ops");
-      ExcelDrawingObjectSnapshot.SignatureLine signatureLine =
+      DrawingObjectReport.SignatureLine signatureLine =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.SignatureLine.class,
+              DrawingObjectReport.SignatureLine.class,
               sheet.drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
                   .findFirst()
@@ -337,9 +336,9 @@ class ExcelDrawingControllerTest {
       assertEquals("Ops!$B$1", title.formula());
       assertEquals("1.0", title.cachedText());
 
-      ExcelDrawingObjectSnapshot.Chart drawingChart =
+      DrawingObjectReport.Chart drawingChart =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.Chart.class,
+              DrawingObjectReport.Chart.class,
               reopened.sheet("Ops").drawings().drawingObjects().getFirst());
       assertEquals("1.0", drawingChart.title());
     }
@@ -568,7 +567,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
-      List<ExcelDrawingObjectSnapshot> before = withDrawing.drawings().drawingObjects();
+      List<DrawingObjectReport> before = withDrawing.drawings().drawingObjects();
 
       withDrawing.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
       assertEquals(before, withDrawing.drawings().drawingObjects());
@@ -657,9 +656,9 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
+      DrawingObjectReport.EmbeddedObject snapshot =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.EmbeddedObject.class,
+              DrawingObjectReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjects().getFirst());
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
@@ -718,9 +717,9 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
+      DrawingObjectReport.EmbeddedObject snapshot =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.EmbeddedObject.class,
+              DrawingObjectReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjects().getFirst());
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
@@ -773,9 +772,9 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
+      DrawingObjectReport.EmbeddedObject snapshot =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.EmbeddedObject.class,
+              DrawingObjectReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjects().getFirst());
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
@@ -825,9 +824,7 @@ class ExcelDrawingControllerTest {
 
       assertEquals(
           List.of("OpsPicture"),
-          sheet.drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
-              .toList());
+          sheet.drawings().drawingObjects().stream().map(DrawingObjectReport::name).toList());
       assertNotNull(poiSheet.getDrawingPatriarch());
       assertEquals(1, poiSheet.getDrawingPatriarch().getShapes().size());
       assertNotNull(sheet.drawings().drawingObjectPayload("OpsPicture"));
@@ -879,9 +876,9 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
+      DrawingObjectReport.EmbeddedObject snapshot =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.EmbeddedObject.class,
+              DrawingObjectReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjects().getFirst());
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
@@ -1011,9 +1008,9 @@ class ExcelDrawingControllerTest {
                       })
               .toList());
 
-      ExcelDrawingObjectSnapshot.Chart drawingChart =
+      DrawingObjectReport.Chart drawingChart =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.Chart.class, sheet.drawings().drawingObjects().getFirst());
+              DrawingObjectReport.Chart.class, sheet.drawings().drawingObjects().getFirst());
       assertTrue(drawingChart.supported());
       assertEquals(List.of("BAR", "LINE"), drawingChart.plotTypeTokens());
 
@@ -1096,8 +1093,7 @@ class ExcelDrawingControllerTest {
       sheet.drawings().setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
       sheet.drawings().setChart(lineChartDefinition(anchor(7, 3, 13, 20)));
       ChartReport typeChanged = sheet.drawings().charts().getFirst();
-      List<ExcelDrawingObjectSnapshot> drawingObjectsBeforeFailure =
-          sheet.drawings().drawingObjects();
+      List<DrawingObjectReport> drawingObjectsBeforeFailure = sheet.drawings().drawingObjects();
       List<ChartReport> chartsBeforeFailure = sheet.drawings().charts();
       assertEquals("OpsChart", typeChanged.name());
       assertInstanceOf(
@@ -1247,9 +1243,9 @@ class ExcelDrawingControllerTest {
   }
 
   private static void assertInitialChartDrawingObject(ExcelSheet sheet) {
-    ExcelDrawingObjectSnapshot.Chart drawingChart =
+    DrawingObjectReport.Chart drawingChart =
         assertInstanceOf(
-            ExcelDrawingObjectSnapshot.Chart.class, sheet.drawings().drawingObjects().getFirst());
+            DrawingObjectReport.Chart.class, sheet.drawings().drawingObjects().getFirst());
     assertTrue(drawingChart.supported());
     assertEquals(List.of("BAR"), drawingChart.plotTypeTokens());
     assertEquals("Roadmap", drawingChart.title());

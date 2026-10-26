@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
@@ -62,7 +63,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -618,15 +618,13 @@ class WorkbookCommandExecutorTest {
           new WorkbookDrawingCommand.SetDrawingObjectAnchor("Ops", "OpsShape", movedAnchor),
           new WorkbookDrawingCommand.DeleteDrawingObject("Ops", "OpsPicture"));
 
-      List<ExcelDrawingObjectSnapshot> drawingObjects =
-          workbook.sheet("Ops").drawings().drawingObjects();
+      List<DrawingObjectReport> drawingObjects = workbook.sheet("Ops").drawings().drawingObjects();
       assertEquals(
           List.of("OpsShape", "OpsEmbed"),
-          drawingObjects.stream().map(ExcelDrawingObjectSnapshot::name).toList());
+          drawingObjects.stream().map(DrawingObjectReport::name).toList());
       assertEquals(
           DrawingGeometryFixtures.report(movedAnchor),
-          assertInstanceOf(ExcelDrawingObjectSnapshot.Shape.class, drawingObjects.getFirst())
-              .anchor());
+          assertInstanceOf(DrawingObjectReport.Shape.class, drawingObjects.getFirst()).anchor());
     }
   }
 

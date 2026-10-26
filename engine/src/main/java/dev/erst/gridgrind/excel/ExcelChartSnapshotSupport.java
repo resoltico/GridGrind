@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
@@ -18,19 +18,19 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTBoolean;
 public final class ExcelChartSnapshotSupport {
   private ExcelChartSnapshotSupport() {}
 
-  public static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
+  public static DrawingObjectReport.Chart snapshotChartDrawingObject(
       XSSFChart chart, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
     return snapshotChartDrawingObject(chart, graphicFrame, null);
   }
 
-  public static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
+  public static DrawingObjectReport.Chart snapshotChartDrawingObject(
       XSSFChart chart,
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ChartReport snapshot = snapshotChart(chart, graphicFrame, formulaRuntime);
     boolean supported =
         snapshot.plots().stream().noneMatch(ChartReport.Unsupported.class::isInstance);
-    return new ExcelDrawingObjectSnapshot.Chart(
+    return new DrawingObjectReport.Chart(
         ExcelChartTitleSnapshotSupport.resolvedChartName(graphicFrame),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(graphicFrame)),
         supported,

@@ -3,9 +3,9 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -176,9 +176,7 @@ class ExcelDrawingControllerChartSeamsTest {
           List.of("LiveChart"), sheet.drawings().charts().stream().map(ChartReport::name).toList());
       assertEquals(
           List.of("LiveChart"),
-          sheet.drawings().drawingObjects().stream()
-              .map(ExcelDrawingObjectSnapshot::name)
-              .toList());
+          sheet.drawings().drawingObjects().stream().map(DrawingObjectReport::name).toList());
     }
   }
 

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
@@ -19,7 +20,6 @@ import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
 import java.io.InputStream;
@@ -292,9 +292,9 @@ final class XlsxRoundTripExpectationVerification {
               textSnapshot.richText());
         }
       }
-      for (Map.Entry<String, List<ExcelDrawingObjectSnapshot>> entry :
+      for (Map.Entry<String, List<DrawingObjectReport>> entry :
           expectedWorkbookState.expectedDrawingObjects().entrySet()) {
-        List<ExcelDrawingObjectSnapshot> actualDrawingObjects =
+        List<DrawingObjectReport> actualDrawingObjects =
             workbook.sheet(entry.getKey()).drawings().drawingObjects();
         if (!entry.getValue().equals(actualDrawingObjects)) {
           throw new IllegalStateException(

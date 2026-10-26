@@ -93,8 +93,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -402,7 +400,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
   private static void assertDrawingResults() {
     var signatureSetup =
-        new ExcelSignatureLineSnapshot.Setup(
+        new DrawingObjectReport.SignatureSetup(
             Optional.of("{ABC}"),
             Optional.of(false),
             Optional.of("Review before signing."),
@@ -410,7 +408,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             Optional.of("Finance"),
             Optional.of("ada@example.com"));
     var signaturePreview =
-        new ExcelSignatureLineSnapshot.Preview(
+        new DrawingObjectReport.SignaturePreview(
             ExcelPictureFormat.PNG,
             "image/png",
             42L,
@@ -418,7 +416,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             Optional.of(400),
             Optional.of(150));
     var signatureDrawingObject =
-        new ExcelDrawingObjectSnapshot.SignatureLine(
+        new DrawingObjectReport.SignatureLine(
             "OpsSignature",
             DrawingGeometryFixtures.report(
                 new DrawingAnchorSpec.TwoCell(
@@ -435,7 +433,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     new StepId("drawing-objects"),
                     "Budget",
                     List.of(
-                        new ExcelDrawingObjectSnapshot.Picture(
+                        new DrawingObjectReport.Picture(
                             "OpsPicture",
                             DrawingGeometryFixtures.report(
                                 new DrawingAnchorSpec.TwoCell(
@@ -449,7 +447,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                             null,
                             null,
                             "Queue preview"),
-                        new ExcelDrawingObjectSnapshot.Shape(
+                        new DrawingObjectReport.Shape(
                             "OpsShape",
                             new DrawingAnchorReport.OneCell(
                                 new DrawingMarkerReport(5, 6, 0, 0), 10L, 20L, null),
@@ -457,7 +455,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                             "rect",
                             "Queue",
                             0),
-                        new ExcelDrawingObjectSnapshot.Chart(
+                        new DrawingObjectReport.Chart(
                             "OpsChart",
                             DrawingGeometryFixtures.report(
                                 new DrawingAnchorSpec.TwoCell(
@@ -467,7 +465,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                             true,
                             List.of("BAR"),
                             "Roadmap"),
-                        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+                        new DrawingObjectReport.EmbeddedObject(
                             "OpsEmbed",
                             new DrawingAnchorReport.Absolute(1L, 2L, 10L, 20L, null),
                             ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,

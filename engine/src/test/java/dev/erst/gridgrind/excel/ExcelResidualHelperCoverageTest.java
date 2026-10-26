@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
@@ -40,11 +41,9 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingRemovalSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingSnapshotSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -301,7 +300,7 @@ class ExcelResidualHelperCoverageTest {
       assertTrue(ExcelDrawingBinarySupport.imagePartUsed(workbook, previewPart.getPartName()));
 
       signatureShape.removeImagedata(0);
-      ExcelSignatureLineSnapshot snapshot =
+      DrawingObjectReport.SignatureLine snapshot =
           signatureLineController.signatureLines(sheet).getFirst();
       assertTrue(snapshot.preview().isEmpty());
       assertTrue(signatureLineController.deleteIfPresent(sheet, "OpsSignature"));
@@ -355,8 +354,8 @@ class ExcelResidualHelperCoverageTest {
                       sheet, locatedChart, (left, right) -> false));
       assertTrue(chartRemovalFailure.getMessage().contains("Failed to remove chart relation"));
 
-      ExcelDrawingObjectSnapshot.Shape graphicFrameSnapshot =
-          (ExcelDrawingObjectSnapshot.Shape)
+      DrawingObjectReport.Shape graphicFrameSnapshot =
+          (DrawingObjectReport.Shape)
               ExcelDrawingSnapshotSupport.snapshotGraphicFrame(graphicFrame);
       assertEquals(ExcelDrawingShapeKind.GRAPHIC_FRAME, graphicFrameSnapshot.kind());
 

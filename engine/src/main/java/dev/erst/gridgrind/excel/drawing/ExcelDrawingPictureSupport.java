@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelWorkbookImageCatalogSupport;
@@ -18,11 +19,11 @@ import org.jspecify.annotations.Nullable;
 public final class ExcelDrawingPictureSupport {
   private ExcelDrawingPictureSupport() {}
 
-  public static ExcelDrawingObjectSnapshot.Picture snapshotPicture(XSSFPicture picture) {
+  public static DrawingObjectReport.Picture snapshotPicture(XSSFPicture picture) {
     PictureReadback readback = requiredPictureReadback(picture);
     ExcelDrawingSnapshotSupport.RasterDimensions dimensions =
         ExcelDrawingSnapshotSupport.rasterDimensions(readback.bytes());
-    return new ExcelDrawingObjectSnapshot.Picture(
+    return new DrawingObjectReport.Picture(
         ExcelDrawingAnchorSupport.resolvedName(picture),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(picture)),
         readback.format(),
