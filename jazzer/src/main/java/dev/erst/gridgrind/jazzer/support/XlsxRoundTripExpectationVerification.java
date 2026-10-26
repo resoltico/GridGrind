@@ -240,7 +240,7 @@ final class XlsxRoundTripExpectationVerification {
                 + " but was "
                 + actualWorkbookSummary);
       }
-      for (Map.Entry<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> entry :
+      for (Map.Entry<String, dev.erst.gridgrind.core.result.SheetSummaryReport> entry :
           expectedWorkbookState.expectedSheetSummaries().entrySet()) {
         var actualSheetSummary =
             ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)

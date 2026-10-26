@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import java.io.IOException;
 import java.util.List;
@@ -29,12 +30,14 @@ class ExcelSheetStateControllerTest {
 
       controller.setSelectedSheets(workbook, List.of("Beta"));
 
-      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
+      WorkbookSummary.WithSheets summary =
           assertInstanceOf(
-              WorkbookCoreResult.WorkbookSummary.WithSheets.class,
-              controller.summarizeWorkbook(workbook));
-      assertEquals("Beta", summary.activeSheetName());
-      assertEquals(List.of("Beta"), summary.selectedSheetNames());
+              WorkbookSummary.WithSheets.class, controller.summarizeWorkbook(workbook));
+      assertEquals(
+          new dev.erst.gridgrind.core.vocabulary.SheetLabel("Beta"), summary.activeSheetName());
+      assertEquals(
+          List.of(new dev.erst.gridgrind.core.vocabulary.SheetLabel("Beta")),
+          summary.selectedSheetNames());
     }
   }
 
@@ -54,12 +57,14 @@ class ExcelSheetStateControllerTest {
 
       controller.setSelectedSheets(workbook, List.of("Beta"));
 
-      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
+      WorkbookSummary.WithSheets summary =
           assertInstanceOf(
-              WorkbookCoreResult.WorkbookSummary.WithSheets.class,
-              controller.summarizeWorkbook(workbook));
-      assertEquals("Beta", summary.activeSheetName());
-      assertEquals(List.of("Beta"), summary.selectedSheetNames());
+              WorkbookSummary.WithSheets.class, controller.summarizeWorkbook(workbook));
+      assertEquals(
+          new dev.erst.gridgrind.core.vocabulary.SheetLabel("Beta"), summary.activeSheetName());
+      assertEquals(
+          List.of(new dev.erst.gridgrind.core.vocabulary.SheetLabel("Beta")),
+          summary.selectedSheetNames());
     }
   }
 

@@ -7,7 +7,6 @@ import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult;
-import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 
@@ -19,9 +18,7 @@ final class InspectionResultReadConverter {
     return switch (result) {
       case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult workbookSummary ->
           new WorkbookInspectionResult.WorkbookSummaryResult(
-              workbookSummary.stepId(),
-              InspectionResultWorkbookCoreReportSupport.toWorkbookSummary(
-                  workbookSummary.workbook()));
+              workbookSummary.stepId(), workbookSummary.workbook());
       case dev.erst.gridgrind.excel.WorkbookCoreResult.PackageSecurityResult packageSecurity ->
           new WorkbookInspectionResult.PackageSecurityResult(
               packageSecurity.stepId(), packageSecurity.security());
@@ -38,17 +35,7 @@ final class InspectionResultReadConverter {
           new WorkbookInspectionResult.NamedRangesResult(
               namedRanges.stepId(), namedRanges.namedRanges());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult sheetSummary ->
-          new SheetInspectionResult.SheetSummaryResult(
-              sheetSummary.stepId(),
-              new SheetSummaryReport(
-                  new dev.erst.gridgrind.core.vocabulary.SheetLabel(
-                      sheetSummary.sheet().sheetName()),
-                  sheetSummary.sheet().visibility(),
-                  InspectionResultWorkbookLayoutReportSupport.toSheetProtectionReport(
-                      sheetSummary.sheet().protection()),
-                  sheetSummary.sheet().physicalRowCount(),
-                  sheetSummary.sheet().lastRowIndex(),
-                  sheetSummary.sheet().lastColumnIndex()));
+          new SheetInspectionResult.SheetSummaryResult(sheetSummary.stepId(), sheetSummary.sheet());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.ArrayFormulasResult arrayFormulas ->
           new SheetInspectionResult.ArrayFormulasResult(
               arrayFormulas.stepId(), arrayFormulas.arrayFormulas());

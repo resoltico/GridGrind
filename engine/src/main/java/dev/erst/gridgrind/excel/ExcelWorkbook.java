@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -139,7 +141,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Returns the workbook-level summary facts including active and selected sheet state. */
-  WorkbookCoreResult.WorkbookSummary workbookSummary() {
+  WorkbookSummary workbookSummary() {
     return new ExcelSheetStateController().summarizeWorkbook(this);
   }
 
@@ -149,7 +151,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Returns the summary facts for one sheet, including visibility and protection state. */
-  WorkbookSheetResult.SheetSummary sheetSummary(String sheetName) {
+  SheetSummaryReport sheetSummary(String sheetName) {
     return new ExcelSheetStateController().summarizeSheet(this, sheetName);
   }
 

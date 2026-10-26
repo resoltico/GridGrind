@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
@@ -46,6 +47,8 @@ import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -257,9 +260,8 @@ class ExcelWorkbookTest {
   @Test
   void workbookSummaryUsesExplicitEmptyAndWithSheetsStates() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      WorkbookCoreResult.WorkbookSummary emptySummary = workbook.workbookSummary();
-      WorkbookCoreResult.WorkbookSummary.Empty empty =
-          assertInstanceOf(WorkbookCoreResult.WorkbookSummary.Empty.class, emptySummary);
+      WorkbookSummary emptySummary = workbook.workbookSummary();
+      WorkbookSummary.Empty empty = assertInstanceOf(WorkbookSummary.Empty.class, emptySummary);
       assertEquals(0, empty.sheetCount());
       assertEquals(List.of(), empty.sheetNames());
 
@@ -270,12 +272,20 @@ class ExcelWorkbookTest {
       workbook.sheets().setSelectedSheets(List.of("Gamma", "Alpha"));
       workbook.sheets().setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
 
-      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
-          assertInstanceOf(
-              WorkbookCoreResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
-      assertEquals(List.of("Alpha", "Beta", "Gamma"), summary.sheetNames());
-      assertEquals("Gamma", summary.activeSheetName());
-      assertEquals(List.of("Alpha", "Gamma"), summary.selectedSheetNames());
+      WorkbookSummary.WithSheets summary =
+          assertInstanceOf(WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+      assertEquals(
+          List.of("Alpha", "Beta", "Gamma").stream()
+              .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+              .toList(),
+          summary.sheetNames());
+      assertEquals(
+          new dev.erst.gridgrind.core.vocabulary.SheetLabel("Gamma"), summary.activeSheetName());
+      assertEquals(
+          List.of("Alpha", "Gamma").stream()
+              .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+              .toList(),
+          summary.selectedSheetNames());
     }
   }
 
@@ -309,27 +319,29 @@ class ExcelWorkbookTest {
     assertEquals(
         ExcelSheetVisibility.VERY_HIDDEN, XlsxRoundTrip.sheetVisibility(workbookPath, "Replica"));
     assertEquals(
-        new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
+        new SheetProtectionReport.Protected(protectionSettings()),
         XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
-          assertInstanceOf(
-              WorkbookCoreResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
-      assertEquals("Gamma", summary.activeSheetName());
-      assertEquals(List.of("Alpha", "Gamma"), summary.selectedSheetNames());
+      WorkbookSummary.WithSheets summary =
+          assertInstanceOf(WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+      assertEquals(
+          new dev.erst.gridgrind.core.vocabulary.SheetLabel("Gamma"), summary.activeSheetName());
+      assertEquals(
+          List.of("Alpha", "Gamma").stream()
+              .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+              .toList(),
+          summary.selectedSheetNames());
 
-      WorkbookSheetResult.SheetSummary alphaSummary = workbook.sheetSummary("Alpha");
-      WorkbookSheetResult.SheetSummary betaSummary = workbook.sheetSummary("Beta");
-      WorkbookSheetResult.SheetSummary replicaSummary = workbook.sheetSummary("Replica");
+      SheetSummaryReport alphaSummary = workbook.sheetSummary("Alpha");
+      SheetSummaryReport betaSummary = workbook.sheetSummary("Beta");
+      SheetSummaryReport replicaSummary = workbook.sheetSummary("Replica");
       assertEquals(ExcelSheetVisibility.VISIBLE, alphaSummary.visibility());
       assertEquals(
-          new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
-          alphaSummary.protection());
+          new SheetProtectionReport.Protected(protectionSettings()), alphaSummary.protection());
       assertEquals(ExcelSheetVisibility.HIDDEN, betaSummary.visibility());
-      assertInstanceOf(
-          WorkbookSheetResult.SheetProtection.Unprotected.class, betaSummary.protection());
+      assertInstanceOf(SheetProtectionReport.Unprotected.class, betaSummary.protection());
       assertEquals(ExcelSheetVisibility.VERY_HIDDEN, replicaSummary.visibility());
     }
   }
@@ -353,8 +365,7 @@ class ExcelWorkbookTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertInstanceOf(
-          WorkbookSheetResult.SheetProtection.Unprotected.class,
-          workbook.sheetSummary("Alpha").protection());
+          SheetProtectionReport.Unprotected.class, workbook.sheetSummary("Alpha").protection());
     }
   }
 
@@ -375,14 +386,13 @@ class ExcelWorkbookTest {
     }
 
     assertEquals(
-        new WorkbookSheetResult.SheetProtection.Unprotected(),
+        new SheetProtectionReport.Unprotected(),
         XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertInstanceOf(
-          WorkbookSheetResult.SheetProtection.Unprotected.class,
-          workbook.sheetSummary("Alpha").protection());
+          SheetProtectionReport.Unprotected.class, workbook.sheetSummary("Alpha").protection());
     }
   }
 

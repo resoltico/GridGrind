@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,34 +18,39 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookProtection;
 /** Owns workbook-level active, selected, visibility, protection, and summary state. */
 final class ExcelSheetStateController {
   /** Returns workbook-level summary facts including active and selected sheet state. */
-  WorkbookCoreResult.WorkbookSummary summarizeWorkbook(ExcelWorkbook workbook) {
+  WorkbookSummary summarizeWorkbook(ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
 
     if (workbook.sheets().sheetCount() == 0) {
-      return new WorkbookCoreResult.WorkbookSummary.Empty(
+      return new WorkbookSummary.Empty(
           0,
           List.of(),
           workbook.names().namedRangeCount(),
           workbook.formulas().recalculateOnOpenEnabled());
     }
-    return new WorkbookCoreResult.WorkbookSummary.WithSheets(
+    return new WorkbookSummary.WithSheets(
         workbook.sheets().sheetCount(),
-        workbook.sheets().sheetNames(),
-        ExcelWorkbookSheetSupport.activeSheetName(workbook.xssfWorkbook()),
-        ExcelWorkbookSheetSupport.selectedSheetNames(workbook.xssfWorkbook()),
+        workbook.sheets().sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+            .toList(),
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+            ExcelWorkbookSheetSupport.activeSheetName(workbook.xssfWorkbook())),
+        ExcelWorkbookSheetSupport.selectedSheetNames(workbook.xssfWorkbook()).stream()
+            .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+            .toList(),
         workbook.names().namedRangeCount(),
         workbook.formulas().recalculateOnOpenEnabled());
   }
 
   /** Returns structural and state facts for one sheet. */
-  WorkbookSheetResult.SheetSummary summarizeSheet(ExcelWorkbook workbook, String sheetName) {
+  SheetSummaryReport summarizeSheet(ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
 
     XSSFSheet sheet = ExcelWorkbookSheetSupport.requiredSheet(workbook.xssfWorkbook(), sheetName);
     ExcelSheet excelSheet = workbook.sheet(sheetName);
-    return new WorkbookSheetResult.SheetSummary(
-        sheetName,
+    return new SheetSummaryReport(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
         ExcelSheetVisibilityPoiBridge.fromPoi(
             workbook
                 .xssfWorkbook()

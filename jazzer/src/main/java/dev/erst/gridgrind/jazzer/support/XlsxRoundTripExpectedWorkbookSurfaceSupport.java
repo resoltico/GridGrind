@@ -127,7 +127,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expectedNamedRanges);
   }
 
-  static dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary(
+  static dev.erst.gridgrind.core.result.WorkbookSummary expectedWorkbookSummary(
       ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     return ((dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult)
@@ -139,10 +139,10 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
         .workbook();
   }
 
-  static Map<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary>
-      expectedSheetSummaries(ExcelWorkbook workbook) {
+  static Map<String, dev.erst.gridgrind.core.result.SheetSummaryReport> expectedSheetSummaries(
+      ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
-    LinkedHashMap<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> expected =
+    LinkedHashMap<String, dev.erst.gridgrind.core.result.SheetSummaryReport> expected =
         new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       expected.put(

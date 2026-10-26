@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
@@ -66,6 +67,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -1074,15 +1076,18 @@ class ResolvedMutationExecutorTest {
       assertEquals(List.of("Alpha", "Alpha Copy", "Beta"), workbook.sheets().sheetNames());
       assertEquals("Live", workbook.sheet("Alpha Copy").cells().text("A1"));
 
-      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
-          assertInstanceOf(
-              WorkbookCoreResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
-      assertEquals("Alpha", summary.activeSheetName());
-      assertEquals(List.of("Alpha"), summary.selectedSheetNames());
+      WorkbookSummary.WithSheets summary =
+          assertInstanceOf(WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+      assertEquals(
+          new dev.erst.gridgrind.core.vocabulary.SheetLabel("Alpha"), summary.activeSheetName());
+      assertEquals(
+          List.of("Alpha").stream()
+              .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+              .toList(),
+          summary.selectedSheetNames());
       assertEquals(ExcelSheetVisibility.HIDDEN, workbook.sheetSummary("Beta").visibility());
       assertInstanceOf(
-          WorkbookSheetResult.SheetProtection.Unprotected.class,
-          workbook.sheetSummary("Alpha").protection());
+          SheetProtectionReport.Unprotected.class, workbook.sheetSummary("Alpha").protection());
     }
   }
 

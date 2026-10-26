@@ -23,6 +23,7 @@ import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -149,7 +150,7 @@ class ExcelSheetCopyControllerTest {
 
       assertEquals(List.of("Source", "Replica"), workbook.sheets().sheetNames());
       assertEquals(
-          new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
+          new SheetProtectionReport.Protected(protectionSettings()),
           workbook.sheetSummary("Replica").protection());
       assertEquals(0, workbook.sheetSummary("Replica").physicalRowCount());
     }
@@ -207,7 +208,7 @@ class ExcelSheetCopyControllerTest {
       assertFalse(
           workbook.xssfWorkbook().getSheet("Replica").validateSheetPassword("gridgrind-wrong"));
       assertEquals(
-          new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
+          new SheetProtectionReport.Protected(protectionSettings()),
           workbook.sheetSummary("Replica").protection());
     }
   }

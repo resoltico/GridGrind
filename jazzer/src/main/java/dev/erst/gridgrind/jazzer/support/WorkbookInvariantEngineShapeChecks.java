@@ -8,7 +8,7 @@ final class WorkbookInvariantEngineShapeChecks {
   private WorkbookInvariantEngineShapeChecks() {}
 
   static void requireEngineWorkbookSummaryShape(
-      dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary workbook) {
+      dev.erst.gridgrind.core.result.WorkbookSummary workbook) {
     WorkbookInvariantChecks.require(workbook != null, "engine workbook summary must not be null");
     WorkbookInvariantChecks.require(
         workbook.sheetCount() >= 0, "engine sheetCount must not be negative");
@@ -25,20 +25,21 @@ final class WorkbookInvariantEngineShapeChecks {
     workbook
         .sheetNames()
         .forEach(
-            sheetName -> WorkbookInvariantChecks.requireNonBlank(sheetName, "engine sheetName"));
+            sheetName ->
+                WorkbookInvariantChecks.requireNonBlank(sheetName.value(), "engine sheetName"));
     switch (workbook) {
-      case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.Empty empty -> {
+      case dev.erst.gridgrind.core.result.WorkbookSummary.Empty empty -> {
         WorkbookInvariantChecks.require(
             empty.sheetCount() == 0, "engine empty workbook summary must have sheetCount 0");
         WorkbookInvariantChecks.require(
             empty.sheetNames().isEmpty(), "engine empty workbook summary must have no sheet names");
       }
-      case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.WithSheets withSheets -> {
+      case dev.erst.gridgrind.core.result.WorkbookSummary.WithSheets withSheets -> {
         WorkbookInvariantChecks.require(
             withSheets.sheetCount() > 0,
             "engine non-empty workbook summary must have positive sheetCount");
         WorkbookInvariantChecks.requireNonBlank(
-            withSheets.activeSheetName(), "engine activeSheetName");
+            withSheets.activeSheetName().value(), "engine activeSheetName");
         WorkbookInvariantChecks.require(
             withSheets.sheetNames().contains(withSheets.activeSheetName()),
             "engine activeSheetName must be present in sheetNames");
@@ -54,7 +55,7 @@ final class WorkbookInvariantEngineShapeChecks {
             .forEach(
                 selectedSheetName -> {
                   WorkbookInvariantChecks.requireNonBlank(
-                      selectedSheetName, "engine selectedSheetName");
+                      selectedSheetName.value(), "engine selectedSheetName");
                   WorkbookInvariantChecks.require(
                       withSheets.sheetNames().contains(selectedSheetName),
                       "engine selectedSheetNames must be present in sheetNames");
@@ -64,8 +65,8 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineSheetSummaryShape(
-      dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary sheet) {
-    WorkbookInvariantChecks.requireNonBlank(sheet.sheetName(), "engine sheetName");
+      dev.erst.gridgrind.core.result.SheetSummaryReport sheet) {
+    WorkbookInvariantChecks.requireNonBlank(sheet.sheetName().value(), "engine sheetName");
     WorkbookInvariantChecks.require(
         sheet.visibility() != null, "engine visibility must not be null");
     WorkbookInvariantChecks.require(
@@ -78,8 +79,9 @@ final class WorkbookInvariantEngineShapeChecks {
         sheet.lastColumnIndex() >= -1,
         "engine lastColumnIndex must be greater than or equal to -1");
     switch (sheet.protection()) {
-      case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Unprotected _ -> {}
-      case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Protected protectedSheet ->
+      case dev.erst.gridgrind.core.model.protection.SheetProtectionReport.Unprotected _ -> {}
+      case dev.erst.gridgrind.core.model.protection.SheetProtectionReport.Protected
+              protectedSheet ->
           WorkbookInvariantChecks.require(
               protectedSheet.settings() != null,
               "engine protected sheet settings must not be null");

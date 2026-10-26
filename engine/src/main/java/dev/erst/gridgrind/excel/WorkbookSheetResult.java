@@ -8,12 +8,11 @@ import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
-import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +30,8 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
         WorkbookSheetResult.PrintLayoutResult {
 
   /** Returns summary facts for one sheet. */
-  record SheetSummaryResult(StepId stepId, SheetSummary sheet) implements WorkbookSheetResult {
+  record SheetSummaryResult(StepId stepId, SheetSummaryReport sheet)
+      implements WorkbookSheetResult {
     public SheetSummaryResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -132,50 +132,6 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       sheetName = requireNonBlank(sheetName, "sheetName");
       Objects.requireNonNull(printLayout, "printLayout must not be null");
-    }
-  }
-
-  /** Structural summary facts for one sheet. */
-  record SheetSummary(
-      String sheetName,
-      ExcelSheetVisibility visibility,
-      SheetProtection protection,
-      int physicalRowCount,
-      int lastRowIndex,
-      int lastColumnIndex) {
-    public SheetSummary {
-      sheetName = requireNonBlank(sheetName, "sheetName");
-      Objects.requireNonNull(visibility, "visibility must not be null");
-      Objects.requireNonNull(protection, "protection must not be null");
-      if (physicalRowCount < 0) {
-        throw new IllegalArgumentException("physicalRowCount must not be negative");
-      }
-      if (lastRowIndex < -1) {
-        throw new IllegalArgumentException(
-            "lastRowIndex "
-                + lastRowIndex
-                + " must be greater than or equal to -1; empty sheets report -1");
-      }
-      if (lastColumnIndex < -1) {
-        throw new IllegalArgumentException(
-            "lastColumnIndex "
-                + lastColumnIndex
-                + " must be greater than or equal to -1; empty sheets report -1");
-      }
-    }
-  }
-
-  /** Captures whether a sheet is protected and, if so, with which supported lock flags. */
-  sealed interface SheetProtection permits SheetProtection.Unprotected, SheetProtection.Protected {
-
-    /** Sheet protection is disabled. */
-    record Unprotected() implements SheetProtection {}
-
-    /** Sheet protection is enabled with the reported supported lock flags. */
-    record Protected(SheetProtectionSettings settings) implements SheetProtection {
-      public Protected {
-        Objects.requireNonNull(settings, "settings must not be null");
-      }
     }
   }
 

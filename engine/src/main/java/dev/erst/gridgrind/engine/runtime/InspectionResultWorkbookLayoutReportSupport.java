@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.model.layout.PaneReport;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
-import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -17,16 +16,6 @@ import java.util.List;
 /** Converts sheet/window/layout/readback snapshots into protocol report records. */
 final class InspectionResultWorkbookLayoutReportSupport {
   private InspectionResultWorkbookLayoutReportSupport() {}
-
-  static SheetProtectionReport toSheetProtectionReport(
-      dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection protection) {
-    return switch (protection) {
-      case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Unprotected _ ->
-          new SheetProtectionReport.Unprotected();
-      case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Protected protectedState ->
-          new SheetProtectionReport.Protected(protectedState.settings());
-    };
-  }
 
   static dev.erst.gridgrind.core.model.layout.WindowReport toWindowReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.Window window,

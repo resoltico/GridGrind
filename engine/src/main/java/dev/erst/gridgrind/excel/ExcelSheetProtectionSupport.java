@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import java.util.Objects;
 import java.util.Optional;
@@ -10,12 +11,11 @@ final class ExcelSheetProtectionSupport {
   private ExcelSheetProtectionSupport() {}
 
   /** Returns the public protection snapshot for one sheet. */
-  static WorkbookSheetResult.SheetProtection snapshot(XSSFSheet sheet) {
+  static SheetProtectionReport snapshot(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return settings(sheet)
-        .<WorkbookSheetResult.SheetProtection>map(
-            WorkbookSheetResult.SheetProtection.Protected::new)
-        .orElseGet(WorkbookSheetResult.SheetProtection.Unprotected::new);
+        .<SheetProtectionReport>map(SheetProtectionReport.Protected::new)
+        .orElseGet(SheetProtectionReport.Unprotected::new);
   }
 
   /** Returns the supported protection settings when sheet protection is enabled. */

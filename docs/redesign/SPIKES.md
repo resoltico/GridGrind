@@ -2519,3 +2519,31 @@ Inventories: converter-named lines1677→1218, Support200→199, main Java114886
 blank288, definitions0 and snapshots2(runtime) unchanged. The467-line materialization owner remains
 real necessary code; the inventory's converter-name reduction is not a claim that all those lines
 were deleted. No WorkbookCommand reference remains in engine main code. Baseline diff empty.
+
+## WP-40 canonical workbook/sheet summary and protection facts
+
+Full-XSSF and event-read producers now return core WorkbookSummary, SheetSummaryReport and
+SheetProtectionReport. Deleted the nested engine variants, summary validator copies and workbook-core
+report converter. Read result conversion forwards these facts directly. Observed sheet labels are
+constructed at native read boundaries; active/selected fallback, ordering, count and recalculation
+behavior are preserved. The previous native summary's physical count/index bounds now live in the
+canonical SheetSummaryReport, with core empty-sentinel/negative-bound regressions. Existing core
+workbook-summary invariant tests cover the retired engine duplicate tests; removed their duplicate
+state-specific constructor sweep. Real native/event/reopen/selection tests remain.
+
+Compilation retries removed a stale static import and retired generic-string fixtures. An initial
+cleanup script assumed another test method followed the last method; it failed before editing that
+file and caused one repeated compile attempt. Corrected the boundary and stopped-on-error sequencing.
+Eight native assertions initially compared String/List<String> with the new labels; updated fixed
+expected labels without changing names or order. A subsequent overbroad assertion edit touched three
+unrelated selector/grant expectations; restored those files exactly and verified them separately12s.
+Failure traces are retained in the external summary-facts-* assertion JSONs. All other focused native
+checks, parity and PMD pass. The independent sequence shape checks unwrap labels at their own input
+boundary; all94 retained seeds and nested check pass16s. No active campaigns.
+
+Final ./gradlew check passes3m20s: core384, JSON353, engine1414 plus14 parity, CLI588, zero failures,
+errors/skips; all143 CLI golden cases unchanged. Inventories: converters1218→1160, Support199→198,
+main Java114790→114625, tests153518→153591; blank288, definitions0, snapshots2(runtime) unchanged.
+Baseline diff empty. WP-40 remains open for resolved plan and the remaining read/query/model cutover.
+Review also found residual requireNoTables no-op wrappers and a range-only autofilter helper still
+present in source, contrary to an earlier progress account; verify/remove them in the next copy cleanup.

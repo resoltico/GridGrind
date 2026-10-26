@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
@@ -120,16 +121,16 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns the saved sheet-protection state for one sheet. */
-  public static WorkbookSheetResult.SheetProtection sheetProtection(
-      Path workbookPath, String sheetName) throws IOException {
+  public static SheetProtectionReport sheetProtection(Path workbookPath, String sheetName)
+      throws IOException {
     return readSheet(
         workbookPath,
         sheetName,
         sheet -> {
           if (!sheet.getProtect()) {
-            return new WorkbookSheetResult.SheetProtection.Unprotected();
+            return new SheetProtectionReport.Unprotected();
           }
-          return new WorkbookSheetResult.SheetProtection.Protected(
+          return new SheetProtectionReport.Protected(
               new SheetProtectionSettings(
                   sheet.isAutoFilterLocked(),
                   sheet.isDeleteColumnsLocked(),

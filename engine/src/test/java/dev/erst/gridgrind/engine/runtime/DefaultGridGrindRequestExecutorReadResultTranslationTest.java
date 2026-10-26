@@ -55,8 +55,17 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult(
                 new StepId("workbook"),
-                new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.WithSheets(
-                    1, List.of("Budget"), "Budget", List.of("Budget"), 1, true)));
+                new dev.erst.gridgrind.core.result.WorkbookSummary.WithSheets(
+                    1,
+                    List.of("Budget").stream()
+                        .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                        .toList(),
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                    List.of("Budget").stream()
+                        .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                        .toList(),
+                    1,
+                    true)));
     InspectionResult namedRanges =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookCoreResult.NamedRangesResult(
@@ -73,10 +82,11 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult(
                 new StepId("sheet"),
-                new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary(
-                    "Budget",
+                new dev.erst.gridgrind.core.result.SheetSummaryReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
                     dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.VISIBLE,
-                    new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Unprotected(),
+                    new dev.erst.gridgrind.core.model.protection.SheetProtectionReport
+                        .Unprotected(),
                     4,
                     3,
                     2)));
@@ -606,27 +616,30 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult(
                 new StepId("workbook"),
-                new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.Empty(
-                    0, List.of(), 0, false)));
+                new dev.erst.gridgrind.core.result.WorkbookSummary.Empty(0, List.of(), 0, false)));
     InspectionResult populatedWorkbookSummary =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult(
                 new StepId("workbook-2"),
-                new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.WithSheets(
+                new dev.erst.gridgrind.core.result.WorkbookSummary.WithSheets(
                     2,
-                    List.of("Budget", "Archive"),
-                    "Archive",
-                    List.of("Budget", "Archive"),
+                    List.of("Budget", "Archive").stream()
+                        .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                        .toList(),
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Archive"),
+                    List.of("Budget", "Archive").stream()
+                        .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                        .toList(),
                     1,
                     true)));
     InspectionResult protectedSheetSummary =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult(
                 new StepId("sheet"),
-                new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary(
-                    "Budget",
+                new dev.erst.gridgrind.core.result.SheetSummaryReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
                     dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.VERY_HIDDEN,
-                    new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Protected(
+                    new dev.erst.gridgrind.core.model.protection.SheetProtectionReport.Protected(
                         excelProtectionSettings()),
                     4,
                     7,

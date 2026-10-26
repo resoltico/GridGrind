@@ -108,9 +108,15 @@ class ExcelWorkbookIntrospectorTest {
       IntrospectionReadResults results =
           readEveryIntrospectionResult(workbook, new ExcelWorkbookIntrospector());
 
-      assertEquals(List.of("Budget", "Ops"), results.workbookSummary().workbook().sheetNames());
+      assertEquals(
+          List.of("Budget", "Ops").stream()
+              .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+              .toList(),
+          results.workbookSummary().workbook().sheetNames());
       assertEquals("BudgetTotal", results.namedRanges().namedRanges().getFirst().name().value());
-      assertEquals("Budget", results.sheetSummary().sheet().sheetName());
+      assertEquals(
+          new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+          results.sheetSummary().sheet().sheetName());
       assertEquals("A1", results.cells().cells().getFirst().address().value());
       assertEquals(
           "A1", results.window().window().rows().getFirst().cells().getFirst().address().value());

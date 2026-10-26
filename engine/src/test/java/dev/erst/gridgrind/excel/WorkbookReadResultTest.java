@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
 import dev.erst.gridgrind.core.model.print.PrintSetupReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
@@ -34,6 +35,8 @@ import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -64,18 +67,43 @@ class WorkbookReadResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                -1, List.of("Budget"), "Budget", List.of("Budget"), 0, true));
+            new WorkbookSummary.WithSheets(
+                -1,
+                List.of("Budget").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                List.of("Budget").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
+                0,
+                true));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, List.of("Budget"), "Budget", List.of("Budget"), -1, true));
+            new WorkbookSummary.WithSheets(
+                1,
+                List.of("Budget").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                List.of("Budget").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
+                -1,
+                true));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, null, "Budget", List.of("Budget"), 0, true));
+            new WorkbookSummary.WithSheets(
+                1,
+                null,
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                List.of("Budget").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
+                0,
+                true));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookCoreResult.NamedRangesResult(new StepId("ranges"), null));
@@ -87,10 +115,10 @@ class WorkbookReadResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookSheetResult.SheetSummary(
-                "Budget",
+            new SheetSummaryReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
                 ExcelSheetVisibility.VISIBLE,
-                new WorkbookSheetResult.SheetProtection.Unprotected(),
+                new SheetProtectionReport.Unprotected(),
                 -1,
                 0,
                 0));
@@ -352,10 +380,10 @@ class WorkbookReadResultTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new WorkbookSheetResult.SheetSummary(
-                    "Budget",
+                new SheetSummaryReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
                     ExcelSheetVisibility.VISIBLE,
-                    new WorkbookSheetResult.SheetProtection.Unprotected(),
+                    new SheetProtectionReport.Unprotected(),
                     0,
                     -2,
                     0));
@@ -366,67 +394,15 @@ class WorkbookReadResultTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new WorkbookSheetResult.SheetSummary(
-                    "Budget",
+                new SheetSummaryReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
                     ExcelSheetVisibility.VISIBLE,
-                    new WorkbookSheetResult.SheetProtection.Unprotected(),
+                    new SheetProtectionReport.Unprotected(),
                     0,
                     0,
                     -2));
     assertTrue(lastColumnFailure.getMessage().contains("lastColumnIndex -2"));
     assertTrue(lastColumnFailure.getMessage().contains("empty sheets report -1"));
-  }
-
-  @Test
-  void validatesWorkbookSummaryStateSpecificInvariants() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCoreResult.WorkbookSummary.Empty(1, List.of("Budget"), 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                2, List.of("Budget"), "Budget", List.of("Budget"), 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                0, List.of(), "Budget", List.of("Budget"), 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, List.of("Budget"), "Budget", List.of("Budget"), -1, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, List.of("Budget"), "Missing", List.of("Budget"), 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, List.of("Budget"), "Budget", List.of(), 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, List.of("Budget"), "Budget", List.of("Missing"), 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                2, List.of("Budget", "Budget"), "Budget", List.of("Budget"), 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, List.of(" "), " ", List.of("Budget"), 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, List.of("Budget"), "Budget", List.of("Budget", "Budget"), 0, false));
   }
 
   private static CellStyleReport defaultStyle() {
@@ -572,15 +548,24 @@ class WorkbookReadResultTest {
         namedRangeEntries,
         new WorkbookCoreResult.WorkbookSummaryResult(
             new StepId("workbook"),
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
-                1, sheetNames, "Budget", List.of("Budget"), 1, true)),
+            new WorkbookSummary.WithSheets(
+                1,
+                sheetNames.stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                List.of("Budget").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
+                1,
+                true)),
         new WorkbookCoreResult.NamedRangesResult(new StepId("ranges"), namedRanges),
         new WorkbookSheetResult.SheetSummaryResult(
             new StepId("sheet"),
-            new WorkbookSheetResult.SheetSummary(
-                "Budget",
+            new SheetSummaryReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
                 ExcelSheetVisibility.VISIBLE,
-                new WorkbookSheetResult.SheetProtection.Unprotected(),
+                new SheetProtectionReport.Unprotected(),
                 4,
                 3,
                 2)),
@@ -623,9 +608,13 @@ class WorkbookReadResultTest {
   }
 
   private void assertCopiedFixture(ReadResultFixture fixture) {
-    assertEquals(List.of("Budget"), fixture.workbookSummary().workbook().sheetNames());
+    assertEquals(
+        List.of(new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
+        fixture.workbookSummary().workbook().sheetNames());
     assertEquals(1, fixture.namedRangesResult().namedRanges().size());
-    assertEquals("Budget", fixture.sheetSummary().sheet().sheetName());
+    assertEquals(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+        fixture.sheetSummary().sheet().sheetName());
     assertEquals("A1", fixture.cellsResult().cells().getFirst().address().value());
     assertEquals(
         "A1",

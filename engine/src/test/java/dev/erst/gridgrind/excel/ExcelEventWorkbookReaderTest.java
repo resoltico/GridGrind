@@ -2,8 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.event.EventReadCommandTypes;
@@ -31,8 +34,8 @@ class ExcelEventWorkbookReaderTest {
   void matchesFullWorkbookAndSheetSummariesForSupportedReads() throws IOException {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-event-read-", ".xlsx");
 
-    WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary;
-    WorkbookSheetResult.SheetSummary expectedSheetSummary;
+    WorkbookSummary expectedWorkbookSummary;
+    SheetSummaryReport expectedSheetSummary;
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.getOrCreateSheet("Archive");
@@ -146,8 +149,7 @@ class ExcelEventWorkbookReaderTest {
     assertEquals(
         List.of(
             new WorkbookCoreResult.WorkbookSummaryResult(
-                new StepId("empty"),
-                new WorkbookCoreResult.WorkbookSummary.Empty(0, List.of(), 0, false))),
+                new StepId("empty"), new WorkbookSummary.Empty(0, List.of(), 0, false))),
         reads);
   }
 
@@ -195,21 +197,25 @@ class ExcelEventWorkbookReaderTest {
     assertEquals(
         new WorkbookCoreResult.WorkbookSummaryResult(
             new StepId("workbook"),
-            new WorkbookCoreResult.WorkbookSummary.WithSheets(
+            new WorkbookSummary.WithSheets(
                 3,
-                List.of("Visible", "Hidden", "VeryHidden"),
-                "Visible",
-                List.of("Visible"),
+                List.of("Visible", "Hidden", "VeryHidden").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Visible"),
+                List.of("Visible").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                    .toList(),
                 1,
                 false)),
         reads.get(0));
     assertEquals(
         new WorkbookSheetResult.SheetSummaryResult(
             new StepId("hidden"),
-            new WorkbookSheetResult.SheetSummary(
-                "Hidden",
+            new SheetSummaryReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Hidden"),
                 ExcelSheetVisibility.HIDDEN,
-                new WorkbookSheetResult.SheetProtection.Unprotected(),
+                new SheetProtectionReport.Unprotected(),
                 0,
                 -1,
                 -1)),
@@ -217,10 +223,10 @@ class ExcelEventWorkbookReaderTest {
     assertEquals(
         new WorkbookSheetResult.SheetSummaryResult(
             new StepId("veryHidden"),
-            new WorkbookSheetResult.SheetSummary(
-                "VeryHidden",
+            new SheetSummaryReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("VeryHidden"),
                 ExcelSheetVisibility.VERY_HIDDEN,
-                new WorkbookSheetResult.SheetProtection.Unprotected(),
+                new SheetProtectionReport.Unprotected(),
                 0,
                 -1,
                 -1)),
@@ -254,9 +260,9 @@ class ExcelEventWorkbookReaderTest {
                   : withNegativeActiveTab.replace("</workbook>", "<calcPr/></workbook>");
             });
 
-    WorkbookCoreResult.WorkbookSummary.WithSheets summary =
+    WorkbookSummary.WithSheets summary =
         assertInstanceOf(
-            WorkbookCoreResult.WorkbookSummary.WithSheets.class,
+            WorkbookSummary.WithSheets.class,
             ((WorkbookCoreResult.WorkbookSummaryResult)
                     new ExcelEventWorkbookReader()
                         .apply(
@@ -266,7 +272,8 @@ class ExcelEventWorkbookReaderTest {
                         .getFirst())
                 .workbook());
 
-    assertEquals("Visible", summary.activeSheetName());
+    assertEquals(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Visible"), summary.activeSheetName());
     assertFalse(summary.forceFormulaRecalculationOnOpen());
   }
 
@@ -316,10 +323,10 @@ class ExcelEventWorkbookReaderTest {
         List.of(
             new WorkbookSheetResult.SheetSummaryResult(
                 new StepId("sheet"),
-                new WorkbookSheetResult.SheetSummary(
-                    "Sparse",
+                new SheetSummaryReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Sparse"),
                     ExcelSheetVisibility.VISIBLE,
-                    new WorkbookSheetResult.SheetProtection.Unprotected(),
+                    new SheetProtectionReport.Unprotected(),
                     2,
                     3,
                     2))),
@@ -520,7 +527,7 @@ class ExcelEventWorkbookReaderTest {
 
     EventSheetSummary summary = handler.summary();
     assertTrue(summary.selected());
-    assertInstanceOf(WorkbookSheetResult.SheetProtection.Protected.class, summary.protection());
+    assertInstanceOf(SheetProtectionReport.Protected.class, summary.protection());
   }
 
   private static String expectedReadType(WorkbookReadCommand.Introspection command) {
@@ -626,12 +633,12 @@ class ExcelEventWorkbookReaderTest {
                     new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
                     new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Visible")));
 
-    WorkbookCoreResult.WorkbookSummary.WithSheets summary =
+    WorkbookSummary.WithSheets summary =
         assertInstanceOf(
-            WorkbookCoreResult.WorkbookSummary.WithSheets.class,
+            WorkbookSummary.WithSheets.class,
             ((WorkbookCoreResult.WorkbookSummaryResult) reads.get(0)).workbook());
     assertFalse(summary.forceFormulaRecalculationOnOpen());
-    WorkbookSheetResult.SheetSummary sheetSummary =
+    SheetSummaryReport sheetSummary =
         ((WorkbookSheetResult.SheetSummaryResult) reads.get(1)).sheet();
     assertEquals(ExcelSheetVisibility.VISIBLE, sheetSummary.visibility());
     assertEquals(1, sheetSummary.physicalRowCount());

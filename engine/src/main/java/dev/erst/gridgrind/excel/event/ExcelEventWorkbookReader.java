@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel.event;
 
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookCoreResult;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -72,13 +74,13 @@ public final class ExcelEventWorkbookReader {
     };
   }
 
-  private WorkbookCoreResult.WorkbookSummary workbookSummary(
+  private WorkbookSummary workbookSummary(
       XSSFReader reader,
       EventWorkbookMetadata metadata,
       Map<String, EventSheetSummary> sheetSummaries)
       throws IOException {
     if (metadata.sheets().isEmpty()) {
-      return new WorkbookCoreResult.WorkbookSummary.Empty(
+      return new WorkbookSummary.Empty(
           0, List.of(), metadata.namedRangeCount(), metadata.forceFormulaRecalculationOnOpen());
     }
     List<String> selectedSheetNames = new ArrayList<>();
@@ -90,16 +92,21 @@ public final class ExcelEventWorkbookReader {
     if (selectedSheetNames.isEmpty()) {
       selectedSheetNames = List.of(EventWorkbookMetadata.activeSheetName(metadata));
     }
-    return new WorkbookCoreResult.WorkbookSummary.WithSheets(
+    return new WorkbookSummary.WithSheets(
         metadata.sheets().size(),
-        metadata.sheetNames(),
-        EventWorkbookMetadata.activeSheetName(metadata),
-        List.copyOf(selectedSheetNames),
+        metadata.sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+            .toList(),
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+            EventWorkbookMetadata.activeSheetName(metadata)),
+        List.copyOf(selectedSheetNames).stream()
+            .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+            .toList(),
         metadata.namedRangeCount(),
         metadata.forceFormulaRecalculationOnOpen());
   }
 
-  private WorkbookSheetResult.SheetSummary sheetSummary(
+  private SheetSummaryReport sheetSummary(
       XSSFReader reader,
       EventWorkbookMetadata metadata,
       Map<String, EventSheetSummary> sheetSummaries,
@@ -110,8 +117,8 @@ public final class ExcelEventWorkbookReader {
       throw new SheetNotFoundException(sheetName);
     }
     EventSheetSummary summary = sheetSnapshot(reader, sheetSummaries, sheet);
-    return new WorkbookSheetResult.SheetSummary(
-        sheetName,
+    return new SheetSummaryReport(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
         sheet.visibility(),
         summary.protection(),
         summary.physicalRowCount(),

@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.excel.event;
 
-import dev.erst.gridgrind.excel.WorkbookSheetResult;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 
 /** Minimal factual EVENT_READ sheet-summary data gathered from one worksheet stream. */
 public record EventSheetSummary(
     boolean selected,
-    WorkbookSheetResult.SheetProtection protection,
+    SheetProtectionReport protection,
     int physicalRowCount,
     int lastRowIndex,
     int lastColumnIndex) {}

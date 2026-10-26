@@ -73,12 +73,12 @@ final class WorkbookInvariantWorkbookChecks {
   }
 
   private static void requireEngineWorkbookSummaryShape(
-      dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary workbook) {
+      dev.erst.gridgrind.core.result.WorkbookSummary workbook) {
     WorkbookInvariantEngineShapeChecks.requireEngineWorkbookSummaryShape(workbook);
   }
 
   private static void requireEngineSheetSummaryShape(
-      dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary sheet) {
+      dev.erst.gridgrind.core.result.SheetSummaryReport sheet) {
     WorkbookInvariantEngineShapeChecks.requireEngineSheetSummaryShape(sheet);
   }
 

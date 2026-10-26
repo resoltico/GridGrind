@@ -22,5 +22,17 @@ public record SheetSummaryReport(
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(visibility, "visibility must not be null");
     Objects.requireNonNull(protection, "protection must not be null");
+    if (physicalRowCount < 0)
+      throw new IllegalArgumentException("physicalRowCount must not be negative");
+    if (lastRowIndex < -1)
+      throw new IllegalArgumentException(
+          "lastRowIndex "
+              + lastRowIndex
+              + " must be greater than or equal to -1; empty sheets report -1");
+    if (lastColumnIndex < -1)
+      throw new IllegalArgumentException(
+          "lastColumnIndex "
+              + lastColumnIndex
+              + " must be greater than or equal to -1; empty sheets report -1");
   }
 }

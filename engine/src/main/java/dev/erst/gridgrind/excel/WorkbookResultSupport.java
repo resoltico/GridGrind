@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,34 +21,6 @@ final class WorkbookResultSupport {
     List<String> copy = List.copyOf(values);
     for (String value : copy) {
       Objects.requireNonNull(value, fieldName + " must not contain nulls");
-    }
-    return copy;
-  }
-
-  static List<String> copyDistinctStrings(List<String> values, String fieldName) {
-    List<String> copy = copyStrings(values, fieldName);
-    if (copy.size() != new LinkedHashSet<>(copy).size()) {
-      throw new IllegalArgumentException(fieldName + " must not contain duplicates");
-    }
-    return copy;
-  }
-
-  static List<String> validateCommonWorkbookSummaryFields(
-      int sheetCount, List<String> sheetNames, int namedRangeCount) {
-    if (sheetCount < 0) {
-      throw new IllegalArgumentException("sheetCount must not be negative");
-    }
-    if (namedRangeCount < 0) {
-      throw new IllegalArgumentException("namedRangeCount must not be negative");
-    }
-    List<String> copy = copyDistinctStrings(sheetNames, "sheetNames");
-    if (sheetCount != copy.size()) {
-      throw new IllegalArgumentException("sheetCount must match sheetNames size");
-    }
-    for (String sheetName : copy) {
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetNames must not contain blank values");
-      }
     }
     return copy;
   }

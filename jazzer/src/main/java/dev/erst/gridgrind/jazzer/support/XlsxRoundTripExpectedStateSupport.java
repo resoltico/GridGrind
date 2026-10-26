@@ -52,7 +52,7 @@ final class XlsxRoundTripExpectedStateSupport {
         XlsxRoundTripExpectedWorkbookSurfaceSupport.expectedTables(workbook));
   }
 
-  static dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary(
+  static dev.erst.gridgrind.core.result.WorkbookSummary expectedWorkbookSummary(
       ExcelWorkbook workbook) {
     return XlsxRoundTripExpectedWorkbookSurfaceSupport.expectedWorkbookSummary(workbook);
   }
@@ -62,8 +62,8 @@ final class XlsxRoundTripExpectedStateSupport {
       Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata,
       Map<String, Map<CellCoordinate, List<RichTextRunReport>>> expectedRichText,
       Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
-      dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary,
-      Map<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> expectedSheetSummaries,
+      dev.erst.gridgrind.core.result.WorkbookSummary expectedWorkbookSummary,
+      Map<String, dev.erst.gridgrind.core.result.SheetSummaryReport> expectedSheetSummaries,
       Map<String, ExpectedSheetLayoutState> expectedSheetLayouts,
       Map<String, List<DataValidationEntryReport>> expectedDataValidations,
       Map<String, List<ConditionalFormattingEntryReport>> expectedConditionalFormatting,

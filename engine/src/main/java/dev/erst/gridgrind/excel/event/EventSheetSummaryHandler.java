@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel.event;
 
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
-import dev.erst.gridgrind.excel.WorkbookSheetResult;
 import org.apache.poi.ss.util.CellReference;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
@@ -14,8 +14,7 @@ public final class EventSheetSummaryHandler extends DefaultHandler {
   private int lastColumnIndex = -1;
   private int nextRowIndex;
   private boolean selected;
-  private WorkbookSheetResult.SheetProtection protection =
-      new WorkbookSheetResult.SheetProtection.Unprotected();
+  private SheetProtectionReport protection = new SheetProtectionReport.Unprotected();
 
   @Override
   public void startElement(String uri, String localName, String qName, Attributes attributes) {
@@ -54,11 +53,11 @@ public final class EventSheetSummaryHandler extends DefaultHandler {
     lastColumnIndex = Math.max(lastColumnIndex, Integer.parseInt(max) - 1);
   }
 
-  private WorkbookSheetResult.SheetProtection sheetProtection(Attributes attributes) {
+  private SheetProtectionReport sheetProtection(Attributes attributes) {
     if (!booleanAttribute(attributes, "sheet")) {
-      return new WorkbookSheetResult.SheetProtection.Unprotected();
+      return new SheetProtectionReport.Unprotected();
     }
-    return new WorkbookSheetResult.SheetProtection.Protected(
+    return new SheetProtectionReport.Protected(
         new SheetProtectionSettings(
             booleanAttribute(attributes, "autoFilter"),
             booleanAttribute(attributes, "deleteColumns"),
