@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
@@ -16,6 +18,7 @@ import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -23,7 +26,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
@@ -36,8 +38,6 @@ import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
@@ -228,9 +228,9 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookSheetCommand.CreateSheet("Queue"),
                     new WorkbookDrawingCommand.SetPicture(
                         "Queue",
-                        new ExcelPictureDefinition(
+                        new ResolvedPicture(
                             "QueuePreview",
-                            new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+                            new BinaryContent(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
                             ExcelPictureFormat.PNG,
                             new DrawingAnchorSpec.TwoCell(
                                 new DrawingMarkerSpec(1, 1, 0, 0),
@@ -240,9 +240,9 @@ class XlsxRoundTripVerifierTest {
                             Optional.of("Queue preview"))),
                     new WorkbookDrawingCommand.SetPicture(
                         "Queue",
-                        new ExcelPictureDefinition(
+                        new ResolvedPicture(
                             "QueuePreview2",
-                            new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+                            new BinaryContent(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
                             ExcelPictureFormat.PNG,
                             new DrawingAnchorSpec.TwoCell(
                                 new DrawingMarkerSpec(6, 1, 0, 0),
@@ -266,15 +266,15 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookSheetCommand.CreateSheet("Queue"),
                     new WorkbookDrawingCommand.SetEmbeddedObject(
                         "Queue",
-                        new ExcelEmbeddedObjectDefinition(
+                        new ResolvedEmbeddedObject(
                             "QueueEmbed",
                             "Payload",
                             "payload.txt",
                             "payload.txt",
-                            new ExcelBinaryData(
+                            new BinaryContent(
                                 "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                             ExcelPictureFormat.PNG,
-                            new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+                            new BinaryContent(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
                             new DrawingAnchorSpec.TwoCell(
                                 new DrawingMarkerSpec(1, 1, 0, 0),
                                 new DrawingMarkerSpec(4, 6, 0, 0),
@@ -349,6 +349,6 @@ class XlsxRoundTripVerifierTest {
         null,
         "invalid",
         Optional.of(ExcelPictureFormat.PNG),
-        Optional.of(new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64))));
+        Optional.of(new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64))));
   }
 }

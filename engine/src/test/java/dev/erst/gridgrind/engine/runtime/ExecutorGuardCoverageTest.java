@@ -140,9 +140,7 @@ class ExecutorGuardCoverageTest {
         "picture payload must be resolved to INLINE_BASE64 before conversion",
         assertThrows(
                 IllegalStateException.class,
-                () ->
-                    WorkbookCommandDrawingInputConverter.toExcelPictureDefinition(
-                        unresolvedPicture))
+                () -> WorkbookCommandDrawingInputConverter.toResolvedPicture(unresolvedPicture))
             .getMessage());
   }
 

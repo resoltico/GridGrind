@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingRemovalSupport;
@@ -118,7 +119,7 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
         relationship.getRelationshipType(),
         part.getContentType(),
         part.getPartName().getName(),
-        ExcelBinaryData.readback(ExcelDrawingBinarySupport.partBytes(part)));
+        BinaryContent.readback(ExcelDrawingBinarySupport.partBytes(part)));
   }
 
   private static void repairCopiedEmbeddedObject(
@@ -566,7 +567,7 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
   }
 
   record InternalRelationSnapshot(
-      String relationshipType, String contentType, String sourcePartName, ExcelBinaryData bytes) {
+      String relationshipType, String contentType, String sourcePartName, BinaryContent bytes) {
     InternalRelationSnapshot {
       relationshipType = requireNonBlank(relationshipType, "relationshipType");
       contentType = requireNonBlank(contentType, "contentType");

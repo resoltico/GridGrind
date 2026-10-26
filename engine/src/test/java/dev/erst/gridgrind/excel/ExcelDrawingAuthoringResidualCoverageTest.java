@@ -2,10 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -34,9 +35,9 @@ class ExcelDrawingAuthoringResidualCoverageTest extends ExcelDrawingCoverageTest
 
       controller.setPicture(
           sheet,
-          new ExcelPictureDefinition(
+          new ResolvedPicture(
               "PlainPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              new BinaryContent(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(0, 0, 2, 2),
               Optional.empty()));
@@ -48,14 +49,14 @@ class ExcelDrawingAuthoringResidualCoverageTest extends ExcelDrawingCoverageTest
           sheet, new ExcelShapeDefinition.Connector("ConnectorOnly", anchor(6, 0, 8, 2)));
       controller.setEmbeddedObject(
           sheet,
-          new ExcelEmbeddedObjectDefinition(
+          new ResolvedEmbeddedObject(
               "AnchoredEmbed",
               "Payload",
               "payload.txt",
               "payload.txt",
-              new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+              new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
               ExcelPictureFormat.PNG,
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              new BinaryContent(PNG_PIXEL_BYTES),
               anchor(9, 0, 12, 4)));
 
       XSSFDrawing drawing = sheet.getDrawingPatriarch();

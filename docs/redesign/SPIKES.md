@@ -1837,3 +1837,25 @@ Inventories: definitions 12→11, converter lines 4252→4204, blank checks 434�
 121771→121635. Snapshots 38 and Support 206 remain open. Baseline diff empty. The shared
 closed-type approach now serves real chart titles as well as cell writes, without copying source-free
 variants. Remaining resolved drawing/binary inputs and command/target/plan cutover remain WP-40.
+
+## WP-40 immutable binary content and resolved drawing payloads
+
+Moved immutable binary content into core.source.BinaryContent and deleted its engine name.
+Preserved defensive construction/access copies, value equality/hash, nonempty authored construction
+and explicit empty factual readback. Picture and embedded-object backend payloads now use core
+ResolvedPicture/ResolvedEmbeddedObject with actual materialized bytes and shared authored geometry.
+No duplicate engine payload or compatibility alias remains. Existing byte-ownership checks moved
+from the mixed engine test into core, with caller-buffer isolation added. The first test relocation
+attempt found the absent source-test directory; recovered the complete assertions from the preceding
+committed source, created the directory and verified the resulting checks.
+
+All source sets compiled first pass (31s). Focused core/engine/14 parity and static checks passed
+(52s); nested deterministic check and all retained seed replay passed (18s), including empty
+embedded-package preservation. ./gradlew check passed (3m14s): core 347, JSON 348, engine 1483
+plus 14 parity, CLI 588, architecture 14 plus 12 rule tests, zero failures/errors/skips. All 143
+golden cases are unchanged. No mutation or active fuzz campaign ran.
+
+Inventories: definitions 11→9, converter lines 4204→4203; main Java remains 121635 because these
+are necessary materialized contracts moved to their core owner. Snapshots 38, Support 206 and blank
+checks 432 remain open. Baseline diff empty. Signature and shape materialization still need their
+source-free/optional-field cleanup before the remaining resolved-plan/step/target cutover.

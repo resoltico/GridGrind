@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -808,7 +809,7 @@ class ExcelResidualHelperCoverageTest {
         null,
         "invalid",
         Optional.of(ExcelPictureFormat.PNG),
-        Optional.of(new ExcelBinaryData(new byte[] {1})));
+        Optional.of(new BinaryContent(new byte[] {1})));
   }
 
   private static ChartAxisSpec axis(ExcelChartAxisKind kind) {

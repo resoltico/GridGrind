@@ -5,15 +5,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -276,9 +277,9 @@ class ExcelWorkbookIntrospectorTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(
+                  new BinaryContent(
                       java.util.Base64.getDecoder()
                           .decode(
                               "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC")),
@@ -289,14 +290,14 @@ class ExcelWorkbookIntrospectorTest {
                       ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                   java.util.Optional.of("Queue preview")))
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(
+                  new BinaryContent(
                       java.util.Base64.getDecoder()
                           .decode(
                               "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC")),

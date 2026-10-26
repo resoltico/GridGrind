@@ -1,19 +1,18 @@
-package dev.erst.gridgrind.excel.drawing;
+package dev.erst.gridgrind.core.model.drawing;
 
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Authoritative picture creation or replacement payload. */
-public record ExcelPictureDefinition(
+/** Picture payload with materialized binary content and canonical authored geometry. */
+public record ResolvedPicture(
     String name,
-    ExcelBinaryData imageData,
+    BinaryContent imageData,
     ExcelPictureFormat format,
     DrawingAnchorSpec.TwoCell anchor,
     Optional<String> description) {
-  public ExcelPictureDefinition {
+  public ResolvedPicture {
     Objects.requireNonNull(name, "name must not be null");
     if (name.isBlank()) {
       throw new IllegalArgumentException("name must not be blank");

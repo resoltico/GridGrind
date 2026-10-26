@@ -4,12 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingPictureSupport;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Base64;
@@ -81,9 +82,9 @@ class ExcelDrawingPictureSupportTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
@@ -152,9 +153,9 @@ class ExcelDrawingPictureSupportTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
@@ -193,9 +194,9 @@ class ExcelDrawingPictureSupportTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
@@ -230,9 +231,9 @@ class ExcelDrawingPictureSupportTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
@@ -261,9 +262,9 @@ class ExcelDrawingPictureSupportTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
@@ -299,9 +300,9 @@ class ExcelDrawingPictureSupportTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));

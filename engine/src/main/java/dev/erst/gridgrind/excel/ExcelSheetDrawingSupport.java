@@ -2,11 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.List;
@@ -39,7 +39,7 @@ final class ExcelSheetDrawingSupport {
     this.formulaRuntime = formulaRuntime;
   }
 
-  ExcelSheet setPicture(ExcelPictureDefinition definition, ExcelSheet owner) {
+  ExcelSheet setPicture(ResolvedPicture definition, ExcelSheet owner) {
     Objects.requireNonNull(definition, "definition must not be null");
     drawingController.setPicture(xssfSheet(), definition);
     return owner;
@@ -63,7 +63,7 @@ final class ExcelSheetDrawingSupport {
     return owner;
   }
 
-  ExcelSheet setEmbeddedObject(ExcelEmbeddedObjectDefinition definition, ExcelSheet owner) {
+  ExcelSheet setEmbeddedObject(ResolvedEmbeddedObject definition, ExcelSheet owner) {
     Objects.requireNonNull(definition, "definition must not be null");
     drawingController.setEmbeddedObject(xssfSheet(), definition);
     return owner;

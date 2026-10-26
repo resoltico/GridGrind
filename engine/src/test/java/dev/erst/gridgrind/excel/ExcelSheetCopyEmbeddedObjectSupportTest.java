@@ -5,12 +5,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -151,16 +152,16 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
     }
   }
 
-  private static ExcelEmbeddedObjectDefinition embeddedObjectDefinition(
+  private static ResolvedEmbeddedObject embeddedObjectDefinition(
       String objectName, String payloadText) {
-    return new ExcelEmbeddedObjectDefinition(
+    return new ResolvedEmbeddedObject(
         objectName,
         "Payload",
         "payload.txt",
         "payload.txt",
-        new ExcelBinaryData(payloadText.getBytes(StandardCharsets.UTF_8)),
+        new BinaryContent(payloadText.getBytes(StandardCharsets.UTF_8)),
         ExcelPictureFormat.PNG,
-        new ExcelBinaryData(PNG_PIXEL_BYTES),
+        new BinaryContent(PNG_PIXEL_BYTES),
         anchor(1, 1, 4, 6));
   }
 

@@ -4,12 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.io.ByteArrayOutputStream;
@@ -76,14 +77,14 @@ class ExcelWorkbookImageCatalogSupportTest {
               sheet
                   .drawings()
                   .setEmbeddedObject(
-                      new ExcelEmbeddedObjectDefinition(
+                      new ResolvedEmbeddedObject(
                           "OpsEmbed",
                           "Payload",
                           "payload.txt",
                           "payload.txt",
-                          new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                          new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                           ExcelPictureFormat.PNG,
-                          new ExcelBinaryData(PNG_PIXEL_BYTES),
+                          new BinaryContent(PNG_PIXEL_BYTES),
                           anchor(9, 1, 12, 6))));
       assertEquals(
           List.of("/xl/media/image1.png", "/xl/media/image2.png", "/xl/media/image3.png"),
@@ -131,14 +132,14 @@ class ExcelWorkbookImageCatalogSupportTest {
       sheet
           .drawings()
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   anchor(5, 1, 8, 6)));
 
       sheet.drawings().deleteDrawingObject("OpsPicture");
@@ -259,11 +260,11 @@ class ExcelWorkbookImageCatalogSupportTest {
     }
   }
 
-  private static ExcelPictureDefinition pictureDefinition(
+  private static ResolvedPicture pictureDefinition(
       String objectName, int fromColumn, int fromRow, int toColumn, int toRow) {
-    return new ExcelPictureDefinition(
+    return new ResolvedPicture(
         objectName,
-        new ExcelBinaryData(PNG_PIXEL_BYTES),
+        new BinaryContent(PNG_PIXEL_BYTES),
         ExcelPictureFormat.PNG,
         anchor(fromColumn, fromRow, toColumn, toRow),
         Optional.of("preview"));
@@ -282,7 +283,7 @@ class ExcelWorkbookImageCatalogSupportTest {
         null,
         "invalid",
         Optional.of(ExcelPictureFormat.PNG),
-        Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES)));
+        Optional.of(new BinaryContent(PNG_PIXEL_BYTES)));
   }
 
   private static DrawingAnchorSpec.TwoCell anchor(

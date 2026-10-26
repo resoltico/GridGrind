@@ -12,14 +12,15 @@ import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -111,10 +112,10 @@ final class OperationSequenceDrawingValues {
         ExcelPictureFormat.PNG, BinarySourceSpec.inlineBase64(PNG_PIXEL_BASE64));
   }
 
-  static ExcelPictureDefinition nextExcelPictureDefinition(GridGrindFuzzData data) {
-    return new ExcelPictureDefinition(
+  static ResolvedPicture nextExcelPictureDefinition(GridGrindFuzzData data) {
+    return new ResolvedPicture(
         DRAWING_PICTURE_NAME,
-        new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+        new BinaryContent(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
         ExcelPictureFormat.PNG,
         nextDrawingAnchorInput(data),
         data.consumeBoolean() ? Optional.of("Queue preview") : Optional.empty());
@@ -135,16 +136,16 @@ final class OperationSequenceDrawingValues {
     return new ExcelShapeDefinition.Connector(DRAWING_CONNECTOR_NAME, nextDrawingAnchorInput(data));
   }
 
-  static ExcelEmbeddedObjectDefinition nextExcelEmbeddedObjectDefinition(GridGrindFuzzData data) {
-    return new ExcelEmbeddedObjectDefinition(
+  static ResolvedEmbeddedObject nextExcelEmbeddedObjectDefinition(GridGrindFuzzData data) {
+    return new ResolvedEmbeddedObject(
         DRAWING_EMBEDDED_OBJECT_NAME,
         "Ops payload",
         "ops-payload.txt",
         "open",
-        new ExcelBinaryData(
+        new BinaryContent(
             ("GridGrind payload " + data.consumeInt(0, 9)).getBytes(StandardCharsets.UTF_8)),
         ExcelPictureFormat.PNG,
-        new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+        new BinaryContent(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
         nextDrawingAnchorInput(data));
   }
 

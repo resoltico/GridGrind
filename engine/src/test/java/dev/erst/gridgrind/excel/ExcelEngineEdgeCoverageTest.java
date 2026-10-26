@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -445,7 +446,7 @@ class ExcelEngineEdgeCoverageTest {
                 null,
                 "invalid",
                 Optional.of(ExcelPictureFormat.PNG),
-                Optional.of(new ExcelBinaryData(new byte[] {1}))));
+                Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -460,7 +461,7 @@ class ExcelEngineEdgeCoverageTest {
                 null,
                 "invalid",
                 Optional.of(ExcelPictureFormat.PNG),
-                Optional.of(new ExcelBinaryData(new byte[] {1}))));
+                Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -475,7 +476,7 @@ class ExcelEngineEdgeCoverageTest {
                 null,
                 "invalid",
                 Optional.of(ExcelPictureFormat.PNG),
-                Optional.of(new ExcelBinaryData(new byte[] {1}))));
+                Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -490,7 +491,7 @@ class ExcelEngineEdgeCoverageTest {
                 null,
                 "invalid",
                 Optional.of(ExcelPictureFormat.PNG),
-                Optional.of(new ExcelBinaryData(new byte[] {1}))));
+                Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -505,7 +506,7 @@ class ExcelEngineEdgeCoverageTest {
                 "line1\nline2\nline3\nline4",
                 "invalid",
                 Optional.of(ExcelPictureFormat.PNG),
-                Optional.of(new ExcelBinaryData(new byte[] {1}))));
+                Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -550,7 +551,7 @@ class ExcelEngineEdgeCoverageTest {
                 null,
                 "invalid",
                 Optional.empty(),
-                Optional.of(new ExcelBinaryData(new byte[] {1}))));
+                Optional.of(new BinaryContent(new byte[] {1}))));
   }
 
   @Test
@@ -893,7 +894,7 @@ class ExcelEngineEdgeCoverageTest {
                     null,
                     "invalid",
                     Optional.of(ExcelPictureFormat.PNG),
-                    Optional.of(new ExcelBinaryData(new byte[] {1}))));
+                    Optional.of(new BinaryContent(new byte[] {1}))));
         forceSignatureLineName(wrappedWorkbook.sheet("Ops").xssfSheet(), "Dup");
         XSSFDrawing drawing = wrappedWorkbook.sheet("Ops").xssfSheet().createDrawingPatriarch();
         XSSFSimpleShape duplicateShape =

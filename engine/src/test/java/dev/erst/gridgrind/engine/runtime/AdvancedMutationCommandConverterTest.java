@@ -23,6 +23,8 @@ import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
@@ -46,6 +48,7 @@ import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.source.BinarySourceSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -71,7 +74,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
@@ -79,8 +81,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
@@ -265,9 +265,9 @@ class AdvancedMutationCommandConverterTest {
                 new DrawingMutationAction.DeleteDrawingObject()));
 
     assertEquals(
-        new ExcelPictureDefinition(
+        new ResolvedPicture(
             "OpsPicture",
-            new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+            new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
             ExcelPictureFormat.PNG,
             new DrawingAnchorSpec.TwoCell(
                 new DrawingMarkerSpec(1, 2, 3, 4),
@@ -290,8 +290,7 @@ class AdvancedMutationCommandConverterTest {
             null,
             "invalid",
             Optional.of(ExcelPictureFormat.PNG),
-            Optional.of(
-                new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)))),
+            Optional.of(new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)))),
         signatureLineCommand.signatureLine());
     assertEquals(
         new ExcelShapeDefinition.SimpleShape(
@@ -304,14 +303,14 @@ class AdvancedMutationCommandConverterTest {
             Optional.of("Queue")),
         shapeCommand.shape());
     assertEquals(
-        new ExcelEmbeddedObjectDefinition(
+        new ResolvedEmbeddedObject(
             "OpsEmbed",
             "Payload",
             "payload.txt",
             "payload.txt",
-            new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+            new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
             ExcelPictureFormat.PNG,
-            new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+            new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
             new DrawingAnchorSpec.TwoCell(
                 new DrawingMarkerSpec(1, 2, 3, 4),
                 new DrawingMarkerSpec(4, 6, 7, 8),

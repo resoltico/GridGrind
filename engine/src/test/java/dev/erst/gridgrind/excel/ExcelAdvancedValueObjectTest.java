@@ -10,6 +10,8 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -21,6 +23,7 @@ import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -32,8 +35,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -344,23 +345,23 @@ class ExcelAdvancedValueObjectTest {
 
   @Test
   void drawingValueObjectsNormalizeDefaultsAndValidate() {
-    ExcelBinaryData binary = new ExcelBinaryData(new byte[] {1, 2, 3});
+    BinaryContent binary = new BinaryContent(new byte[] {1, 2, 3});
     DrawingMarkerSpec from = new DrawingMarkerSpec(1, 2, 3, 4);
     DrawingMarkerSpec to = new DrawingMarkerSpec(4, 6, 0, 0);
     DrawingAnchorSpec.TwoCell twoCell =
         new DrawingAnchorSpec.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
-    ExcelPictureDefinition picture =
-        new ExcelPictureDefinition(
+    ResolvedPicture picture =
+        new ResolvedPicture(
             "OpsPicture", binary, ExcelPictureFormat.PNG, twoCell, Optional.empty());
     ExcelShapeDefinition shape =
         new ExcelShapeDefinition.SimpleShape("OpsShape", twoCell, " rect ", Optional.of("Queue"));
-    ExcelEmbeddedObjectDefinition embeddedObject =
-        new ExcelEmbeddedObjectDefinition(
+    ResolvedEmbeddedObject embeddedObject =
+        new ResolvedEmbeddedObject(
             "OpsEmbed",
             "Payload",
             "payload.txt",
             "payload.txt",
-            new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+            new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
             ExcelPictureFormat.PNG,
             binary,
             twoCell);
@@ -379,7 +380,7 @@ class ExcelAdvancedValueObjectTest {
             "application/octet-stream",
             "payload.txt",
             "abc123",
-            new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+            new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
             "Payload",
             "payload.txt");
 
@@ -391,7 +392,7 @@ class ExcelAdvancedValueObjectTest {
     assertEquals("payload.txt", embeddedObject.fileName());
     assertEquals(2, groupSnapshot.childCount());
     assertEquals("Payload", payload.label());
-    assertThrows(IllegalArgumentException.class, () -> new ExcelBinaryData(new byte[0]));
+    assertThrows(IllegalArgumentException.class, () -> new BinaryContent(new byte[0]));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0));
     assertThrows(
         IllegalArgumentException.class,

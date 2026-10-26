@@ -11,7 +11,10 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -27,8 +30,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.io.IOException;
@@ -80,9 +81,9 @@ class ExcelDrawingControllerTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")))
@@ -91,14 +92,14 @@ class ExcelDrawingControllerTest {
                   "OpsShape", anchor(5, 1, 8, 5), "rect", Optional.of("Queue")))
           .setShape(new ExcelShapeDefinition.Connector("OpsConnector", anchor(9, 1, 11, 4)))
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   anchor(12, 1, 15, 6)));
 
       List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawings().drawingObjects();
@@ -193,7 +194,7 @@ class ExcelDrawingControllerTest {
                   null,
                   "invalid",
                   Optional.of(ExcelPictureFormat.PNG),
-                  Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES))));
+                  Optional.of(new BinaryContent(PNG_PIXEL_BYTES))));
 
       List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawings().drawingObjects();
       assertEquals(
@@ -559,9 +560,9 @@ class ExcelDrawingControllerTest {
       withDrawing
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
@@ -619,14 +620,14 @@ class ExcelDrawingControllerTest {
           .getOrCreateSheet("Ops")
           .drawings()
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
       workbook
           .persistence()
@@ -679,14 +680,14 @@ class ExcelDrawingControllerTest {
           .getOrCreateSheet("Ops")
           .drawings()
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
       workbook
           .persistence()
@@ -741,14 +742,14 @@ class ExcelDrawingControllerTest {
           .getOrCreateSheet("Ops")
           .drawings()
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
       workbook
           .persistence()
@@ -794,23 +795,23 @@ class ExcelDrawingControllerTest {
       sheet
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
       sheet
           .drawings()
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   anchor(5, 1, 8, 6)));
 
       XSSFSheet poiSheet = sheet.xssfSheet();
@@ -840,14 +841,14 @@ class ExcelDrawingControllerTest {
           .getOrCreateSheet("Ops")
           .drawings()
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
       workbook
           .persistence()

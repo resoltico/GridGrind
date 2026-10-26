@@ -6,6 +6,9 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
@@ -13,8 +16,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import java.util.Optional;
@@ -25,20 +26,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
   @Test
   @SuppressWarnings("PMD.NcssCount")
   void drawingValueObjectsAndCommandsValidateEveryBranch() {
-    ExcelBinaryData data = new ExcelBinaryData(new byte[] {1, 2, 3});
-    byte[] extractedBytes = data.bytes();
-    extractedBytes[0] = 9;
-    assertArrayEquals(new byte[] {1, 2, 3}, data.bytes());
-    assertArrayEquals(new byte[] {1, 2, 3}, data.bytes());
-    assertEquals(3, data.size());
-    assertEquals(new ExcelBinaryData(new byte[] {1, 2, 3}), data);
-    assertEquals(new ExcelBinaryData(new byte[] {1, 2, 3}).hashCode(), data.hashCode());
-    assertNotEquals(data, new ExcelBinaryData(new byte[] {3, 2, 1}));
-    assertNotEquals(data, "payload");
-    assertTrue(data.toString().contains("size=3"));
-    assertEquals(0, ExcelBinaryData.readback(new byte[0]).size());
-    assertThrows(NullPointerException.class, () -> new ExcelBinaryData(null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelBinaryData(new byte[0]));
+    BinaryContent data = new BinaryContent(new byte[] {1, 2, 3});
 
     DrawingMarkerSpec from = new DrawingMarkerSpec(1, 2, 0, 0);
     DrawingMarkerSpec to = new DrawingMarkerSpec(3, 4, 5, 6);
@@ -149,37 +137,31 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
         IllegalArgumentException.class,
         () -> ExcelPictureFormat.fromContentType("application/x-gridgrind"));
 
-    ExcelPictureDefinition pictureDefinition =
-        new ExcelPictureDefinition(
+    ResolvedPicture pictureDefinition =
+        new ResolvedPicture(
             "Picture", data, ExcelPictureFormat.PNG, twoCell, Optional.of("preview"));
     assertEquals("Picture", pictureDefinition.name());
     assertThrows(
         NullPointerException.class,
-        () ->
-            new ExcelPictureDefinition(
-                null, data, ExcelPictureFormat.PNG, twoCell, Optional.empty()));
+        () -> new ResolvedPicture(null, data, ExcelPictureFormat.PNG, twoCell, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelPictureDefinition(
-                " ", data, ExcelPictureFormat.PNG, twoCell, Optional.empty()));
+        () -> new ResolvedPicture(" ", data, ExcelPictureFormat.PNG, twoCell, Optional.empty()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPictureDefinition(
+            new ResolvedPicture(
                 "Picture", null, ExcelPictureFormat.PNG, twoCell, Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelPictureDefinition("Picture", data, null, twoCell, Optional.empty()));
+        () -> new ResolvedPicture("Picture", data, null, twoCell, Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () ->
-            new ExcelPictureDefinition(
-                "Picture", data, ExcelPictureFormat.PNG, null, Optional.empty()));
+        () -> new ResolvedPicture("Picture", data, ExcelPictureFormat.PNG, null, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPictureDefinition(
+            new ResolvedPicture(
                 "Picture", data, ExcelPictureFormat.PNG, twoCell, Optional.of(" ")));
 
     ExcelShapeDefinition defaultShape =
@@ -205,21 +187,21 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
         IllegalArgumentException.class,
         () -> new ExcelShapeDefinition.SimpleShape("Shape", twoCell, "rect", Optional.of(" ")));
 
-    ExcelEmbeddedObjectDefinition embeddedDefinition =
-        new ExcelEmbeddedObjectDefinition(
+    ResolvedEmbeddedObject embeddedDefinition =
+        new ResolvedEmbeddedObject(
             "Embed",
             "Payload",
             "payload.txt",
             "payload.txt",
             data,
             ExcelPictureFormat.PNG,
-            new ExcelBinaryData(PNG_PIXEL_BYTES),
+            new BinaryContent(PNG_PIXEL_BYTES),
             twoCell);
     assertEquals("payload.txt", embeddedDefinition.fileName());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelEmbeddedObjectDefinition(
+            new ResolvedEmbeddedObject(
                 " ",
                 "Payload",
                 "payload.txt",
@@ -231,7 +213,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelEmbeddedObjectDefinition(
+            new ResolvedEmbeddedObject(
                 null,
                 "Payload",
                 "payload.txt",
@@ -243,7 +225,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelEmbeddedObjectDefinition(
+            new ResolvedEmbeddedObject(
                 "Embed",
                 " ",
                 "payload.txt",
@@ -255,7 +237,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelEmbeddedObjectDefinition(
+            new ResolvedEmbeddedObject(
                 "Embed",
                 "Payload",
                 " ",
@@ -267,7 +249,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelEmbeddedObjectDefinition(
+            new ResolvedEmbeddedObject(
                 "Embed",
                 "Payload",
                 "payload.txt",

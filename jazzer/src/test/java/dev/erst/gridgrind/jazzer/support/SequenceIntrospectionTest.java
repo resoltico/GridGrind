@@ -21,6 +21,8 @@ import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
@@ -51,6 +53,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.source.BinarySourceSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -73,7 +76,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -85,8 +87,6 @@ import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
@@ -803,10 +803,10 @@ class SequenceIntrospectionTest {
         dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static ExcelPictureDefinition excelPictureDefinition() {
-    return new ExcelPictureDefinition(
+  private static ResolvedPicture excelPictureDefinition() {
+    return new ResolvedPicture(
         "OpsPicture",
-        new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+        new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
         ExcelPictureFormat.PNG,
         excelAnchor(),
         Optional.of("Queue preview"));
@@ -817,15 +817,15 @@ class SequenceIntrospectionTest {
         "OpsShape", excelAnchor(), "rect", Optional.of("Queue"));
   }
 
-  private static ExcelEmbeddedObjectDefinition excelEmbeddedObjectDefinition() {
-    return new ExcelEmbeddedObjectDefinition(
+  private static ResolvedEmbeddedObject excelEmbeddedObjectDefinition() {
+    return new ResolvedEmbeddedObject(
         "OpsEmbed",
         "Ops payload",
         "ops-payload.txt",
         "open",
-        new ExcelBinaryData("GridGrind payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+        new BinaryContent("GridGrind payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
         ExcelPictureFormat.PNG,
-        new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+        new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
         excelAnchor());
   }
 
@@ -841,7 +841,7 @@ class SequenceIntrospectionTest {
         null,
         "invalid",
         Optional.of(ExcelPictureFormat.PNG),
-        Optional.of(new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64))));
+        Optional.of(new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64))));
   }
 
   private static ResolvedChart excelChartDefinition() {

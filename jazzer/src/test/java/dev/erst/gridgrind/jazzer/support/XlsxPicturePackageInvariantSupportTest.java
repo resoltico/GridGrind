@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -74,14 +74,14 @@ class XlsxPicturePackageInvariantSupportTest {
           .sheet("Ops")
           .drawings()
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   new DrawingAnchorSpec.TwoCell(
                       new DrawingMarkerSpec(1, 1, 0, 0),
                       new DrawingMarkerSpec(4, 6, 0, 0),
@@ -106,14 +106,14 @@ class XlsxPicturePackageInvariantSupportTest {
           .sheet("Ops")
           .drawings()
           .setEmbeddedObject(
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   new DrawingAnchorSpec.TwoCell(
                       new DrawingMarkerSpec(1, 1, 0, 0),
                       new DrawingMarkerSpec(4, 6, 0, 0),
@@ -148,9 +148,9 @@ class XlsxPicturePackageInvariantSupportTest {
           .sheet("Ops")
           .drawings()
           .setPicture(
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  new BinaryContent(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   new DrawingAnchorSpec.TwoCell(
                       new DrawingMarkerSpec(1, 1, 0, 0),

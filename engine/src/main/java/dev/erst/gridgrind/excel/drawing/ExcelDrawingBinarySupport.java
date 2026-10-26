@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelPackageRelationshipSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbookImageCatalogSupport;
 import java.io.ByteArrayInputStream;
@@ -184,9 +184,9 @@ public final class ExcelDrawingBinarySupport {
     return blankAsOptional(objectData.getCTShape().getSpPr().getBlipFill().getBlip().getEmbed());
   }
 
-  public static ExcelBinaryData binary(byte[] bytes, String label) {
+  public static BinaryContent binary(byte[] bytes, String label) {
     Objects.requireNonNull(label, "label must not be null");
-    return ExcelBinaryData.readback(bytes);
+    return BinaryContent.readback(bytes);
   }
 
   public static byte[] partBytes(org.apache.poi.openxml4j.opc.PackagePart part) {
@@ -246,7 +246,7 @@ public final class ExcelDrawingBinarySupport {
   private static EmbeddedObjectReadback embeddedObjectReadback(
       String objectName, org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     Optional<org.apache.poi.openxml4j.opc.PackagePart> previewPart = previewImagePart(objectData);
-    ExcelBinaryData previewImage =
+    BinaryContent previewImage =
         previewPart.isPresent()
             ? binary(partBytes(previewPart.orElseThrow()), "preview image")
             : null;
@@ -260,17 +260,17 @@ public final class ExcelDrawingBinarySupport {
           "Embedded object '" + objectName + "' is missing its package relationship");
     }
     org.apache.poi.openxml4j.opc.PackagePart resolvedObjectPart = objectPart.orElseThrow();
-    ExcelBinaryData rawPackage = binary(partBytes(resolvedObjectPart), "embedded object package");
+    BinaryContent rawPackage = binary(partBytes(resolvedObjectPart), "embedded object package");
     String contentType = resolvedObjectPart.getContentType();
     String label = null;
     String fileName = partFileName(resolvedObjectPart);
     String command = null;
     ExcelEmbeddedObjectPackagingKind packagingKind = ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE;
-    ExcelBinaryData payload = rawPackage;
+    BinaryContent payload = rawPackage;
     try {
       if (looksLikeOle2Storage(rawPackage.bytes())) {
         org.apache.poi.poifs.filesystem.Ole10Native nativeData = ole10Native(rawPackage.bytes());
-        payload = ExcelBinaryData.readback(nativeData.getDataBuffer());
+        payload = BinaryContent.readback(nativeData.getDataBuffer());
         label = firstNonBlank(nativeData.getLabel2(), nativeData.getLabel()).orElse(null);
         fileName = firstNonBlank(nativeData.getFileName2(), nativeData.getFileName()).orElse(null);
         command = firstNonBlank(nativeData.getCommand2(), nativeData.getCommand()).orElse(null);
@@ -393,7 +393,7 @@ public final class ExcelDrawingBinarySupport {
       String fileName,
       @Nullable String command,
       String contentType,
-      ExcelBinaryData payload,
+      BinaryContent payload,
       @Nullable ExcelPictureFormat previewFormat,
-      @Nullable ExcelBinaryData previewImage) {}
+      @Nullable BinaryContent previewImage) {}
 }

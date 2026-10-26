@@ -11,12 +11,12 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 
@@ -30,10 +30,10 @@ final class WorkbookCommandDrawingInputConverter {
         input.locator(), WorkbookCommandSourceSupport.inlineText(input.xml(), "custom XML"));
   }
 
-  static ExcelPictureDefinition toExcelPictureDefinition(PictureSpec picture) {
-    return new ExcelPictureDefinition(
+  static ResolvedPicture toResolvedPicture(PictureSpec picture) {
+    return new ResolvedPicture(
         picture.name(),
-        new ExcelBinaryData(
+        new BinaryContent(
             WorkbookCommandSourceSupport.inlineBinary(picture.image().source(), "picture payload")),
         picture.image().format(),
         twoCellAnchor(picture.anchor()),
@@ -74,7 +74,7 @@ final class WorkbookCommandDrawingInputConverter {
             .plainSignature()
             .map(
                 plainSignature ->
-                    new ExcelBinaryData(
+                    new BinaryContent(
                         WorkbookCommandSourceSupport.inlineBinary(
                             plainSignature.source(), "signature-line plain signature"))));
   }
@@ -94,18 +94,17 @@ final class WorkbookCommandDrawingInputConverter {
     };
   }
 
-  static ExcelEmbeddedObjectDefinition toExcelEmbeddedObjectDefinition(
-      EmbeddedObjectSpec embeddedObject) {
-    return new ExcelEmbeddedObjectDefinition(
+  static ResolvedEmbeddedObject toResolvedEmbeddedObject(EmbeddedObjectSpec embeddedObject) {
+    return new ResolvedEmbeddedObject(
         embeddedObject.name(),
         embeddedObject.label(),
         embeddedObject.fileName(),
         embeddedObject.command(),
-        new ExcelBinaryData(
+        new BinaryContent(
             WorkbookCommandSourceSupport.inlineBinary(
                 embeddedObject.payload(), "embedded-object payload")),
         embeddedObject.previewImage().format(),
-        new ExcelBinaryData(
+        new BinaryContent(
             WorkbookCommandSourceSupport.inlineBinary(
                 embeddedObject.previewImage().source(), "embedded-object preview image")),
         twoCellAnchor(embeddedObject.anchor()));

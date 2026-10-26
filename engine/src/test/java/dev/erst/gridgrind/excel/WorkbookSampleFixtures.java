@@ -8,12 +8,15 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -30,8 +33,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
@@ -167,9 +168,9 @@ final class WorkbookSampleFixtures {
         new WorkbookAnnotationCommand.ClearComment("Budget", "A1"),
         new WorkbookDrawingCommand.SetPicture(
             "Budget",
-            new ExcelPictureDefinition(
+            new ResolvedPicture(
                 "BudgetPicture",
-                new ExcelBinaryData(PNG_PIXEL_BYTES),
+                new BinaryContent(PNG_PIXEL_BYTES),
                 ExcelPictureFormat.PNG,
                 firstAnchor,
                 Optional.of("Queue preview"))),
@@ -186,7 +187,7 @@ final class WorkbookSampleFixtures {
                 null,
                 "invalid",
                 Optional.of(ExcelPictureFormat.PNG),
-                Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES)))),
+                Optional.of(new BinaryContent(PNG_PIXEL_BYTES)))),
         new WorkbookDrawingCommand.SetChart("Budget", chartDefinition(firstAnchor)),
         new WorkbookTabularCommand.SetPivotTable(
             new ExcelPivotTableDefinition(
@@ -209,14 +210,14 @@ final class WorkbookSampleFixtures {
                 "BudgetShape", firstAnchor, "rect", Optional.of("Queue"))),
         new WorkbookDrawingCommand.SetEmbeddedObject(
             "Budget",
-            new ExcelEmbeddedObjectDefinition(
+            new ResolvedEmbeddedObject(
                 "BudgetEmbed",
                 "Payload",
                 "payload.txt",
                 "payload.txt",
-                new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
                 ExcelPictureFormat.PNG,
-                new ExcelBinaryData(PNG_PIXEL_BYTES),
+                new BinaryContent(PNG_PIXEL_BYTES),
                 firstAnchor)),
         new WorkbookDrawingCommand.SetDrawingObjectAnchor("Budget", "BudgetShape", movedAnchor),
         new WorkbookDrawingCommand.DeleteDrawingObject("Budget", "BudgetPicture"),

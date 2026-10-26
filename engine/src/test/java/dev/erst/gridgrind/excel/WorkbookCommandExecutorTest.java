@@ -5,12 +5,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -25,8 +28,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -531,9 +532,9 @@ class WorkbookCommandExecutorTest {
           new WorkbookSheetCommand.CreateSheet("Ops"),
           new WorkbookDrawingCommand.SetPicture(
               "Ops",
-              new ExcelPictureDefinition(
+              new ResolvedPicture(
                   "OpsPicture",
-                  new ExcelBinaryData(pngBytes),
+                  new BinaryContent(pngBytes),
                   ExcelPictureFormat.PNG,
                   firstAnchor,
                   Optional.of("Queue preview"))),
@@ -543,14 +544,14 @@ class WorkbookCommandExecutorTest {
                   "OpsShape", firstAnchor, "rect", Optional.of("Queue"))),
           new WorkbookDrawingCommand.SetEmbeddedObject(
               "Ops",
-              new ExcelEmbeddedObjectDefinition(
+              new ResolvedEmbeddedObject(
                   "OpsEmbed",
                   "Payload",
                   "payload.txt",
                   "payload.txt",
-                  new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                  new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
-                  new ExcelBinaryData(pngBytes),
+                  new BinaryContent(pngBytes),
                   firstAnchor)),
           new WorkbookDrawingCommand.SetDrawingObjectAnchor("Ops", "OpsShape", movedAnchor),
           new WorkbookDrawingCommand.DeleteDrawingObject("Ops", "OpsPicture"));

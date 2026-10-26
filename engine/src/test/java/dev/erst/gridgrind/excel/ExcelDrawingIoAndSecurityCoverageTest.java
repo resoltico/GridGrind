@@ -2,12 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -91,9 +92,9 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
 
       controller.setPicture(
           sheet,
-          new ExcelPictureDefinition(
+          new ResolvedPicture(
               "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              new BinaryContent(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(0, 0, 2, 2),
               Optional.of("replacement")));
@@ -105,14 +106,14 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
 
       controller.setEmbeddedObject(
           sheet,
-          new ExcelEmbeddedObjectDefinition(
+          new ResolvedEmbeddedObject(
               "OpsEmbed",
               "Payload",
               "payload.txt",
               "payload.txt",
-              new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+              new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
               ExcelPictureFormat.PNG,
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              new BinaryContent(PNG_PIXEL_BYTES),
               anchor(3, 0, 6, 4)));
       assertEquals(
           1L,

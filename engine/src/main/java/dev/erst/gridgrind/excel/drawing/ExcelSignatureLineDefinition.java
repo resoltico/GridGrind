@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel.drawing;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -19,7 +19,7 @@ public record ExcelSignatureLineDefinition(
     @Nullable String caption,
     @Nullable String invalidStamp,
     Optional<ExcelPictureFormat> plainSignatureFormat,
-    Optional<ExcelBinaryData> plainSignature) {
+    Optional<BinaryContent> plainSignature) {
   public ExcelSignatureLineDefinition {
     Objects.requireNonNull(name, "name must not be null");
     if (name.isBlank()) {

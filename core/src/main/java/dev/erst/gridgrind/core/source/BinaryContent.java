@@ -1,14 +1,14 @@
-package dev.erst.gridgrind.excel;
+package dev.erst.gridgrind.core.source;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 /** Immutable binary payload used by drawing and embedded-object workflows. */
-public final class ExcelBinaryData {
+public final class BinaryContent {
   private final byte[] bytes;
 
   /** Creates an immutable binary payload from one non-empty byte array. */
-  public ExcelBinaryData(byte[] bytes) {
+  public BinaryContent(byte[] bytes) {
     this(bytes, false);
   }
 
@@ -16,11 +16,11 @@ public final class ExcelBinaryData {
    * Creates an immutable binary payload from workbook-read bytes, which may be empty in malformed
    * packages that GridGrind still reports factually.
    */
-  public static ExcelBinaryData readback(byte[] bytes) {
-    return new ExcelBinaryData(bytes, true);
+  public static BinaryContent readback(byte[] bytes) {
+    return new BinaryContent(bytes, true);
   }
 
-  private ExcelBinaryData(byte[] bytes, boolean allowEmpty) {
+  private BinaryContent(byte[] bytes, boolean allowEmpty) {
     Objects.requireNonNull(bytes, "bytes must not be null");
     if (!allowEmpty && bytes.length == 0) {
       throw new IllegalArgumentException("bytes must not be empty");
@@ -40,7 +40,7 @@ public final class ExcelBinaryData {
 
   @Override
   public boolean equals(Object other) {
-    return other instanceof ExcelBinaryData that && Arrays.equals(bytes, that.bytes);
+    return other instanceof BinaryContent that && Arrays.equals(bytes, that.bytes);
   }
 
   @Override
@@ -50,6 +50,6 @@ public final class ExcelBinaryData {
 
   @Override
   public String toString() {
-    return "ExcelBinaryData[size=" + bytes.length + "]";
+    return "BinaryContent[size=" + bytes.length + "]";
   }
 }

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
@@ -353,11 +354,11 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
             STEditAs.Enum.class,
             ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE));
 
-    ExcelBinaryData binary =
-        invoke(controller, "binary", ExcelBinaryData.class, PNG_PIXEL_BYTES, "image");
+    BinaryContent binary =
+        invoke(controller, "binary", BinaryContent.class, PNG_PIXEL_BYTES, "image");
     assertEquals(PNG_PIXEL_BYTES.length, binary.size());
-    ExcelBinaryData emptyBinary =
-        invoke(controller, "binary", ExcelBinaryData.class, new byte[0], "payload");
+    BinaryContent emptyBinary =
+        invoke(controller, "binary", BinaryContent.class, new byte[0], "payload");
     assertEquals(0, emptyBinary.size());
 
     assertTrue(invoke(controller, "looksLikeOle2Storage", Boolean.class, ole2StorageBytes()));

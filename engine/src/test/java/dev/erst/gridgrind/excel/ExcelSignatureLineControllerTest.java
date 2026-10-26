@@ -9,6 +9,7 @@ import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
@@ -249,7 +250,7 @@ class ExcelSignatureLineControllerTest {
         null,
         "invalid",
         Optional.of(ExcelPictureFormat.PNG),
-        Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES)));
+        Optional.of(new BinaryContent(PNG_PIXEL_BYTES)));
   }
 
   private static List<CTShape> signatureShapes(XSSFVMLDrawing vmlDrawing) {

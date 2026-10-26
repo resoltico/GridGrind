@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -17,7 +17,7 @@ public sealed interface ExcelDrawingObjectPayload
   String contentType();
 
   /** Extracted payload bytes. */
-  ExcelBinaryData data();
+  BinaryContent data();
 
   /** SHA-256 digest of the extracted payload bytes. */
   String sha256();
@@ -29,7 +29,7 @@ public sealed interface ExcelDrawingObjectPayload
       String contentType,
       String fileName,
       String sha256,
-      ExcelBinaryData data,
+      BinaryContent data,
       @Nullable String description)
       implements ExcelDrawingObjectPayload {
     public Picture {
@@ -49,7 +49,7 @@ public sealed interface ExcelDrawingObjectPayload
       String contentType,
       @Nullable String fileName,
       String sha256,
-      ExcelBinaryData data,
+      BinaryContent data,
       @Nullable String label,
       @Nullable String command)
       implements ExcelDrawingObjectPayload {
@@ -69,7 +69,7 @@ public sealed interface ExcelDrawingObjectPayload
   }
 
   private static void validateCommon(
-      String name, String contentType, String sha256, ExcelBinaryData data) {
+      String name, String contentType, String sha256, BinaryContent data) {
     requireNonBlank(name, "name");
     requireNonBlank(contentType, "contentType");
     requireNonBlank(sha256, "sha256");

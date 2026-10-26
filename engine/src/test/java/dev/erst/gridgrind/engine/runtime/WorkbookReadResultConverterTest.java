@@ -38,6 +38,7 @@ import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
@@ -476,7 +477,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                         "application/octet-stream",
                         "payload.txt",
                         "def456",
-                        new ExcelBinaryData(
+                        new BinaryContent(
                             "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                         "Payload",
                         "payload.txt"))));
@@ -511,8 +512,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     "image/png",
                     "OpsPicture.png",
                     "abc123",
-                    new ExcelBinaryData(
-                        "picture".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                    new BinaryContent("picture".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                     "Queue preview")));
     assertEquals("OpsPicture.png", picturePayload.fileName());
     assertEquals("cGljdHVyZQ==", picturePayload.base64Data());

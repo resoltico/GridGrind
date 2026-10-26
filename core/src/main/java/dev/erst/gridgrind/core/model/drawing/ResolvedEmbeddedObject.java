@@ -1,21 +1,20 @@
-package dev.erst.gridgrind.excel.drawing;
+package dev.erst.gridgrind.core.model.drawing;
 
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelBinaryData;
 import java.util.Objects;
 
-/** Authoritative embedded-object creation or replacement payload. */
-public record ExcelEmbeddedObjectDefinition(
+/** Embedded-object payload with materialized package and preview content. */
+public record ResolvedEmbeddedObject(
     String name,
     String label,
     String fileName,
     String command,
-    ExcelBinaryData payload,
+    BinaryContent payload,
     ExcelPictureFormat previewFormat,
-    ExcelBinaryData previewImage,
+    BinaryContent previewImage,
     DrawingAnchorSpec.TwoCell anchor) {
-  public ExcelEmbeddedObjectDefinition {
+  public ResolvedEmbeddedObject {
     Objects.requireNonNull(name, "name must not be null");
     Objects.requireNonNull(label, "label must not be null");
     Objects.requireNonNull(fileName, "fileName must not be null");

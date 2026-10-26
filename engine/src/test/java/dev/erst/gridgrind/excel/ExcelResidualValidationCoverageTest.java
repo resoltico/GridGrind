@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
@@ -328,7 +329,7 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 Optional.empty(),
-                Optional.of(new ExcelBinaryData(new byte[] {1}))));
+                Optional.of(new BinaryContent(new byte[] {1}))));
     new ExcelSignatureLineDefinition(
         "OpsSignature",
         anchor,
@@ -748,7 +749,7 @@ class ExcelResidualValidationCoverageTest {
         null,
         "invalid",
         Optional.of(ExcelPictureFormat.PNG),
-        Optional.of(new ExcelBinaryData(new byte[] {1})));
+        Optional.of(new BinaryContent(new byte[] {1})));
   }
 
   private static ExcelCustomXmlMappingSnapshot customXmlMappingSnapshot(

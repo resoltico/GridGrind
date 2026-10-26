@@ -4,13 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingPictureSupport;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Base64;
@@ -215,11 +216,11 @@ class ExcelSheetCopyPictureSupportTest {
     assertEquals("sourcePartName must not be blank", blankSourcePartName.getMessage());
   }
 
-  private static ExcelPictureDefinition pictureDefinition(
+  private static ResolvedPicture pictureDefinition(
       String pictureName, int fromColumn, int fromRow, int toColumn, int toRow) {
-    return new ExcelPictureDefinition(
+    return new ResolvedPicture(
         pictureName,
-        new ExcelBinaryData(PNG_PIXEL_BYTES),
+        new BinaryContent(PNG_PIXEL_BYTES),
         ExcelPictureFormat.PNG,
         anchor(fromColumn, fromRow, toColumn, toRow),
         Optional.of("Queue preview"));

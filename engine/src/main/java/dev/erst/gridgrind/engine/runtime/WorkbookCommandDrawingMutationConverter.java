@@ -15,7 +15,7 @@ final class WorkbookCommandDrawingMutationConverter {
       case DrawingMutationAction.SetPicture setPicture ->
           new WorkbookDrawingCommand.SetPicture(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
-              WorkbookCommandDrawingInputConverter.toExcelPictureDefinition(setPicture.picture()));
+              WorkbookCommandDrawingInputConverter.toResolvedPicture(setPicture.picture()));
       case DrawingMutationAction.SetSignatureLine setSignatureLine ->
           new WorkbookDrawingCommand.SetSignatureLine(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
@@ -32,7 +32,7 @@ final class WorkbookCommandDrawingMutationConverter {
       case DrawingMutationAction.SetEmbeddedObject setEmbeddedObject ->
           new WorkbookDrawingCommand.SetEmbeddedObject(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
-              WorkbookCommandDrawingInputConverter.toExcelEmbeddedObjectDefinition(
+              WorkbookCommandDrawingInputConverter.toResolvedEmbeddedObject(
                   setEmbeddedObject.embeddedObject()));
       case DrawingMutationAction.SetDrawingObjectAnchor setDrawingObjectAnchor -> {
         DrawingObjectSelector.ByName selector =

@@ -2,8 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.Objects;
@@ -19,8 +19,7 @@ public sealed interface WorkbookDrawingCommand extends WorkbookCommand
         WorkbookDrawingCommand.DeleteDrawingObject {
 
   /** Creates or replaces one picture-backed drawing object on a single sheet. */
-  record SetPicture(String sheetName, ExcelPictureDefinition picture)
-      implements WorkbookDrawingCommand {
+  record SetPicture(String sheetName, ResolvedPicture picture) implements WorkbookDrawingCommand {
     public SetPicture {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(picture, "picture must not be null");
@@ -65,7 +64,7 @@ public sealed interface WorkbookDrawingCommand extends WorkbookCommand
   }
 
   /** Creates or replaces one embedded-object drawing object on a single sheet. */
-  record SetEmbeddedObject(String sheetName, ExcelEmbeddedObjectDefinition embeddedObject)
+  record SetEmbeddedObject(String sheetName, ResolvedEmbeddedObject embeddedObject)
       implements WorkbookDrawingCommand {
     public SetEmbeddedObject {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

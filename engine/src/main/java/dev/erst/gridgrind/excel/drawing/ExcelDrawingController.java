@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel.drawing;
 
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.excel.DrawingObjectNotFoundException;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelFormulaRuntime;
@@ -116,7 +118,7 @@ public final class ExcelDrawingController {
     throw ExcelDrawingObjectLocator.noBinaryPayloadException(sheet, objectName);
   }
 
-  public void setPicture(XSSFSheet sheet, ExcelPictureDefinition definition) {
+  public void setPicture(XSSFSheet sheet, ResolvedPicture definition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
@@ -190,7 +192,7 @@ public final class ExcelDrawingController {
     }
   }
 
-  public void setEmbeddedObject(XSSFSheet sheet, ExcelEmbeddedObjectDefinition definition) {
+  public void setEmbeddedObject(XSSFSheet sheet, ResolvedEmbeddedObject definition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 

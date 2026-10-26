@@ -2,10 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.List;
@@ -22,7 +22,7 @@ public final class ExcelSheetDrawings {
   }
 
   /** Creates or replaces one picture-backed drawing object on this sheet. */
-  public ExcelSheetDrawings setPicture(ExcelPictureDefinition definition) {
+  public ExcelSheetDrawings setPicture(ResolvedPicture definition) {
     drawingSupport.setPicture(definition, sheet);
     return this;
   }
@@ -46,7 +46,7 @@ public final class ExcelSheetDrawings {
   }
 
   /** Creates or replaces one embedded-object drawing object on this sheet. */
-  public ExcelSheetDrawings setEmbeddedObject(ExcelEmbeddedObjectDefinition definition) {
+  public ExcelSheetDrawings setEmbeddedObject(ResolvedEmbeddedObject definition) {
     drawingSupport.setEmbeddedObject(definition, sheet);
     return this;
   }
