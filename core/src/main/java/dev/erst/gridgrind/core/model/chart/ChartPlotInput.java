@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -42,6 +43,7 @@ public sealed interface ChartPlotInput
           "Authored area-chart plot. Supply explicit grouping and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Area(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       ExcelChartGrouping grouping,
       List<ChartAxisInput> axes,
@@ -76,6 +78,7 @@ public sealed interface ChartPlotInput
           "Authored 3D area-chart plot. Supply explicit grouping and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Area3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       ExcelChartGrouping grouping,
       Optional<Integer> gapDepth,
@@ -117,6 +120,7 @@ public sealed interface ChartPlotInput
           "Authored bar-chart plot. Supply explicit barDirection, grouping, and axes. The Java authoring surface exposes one convenience constructor for the standard category/value axis pair.")
   record Bar(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       ExcelChartBarDirection barDirection,
       ExcelChartBarGrouping grouping,
@@ -176,6 +180,7 @@ public sealed interface ChartPlotInput
           "Authored 3D bar-chart plot. Supply explicit barDirection, grouping, and axes. The Java authoring surface exposes one convenience constructor for the standard category/value axis pair.")
   record Bar3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       ExcelChartBarDirection barDirection,
       ExcelChartBarGrouping grouping,
@@ -245,6 +250,7 @@ public sealed interface ChartPlotInput
           "Authored doughnut-chart plot. varyColors, firstSliceAngle, and holeSize are optional.")
   record Doughnut(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       Optional<Integer> firstSliceAngle,
       Optional<Integer> holeSize,
@@ -278,6 +284,7 @@ public sealed interface ChartPlotInput
           "Authored line-chart plot. Supply explicit grouping and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Line(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       ExcelChartGrouping grouping,
       List<ChartAxisInput> axes,
@@ -312,6 +319,7 @@ public sealed interface ChartPlotInput
           "Authored 3D line-chart plot. Supply explicit grouping and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Line3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       ExcelChartGrouping grouping,
       Optional<Integer> gapDepth,
@@ -352,6 +360,7 @@ public sealed interface ChartPlotInput
       summary = "Authored pie-chart plot. varyColors and firstSliceAngle are optional.")
   record Pie(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       Optional<Integer> firstSliceAngle,
       List<ChartSeriesInput> series)
@@ -376,6 +385,7 @@ public sealed interface ChartPlotInput
   @Variant(id = "PIE_3D", summary = "Authored 3D pie-chart plot.")
   record Pie3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
@@ -399,6 +409,7 @@ public sealed interface ChartPlotInput
           "Authored radar-chart plot. Supply explicit style and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Radar(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle style,
       List<ChartAxisInput> axes,
@@ -433,6 +444,7 @@ public sealed interface ChartPlotInput
           "Authored scatter-chart plot. Supply explicit style and axes, or use the Java convenience constructor for the standard X/Y axis pair.")
   record Scatter(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       ExcelChartScatterStyle style,
       List<ChartAxisInput> axes,
@@ -468,8 +480,10 @@ public sealed interface ChartPlotInput
           "Authored surface-chart plot. Supply explicit axes, or use the Java convenience constructor for the standard category/value/series axis set.")
   record Surface(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean wireframe,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
@@ -502,8 +516,10 @@ public sealed interface ChartPlotInput
           "Authored 3D surface-chart plot. Supply explicit axes, or use the Java convenience constructor for the standard category/value/series axis set.")
   record Surface3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean varyColors,
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean wireframe,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)

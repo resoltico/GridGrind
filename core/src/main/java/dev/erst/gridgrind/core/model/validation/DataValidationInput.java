@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,8 +18,10 @@ import java.util.Optional;
 public record DataValidationInput(
     DataValidationRuleInput rule,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean allowBlank,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean suppressDropDownArrow,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DataValidationPromptInput> prompt,
     @JsonInclude(JsonInclude.Include.NON_ABSENT)

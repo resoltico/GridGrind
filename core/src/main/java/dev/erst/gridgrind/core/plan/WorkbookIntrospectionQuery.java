@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -54,6 +55,7 @@ public sealed interface WorkbookIntrospectionQuery extends InspectionQuery.Intro
   record ExportCustomXmlMapping(
       CustomXmlMappingLocator mapping,
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @WireDefault("false")
           boolean validateSchema,
       @ProtocolField(optional = true) String encoding)
       implements WorkbookIntrospectionQuery {

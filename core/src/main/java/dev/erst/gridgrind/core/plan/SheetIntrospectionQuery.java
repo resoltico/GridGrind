@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -78,7 +79,7 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
   record GetWindow(
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection,
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
-          @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+          @WireDefault(value = "false", omit = true)
           boolean includeBlanks)
       implements SheetIntrospectionQuery {
     /** Creates a sparse window query that relies on the default cell-read projection. */

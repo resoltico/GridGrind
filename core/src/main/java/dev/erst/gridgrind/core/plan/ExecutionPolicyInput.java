@@ -1,11 +1,9 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import java.util.Objects;
@@ -21,24 +19,16 @@ import java.util.Objects;
     displayOrder = 9)
 public record ExecutionPolicyInput(
     @ProtocolField(optional = true)
-        @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = ExecutionModeInput.DefaultFilter.class)
+        @WireDefault(factory = ExecutionModeInput.class, method = "defaults", omit = true)
         ExecutionModeInput mode,
     @ProtocolField(optional = true)
-        @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = ExecutionJournalInput.DefaultFilter.class)
+        @WireDefault(factory = ExecutionJournalInput.class, method = "defaults", omit = true)
         ExecutionJournalInput journal,
     @ProtocolField(optional = true)
-        @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = CalculationPolicyInput.DefaultFilter.class)
+        @WireDefault(factory = CalculationPolicyInput.class, method = "defaults", omit = true)
         CalculationPolicyInput calculation,
     @ProtocolField(optional = true)
-        @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = AssertionModeInput.DefaultFilter.class)
+        @WireDefault(factory = AssertionModeInput.class, method = "defaults", omit = true)
         AssertionModeInput assertionMode) {
   /** Returns the default execution policy for mode, journaling, calculation, and assertions. */
   public static ExecutionPolicyInput defaults() {
@@ -105,20 +95,6 @@ public record ExecutionPolicyInput(
         assertionMode);
   }
 
-  /** Reads one execution-policy block while applying the documented omission defaults. */
-  @JsonCreator
-  static ExecutionPolicyInput create(
-      @JsonProperty("mode") ExecutionModeInput mode,
-      @JsonProperty("journal") ExecutionJournalInput journal,
-      @JsonProperty("calculation") CalculationPolicyInput calculation,
-      @JsonProperty("assertionMode") AssertionModeInput assertionMode) {
-    return new ExecutionPolicyInput(
-        mode == null ? ExecutionModeInput.defaults() : mode,
-        journal == null ? ExecutionJournalInput.defaults() : journal,
-        calculation == null ? CalculationPolicyInput.defaults() : calculation,
-        assertionMode == null ? AssertionModeInput.defaults() : assertionMode);
-  }
-
   public ExecutionPolicyInput {
     Objects.requireNonNull(mode, "mode must not be null");
     Objects.requireNonNull(journal, "journal must not be null");
@@ -159,18 +135,5 @@ public record ExecutionPolicyInput(
   @JsonIgnore
   public AssertionModeInput effectiveAssertionMode() {
     return assertionMode;
-  }
-
-  /** Custom Jackson inclusion filter that omits the standard default execution policy. */
-  public static final class DefaultFilter {
-    @Override
-    public boolean equals(Object other) {
-      return other == null || (other instanceof ExecutionPolicyInput input && input.isDefault());
-    }
-
-    @Override
-    public int hashCode() {
-      return DefaultFilter.class.hashCode();
-    }
   }
 }

@@ -20,17 +20,4 @@ public enum AssertionModeInput {
   public boolean isDefault() {
     return this == FAIL_FAST;
   }
-
-  /** Custom Jackson inclusion filter that omits the default fail-fast mode. */
-  public static final class DefaultFilter {
-    @Override
-    public boolean equals(Object other) {
-      return other == null || other == FAIL_FAST;
-    }
-
-    @Override
-    public int hashCode() {
-      return DefaultFilter.class.hashCode();
-    }
-  }
 }

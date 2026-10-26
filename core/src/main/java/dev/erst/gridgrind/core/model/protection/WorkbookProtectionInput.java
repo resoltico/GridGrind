@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.source.SecretReference;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,10 +19,13 @@ import java.util.Optional;
     displayOrder = 75)
 public record WorkbookProtectionInput(
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean structureLocked,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean windowsLocked,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean revisionsLocked,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SecretReference> workbookPasswordRef,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SecretReference> revisionsPasswordRef) {

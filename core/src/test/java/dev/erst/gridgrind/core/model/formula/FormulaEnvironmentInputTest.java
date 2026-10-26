@@ -50,35 +50,6 @@ class FormulaEnvironmentInputTest {
   }
 
   @Test
-  void emptyFilterOnlyMatchesTrulyEmptyFormulaEnvironments() {
-    FormulaEnvironmentInput.EmptyFilter filter = new FormulaEnvironmentInput.EmptyFilter();
-    FormulaEnvironmentInput defaults = FormulaEnvironmentInput.empty();
-    FormulaEnvironmentInput externalWorkbookOnly =
-        new FormulaEnvironmentInput(
-            List.of(new FormulaExternalWorkbookInput("Rates.xlsx", "tmp/rates.xlsx")),
-            FormulaMissingWorkbookPolicy.ERROR,
-            List.of());
-    FormulaEnvironmentInput permissiveMissingWorkbookPolicy =
-        new FormulaEnvironmentInput(
-            List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of());
-    FormulaEnvironmentInput udfOnly =
-        new FormulaEnvironmentInput(
-            List.of(),
-            FormulaMissingWorkbookPolicy.ERROR,
-            List.of(
-                new FormulaUdfToolpackInput(
-                    "math", List.of(new FormulaUdfFunctionInput("DOUBLE", 1, 1, "ARG1*2")))));
-
-    assertTrue(filterMatches(filter, null));
-    assertTrue(filterMatches(filter, defaults));
-    assertFalse(filterMatches(filter, externalWorkbookOnly));
-    assertFalse(filterMatches(filter, permissiveMissingWorkbookPolicy));
-    assertFalse(filterMatches(filter, udfOnly));
-    assertFalse(filterMatches(filter, "not-a-formula-environment"));
-    assertEquals(FormulaEnvironmentInput.EmptyFilter.class.hashCode(), filter.hashCode());
-  }
-
-  @Test
   void rejectsInvalidFormulaEnvironmentInputs() {
     FormulaUdfFunctionInput validFunction = new FormulaUdfFunctionInput("DOUBLE", 1, 1, "ARG1");
 
@@ -179,9 +150,5 @@ class FormulaEnvironmentInputTest {
                     new FormulaUdfToolpackInput("math", List.of(validFunction)),
                     new FormulaUdfToolpackInput(
                         "stats", List.of(new FormulaUdfFunctionInput("double", 1, 1, "ARG1"))))));
-  }
-
-  private static boolean filterMatches(Object filter, Object candidate) {
-    return filter.equals(candidate);
   }
 }

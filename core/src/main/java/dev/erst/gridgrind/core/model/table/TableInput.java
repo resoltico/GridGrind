@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -30,16 +31,21 @@ public record TableInput(
     SheetName sheetName,
     RangeRef range,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean showTotalsRow,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.TRUE)
+        @WireDefault("true")
         boolean hasAutofilter,
     TableStyleInput style,
     @ProtocolField(optional = true) TextSourceInput comment,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean published,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean insertRow,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean insertRowShift,
     @ProtocolField(optional = true) String headerRowCellStyle,
     @ProtocolField(optional = true) String dataCellStyle,

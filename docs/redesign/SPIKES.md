@@ -916,3 +916,29 @@ value-instantiation/serialization extension points. See `default-binding-and-omi
 Next: apply metadata defaults, delete secondary wire creators/null normalizers, remove the
 annotation dependency from core, then complete vocabulary normalization and schema intake.
 Baseline diff remains empty; no supplement.
+
+### WP-24 omission-default mechanism and execution policy checkpoint
+
+WireDefault now declares literal, public factory, and sibling-derived component defaults. A pure
+JDK resolver supplies Java values; native Jackson 3 creator/property extensions distinguish absent
+fields from explicit null and omit only declared matching defaults. NON_ABSENT is global. Execution
+policy, calculation, journal and formula-environment secondary wire factories were deleted, with
+seven obsolete custom inclusion filters and three tests dedicated to those deleted filters. Five
+replacement tests independently assert default/override/null behavior, nested policies, sibling
+resolution and output omission. Boolean sites carry WireDefault while old consumers are migrated in
+the next batch; this checkpoint does not complete WP-24 or remove the core annotation dependency.
+
+Core and JSON regression suites passed. Initial compile errors (NullAway) and standard PMD findings
+were repaired; focused PMD then passed. One overlapping iteration failed while another build pruned
+JAR outputs; stable checks were rerun serially. A combined spotlessApply/check invocation exposed
+an existing task-order cycle, so formatting and verification were run as separate invocations.
+The stopped Gradle daemon had retained hundreds of idle compiler workers; terminated that stopped
+daemon and its task-owned workers before the final build. No test result from the overlapping runs
+was used as delivered-state evidence.
+
+Final ./gradlew check passed in 3m20s: core 325, JSON 335, engine 1513, CLI 598, architecture 35;
+no failures, errors or skips. All 141 golden cases passed without snapshot changes. Inventory:
+main Java 125348 -> 125580, test Java 154930 -> 154931, JSON main files 67 -> 69; registrations 0,
+handwritten descriptor lines 0, Support 217 and blank checks 438 unchanged. Evidence is external in
+wp-22/defaults-*.log and defaults-inventories. No mutation or active fuzzing ran. Baseline diff is
+empty and no supplement exists yet. Next: complete all defaults/creator and Jackson-core removal.

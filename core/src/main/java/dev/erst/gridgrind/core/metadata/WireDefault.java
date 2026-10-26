@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.RECORD_COMPONENT)
 public @interface WireDefault {
-  /** JSON literal used when this component is absent. */
+  /** Literal text, enum constant, boolean, or empty-list marker for an absent component. */
   String value() default "";
 
   /** Core factory owner, or the component type when omitted. */
@@ -23,4 +23,7 @@ public @interface WireDefault {
 
   /** Whether the effective default is omitted during wire serialization. */
   boolean omit() default false;
+
+  /** Sibling component copied when this component is absent. */
+  String from() default "";
 }

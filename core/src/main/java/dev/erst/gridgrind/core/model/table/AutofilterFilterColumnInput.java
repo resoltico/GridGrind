@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import java.util.Objects;
 
 /** One authored autofilter filter-column payload. */
@@ -15,6 +16,7 @@ import java.util.Objects;
 public record AutofilterFilterColumnInput(
     long columnId,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.TRUE)
+        @WireDefault("true")
         boolean showButton,
     AutofilterFilterCriterionInput criterion) {
   /** Creates a filter-column payload with an explicit visible button. */

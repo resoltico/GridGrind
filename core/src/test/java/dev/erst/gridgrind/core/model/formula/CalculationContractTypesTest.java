@@ -148,70 +148,6 @@ class CalculationContractTypesTest {
   }
 
   @Test
-  void executionPolicyDefaultFilterOnlyMatchesNullOrDefaultPolicies() {
-    ExecutionPolicyInput.DefaultFilter filter = new ExecutionPolicyInput.DefaultFilter();
-    ExecutionPolicyInput defaultPolicy = ExecutionPolicyInput.defaults();
-    ExecutionPolicyInput customPolicy =
-        ExecutionPolicyInput.modeAndCalculation(
-            ExecutionModeInput.eventRead(),
-            new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true));
-
-    assertTrue(filterMatches(filter, null));
-    assertTrue(filterMatches(filter, defaultPolicy));
-    assertFalse(filterMatches(filter, customPolicy));
-    assertFalse(filterMatches(filter, "not-an-execution-policy"));
-    assertEquals(ExecutionPolicyInput.DefaultFilter.class.hashCode(), filter.hashCode());
-  }
-
-  @Test
-  void nestedExecutionFiltersOnlyMatchNullOrDefaultValues() {
-    ExecutionModeInput.DefaultFilter modeFilter = new ExecutionModeInput.DefaultFilter();
-    ExecutionJournalInput.DefaultFilter journalFilter = new ExecutionJournalInput.DefaultFilter();
-    CalculationStrategyInput.DefaultFilter strategyFilter =
-        new CalculationStrategyInput.DefaultFilter();
-    CalculationPolicyInput.DefaultFilter calculationFilter =
-        new CalculationPolicyInput.DefaultFilter();
-    AssertionModeInput.DefaultFilter assertionModeFilter = new AssertionModeInput.DefaultFilter();
-
-    assertTrue(defaultFilterMatches(modeFilter, null));
-    assertTrue(defaultFilterMatches(modeFilter, ExecutionModeInput.defaults()));
-    assertFalse(defaultFilterMatches(modeFilter, ExecutionModeInput.eventRead()));
-    assertFalse(defaultFilterMatches(modeFilter, "not-an-execution-mode"));
-    assertEquals(ExecutionModeInput.DefaultFilter.class.hashCode(), modeFilter.hashCode());
-
-    assertTrue(defaultFilterMatches(journalFilter, null));
-    assertTrue(defaultFilterMatches(journalFilter, ExecutionJournalInput.defaults()));
-    assertTrue(defaultFilterMatches(journalFilter, ExecutionJournalLevel.SUMMARY));
-    assertFalse(
-        defaultFilterMatches(
-            journalFilter, new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)));
-    assertEquals(ExecutionJournalInput.DefaultFilter.class.hashCode(), journalFilter.hashCode());
-
-    assertTrue(defaultFilterMatches(strategyFilter, null));
-    assertTrue(defaultFilterMatches(strategyFilter, new CalculationStrategyInput.DoNotCalculate()));
-    assertFalse(defaultFilterMatches(strategyFilter, new CalculationStrategyInput.EvaluateAll()));
-    assertFalse(defaultFilterMatches(strategyFilter, "not-a-calculation-strategy"));
-    assertEquals(
-        CalculationStrategyInput.DefaultFilter.class.hashCode(), strategyFilter.hashCode());
-
-    assertTrue(defaultFilterMatches(calculationFilter, null));
-    assertTrue(defaultFilterMatches(calculationFilter, CalculationPolicyInput.defaults()));
-    assertFalse(
-        defaultFilterMatches(
-            calculationFilter,
-            new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true)));
-    assertFalse(defaultFilterMatches(calculationFilter, "not-a-calculation-policy"));
-    assertEquals(
-        CalculationPolicyInput.DefaultFilter.class.hashCode(), calculationFilter.hashCode());
-
-    assertTrue(defaultFilterMatches(assertionModeFilter, null));
-    assertTrue(defaultFilterMatches(assertionModeFilter, AssertionModeInput.FAIL_FAST));
-    assertFalse(defaultFilterMatches(assertionModeFilter, AssertionModeInput.COLLECT));
-    assertFalse(defaultFilterMatches(assertionModeFilter, "not-an-assertion-mode"));
-    assertEquals(AssertionModeInput.DefaultFilter.class.hashCode(), assertionModeFilter.hashCode());
-  }
-
-  @Test
   void validatesCalculationReportsAndJournalCalculationEnvelope() {
     CalculationReport.FormulaCapability evaluable =
         new CalculationReport.FormulaCapability(
@@ -379,14 +315,5 @@ class CalculationContractTypesTest {
         preserved.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(java.util.Optional.of("C4"), preserved.address());
     assertEquals(java.util.Optional.of("SUM(A1:A3)"), preserved.formula());
-  }
-
-  private static boolean filterMatches(
-      ExecutionPolicyInput.DefaultFilter filter, Object candidate) {
-    return filter.equals(candidate);
-  }
-
-  private static boolean defaultFilterMatches(Object filter, Object candidate) {
-    return filter.equals(candidate);
   }
 }

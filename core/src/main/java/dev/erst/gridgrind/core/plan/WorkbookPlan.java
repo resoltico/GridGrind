@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
 import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
@@ -36,14 +37,10 @@ public record WorkbookPlan(
     WorkbookSource source,
     WorkbookPersistence persistence,
     @ProtocolField(optional = true)
-        @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = ExecutionPolicyInput.DefaultFilter.class)
+        @WireDefault(factory = ExecutionPolicyInput.class, method = "defaults", omit = true)
         ExecutionPolicyInput execution,
     @ProtocolField(optional = true)
-        @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = FormulaEnvironmentInput.EmptyFilter.class)
+        @WireDefault(factory = FormulaEnvironmentInput.class, method = "empty", omit = true)
         FormulaEnvironmentInput formulaEnvironment,
     List<WorkbookStep> steps) {
   /** Normalizes one authored plan instance. */

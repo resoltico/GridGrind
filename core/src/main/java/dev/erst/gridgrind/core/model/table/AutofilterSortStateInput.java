@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import java.util.ArrayList;
@@ -21,8 +22,10 @@ import java.util.Optional;
 public record AutofilterSortStateInput(
     RangeRef range,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean caseSensitive,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
         boolean columnSort,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ExcelAutofilterSortMethod> sortMethod,
     List<AutofilterSortConditionInput> conditions) {

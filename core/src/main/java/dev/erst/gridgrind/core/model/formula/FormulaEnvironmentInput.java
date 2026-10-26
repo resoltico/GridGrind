@@ -1,10 +1,9 @@
 package dev.erst.gridgrind.core.model.formula;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.vocabulary.FormulaEnvironmentSupport;
 import java.util.List;
 import java.util.Objects;
@@ -16,24 +15,14 @@ import java.util.Objects;
         "Optional request-scoped formula-evaluation environment covering external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. Omit formulaEnvironment when the default evaluator is intended.",
     displayOrder = 18)
 public record FormulaEnvironmentInput(
-    @ProtocolField(optional = true) List<FormulaExternalWorkbookInput> externalWorkbooks,
-    @ProtocolField(optional = true) FormulaMissingWorkbookPolicy missingWorkbookPolicy,
-    @ProtocolField(optional = true) List<FormulaUdfToolpackInput> udfToolpacks) {
+    @ProtocolField(optional = true) @WireDefault("[]")
+        List<FormulaExternalWorkbookInput> externalWorkbooks,
+    @ProtocolField(optional = true) @WireDefault("ERROR")
+        FormulaMissingWorkbookPolicy missingWorkbookPolicy,
+    @ProtocolField(optional = true) @WireDefault("[]") List<FormulaUdfToolpackInput> udfToolpacks) {
   /** Returns the default empty formula environment with no external workbooks or UDFs. */
   public static FormulaEnvironmentInput empty() {
     return new FormulaEnvironmentInput(List.of(), FormulaMissingWorkbookPolicy.ERROR, List.of());
-  }
-
-  /** Reads one formula-environment block while applying the documented omission defaults. */
-  @JsonCreator
-  static FormulaEnvironmentInput create(
-      @JsonProperty("externalWorkbooks") List<FormulaExternalWorkbookInput> externalWorkbooks,
-      @JsonProperty("missingWorkbookPolicy") FormulaMissingWorkbookPolicy missingWorkbookPolicy,
-      @JsonProperty("udfToolpacks") List<FormulaUdfToolpackInput> udfToolpacks) {
-    return new FormulaEnvironmentInput(
-        externalWorkbooks == null ? List.of() : externalWorkbooks,
-        missingWorkbookPolicy == null ? FormulaMissingWorkbookPolicy.ERROR : missingWorkbookPolicy,
-        udfToolpacks == null ? List.of() : udfToolpacks);
   }
 
   public FormulaEnvironmentInput {
@@ -68,18 +57,5 @@ public record FormulaEnvironmentInput(
     return externalWorkbooks.isEmpty()
         && missingWorkbookPolicy == FormulaMissingWorkbookPolicy.ERROR
         && udfToolpacks.isEmpty();
-  }
-
-  /** Custom Jackson inclusion filter that omits an empty formula-environment object. */
-  public static final class EmptyFilter {
-    @Override
-    public boolean equals(Object other) {
-      return other == null || (other instanceof FormulaEnvironmentInput input && input.isEmpty());
-    }
-
-    @Override
-    public int hashCode() {
-      return EmptyFilter.class.hashCode();
-    }
   }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.style.RichTextRunInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.Objects;
@@ -19,7 +20,9 @@ import java.util.Optional;
 public record CommentInput(
     TextSourceInput text,
     String author,
-    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE) boolean visible,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @WireDefault("false")
+        boolean visible,
     @com.fasterxml.jackson.annotation.JsonInclude(
             com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
         Optional<java.util.List<RichTextRunInput>> runs,

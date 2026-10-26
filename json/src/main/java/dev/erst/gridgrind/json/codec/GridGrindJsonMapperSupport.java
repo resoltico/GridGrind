@@ -29,10 +29,9 @@ import tools.jackson.databind.type.LogicalType;
 /** Owns JSON mapper construction and request-size policy for the protocol seam. */
 public final class GridGrindJsonMapperSupport {
   public static final JsonMapper JSON_MAPPER = buildMapper(unlimitedJsonFactory());
-  public static final JsonMapper WIRE_JSON_MAPPER =
-      buildMapper(unlimitedJsonFactory(), true, false);
+  public static final JsonMapper WIRE_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), false);
   public static final JsonMapper PRETTY_WIRE_JSON_MAPPER =
-      buildMapper(unlimitedJsonFactory(), true, true);
+      buildMapper(unlimitedJsonFactory(), true);
   public static final JsonMapper REQUEST_JSON_MAPPER = buildMapper(requestJsonFactory());
 
   private GridGrindJsonMapperSupport() {}
@@ -62,11 +61,10 @@ public final class GridGrindJsonMapperSupport {
   }
 
   private static JsonMapper buildMapper(JsonFactory jsonFactory) {
-    return buildMapper(jsonFactory, false, false);
+    return buildMapper(jsonFactory, false);
   }
 
-  private static JsonMapper buildMapper(
-      JsonFactory jsonFactory, boolean omitNullValues, boolean prettyPrint) {
+  private static JsonMapper buildMapper(JsonFactory jsonFactory, boolean prettyPrint) {
     JsonMapper.Builder builder =
         JsonMapper.builder(jsonFactory)
             .annotationIntrospector(new CoreMetadataIntrospector())
@@ -89,16 +87,16 @@ public final class GridGrindJsonMapperSupport {
     if (prettyPrint) {
       builder.enable(SerializationFeature.INDENT_OUTPUT);
     }
-    if (omitNullValues) {
-      builder.changeDefaultPropertyInclusion(
-          value -> value.withValueInclusion(JsonInclude.Include.NON_ABSENT));
-    }
+    builder.changeDefaultPropertyInclusion(
+        value -> value.withValueInclusion(JsonInclude.Include.NON_ABSENT));
     return builder.build();
   }
 
   private static SimpleModule coreCodecs() {
     SimpleModule module =
         new SimpleModule()
+            .setValueInstantiators(new RecordDefaultInstantiators())
+            .setSerializerModifier(new RecordDefaultSerialization())
             .setDeserializers(new WireStringDeserializers())
             .addSerializer(WireString.class, new WireStringSerializer())
             .addSerializer(Selector.class, new SelectorJsonSerializer());
