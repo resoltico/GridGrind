@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -15,6 +16,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
@@ -413,7 +415,8 @@ class ExcelResidualHelperCoverageTest {
 
       ExcelSheetPresentationController.clearTabColor(workbook.createSheet("NoSheetPr"));
       XSSFSheet colorSheet = workbook.createSheet("Color");
-      colorSheet.setTabColor(ExcelColorSupport.toXssfColor(workbook, ExcelColor.rgb("#FF0000")));
+      colorSheet.setTabColor(
+          ExcelColorSupport.toXssfColor(workbook, ColorSpec.rgb(new RgbHex("#FF0000"))));
       ExcelSheetPresentationController.clearTabColor(colorSheet);
       assertNull(colorSheet.getTabColor());
 

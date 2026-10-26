@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import java.util.Comparator;
@@ -63,7 +64,7 @@ final class ExcelSheetPresentationController {
         sheet.isRightToLeft());
   }
 
-  private static void applyTabColor(XSSFSheet sheet, Optional<ExcelColor> tabColor) {
+  private static void applyTabColor(XSSFSheet sheet, Optional<ColorSpec> tabColor) {
     Objects.requireNonNull(tabColor, "tabColor must not be null");
     if (tabColor.isEmpty()) {
       clearTabColor(sheet);

@@ -3,12 +3,17 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -75,11 +80,11 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.of(
-                      ExcelCellFill.patternForeground(
-                          ExcelFillPattern.SOLID, ExcelColor.rgb("#AABBCC"))),
+                      CellFillSpec.patternForeground(
+                          ExcelFillPattern.SOLID, ColorSpec.rgb(new RgbHex("#AABBCC")))),
                   Optional.of(
-                      new ExcelBorder(
-                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                      new CellBorderPatch(
+                          Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.THIN)),
                           Optional.empty(),
                           Optional.empty(),
                           Optional.empty(),
@@ -148,13 +153,13 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                       Optional.empty(),
                       Optional.empty())),
               Optional.of(
-                  ExcelCellFill.patternForeground(
-                      ExcelFillPattern.SOLID, ExcelColor.rgb("#DDEBF7"))),
+                  CellFillSpec.patternForeground(
+                      ExcelFillPattern.SOLID, ColorSpec.rgb(new RgbHex("#DDEBF7")))),
               Optional.of(
-                  new ExcelBorder(
+                  new CellBorderPatch(
                       Optional.empty(),
                       Optional.empty(),
-                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
+                      Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.DOUBLE)),
                       Optional.empty(),
                       Optional.empty())),
               Optional.empty());
@@ -215,7 +220,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                                       Optional.empty(),
                                       Optional.empty(),
                                       Optional.empty(),
-                                      Optional.of(ExcelColor.rgb("#FF0000")),
+                                      Optional.of(ColorSpec.rgb(new RgbHex("#FF0000"))),
                                       Optional.empty(),
                                       Optional.empty())))))));
       sheet
@@ -231,7 +236,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.of(Boolean.TRUE),
                           Optional.of("Aptos"),
                           Optional.of(FontHeightReport.fromTwips(260)),
-                          Optional.of(ExcelColor.rgb("#112233")),
+                          Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                           Optional.empty(),
                           Optional.empty())),
                   Optional.empty(),
@@ -286,15 +291,15 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.of("Aptos"),
                           Optional.of(
                               FontHeightReport.fromPoints(new java.math.BigDecimal("15.2"))),
-                          Optional.of(ExcelColor.rgb("#A3A3A3")),
+                          Optional.of(ColorSpec.rgb(new RgbHex("#A3A3A3"))),
                           Optional.empty(),
                           Optional.of(Boolean.TRUE))),
                   Optional.of(
-                      ExcelCellFill.patternForeground(
-                          ExcelFillPattern.SOLID, ExcelColor.rgb("#CDCDCD"))),
+                      CellFillSpec.patternForeground(
+                          ExcelFillPattern.SOLID, ColorSpec.rgb(new RgbHex("#CDCDCD")))),
                   Optional.of(
-                      new ExcelBorder(
-                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DASH_DOT)),
+                      new CellBorderPatch(
+                          Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.DASH_DOT)),
                           Optional.empty(),
                           Optional.empty(),
                           Optional.empty(),
@@ -359,13 +364,13 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.of(
-                      ExcelCellFill.patternForeground(
-                          ExcelFillPattern.SOLID, ExcelColor.rgb("#603A79"))),
+                      CellFillSpec.patternForeground(
+                          ExcelFillPattern.SOLID, ColorSpec.rgb(new RgbHex("#603A79")))),
                   Optional.of(
-                      new ExcelBorder(
-                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED)),
+                      new CellBorderPatch(
+                          Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.MEDIUM_DASHED)),
                           Optional.empty(),
-                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED)),
+                          Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.MEDIUM_DASHED)),
                           Optional.empty(),
                           Optional.empty())),
                   Optional.empty()));

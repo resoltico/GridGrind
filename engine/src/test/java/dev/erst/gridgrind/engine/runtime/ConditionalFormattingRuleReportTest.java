@@ -2,7 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
@@ -14,8 +16,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
@@ -143,10 +143,10 @@ class ConditionalFormattingRuleReportTest {
             true,
             false,
             null,
-            ExcelColor.rgb("#111111"),
+            ColorSpec.rgb(new RgbHex("#111111")),
             true,
             false,
-            ExcelColor.rgb("#EEEEEE"),
+            ColorSpec.rgb(new RgbHex("#EEEEEE")),
             border,
             List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT));
 
@@ -249,7 +249,7 @@ class ConditionalFormattingRuleReportTest {
         () -> new ConditionalFormattingThresholdReport(null, null, null));
   }
 
-  private static ExcelBorderSide borderSide(ExcelBorderStyle style, String rgb) {
-    return new ExcelBorderSide(Optional.of(style), Optional.of(ExcelColor.rgb(rgb)));
+  private static BorderSidePatch borderSide(ExcelBorderStyle style, String rgb) {
+    return new BorderSidePatch(Optional.of(style), Optional.of(ColorSpec.rgb(new RgbHex(rgb))));
   }
 }

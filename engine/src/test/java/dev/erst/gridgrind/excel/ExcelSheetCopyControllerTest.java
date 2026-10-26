@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -644,10 +645,12 @@ class ExcelSheetCopyControllerTest {
                                   ExcelConditionalFormattingThresholdType.MIN, null, null),
                               new ExcelConditionalFormattingThreshold(
                                   ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                          List.of(ExcelColor.rgb("#112233"), ExcelColor.rgb("#445566")),
+                          List.of(
+                              ColorSpec.rgb(new RgbHex("#112233")),
+                              ColorSpec.rgb(new RgbHex("#445566"))),
                           false),
                       new ExcelConditionalFormattingRule.DataBarRule(
-                          ExcelColor.rgb("#223344"),
+                          ColorSpec.rgb(new RgbHex("#223344")),
                           false,
                           0,
                           100,
@@ -1146,7 +1149,7 @@ class ExcelSheetCopyControllerTest {
                                         Optional.of(false),
                                         Optional.of("Aptos"),
                                         Optional.empty(),
-                                        Optional.of(ExcelColor.rgb("#112233")),
+                                        Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                                         Optional.empty(),
                                         Optional.empty())))))),
                 Optional.of(new ExcelCommentAnchor(1, 1, 4, 5))));
@@ -1254,7 +1257,9 @@ class ExcelSheetCopyControllerTest {
         new ExcelAutofilterFilterColumn(
             3L, true, new ExcelAutofilterFilterCriterion.Top10(10, false, true)),
         new ExcelAutofilterFilterColumn(
-            4L, true, new ExcelAutofilterFilterCriterion.Color(false, ExcelColor.rgb("#AABBCC"))),
+            4L,
+            true,
+            new ExcelAutofilterFilterCriterion.Color(false, ColorSpec.rgb(new RgbHex("#AABBCC")))),
         new ExcelAutofilterFilterColumn(
             5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2)));
   }
@@ -1266,7 +1271,8 @@ class ExcelSheetCopyControllerTest {
         true,
         java.util.Optional.of(dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.STROKE),
         List.of(
-            new ExcelAutofilterSortCondition.CellColor("A2:A3", true, ExcelColor.rgb("#102030")),
+            new ExcelAutofilterSortCondition.CellColor(
+                "A2:A3", true, ColorSpec.rgb(new RgbHex("#102030"))),
             new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4)));
   }
 

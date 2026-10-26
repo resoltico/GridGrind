@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
@@ -14,8 +15,8 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
-import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
@@ -42,10 +43,10 @@ class ConditionalFormattingEntryReportTest {
                             true,
                             false,
                             FontHeightReport.fromPoints(BigDecimal.valueOf(12)),
-                            ExcelColor.rgb("#102030"),
+                            ColorSpec.rgb(new RgbHex("#102030")),
                             true,
                             true,
-                            ExcelColor.rgb("#E0F0AA"),
+                            ColorSpec.rgb(new RgbHex("#E0F0AA")),
                             null,
                             List.of())),
                     new ExcelConditionalFormattingRuleSnapshot.CellValueRule(

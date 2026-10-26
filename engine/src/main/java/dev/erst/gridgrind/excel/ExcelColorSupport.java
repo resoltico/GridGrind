@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import java.util.Objects;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -11,23 +12,23 @@ final class ExcelColorSupport {
   private ExcelColorSupport() {}
 
   /** Converts one authored color into the matching POI workbook color. */
-  static XSSFColor toXssfColor(XSSFWorkbook workbook, ExcelColor color) {
+  static XSSFColor toXssfColor(XSSFWorkbook workbook, ColorSpec color) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(color, "color must not be null");
 
     XSSFColor xssfColor =
         switch (color) {
-          case ExcelColor.Rgb rgb -> ExcelRgbColorSupport.toXssfColor(workbook, rgb.rgb());
-          case ExcelColor.Theme _ -> new XSSFColor(workbook.getStylesSource().getIndexedColors());
-          case ExcelColor.Indexed _ -> new XSSFColor(workbook.getStylesSource().getIndexedColors());
+          case ColorSpec.Rgb rgb -> ExcelRgbColorSupport.toXssfColor(workbook, rgb.rgb().value());
+          case ColorSpec.Theme _ -> new XSSFColor(workbook.getStylesSource().getIndexedColors());
+          case ColorSpec.Indexed _ -> new XSSFColor(workbook.getStylesSource().getIndexedColors());
         };
     switch (color) {
-      case ExcelColor.Rgb rgb -> applyTint(xssfColor, rgb.tint());
-      case ExcelColor.Theme theme -> {
+      case ColorSpec.Rgb rgb -> applyTint(xssfColor, rgb.tint());
+      case ColorSpec.Theme theme -> {
         xssfColor.setTheme(theme.theme());
         applyTint(xssfColor, theme.tint());
       }
-      case ExcelColor.Indexed indexed -> {
+      case ColorSpec.Indexed indexed -> {
         xssfColor.setIndexed(indexed.indexed());
         applyTint(xssfColor, indexed.tint());
       }
@@ -35,14 +36,14 @@ final class ExcelColorSupport {
     return xssfColor;
   }
 
-  static @Nullable ExcelColor copyOf(@Nullable CellColorReport color) {
+  static @Nullable ColorSpec copyOf(@Nullable CellColorReport color) {
     return color == null
         ? null
         : switch (color) {
-          case CellColorReport.Rgb rgb -> ExcelColor.rgb(rgb.rgb().value(), rgb.tint());
-          case CellColorReport.Theme theme -> ExcelColor.theme(theme.theme(), theme.tint());
+          case CellColorReport.Rgb rgb -> new ColorSpec.Rgb(rgb.rgb(), rgb.tint());
+          case CellColorReport.Theme theme -> new ColorSpec.Theme(theme.theme(), theme.tint());
           case CellColorReport.Indexed indexed ->
-              ExcelColor.indexed(indexed.indexed(), indexed.tint());
+              new ColorSpec.Indexed(indexed.indexed(), indexed.tint());
         };
   }
 

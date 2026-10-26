@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -79,7 +80,8 @@ class ExcelAutofilterControllerTest {
               new ExcelAutofilterFilterColumn(
                   4L,
                   true,
-                  new ExcelAutofilterFilterCriterion.Color(false, ExcelColor.rgb("#AABBCC"))),
+                  new ExcelAutofilterFilterCriterion.Color(
+                      false, ColorSpec.rgb(new RgbHex("#AABBCC")))),
               new ExcelAutofilterFilterColumn(
                   5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2))),
           Optional.of(
@@ -90,7 +92,7 @@ class ExcelAutofilterControllerTest {
                   Optional.of(ExcelAutofilterSortMethod.STROKE),
                   List.of(
                       new ExcelAutofilterSortCondition.CellColor(
-                          "A2:A3", true, ExcelColor.rgb("#102030")),
+                          "A2:A3", true, ColorSpec.rgb(new RgbHex("#102030"))),
                       new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4)))));
 
       ExcelAutofilterSnapshot.SheetOwned snapshot =

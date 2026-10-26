@@ -2,7 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 
 /** Test-only helpers for inspecting sealed engine style variants. */
@@ -28,13 +31,13 @@ final class ExcelStyleTestAccess {
         : null;
   }
 
-  static ExcelFillPattern fillPattern(ExcelCellFill fill) {
+  static ExcelFillPattern fillPattern(CellFillSpec fill) {
     return switch (fill) {
-      case ExcelCellFill.PatternOnly pattern -> pattern.pattern();
-      case ExcelCellFill.PatternForeground pattern -> pattern.pattern();
-      case ExcelCellFill.PatternBackground pattern -> pattern.pattern();
-      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.pattern();
-      case ExcelCellFill.Gradient ignored -> ExcelFillPattern.NONE;
+      case CellFillSpec.PatternOnly pattern -> pattern.pattern();
+      case CellFillSpec.PatternForeground pattern -> pattern.pattern();
+      case CellFillSpec.PatternBackground pattern -> pattern.pattern();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.pattern();
+      case CellFillSpec.Gradient ignored -> ExcelFillPattern.NONE;
     };
   }
 
@@ -48,10 +51,10 @@ final class ExcelStyleTestAccess {
     };
   }
 
-  static ExcelColor fillForegroundColor(ExcelCellFill fill) {
+  static ColorSpec fillForegroundColor(CellFillSpec fill) {
     return switch (fill) {
-      case ExcelCellFill.PatternForeground pattern -> pattern.foregroundColor();
-      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.foregroundColor();
+      case CellFillSpec.PatternForeground pattern -> pattern.foregroundColor();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.foregroundColor();
       default -> null;
     };
   }
@@ -64,10 +67,10 @@ final class ExcelStyleTestAccess {
     };
   }
 
-  static ExcelColor fillBackgroundColor(ExcelCellFill fill) {
+  static ColorSpec fillBackgroundColor(CellFillSpec fill) {
     return switch (fill) {
-      case ExcelCellFill.PatternBackground pattern -> pattern.backgroundColor();
-      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.backgroundColor();
+      case CellFillSpec.PatternBackground pattern -> pattern.backgroundColor();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.backgroundColor();
       default -> null;
     };
   }
@@ -80,8 +83,8 @@ final class ExcelStyleTestAccess {
     };
   }
 
-  static ExcelGradientFill fillGradient(ExcelCellFill fill) {
-    if (fill instanceof ExcelCellFill.Gradient gradient) {
+  static CellGradientFillSpec fillGradient(CellFillSpec fill) {
+    if (fill instanceof CellFillSpec.Gradient gradient) {
       return gradient.gradient();
     }
     return null;
@@ -94,10 +97,10 @@ final class ExcelStyleTestAccess {
     return null;
   }
 
-  static String gradientType(ExcelGradientFill gradient) {
+  static String gradientType(CellGradientFillSpec gradient) {
     return switch (gradient) {
-      case ExcelGradientFill.Linear ignored -> "LINEAR";
-      case ExcelGradientFill.Path ignored -> "PATH";
+      case CellGradientFillSpec.Linear ignored -> "LINEAR";
+      case CellGradientFillSpec.Path ignored -> "PATH";
     };
   }
 
@@ -108,10 +111,10 @@ final class ExcelStyleTestAccess {
     };
   }
 
-  static Double gradientDegree(ExcelGradientFill gradient) {
+  static Double gradientDegree(CellGradientFillSpec gradient) {
     return switch (gradient) {
-      case ExcelGradientFill.Linear linear -> linear.degree().orElse(null);
-      case ExcelGradientFill.Path ignored -> null;
+      case CellGradientFillSpec.Linear linear -> linear.degree().orElse(null);
+      case CellGradientFillSpec.Path ignored -> null;
     };
   }
 
@@ -122,10 +125,10 @@ final class ExcelStyleTestAccess {
     };
   }
 
-  static Double gradientLeft(ExcelGradientFill gradient) {
+  static Double gradientLeft(CellGradientFillSpec gradient) {
     return switch (gradient) {
-      case ExcelGradientFill.Path path -> path.left().orElse(null);
-      case ExcelGradientFill.Linear ignored -> null;
+      case CellGradientFillSpec.Path path -> path.left().orElse(null);
+      case CellGradientFillSpec.Linear ignored -> null;
     };
   }
 
@@ -136,10 +139,10 @@ final class ExcelStyleTestAccess {
     };
   }
 
-  static Double gradientRight(ExcelGradientFill gradient) {
+  static Double gradientRight(CellGradientFillSpec gradient) {
     return switch (gradient) {
-      case ExcelGradientFill.Path path -> path.right().orElse(null);
-      case ExcelGradientFill.Linear ignored -> null;
+      case CellGradientFillSpec.Path path -> path.right().orElse(null);
+      case CellGradientFillSpec.Linear ignored -> null;
     };
   }
 
@@ -150,10 +153,10 @@ final class ExcelStyleTestAccess {
     };
   }
 
-  static Double gradientTop(ExcelGradientFill gradient) {
+  static Double gradientTop(CellGradientFillSpec gradient) {
     return switch (gradient) {
-      case ExcelGradientFill.Path path -> path.top().orElse(null);
-      case ExcelGradientFill.Linear ignored -> null;
+      case CellGradientFillSpec.Path path -> path.top().orElse(null);
+      case CellGradientFillSpec.Linear ignored -> null;
     };
   }
 
@@ -164,10 +167,10 @@ final class ExcelStyleTestAccess {
     };
   }
 
-  static Double gradientBottom(ExcelGradientFill gradient) {
+  static Double gradientBottom(CellGradientFillSpec gradient) {
     return switch (gradient) {
-      case ExcelGradientFill.Path path -> path.bottom().orElse(null);
-      case ExcelGradientFill.Linear ignored -> null;
+      case CellGradientFillSpec.Path path -> path.bottom().orElse(null);
+      case CellGradientFillSpec.Linear ignored -> null;
     };
   }
 

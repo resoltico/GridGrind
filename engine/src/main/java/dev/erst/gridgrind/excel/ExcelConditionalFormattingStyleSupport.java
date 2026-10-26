@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
@@ -68,7 +70,7 @@ final class ExcelConditionalFormattingStyleSupport {
   /**
    * Returns one modeled solid-fill foreground color, recording unsupported fill states as needed.
    */
-  static @Nullable ExcelColor patternForegroundColor(
+  static @Nullable ColorSpec patternForegroundColor(
       CTPatternFill patternFill,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     return ExcelConditionalFormattingStyleSnapshotSupport.patternForegroundColor(
@@ -83,25 +85,25 @@ final class ExcelConditionalFormattingStyleSupport {
   /** Reports whether one differential border references a side payload GridGrind cannot read. */
   static boolean hasUnsupportedSideReference(
       CTBorder border,
-      @Nullable ExcelBorderSide top,
-      @Nullable ExcelBorderSide right,
-      @Nullable ExcelBorderSide bottom,
-      @Nullable ExcelBorderSide left) {
+      @Nullable BorderSidePatch top,
+      @Nullable BorderSidePatch right,
+      @Nullable BorderSidePatch bottom,
+      @Nullable BorderSidePatch left) {
     return ExcelConditionalFormattingStyleSnapshotSupport.hasUnsupportedSideReference(
         border, top, right, bottom, left);
   }
 
   /** Collapses the four explicit sides of one differential border into the public border record. */
   static @Nullable ExcelDifferentialBorder borderValue(
-      @Nullable ExcelBorderSide top,
-      @Nullable ExcelBorderSide right,
-      @Nullable ExcelBorderSide bottom,
-      @Nullable ExcelBorderSide left) {
+      @Nullable BorderSidePatch top,
+      @Nullable BorderSidePatch right,
+      @Nullable BorderSidePatch bottom,
+      @Nullable BorderSidePatch left) {
     return ExcelConditionalFormattingStyleSnapshotSupport.borderValue(top, right, bottom, left);
   }
 
   /** Returns the factual border side modeled by one differential border-side XML payload. */
-  static @Nullable ExcelBorderSide snapshotBorderSide(@Nullable CTBorderPr side) {
+  static @Nullable BorderSidePatch snapshotBorderSide(@Nullable CTBorderPr side) {
     return ExcelConditionalFormattingStyleSnapshotSupport.snapshotBorderSide(side);
   }
 
@@ -149,7 +151,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   record FillSnapshot(
-      @Nullable ExcelColor fillColor,
+      @Nullable ColorSpec fillColor,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     FillSnapshot {
       unsupportedFeatures = List.copyOf(unsupportedFeatures);
@@ -176,7 +178,7 @@ final class ExcelConditionalFormattingStyleSupport {
       @Nullable Boolean bold,
       @Nullable Boolean italic,
       @Nullable FontHeightReport fontHeight,
-      @Nullable ExcelColor fontColor,
+      @Nullable ColorSpec fontColor,
       @Nullable Boolean underline,
       @Nullable Boolean strikeout,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {

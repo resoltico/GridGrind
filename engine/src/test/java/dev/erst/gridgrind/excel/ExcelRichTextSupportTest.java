@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -183,7 +184,7 @@ class ExcelRichTextSupportTest {
                                   Optional.empty(),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of(ExcelColor.theme(4, -0.20d)),
+                                  Optional.of(ColorSpec.theme(4, -0.20d)),
                                   Optional.empty(),
                                   Optional.empty()))),
                       new ExcelRichTextRun(" ", Optional.empty()),
@@ -196,7 +197,7 @@ class ExcelRichTextSupportTest {
                                   Optional.empty(),
                                   Optional.empty(),
                                   Optional.of(
-                                      ExcelColor.indexed(
+                                      ColorSpec.indexed(
                                           Short.toUnsignedInt(
                                               IndexedColors.DARK_GREEN.getIndex()))),
                                   Optional.empty(),
@@ -227,7 +228,7 @@ class ExcelRichTextSupportTest {
                               Optional.of(Boolean.FALSE),
                               Optional.of("Courier New"),
                               Optional.of(FontHeightReport.fromPoints(new BigDecimal("14"))),
-                              Optional.of(ExcelColor.rgb("#123456")),
+                              Optional.of(ColorSpec.rgb(new RgbHex("#123456"))),
                               Optional.of(Boolean.FALSE),
                               Optional.of(Boolean.TRUE)))),
                   new ExcelRichTextRun(
@@ -238,7 +239,7 @@ class ExcelRichTextSupportTest {
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty(),
-                              Optional.of(ExcelColor.rgb("#ABCDEF")),
+                              Optional.of(ColorSpec.rgb(new RgbHex("#ABCDEF"))),
                               Optional.of(Boolean.TRUE),
                               Optional.of(Boolean.FALSE)))),
                   new ExcelRichTextRun(
@@ -371,7 +372,7 @@ class ExcelRichTextSupportTest {
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty(),
-                              Optional.of(ExcelColor.rgb("#ABCDEF")),
+                              Optional.of(ColorSpec.rgb(new RgbHex("#ABCDEF"))),
                               Optional.empty(),
                               Optional.empty()))),
                   new ExcelRichTextRun(

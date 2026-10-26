@@ -30,10 +30,7 @@ import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
-import dev.erst.gridgrind.core.model.style.BorderSidePatch;
-import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
-import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.table.TableSpec;
@@ -69,7 +66,6 @@ import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
-import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -85,12 +81,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
-import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelBorder;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
 import java.math.BigDecimal;
@@ -130,11 +122,8 @@ class RuntimeResidualCoverageTest {
   }
 
   @Test
-  void converterNullBranchesAndColorReportVariantsStayTyped() {
+  void converterNullBranchesAndResolvedPromptFieldsStayTyped() {
     assertTrue(WorkbookCommandCellValueSpecConverter.toFontHeightReport(null).isEmpty());
-    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelBorder(null).isEmpty());
-    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelBorderSide(null).isEmpty());
-    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelColor(null).isEmpty());
     assertTrue(WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(null).isEmpty());
     assertTrue(
         WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(null).isEmpty());
@@ -144,21 +133,6 @@ class RuntimeResidualCoverageTest {
         WorkbookCommandCellValueSpecConverter.toFontHeightReport(
             new dev.erst.gridgrind.core.model.style.FontHeightSpec.Points(
                 BigDecimal.valueOf(12.5d)));
-    Optional<ExcelBorder> border =
-        WorkbookCommandCellValueSpecConverter.toExcelBorder(
-            new CellBorderPatch(
-                Optional.of(
-                    new BorderSidePatch(
-                        ExcelBorderStyle.THIN, ColorSpec.rgb(new RgbHex("#112233")))),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()));
-    Optional<ExcelBorderSide> borderSide =
-        WorkbookCommandCellValueSpecConverter.toExcelBorderSide(
-            new BorderSidePatch(Optional.of(ExcelBorderStyle.DOUBLE), Optional.empty()));
-    Optional<ExcelColor> color =
-        WorkbookCommandCellValueSpecConverter.toExcelColor(ColorSpec.indexed(6, 0.25d));
     Optional<ExcelDataValidationPrompt> prompt =
         WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(
             new DataValidationPromptSpec(
@@ -172,10 +146,6 @@ class RuntimeResidualCoverageTest {
                 true));
 
     assertEquals(Optional.of(FontHeightReport.fromTwips(250)), fontHeight);
-    assertEquals(
-        Optional.of(ExcelBorderStyle.THIN), border.orElseThrow().all().orElseThrow().style());
-    assertEquals(Optional.of(ExcelBorderStyle.DOUBLE), borderSide.orElseThrow().style());
-    assertEquals(Optional.of(0.25d), color.orElseThrow().tint());
     assertEquals("Prompt title", prompt.orElseThrow().title());
     assertEquals(ExcelDataValidationErrorStyle.WARNING, alert.orElseThrow().style());
   }

@@ -10,9 +10,6 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
-import dev.erst.gridgrind.excel.ExcelBorder;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import java.util.LinkedHashMap;
@@ -130,12 +127,12 @@ public final class StyleKindIntrospection {
   }
 
   private static void appendEngineBorderKinds(
-      Map<String, Long> kinds, Optional<ExcelBorder> border) {
+      Map<String, Long> kinds, Optional<CellBorderPatch> border) {
     increment(kinds, "border", border.isPresent());
     if (border.isEmpty()) {
       return;
     }
-    ExcelBorder required = border.orElseThrow();
+    CellBorderPatch required = border.orElseThrow();
     increment(kinds, "border_all", required.all().isPresent());
     increment(kinds, "border_top", required.top().isPresent());
     increment(kinds, "border_right", required.right().isPresent());
@@ -197,7 +194,7 @@ public final class StyleKindIntrospection {
     if (style.fill().isEmpty()) {
       return;
     }
-    ExcelCellFill fill = style.fill().orElseThrow();
+    CellFillSpec fill = style.fill().orElseThrow();
     ExcelFillPattern pattern = engineFillPattern(fill);
     increment(kinds, "fill_pattern", pattern != null);
     increment(kinds, "fill_pattern_solid", pattern == ExcelFillPattern.SOLID);
@@ -221,7 +218,7 @@ public final class StyleKindIntrospection {
     return side.isPresent() && side.orElseThrow().style().orElseThrow() == ExcelBorderStyle.NONE;
   }
 
-  private static boolean isEngineNone(Optional<ExcelBorderSide> side) {
+  private static boolean isEngineNone(Optional<BorderSidePatch> side) {
     return side.isPresent()
         && side.orElseThrow().style().orElseThrow()
             == dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle.NONE;
@@ -231,7 +228,7 @@ public final class StyleKindIntrospection {
     return side.isPresent() && side.orElseThrow().color().isPresent();
   }
 
-  private static boolean hasEngineColor(Optional<ExcelBorderSide> side) {
+  private static boolean hasEngineColor(Optional<BorderSidePatch> side) {
     return side.isPresent() && side.orElseThrow().color().isPresent();
   }
 
@@ -261,28 +258,28 @@ public final class StyleKindIntrospection {
     };
   }
 
-  private static @Nullable ExcelFillPattern engineFillPattern(ExcelCellFill fill) {
+  private static @Nullable ExcelFillPattern engineFillPattern(CellFillSpec fill) {
     return switch (fill) {
-      case ExcelCellFill.PatternOnly pattern -> pattern.pattern();
-      case ExcelCellFill.PatternForeground pattern -> pattern.pattern();
-      case ExcelCellFill.PatternBackground pattern -> pattern.pattern();
-      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.pattern();
-      case ExcelCellFill.Gradient ignored -> null;
+      case CellFillSpec.PatternOnly pattern -> pattern.pattern();
+      case CellFillSpec.PatternForeground pattern -> pattern.pattern();
+      case CellFillSpec.PatternBackground pattern -> pattern.pattern();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.pattern();
+      case CellFillSpec.Gradient ignored -> null;
     };
   }
 
-  private static @Nullable Object engineForegroundColor(ExcelCellFill fill) {
+  private static @Nullable Object engineForegroundColor(CellFillSpec fill) {
     return switch (fill) {
-      case ExcelCellFill.PatternForeground pattern -> pattern.foregroundColor();
-      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.foregroundColor();
+      case CellFillSpec.PatternForeground pattern -> pattern.foregroundColor();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.foregroundColor();
       default -> null;
     };
   }
 
-  private static @Nullable Object engineBackgroundColor(ExcelCellFill fill) {
+  private static @Nullable Object engineBackgroundColor(CellFillSpec fill) {
     return switch (fill) {
-      case ExcelCellFill.PatternBackground pattern -> pattern.backgroundColor();
-      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.backgroundColor();
+      case CellFillSpec.PatternBackground pattern -> pattern.backgroundColor();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.backgroundColor();
       default -> null;
     };
   }

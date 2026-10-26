@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -63,12 +65,12 @@ final class ExcelSheetCopyConditionalFormattingSupport {
                   .map(ExcelSheetCopyConditionalFormattingSupport::copyableThreshold)
                   .toList(),
               colorScaleRule.colors().stream()
-                  .map(color -> (ExcelColor) ExcelColor.rgb(color))
+                  .map(color -> (ColorSpec) ColorSpec.rgb(new RgbHex(color)))
                   .toList(),
               colorScaleRule.stopIfTrue());
       case ExcelConditionalFormattingRuleSnapshot.DataBarRule dataBarRule ->
           new ExcelConditionalFormattingRule.DataBarRule(
-              ExcelColor.rgb(dataBarRule.color()),
+              ColorSpec.rgb(new RgbHex(dataBarRule.color())),
               dataBarRule.iconOnly(),
               dataBarRule.widthMin(),
               dataBarRule.widthMax(),

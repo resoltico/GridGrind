@@ -143,10 +143,10 @@ final class OperationSequenceRuleValues {
     boolean includeNumberFormat = data.consumeBoolean();
     Boolean bold = data.consumeBoolean() ? Boolean.TRUE : null;
     Boolean italic = data.consumeBoolean() ? Boolean.TRUE : null;
-    ExcelColor fontColor = data.consumeBoolean() ? nextExcelColor(data) : null;
+    ColorSpec fontColor = data.consumeBoolean() ? nextDifferentialColor(data) : null;
     Boolean underline = data.consumeBoolean() ? Boolean.TRUE : null;
     Boolean strikeout = data.consumeBoolean() ? Boolean.TRUE : null;
-    ExcelColor fillColor = data.consumeBoolean() ? nextExcelColor(data) : null;
+    ColorSpec fillColor = data.consumeBoolean() ? nextDifferentialColor(data) : null;
     String numberFormat =
         includeNumberFormat
                 || Stream.of(bold, italic, fontColor, underline, strikeout, fillColor)
@@ -174,12 +174,12 @@ final class OperationSequenceRuleValues {
     };
   }
 
-  private static ExcelColor nextExcelColor(GridGrindFuzzData data) {
+  private static ColorSpec nextDifferentialColor(GridGrindFuzzData data) {
     Optional<Double> tint = nextTint(data);
     return switch (Math.floorMod(data.consumeByte(), 3)) {
-      case 0 -> new ExcelColor.Rgb("#E0F0AA", tint);
-      case 1 -> new ExcelColor.Theme(data.consumeInt(0, 11), tint);
-      default -> new ExcelColor.Indexed(data.consumeInt(0, 63), tint);
+      case 0 -> new ColorSpec.Rgb(new RgbHex("#E0F0AA"), tint);
+      case 1 -> new ColorSpec.Theme(data.consumeInt(0, 11), tint);
+      default -> new ColorSpec.Indexed(data.consumeInt(0, 63), tint);
     };
   }
 

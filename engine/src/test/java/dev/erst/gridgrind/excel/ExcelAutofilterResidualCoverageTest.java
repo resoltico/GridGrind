@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.List;
@@ -36,7 +37,7 @@ class ExcelAutofilterResidualCoverageTest {
               Optional.of(ExcelAutofilterSortMethod.STROKE),
               List.of(
                   new ExcelAutofilterSortCondition.FontColor(
-                      "B2:B5", true, ExcelColor.rgb("#112233")),
+                      "B2:B5", true, ColorSpec.rgb(new RgbHex("#112233"))),
                   new ExcelAutofilterSortCondition.Icon("C2:C5", false, 3)));
 
       ExcelAutofilterOoxmlSupport.replaceSortState(workbook, autoFilter, Optional.of(sortState));
@@ -135,7 +136,7 @@ class ExcelAutofilterResidualCoverageTest {
                     "A1:A2", true, CellColorReport.rgb(new RgbHex("#AABBCC")))));
     assertEquals("A1:A2", fontColor.range());
     assertTrue(fontColor.descending());
-    assertEquals(ExcelColor.rgb("#AABBCC"), fontColor.color());
+    assertEquals(ColorSpec.rgb(new RgbHex("#AABBCC")), fontColor.color());
 
     ExcelAutofilterSortCondition.Value value =
         assertInstanceOf(

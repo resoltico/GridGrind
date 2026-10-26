@@ -2,12 +2,15 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,9 +115,9 @@ class ExcelConditionalFormattingDomainModelTest {
 
   @Test
   void enforcesDifferentialStyleAndBorderInvariants() {
-    ExcelBorderSide side =
-        new ExcelBorderSide(
-            Optional.of(ExcelBorderStyle.THIN), Optional.of(ExcelColor.rgb("#102030")));
+    BorderSidePatch side =
+        new BorderSidePatch(
+            Optional.of(ExcelBorderStyle.THIN), Optional.of(ColorSpec.rgb(new RgbHex("#102030"))));
     ExcelDifferentialBorder border = new ExcelDifferentialBorder(side, null, null, null, null);
     ExcelDifferentialStyle style =
         new ExcelDifferentialStyle(
@@ -122,10 +125,10 @@ class ExcelConditionalFormattingDomainModelTest {
             Optional.of(true),
             Optional.of(false),
             Optional.ofNullable(FontHeightReport.fromPoints(BigDecimal.valueOf(11))),
-            Optional.of(ExcelColor.theme(3, Optional.of(0.25d))),
+            Optional.of(new ColorSpec.Theme(3, Optional.of(0.25d))),
             Optional.of(true),
             Optional.of(false),
-            Optional.of(ExcelColor.indexed(12, Optional.empty())),
+            Optional.of(new ColorSpec.Indexed(12, Optional.empty())),
             Optional.ofNullable(border));
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures =
         new ArrayList<>(List.of(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES));
@@ -135,16 +138,16 @@ class ExcelConditionalFormattingDomainModelTest {
             true,
             false,
             FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
-            ExcelColor.theme(3, Optional.of(0.25d)),
+            new ColorSpec.Theme(3, Optional.of(0.25d)),
             true,
             false,
-            ExcelColor.indexed(12, Optional.empty()),
+            new ColorSpec.Indexed(12, Optional.empty()),
             border,
             unsupportedFeatures);
     unsupportedFeatures.clear();
 
-    assertEquals(Optional.of(ExcelColor.theme(3, Optional.of(0.25d))), style.fontColor());
-    assertEquals(Optional.of(ExcelColor.indexed(12, Optional.empty())), style.fillColor());
+    assertEquals(Optional.of(new ColorSpec.Theme(3, Optional.of(0.25d))), style.fontColor());
+    assertEquals(Optional.of(new ColorSpec.Indexed(12, Optional.empty())), style.fillColor());
     assertEquals(
         List.of(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES),
         snapshot.unsupportedFeatures());

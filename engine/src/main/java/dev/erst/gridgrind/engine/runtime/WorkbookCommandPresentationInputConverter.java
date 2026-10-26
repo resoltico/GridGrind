@@ -19,7 +19,7 @@ final class WorkbookCommandPresentationInputConverter {
             presentation.display().displayRowColHeadings(),
             presentation.display().displayFormulas(),
             presentation.display().rightToLeft()),
-        presentation.tabColor().flatMap(WorkbookCommandCellValueSpecConverter::toExcelColor),
+        presentation.tabColor(),
         new ExcelSheetOutlineSummary(
             presentation.outlineSummary().rowSumsBelow(),
             presentation.outlineSummary().rowSumsRight()),

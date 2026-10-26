@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
@@ -31,7 +32,6 @@ import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelCommentAnchorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -51,28 +51,29 @@ class ReadbackSupportCoverageTest {
   void styleReportConversionPreservesEveryOwnedDifferentialColorVariant() {
     assertEquals(
         Optional.empty(),
-        InspectionResultCellStyleReportSupport.toCellColorReport((ExcelColor) null));
+        InspectionResultCellStyleReportSupport.toCellColorReport((ColorSpec) null));
     assertEquals(
         Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
-        InspectionResultCellStyleReportSupport.toCellColorReport(ExcelColor.rgb("#112233")));
+        InspectionResultCellStyleReportSupport.toCellColorReport(
+            ColorSpec.rgb(new RgbHex("#112233"))));
     assertEquals(
         Optional.of(CellColorReport.rgb(new RgbHex("#112233"), 0.25d)),
         InspectionResultCellStyleReportSupport.toCellColorReport(
-            ExcelColor.rgb("#112233", Optional.of(0.25d))));
+            new ColorSpec.Rgb(new RgbHex("#112233"), Optional.of(0.25d))));
     assertEquals(
         Optional.of(CellColorReport.theme(4)),
-        InspectionResultCellStyleReportSupport.toCellColorReport(ExcelColor.theme(4)));
+        InspectionResultCellStyleReportSupport.toCellColorReport(ColorSpec.theme(4)));
     assertEquals(
         Optional.of(CellColorReport.theme(4, -0.25d)),
         InspectionResultCellStyleReportSupport.toCellColorReport(
-            ExcelColor.theme(4, Optional.of(-0.25d))));
+            new ColorSpec.Theme(4, Optional.of(-0.25d))));
     assertEquals(
         Optional.of(CellColorReport.indexed(9)),
-        InspectionResultCellStyleReportSupport.toCellColorReport(ExcelColor.indexed(9)));
+        InspectionResultCellStyleReportSupport.toCellColorReport(ColorSpec.indexed(9)));
     assertEquals(
         Optional.of(CellColorReport.indexed(9, 0.5d)),
         InspectionResultCellStyleReportSupport.toCellColorReport(
-            ExcelColor.indexed(9, Optional.of(0.5d))));
+            new ColorSpec.Indexed(9, Optional.of(0.5d))));
   }
 
   @Test

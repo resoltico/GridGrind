@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -370,7 +371,7 @@ class WorkbookCommandExecutorTest {
       ExcelSheetPresentation presentation =
           new ExcelSheetPresentation(
               new ExcelSheetDisplay(false, false, false, true, true),
-              Optional.of(ExcelColor.rgb("#225577")),
+              Optional.of(ColorSpec.rgb(new RgbHex("#225577"))),
               new ExcelSheetOutlineSummary(false, false),
               new ExcelSheetDefaults(12, 19.5d),
               List.of(
@@ -619,7 +620,7 @@ class WorkbookCommandExecutorTest {
                                   Optional.of(true),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of(ExcelColor.rgb("#112233")),
+                                  Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                                   Optional.empty(),
                                   Optional.empty(),
                                   Optional.empty(),

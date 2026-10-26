@@ -1,8 +1,13 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
@@ -11,14 +16,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelBorder;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
-import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelGradientFill;
-import dev.erst.gridgrind.excel.ExcelGradientStop;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
@@ -63,7 +62,7 @@ final class FuzzStyleDecoders {
               Optional.of(nextAlignment(data, true)),
               Optional.of(nextFont(data, true)),
               Optional.of(nextFill(data)),
-              Optional.of(nextExcelBorder(data)),
+              Optional.of(nextBorderPatch(data)),
               Optional.ofNullable(nextProtection(data)));
       case 4 ->
           new ExcelCellStyle(
@@ -71,7 +70,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.of(nextFont(data, false)),
               Optional.of(nextFill(data)),
-              Optional.of(nextExcelBorder(data)),
+              Optional.of(nextBorderPatch(data)),
               Optional.empty());
       case 5 ->
           new ExcelCellStyle(
@@ -87,7 +86,7 @@ final class FuzzStyleDecoders {
               Optional.of(nextAlignment(data, true)),
               Optional.empty(),
               Optional.empty(),
-              Optional.of(nextExcelBorder(data)),
+              Optional.of(nextBorderPatch(data)),
               Optional.empty());
       default ->
           new ExcelCellStyle(
@@ -144,7 +143,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
-              Optional.of(nextExcelColor(data)),
+              Optional.of(nextColor(data)),
               Optional.empty(),
               Optional.empty());
       case 5 ->
@@ -178,7 +177,7 @@ final class FuzzStyleDecoders {
             font.italic(),
             font.fontName(),
             font.fontHeight().map(height -> new FontHeightSpec.Twips(height.twips())),
-            font.fontColor().flatMap(FuzzStyleDecoders::toColorInput),
+            font.fontColor(),
             font.underline(),
             font.strikeout()));
   }
@@ -209,23 +208,22 @@ final class FuzzStyleDecoders {
             ? Optional.of(data.consumeBoolean() ? "Aptos" : "Aptos Display")
             : Optional.empty(),
         data.consumeBoolean() ? Optional.of(nextFontHeightReport(data)) : Optional.empty(),
-        data.consumeBoolean() ? Optional.of(nextExcelColor(data)) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(nextColor(data)) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty());
   }
 
-  private static ExcelCellFill nextFill(GridGrindFuzzData data) {
+  private static CellFillSpec nextFill(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 4)) {
-      case 0 -> ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, nextExcelColor(data));
+      case 0 -> CellFillSpec.patternForeground(ExcelFillPattern.SOLID, nextColor(data));
       case 1 ->
           data.consumeBoolean()
-              ? ExcelCellFill.patternColors(
-                  nextPatternFill(data), nextExcelColor(data), nextExcelColor(data))
-              : ExcelCellFill.patternForeground(nextPatternFill(data), nextExcelColor(data));
-      case 2 -> ExcelCellFill.patternBackground(nextPatternFill(data), nextExcelColor(data));
-      case 3 -> ExcelCellFill.gradient(nextGradientFill(data));
+              ? CellFillSpec.patternColors(nextPatternFill(data), nextColor(data), nextColor(data))
+              : CellFillSpec.patternForeground(nextPatternFill(data), nextColor(data));
+      case 2 -> CellFillSpec.patternBackground(nextPatternFill(data), nextColor(data));
+      case 3 -> CellFillSpec.gradient(nextGradientFill(data));
       default ->
-          ExcelCellFill.pattern(
+          CellFillSpec.pattern(
               data.consumeBoolean() ? ExcelFillPattern.NONE : nextPatternFill(data));
     };
   }
@@ -270,37 +268,37 @@ final class FuzzStyleDecoders {
         .formatted(data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
   }
 
-  private static ExcelColor nextExcelColor(GridGrindFuzzData data) {
+  private static ColorSpec nextColor(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
       case 0 ->
-          ExcelColor.rgb(
-              nextRgbHex(data),
+          new ColorSpec.Rgb(
+              new RgbHex(nextRgbHex(data)),
               data.consumeBoolean() ? Optional.of(nextTint(data)) : Optional.empty());
       case 1 ->
-          ExcelColor.theme(
+          new ColorSpec.Theme(
               data.consumeInt(0, 9),
               data.consumeBoolean() ? Optional.of(nextTint(data)) : Optional.empty());
       default ->
-          ExcelColor.indexed(
+          new ColorSpec.Indexed(
               data.consumeInt(0, 64),
               data.consumeBoolean() ? Optional.of(nextTint(data)) : Optional.empty());
     };
   }
 
-  private static ExcelGradientFill nextGradientFill(GridGrindFuzzData data) {
+  private static CellGradientFillSpec nextGradientFill(GridGrindFuzzData data) {
     boolean linear = data.consumeBoolean();
-    List<ExcelGradientStop> stops =
+    List<CellGradientStopSpec> stops =
         List.of(
-            new ExcelGradientStop(0.0d, nextExcelColor(data)),
-            new ExcelGradientStop(1.0d, nextExcelColor(data)));
+            new CellGradientStopSpec(0.0d, nextColor(data)),
+            new CellGradientStopSpec(1.0d, nextColor(data)));
     if (linear) {
-      return ExcelGradientFill.linear(
+      return CellGradientFillSpec.linear(
           data.consumeBoolean()
               ? Optional.of(data.consumeRegularDouble(0.0d, 180.0d))
               : Optional.empty(),
           stops);
     }
-    return ExcelGradientFill.path(
+    return CellGradientFillSpec.path(
         data.consumeBoolean()
             ? Optional.of(data.consumeRegularDouble(0.0d, 1.0d))
             : Optional.empty(),
@@ -320,59 +318,38 @@ final class FuzzStyleDecoders {
     return data.consumeRegularDouble(-1.0d, 1.0d);
   }
 
-  private static Optional<ColorSpec> toColorInput(ExcelColor color) {
-    if (color == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        switch (color) {
-          case ExcelColor.Rgb rgb ->
-              rgb.tint().isPresent()
-                  ? ColorSpec.rgb(new RgbHex(rgb.rgb()), rgb.tint().orElseThrow())
-                  : ColorSpec.rgb(new RgbHex(rgb.rgb()));
-          case ExcelColor.Theme theme ->
-              theme.tint().isPresent()
-                  ? ColorSpec.theme(theme.theme(), theme.tint().orElseThrow())
-                  : ColorSpec.theme(theme.theme());
-          case ExcelColor.Indexed indexed ->
-              indexed.tint().isPresent()
-                  ? ColorSpec.indexed(indexed.indexed(), indexed.tint().orElseThrow())
-                  : ColorSpec.indexed(indexed.indexed());
-        });
-  }
-
-  private static ExcelBorder nextExcelBorder(GridGrindFuzzData data) {
+  private static CellBorderPatch nextBorderPatch(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 4)) {
       case 0 ->
-          new ExcelBorder(
+          new CellBorderPatch(
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               Optional.empty());
       case 1 ->
-          new ExcelBorder(
+          new CellBorderPatch(
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
               Optional.empty());
       case 2 ->
-          new ExcelBorder(
+          new CellBorderPatch(
               Optional.empty(),
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextBorderSide(data)));
       case 3 ->
-          new ExcelBorder(
+          new CellBorderPatch(
               Optional.of(nextBorderSide(data)),
               Optional.of(nextBorderSide(data)),
               Optional.of(nextBorderSide(data)),
               Optional.of(nextBorderSide(data)),
               Optional.of(nextBorderSide(data)));
       default ->
-          new ExcelBorder(
+          new CellBorderPatch(
               Optional.empty(),
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
@@ -381,13 +358,13 @@ final class FuzzStyleDecoders {
     };
   }
 
-  private static ExcelBorderSide nextBorderSide(GridGrindFuzzData data) {
+  private static BorderSidePatch nextBorderSide(GridGrindFuzzData data) {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     ExcelBorderStyle style = values[data.consumeInt(0, values.length - 1)];
-    return new ExcelBorderSide(
+    return new BorderSidePatch(
         Optional.of(style),
         style == ExcelBorderStyle.NONE || !data.consumeBoolean()
             ? Optional.empty()
-            : Optional.of(nextExcelColor(data)));
+            : Optional.of(nextColor(data)));
   }
 }

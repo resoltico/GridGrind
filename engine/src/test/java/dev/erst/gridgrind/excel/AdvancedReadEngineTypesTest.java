@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -145,8 +146,8 @@ class AdvancedReadEngineTypesTest {
           ExcelColorSnapshotSupport.snapshot(workbook, argb));
       assertNull(ExcelColorSupport.copyOf(null));
       assertEquals(
-          ExcelColor.theme(3, 0.25d), ExcelColorSupport.copyOf(CellColorReport.theme(3, 0.25d)));
-      assertEquals(ExcelColor.indexed(7), ExcelColorSupport.copyOf(CellColorReport.indexed(7)));
+          ColorSpec.theme(3, 0.25d), ExcelColorSupport.copyOf(CellColorReport.theme(3, 0.25d)));
+      assertEquals(ColorSpec.indexed(7), ExcelColorSupport.copyOf(CellColorReport.indexed(7)));
       assertThrows(
           IllegalStateException.class,
           () -> ExcelColorSnapshotSupport.snapshot(workbook, CTColor.Factory.newInstance()));
@@ -505,7 +506,7 @@ class AdvancedReadEngineTypesTest {
                 true,
                 null,
                 null,
-                ExcelColor.rgb("#AABBCC"),
+                ColorSpec.rgb(new RgbHex("#AABBCC")),
                 null,
                 null,
                 null,

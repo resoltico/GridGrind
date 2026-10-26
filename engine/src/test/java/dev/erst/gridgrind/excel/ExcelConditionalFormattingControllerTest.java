@@ -2,12 +2,15 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
@@ -209,12 +212,12 @@ class ExcelConditionalFormattingControllerTest {
                           new ExcelConditionalFormattingThreshold(
                               ExcelConditionalFormattingThresholdType.MAX, null, null)),
                       List.of(
-                          ExcelColor.rgb("#AA2211"),
-                          ExcelColor.rgb("#FFDD55"),
-                          ExcelColor.rgb("#11CC66")),
+                          ColorSpec.rgb(new RgbHex("#AA2211")),
+                          ColorSpec.rgb(new RgbHex("#FFDD55")),
+                          ColorSpec.rgb(new RgbHex("#11CC66"))),
                       false),
                   new ExcelConditionalFormattingRule.DataBarRule(
-                      ExcelColor.rgb("#123456"),
+                      ColorSpec.rgb(new RgbHex("#123456")),
                       true,
                       10,
                       90,
@@ -1239,16 +1242,16 @@ class ExcelConditionalFormattingControllerTest {
                         Optional.empty())))));
   }
 
-  private static ExcelDifferentialBorder expandedBorder(ExcelBorderSide side) {
+  private static ExcelDifferentialBorder expandedBorder(BorderSidePatch side) {
     return new ExcelDifferentialBorder(null, side, side, side, side);
   }
 
-  private static ExcelBorderSide borderSide(ExcelBorderStyle style, String rgb) {
-    return new ExcelBorderSide(Optional.of(style), Optional.of(color(rgb)));
+  private static BorderSidePatch borderSide(ExcelBorderStyle style, String rgb) {
+    return new BorderSidePatch(Optional.of(style), Optional.of(color(rgb)));
   }
 
-  private static ExcelColor color(String rgb) {
-    return ExcelColor.rgb(rgb);
+  private static ColorSpec color(String rgb) {
+    return ColorSpec.rgb(new RgbHex(rgb));
   }
 
   private static void seedConditionalFormattingValues(XSSFSheet sheet) {

@@ -3,25 +3,26 @@ package dev.erst.gridgrind.jazzer.support;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
-import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
-import dev.erst.gridgrind.excel.ExcelGradientFill;
-import dev.erst.gridgrind.excel.ExcelGradientStop;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -73,12 +74,13 @@ class XlsxRoundTripVerifierTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.of(
-                                ExcelCellFill.gradient(
-                                    ExcelGradientFill.linear(
+                                CellFillSpec.gradient(
+                                    CellGradientFillSpec.linear(
                                         Optional.of(42.5d),
                                         List.of(
-                                            new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
-                                            new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
+                                            new CellGradientStopSpec(
+                                                0.0d, ColorSpec.rgb(new RgbHex("#736C00"))),
+                                            new CellGradientStopSpec(1.0d, ColorSpec.theme(3)))))),
                             Optional.empty(),
                             Optional.of(
                                 new CellProtectionPatch(Optional.of(true), Optional.of(true))))))));
@@ -107,7 +109,7 @@ class XlsxRoundTripVerifierTest {
                                                 Optional.empty(),
                                                 Optional.empty(),
                                                 Optional.empty(),
-                                                Optional.of(ExcelColor.rgb("#C0504D")),
+                                                Optional.of(ColorSpec.rgb(new RgbHex("#C0504D"))),
                                                 Optional.empty(),
                                                 Optional.empty()))))))),
                     new WorkbookFormattingCommand.ApplyStyle(
@@ -118,10 +120,10 @@ class XlsxRoundTripVerifierTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.of(
-                                ExcelCellFill.patternColors(
+                                CellFillSpec.patternColors(
                                     ExcelFillPattern.BRICKS,
-                                    ExcelColor.rgb("#102030"),
-                                    ExcelColor.rgb("#405060"))),
+                                    ColorSpec.rgb(new RgbHex("#102030")),
+                                    ColorSpec.rgb(new RgbHex("#405060")))),
                             Optional.empty(),
                             Optional.of(
                                 new CellProtectionPatch(Optional.of(false), Optional.of(true))))),

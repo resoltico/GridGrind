@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
@@ -13,7 +14,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
@@ -169,7 +169,7 @@ final class InspectionResultValidationReportSupport {
   }
 
   static Optional<DifferentialBorderSideReport> toDifferentialBorderSideReport(
-      @org.jspecify.annotations.Nullable ExcelBorderSide side) {
+      @org.jspecify.annotations.Nullable BorderSidePatch side) {
     return side == null
         ? Optional.empty()
         : Optional.of(

@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
@@ -1177,6 +1178,15 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
   private static ExcelDifferentialStyleSnapshot differentialStyle() {
     return new ExcelDifferentialStyleSnapshot(
-        "0.00", true, null, null, ExcelColor.rgb("#AABBCC"), null, null, null, null, List.of());
+        "0.00",
+        true,
+        null,
+        null,
+        ColorSpec.rgb(new RgbHex("#AABBCC")),
+        null,
+        null,
+        null,
+        null,
+        List.of());
   }
 }

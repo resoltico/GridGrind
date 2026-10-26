@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
@@ -51,7 +52,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortBy;
 class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
   @Test
   void colorFactoriesShapeKindsAndConditionalFormattingBranchesRemainExplicit() {
-    assertEquals(Optional.of(0.25d), ExcelColor.rgb("#112233", 0.25d).tint());
+    assertEquals(Optional.of(0.25d), ColorSpec.rgb(new RgbHex("#112233"), 0.25d).tint());
     assertEquals(Optional.of(0.25d), CellColorReport.rgb(new RgbHex("#112233"), 0.25d).tint());
     assertEquals(Optional.of(-0.5d), CellColorReport.indexed(7, -0.5d).tint());
 

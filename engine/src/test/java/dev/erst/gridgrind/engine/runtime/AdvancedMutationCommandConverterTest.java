@@ -74,19 +74,13 @@ import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
-import dev.erst.gridgrind.excel.ExcelBorder;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
-import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentAnchor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
-import dev.erst.gridgrind.excel.ExcelGradientFill;
-import dev.erst.gridgrind.excel.ExcelGradientStop;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -702,28 +696,28 @@ class AdvancedMutationCommandConverterTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of(ExcelColor.theme(2, 0.4d)),
+                Optional.of(ColorSpec.theme(2, 0.4d)),
                 Optional.of(true),
                 Optional.empty())),
         style.font());
     assertEquals(
         Optional.of(
-            ExcelCellFill.gradient(
-                ExcelGradientFill.path(
+            CellFillSpec.gradient(
+                CellGradientFillSpec.path(
                     Optional.of(0.1d),
                     Optional.of(0.2d),
                     Optional.of(0.3d),
                     Optional.of(0.4d),
                     List.of(
-                        new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
-                        new ExcelGradientStop(1.0d, ExcelColor.theme(5, 0.2d)))))),
+                        new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
+                        new CellGradientStopSpec(1.0d, ColorSpec.theme(5, 0.2d)))))),
         style.fill());
     assertEquals(
         Optional.of(
-            new ExcelBorder(
+            new CellBorderPatch(
                 Optional.empty(),
                 Optional.ofNullable(
-                    new ExcelBorderSide(Optional.empty(), Optional.of(ExcelColor.theme(1, 0.15d)))),
+                    new BorderSidePatch(Optional.empty(), Optional.of(ColorSpec.theme(1, 0.15d)))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty())),
@@ -736,7 +730,7 @@ class AdvancedMutationCommandConverterTest {
                     ExcelConditionalFormattingThresholdType.MIN, null, null),
                 new ExcelConditionalFormattingThreshold(
                     ExcelConditionalFormattingThresholdType.MAX, null, null)),
-            List.of(ExcelColor.rgb("#112233"), ExcelColor.rgb("#AABBCC")),
+            List.of(ColorSpec.rgb(new RgbHex("#112233")), ColorSpec.rgb(new RgbHex("#AABBCC"))),
             true),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleSpec.ColorScaleRule(
@@ -749,7 +743,7 @@ class AdvancedMutationCommandConverterTest {
 
     assertEquals(
         new ExcelConditionalFormattingRule.DataBarRule(
-            ExcelColor.theme(4, 0.25d),
+            ColorSpec.theme(4, 0.25d),
             true,
             10,
             90,
@@ -1016,7 +1010,7 @@ class AdvancedMutationCommandConverterTest {
         new ExcelAutofilterFilterColumn(
             3L, true, new ExcelAutofilterFilterCriterion.Top10(10, true, false)),
         new ExcelAutofilterFilterColumn(
-            4L, true, new ExcelAutofilterFilterCriterion.Color(false, ExcelColor.theme(3, 0.25d))),
+            4L, true, new ExcelAutofilterFilterCriterion.Color(false, ColorSpec.theme(3, 0.25d))),
         new ExcelAutofilterFilterColumn(
             5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2)));
   }
@@ -1028,8 +1022,9 @@ class AdvancedMutationCommandConverterTest {
         true,
         java.util.Optional.empty(),
         List.of(
-            new ExcelAutofilterSortCondition.CellColor("B2:B9", true, ExcelColor.rgb("#AABBCC")),
-            new ExcelAutofilterSortCondition.FontColor("C2:C9", false, ExcelColor.theme(4, 0.15d)),
+            new ExcelAutofilterSortCondition.CellColor(
+                "B2:B9", true, ColorSpec.rgb(new RgbHex("#AABBCC"))),
+            new ExcelAutofilterSortCondition.FontColor("C2:C9", false, ColorSpec.theme(4, 0.15d)),
             new ExcelAutofilterSortCondition.Icon("C2:C9", false, 2)));
   }
 }

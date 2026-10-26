@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import java.util.List;
 import java.util.Map;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -35,11 +37,11 @@ final class ExcelGradientFillStyleSupport {
     }
   }
 
-  void applyGradientFillPatch(XSSFCellStyle cellStyle, ExcelGradientFill gradientPatch) {
+  void applyGradientFillPatch(XSSFCellStyle cellStyle, CellGradientFillSpec gradientPatch) {
     CTFill gradientFill = CTFill.Factory.newInstance();
     CTGradientFill gradient = gradientFill.addNewGradientFill();
     switch (gradientPatch) {
-      case ExcelGradientFill.Path path -> {
+      case CellGradientFillSpec.Path path -> {
         gradient.setType(
             org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.Enum.forString(
                 "path"));
@@ -48,9 +50,9 @@ final class ExcelGradientFillStyleSupport {
         path.top().ifPresent(gradient::setTop);
         path.bottom().ifPresent(gradient::setBottom);
       }
-      case ExcelGradientFill.Linear linear -> linear.degree().ifPresent(gradient::setDegree);
+      case CellGradientFillSpec.Linear linear -> linear.degree().ifPresent(gradient::setDegree);
     }
-    for (ExcelGradientStop stop : gradientPatch.stops()) {
+    for (CellGradientStopSpec stop : gradientPatch.stops()) {
       CTGradientStop ctStop = gradient.addNewStop();
       ctStop.setPosition(stop.position());
       ctStop.addNewColor().set(ExcelColorSupport.toXssfColor(workbook, stop.color()).getCTColor());

@@ -1601,3 +1601,30 @@ check passed (4m): core 334, JSON 348, engine 1494 plus 14 parity, CLI 588, arch
 snapshots 44→41; converter lines 4566→4513; main Java lines 122914→122760. Definitions 13,
 Support 206 and blank checks 436 remain open. Baseline diff empty. Next: authored style mirrors,
 then remaining factual/model and resolved command consumers; WP-40 remains in progress.
+
+## WP-40 authored color fill gradient and border consolidation
+
+Deleted ExcelColor, ExcelCellFill, ExcelGradientFill, ExcelGradientStop, ExcelBorder and
+ExcelBorderSide; adapters, command payloads and deterministic sequence support accept the existing
+core specs/patches directly. RGB is unwrapped only for POI string/byte APIs; tint and theme/index
+semantics are unchanged. Removed their identity converters and the reverse color identity bridge
+in seed support. One valid border requirement test moved to core; two sole-mechanism converter
+tests were retired. Real workbook color/fill/gradient/border coverage is retained. No compatibility
+constructors/factories were added to core.
+
+Initial compilation caught four remaining String/RgbHex consumers, repaired at their POI/report
+boundaries; all engine source sets compiled (25s and 34s). Focused checking first caught an
+import-count suppression made unnecessary by converter deletion; removed it and its stale
+explanation. Focused engine/core/PMD and all 14 parity scenarios passed (40s). Nested deterministic
+check and all retained seed replay passed (22s). No mutation or active fuzz campaign ran.
+
+./gradlew check passed (3m4s): core 335, JSON 348, engine 1491 plus 14 parity, CLI 588,
+architecture 14 plus 12 rule tests, zero failures/errors/skips. All 143 golden cases pass without
+changes. Inventories: converters 4513→4375, main Java lines 122760→122294; snapshots 41,
+definitions 13, Support 206, blank checks 436. Baseline diff empty.
+
+Next font/style migration must preserve cache equality of equivalent authored point/twip heights: the
+old converter normalizes to FontHeightReport before MergedCellStyleKey/MergedFontKey equality.
+Direct core patch consumption must normalize cache identity at the POI adapter, retain authored
+shape elsewhere, and prove value-equivalent style/font reuse with a workbook regression. No extra
+engine patch record is justified by that runtime cache requirement.

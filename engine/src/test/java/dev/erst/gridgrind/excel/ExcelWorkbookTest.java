@@ -4,10 +4,16 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -382,10 +388,10 @@ class ExcelWorkbookTest {
                                   Optional.of(true),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of(ExcelColor.rgb("#102030")),
+                                  Optional.of(ColorSpec.rgb(new RgbHex("#102030"))),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of(ExcelColor.rgb("#E0F0AA")),
+                                  Optional.of(ColorSpec.rgb(new RgbHex("#E0F0AA"))),
                                   Optional.empty()))))));
       workbook.sheet("Source").layout().mergeCells("A1:B1");
       workbook.sheet("Source").layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
@@ -1028,17 +1034,17 @@ class ExcelWorkbookTest {
                           Optional.of(false),
                           Optional.of("Aptos"),
                           Optional.of(FontHeightReport.fromPoints(new BigDecimal("11.5"))),
-                          Optional.of(ExcelColor.rgb("#1F4E78")),
+                          Optional.of(ColorSpec.rgb(new RgbHex("#1F4E78"))),
                           Optional.of(true),
                           Optional.of(true))),
                   Optional.of(
-                      ExcelCellFill.patternForeground(
-                          ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC"))),
+                      CellFillSpec.patternForeground(
+                          ExcelFillPattern.SOLID, ColorSpec.rgb(new RgbHex("#FFF2CC")))),
                   Optional.of(
-                      new ExcelBorder(
-                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                      new CellBorderPatch(
+                          Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.THIN)),
                           Optional.empty(),
-                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
+                          Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.DOUBLE)),
                           Optional.empty(),
                           Optional.empty())),
                   Optional.empty()));
@@ -1084,12 +1090,13 @@ class ExcelWorkbookTest {
                   Optional.empty(),
                   Optional.empty(),
                   Optional.of(
-                      ExcelCellFill.gradient(
-                          ExcelGradientFill.linear(
+                      CellFillSpec.gradient(
+                          CellGradientFillSpec.linear(
                               Optional.of(42.5d),
                               List.of(
-                                  new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
-                                  new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
+                                  new CellGradientStopSpec(
+                                      0.0d, ColorSpec.rgb(new RgbHex("#736C00"))),
+                                  new CellGradientStopSpec(1.0d, ColorSpec.theme(3)))))),
                   Optional.empty(),
                   Optional.of(new CellProtectionPatch(Optional.of(true), Optional.of(true)))));
       workbook

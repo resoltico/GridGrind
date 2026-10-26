@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import java.util.Objects;
 import java.util.Optional;
@@ -10,7 +11,7 @@ public record ExcelCellFont(
     Optional<Boolean> italic,
     Optional<String> fontName,
     Optional<FontHeightReport> fontHeight,
-    Optional<ExcelColor> fontColor,
+    Optional<ColorSpec> fontColor,
     Optional<Boolean> underline,
     Optional<Boolean> strikeout) {
   public ExcelCellFont {

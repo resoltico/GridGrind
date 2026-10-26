@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -54,7 +55,7 @@ public sealed interface ExcelAutofilterFilterCriterion
     }
   }
 
-  record Color(boolean cellColor, ExcelColor color) implements ExcelAutofilterFilterCriterion {
+  record Color(boolean cellColor, ColorSpec color) implements ExcelAutofilterFilterCriterion {
     public Color {
       Objects.requireNonNull(color, "color must not be null");
     }

@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.print.PrintScalingReport;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
@@ -20,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
@@ -162,10 +164,10 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                                     true,
                                     null,
                                     null,
-                                    ExcelColor.rgb("#102030"),
+                                    ColorSpec.rgb(new RgbHex("#102030")),
                                     null,
                                     null,
-                                    ExcelColor.rgb("#E0F0AA"),
+                                    ColorSpec.rgb(new RgbHex("#E0F0AA")),
                                     null,
                                     List.of())),
                             new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(

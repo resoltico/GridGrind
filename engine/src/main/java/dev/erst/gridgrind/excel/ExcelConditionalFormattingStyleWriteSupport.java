@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import java.util.Objects;
 import org.apache.poi.xssf.model.StylesTable;
 import org.jspecify.annotations.Nullable;
@@ -69,7 +71,7 @@ final class ExcelConditionalFormattingStyleWriteSupport {
     }
   }
 
-  private static void applyFill(CTDxf dxf, @Nullable ExcelColor fillColor) {
+  private static void applyFill(CTDxf dxf, @Nullable ColorSpec fillColor) {
     if (fillColor == null) {
       return;
     }
@@ -91,7 +93,7 @@ final class ExcelConditionalFormattingStyleWriteSupport {
   }
 
   private static void applyBorderSide(
-      java.util.function.Supplier<CTBorderPr> borderPrFactory, @Nullable ExcelBorderSide side) {
+      java.util.function.Supplier<CTBorderPr> borderPrFactory, @Nullable BorderSidePatch side) {
     Objects.requireNonNull(borderPrFactory, "borderPrFactory must not be null");
     if (side == null) {
       return;
@@ -107,8 +109,8 @@ final class ExcelConditionalFormattingStyleWriteSupport {
     }
   }
 
-  private static @Nullable ExcelBorderSide resolvedSide(
-      @Nullable ExcelBorderSide defaultSide, @Nullable ExcelBorderSide explicitSide) {
+  private static @Nullable BorderSidePatch resolvedSide(
+      @Nullable BorderSidePatch defaultSide, @Nullable BorderSidePatch explicitSide) {
     return explicitSide == null ? defaultSide : explicitSide;
   }
 

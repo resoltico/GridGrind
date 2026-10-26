@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import java.util.Objects;
@@ -12,8 +14,8 @@ public record ExcelCellStyle(
     Optional<String> numberFormat,
     Optional<CellAlignmentPatch> alignment,
     Optional<ExcelCellFont> font,
-    Optional<ExcelCellFill> fill,
-    Optional<ExcelBorder> border,
+    Optional<CellFillSpec> fill,
+    Optional<CellBorderPatch> border,
     Optional<CellProtectionPatch> protection) {
   public ExcelCellStyle {
     Objects.requireNonNull(numberFormat, "numberFormat must not be null");

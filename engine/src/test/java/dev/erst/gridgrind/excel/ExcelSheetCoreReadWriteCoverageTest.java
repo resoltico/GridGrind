@@ -3,8 +3,12 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -530,15 +534,15 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           Optional.of(false),
                           Optional.of("Aptos"),
                           Optional.of(FontHeightReport.fromTwips(280)),
-                          Optional.of(ExcelColor.rgb("#1F4E78")),
+                          Optional.of(ColorSpec.rgb(new RgbHex("#1F4E78"))),
                           Optional.of(true),
                           Optional.of(false))),
                   Optional.of(
-                      ExcelCellFill.patternForeground(
-                          ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC"))),
+                      CellFillSpec.patternForeground(
+                          ExcelFillPattern.SOLID, ColorSpec.rgb(new RgbHex("#FFF2CC")))),
                   Optional.of(
-                      new ExcelBorder(
-                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                      new CellBorderPatch(
+                          Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.THIN)),
                           Optional.empty(),
                           Optional.empty(),
                           Optional.empty(),
@@ -562,10 +566,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           Optional.of(true))),
                   Optional.empty(),
                   Optional.of(
-                      new ExcelBorder(
+                      new CellBorderPatch(
                           Optional.empty(),
                           Optional.empty(),
-                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
+                          Optional.ofNullable(new BorderSidePatch(ExcelBorderStyle.DOUBLE)),
                           Optional.empty(),
                           Optional.empty())),
                   Optional.empty()));
@@ -730,7 +734,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           .setPresentation(
               new ExcelSheetPresentation(
                   new ExcelSheetDisplay(false, false, false, true, true),
-                  Optional.of(ExcelColor.rgb("#112233")),
+                  Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                   new ExcelSheetOutlineSummary(false, false),
                   new ExcelSheetDefaults(11, 18.5d),
                   List.of(

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -26,7 +27,7 @@ class ExcelSheetPresentationControllerTest {
       ExcelSheetPresentation authored =
           new ExcelSheetPresentation(
               new ExcelSheetDisplay(false, false, false, true, true),
-              Optional.of(ExcelColor.rgb("#112233")),
+              Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
               new ExcelSheetOutlineSummary(false, false),
               new ExcelSheetDefaults(11, 18.5d),
               List.of(

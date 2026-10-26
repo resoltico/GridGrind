@@ -2,8 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.HashMap;
 import java.util.Map;
@@ -150,16 +153,16 @@ public final class WorkbookStyleRegistry {
     patch.indentation().ifPresent(value -> cellStyle.setIndention(value.shortValue()));
   }
 
-  private void applyFillPatch(XSSFCellStyle cellStyle, Optional<ExcelCellFill> fillPatch) {
+  private void applyFillPatch(XSSFCellStyle cellStyle, Optional<CellFillSpec> fillPatch) {
     if (fillPatch.isEmpty()) {
       return;
     }
     switch (fillPatch.orElseThrow()) {
-      case ExcelCellFill.Gradient gradient -> {
+      case CellFillSpec.Gradient gradient -> {
         gradientFillSupport.applyGradientFillPatch(cellStyle, gradient.gradient());
         return;
       }
-      case ExcelCellFill.PatternOnly pattern -> {
+      case CellFillSpec.PatternOnly pattern -> {
         cellStyle.setFillPattern(ExcelCellStylePoiBridge.toPoi(pattern.pattern()));
         if (pattern.pattern() == ExcelFillPattern.NONE) {
           gradientFillSupport.clearFillColors(cellStyle);
@@ -169,7 +172,7 @@ public final class WorkbookStyleRegistry {
           cellStyle.setFillBackgroundColor((XSSFColor) null);
         }
       }
-      case ExcelCellFill.PatternForeground pattern -> {
+      case CellFillSpec.PatternForeground pattern -> {
         cellStyle.setFillPattern(ExcelCellStylePoiBridge.toPoi(pattern.pattern()));
         if (pattern.pattern() == ExcelFillPattern.SOLID) {
           cellStyle.setFillBackgroundColor((XSSFColor) null);
@@ -177,12 +180,12 @@ public final class WorkbookStyleRegistry {
         cellStyle.setFillForegroundColor(
             ExcelColorSupport.toXssfColor(workbook, pattern.foregroundColor()));
       }
-      case ExcelCellFill.PatternBackground pattern -> {
+      case CellFillSpec.PatternBackground pattern -> {
         cellStyle.setFillPattern(ExcelCellStylePoiBridge.toPoi(pattern.pattern()));
         cellStyle.setFillBackgroundColor(
             ExcelColorSupport.toXssfColor(workbook, pattern.backgroundColor()));
       }
-      case ExcelCellFill.PatternForegroundBackground pattern -> {
+      case CellFillSpec.PatternForegroundBackground pattern -> {
         cellStyle.setFillPattern(ExcelCellStylePoiBridge.toPoi(pattern.pattern()));
         cellStyle.setFillForegroundColor(
             ExcelColorSupport.toXssfColor(workbook, pattern.foregroundColor()));
@@ -221,7 +224,7 @@ public final class WorkbookStyleRegistry {
     return font;
   }
 
-  private void applyFontColor(XSSFFont font, ExcelColor color) {
+  private void applyFontColor(XSSFFont font, ColorSpec color) {
     CTFont ctFont = font.getCTFont();
     while (ctFont.sizeOfColorArray() > 1) {
       ctFont.removeColor(ctFont.sizeOfColorArray() - 1);
@@ -232,7 +235,7 @@ public final class WorkbookStyleRegistry {
     ctFont.getColorArray(0).set(ExcelColorSupport.toXssfColor(workbook, color).getCTColor());
   }
 
-  private void applyBorderPatch(XSSFCellStyle cellStyle, ExcelBorder border) {
+  private void applyBorderPatch(XSSFCellStyle cellStyle, CellBorderPatch border) {
     borderPatchSupport.applyBorderPatch(cellStyle, border);
   }
 

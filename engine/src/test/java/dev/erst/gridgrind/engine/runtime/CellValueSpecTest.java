@@ -8,7 +8,6 @@ import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import java.time.LocalDate;
@@ -59,7 +58,7 @@ class CellValueSpecTest {
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),
-                            java.util.Optional.of(ExcelColor.rgb("#AABBCC")),
+                            java.util.Optional.of(ColorSpec.rgb(new RgbHex("#AABBCC"))),
                             java.util.Optional.empty(),
                             java.util.Optional.empty()))))),
         richTextValue.value());

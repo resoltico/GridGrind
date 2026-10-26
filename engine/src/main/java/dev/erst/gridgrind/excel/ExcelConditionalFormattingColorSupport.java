@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -12,19 +14,19 @@ final class ExcelConditionalFormattingColorSupport {
   /**
    * Writes one owned workbook color without collapsing theme, indexed, or tint semantics to RGB.
    */
-  static void setColor(CTColor target, ExcelColor color) {
+  static void setColor(CTColor target, ColorSpec color) {
     Objects.requireNonNull(target, "target must not be null");
     Objects.requireNonNull(color, "color must not be null");
     switch (color) {
-      case ExcelColor.Rgb rgb -> {
+      case ColorSpec.Rgb rgb -> {
         target.setRgb(argbBytes(rgb));
         rgb.tint().ifPresent(target::setTint);
       }
-      case ExcelColor.Theme theme -> {
+      case ColorSpec.Theme theme -> {
         target.setTheme(theme.theme());
         theme.tint().ifPresent(target::setTint);
       }
-      case ExcelColor.Indexed indexed -> {
+      case ColorSpec.Indexed indexed -> {
         target.setIndexed(indexed.indexed());
         indexed.tint().ifPresent(target::setTint);
       }
@@ -32,25 +34,25 @@ final class ExcelConditionalFormattingColorSupport {
   }
 
   /** Reads one OOXML color into the owned color vocabulary, preserving tint and reference kind. */
-  static Optional<ExcelColor> optionalColor(@Nullable CTColor color) {
+  static Optional<ColorSpec> optionalColor(@Nullable CTColor color) {
     if (color == null) {
       return Optional.empty();
     }
     Optional<Double> tint = color.isSetTint() ? Optional.of(color.getTint()) : Optional.empty();
     if (color.isSetRgb()) {
-      return rgbHex(color.getRgb()).map(value -> ExcelColor.rgb(value, tint));
+      return rgbHex(color.getRgb()).map(value -> new ColorSpec.Rgb(new RgbHex(value), tint));
     }
     if (color.isSetTheme()) {
-      return Optional.of(ExcelColor.theme(Math.toIntExact(color.getTheme()), tint));
+      return Optional.of(new ColorSpec.Theme(Math.toIntExact(color.getTheme()), tint));
     }
     if (color.isSetIndexed()) {
-      return Optional.of(ExcelColor.indexed(Math.toIntExact(color.getIndexed()), tint));
+      return Optional.of(new ColorSpec.Indexed(Math.toIntExact(color.getIndexed()), tint));
     }
     return Optional.empty();
   }
 
-  private static byte[] argbBytes(ExcelColor.Rgb color) {
-    String rgb = color.rgb();
+  private static byte[] argbBytes(ColorSpec.Rgb color) {
+    String rgb = color.rgb().value();
     return new byte[] {
       (byte) 0xFF,
       (byte) Integer.parseInt(rgb.substring(1, 3), 16),

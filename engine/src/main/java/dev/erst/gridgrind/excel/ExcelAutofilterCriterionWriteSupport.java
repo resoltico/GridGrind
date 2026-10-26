@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilter;
@@ -121,7 +122,7 @@ final class ExcelAutofilterCriterionWriteSupport {
     return resolved;
   }
 
-  static long putColorDxf(XSSFWorkbook workbook, ExcelColor color, boolean cellColor) {
+  static long putColorDxf(XSSFWorkbook workbook, ColorSpec color, boolean cellColor) {
     CTDxf dxf = CTDxf.Factory.newInstance();
     if (cellColor) {
       CTPatternFill patternFill = dxf.addNewFill().addNewPatternFill();

@@ -2,19 +2,23 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/** Tests for ExcelBorder and ExcelBorderSide record construction. */
+/** Tests for CellBorderPatch and BorderSidePatch record construction. */
 class ExcelBorderTest {
   @Test
   void constructsBorderPatchesWithDefaultsAndOverrides() {
-    ExcelBorder border =
-        new ExcelBorder(
-            Optional.of(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+    CellBorderPatch border =
+        new CellBorderPatch(
+            Optional.of(new BorderSidePatch(ExcelBorderStyle.THIN)),
             Optional.empty(),
-            Optional.of(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
+            Optional.of(new BorderSidePatch(ExcelBorderStyle.DOUBLE)),
             Optional.empty(),
             Optional.empty());
 
@@ -22,9 +26,9 @@ class ExcelBorderTest {
     assertEquals(Optional.of(ExcelBorderStyle.DOUBLE), border.right().orElseThrow().style());
     assertEquals(
         Optional.of(ExcelBorderStyle.THIN),
-        new ExcelBorder(
+        new CellBorderPatch(
                 Optional.empty(),
-                Optional.of(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                Optional.of(new BorderSidePatch(ExcelBorderStyle.THIN)),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty())
@@ -33,10 +37,10 @@ class ExcelBorderTest {
             .style());
     assertEquals(
         Optional.of(ExcelBorderStyle.THIN),
-        new ExcelBorder(
+        new CellBorderPatch(
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                Optional.of(new BorderSidePatch(ExcelBorderStyle.THIN)),
                 Optional.empty(),
                 Optional.empty())
             .right()
@@ -44,23 +48,23 @@ class ExcelBorderTest {
             .style());
     assertEquals(
         Optional.of(ExcelBorderStyle.THIN),
-        new ExcelBorder(
+        new CellBorderPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                Optional.of(new BorderSidePatch(ExcelBorderStyle.THIN)),
                 Optional.empty())
             .bottom()
             .orElseThrow()
             .style());
     assertEquals(
         Optional.of(ExcelBorderStyle.THIN),
-        new ExcelBorder(
+        new CellBorderPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of(new ExcelBorderSide(ExcelBorderStyle.THIN)))
+                Optional.of(new BorderSidePatch(ExcelBorderStyle.THIN)))
             .left()
             .orElseThrow()
             .style());
@@ -68,11 +72,11 @@ class ExcelBorderTest {
 
   @Test
   void validatesBorderRequirements() {
-    assertThrows(IllegalArgumentException.class, () -> new ExcelBorderSide(null));
+    assertThrows(IllegalArgumentException.class, () -> new BorderSidePatch(null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelBorder(
+            new CellBorderPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -82,15 +86,16 @@ class ExcelBorderTest {
 
   @Test
   void validatesBorderSideColorRules() {
-    ExcelBorderSide colorOnly =
-        new ExcelBorderSide(Optional.empty(), Optional.of(ExcelColor.rgb("#a1b2c3")));
+    BorderSidePatch colorOnly =
+        new BorderSidePatch(Optional.empty(), Optional.of(ColorSpec.rgb(new RgbHex("#a1b2c3"))));
 
     assertEquals(Optional.empty(), colorOnly.style());
-    assertEquals(Optional.of(ExcelColor.rgb("#A1B2C3")), colorOnly.color());
+    assertEquals(Optional.of(ColorSpec.rgb(new RgbHex("#A1B2C3"))), colorOnly.color());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelBorderSide(
-                Optional.of(ExcelBorderStyle.NONE), Optional.of(ExcelColor.rgb("#112233"))));
+            new BorderSidePatch(
+                Optional.of(ExcelBorderStyle.NONE),
+                Optional.of(ColorSpec.rgb(new RgbHex("#112233")))));
   }
 }

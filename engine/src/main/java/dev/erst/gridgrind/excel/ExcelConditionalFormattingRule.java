@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
@@ -45,7 +46,7 @@ public sealed interface ExcelConditionalFormattingRule
   /** Color-scale rule with authored thresholds and control-point colors. */
   record ColorScaleRule(
       List<ExcelConditionalFormattingThreshold> thresholds,
-      List<ExcelColor> colors,
+      List<ColorSpec> colors,
       boolean stopIfTrue)
       implements ExcelConditionalFormattingRule {
     public ColorScaleRule {
@@ -62,7 +63,7 @@ public sealed interface ExcelConditionalFormattingRule
 
   /** Data-bar rule with authored thresholds, widths, and color payload. */
   record DataBarRule(
-      ExcelColor color,
+      ColorSpec color,
       boolean iconOnly,
       int widthMin,
       int widthMax,
@@ -135,10 +136,10 @@ public sealed interface ExcelConditionalFormattingRule
     return copy;
   }
 
-  private static List<ExcelColor> copyColors(List<ExcelColor> colors, String fieldName) {
-    List<ExcelColor> copy =
+  private static List<ColorSpec> copyColors(List<ColorSpec> colors, String fieldName) {
+    List<ColorSpec> copy =
         List.copyOf(Objects.requireNonNull(colors, fieldName + " must not be null"));
-    for (ExcelColor color : copy) {
+    for (ColorSpec color : copy) {
       Objects.requireNonNull(color, fieldName + " must not contain null values");
     }
     return copy;

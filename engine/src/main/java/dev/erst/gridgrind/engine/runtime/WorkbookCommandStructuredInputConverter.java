@@ -131,17 +131,11 @@ final class WorkbookCommandStructuredInputConverter {
                       WorkbookCommandStructuredInputConverter
                           ::toExcelConditionalFormattingThreshold)
                   .toList(),
-              colorScaleRule.colors().stream()
-                  .map(
-                      color ->
-                          WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
-                              color, "color-scale color"))
-                  .toList(),
+              colorScaleRule.colors().stream().map(color -> color).toList(),
               colorScaleRule.stopIfTrue());
       case ConditionalFormattingRuleSpec.DataBarRule dataBarRule ->
           new ExcelConditionalFormattingRule.DataBarRule(
-              WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
-                  dataBarRule.color(), "data-bar color"),
+              dataBarRule.color(),
               dataBarRule.iconOnly(),
               dataBarRule.widthMin(),
               dataBarRule.widthMax(),
@@ -181,10 +175,10 @@ final class WorkbookCommandStructuredInputConverter {
             style.bold(),
             style.italic(),
             style.fontHeight().flatMap(WorkbookCommandCellValueSpecConverter::toFontHeightReport),
-            style.fontColor().flatMap(WorkbookCommandCellValueSpecConverter::toExcelColor),
+            style.fontColor(),
             style.underline(),
             style.strikeout(),
-            style.fillColor().flatMap(WorkbookCommandCellValueSpecConverter::toExcelColor),
+            style.fillColor(),
             style
                 .border()
                 .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorder)));
@@ -197,26 +191,11 @@ final class WorkbookCommandStructuredInputConverter {
     }
     return Optional.of(
         new ExcelDifferentialBorder(
-            border
-                .all()
-                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
-                .orElse(null),
-            border
-                .top()
-                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
-                .orElse(null),
-            border
-                .right()
-                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
-                .orElse(null),
-            border
-                .bottom()
-                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
-                .orElse(null),
-            border
-                .left()
-                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
-                .orElse(null)));
+            border.all().orElse(null),
+            border.top().orElse(null),
+            border.right().orElse(null),
+            border.bottom().orElse(null),
+            border.left().orElse(null)));
   }
 
   static ExcelAutofilterFilterColumn toExcelAutofilterFilterColumn(
@@ -263,10 +242,7 @@ final class WorkbookCommandStructuredInputConverter {
       case AutofilterFilterCriterionSpec.Top10 top10 ->
           new ExcelAutofilterFilterCriterion.Top10(top10.value(), top10.top(), top10.percent());
       case AutofilterFilterCriterionSpec.Color color ->
-          new ExcelAutofilterFilterCriterion.Color(
-              color.cellColor(),
-              WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
-                  color.color(), "autofilter color"));
+          new ExcelAutofilterFilterCriterion.Color(color.cellColor(), color.color());
       case AutofilterFilterCriterionSpec.Icon icon ->
           new ExcelAutofilterFilterCriterion.Icon(icon.iconSet(), icon.iconId());
     };
@@ -279,16 +255,10 @@ final class WorkbookCommandStructuredInputConverter {
           new ExcelAutofilterSortCondition.Value(value.range().value(), value.descending());
       case AutofilterSortConditionSpec.CellColor cellColor ->
           new ExcelAutofilterSortCondition.CellColor(
-              cellColor.range().value(),
-              cellColor.descending(),
-              WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
-                  cellColor.color(), "autofilter cell sort color"));
+              cellColor.range().value(), cellColor.descending(), cellColor.color());
       case AutofilterSortConditionSpec.FontColor fontColor ->
           new ExcelAutofilterSortCondition.FontColor(
-              fontColor.range().value(),
-              fontColor.descending(),
-              WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
-                  fontColor.color(), "autofilter font sort color"));
+              fontColor.range().value(), fontColor.descending(), fontColor.color());
       case AutofilterSortConditionSpec.Icon icon ->
           new ExcelAutofilterSortCondition.Icon(
               icon.range().value(), icon.descending(), icon.iconId());

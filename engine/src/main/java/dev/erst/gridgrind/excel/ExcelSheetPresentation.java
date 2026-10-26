@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -7,7 +8,7 @@ import java.util.Optional;
 /** Authoritative sheet-presentation state for display flags, tab color, defaults, and warnings. */
 public record ExcelSheetPresentation(
     ExcelSheetDisplay display,
-    Optional<ExcelColor> tabColor,
+    Optional<ColorSpec> tabColor,
     ExcelSheetOutlineSummary outlineSummary,
     ExcelSheetDefaults sheetDefaults,
     List<ExcelIgnoredError> ignoredErrors) {

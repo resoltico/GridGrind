@@ -4,7 +4,11 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
@@ -41,11 +45,12 @@ class ExcelAdvancedValueObjectTest {
     var custom = new ExcelAutofilterFilterCriterion.Custom(true, List.of(customCondition));
     var dynamic = new ExcelAutofilterFilterCriterion.Dynamic("today", 1.0d, 2.0d);
     var top10 = new ExcelAutofilterFilterCriterion.Top10(10, false, true);
-    var color = new ExcelAutofilterFilterCriterion.Color(false, ExcelColor.indexed(10, -0.25d));
+    var color = new ExcelAutofilterFilterCriterion.Color(false, ColorSpec.indexed(10, -0.25d));
     var icon = new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2);
     var column = new ExcelAutofilterFilterColumn(4L, false, color);
     var sortCondition =
-        new ExcelAutofilterSortCondition.CellColor("A2:A5", true, ExcelColor.rgb("#AABBCC"));
+        new ExcelAutofilterSortCondition.CellColor(
+            "A2:A5", true, ColorSpec.rgb(new RgbHex("#AABBCC")));
     var sortState =
         new ExcelAutofilterSortState("A1:F5", true, true, Optional.empty(), List.of(sortCondition));
 
@@ -53,7 +58,7 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(List.of(customCondition), custom.conditions());
     assertEquals("today", dynamic.type());
     assertEquals(10, top10.value());
-    assertEquals(ExcelColor.indexed(10, -0.25d), color.color());
+    assertEquals(ColorSpec.indexed(10, -0.25d), color.color());
     assertEquals("3TrafficLights1", icon.iconSet());
     assertEquals(4L, column.columnId());
     assertInstanceOf(ExcelAutofilterSortCondition.CellColor.class, sortCondition);
@@ -112,18 +117,18 @@ class ExcelAdvancedValueObjectTest {
 
   @Test
   void styleValueObjectsNormalizeDefaultsAndValidate() {
-    var themeColor = ExcelColor.theme(6, -0.35d);
-    var indexedColor = ExcelColor.indexed(10);
+    var themeColor = ColorSpec.theme(6, -0.35d);
+    var indexedColor = ColorSpec.indexed(10);
     var gradient =
-        ExcelGradientFill.path(
+        CellGradientFillSpec.path(
             Optional.of(0.1d),
             Optional.of(0.2d),
             Optional.of(0.3d),
             Optional.of(0.4d),
             List.of(
-                new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
-                new ExcelGradientStop(1.0d, indexedColor)));
-    var gradientFill = ExcelCellFill.gradient(gradient);
+                new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
+                new CellGradientStopSpec(1.0d, indexedColor)));
+    var gradientFill = CellFillSpec.gradient(gradient);
     var printSetup =
         new ExcelPrintSetup(
             new ExcelPrintMargins(0.5d, 0.6d, 0.7d, 0.8d, 0.2d, 0.3d),
@@ -148,7 +153,7 @@ class ExcelAdvancedValueObjectTest {
             new ExcelHeaderFooterText("Left", "Center", "Right"),
             new ExcelHeaderFooterText("Footer", "", ""));
 
-    assertEquals("#AA00CC", ExcelColor.rgb("#aa00cc").rgb());
+    assertEquals("#AA00CC", ColorSpec.rgb(new RgbHex("#aa00cc")).rgb().value());
     assertEquals(6, themeColor.theme());
     assertEquals(10, indexedColor.indexed());
     assertEquals("PATH", gradientType(gradient));
@@ -162,17 +167,17 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(ExcelPrintSetup.defaults(), printLayout.setup());
     assertEquals(new ExcelPrintLayout.Area.None(), ExcelPrintLayout.defaults().printArea());
 
-    assertThrows(IllegalArgumentException.class, () -> ExcelColor.rgb(" "));
-    assertThrows(IllegalArgumentException.class, () -> ExcelColor.rgb("#12345"));
-    assertThrows(IllegalArgumentException.class, () -> ExcelColor.theme(-1));
-    assertThrows(IllegalArgumentException.class, () -> ExcelColor.indexed(-1));
-    assertThrows(NullPointerException.class, () -> ExcelColor.rgb(null));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.rgb(new RgbHex(" ")));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.rgb(new RgbHex("#12345")));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.theme(-1));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.indexed(-1));
+    assertThrows(NullPointerException.class, () -> ColorSpec.rgb(new RgbHex(null)));
     assertThrows(
-        IllegalArgumentException.class, () -> ExcelColor.theme(1, Double.POSITIVE_INFINITY));
+        IllegalArgumentException.class, () -> ColorSpec.theme(1, Double.POSITIVE_INFINITY));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ExcelGradientFill.path(
+            CellGradientFillSpec.path(
                 Optional.of(Double.NaN),
                 Optional.empty(),
                 Optional.empty(),
@@ -181,79 +186,85 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(
         "LINEAR",
         gradientType(
-            ExcelGradientFill.linear(
+            CellGradientFillSpec.linear(
                 Optional.empty(),
                 List.of(
-                    new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
-                    new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566"))))));
+                    new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
+                    new CellGradientStopSpec(1.0d, ColorSpec.rgb(new RgbHex("#445566")))))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ExcelGradientFill.linear(
+            CellGradientFillSpec.linear(
                 Optional.of(Double.POSITIVE_INFINITY),
                 List.of(
-                    new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
-                    new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566")))));
+                    new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
+                    new CellGradientStopSpec(1.0d, ColorSpec.rgb(new RgbHex("#445566"))))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ExcelGradientFill.path(
+            CellGradientFillSpec.path(
                 Optional.of(Double.POSITIVE_INFINITY),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 List.of(
-                    new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
-                    new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566")))));
+                    new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
+                    new CellGradientStopSpec(1.0d, ColorSpec.rgb(new RgbHex("#445566"))))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ExcelGradientFill.linear(
+            CellGradientFillSpec.linear(
                 Optional.of(Double.NaN),
                 List.of(
-                    new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
-                    new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566")))));
+                    new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
+                    new CellGradientStopSpec(1.0d, ColorSpec.rgb(new RgbHex("#445566"))))));
     assertThrows(
-        NullPointerException.class, () -> ExcelGradientFill.linear(Optional.empty(), null));
+        NullPointerException.class, () -> CellGradientFillSpec.linear(Optional.empty(), null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ExcelGradientFill.linear(
-                Optional.empty(), List.of(new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")))));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            ExcelGradientFill.linear(
+            CellGradientFillSpec.linear(
                 Optional.empty(),
-                Arrays.asList(new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")), null)));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelGradientStop(-0.1d, ExcelColor.rgb("#112233")));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelGradientStop(1.5d, ExcelColor.rgb("#112233")));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelGradientStop(Double.NaN, ExcelColor.rgb("#112233")));
-    assertThrows(NullPointerException.class, () -> ExcelCellFill.pattern(null));
+                List.of(new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))))));
     assertThrows(
         NullPointerException.class,
-        () -> ExcelCellFill.patternBackground(null, ExcelColor.rgb("#112233")));
-    assertThrows(NullPointerException.class, () -> ExcelCellFill.gradient(null));
-    assertThrows(
-        NullPointerException.class,
-        () -> ExcelCellFill.patternForeground(null, ExcelColor.rgb("#112233")));
-    assertThrows(
-        NullPointerException.class,
-        () -> ExcelCellFill.patternBackground(null, ExcelColor.rgb("#112233")));
+        () ->
+            CellGradientFillSpec.linear(
+                Optional.empty(),
+                Arrays.asList(
+                    new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))), null)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ExcelCellFill.patternForeground(ExcelFillPattern.NONE, ExcelColor.rgb("#112233")));
+        () -> new CellGradientStopSpec(-0.1d, ColorSpec.rgb(new RgbHex("#112233"))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellGradientStopSpec(1.5d, ColorSpec.rgb(new RgbHex("#112233"))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellGradientStopSpec(Double.NaN, ColorSpec.rgb(new RgbHex("#112233"))));
+    assertThrows(NullPointerException.class, () -> CellFillSpec.pattern(null));
+    assertThrows(
+        NullPointerException.class,
+        () -> CellFillSpec.patternBackground(null, ColorSpec.rgb(new RgbHex("#112233"))));
+    assertThrows(NullPointerException.class, () -> CellFillSpec.gradient(null));
+    assertThrows(
+        NullPointerException.class,
+        () -> CellFillSpec.patternForeground(null, ColorSpec.rgb(new RgbHex("#112233"))));
+    assertThrows(
+        NullPointerException.class,
+        () -> CellFillSpec.patternBackground(null, ColorSpec.rgb(new RgbHex("#112233"))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ExcelCellFill.patternColors(
-                ExcelFillPattern.SOLID, ExcelColor.rgb("#112233"), ExcelColor.rgb("#445566")));
+            CellFillSpec.patternForeground(
+                ExcelFillPattern.NONE, ColorSpec.rgb(new RgbHex("#112233"))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            CellFillSpec.patternColors(
+                ExcelFillPattern.SOLID,
+                ColorSpec.rgb(new RgbHex("#112233")),
+                ColorSpec.rgb(new RgbHex("#445566"))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -422,7 +433,7 @@ class ExcelAdvancedValueObjectTest {
                                     Optional.of(false),
                                     Optional.of("Aptos"),
                                     Optional.empty(),
-                                    Optional.of(ExcelColor.rgb("#112233")),
+                                    Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                                     Optional.empty(),
                                     Optional.empty())))))),
             Optional.of(new ExcelCommentAnchor(1, 2, 4, 6)));
@@ -486,7 +497,7 @@ class ExcelAdvancedValueObjectTest {
         authoringComment.runs().orElseThrow().plainText(),
         copiedComment.runs().orElseThrow().plainText());
     assertEquals(
-        ExcelColor.rgb("#112233"),
+        ColorSpec.rgb(new RgbHex("#112233")),
         copiedComment
             .runs()
             .orElseThrow()
@@ -625,11 +636,13 @@ class ExcelAdvancedValueObjectTest {
         new ExcelConditionalFormattingRule.ColorScaleRule(
             List.of(min, percentile, max),
             List.of(
-                ExcelColor.rgb("#112233"), ExcelColor.rgb("#445566"), ExcelColor.rgb("#778899")),
+                ColorSpec.rgb(new RgbHex("#112233")),
+                ColorSpec.rgb(new RgbHex("#445566")),
+                ColorSpec.rgb(new RgbHex("#778899"))),
             false);
     var dataBar =
         new ExcelConditionalFormattingRule.DataBarRule(
-            ExcelColor.rgb("#102030"), true, 10, 90, min, max, false);
+            ColorSpec.rgb(new RgbHex("#102030")), true, 10, 90, min, max, false);
     var iconSetRule =
         new ExcelConditionalFormattingRule.IconSetRule(
             ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
@@ -665,22 +678,22 @@ class ExcelAdvancedValueObjectTest {
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRule.ColorScaleRule(
-                List.of(min), List.of(ExcelColor.rgb("#112233")), false));
+                List.of(min), List.of(ColorSpec.rgb(new RgbHex("#112233"))), false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRule.ColorScaleRule(
-                List.of(min, max), List.of(ExcelColor.rgb("#112233")), false));
+                List.of(min, max), List.of(ColorSpec.rgb(new RgbHex("#112233"))), false));
     assertThrows(
         NullPointerException.class,
         () ->
             new ExcelConditionalFormattingRule.ColorScaleRule(
-                null, List.of(ExcelColor.rgb("#112233")), false));
+                null, List.of(ColorSpec.rgb(new RgbHex("#112233"))), false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRule.DataBarRule(
-                ExcelColor.rgb("#102030"), false, 10, 9, min, max, false));
+                ColorSpec.rgb(new RgbHex("#102030")), false, 10, 9, min, max, false));
     assertThrows(
         NullPointerException.class,
         () -> new ExcelConditionalFormattingRule.DataBarRule(null, false, 0, 0, min, max, false));
@@ -688,32 +701,32 @@ class ExcelAdvancedValueObjectTest {
         NullPointerException.class,
         () ->
             new ExcelConditionalFormattingRule.DataBarRule(
-                ExcelColor.rgb("#102030"), false, 0, 0, null, max, false));
+                ColorSpec.rgb(new RgbHex("#102030")), false, 0, 0, null, max, false));
     assertThrows(
         NullPointerException.class,
         () ->
             new ExcelConditionalFormattingRule.DataBarRule(
-                ExcelColor.rgb("#102030"), false, 0, 0, min, null, false));
+                ColorSpec.rgb(new RgbHex("#102030")), false, 0, 0, min, null, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRule.DataBarRule(
-                ExcelColor.rgb("#102030"), false, -1, 0, min, max, false));
+                ColorSpec.rgb(new RgbHex("#102030")), false, -1, 0, min, max, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRule.DataBarRule(
-                ExcelColor.rgb("#102030"), false, 0, -1, min, max, false));
+                ColorSpec.rgb(new RgbHex("#102030")), false, 0, -1, min, max, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRule.DataBarRule(
-                ExcelColor.rgb("#102030"), false, 101, 101, min, max, false));
+                ColorSpec.rgb(new RgbHex("#102030")), false, 101, 101, min, max, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRule.DataBarRule(
-                ExcelColor.rgb("#102030"), false, 0, 101, min, max, false));
+                ColorSpec.rgb(new RgbHex("#102030")), false, 0, 101, min, max, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->

@@ -16,8 +16,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelCellFill;
-import dev.erst.gridgrind.excel.ExcelColor;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -76,20 +74,21 @@ class CellStylePatchTest {
         new BigDecimal("11.5"),
         engineStyle.font().orElseThrow().fontHeight().orElseThrow().points());
     assertEquals(
-        ExcelColor.rgb("#00AA55"), engineStyle.font().orElseThrow().fontColor().orElseThrow());
+        ColorSpec.rgb(new RgbHex("#00AA55")),
+        engineStyle.font().orElseThrow().fontColor().orElseThrow());
     assertTrue(engineStyle.font().orElseThrow().underline().orElseThrow());
     assertFalse(engineStyle.font().orElseThrow().strikeout().orElseThrow());
-    ExcelCellFill.PatternForegroundBackground fill =
+    CellFillSpec.PatternForegroundBackground fill =
         assertInstanceOf(
-            ExcelCellFill.PatternForegroundBackground.class, engineStyle.fill().orElseThrow());
+            CellFillSpec.PatternForegroundBackground.class, engineStyle.fill().orElseThrow());
     assertEquals(ExcelFillPattern.THIN_HORIZONTAL_BANDS, fill.pattern());
-    assertEquals(ExcelColor.rgb("#FFF2CC"), fill.foregroundColor());
-    assertEquals(ExcelColor.rgb("#DDEBF7"), fill.backgroundColor());
+    assertEquals(ColorSpec.rgb(new RgbHex("#FFF2CC")), fill.foregroundColor());
+    assertEquals(ColorSpec.rgb(new RgbHex("#DDEBF7")), fill.backgroundColor());
     assertEquals(
         Optional.of(ExcelBorderStyle.THICK),
         engineStyle.border().orElseThrow().top().orElseThrow().style());
     assertEquals(
-        Optional.of(ExcelColor.rgb("#112233")),
+        Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
         engineStyle.border().orElseThrow().top().orElseThrow().color());
     assertFalse(engineStyle.protection().orElseThrow().locked().orElseThrow());
     assertTrue(engineStyle.protection().orElseThrow().hiddenFormula().orElseThrow());

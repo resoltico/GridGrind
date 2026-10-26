@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import java.util.Objects;
 
 /** One authored sort condition nested under a mutable-workbook autofilter sort state. */
@@ -22,7 +23,7 @@ public sealed interface ExcelAutofilterSortCondition
   }
 
   /** One fill-color-based sort condition. */
-  record CellColor(String range, boolean descending, ExcelColor color)
+  record CellColor(String range, boolean descending, ColorSpec color)
       implements ExcelAutofilterSortCondition {
     public CellColor {
       range = requireRange(range);
@@ -31,7 +32,7 @@ public sealed interface ExcelAutofilterSortCondition
   }
 
   /** One font-color-based sort condition. */
-  record FontColor(String range, boolean descending, ExcelColor color)
+  record FontColor(String range, boolean descending, ColorSpec color)
       implements ExcelAutofilterSortCondition {
     public FontColor {
       range = requireRange(range);
