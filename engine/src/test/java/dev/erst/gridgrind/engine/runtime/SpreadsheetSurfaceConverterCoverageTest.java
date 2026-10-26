@@ -241,7 +241,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
     StructuredMutationAction.ImportCustomXmlMapping inlineImportAction =
         new StructuredMutationAction.ImportCustomXmlMapping(
             new CustomXmlImportSpec(
-                new CustomXmlMappingLocator(1L, "CORSO_mapping"),
+                new CustomXmlMappingLocator(
+                    java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                 TextSourceSpec.inline("<root/>")));
 
     for (ChartPlotSpec plot : standardInputChart.plots()) {
@@ -267,11 +268,14 @@ class SpreadsheetSurfaceConverterCoverageTest {
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CustomXmlImportSpec(
-                new CustomXmlMappingLocator(1L, "CORSO_mapping"), TextSourceSpec.standardInput())));
+                new CustomXmlMappingLocator(
+                    java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+                TextSourceSpec.standardInput())));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new CustomXmlImportSpec(
-                new CustomXmlMappingLocator(1L, "CORSO_mapping"),
+                new CustomXmlMappingLocator(
+                    java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                 TextSourceSpec.inline("<root/>"))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
@@ -280,7 +284,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.ImportCustomXmlMapping(
                 new CustomXmlImportSpec(
-                    new CustomXmlMappingLocator(1L, "CORSO_mapping"),
+                    new CustomXmlMappingLocator(
+                        java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                     TextSourceSpec.standardInput()))));
 
     WorkbookPlan plan =

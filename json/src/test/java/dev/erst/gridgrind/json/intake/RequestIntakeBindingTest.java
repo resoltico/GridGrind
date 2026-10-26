@@ -24,7 +24,6 @@ import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.core.problem.RequestUnknownField;
 import dev.erst.gridgrind.core.problem.RequestUnknownTypeDiscriminator;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
-import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -939,11 +938,6 @@ class RequestIntakeBindingTest {
       dev.erst.gridgrind.core.problem.RequestBoundFragments fragments,
       java.util.List<dev.erst.gridgrind.core.problem.RequestStructuralProblem> problems) {
     return RequestIntakeBinder.bind(
-        fragments,
-        problems,
-        java.util.List.of(),
-        RequestDiagnosticRedactor.forRequestType(Object.class),
-        java.util.Optional.empty(),
-        java.util.List.of());
+        fragments, problems, java.util.List.of(), java.util.Optional.empty(), java.util.List.of());
   }
 }

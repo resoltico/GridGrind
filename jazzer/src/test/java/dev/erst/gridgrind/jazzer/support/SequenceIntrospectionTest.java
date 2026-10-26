@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
@@ -83,7 +84,6 @@ import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -418,7 +418,8 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.commandKind(
             new WorkbookMetadataCommand.ImportCustomXmlMapping(
                 new ExcelCustomXmlImportDefinition(
-                    new ExcelCustomXmlMappingLocator(1L, "BudgetMap"),
+                    new CustomXmlMappingLocator(
+                        java.util.Optional.of(1L), java.util.Optional.of("BudgetMap")),
                     "<Budget><Owner>Ada</Owner></Budget>"))));
     assertEquals(
         "SET_SIGNATURE_LINE",
@@ -565,7 +566,7 @@ class SequenceIntrospectionTest {
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                         new dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator(
-                            1L, "BudgetMap"),
+                            java.util.Optional.of(1L), java.util.Optional.of("BudgetMap")),
                         true,
                         "UTF-8")),
                 inspect(

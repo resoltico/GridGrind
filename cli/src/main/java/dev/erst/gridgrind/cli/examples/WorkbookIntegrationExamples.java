@@ -94,13 +94,17 @@ final class WorkbookIntegrationExamples {
             new StepId("export-custom-xml-before-import"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
-                new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8")),
+                new CustomXmlMappingLocator(
+                    java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+                true,
+                "UTF-8")),
         ExampleSteps.step(
             new StepId("import-custom-xml"),
             ExampleSelectors.workbook(),
             new StructuredMutationAction.ImportCustomXmlMapping(
                 new CustomXmlImportSpec(
-                    new CustomXmlMappingLocator(1L, "CORSO_mapping"),
+                    new CustomXmlMappingLocator(
+                        java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                     TextSourceSpec.utf8File(
                         paths.asset("custom-xml-assets/custom-xml-update.xml"))))),
         ExampleSteps.read(
@@ -111,7 +115,10 @@ final class WorkbookIntegrationExamples {
             new StepId("export-custom-xml-after-import"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
-                new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8")));
+                new CustomXmlMappingLocator(
+                    java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+                true,
+                "UTF-8")));
   }
 
   static WorkbookPlan packageSecurityInspectionPlan(ExamplePathLayout paths) {

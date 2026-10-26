@@ -7,7 +7,6 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
-import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -122,11 +121,6 @@ class RequestIntakeLocationTest {
       dev.erst.gridgrind.core.problem.RequestBoundFragments fragments,
       java.util.List<dev.erst.gridgrind.core.problem.RequestStructuralProblem> problems) {
     return RequestIntakeBinder.bind(
-        fragments,
-        problems,
-        java.util.List.of(),
-        RequestDiagnosticRedactor.forRequestType(Object.class),
-        java.util.Optional.empty(),
-        java.util.List.of());
+        fragments, problems, java.util.List.of(), java.util.Optional.empty(), java.util.List.of());
   }
 }

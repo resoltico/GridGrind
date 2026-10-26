@@ -126,7 +126,10 @@ class InspectionCommandConverterTest {
             new StepId("custom-xml-export"),
             new WorkbookSelector.Current(),
             new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
-                new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8"));
+                new CustomXmlMappingLocator(
+                    java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+                true,
+                "UTF-8"));
 
     WorkbookReadCommand.GetCustomXmlMappings mappingsCommand =
         assertInstanceOf(
@@ -139,8 +142,8 @@ class InspectionCommandConverterTest {
 
     assertEquals("custom-xml-mappings", mappingsCommand.stepId().value());
     assertEquals("custom-xml-export", exportCommand.stepId().value());
-    assertEquals(1L, exportCommand.mapping().mapId());
-    assertEquals("CORSO_mapping", exportCommand.mapping().name());
+    assertEquals(1L, exportCommand.mapping().mapId().orElseThrow());
+    assertEquals("CORSO_mapping", exportCommand.mapping().name().orElseThrow());
     assertEquals("UTF-8", exportCommand.encoding());
   }
 }

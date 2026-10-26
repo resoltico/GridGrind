@@ -48,7 +48,7 @@ final class InspectionCommandConverter {
       case WorkbookIntrospectionQuery.ExportCustomXmlMapping exportCustomXmlMapping ->
           new WorkbookReadCommand.ExportCustomXmlMapping(
               stepId,
-              toExcelCustomXmlMappingLocator(exportCustomXmlMapping.mapping()),
+              exportCustomXmlMapping.mapping(),
               exportCustomXmlMapping.validateSchema(),
               exportCustomXmlMapping.encoding());
       case WorkbookIntrospectionQuery.GetNamedRanges _ ->
@@ -182,13 +182,6 @@ final class InspectionCommandConverter {
       case InspectionAnalysisQuery.AnalyzeWorkbookFindings _ ->
           new WorkbookReadCommand.AnalyzeWorkbookFindings(stepId);
     };
-  }
-
-  private static dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator
-      toExcelCustomXmlMappingLocator(
-          dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator locator) {
-    return new dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator(
-        locator.mapId(), locator.name());
   }
 
   private static ExcelCellReadProjection toExcelProjection(CellReadProjection projection) {

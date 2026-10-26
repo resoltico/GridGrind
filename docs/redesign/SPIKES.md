@@ -1435,3 +1435,51 @@ Remaining WP-30 work: validate constructor/domain invariants before final treeTo
 paths/codes without Jackson-message inference, retire failure sanitization and its superseded
 helpers/tests, and run the phase gate. Standard schema structural success alone does not establish
 constructor/workbook-state validity; the S3 limitation remains explicit.
+
+### WP-30 canonical constructor prevalidation checkpoint
+
+Shape-valid request fragments now pass through their public canonical constructors before the final
+Jackson treeToValue. The preflight follows the same closed model graph, decodes Java scalars with
+JDK APIs, resolves omission/sibling defaults through ModelDefaults and collects owned invariant
+failures. A successful final wire binding must equal the prevalidated model; a later Jackson binding
+failure or disagreement is an internal defect, not rewritten into a user-input problem. Tests compare
+all 14 examples directly with the final mapper, not with an intake entrypoint that invokes the same
+preflight, and independently assert a bad typed step id is rejected before any Jackson binding.
+
+Removed the active request failure normalizer, path guesser and rebaser, their dead code and unused
+redactor plumbing. Complete-plan invariant failures use the same owned adapter. Existing coordinate
+and typed-exception checks remain; retired tests that bypassed shape validation or asserted message-
+inference mechanics were removed/retargeted. Native model constructors now supply formula paths via
+the classified formula exception contract, using the existing serializable PayloadLocation and
+retaining lower-level causes. Composite assertion emptiness and stored/reported error-literal checks
+also own their relative paths. The relative-path adapter appends repeated segments literally; it does
+not collapse value.value because of a matching suffix. Focused regressions retain exact formula and
+stored-error locations.
+
+The preflight exposed an adopted-vocabulary violation: CustomXmlMappingLocator still used nullable
+optional fields. Converted it to Optional<Long>/Optional<String>, updated every caller and removed the
+identical engine ExcelCustomXmlMappingLocator mirror plus both identity converters. This is a narrow
+prerequisite slice of WP-21/WP-40, preserving the existing wire omissions and mapping behavior instead
+of reproducing nullable handling in the new preflight. Core/engine custom-XML tests and integration
+checks remain. No compatibility constructors or aliases were added.
+
+Iteration evidence includes the optional-locator constructor gap, retired direct map/scalar binder
+tests, missing formula/composite/error paths, exception serialization/cause PMD findings, one stale
+engine Optional assertion and the repeated-value path qualifier defect. Focused corrections passed
+before the final aggregate retry. The failed aggregate is retained and not concealed by the later
+success. No golden snapshots or normalization changed: all 34 doctor observations and all 143 golden
+cases, including the real changed-value control, pass on both launchers.
+
+Final ./gradlew check passes in 4m07s: core 329, JSON 372, engine 1512, CLI 588, architecture 41;
+2842 tests, zero failures/errors/skips. Named JPMS modules pass 14 request round trips (therefore
+canonical reflection without opens), catalog, response, twelve scalars, factual NaN, canonical grant
+and three schemas. Refreshed nested Jazzer check passes 106 support tests and 94 deterministic seeds.
+No mutation or active fuzz campaign ran. Inventories: JSON files 71 -> 69, converter lines 4701 ->
+4687, Support 215 -> 214, blank checks 437 -> 436, main Java 124123 -> 124011, tests 154989 -> 154947.
+Spec/Patch 75/eight, reports 95, remaining engine snapshots 51/definitions 13 are unchanged.
+AGENTS.md baseline diff is empty; supplement absent.
+
+WP-30 remains open: the shared response/catalog decoder still uses GridGrindJsonProblemMessageSupport
+and its framework-error helpers. Remove that mechanism with retained public read behavior, prove the
+cleanJacksonMessage/productOwnedJacksonMessage searches empty, and run the full phase gate. Do not
+claim completion of the single-intake work while those consumers remain.

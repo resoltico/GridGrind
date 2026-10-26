@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -16,7 +17,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
@@ -517,7 +517,8 @@ class ExcelResidualHelperCoverageTest {
           workbook,
           new WorkbookMetadataCommand.ImportCustomXmlMapping(
               new ExcelCustomXmlImportDefinition(
-                  new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
+                  new CustomXmlMappingLocator(
+                      java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                   "<CORSO><NOME>Ops</NOME><DOCENTE>Agent</DOCENTE><TUTOR>Grid</TUTOR><CDL>QA</CDL>"
                       + "<DURATA>4</DURATA><ARGOMENTO>Coverage</ARGOMENTO>"
                       + "<PROGETTO>Parity</PROGETTO><CREDITI>8</CREDITI></CORSO>")));

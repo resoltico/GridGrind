@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -21,7 +22,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
@@ -588,12 +588,20 @@ class ExcelEngineEdgeCoverageTest {
                 Optional.of("file"),
                 -1L));
 
-    assertDoesNotThrow(() -> new ExcelCustomXmlMappingLocator(1L, null));
-    assertDoesNotThrow(() -> new ExcelCustomXmlMappingLocator(null, "Map"));
+    assertDoesNotThrow(
+        () -> new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.empty()));
+    assertDoesNotThrow(
+        () ->
+            new CustomXmlMappingLocator(java.util.Optional.empty(), java.util.Optional.of("Map")));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelCustomXmlMappingLocator(null, null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCustomXmlMappingLocator(0L, "Map"));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCustomXmlMappingLocator(1L, " "));
+        IllegalArgumentException.class,
+        () -> new CustomXmlMappingLocator(java.util.Optional.empty(), java.util.Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CustomXmlMappingLocator(java.util.Optional.of(0L), java.util.Optional.of("Map")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.of(" ")));
 
     ExcelCustomXmlLinkedCellSnapshot linkedCell =
         new ExcelCustomXmlLinkedCellSnapshot("Sheet1", "A1", "/root/value", "string");

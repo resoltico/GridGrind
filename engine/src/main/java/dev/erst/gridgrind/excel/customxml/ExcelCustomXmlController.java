@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.customxml;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -59,7 +60,7 @@ public final class ExcelCustomXmlController {
 
   public ExcelCustomXmlExportSnapshot exportMapping(
       XSSFWorkbook workbook,
-      ExcelCustomXmlMappingLocator locator,
+      CustomXmlMappingLocator locator,
       boolean validateSchema,
       String encoding) {
     Objects.requireNonNull(workbook, "workbook must not be null");
@@ -104,14 +105,13 @@ public final class ExcelCustomXmlController {
     }
   }
 
-  public static XSSFMap requireMapping(
-      XSSFWorkbook workbook, ExcelCustomXmlMappingLocator locator) {
+  public static XSSFMap requireMapping(XSSFWorkbook workbook, CustomXmlMappingLocator locator) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     return requireMapping(workbook.getCustomXMLMappings(), locator);
   }
 
   public static XSSFMap requireMapping(
-      Collection<? extends XSSFMap> mappings, ExcelCustomXmlMappingLocator locator) {
+      Collection<? extends XSSFMap> mappings, CustomXmlMappingLocator locator) {
     Objects.requireNonNull(mappings, "mappings must not be null");
     Objects.requireNonNull(locator, "locator must not be null");
     if (mappings.isEmpty()) {
@@ -121,9 +121,11 @@ public final class ExcelCustomXmlController {
     List<XSSFMap> matches = new ArrayList<>();
     for (XSSFMap mapping : mappings) {
       CTMap ctMap = mapping.getCtMap();
-      boolean idMatches = locator.mapId() == null || locator.mapId().equals(ctMap.getID());
+      boolean idMatches =
+          locator.mapId().isEmpty() || locator.mapId().orElseThrow().equals(ctMap.getID());
       boolean nameMatches =
-          locator.name() == null || ctMap.getName().equalsIgnoreCase(locator.name());
+          locator.name().isEmpty()
+              || ctMap.getName().equalsIgnoreCase(locator.name().orElseThrow());
       if (idMatches && nameMatches) {
         matches.add(mapping);
       }

@@ -295,7 +295,8 @@ class RuntimeResidualCoverageTest {
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.ImportCustomXmlMapping(
                 new CustomXmlImportSpec(
-                    new CustomXmlMappingLocator(null, "root/item"),
+                    new CustomXmlMappingLocator(
+                        java.util.Optional.empty(), java.util.Optional.of("root/item")),
                     TextSourceSpec.standardInput()))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
@@ -451,7 +452,9 @@ class RuntimeResidualCoverageTest {
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CustomXmlImportSpec(
-                new CustomXmlMappingLocator(null, "root/item"), TextSourceSpec.standardInput())));
+                new CustomXmlMappingLocator(
+                    java.util.Optional.empty(), java.util.Optional.of("root/item")),
+                TextSourceSpec.standardInput())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new HeaderFooterTextSpec(

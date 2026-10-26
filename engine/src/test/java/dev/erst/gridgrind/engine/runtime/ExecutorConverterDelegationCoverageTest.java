@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
@@ -55,11 +54,6 @@ class ExecutorConverterDelegationCoverageTest {
     RichTextRunSpec run =
         new RichTextRunSpec(TextSourceSpec.inline("Bold"), java.util.Optional.empty());
 
-    assertEquals(
-        7L,
-        WorkbookCommandDrawingInputConverter.toExcelCustomXmlMappingLocator(
-                new CustomXmlMappingLocator(7L, "CourseMap"))
-            .mapId());
     assertEquals(
         "Bold",
         WorkbookCommandCellValueSpecConverter.toExcelRichText(

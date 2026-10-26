@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import java.io.IOException;
 import java.util.List;
@@ -56,7 +56,10 @@ class ExcelCustomXmlControllerTest {
           workbook
               .customXml()
               .exportCustomXmlMapping(
-                  new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8");
+                  new CustomXmlMappingLocator(
+                      java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+                  true,
+                  "UTF-8");
 
       assertEquals("UTF-8", exported.encoding());
       assertTrue(exported.schemaValidated());
@@ -73,7 +76,8 @@ class ExcelCustomXmlControllerTest {
           .customXml()
           .importCustomXmlMapping(
               new ExcelCustomXmlImportDefinition(
-                  new ExcelCustomXmlMappingLocator(null, "CORSO_mapping"),
+                  new CustomXmlMappingLocator(
+                      java.util.Optional.empty(), java.util.Optional.of("CORSO_mapping")),
                   "<CORSO><NOME>Grid</NOME><DOCENTE>Grind</DOCENTE><TUTOR>Agent</TUTOR>"
                       + "<CDL>Ops</CDL><DURATA>5</DURATA><ARGOMENTO>Audit</ARGOMENTO>"
                       + "<PROGETTO>Parity</PROGETTO><CREDITI>10</CREDITI></CORSO>"));
@@ -96,7 +100,8 @@ class ExcelCustomXmlControllerTest {
                   workbook,
                   new WorkbookReadCommand.ExportCustomXmlMapping(
                       new StepId("export"),
-                      new ExcelCustomXmlMappingLocator(1L, null),
+                      new CustomXmlMappingLocator(
+                          java.util.Optional.of(1L), java.util.Optional.empty()),
                       false,
                       "UTF-8")));
 
@@ -117,7 +122,10 @@ class ExcelCustomXmlControllerTest {
                   workbook
                       .customXml()
                       .exportCustomXmlMapping(
-                          new ExcelCustomXmlMappingLocator(99L, "missing"), false, "UTF-8"));
+                          new CustomXmlMappingLocator(
+                              java.util.Optional.of(99L), java.util.Optional.of("missing")),
+                          false,
+                          "UTF-8"));
       assertTrue(failure.getMessage().contains("No custom XML mapping matched"));
     }
   }
@@ -137,7 +145,8 @@ class ExcelCustomXmlControllerTest {
               () ->
                   transformerFailingController.exportMapping(
                       workbook.xssfWorkbook(),
-                      new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
+                      new CustomXmlMappingLocator(
+                          java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                       false,
                       "UTF-8"));
       assertTrue(transformerFailure.getMessage().contains("CORSO_mapping"));
@@ -154,7 +163,8 @@ class ExcelCustomXmlControllerTest {
               () ->
                   validatingController.exportMapping(
                       workbook.xssfWorkbook(),
-                      new ExcelCustomXmlMappingLocator(1L, null),
+                      new CustomXmlMappingLocator(
+                          java.util.Optional.of(1L), java.util.Optional.empty()),
                       true,
                       "UTF-8"));
       assertTrue(validationFailure.getMessage().contains("Schema validation failed"));
@@ -172,7 +182,9 @@ class ExcelCustomXmlControllerTest {
                   ioFailingController.importMapping(
                       workbook.xssfWorkbook(),
                       new ExcelCustomXmlImportDefinition(
-                          new ExcelCustomXmlMappingLocator(1L, null), "<CORSO/>")));
+                          new CustomXmlMappingLocator(
+                              java.util.Optional.of(1L), java.util.Optional.empty()),
+                          "<CORSO/>")));
       assertTrue(importIoFailure.getMessage().contains("CORSO_mapping"));
 
       ExcelCustomXmlController invalidXmlController =
@@ -188,7 +200,9 @@ class ExcelCustomXmlControllerTest {
                   invalidXmlController.importMapping(
                       workbook.xssfWorkbook(),
                       new ExcelCustomXmlImportDefinition(
-                          new ExcelCustomXmlMappingLocator(1L, null), "<CORSO/>")));
+                          new CustomXmlMappingLocator(
+                              java.util.Optional.of(1L), java.util.Optional.empty()),
+                          "<CORSO/>")));
       assertTrue(invalidXmlFailure.getMessage().contains("Invalid XML"));
     }
   }
@@ -217,7 +231,8 @@ class ExcelCustomXmlControllerTest {
                   new ExcelCustomXmlController()
                       .exportMapping(
                           workbook.xssfWorkbook(),
-                          new ExcelCustomXmlMappingLocator(1L, null),
+                          new CustomXmlMappingLocator(
+                              java.util.Optional.of(1L), java.util.Optional.empty()),
                           false,
                           " "));
       assertEquals("encoding must not be blank", noMappingsFailure.getMessage());
@@ -232,7 +247,8 @@ class ExcelCustomXmlControllerTest {
             () ->
                 ExcelCustomXmlController.requireMapping(
                     List.<org.apache.poi.xssf.usermodel.XSSFMap>of(),
-                    new ExcelCustomXmlMappingLocator(null, "missing")));
+                    new CustomXmlMappingLocator(
+                        java.util.Optional.empty(), java.util.Optional.of("missing"))));
     assertTrue(emptyFailure.getMessage().contains("does not contain any custom XML mappings"));
 
     try (ExcelWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
@@ -242,7 +258,8 @@ class ExcelCustomXmlControllerTest {
               () ->
                   ExcelCustomXmlController.requireMapping(
                       workbook.xssfWorkbook(),
-                      new ExcelCustomXmlMappingLocator(1L, "missing-name")));
+                      new CustomXmlMappingLocator(
+                          java.util.Optional.of(1L), java.util.Optional.of("missing-name"))));
       assertTrue(mixedMismatchFailure.getMessage().contains("No custom XML mapping matched"));
 
       CTMap duplicateMap = CTMap.Factory.newInstance();
@@ -259,7 +276,8 @@ class ExcelCustomXmlControllerTest {
                           workbook.xssfWorkbook().getCustomXMLMappings().iterator().next(),
                           ExcelCustomXmlControllerTestSupport.fakeMap(
                               duplicateMap, null, null, List.of(), List.of())),
-                      new ExcelCustomXmlMappingLocator(null, "CORSO_mapping")));
+                      new CustomXmlMappingLocator(
+                          java.util.Optional.empty(), java.util.Optional.of("CORSO_mapping"))));
       assertTrue(ambiguousFailure.getMessage().contains("Multiple custom XML mappings matched"));
     }
   }

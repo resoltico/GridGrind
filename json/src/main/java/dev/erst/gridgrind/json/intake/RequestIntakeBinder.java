@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.problem.RequestBoundFragments;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.core.problem.RequestWarning;
-import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,13 +20,11 @@ final class RequestIntakeBinder {
       RequestBoundFragments boundFragments,
       List<RequestStructuralProblem> structuralProblems,
       List<RequestBindingFailure> bindingFailures,
-      RequestDiagnosticRedactor diagnosticRedactor,
       Optional<RequestJsonNode> rawRoot,
       List<RequestWarning> warnings) {
     Objects.requireNonNull(boundFragments, "boundFragments must not be null");
     List<RequestStructuralProblem> orderedProblems =
         RequestStructuralProblemOrder.order(List.copyOf(structuralProblems));
-    Objects.requireNonNull(diagnosticRedactor, "diagnosticRedactor must not be null");
     Optional<RequestJsonNode> parsedRoot = Objects.requireNonNullElseGet(rawRoot, Optional::empty);
     List<RequestBindingFailure> discoveredFailures = new ArrayList<>(bindingFailures);
     Optional<WorkbookPlan> completePlan = Optional.empty();
@@ -35,8 +32,7 @@ final class RequestIntakeBinder {
       try {
         completePlan = boundFragments.completePlan();
       } catch (IllegalArgumentException exception) {
-        discoveredFailures.add(
-            RequestBindingFailureNormalizer.fromCompletePlan(exception, diagnosticRedactor));
+        discoveredFailures.add(RequestConstructorValidation.problem(exception, "", false));
       }
     }
     return new RequestIntake(
@@ -52,16 +48,6 @@ final class RequestIntakeBinder {
 
   private static RequestBindingFailure locateBindingFailure(
       RequestBindingFailure failure, Optional<RequestJsonNode> rawRoot) {
-    Optional<String> inferredPath =
-        rawRoot.flatMap(
-            root -> RequestBindingPathSupport.inferQualifiedInvariantFieldPath(root, failure));
-    if (inferredPath.isPresent()) {
-      String qualifiedPath = inferredPath.orElseThrow();
-      return failure.rebasedAt(
-          qualifiedPath,
-          rawRoot.flatMap(
-              root -> RequestJsonTokenLocationSupport.byteOffsetAt(root, qualifiedPath)));
-    }
     Optional<Long> byteOffset =
         rawRoot.flatMap(
             root -> RequestJsonTokenLocationSupport.byteOffsetAt(root, failure.jsonPath()));

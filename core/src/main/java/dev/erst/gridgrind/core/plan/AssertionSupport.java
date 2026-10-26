@@ -29,7 +29,13 @@ final class AssertionSupport {
       copy.add(Objects.requireNonNull(assertion, fieldName + " must not contain nulls"));
     }
     if (copy.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be empty");
+      throw new dev.erst.gridgrind.core.problem.InvalidRequestException(
+          new dev.erst.gridgrind.core.problem.MessageInvariant(
+              fieldName + " must not be empty", java.util.Optional.of(fieldName)),
+          java.util.Optional.of(fieldName),
+          java.util.Optional.empty(),
+          java.util.Optional.empty(),
+          null);
     }
     return List.copyOf(copy);
   }

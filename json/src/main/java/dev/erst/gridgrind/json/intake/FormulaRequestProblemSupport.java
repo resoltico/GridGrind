@@ -25,39 +25,6 @@ final class FormulaRequestProblemSupport {
                     codeFor(input), input.publicMessage(), jsonPath, jsonLine, jsonColumn, cause));
   }
 
-  static Optional<FormulaRequestException> requestFailure(Throwable failure) {
-    Throwable current = failure;
-    while (current != null) {
-      if (current instanceof FormulaRequestException formulaRequestException) {
-        return Optional.of(formulaRequestException);
-      }
-      current = current.getCause();
-    }
-    return Optional.empty();
-  }
-
-  static FormulaRequestException normalizeRequestFailure(
-      FormulaRequestException failure,
-      RuntimeException cause,
-      RequestJsonNode fragment,
-      String fragmentPath) {
-    Optional<String> preciseInnerPath =
-        RequestBindingPathSupport.preciseInnerPath(
-            fragment,
-            RequestBindingPathSupport.jacksonFailure(cause)
-                .flatMap(
-                    exception ->
-                        GridGrindJsonPayloadMetadataSupport.payloadMetadata(exception).jsonPath()),
-            failure.requestProblem().jsonPath());
-    return new FormulaRequestException(
-        failure.problemCode(),
-        failure.getMessage(),
-        GridGrindJsonPathSupport.qualifyPath(Optional.of(fragmentPath), preciseInnerPath),
-        Optional.empty(),
-        Optional.empty(),
-        cause);
-  }
-
   private static Optional<FormulaInputException> inputFailure(Throwable failure) {
     Throwable current = failure;
     while (current != null) {

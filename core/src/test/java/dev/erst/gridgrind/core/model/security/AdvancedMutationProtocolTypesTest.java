@@ -477,20 +477,27 @@ class AdvancedMutationProtocolTypesTest {
 
   @Test
   void customXmlInputsNormalizeAndValidate() {
-    CustomXmlMappingLocator byId = new CustomXmlMappingLocator(1L, null);
-    CustomXmlMappingLocator byName = new CustomXmlMappingLocator(null, "CORSO_mapping");
+    CustomXmlMappingLocator byId =
+        new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.empty());
+    CustomXmlMappingLocator byName =
+        new CustomXmlMappingLocator(
+            java.util.Optional.empty(), java.util.Optional.of("CORSO_mapping"));
     CustomXmlImportSpec inlineImport =
         new CustomXmlImportSpec(byName, text("<CORSO><NOME>Grid</NOME></CORSO>"));
 
-    assertEquals(1L, byId.mapId());
-    assertEquals("CORSO_mapping", byName.name());
+    assertEquals(1L, byId.mapId().orElse(null));
+    assertEquals("CORSO_mapping", byName.name().orElse(null));
     assertEquals(byName, inlineImport.locator());
     assertEquals(
         "<CORSO><NOME>Grid</NOME></CORSO>",
         assertInstanceOf(TextSourceSpec.Inline.class, inlineImport.xml()).text());
 
-    assertThrows(IllegalArgumentException.class, () -> new CustomXmlMappingLocator(null, null));
-    assertThrows(IllegalArgumentException.class, () -> new CustomXmlMappingLocator(0L, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CustomXmlMappingLocator(java.util.Optional.empty(), java.util.Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CustomXmlMappingLocator(java.util.Optional.of(0L), java.util.Optional.empty()));
     assertThrows(IllegalArgumentException.class, () -> new CustomXmlImportSpec(byId, text(" ")));
   }
 

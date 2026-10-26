@@ -4,7 +4,6 @@ import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestBoundFragments;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
-import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,8 +16,7 @@ final class RequestStepFragmentCollector {
   static Optional<List<RequestBoundFragments.Step>> bind(
       Optional<RequestJsonMember> stepsMember,
       List<RequestStructuralProblem> structuralProblems,
-      List<RequestBindingFailure> bindingFailures,
-      RequestDiagnosticRedactor diagnosticRedactor) {
+      List<RequestBindingFailure> bindingFailures) {
     if (stepsMember.isEmpty() || RequestFragmentBinder.hasProblemAt("steps", structuralProblems)) {
       return Optional.empty();
     }
@@ -34,12 +32,7 @@ final class RequestStepFragmentCollector {
           new RequestBoundFragments.Step(
               index,
               RequestFragmentBinder.bindNode(
-                  element,
-                  WorkbookStep.class,
-                  stepPath,
-                  structuralProblems,
-                  bindingFailures,
-                  diagnosticRedactor)));
+                  element, WorkbookStep.class, stepPath, structuralProblems, bindingFailures)));
     }
     return Optional.of(List.copyOf(boundSteps));
   }

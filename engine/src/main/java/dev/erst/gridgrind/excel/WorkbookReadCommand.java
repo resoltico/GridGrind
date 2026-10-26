@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.vocabulary.ExcelAddressLists;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import java.util.Objects;
@@ -93,7 +93,7 @@ public sealed interface WorkbookReadCommand
 
   /** Exports XML for one existing workbook custom-XML mapping. */
   record ExportCustomXmlMapping(
-      StepId stepId, ExcelCustomXmlMappingLocator mapping, boolean validateSchema, String encoding)
+      StepId stepId, CustomXmlMappingLocator mapping, boolean validateSchema, String encoding)
       implements Introspection {
     public ExportCustomXmlMapping {
 

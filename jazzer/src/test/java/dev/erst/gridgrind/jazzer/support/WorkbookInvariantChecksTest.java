@@ -1279,7 +1279,10 @@ class WorkbookInvariantChecksTest {
                 "custom-xml-export",
                 new WorkbookSelector.Current(),
                 new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
-                    new CustomXmlMappingLocator(1L, "BudgetMap"), true, "UTF-8")),
+                    new CustomXmlMappingLocator(
+                        java.util.Optional.of(1L), java.util.Optional.of("BudgetMap")),
+                    true,
+                    "UTF-8")),
             inspect(
                 "array-formulas",
                 new SheetSelector.ByName(new SheetName("Ops")),

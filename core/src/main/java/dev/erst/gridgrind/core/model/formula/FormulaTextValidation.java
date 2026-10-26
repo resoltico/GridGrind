@@ -9,26 +9,34 @@ public final class FormulaTextValidation {
 
   /** Validates the parseable {@code FORMULA} body before it reaches the authoring path. */
   public static String requireNormalFormulaBody(String formula, String fieldName) {
-    String normalized = requireNonBlank(formula, fieldName, InvalidFormulaInputException::new);
+    String normalized =
+        requireNonBlank(
+            formula, fieldName, message -> new InvalidFormulaInputException(message, fieldName));
     if (normalized.startsWith("=")) {
       throw new InvalidFormulaInputException(
-          fieldName + " must be an OOXML formula body and must not begin with =");
+          fieldName + " must be an OOXML formula body and must not begin with =", fieldName);
     }
     if (normalized.startsWith("{=") && normalized.endsWith("}")) {
       throw new InvalidFormulaInputException(
-          fieldName + " must be scalar; use SET_ARRAY_FORMULA for an array formula");
+          fieldName + " must be scalar; use SET_ARRAY_FORMULA for an array formula", fieldName);
     }
     return normalized;
   }
 
   /** Validates opaque {@code RAW_FORMULA} character data without interpreting formula syntax. */
   public static String requireRawFormulaBody(String formula, String fieldName) {
-    String normalized = requireNonBlank(formula, fieldName, InvalidRawFormulaTextException::new);
+    String normalized =
+        requireNonBlank(
+            formula, fieldName, message -> new InvalidRawFormulaTextException(message, fieldName));
     if (normalized.startsWith("=")) {
       throw new InvalidRawFormulaTextException(
-          fieldName + " must be an OOXML formula body and must not begin with =");
+          fieldName + " must be an OOXML formula body and must not begin with =", fieldName);
     }
-    requireXml10CharacterData(normalized);
+    try {
+      requireXml10CharacterData(normalized);
+    } catch (InvalidRawFormulaTextException invalid) {
+      throw new InvalidRawFormulaTextException(invalid.publicMessage(), fieldName, invalid);
+    }
     return normalized;
   }
 

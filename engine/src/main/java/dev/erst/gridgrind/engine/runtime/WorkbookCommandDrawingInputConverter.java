@@ -17,7 +17,6 @@ import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -32,13 +31,7 @@ final class WorkbookCommandDrawingInputConverter {
   static ExcelCustomXmlImportDefinition toExcelCustomXmlImportDefinition(
       CustomXmlImportSpec input) {
     return new ExcelCustomXmlImportDefinition(
-        toExcelCustomXmlMappingLocator(input.locator()),
-        WorkbookCommandSourceSupport.inlineText(input.xml(), "custom XML"));
-  }
-
-  static ExcelCustomXmlMappingLocator toExcelCustomXmlMappingLocator(
-      dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator locator) {
-    return new ExcelCustomXmlMappingLocator(locator.mapId(), locator.name());
+        input.locator(), WorkbookCommandSourceSupport.inlineText(input.xml(), "custom XML"));
   }
 
   static ExcelPictureDefinition toExcelPictureDefinition(PictureSpec picture) {

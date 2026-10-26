@@ -12,7 +12,6 @@ import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,8 +23,6 @@ final class RequestRootStructuralAnalyzer {
   static RequestIntake analyze(RequestSyntaxParseResult parsed) {
     List<RequestStructuralProblem> problems = new ArrayList<>(parsed.problems());
     List<RequestBindingFailure> bindingFailures = new ArrayList<>();
-    RequestDiagnosticRedactor diagnosticRedactor =
-        RequestDiagnosticRedactor.forRequestType(WorkbookPlan.class);
     if (!(parsed.root() instanceof RequestJsonObject root)) {
       if (parsed.problems().stream()
           .noneMatch(
@@ -40,7 +37,6 @@ final class RequestRootStructuralAnalyzer {
           emptyFragments(),
           problems,
           bindingFailures,
-          diagnosticRedactor,
           Optional.of(parsed.root()),
           parsed.warnings());
     }
@@ -56,50 +52,42 @@ final class RequestRootStructuralAnalyzer {
                     ProtocolVersion.class,
                     "protocolVersion",
                     problems,
-                    bindingFailures,
-                    diagnosticRedactor),
+                    bindingFailures),
                 RequestFragmentBinder.bindMember(
                     members.member("planId"),
                     dev.erst.gridgrind.core.vocabulary.PlanId.class,
                     "planId",
                     problems,
-                    bindingFailures,
-                    diagnosticRedactor),
+                    bindingFailures),
                 RequestFragmentBinder.bindMember(
                     members.member("source"),
                     WorkbookPlan.WorkbookSource.class,
                     "source",
                     problems,
-                    bindingFailures,
-                    diagnosticRedactor),
+                    bindingFailures),
                 RequestFragmentBinder.bindMember(
                     members.member("persistence"),
                     WorkbookPlan.WorkbookPersistence.class,
                     "persistence",
                     problems,
-                    bindingFailures,
-                    diagnosticRedactor),
+                    bindingFailures),
                 bindOrDefault(
                     members.member("execution"),
                     ExecutionPolicySpec.class,
                     "execution",
                     ExecutionPolicySpec.defaults(),
                     problems,
-                    bindingFailures,
-                    diagnosticRedactor),
+                    bindingFailures),
                 bindOrDefault(
                     members.member("formulaEnvironment"),
                     FormulaEnvironmentSpec.class,
                     "formulaEnvironment",
                     FormulaEnvironmentSpec.empty(),
                     problems,
-                    bindingFailures,
-                    diagnosticRedactor)),
-            RequestStepFragmentCollector.bind(
-                members.member("steps"), problems, bindingFailures, diagnosticRedactor)),
+                    bindingFailures)),
+            RequestStepFragmentCollector.bind(members.member("steps"), problems, bindingFailures)),
         problems,
         bindingFailures,
-        diagnosticRedactor,
         Optional.of(parsed.root()),
         parsed.warnings());
   }
@@ -110,11 +98,10 @@ final class RequestRootStructuralAnalyzer {
       String jsonPath,
       T defaultValue,
       List<RequestStructuralProblem> structuralProblems,
-      List<RequestBindingFailure> bindingFailures,
-      RequestDiagnosticRedactor diagnosticRedactor) {
+      List<RequestBindingFailure> bindingFailures) {
     return member.isPresent()
         ? RequestFragmentBinder.bindMember(
-            member, type, jsonPath, structuralProblems, bindingFailures, diagnosticRedactor)
+            member, type, jsonPath, structuralProblems, bindingFailures)
         : Optional.of(defaultValue);
   }
 

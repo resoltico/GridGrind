@@ -31,13 +31,11 @@ import dev.erst.gridgrind.core.problem.RequestUnknownTypeDiscriminator;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
-import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -81,41 +79,34 @@ class RequestStructuralSupportTest {
 
   @Test
   void independentlyBindsValidFragmentsAndRetainsMalformedSiblingLocations() {
-    RequestJsonObject node =
-        object(
-            member("text", new RequestJsonString(0, "value")),
-            member("number", new RequestJsonNumber(1, "7")),
-            member("truth", new RequestJsonBoolean(2, true)),
-            member("nothing", new RequestJsonNull(3)),
-            member(
-                "values",
-                new RequestJsonArray(
-                    4, List.of(new RequestJsonString(5, "one"), new RequestJsonString(6, "two")))));
     List<RequestStructuralProblem> noProblems = new ArrayList<>();
 
-    Optional<Map> bound = bindNode(node, Map.class, "carrier", noProblems);
-    assertEquals("value", bound.orElseThrow().get("text"));
-    assertEquals("7", bound.orElseThrow().get("number").toString());
-    assertEquals(true, bound.orElseThrow().get("truth"));
-    assertEquals(null, bound.orElseThrow().get("nothing"));
-    assertEquals(List.of("one", "two"), bound.orElseThrow().get("values"));
-    assertTrue(bindNode(new RequestJsonInvalid(7), Map.class, "carrier", noProblems).isEmpty());
-
-    List<RequestStructuralProblem> siblingProblems =
-        List.of(new RequestUnknownField("carrier.text", 0));
-    assertTrue(bindNode(node, Map.class, "carrier", siblingProblems).isEmpty());
-    assertTrue(bindNode(node, Map.class, "other", siblingProblems).isPresent());
-    assertTrue(bindMember(Optional.empty(), Map.class, "carrier", noProblems).isEmpty());
+    RequestJsonObject encryption =
+        object(member("passwordRef", object(member("id", new RequestJsonString(0, "protected")))));
+    assertEquals(
+        "protected",
+        bindNode(encryption, OoxmlEncryptionSpec.class, "carrier", noProblems)
+            .orElseThrow()
+            .passwordRef()
+            .id());
     assertTrue(
-        bindMember(Optional.of(member("carrier", node)), Map.class, "carrier", noProblems)
-            .isPresent());
-    assertTrue(
-        bindNode(
-                new RequestJsonString(8, "not-an-encryption-object"),
-                OoxmlEncryptionSpec.class,
-                "encryption",
-                noProblems)
+        bindNode(new RequestJsonInvalid(7), OoxmlEncryptionSpec.class, "carrier", noProblems)
             .isEmpty());
+    List<RequestStructuralProblem> siblingProblems =
+        List.of(new RequestUnknownField("carrier.passwordRef", 0));
+    assertTrue(
+        bindNode(encryption, OoxmlEncryptionSpec.class, "carrier", siblingProblems).isEmpty());
+    assertTrue(
+        bindNode(encryption, OoxmlEncryptionSpec.class, "other", siblingProblems).isPresent());
+    assertTrue(
+        bindMember(Optional.empty(), OoxmlEncryptionSpec.class, "carrier", noProblems).isEmpty());
+    assertTrue(
+        bindMember(
+                Optional.of(member("carrier", encryption)),
+                OoxmlEncryptionSpec.class,
+                "carrier",
+                noProblems)
+            .isPresent());
 
     RequestJsonObject duplicateObject =
         object(
@@ -147,26 +138,27 @@ class RequestStructuralSupportTest {
             new RequestDuplicateKey("carrier.child", "duplicate", 0, 0),
             new RequestDuplicateKey("carrier[0]", "duplicate", 0, 0),
             new RequestUnknownField("carrier", 0))) {
-      assertTrue(bindNode(node, Map.class, "carrier", List.of(problem)).isEmpty());
+      assertTrue(
+          bindNode(encryption, OoxmlEncryptionSpec.class, "carrier", List.of(problem)).isEmpty());
     }
     assertTrue(
         bindNode(
-                node,
-                Map.class,
+                encryption,
+                OoxmlEncryptionSpec.class,
                 "carrier",
                 List.of(new RequestDuplicateKey("other", "duplicate", 0, 0)))
             .isPresent());
     assertTrue(
         bindNode(
-                node,
-                Map.class,
+                encryption,
+                OoxmlEncryptionSpec.class,
                 "carrier",
                 List.of(new RequestInvalidJson("grammar", Optional.empty(), Optional.empty())))
             .isPresent());
     assertTrue(
         bindNode(
-                node,
-                Map.class,
+                encryption,
+                OoxmlEncryptionSpec.class,
                 "carrier",
                 List.of(new RequestInvalidJson("grammar", Optional.of("carrier"), Optional.of(0L))))
             .isEmpty());
@@ -420,12 +412,7 @@ class RequestStructuralSupportTest {
       String jsonPath,
       List<RequestStructuralProblem> structuralProblems) {
     return RequestFragmentBinder.bindNode(
-        node,
-        type,
-        jsonPath,
-        structuralProblems,
-        new ArrayList<>(),
-        RequestDiagnosticRedactor.forRequestType(Object.class));
+        node, type, jsonPath, structuralProblems, new ArrayList<>());
   }
 
   private static <T> Optional<T> bindMember(
@@ -434,21 +421,12 @@ class RequestStructuralSupportTest {
       String jsonPath,
       List<RequestStructuralProblem> structuralProblems) {
     return RequestFragmentBinder.bindMember(
-        member,
-        type,
-        jsonPath,
-        structuralProblems,
-        new ArrayList<>(),
-        RequestDiagnosticRedactor.forRequestType(Object.class));
+        member, type, jsonPath, structuralProblems, new ArrayList<>());
   }
 
   private static Optional<List<RequestBoundFragments.Step>> bindSteps(
       Optional<RequestJsonMember> stepsMember, List<RequestStructuralProblem> structuralProblems) {
-    return RequestStepFragmentCollector.bind(
-        stepsMember,
-        structuralProblems,
-        new ArrayList<>(),
-        RequestDiagnosticRedactor.forRequestType(Object.class));
+    return RequestStepFragmentCollector.bind(stepsMember, structuralProblems, new ArrayList<>());
   }
 
   private static RequestJsonObject object(RequestJsonMember... members) {
@@ -481,11 +459,6 @@ class RequestStructuralSupportTest {
       dev.erst.gridgrind.core.problem.RequestBoundFragments fragments,
       java.util.List<dev.erst.gridgrind.core.problem.RequestStructuralProblem> problems) {
     return RequestIntakeBinder.bind(
-        fragments,
-        problems,
-        java.util.List.of(),
-        RequestDiagnosticRedactor.forRequestType(Object.class),
-        java.util.Optional.empty(),
-        java.util.List.of());
+        fragments, problems, java.util.List.of(), java.util.Optional.empty(), java.util.List.of());
   }
 }

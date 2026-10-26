@@ -94,7 +94,6 @@ import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -371,12 +370,14 @@ class AdvancedMutationCommandConverterTest {
                 new WorkbookSelector.Current(),
                 new StructuredMutationAction.ImportCustomXmlMapping(
                     new CustomXmlImportSpec(
-                        new CustomXmlMappingLocator(1L, "CORSO_mapping"),
+                        new CustomXmlMappingLocator(
+                            java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                         text("<CORSO><NOME>Grid</NOME></CORSO>")))));
 
     assertEquals(
         new ExcelCustomXmlImportDefinition(
-            new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
+            new CustomXmlMappingLocator(
+                java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
             "<CORSO><NOME>Grid</NOME></CORSO>"),
         command.mapping());
   }

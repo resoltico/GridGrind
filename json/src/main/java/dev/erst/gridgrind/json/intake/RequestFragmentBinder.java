@@ -4,7 +4,6 @@ import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
-import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
@@ -23,17 +22,9 @@ final class RequestFragmentBinder {
       Class<T> type,
       String jsonPath,
       List<RequestStructuralProblem> structuralProblems,
-      List<RequestBindingFailure> bindingFailures,
-      RequestDiagnosticRedactor diagnosticRedactor) {
+      List<RequestBindingFailure> bindingFailures) {
     return member.flatMap(
-        value ->
-            bindNode(
-                value.value(),
-                type,
-                jsonPath,
-                structuralProblems,
-                bindingFailures,
-                diagnosticRedactor));
+        value -> bindNode(value.value(), type, jsonPath, structuralProblems, bindingFailures));
   }
 
   static <T> Optional<T> bindNode(
@@ -41,18 +32,25 @@ final class RequestFragmentBinder {
       Class<T> type,
       String jsonPath,
       List<RequestStructuralProblem> structuralProblems,
-      List<RequestBindingFailure> bindingFailures,
-      RequestDiagnosticRedactor diagnosticRedactor) {
+      List<RequestBindingFailure> bindingFailures) {
     if (hasProblemAtOrBelow(jsonPath, structuralProblems) || !canConvert(node)) {
       return Optional.empty();
     }
-    try {
-      return Optional.of(
-          GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.treeToValue(toJsonNode(node), type));
-    } catch (RuntimeException exception) {
-      bindingFailures.add(
-          RequestBindingFailureNormalizer.from(exception, node, jsonPath, diagnosticRedactor));
+    Optional<T> validated =
+        RequestConstructorValidation.validate(node, type, jsonPath, bindingFailures);
+    if (validated.isEmpty()) {
       return Optional.empty();
+    }
+    try {
+      T bound = GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.treeToValue(toJsonNode(node), type);
+      if (!validated.orElseThrow().equals(bound)) {
+        throw new IllegalStateException(
+            "Wire binding differs from canonical model validation at " + jsonPath);
+      }
+      return Optional.of(bound);
+    } catch (tools.jackson.core.JacksonException defect) {
+      throw new IllegalStateException(
+          "Wire binding failed after canonical validation at " + jsonPath, defect);
     }
   }
 

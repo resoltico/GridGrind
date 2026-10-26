@@ -463,7 +463,8 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             java.util.Optional.empty());
     WorkbookIntrospectionQuery.ExportCustomXmlMapping export =
         new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
-            new CustomXmlMappingLocator(1L, null), false);
+            new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.empty()),
+            false);
 
     assertTrue(captionOnly.allowComments());
     assertEquals("Please sign\nbefore release", captionOnly.caption().orElseThrow());
@@ -532,7 +533,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         IllegalArgumentException.class,
         () ->
             new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
-                new CustomXmlMappingLocator(1L, null), true, " "));
+                new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.empty()),
+                true,
+                " "));
   }
 
   @Test
@@ -542,7 +545,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     ArrayFormulaSpec malformedBraceFormula =
         new ArrayFormulaSpec(TextSourceSpec.inline("{=BROKEN"));
     ArrayFormulaSpec standardInputFormula = new ArrayFormulaSpec(TextSourceSpec.standardInput());
-    CustomXmlMappingLocator namedLocator = new CustomXmlMappingLocator(null, "CORSO_mapping");
+    CustomXmlMappingLocator namedLocator =
+        new CustomXmlMappingLocator(
+            java.util.Optional.empty(), java.util.Optional.of("CORSO_mapping"));
 
     assertEquals(
         "B2:B4*C2:C4", assertInstanceOf(TextSourceSpec.Inline.class, arrayFormula.source()).text());
@@ -552,8 +557,10 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         "{=BROKEN",
         assertInstanceOf(TextSourceSpec.Inline.class, malformedBraceFormula.source()).text());
     assertTrue(standardInputFormula.source() instanceof TextSourceSpec.Stdin);
-    assertEquals("CORSO_mapping", namedLocator.name());
-    assertThrows(IllegalArgumentException.class, () -> new CustomXmlMappingLocator(null, " "));
+    assertEquals("CORSO_mapping", namedLocator.name().orElse(null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CustomXmlMappingLocator(java.util.Optional.empty(), java.util.Optional.of(" ")));
     assertThrows(
         IllegalArgumentException.class,
         () ->

@@ -15,14 +15,16 @@ final class CellErrorLiteralValidation {
       return ExcelStoredCellErrorLiteral.fromWireValue(normalized).wireValue();
     }
     if (ExcelReportedCellErrorLiteral.isSupportedWireValue(normalized)) {
-      throw new IllegalArgumentException(
+      throw invalid(
+          fieldName,
           fieldName
               + " must be one of "
               + String.join(", ", orderedStoredErrorLiterals())
               + "; computed evaluation-only states such as #CIRCULAR_REF! and"
               + " #FUNCTION_NOT_IMPLEMENTED! cannot be authored as stored cell values");
     }
-    throw new IllegalArgumentException(
+    throw invalid(
+        fieldName,
         fieldName
             + " must be one of "
             + String.join(", ", orderedStoredErrorLiterals())
@@ -34,7 +36,8 @@ final class CellErrorLiteralValidation {
     if (ExcelReportedCellErrorLiteral.isSupportedWireValue(normalized)) {
       return ExcelReportedCellErrorLiteral.fromWireValue(normalized).wireValue();
     }
-    throw new IllegalArgumentException(
+    throw invalid(
+        fieldName,
         fieldName
             + " must be one of "
             + String.join(", ", orderedReportedErrorLiterals())
@@ -49,12 +52,22 @@ final class CellErrorLiteralValidation {
     return new LinkedHashSet<>(ExcelReportedCellErrorLiteral.orderedWireValues());
   }
 
+  private static IllegalArgumentException invalid(String fieldName, String message) {
+    return new dev.erst.gridgrind.core.problem.InvalidRequestException(
+        new dev.erst.gridgrind.core.problem.MessageInvariant(
+            message, java.util.Optional.of(fieldName)),
+        java.util.Optional.of(fieldName),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        null);
+  }
+
   private static String requireNonBlank(String value, String fieldName) {
     if (value == null) {
-      throw new IllegalArgumentException(fieldName + " must not be null");
+      throw invalid(fieldName, fieldName + " must not be null");
     }
     if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
+      throw invalid(fieldName, fieldName + " must not be blank");
     }
     return value;
   }

@@ -5,12 +5,12 @@ import static dev.erst.gridgrind.excel.ExcelSignatureLineSnapshotTestSupport.sig
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
@@ -27,7 +27,9 @@ class ExcelResidualValidationCoverageTest {
   void residualConstructorsRejectInvalidInputs() {
     ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
     ExcelArrayFormulaDefinition arrayFormula = new ExcelArrayFormulaDefinition("SUM(A1:A2)");
-    ExcelCustomXmlMappingLocator locator = new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping");
+    CustomXmlMappingLocator locator =
+        new CustomXmlMappingLocator(
+            java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping"));
     ExcelCustomXmlLinkedCellSnapshot linkedCell =
         new ExcelCustomXmlLinkedCellSnapshot("Ops", "A1", "/root/value", "string");
     ExcelCustomXmlLinkedTableSnapshot linkedTable =

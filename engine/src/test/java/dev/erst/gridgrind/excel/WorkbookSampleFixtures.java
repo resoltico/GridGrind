@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -16,7 +17,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -51,7 +51,8 @@ final class WorkbookSampleFixtures {
         new WorkbookReadCommand.GetCustomXmlMappings(new StepId("customXmlMappings")),
         new WorkbookReadCommand.ExportCustomXmlMapping(
             new StepId("customXmlExport"),
-            new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
+            new CustomXmlMappingLocator(
+                java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
             false,
             StandardCharsets.UTF_8.name()),
         new WorkbookReadCommand.GetNamedRanges(
@@ -137,7 +138,8 @@ final class WorkbookSampleFixtures {
         new WorkbookCellCommand.ClearArrayFormula("Budget", "D2"),
         new WorkbookMetadataCommand.ImportCustomXmlMapping(
             new ExcelCustomXmlImportDefinition(
-                new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
+                new CustomXmlMappingLocator(
+                    java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                 "<CORSO><NOME>Ops</NOME></CORSO>")),
         new WorkbookCellCommand.SetRange(
             "Budget",

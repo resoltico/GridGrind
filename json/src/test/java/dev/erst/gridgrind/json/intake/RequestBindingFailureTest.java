@@ -16,44 +16,19 @@ import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.MessageShape;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.exc.MismatchedInputException;
 
 /** Covers binding-failure normalization independently from full request analysis. */
 class RequestBindingFailureTest {
   @Test
-  void normalizesADirectConstructorFailureAtTheFragmentOwner() {
-    RequestBindingFailure failure =
-        RequestBindingFailureNormalizer.from(
-            new IllegalArgumentException("direct failure"),
-            new RequestJsonString(0, "value"),
-            "source.path",
-            RequestDiagnosticRedactor.forRequestType(Object.class));
-
+  void locatesADirectConstructorFailureAtTheFragmentOwner() {
+    var failure =
+        RequestConstructorValidation.problem(
+            new IllegalArgumentException("direct failure"), "source.path", false);
     assertEquals("direct failure", failure.exception().getMessage());
     assertEquals("source.path", failure.jsonPath());
     assertTrue(failure.byteOffset().isEmpty());
-  }
-
-  @Test
-  void translatesAJacksonBindingFailureWithoutDroppingTheFragment() {
-    List<RequestBindingFailure> bindingFailures = new ArrayList<>();
-
-    assertTrue(
-        RequestFragmentBinder.bindNode(
-                new RequestJsonString(0, "not-an-integer"),
-                Integer.class,
-                "count",
-                List.of(),
-                bindingFailures,
-                RequestDiagnosticRedactor.forRequestType(Object.class))
-            .isEmpty());
-    assertEquals(1, bindingFailures.size());
-    assertEquals("count", bindingFailures.getFirst().jsonPath());
   }
 
   @Test
@@ -66,9 +41,7 @@ class RequestBindingFailureTest {
             java.util.Optional.empty(),
             null);
 
-    RequestBindingFailure failure =
-        RequestBindingFailureNormalizer.fromCompletePlan(
-            exception, RequestDiagnosticRedactor.forRequestType(Object.class));
+    RequestBindingFailure failure = RequestConstructorValidation.problem(exception, "", false);
 
     assertEquals("steps[1].stepId", failure.jsonPath());
     assertEquals(exception.getMessage(), failure.exception().getMessage());
@@ -85,9 +58,7 @@ class RequestBindingFailureTest {
             Optional.empty(),
             null);
 
-    RequestBindingFailure failure =
-        RequestBindingFailureNormalizer.fromCompletePlan(
-            exception, RequestDiagnosticRedactor.forRequestType(Object.class));
+    RequestBindingFailure failure = RequestConstructorValidation.problem(exception, "", false);
 
     assertEquals("steps", failure.jsonPath());
     assertEquals(exception.getMessage(), failure.exception().getMessage());
@@ -97,12 +68,25 @@ class RequestBindingFailureTest {
   @Test
   void normalizesAnUnstructuredCompletePlanFailureAtTheRequestRoot() {
     RequestBindingFailure failure =
-        RequestBindingFailureNormalizer.fromCompletePlan(
-            new IllegalArgumentException("complete plan failure"),
-            RequestDiagnosticRedactor.forRequestType(Object.class));
+        RequestConstructorValidation.problem(
+            new IllegalArgumentException("complete plan failure"), "", false);
 
     assertEquals("request", failure.jsonPath());
     assertEquals("complete plan failure", failure.exception().getMessage());
+  }
+
+  @Test
+  void repeatedFieldNamesRemainDistinctRelativeSegments() {
+    var invalid =
+        new InvalidRequestException(
+            new MessageInvariant("invalid value", Optional.of("value")),
+            Optional.of("value"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
+    assertEquals(
+        "steps[0].action.value.value",
+        RequestConstructorValidation.problem(invalid, "steps[0].action.value", false).jsonPath());
   }
 
   @Test
@@ -118,61 +102,25 @@ class RequestBindingFailureTest {
   }
 
   @Test
-  void preservesFormulaSpecificFailuresAcrossFragmentAndCompletePlanNormalization() {
-    RequestBindingFailure normal =
-        RequestBindingFailureNormalizer.from(
-            new InvalidFormulaInputException("formula must not begin with ="),
-            new RequestJsonString(0, "formula"),
+  void retainsFormulaCodesAndOwnedRelativeFieldPaths() {
+    var normal =
+        RequestConstructorValidation.problem(
+            new InvalidFormulaInputException("formula must not begin with =", "value.text"),
             "steps[0].action.value",
-            RequestDiagnosticRedactor.forRequestType(Object.class));
-    RequestBindingFailure raw =
-        RequestBindingFailureNormalizer.fromCompletePlan(
-            new InvalidRawFormulaTextException("raw formula contains a forbidden XML character"),
-            RequestDiagnosticRedactor.forRequestType(Object.class));
-    FormulaRequestException wrappedFormula =
-        new FormulaRequestException(
-            GridGrindProblemCode.INVALID_FORMULA,
-            "formula must not begin with =",
-            Optional.of("source.text"),
-            Optional.empty(),
-            Optional.empty(),
-            null);
-    RequestBindingFailure rebased =
-        RequestBindingFailureNormalizer.from(
-            new IllegalArgumentException(wrappedFormula),
-            new RequestJsonObject(0, List.of()),
-            "steps[0].action.value",
-            RequestDiagnosticRedactor.forRequestType(Object.class));
-    MismatchedInputException jacksonCause =
-        MismatchedInputException.from(null, Object.class, "formula binding failure");
-    FormulaRequestException jacksonWrappedFormula =
-        new FormulaRequestException(
-            GridGrindProblemCode.INVALID_FORMULA,
-            "formula must not begin with =",
-            Optional.of("source.text"),
-            Optional.empty(),
-            Optional.empty(),
-            jacksonCause);
-    RequestBindingFailure rebasedWithJacksonLocation =
-        RequestBindingFailureNormalizer.from(
-            new IllegalArgumentException(jacksonWrappedFormula),
-            new RequestJsonObject(0, List.of()),
-            "steps[0].action.value",
-            RequestDiagnosticRedactor.forRequestType(Object.class));
-
+            false);
+    var raw =
+        RequestConstructorValidation.problem(
+            new InvalidRawFormulaTextException("forbidden XML character", "value.text"),
+            "steps[1].action.value",
+            false);
     assertEquals(
         GridGrindProblemCode.INVALID_FORMULA,
         assertInstanceOf(FormulaRequestException.class, normal.exception()).problemCode());
+    assertEquals("steps[0].action.value.value.text", normal.jsonPath());
     assertEquals(
         GridGrindProblemCode.INVALID_FORMULA_TEXT,
         assertInstanceOf(FormulaRequestException.class, raw.exception()).problemCode());
-    assertEquals(
-        GridGrindProblemCode.INVALID_FORMULA,
-        assertInstanceOf(FormulaRequestException.class, rebased.exception()).problemCode());
-    assertEquals(
-        GridGrindProblemCode.INVALID_FORMULA,
-        assertInstanceOf(FormulaRequestException.class, rebasedWithJacksonLocation.exception())
-            .problemCode());
+    assertEquals("steps[1].action.value.value.text", raw.jsonPath());
   }
 
   @Test
@@ -209,72 +157,5 @@ class RequestBindingFailureTest {
         new RequestBindingFailure(generic, "value", Optional.empty())
             .rebasedAt("steps[1].action.value", Optional.empty())
             .exception());
-  }
-
-  @Test
-  void rebasesUniqueNestedFormulaAndShapeFailuresAtTheExactAuthoredField() {
-    RequestJsonObject fragment =
-        new RequestJsonObject(
-            0,
-            List.of(
-                new RequestJsonMember("formula", 1, new RequestJsonString(11, "SUM(A1)")),
-                new RequestJsonMember("nested", 22, new RequestJsonArray(31, List.of()))));
-    FormulaRequestException formula =
-        new FormulaRequestException(
-            GridGrindProblemCode.INVALID_FORMULA,
-            "formula must not begin with =",
-            Optional.of("formula"),
-            Optional.empty(),
-            Optional.empty(),
-            null);
-    InvalidRequestShapeException shape =
-        new InvalidRequestShapeException(
-            new MessageShape("formula must be a string", Optional.of("formula")),
-            Optional.of("formula"),
-            Optional.empty(),
-            Optional.empty(),
-            null);
-
-    RequestBindingFailure formulaFailure =
-        RequestBindingFailureNormalizer.from(
-            formula,
-            fragment,
-            "steps[2].action",
-            RequestDiagnosticRedactor.forRequestType(Object.class));
-    RequestBindingFailure inputFormulaFailure =
-        RequestBindingFailureNormalizer.from(
-            new InvalidFormulaInputException("formula must not begin with ="),
-            fragment,
-            "steps[2].action",
-            RequestDiagnosticRedactor.forRequestType(Object.class));
-    RequestBindingFailure shapeFailure =
-        RequestBindingFailureNormalizer.from(
-            shape,
-            fragment,
-            "steps[2].action",
-            RequestDiagnosticRedactor.forRequestType(Object.class));
-
-    assertEquals("steps[2].action.formula", formulaFailure.jsonPath());
-    assertInstanceOf(FormulaRequestException.class, formulaFailure.exception());
-    assertEquals("steps[2].action.formula", inputFormulaFailure.jsonPath());
-    assertInstanceOf(FormulaRequestException.class, inputFormulaFailure.exception());
-    assertEquals("steps[2].action.formula", shapeFailure.jsonPath());
-    assertInstanceOf(InvalidRequestShapeException.class, shapeFailure.exception());
-  }
-
-  @Test
-  void resolvesOneInvariantFieldNestedInsideAnArray() {
-    RequestJsonNode fragment =
-        new RequestJsonArray(
-            0,
-            List.of(
-                new RequestJsonObject(
-                    1,
-                    List.of(new RequestJsonMember("name", 2, new RequestJsonString(9, "value"))))));
-
-    assertEquals(
-        Optional.of("[0].name"),
-        RequestBindingPathSupport.directChildPathForInvariant(
-            fragment, new IllegalArgumentException("name must not be blank")));
   }
 }

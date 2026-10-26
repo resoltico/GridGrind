@@ -235,7 +235,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                     new WorkbookSelector.Current(),
                     new StructuredMutationAction.ImportCustomXmlMapping(
                         new CustomXmlImportSpec(
-                            new CustomXmlMappingLocator(1L, "CORSO_mapping"),
+                            new CustomXmlMappingLocator(
+                                java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
                             new TextSourceSpec.Utf8File("mapping.xml"))))));
 
     WorkbookPlan resolved =
@@ -246,7 +247,10 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
         assertInstanceOf(
             StructuredMutationAction.ImportCustomXmlMapping.class,
             assertInstanceOf(MutationStep.class, resolved.steps().getFirst()).action());
-    assertEquals(new CustomXmlMappingLocator(1L, "CORSO_mapping"), action.mapping().locator());
+    assertEquals(
+        new CustomXmlMappingLocator(
+            java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+        action.mapping().locator());
     assertEquals(
         "<CORSO><NOME>Grid</NOME><DOCENTE>Grind</DOCENTE></CORSO>",
         assertInstanceOf(TextSourceSpec.Inline.class, action.mapping().xml()).text());
