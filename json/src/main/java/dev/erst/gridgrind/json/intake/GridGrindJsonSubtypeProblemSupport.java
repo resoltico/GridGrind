@@ -8,29 +8,6 @@ import java.util.Optional;
 final class GridGrindJsonSubtypeProblemSupport {
   private GridGrindJsonSubtypeProblemSupport() {}
 
-  static String unknownTypeValueMessage(
-      tools.jackson.databind.exc.InvalidTypeIdException exception) {
-    String typeId = exception.getTypeId();
-    if (typeId == null) {
-      return "JSON object is missing required fields or has the wrong shape";
-    }
-    String defaultMessage = "Unknown type value '" + typeId + "'";
-    Optional<String> specificGuidance = specificGuidance(exception, typeId);
-    if (specificGuidance.isPresent()) {
-      defaultMessage += "; " + specificGuidance.orElseThrow();
-    }
-    List<String> candidates = similarTypeIds(exception, typeId);
-    if (!candidates.isEmpty()) {
-      return defaultMessage + "; similar valid values: " + String.join(", ", candidates);
-    }
-    return defaultMessage;
-  }
-
-  static Optional<String> specificGuidance(
-      tools.jackson.databind.exc.InvalidTypeIdException exception, String typeId) {
-    return specificGuidance(renderedDiscriminatorPath(exception), typeId);
-  }
-
   static Optional<String> specificGuidance(String discriminatorPath, String typeId) {
     if ("source.type".equals(discriminatorPath) && "FILE".equals(typeId)) {
       return Optional.of(
@@ -51,15 +28,6 @@ final class GridGrindJsonSubtypeProblemSupport {
             + String.join(", ", GridGrindJsonSubtypeSupport.typeIds(similarityRoot.orElseThrow())));
   }
 
-  static List<String> similarTypeIds(
-      tools.jackson.databind.exc.InvalidTypeIdException exception, String typeId) {
-    tools.jackson.databind.JavaType baseType = exception.getBaseType();
-    if (baseType == null) {
-      return List.of();
-    }
-    return similarTypeIds(baseType.getRawClass(), typeId);
-  }
-
   static List<String> similarTypeIds(Class<?> baseClass, String typeId) {
     List<String> all = GridGrindJsonSubtypeSupport.typeIds(baseClass);
     String normalized = typeId.toUpperCase(java.util.Locale.ROOT);
@@ -71,15 +39,6 @@ final class GridGrindJsonSubtypeProblemSupport {
                 .thenComparing(java.util.Comparator.naturalOrder()))
         .limit(3)
         .toList();
-  }
-
-  private static String renderedDiscriminatorPath(
-      tools.jackson.databind.exc.InvalidTypeIdException exception) {
-    String path = GridGrindJsonPayloadMetadataSupport.renderPath(exception.getPath());
-    if (path.endsWith(".type") || "type".equals(path)) {
-      return path;
-    }
-    return path.isBlank() ? "type" : path + ".type";
   }
 
   @SuppressWarnings("PMD.AvoidArrayLoops")

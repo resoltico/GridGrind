@@ -20,11 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import tools.jackson.core.TokenStreamLocation;
-import tools.jackson.core.json.JsonFactory;
-import tools.jackson.databind.exc.InvalidTypeIdException;
-import tools.jackson.databind.exc.MismatchedInputException;
-import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 /** Focused JSON problem-surface and limit-behavior tests for {@link GridGrindJson}. */
 @SuppressWarnings("NotJavadoc")
@@ -135,53 +130,6 @@ class GridGrindJsonProblemSurfaceTest {
     assertEquals(Optional.of(1), invalidResponse.jsonLine());
     assertEquals(Optional.of(2), invalidResponse.jsonColumn());
     assertTrue(invalidCatalog.getMessage().startsWith("Missing required field '"));
-  }
-
-  @Test
-  void exposesProductOwnedHelperMessagesAndJsonLocations() throws IOException {
-    JsonFactory jsonFactory = new JsonFactory();
-    MismatchedInputException floatingInteger =
-        (MismatchedInputException)
-            MismatchedInputException.from(
-                    utf8Parser(jsonFactory, "2.5"),
-                    Integer.class,
-                    "Cannot coerce Floating-point value (2.5) to `int` value"
-                        + " (but could if coercion was enabled using `CoercionConfig`)")
-                .prependPath(WorkbookPlan.class, "rowCount");
-    InvalidTypeIdException invalidType =
-        InvalidTypeIdException.from(utf8Parser(jsonFactory, "\"x\""), "bad type", null, "NOPE");
-
-    assertEquals(
-        "Field 'rowCount' must be an integer value",
-        GridGrindJsonValueProblemSupport.mismatchedInputMessage(floatingInteger));
-    assertEquals(
-        "Unknown type value 'NOPE'", GridGrindJsonProblemMessageSupport.message(invalidType));
-    assertEquals(
-        "Unknown field 'reads'",
-        GridGrindJsonProblemMessageSupport.message(
-            UnrecognizedPropertyException.from(
-                utf8Parser(jsonFactory, "{}"), WorkbookPlan.class, "reads", List.of())));
-    assertEquals(
-        "Cannot construct instance of `x`",
-        GridGrindJsonProblemMessageSupport.message(
-            new IllegalArgumentException("Cannot construct instance of `x`")));
-    assertEquals(
-        "Cannot deserialize value as a subtype of `x` (for POJO property 'target')"
-            + " (but could if coercion was enabled using `CoercionConfig`)",
-        GridGrindJsonProblemMessageSupport.cleanJacksonMessage(
-            "Cannot deserialize value as a subtype of `x` (for POJO property 'target')"
-                + " (but could if coercion was enabled using `CoercionConfig`)"));
-    assertEquals(
-        "Invalid JSON payload", GridGrindJsonProblemMessageSupport.cleanJacksonMessage(" "));
-    assertEquals(Optional.empty(), GridGrindJsonPayloadMetadataSupport.jsonLine(null));
-    assertEquals(Optional.empty(), GridGrindJsonPayloadMetadataSupport.jsonColumn(null));
-    assertEquals(
-        Optional.of(4),
-        GridGrindJsonPayloadMetadataSupport.jsonLine(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
-    assertEquals(
-        Optional.of(9),
-        GridGrindJsonPayloadMetadataSupport.jsonColumn(
-            new TokenStreamLocation(null, 0L, 0L, 4, 9)));
   }
 
   @Test
@@ -397,12 +345,5 @@ class GridGrindJsonProblemSurfaceTest {
     public void close() {
       closed = true;
     }
-  }
-
-  private static tools.jackson.core.JsonParser utf8Parser(JsonFactory jsonFactory, String json)
-      throws IOException {
-    return jsonFactory.createParser(
-        tools.jackson.core.ObjectReadContext.empty(),
-        new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
   }
 }

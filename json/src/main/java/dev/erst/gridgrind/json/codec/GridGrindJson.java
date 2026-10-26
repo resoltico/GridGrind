@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.result.WorkbookResult;
-import dev.erst.gridgrind.json.intake.GridGrindJsonProblemMessageSupport;
 import dev.erst.gridgrind.json.intake.GridGrindRequestDecoder;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,7 +66,7 @@ public final class GridGrindJson {
         inputStream,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         WorkbookResult.class,
-        GridGrindJsonProblemMessageSupport::invalidPayload);
+        JsonReadFailures::syntax);
   }
 
   /** Reads a response from a byte array. */
@@ -77,7 +76,7 @@ public final class GridGrindJson {
         bytes,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         WorkbookResult.class,
-        GridGrindJsonProblemMessageSupport::invalidPayload);
+        JsonReadFailures::syntax);
   }
 
   /** Reads a protocol catalog from an input stream without closing the caller-owned stream. */
@@ -87,17 +86,14 @@ public final class GridGrindJson {
         inputStream,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         Catalog.class,
-        GridGrindJsonProblemMessageSupport::invalidPayload);
+        JsonReadFailures::syntax);
   }
 
   /** Reads a protocol catalog from a byte array. */
   public static Catalog readProtocolCatalog(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
     return GridGrindJsonCodecSupport.readValue(
-        bytes,
-        GridGrindJsonMapperSupport.JSON_MAPPER,
-        Catalog.class,
-        GridGrindJsonProblemMessageSupport::invalidPayload);
+        bytes, GridGrindJsonMapperSupport.JSON_MAPPER, Catalog.class, JsonReadFailures::syntax);
   }
 
   /** Reads a request doctor report from an input stream without closing the caller-owned stream. */
@@ -108,7 +104,7 @@ public final class GridGrindJson {
         inputStream,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         RequestDoctorReport.class,
-        GridGrindJsonProblemMessageSupport::invalidPayload);
+        JsonReadFailures::syntax);
   }
 
   /** Reads a request doctor report from a byte array. */
@@ -118,7 +114,7 @@ public final class GridGrindJson {
         bytes,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         RequestDoctorReport.class,
-        GridGrindJsonProblemMessageSupport::invalidPayload);
+        JsonReadFailures::syntax);
   }
 
   /** Returns the maximum accepted JSON request document length in bytes. */

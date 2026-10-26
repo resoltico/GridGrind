@@ -35,3 +35,9 @@ token checks and static/runtime validation additionally enforce domain and workb
 Independent NetworkNT tests validate examples and actual serialized grants/results, reject malformed
 controls, and compare the committed schema artifacts without rewriting them. Their reference and
 example directories are declared test inputs.
+
+Request intake preserves duplicate members and recoverable syntax findings, validates emitted schema
+structures, and checks canonical constructors/defaults before final wire binding. The final model must
+match the prevalidated value; binding failure after validation is an internal defect. Independently
+valid root/step fragments remain available for complete doctor diagnostics. Shared response/catalog
+reads classify typed exception data and core contracts without parsing framework message text.

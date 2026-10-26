@@ -34,11 +34,7 @@ final class WorkbookStepJsonQualifiedFieldSupport {
       if (!renderedPath.isEmpty()) {
         return renderedPath;
       }
-      if (node != null) {
-        return GridGrindJsonRequestProblemDetector.detect(node, targetType, jacksonException)
-            .flatMap(problem -> problem.jsonPath())
-            .orElse("");
-      }
+      return missingField(node, targetType, jacksonException);
     }
     if (failure instanceof RequestProblemSource requestProblemSource) {
       Optional<String> jsonPath = requestProblemSource.requestProblem().jsonPath();
@@ -47,6 +43,30 @@ final class WorkbookStepJsonQualifiedFieldSupport {
       }
     }
     return "";
+  }
+
+  private static String missingField(
+      @Nullable JsonNode node, Class<?> targetType, JacksonException failure) {
+    if (node == null || !node.isObject()) {
+      return "";
+    }
+    Class<?> actual = targetType;
+    if (failure instanceof tools.jackson.databind.exc.ValueInstantiationException creation
+        && creation.getType() != null) {
+      actual = creation.getType().getRawClass();
+    } else if (failure instanceof tools.jackson.databind.exc.MismatchedInputException mismatch
+        && mismatch.getTargetType() != null) {
+      actual = mismatch.getTargetType();
+    }
+    if (!actual.isRecord()) {
+      return "";
+    }
+    return dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport.requiredFieldNames(
+            actual.asSubclass(Record.class))
+        .stream()
+        .filter(name -> !node.has(name))
+        .findFirst()
+        .orElse("");
   }
 
   private static String renderPath(java.util.List<Reference> path) {

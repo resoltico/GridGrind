@@ -10,7 +10,6 @@ import dev.erst.gridgrind.core.problem.ExplicitNullField;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.MissingRequiredField;
-import dev.erst.gridgrind.json.intake.GridGrindJsonProblemMessageSupport;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -38,7 +37,7 @@ class GridGrindJsonCodecSupportTest {
             requestTree,
             GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
             WorkbookPlan.class,
-            GridGrindJsonProblemMessageSupport::invalidRequestPayload);
+            JsonReadFailures::syntax);
 
     assertEquals(0, plan.steps().size());
   }
@@ -61,7 +60,7 @@ class GridGrindJsonCodecSupportTest {
                     requestTree,
                     GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
                     WorkbookPlan.class,
-                    GridGrindJsonProblemMessageSupport::invalidRequestPayload));
+                    JsonReadFailures::syntax));
 
     ExplicitNullField problem = assertInstanceOf(ExplicitNullField.class, failure.requestProblem());
     assertEquals(
@@ -89,7 +88,7 @@ class GridGrindJsonCodecSupportTest {
                     requestTree,
                     GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
                     WorkbookPlan.class,
-                    GridGrindJsonProblemMessageSupport::invalidRequestPayload));
+                    JsonReadFailures::syntax));
 
     MissingRequiredField problem =
         assertInstanceOf(MissingRequiredField.class, failure.requestProblem());
@@ -104,37 +103,27 @@ class GridGrindJsonCodecSupportTest {
 
     assertEquals(
         "{}",
-        GridGrindJsonCodecSupport.readTree(
-                "{}", mapper, GridGrindJsonProblemMessageSupport::invalidRequestPayload)
-            .toString());
+        GridGrindJsonCodecSupport.readTree("{}", mapper, JsonReadFailures::syntax).toString());
 
     assertInstanceOf(
         InvalidJsonException.class,
         assertThrows(
             InvalidJsonException.class,
-            () ->
-                GridGrindJsonCodecSupport.readTree(
-                    "{", mapper, GridGrindJsonProblemMessageSupport::invalidRequestPayload)));
+            () -> GridGrindJsonCodecSupport.readTree("{", mapper, JsonReadFailures::syntax)));
     assertInstanceOf(
         InvalidRequestShapeException.class,
         assertThrows(
             InvalidRequestShapeException.class,
             () ->
                 GridGrindJsonCodecSupport.decodeTree(
-                    mapper.readTree("[null]"),
-                    mapper,
-                    Object.class,
-                    GridGrindJsonProblemMessageSupport::invalidRequestPayload)));
+                    mapper.readTree("[null]"), mapper, Object.class, JsonReadFailures::syntax)));
     assertInstanceOf(
         InvalidRequestShapeException.class,
         assertThrows(
             InvalidRequestShapeException.class,
             () ->
                 GridGrindJsonCodecSupport.decodeTree(
-                    mapper.nullNode(),
-                    mapper,
-                    Object.class,
-                    GridGrindJsonProblemMessageSupport::invalidRequestPayload)));
+                    mapper.nullNode(), mapper, Object.class, JsonReadFailures::syntax)));
   }
 
   @Test
@@ -147,7 +136,7 @@ class GridGrindJsonCodecSupportTest {
                     "[]".getBytes(StandardCharsets.UTF_8),
                     GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
                     WorkbookPlan.class,
-                    GridGrindJsonProblemMessageSupport::invalidRequestPayload));
+                    JsonReadFailures::syntax));
     assertEquals("JSON value has the wrong shape for this field", exception.getMessage());
   }
 }

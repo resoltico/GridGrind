@@ -4,8 +4,6 @@ import dev.erst.gridgrind.core.problem.ExplicitNullField;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.MessageShape;
-import dev.erst.gridgrind.json.intake.GridGrindJsonProblemMessageSupport;
-import dev.erst.gridgrind.json.intake.GridGrindJsonStepPayloadShapeSupport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -87,10 +85,9 @@ final class GridGrindJsonCodecSupport {
     requireNonNullRoot(node);
     try {
       rejectExplicitNullMembers(node, "");
-      GridGrindJsonStepPayloadShapeSupport.rejectInvalidStepPayloadShapes(node);
       return mapper.treeToValue(node, targetType);
     } catch (JacksonException exception) {
-      throw GridGrindJsonProblemMessageSupport.invalidPayload(exception, node, targetType);
+      throw JsonReadFailures.value(exception, node, targetType);
     }
   }
 

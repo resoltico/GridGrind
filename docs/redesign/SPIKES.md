@@ -1483,3 +1483,54 @@ WP-30 remains open: the shared response/catalog decoder still uses GridGrindJson
 and its framework-error helpers. Remove that mechanism with retained public read behavior, prove the
 cleanJacksonMessage/productOwnedJacksonMessage searches empty, and run the full phase gate. Do not
 claim completion of the single-intake work while those consumers remain.
+
+### WP-30 shared-reader cleanup and phase gate
+
+Replaced the shared codec's framework-prose adapter with JsonReadFailures, which uses typed exception
+properties (property name, target class, subtype id, enum value and path references), canonical core
+presence contracts and owned constructor causes. It never reads getOriginalMessage, searches wording,
+or strips framework suffixes. Removed the old message/value/type/shape/contract detector family,
+framework path helpers and duplicate raw step-payload validator: nine production files plus their
+sole implementation tests. Retained public response/catalog/doctor IO, stream-ownership, null,
+missing-field and round-trip checks. Three direct controls prove arbitrary framework wording cannot
+change public classification. Dead synthetic exception/parser fixtures were removed. Standard PMD
+findings were corrected by separating typed cause discovery/classification and closing the test
+parser; no validation thresholds were changed.
+
+Production Java searches for cleanJacksonMessage, productOwnedJacksonMessage and getOriginalMessage
+are empty. One test still calls getOriginalMessage solely to assert text authored by GridGrind's own
+step codec; it is verification of our message, not framework-message inference. Valid historical
+CHANGELOG_ARCHIVE.md entries and this temporary decision record retain the old names. This is the
+explicit scope deviation from WP-30's literal whole-repository grep requirement; E6 permits justified
+results, and erasing valid history would not prove removal. No compatibility handler remains.
+
+All 143 golden cases, including both transports and the real value-changing control, remain equal
+without re-recording. ./gradlew check passes in 4m22s: core 329, JSON 348, engine 1512, CLI 588,
+architecture 41; 2818 tests, zero failures/errors/skips. Reduction from 2842 is retired normalizer/
+message-cleaner mechanics, not workbook behavioural checks. NetworkNT independent schema cases,
+constructor prevalidation, numeric/temporal and primitive-null protections remain.
+
+The first phase gate passed quality/replay/packaging but failed after 11m08s in a shell string scan:
+it confused the response schema's legitimate Admission.operations property with a retired request
+field. Corrected that check to parsed authored request envelopes. A real temporary request containing
+source + operations fails it, while the generated response schema passes; the control file was
+removed. Retained the failed gate and both focused controls. The full ./check.sh retry passed all six
+stages in 15m23s, including isolated quality/coverage, deterministic 94-seed replay and support tests,
+packaging, shell regressions, real examples/task starters and Docker smoke. Docker additionally
+verified odd paths, reopening saved workbooks, signature-line fonts and streaming readback.
+
+Stopped only the recorded task Gradle daemon and its 231 idle compiler workers after the completed
+aggregate build, reclaiming roughly 6.8 GiB of retained compiler RSS before isolated verification.
+No unrelated daemon/service was stopped. No mutation or active fuzz campaign ran.
+
+Inventory before -> after this cleanup: JSON main files 69 -> 61, Support 214 -> 206, main Java
+124011 -> 123345, tests 154947 -> 153624. Converter lines 4687, blank checks 436, Spec/Patch 75/eight,
+reports 95, engine snapshots 51/definitions 13 are unchanged. The scoped shell correction adds 20
+lines and will be superseded by WP-61's actual Gradle/JUnit product checks. Baseline diff is empty;
+supplement absent. Final named-module and inventory outputs are retained under external wp-30.
+
+WP-30 request intake/schema/default publication criteria are delivered, with the historical grep
+exception above. Workbook-state preconditions remain in static/runtime checks per S3. Phase 3 is
+verified. Next is WP-40's canonical engine model/resolved seam; WP-21's aggregate blank target stays
+open until the scheduled engine/fuzz drains. Do not claim the engine, host, tooling, docs or clean-
+clone WPs are complete from these intake results.

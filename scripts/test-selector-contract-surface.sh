@@ -125,9 +125,29 @@ check_no_matches 'Selection snippets:' \
 check_no_matches 'Cell-selection payloads use:|Range-selection payloads use:|Table-selection payloads use:|Sheet-selection payloads use:' \
     'public docs still describe selector payload families with the deleted selection terminology' \
     "${repo_root}/README.md" "${repo_root}/docs"
-check_no_matches '"operations"[[:space:]]*:' \
-    'public docs/examples still mention the deleted request field "operations"' \
-    "${public_surface[@]}"
+# Response facts and JSON Schema property definitions may legitimately use "operations".
+# This retired-field check applies only to authored request envelopes.
+python3 - "${repo_root}" <<'PY_REQUEST_OPERATIONS'
+import json
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+sources = [root / "README.md", *root.glob("docs/*.md"), *root.glob("examples/*.json")]
+for source in sources:
+    if source.name == "CHANGELOG_ARCHIVE.md":
+        continue
+    text = source.read_text(encoding="utf-8")
+    blocks = [text] if source.suffix == ".json" else re.findall(r"```json\s*(.*?)```", text, re.S)
+    for block in blocks:
+        try:
+            value = json.loads(block)
+        except (ValueError, TypeError):
+            continue
+        if isinstance(value, dict) and "source" in value and "operations" in value:
+            raise SystemExit(f"{source.relative_to(root)} authors the deleted request field operations")
+PY_REQUEST_OPERATIONS
 check_no_matches '"reads"[[:space:]]*:' \
     'public docs/examples still mention the deleted request field "reads"' \
     "${public_surface[@]}"

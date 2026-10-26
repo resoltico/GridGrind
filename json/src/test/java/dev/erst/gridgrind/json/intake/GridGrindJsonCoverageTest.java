@@ -40,15 +40,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.DateTimeException;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.TokenStreamLocation;
-import tools.jackson.core.exc.StreamConstraintsException;
-import tools.jackson.core.json.JsonFactory;
-import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -436,97 +430,6 @@ class GridGrindJsonCoverageTest {
   }
 
   @Test
-  void helperMethodsCoverFallbackAndLocationEdgeCases() throws IOException {
-    JsonFactory jsonFactory = new JsonFactory();
-    MismatchedInputException floatingPointWithoutPath =
-        MismatchedInputException.from(
-            utf8Parser(jsonFactory, "2.5"),
-            Integer.class,
-            "Cannot coerce Floating-point value (2.5) to `int` value"
-                + " (but could if coercion was enabled using `CoercionConfig`)");
-    MismatchedInputException floatingPointWithIndex =
-        (MismatchedInputException)
-            MismatchedInputException.from(
-                    utf8Parser(jsonFactory, "2.5"),
-                    Integer.class,
-                    "Cannot coerce Floating-point value (2.5) to `int` value"
-                        + " (but could if coercion was enabled using `CoercionConfig`)")
-                .prependPath(new Object(), 0);
-    MismatchedInputException floatingPointWithNestedPath =
-        (MismatchedInputException)
-            MismatchedInputException.from(
-                    utf8Parser(jsonFactory, "2.5"),
-                    Integer.class,
-                    "Cannot coerce Floating-point value (2.5) to `int` value"
-                        + " (but could if coercion was enabled using `CoercionConfig`)")
-                .prependPath(new Object(), 1)
-                .prependPath(new Object(), "bar")
-                .prependPath(new Object(), 0)
-                .prependPath(new Object(), "items");
-
-    assertEquals(
-        "JSON value must be an integer value",
-        GridGrindJsonValueProblemSupport.mismatchedInputMessage(floatingPointWithoutPath));
-    assertEquals(
-        "JSON value at '[0]' must be an integer value",
-        GridGrindJsonValueProblemSupport.mismatchedInputMessage(floatingPointWithIndex));
-    assertEquals(
-        "JSON value at 'items[0].bar[1]' must be an integer value",
-        GridGrindJsonValueProblemSupport.mismatchedInputMessage(floatingPointWithNestedPath));
-    assertEquals(
-        "fieldName must not be null",
-        GridGrindJsonProblemMessageSupport.message(
-            new NullPointerException("fieldName must not be null")));
-    assertEquals(
-        "steps[0].target must not be null",
-        GridGrindJsonProblemMessageSupport.message(
-            new NullPointerException("steps[0].target must not be null")));
-    assertEquals(
-        "Cannot deserialize value of type `x` from String",
-        GridGrindJsonProblemMessageSupport.message(
-            new IllegalArgumentException("Cannot deserialize value of type `x` from String")));
-    assertEquals("bad", invokeInvalidPayload(new StreamConstraintsException("bad")).getMessage());
-    assertEquals(
-        "wrapper",
-        invokeInvalidPayload(
-                new WrappedJacksonException(
-                    "wrapper", new DateTimeException("2026-04-17T25:00:00 is not a valid date")))
-            .getMessage());
-    assertEquals(
-        "Invalid JSON payload",
-        GridGrindJsonProblemMessageSupport.cleanJacksonMessage(
-            " (start marker at [Source: REDACTED; line: 1, column: 1])"));
-    assertEquals(
-        "Invalid JSON payload", GridGrindJsonProblemMessageSupport.cleanJacksonMessage(null));
-    assertEquals(
-        "Missing required creator property 'fieldName'",
-        GridGrindJsonProblemMessageSupport.message(
-            new IllegalStateException("Missing required creator property 'fieldName'")));
-    assertEquals(
-        "missing type id property 'type'",
-        GridGrindJsonProblemMessageSupport.message(
-            new IllegalStateException("missing type id property 'type'")));
-    assertEquals(
-        "Invalid JSON payload",
-        GridGrindJsonValueProblemSupport.mismatchedInputMessage(
-            MismatchedInputException.from(
-                utf8Parser(jsonFactory, "null"), Integer.class, (String) null)));
-    assertEquals(
-        Optional.empty(),
-        GridGrindJsonPayloadMetadataSupport.jsonLine(new TokenStreamLocation(null, 0L, 0L, 0, 9)));
-    assertEquals(
-        Optional.empty(),
-        GridGrindJsonPayloadMetadataSupport.jsonColumn(
-            new TokenStreamLocation(null, 0L, 0L, 4, 0)));
-    assertEquals(
-        "Cannot coerce value to `boolean`"
-            + " (but could if coercion was enabled using `CoercionConfig`)",
-        GridGrindJsonProblemMessageSupport.cleanJacksonMessage(
-            "Cannot coerce value to `boolean`"
-                + " (but could if coercion was enabled using `CoercionConfig`)"));
-  }
-
-  @Test
   void typeEntryAndRequestReadersStayDeterministicThroughPublicRoundTrip() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     ByteArrayOutputStream doctorReportOutputStream = new ByteArrayOutputStream();
@@ -798,50 +701,6 @@ class GridGrindJsonCoverageTest {
         exception.jsonLocation().jsonPath());
   }
 
-  @Test
-  void classifiesOnlyExplicitNullChecksAsValidationCauses() {
-    NullPointerException explicitNull = new NullPointerException("field must not be null");
-    NullPointerException jvmNull = new NullPointerException("Cannot invoke method on null");
-    NullPointerException nullMessageNull = new NullPointerException();
-
-    assertInstanceOf(
-        InvalidJsonException.class,
-        invokeInvalidPayload(new WrappedJacksonException("wrapper", explicitNull)),
-        "Synthetic helper calls without structural intake context stay in the invalid-JSON lane.");
-    assertInstanceOf(
-        InvalidJsonException.class,
-        invokeInvalidPayload(new WrappedJacksonException("wrapper", jvmNull)),
-        "JVM NPE without 'must not be null' message should not be treated as a validation error");
-    assertInstanceOf(
-        InvalidJsonException.class,
-        invokeInvalidPayload(new WrappedJacksonException("wrapper", nullMessageNull)),
-        "NPE with null message should not be treated as a validation error");
-  }
-
-  @Test
-  void prefersMissingRequiredCreatorMessagesOverExplicitNullValidationCauses() {
-    InvalidJsonException failure =
-        assertInstanceOf(
-            InvalidJsonException.class,
-            invokeInvalidPayload(
-                new WrappedJacksonException(
-                    "Missing required creator property 'protocolVersion'",
-                    new NullPointerException("protocolVersion must not be null"))));
-
-    assertEquals("Missing required creator property 'protocolVersion'", failure.getMessage());
-  }
-
-  private static IllegalArgumentException invokeInvalidPayload(JacksonException exception) {
-    return GridGrindJsonProblemMessageSupport.invalidPayload(exception);
-  }
-
-  private static tools.jackson.core.JsonParser utf8Parser(JsonFactory jsonFactory, String json)
-      throws IOException {
-    return jsonFactory.createParser(
-        tools.jackson.core.ObjectReadContext.empty(),
-        new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
-  }
-
   private static void assertStreamSerializationMatchesBytes(byte[] expected, StreamWriter writer)
       throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -886,29 +745,5 @@ class GridGrindJsonCoverageTest {
   @SuppressWarnings("NotJavadoc")
   private interface StreamWriter {
     void write(OutputStream outputStream) throws IOException;
-  }
-
-  /** Synthetic Jackson exception used to cover wrapped validation-cause wording. */
-  private static final class WrappedJacksonException extends JacksonException {
-    private static final long serialVersionUID = 1L;
-
-    private WrappedJacksonException(String message, Throwable cause) {
-      super(message, cause);
-    }
-
-    @Override
-    public TokenStreamLocation getLocation() {
-      return null;
-    }
-
-    @Override
-    public String getOriginalMessage() {
-      return getMessage();
-    }
-
-    @Override
-    public Object processor() {
-      return null;
-    }
   }
 }
