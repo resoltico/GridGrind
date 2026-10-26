@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.pivot;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.excel.WorkbookAnalysis;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -113,8 +114,8 @@ public final class ExcelPivotTableAnalysisSupport {
               List.of(Long.toString(definition.getCacheId()))));
     }
 
-    ExcelPivotTableSnapshot snapshot = ExcelPivotTableSnapshotSupport.snapshot(workbook, handle);
-    if (snapshot instanceof ExcelPivotTableSnapshot.Unsupported unsupported) {
+    PivotTableReport snapshot = ExcelPivotTableSnapshotSupport.snapshot(workbook, handle);
+    if (snapshot instanceof PivotTableReport.Unsupported unsupported) {
       findings.add(
           finding(
               dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
@@ -122,7 +123,7 @@ public final class ExcelPivotTableAnalysisSupport {
               handle,
               "Pivot table contains unsupported detail",
               unsupported.detail(),
-              List.of(unsupported.anchor().locationRange())));
+              List.of(unsupported.anchor().locationRange().value())));
     }
 
     try {

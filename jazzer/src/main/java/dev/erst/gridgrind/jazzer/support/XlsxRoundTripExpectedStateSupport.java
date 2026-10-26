@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -16,7 +17,6 @@ import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.util.List;
@@ -71,7 +71,7 @@ final class XlsxRoundTripExpectedStateSupport {
       Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
       Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects,
       Map<String, List<ExcelChartSnapshot>> expectedCharts,
-      List<ExcelPivotTableSnapshot> expectedPivots,
+      List<PivotTableReport> expectedPivots,
       List<ExcelTableSnapshot> expectedTables) {}
 
   record ExpectedWorkbookFootprint(Map<String, List<CellCoordinate>> candidateCoordinatesBySheet) {}

@@ -3,10 +3,10 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,7 +41,7 @@ public sealed interface WorkbookDrawingResult extends WorkbookReadIntrospectionR
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
-  record PivotTablesResult(StepId stepId, List<ExcelPivotTableSnapshot> pivotTables)
+  record PivotTablesResult(StepId stepId, List<PivotTableReport> pivotTables)
       implements WorkbookDrawingResult {
     public PivotTablesResult {
 

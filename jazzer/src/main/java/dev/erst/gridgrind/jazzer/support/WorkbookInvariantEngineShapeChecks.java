@@ -334,13 +334,14 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEnginePivotTableShape(
-      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot pivotTable) {
+      dev.erst.gridgrind.core.model.pivot.PivotTableReport pivotTable) {
     WorkbookInvariantChecks.require(pivotTable != null, "engine pivot table must not be null");
     WorkbookInvariantChecks.requireNonBlank(pivotTable.name(), "engine pivot table name");
-    WorkbookInvariantChecks.requireNonBlank(pivotTable.sheetName(), "engine pivot table sheetName");
+    WorkbookInvariantChecks.requireNonBlank(
+        pivotTable.sheetName().value(), "engine pivot table sheetName");
     requireEnginePivotTableAnchorShape(pivotTable.anchor());
     switch (pivotTable) {
-      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Supported supported -> {
+      case dev.erst.gridgrind.core.model.pivot.PivotTableReport.Supported supported -> {
         requireEnginePivotTableSourceShape(supported.source());
         supported
             .rowLabels()
@@ -357,49 +358,53 @@ final class WorkbookInvariantEngineShapeChecks {
             .dataFields()
             .forEach(WorkbookInvariantEngineShapeChecks::requireEnginePivotTableDataFieldShape);
       }
-      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Unsupported unsupported ->
+      case dev.erst.gridgrind.core.model.pivot.PivotTableReport.Unsupported unsupported ->
           WorkbookInvariantChecks.requireNonBlank(
               unsupported.detail(), "engine pivot table detail");
     }
   }
 
   static void requireEnginePivotTableSourceShape(
-      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Source source) {
+      dev.erst.gridgrind.core.model.pivot.PivotTableReport.PivotSourceReport source) {
     WorkbookInvariantChecks.require(source != null, "engine pivot table source must not be null");
     switch (source) {
-      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Source.Range range -> {
+      case dev.erst.gridgrind.core.model.pivot.PivotTableReport.PivotSourceReport.Range range -> {
         WorkbookInvariantChecks.requireNonBlank(
-            range.sheetName(), "engine pivot range source sheetName");
-        WorkbookInvariantChecks.requireNonBlank(range.range(), "engine pivot range source range");
+            range.sheetName().value(), "engine pivot range source sheetName");
+        WorkbookInvariantChecks.requireNonBlank(
+            range.range().value(), "engine pivot range source range");
       }
-      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Source.NamedRange namedRange -> {
+      case dev.erst.gridgrind.core.model.pivot.PivotTableReport.PivotSourceReport.NamedRange
+              namedRange -> {
         WorkbookInvariantChecks.requireNonBlank(
-            namedRange.name(), "engine pivot named-range source name");
+            namedRange.name().value(), "engine pivot named-range source name");
         WorkbookInvariantChecks.requireNonBlank(
-            namedRange.sheetName(), "engine pivot named-range source sheetName");
+            namedRange.sheetName().value(), "engine pivot named-range source sheetName");
         WorkbookInvariantChecks.requireNonBlank(
-            namedRange.range(), "engine pivot named-range source range");
+            namedRange.range().value(), "engine pivot named-range source range");
       }
-      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Source.Table table -> {
-        WorkbookInvariantChecks.requireNonBlank(table.name(), "engine pivot table source name");
+      case dev.erst.gridgrind.core.model.pivot.PivotTableReport.PivotSourceReport.Table table -> {
         WorkbookInvariantChecks.requireNonBlank(
-            table.sheetName(), "engine pivot table source sheetName");
-        WorkbookInvariantChecks.requireNonBlank(table.range(), "engine pivot table source range");
+            table.name().value(), "engine pivot table source name");
+        WorkbookInvariantChecks.requireNonBlank(
+            table.sheetName().value(), "engine pivot table source sheetName");
+        WorkbookInvariantChecks.requireNonBlank(
+            table.range().value(), "engine pivot table source range");
       }
     }
   }
 
   static void requireEnginePivotTableAnchorShape(
-      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Anchor anchor) {
+      dev.erst.gridgrind.core.model.pivot.PivotTableReport.Anchor anchor) {
     WorkbookInvariantChecks.require(anchor != null, "engine pivot table anchor must not be null");
     WorkbookInvariantChecks.requireNonBlank(
-        anchor.topLeftAddress(), "engine pivot table anchor topLeftAddress");
+        anchor.topLeftAddress().value(), "engine pivot table anchor topLeftAddress");
     WorkbookInvariantChecks.requireNonBlank(
-        anchor.locationRange(), "engine pivot table anchor locationRange");
+        anchor.locationRange().value(), "engine pivot table anchor locationRange");
   }
 
   static void requireEnginePivotTableFieldShape(
-      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Field field) {
+      dev.erst.gridgrind.core.model.pivot.PivotTableReport.Field field) {
     WorkbookInvariantChecks.require(field != null, "engine pivot table field must not be null");
     WorkbookInvariantChecks.require(
         field.sourceColumnIndex() >= 0,
@@ -409,7 +414,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEnginePivotTableDataFieldShape(
-      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.DataField dataField) {
+      dev.erst.gridgrind.core.model.pivot.PivotTableReport.DataField dataField) {
     WorkbookInvariantChecks.require(
         dataField != null, "engine pivot table dataField must not be null");
     WorkbookInvariantChecks.require(

@@ -2,11 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
@@ -59,7 +59,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       assertTrue(duplicateCodes.contains(AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME));
 
       firstPivot.getCTPivotTableDefinition().setName(null);
-      ExcelPivotTableSnapshot syntheticNameSnapshot =
+      PivotTableReport syntheticNameSnapshot =
           controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst();
       assertTrue(syntheticNameSnapshot.name().startsWith("_GG_PIVOT_"));
 
@@ -165,9 +165,9 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       XSSFPivotTable pivot = workbook.xssfWorkbook().getPivotTables().getFirst();
       pivot.getCTPivotTableDefinition().unsetDataFields();
 
-      ExcelPivotTableSnapshot.Unsupported snapshot =
+      PivotTableReport.Unsupported snapshot =
           assertInstanceOf(
-              ExcelPivotTableSnapshot.Unsupported.class,
+              PivotTableReport.Unsupported.class,
               controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst());
       assertTrue(snapshot.detail().contains("does not contain any data fields"));
     }
@@ -176,9 +176,9 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       XSSFPivotTable pivot = workbook.xssfWorkbook().getPivotTables().getFirst();
       pivot.getCTPivotTableDefinition().getLocation().setRef("not-a-range");
 
-      ExcelPivotTableSnapshot.Unsupported snapshot =
+      PivotTableReport.Unsupported snapshot =
           assertInstanceOf(
-              ExcelPivotTableSnapshot.Unsupported.class,
+              PivotTableReport.Unsupported.class,
               controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst());
       assertTrue(snapshot.detail().contains("location range"));
       List<AnalysisFindingCode> codes =
@@ -203,7 +203,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
                   invoke(
                       controller,
                       "snapshotSource",
-                      ExcelPivotTableSnapshot.Source.class,
+                      PivotTableReport.PivotSourceReport.class,
                       workbook.xssfWorkbook(),
                       pivot));
       assertTrue(failure.getMessage().contains("worksheetSource"));

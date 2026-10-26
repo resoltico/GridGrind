@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
@@ -13,7 +14,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,21 +48,21 @@ class ExcelPivotTableControllerTest {
               List.of("Region"),
               List.of("Stage")));
 
-      ExcelPivotTableSnapshot.Supported snapshot =
+      PivotTableReport.Supported snapshot =
           assertInstanceOf(
-              ExcelPivotTableSnapshot.Supported.class,
+              PivotTableReport.Supported.class,
               controller
                   .pivotTables(
                       workbook, new ExcelPivotTableSelection.ByNames(List.of("Sales Pivot 2026")))
                   .getFirst());
 
       assertEquals("Sales Pivot 2026", snapshot.name());
-      assertEquals("Report", snapshot.sheetName());
-      assertEquals("C5", snapshot.anchor().topLeftAddress());
-      ExcelPivotTableSnapshot.Source.Range source =
-          assertInstanceOf(ExcelPivotTableSnapshot.Source.Range.class, snapshot.source());
-      assertEquals("Data", source.sheetName());
-      assertEquals("A1:D5", source.range());
+      assertEquals("Report", snapshot.sheetName().value());
+      assertEquals("C5", snapshot.anchor().topLeftAddress().value());
+      PivotTableReport.PivotSourceReport.Range source =
+          assertInstanceOf(PivotTableReport.PivotSourceReport.Range.class, snapshot.source());
+      assertEquals("Data", source.sheetName().value());
+      assertEquals("A1:D5", source.range().value());
       assertEquals(List.of("Region"), fieldNames(snapshot.rowLabels()));
       assertEquals(List.of("Stage"), fieldNames(snapshot.columnLabels()));
       assertEquals(List.of(), fieldNames(snapshot.reportFilters()));
@@ -86,13 +86,13 @@ class ExcelPivotTableControllerTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelPivotTableSnapshot.Supported snapshot =
+      PivotTableReport.Supported snapshot =
           assertInstanceOf(
-              ExcelPivotTableSnapshot.Supported.class,
+              PivotTableReport.Supported.class,
               controller.pivotTables(reopened, new ExcelPivotTableSelection.All()).getFirst());
 
       assertEquals("Sales Pivot 2026", snapshot.name());
-      assertEquals("C5", snapshot.anchor().topLeftAddress());
+      assertEquals("C5", snapshot.anchor().topLeftAddress().value());
       assertTrue(
           controller
               .pivotTableHealthFindings(reopened, new ExcelPivotTableSelection.All())
@@ -146,20 +146,20 @@ class ExcelPivotTableControllerTest {
               List.of("Stage"),
               List.of()));
 
-      List<ExcelPivotTableSnapshot> snapshots =
+      List<PivotTableReport> snapshots =
           controller.pivotTables(
               workbook,
               new ExcelPivotTableSelection.ByNames(List.of("Named Pivot", "Table Pivot")));
 
-      ExcelPivotTableSnapshot.Supported namedPivot =
-          assertInstanceOf(ExcelPivotTableSnapshot.Supported.class, snapshots.getFirst());
-      ExcelPivotTableSnapshot.Supported tablePivot =
-          assertInstanceOf(ExcelPivotTableSnapshot.Supported.class, snapshots.get(1));
+      PivotTableReport.Supported namedPivot =
+          assertInstanceOf(PivotTableReport.Supported.class, snapshots.getFirst());
+      PivotTableReport.Supported tablePivot =
+          assertInstanceOf(PivotTableReport.Supported.class, snapshots.get(1));
 
-      assertInstanceOf(ExcelPivotTableSnapshot.Source.NamedRange.class, namedPivot.source());
+      assertInstanceOf(PivotTableReport.PivotSourceReport.NamedRange.class, namedPivot.source());
       assertEquals(List.of("Owner"), fieldNames(namedPivot.reportFilters()));
-      assertEquals("A3", namedPivot.anchor().topLeftAddress());
-      assertInstanceOf(ExcelPivotTableSnapshot.Source.Table.class, tablePivot.source());
+      assertEquals("A3", namedPivot.anchor().topLeftAddress().value());
+      assertInstanceOf(PivotTableReport.PivotSourceReport.Table.class, tablePivot.source());
       assertEquals(List.of("Stage"), fieldNames(tablePivot.rowLabels()));
       assertTrue(
           controller
@@ -230,7 +230,7 @@ class ExcelPivotTableControllerTest {
       assertEquals(
           List.of("Beta Pivot", "Gamma Pivot"),
           controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).stream()
-              .map(ExcelPivotTableSnapshot::name)
+              .map(PivotTableReport::name)
               .toList());
     }
   }
@@ -261,7 +261,7 @@ class ExcelPivotTableControllerTest {
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
-      ExcelPivotTableSnapshot snapshot =
+      PivotTableReport snapshot =
           controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst();
 
       assertTrue(missingNameCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
@@ -369,8 +369,8 @@ class ExcelPivotTableControllerTest {
                     new CellValue.NumberValue(12))));
   }
 
-  private List<String> fieldNames(List<ExcelPivotTableSnapshot.Field> fields) {
-    return fields.stream().map(ExcelPivotTableSnapshot.Field::sourceColumnName).toList();
+  private List<String> fieldNames(List<PivotTableReport.Field> fields) {
+    return fields.stream().map(PivotTableReport.Field::sourceColumnName).toList();
   }
 
   private XSSFPivotCacheDefinition cacheDefinition(XSSFPivotTable pivotTable) {

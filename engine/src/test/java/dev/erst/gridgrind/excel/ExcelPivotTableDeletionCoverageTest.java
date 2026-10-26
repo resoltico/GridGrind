@@ -2,10 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
@@ -84,9 +84,9 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
               List.of(),
               List.of("Stage")));
 
-      ExcelPivotTableSnapshot.Supported snapshot =
+      PivotTableReport.Supported snapshot =
           assertInstanceOf(
-              ExcelPivotTableSnapshot.Supported.class,
+              PivotTableReport.Supported.class,
               controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst());
       assertEquals(List.of(), fieldNames(snapshot.rowLabels()));
     }
@@ -127,7 +127,7 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
                   invoke(
                       controller,
                       "snapshotSource",
-                      ExcelPivotTableSnapshot.Source.class,
+                      PivotTableReport.PivotSourceReport.class,
                       workbook.xssfWorkbook(),
                       workbook.xssfWorkbook().getPivotTables().getFirst()));
       assertTrue(failure.getMessage().contains("ambiguous"));

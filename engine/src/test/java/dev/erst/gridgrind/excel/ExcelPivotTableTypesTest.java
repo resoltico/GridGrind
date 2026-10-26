@@ -2,11 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotDataPoiBridge;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,39 +29,44 @@ class ExcelPivotTableTypesTest {
         () ->
             new ExcelPivotTableSelection.ByNames(List.of("Sales Pivot 2026", "sales pivot 2026")));
 
-    ExcelPivotTableSnapshot.Supported supported =
-        new ExcelPivotTableSnapshot.Supported(
+    PivotTableReport.Supported supported =
+        new PivotTableReport.Supported(
             "Sales Pivot 2026",
-            "Report",
-            new ExcelPivotTableSnapshot.Anchor("C5", "C5:F9"),
-            new ExcelPivotTableSnapshot.Source.Range("Data", "A1:D5"),
-            List.of(new ExcelPivotTableSnapshot.Field(0, "Region")),
-            List.of(new ExcelPivotTableSnapshot.Field(1, "Stage")),
-            List.of(new ExcelPivotTableSnapshot.Field(2, "Owner")),
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+            new PivotTableReport.Anchor(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("C5"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("C5:F9")),
+            new PivotTableReport.PivotSourceReport.Range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:D5")),
+            List.of(new PivotTableReport.Field(0, "Region")),
+            List.of(new PivotTableReport.Field(1, "Stage")),
+            List.of(new PivotTableReport.Field(2, "Owner")),
             List.of(
-                new ExcelPivotTableSnapshot.DataField(
+                new PivotTableReport.DataField(
                     3,
                     "Amount",
                     ExcelPivotDataConsolidateFunction.SUM,
                     "Total Amount",
                     Optional.of("#,##0.00"))),
             true);
-    ExcelPivotTableSnapshot.Unsupported unsupported =
-        new ExcelPivotTableSnapshot.Unsupported(
+    PivotTableReport.Unsupported unsupported =
+        new PivotTableReport.Unsupported(
             "Broken Pivot",
-            "Report",
-            new ExcelPivotTableSnapshot.Anchor("A3", "A3:C6"),
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+            new PivotTableReport.Anchor(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A3:C6")),
             "Pivot cache source no longer resolves cleanly.");
 
     assertTrue(supported.valuesAxisOnColumns());
     assertEquals("Amount", supported.dataFields().getFirst().sourceColumnName());
     assertEquals("Pivot cache source no longer resolves cleanly.", unsupported.detail());
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelPivotTableSnapshot.Field(-1, "Region"));
+    assertThrows(IllegalArgumentException.class, () -> new PivotTableReport.Field(-1, "Region"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPivotTableSnapshot.DataField(
+            new PivotTableReport.DataField(
                 0, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.of(" ")));
   }
 
@@ -88,20 +93,25 @@ class ExcelPivotTableTypesTest {
             new ExcelPivotTableSelection.ByNames(
                 new ArrayList<>(java.util.Arrays.asList("Sales Pivot 2026", null))));
 
-    ExcelPivotTableSnapshot.Anchor anchor = new ExcelPivotTableSnapshot.Anchor("C5", "C5:F9");
-    ExcelPivotTableSnapshot.Source.Range source =
-        new ExcelPivotTableSnapshot.Source.Range("Data", "A1:D5");
-    ExcelPivotTableSnapshot.Field rowField = new ExcelPivotTableSnapshot.Field(0, "Region");
-    ExcelPivotTableSnapshot.DataField dataField =
-        new ExcelPivotTableSnapshot.DataField(
+    PivotTableReport.Anchor anchor =
+        new PivotTableReport.Anchor(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C5"),
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("C5:F9"));
+    PivotTableReport.PivotSourceReport.Range source =
+        new PivotTableReport.PivotSourceReport.Range(
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:D5"));
+    PivotTableReport.Field rowField = new PivotTableReport.Field(0, "Region");
+    PivotTableReport.DataField dataField =
+        new PivotTableReport.DataField(
             3, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", Optional.empty());
 
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPivotTableSnapshot.Supported(
+            new PivotTableReport.Supported(
                 "Sales Pivot 2026",
-                "Report",
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
                 anchor,
                 source,
                 null,
@@ -112,48 +122,51 @@ class ExcelPivotTableTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPivotTableSnapshot.Supported(
+            new PivotTableReport.Supported(
                 "Sales Pivot 2026",
-                "Report",
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
                 anchor,
                 source,
                 List.of(rowField),
                 List.of(),
                 List.of(),
-                new ArrayList<>(java.util.Arrays.asList((ExcelPivotTableSnapshot.DataField) null)),
+                new ArrayList<>(java.util.Arrays.asList((PivotTableReport.DataField) null)),
                 false));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPivotTableSnapshot.DataField(
+            new PivotTableReport.DataField(
                 3, "Amount", ExcelPivotDataConsolidateFunction.SUM, null, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPivotTableSnapshot.DataField(
+            new PivotTableReport.DataField(
                 3, "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelPivotTableSnapshot.Unsupported("Broken Pivot", "Report", anchor, " "));
+        () ->
+            new PivotTableReport.Unsupported(
+                "Broken Pivot",
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+                anchor,
+                " "));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPivotTableSnapshot.DataField(
+            new PivotTableReport.DataField(
                 3, null, ExcelPivotDataConsolidateFunction.SUM, "Total Amount", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPivotTableSnapshot.DataField(
+            new PivotTableReport.DataField(
                 3, " ", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () ->
-            new ExcelPivotTableSnapshot.DataField(
-                3, "Amount", null, "Total Amount", Optional.empty()));
+        () -> new PivotTableReport.DataField(3, "Amount", null, "Total Amount", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPivotTableSnapshot.DataField(
+            new PivotTableReport.DataField(
                 -1,
                 "Amount",
                 ExcelPivotDataConsolidateFunction.SUM,

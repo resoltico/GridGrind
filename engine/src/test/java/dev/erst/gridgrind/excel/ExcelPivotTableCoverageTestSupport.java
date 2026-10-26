@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.excel.pivot.ColumnAxisSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableAnalysisSupport;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableIdentitySupport;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshotSupport;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSourceSupport;
 import dev.erst.gridgrind.excel.pivot.PivotHandle;
@@ -134,8 +134,8 @@ class ExcelPivotTableCoverageTestSupport {
                     new CellValue.NumberValue(12))));
   }
 
-  List<String> fieldNames(List<ExcelPivotTableSnapshot.Field> fields) {
-    return fields.stream().map(ExcelPivotTableSnapshot.Field::sourceColumnName).toList();
+  List<String> fieldNames(List<PivotTableReport.Field> fields) {
+    return fields.stream().map(PivotTableReport.Field::sourceColumnName).toList();
   }
 
   List<Object> allPivotHandles(ExcelWorkbook workbook) throws Exception {
@@ -318,7 +318,7 @@ class ExcelPivotTableCoverageTestSupport {
             ExcelPivotTableSnapshotSupport.unsupportedSnapshot(
                 (PivotHandle) args[0],
                 (String) args[1],
-                (ExcelPivotTableSnapshot.Anchor) args[2],
+                (PivotTableReport.Anchor) args[2],
                 (String) args[3]);
         case "cacheRecords" ->
             ExcelPivotTableSnapshotSupport.cacheRecords((XSSFPivotCacheDefinition) args[0]);

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
@@ -30,7 +31,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -241,17 +241,21 @@ class WorkbookReadResultTest {
 
   @Test
   void pivotReadResultsCopyEntriesAndRejectInvalidState() {
-    ExcelPivotTableSnapshot.Supported pivot =
-        new ExcelPivotTableSnapshot.Supported(
+    PivotTableReport.Supported pivot =
+        new PivotTableReport.Supported(
             "Budget Pivot",
-            "Report",
-            new ExcelPivotTableSnapshot.Anchor("A3", "A3:C8"),
-            new ExcelPivotTableSnapshot.Source.Range("Data", "A1:D5"),
-            List.of(new ExcelPivotTableSnapshot.Field(0, "Region")),
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+            new PivotTableReport.Anchor(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A3:C8")),
+            new PivotTableReport.PivotSourceReport.Range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:D5")),
+            List.of(new PivotTableReport.Field(0, "Region")),
             List.of(),
             List.of(),
             List.of(
-                new ExcelPivotTableSnapshot.DataField(
+                new PivotTableReport.DataField(
                     3,
                     "Amount",
                     ExcelPivotDataConsolidateFunction.SUM,

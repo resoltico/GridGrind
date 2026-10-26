@@ -2,9 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.pivot.PivotHandle;
 import dev.erst.gridgrind.excel.pivot.ResolvedAuthoringSource;
 import java.util.List;
@@ -38,12 +38,15 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
     try (ExcelWorkbook workbook = pivotWorkbook()) {
       XSSFPivotTable pivot = workbook.xssfWorkbook().getPivotTables().getFirst();
       PivotHandle handle = (PivotHandle) allPivotHandles(workbook).getFirst();
-      ExcelPivotTableSnapshot.Anchor anchor = new ExcelPivotTableSnapshot.Anchor("C5", "C5:F9");
-      ExcelPivotTableSnapshot.Unsupported unsupported =
+      PivotTableReport.Anchor anchor =
+          new PivotTableReport.Anchor(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C5"),
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel("C5:F9"));
+      PivotTableReport.Unsupported unsupported =
           invoke(
               controller,
               "unsupportedSnapshot",
-              ExcelPivotTableSnapshot.Unsupported.class,
+              PivotTableReport.Unsupported.class,
               handle,
               "Broken Pivot",
               anchor,
@@ -55,11 +58,11 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
       assertEquals(
           List.of("Region", "Stage", "Owner", "Amount"),
           invoke(controller, "cacheFieldNames", List.class, pivot));
-      ExcelPivotTableSnapshot.Field sourceField =
+      PivotTableReport.Field sourceField =
           invoke(
               controller,
               "sourceField",
-              ExcelPivotTableSnapshot.Field.class,
+              PivotTableReport.Field.class,
               List.of("Region", "Amount"),
               1);
       assertEquals("Amount", sourceField.sourceColumnName());
@@ -323,7 +326,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
               invoke(
                   controller,
                   "snapshotSource",
-                  ExcelPivotTableSnapshot.Source.class,
+                  PivotTableReport.PivotSourceReport.class,
                   workbook.xssfWorkbook(),
                   pivot));
     }
@@ -342,7 +345,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
               invoke(
                   controller,
                   "snapshotSource",
-                  ExcelPivotTableSnapshot.Source.class,
+                  PivotTableReport.PivotSourceReport.class,
                   workbook.xssfWorkbook(),
                   pivot));
     }
@@ -357,7 +360,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
               invoke(
                   controller,
                   "snapshotSource",
-                  ExcelPivotTableSnapshot.Source.class,
+                  PivotTableReport.PivotSourceReport.class,
                   workbook.xssfWorkbook(),
                   pivot));
     }

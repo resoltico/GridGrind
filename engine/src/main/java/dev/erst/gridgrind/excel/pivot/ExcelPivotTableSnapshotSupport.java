@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.pivot;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,14 +29,17 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorksheetSource;
 public final class ExcelPivotTableSnapshotSupport {
   private ExcelPivotTableSnapshotSupport() {}
 
-  public static ExcelPivotTableSnapshot snapshot(XSSFWorkbook workbook, PivotHandle handle) {
+  public static PivotTableReport snapshot(XSSFWorkbook workbook, PivotHandle handle) {
     String name = ExcelPivotTableIdentitySupport.resolvedName(handle);
     PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
-    ExcelPivotTableSnapshot.Anchor anchor =
+    PivotTableReport.Anchor anchor =
         location == null
-            ? new ExcelPivotTableSnapshot.Anchor("A1", "A1")
-            : new ExcelPivotTableSnapshot.Anchor(
-                location.topLeftAddress(), location.locationRange());
+            ? new PivotTableReport.Anchor(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1"))
+            : new PivotTableReport.Anchor(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress(location.topLeftAddress()),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel(location.locationRange()));
     if (location == null) {
       return unsupportedSnapshot(
           handle, name, anchor, "Pivot table location range is missing or malformed.");
@@ -44,13 +48,13 @@ public final class ExcelPivotTableSnapshotSupport {
       CTPivotTableDefinition definition = handle.table().getCTPivotTableDefinition();
       List<String> sourceColumnNames = cacheFieldNames(handle.table());
       ColumnAxisSnapshot columns = snapshotColumnLabels(definition, sourceColumnNames);
-      List<ExcelPivotTableSnapshot.DataField> dataFields =
+      List<PivotTableReport.DataField> dataFields =
           snapshotDataFields(workbook, definition, sourceColumnNames);
       if (dataFields.isEmpty()) {
         return unsupportedSnapshot(
             handle, name, anchor, "Pivot table does not contain any data fields.");
       }
-      List<ExcelPivotTableSnapshot.Field> rowFields =
+      List<PivotTableReport.Field> rowFields =
           definition.getRowFields() == null
               ? List.of()
               : snapshotFields(
@@ -58,7 +62,7 @@ public final class ExcelPivotTableSnapshotSupport {
                       definition.getRowFields().getFieldArray(),
                       "pivot row field array must not be null"),
                   sourceColumnNames);
-      List<ExcelPivotTableSnapshot.Field> pageFields =
+      List<PivotTableReport.Field> pageFields =
           definition.getPageFields() == null
               ? List.of()
               : snapshotPageFields(
@@ -66,9 +70,9 @@ public final class ExcelPivotTableSnapshotSupport {
                       definition.getPageFields().getPageFieldArray(),
                       "pivot page field array must not be null"),
                   sourceColumnNames);
-      return new ExcelPivotTableSnapshot.Supported(
+      return new PivotTableReport.Supported(
           name,
-          handle.sheetName(),
+          new dev.erst.gridgrind.core.vocabulary.SheetName(handle.sheetName()),
           anchor,
           snapshotSource(workbook, handle.table()),
           rowFields,
@@ -90,7 +94,7 @@ public final class ExcelPivotTableSnapshotSupport {
   public static ColumnAxisSnapshot snapshotColumnLabels(
       CTPivotTableDefinition definition, List<String> sourceColumnNames) {
     boolean valuesAxisOnColumns = false;
-    List<ExcelPivotTableSnapshot.Field> columnLabels = new ArrayList<>();
+    List<PivotTableReport.Field> columnLabels = new ArrayList<>();
     if (definition.getColFields() != null) {
       for (CTField field : definition.getColFields().getFieldArray()) {
         if (field.getX() == -2) {
@@ -103,12 +107,12 @@ public final class ExcelPivotTableSnapshotSupport {
     return new ColumnAxisSnapshot(List.copyOf(columnLabels), valuesAxisOnColumns);
   }
 
-  public static List<ExcelPivotTableSnapshot.Field> snapshotFields(
+  public static List<PivotTableReport.Field> snapshotFields(
       @Nullable CTField[] fields, List<String> sourceColumnNames) {
     if (fields == null || fields.length == 0) {
       return List.of();
     }
-    List<ExcelPivotTableSnapshot.Field> snapshots = new ArrayList<>(fields.length);
+    List<PivotTableReport.Field> snapshots = new ArrayList<>(fields.length);
     for (CTField field : fields) {
       Objects.requireNonNull(field, "pivot field entries must not be null");
       snapshots.add(sourceField(sourceColumnNames, field.getX()));
@@ -116,12 +120,12 @@ public final class ExcelPivotTableSnapshotSupport {
     return List.copyOf(snapshots);
   }
 
-  public static List<ExcelPivotTableSnapshot.Field> snapshotPageFields(
+  public static List<PivotTableReport.Field> snapshotPageFields(
       @Nullable CTPageField[] pageFields, List<String> sourceColumnNames) {
     if (pageFields == null || pageFields.length == 0) {
       return List.of();
     }
-    List<ExcelPivotTableSnapshot.Field> snapshots = new ArrayList<>(pageFields.length);
+    List<PivotTableReport.Field> snapshots = new ArrayList<>(pageFields.length);
     for (CTPageField pageField : pageFields) {
       Objects.requireNonNull(pageField, "pivot page-field entries must not be null");
       snapshots.add(sourceField(sourceColumnNames, pageField.getFld()));
@@ -129,19 +133,19 @@ public final class ExcelPivotTableSnapshotSupport {
     return List.copyOf(snapshots);
   }
 
-  public static List<ExcelPivotTableSnapshot.DataField> snapshotDataFields(
+  public static List<PivotTableReport.DataField> snapshotDataFields(
       XSSFWorkbook workbook, CTPivotTableDefinition definition, List<String> sourceColumnNames) {
     if (definition.getDataFields() == null
         || definition.getDataFields().sizeOfDataFieldArray() == 0) {
       return List.of();
     }
-    List<ExcelPivotTableSnapshot.DataField> dataFields = new ArrayList<>();
+    List<PivotTableReport.DataField> dataFields = new ArrayList<>();
     for (CTDataField dataField : definition.getDataFields().getDataFieldArray()) {
       int sourceColumnIndex = Math.toIntExact(dataField.getFld());
       String sourceColumnName =
           ExcelPivotTableSourceSupport.sourceColumnName(sourceColumnNames, sourceColumnIndex);
       dataFields.add(
-          new ExcelPivotTableSnapshot.DataField(
+          new PivotTableReport.DataField(
               sourceColumnIndex,
               sourceColumnName,
               fromSubtotal(
@@ -155,12 +159,13 @@ public final class ExcelPivotTableSnapshotSupport {
     return List.copyOf(dataFields);
   }
 
-  public static ExcelPivotTableSnapshot.Unsupported unsupportedSnapshot(
-      PivotHandle handle, String name, ExcelPivotTableSnapshot.Anchor anchor, String detail) {
-    return new ExcelPivotTableSnapshot.Unsupported(name, handle.sheetName(), anchor, detail);
+  public static PivotTableReport.Unsupported unsupportedSnapshot(
+      PivotHandle handle, String name, PivotTableReport.Anchor anchor, String detail) {
+    return new PivotTableReport.Unsupported(
+        name, new dev.erst.gridgrind.core.vocabulary.SheetName(handle.sheetName()), anchor, detail);
   }
 
-  public static ExcelPivotTableSnapshot.Source snapshotSource(
+  public static PivotTableReport.PivotSourceReport snapshotSource(
       XSSFWorkbook workbook, XSSFPivotTable pivotTable) {
     XSSFPivotCacheDefinition cacheDefinition = requiredCacheDefinition(pivotTable);
     if (cacheDefinition.getCTPivotCacheDefinition().getCacheSource() == null
@@ -175,8 +180,10 @@ public final class ExcelPivotTableSnapshotSupport {
     if (worksheetSource.getRef() != null && !worksheetSource.getRef().isBlank()) {
       AreaReference area =
           new AreaReference(worksheetSource.getRef(), SpreadsheetVersion.EXCEL2007);
-      return new ExcelPivotTableSnapshot.Source.Range(
-          sheetName, ExcelPivotTableIdentitySupport.normalizeArea(area));
+      return new PivotTableReport.PivotSourceReport.Range(
+          new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName),
+          new dev.erst.gridgrind.core.vocabulary.RangeLabel(
+              ExcelPivotTableIdentitySupport.normalizeArea(area)));
     }
 
     String sourceName =
@@ -186,10 +193,13 @@ public final class ExcelPivotTableSnapshotSupport {
         ExcelPivotTableSourceSupport.matchingNamedRanges(workbook, sourceName, sheetName);
     if (namedRanges.size() == 1) {
       AreaReference area = ExcelPivotTableSourceSupport.namedRangeArea(namedRanges.getFirst());
-      return new ExcelPivotTableSnapshot.Source.NamedRange(
-          sourceName,
-          ExcelPivotTableSourceSupport.sourceSheetName(area, namedRanges.getFirst(), sheetName),
-          ExcelPivotTableIdentitySupport.normalizeArea(area));
+      return new PivotTableReport.PivotSourceReport.NamedRange(
+          new dev.erst.gridgrind.core.vocabulary.DefinedName(sourceName),
+          new dev.erst.gridgrind.core.vocabulary.SheetName(
+              ExcelPivotTableSourceSupport.sourceSheetName(
+                  area, namedRanges.getFirst(), sheetName)),
+          new dev.erst.gridgrind.core.vocabulary.RangeLabel(
+              ExcelPivotTableIdentitySupport.normalizeArea(area)));
     }
     if (namedRanges.size() > 1) {
       throw new IllegalArgumentException(
@@ -201,14 +211,15 @@ public final class ExcelPivotTableSnapshotSupport {
     Optional<XSSFTable> table =
         ExcelPivotTableSourceSupport.tableByName(workbook, sourceName, sheetName);
     if (table.isPresent()) {
-      return new ExcelPivotTableSnapshot.Source.Table(
-          sourceName,
-          table.orElseThrow().getSheetName(),
-          ExcelPivotTableIdentitySupport.normalizeArea(
-              new AreaReference(
-                  table.orElseThrow().getStartCellReference(),
-                  table.orElseThrow().getEndCellReference(),
-                  SpreadsheetVersion.EXCEL2007)));
+      return new PivotTableReport.PivotSourceReport.Table(
+          new dev.erst.gridgrind.core.vocabulary.TableName(sourceName),
+          new dev.erst.gridgrind.core.vocabulary.SheetName(table.orElseThrow().getSheetName()),
+          new dev.erst.gridgrind.core.vocabulary.RangeLabel(
+              ExcelPivotTableIdentitySupport.normalizeArea(
+                  new AreaReference(
+                      table.orElseThrow().getStartCellReference(),
+                      table.orElseThrow().getEndCellReference(),
+                      SpreadsheetVersion.EXCEL2007))));
     }
     throw new IllegalArgumentException(
         "Pivot source name '"
@@ -231,9 +242,9 @@ public final class ExcelPivotTableSnapshotSupport {
     return List.copyOf(fieldNames);
   }
 
-  public static ExcelPivotTableSnapshot.Field sourceField(
+  public static PivotTableReport.Field sourceField(
       List<String> sourceColumnNames, int sourceColumnIndex) {
-    return new ExcelPivotTableSnapshot.Field(
+    return new PivotTableReport.Field(
         sourceColumnIndex,
         ExcelPivotTableSourceSupport.sourceColumnName(sourceColumnNames, sourceColumnIndex));
   }

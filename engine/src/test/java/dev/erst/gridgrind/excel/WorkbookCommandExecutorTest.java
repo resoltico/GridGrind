@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
@@ -52,7 +53,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -515,9 +515,8 @@ class WorkbookCommandExecutorTest {
                       workbook,
                       new WorkbookReadCommand.GetPivotTables(
                           new StepId("pivots"), new ExcelPivotTableSelection.All())));
-      ExcelPivotTableSnapshot.Supported pivot =
-          assertInstanceOf(
-              ExcelPivotTableSnapshot.Supported.class, pivotTables.pivotTables().getFirst());
+      PivotTableReport.Supported pivot =
+          assertInstanceOf(PivotTableReport.Supported.class, pivotTables.pivotTables().getFirst());
 
       assertEquals("Ops Pivot", pivot.name());
       assertEquals("Amount", pivot.dataFields().getFirst().sourceColumnName());

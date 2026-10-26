@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
@@ -83,8 +83,7 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
-  List<ExcelPivotTableSnapshot> pivotTables(
-      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+  List<PivotTableReport> pivotTables(ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return pivotTableController.pivotTables(workbook, selection);

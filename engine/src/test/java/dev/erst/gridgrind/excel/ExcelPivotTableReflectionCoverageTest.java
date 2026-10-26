@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -10,7 +11,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -345,9 +345,8 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
               syntheticDefinition,
               List.of("Region", "Amount"));
       @SuppressWarnings("unchecked")
-      List<ExcelPivotTableSnapshot.Field> columnLabels =
-          (List<ExcelPivotTableSnapshot.Field>)
-              invoke(columnAxisSnapshot, "columnLabels", List.class);
+      List<PivotTableReport.Field> columnLabels =
+          (List<PivotTableReport.Field>) invoke(columnAxisSnapshot, "columnLabels", List.class);
       assertEquals(List.of("Amount"), fieldNames(columnLabels));
       assertTrue(invoke(columnAxisSnapshot, "valuesAxisOnColumns", Boolean.class));
 
@@ -427,8 +426,8 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
                     throw new UnsupportedOperationException(method.getName());
                   });
       @SuppressWarnings("unchecked")
-      List<ExcelPivotTableSnapshot.DataField> defaultSubtotalSnapshots =
-          (List<ExcelPivotTableSnapshot.DataField>)
+      List<PivotTableReport.DataField> defaultSubtotalSnapshots =
+          (List<PivotTableReport.DataField>)
               invoke(
                   controller,
                   "snapshotDataFields",
@@ -439,8 +438,8 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
       assertEquals(
           ExcelPivotDataConsolidateFunction.SUM, defaultSubtotalSnapshots.getFirst().function());
       @SuppressWarnings("unchecked")
-      List<ExcelPivotTableSnapshot.DataField> syntheticDataSnapshots =
-          (List<ExcelPivotTableSnapshot.DataField>)
+      List<PivotTableReport.DataField> syntheticDataSnapshots =
+          (List<PivotTableReport.DataField>)
               invoke(
                   controller,
                   "snapshotDataFields",
@@ -460,7 +459,7 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
                   invoke(
                       controller,
                       "snapshot",
-                      ExcelPivotTableSnapshot.class,
+                      PivotTableReport.class,
                       workbook.xssfWorkbook(),
                       newPivotHandle(
                           workbook.xssfWorkbook().getSheetIndex("Report"),
@@ -470,13 +469,13 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
                           new ThrowingPivotTable(
                               pivotTableDefinition("Broken Snapshot", "C5:F9", 42L)))));
       assertTrue(brokenSnapshotFailure.getMessage().contains("broken cache relation"));
-      ExcelPivotTableSnapshot.Unsupported missingLocationSnapshot =
+      PivotTableReport.Unsupported missingLocationSnapshot =
           assertInstanceOf(
-              ExcelPivotTableSnapshot.Unsupported.class,
+              PivotTableReport.Unsupported.class,
               invoke(
                   controller,
                   "snapshot",
-                  ExcelPivotTableSnapshot.class,
+                  PivotTableReport.class,
                   workbook.xssfWorkbook(),
                   newPivotHandle(
                       workbook.xssfWorkbook().getSheetIndex("Report"),
@@ -490,7 +489,7 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
           invoke(
               controller,
               "snapshotSource",
-              ExcelPivotTableSnapshot.Source.class,
+              PivotTableReport.PivotSourceReport.class,
               workbook.xssfWorkbook(),
               pivot));
       pivot
@@ -505,7 +504,7 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
               invoke(
                   controller,
                   "snapshotSource",
-                  ExcelPivotTableSnapshot.Source.class,
+                  PivotTableReport.PivotSourceReport.class,
                   workbook.xssfWorkbook(),
                   pivot));
       pivot
@@ -532,7 +531,7 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
               invoke(
                   controller,
                   "snapshotSource",
-                  ExcelPivotTableSnapshot.Source.class,
+                  PivotTableReport.PivotSourceReport.class,
                   workbook.xssfWorkbook(),
                   pivot));
       pivot

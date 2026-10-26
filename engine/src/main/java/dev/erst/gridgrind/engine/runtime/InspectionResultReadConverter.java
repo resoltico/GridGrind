@@ -117,10 +117,7 @@ final class InspectionResultReadConverter {
                   .toList());
       case dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult pivotTables ->
           new WorkbookAssetInspectionResult.PivotTablesResult(
-              pivotTables.stepId(),
-              pivotTables.pivotTables().stream()
-                  .map(InspectionResultWorkbookStructureReportSupport::toPivotTableReport)
-                  .toList());
+              pivotTables.stepId(), pivotTables.pivotTables());
       case dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectPayloadResult
               drawingPayload ->
           new WorkbookAssetInspectionResult.DrawingObjectPayloadResult(

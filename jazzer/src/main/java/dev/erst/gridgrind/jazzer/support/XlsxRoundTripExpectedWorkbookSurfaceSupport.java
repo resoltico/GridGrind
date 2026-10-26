@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -18,7 +19,6 @@ import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -229,7 +229,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expected);
   }
 
-  static List<ExcelPivotTableSnapshot> expectedPivots(ExcelWorkbook workbook) {
+  static List<PivotTableReport> expectedPivots(ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var result =
         (dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult)

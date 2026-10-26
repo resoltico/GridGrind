@@ -2087,3 +2087,19 @@ core/engine/14 parity/static checks pass (45s); deterministic check/all retained
 Root ./gradlew check passes (3m09s), all 143 golden cases unchanged. No active mutation/fuzz campaign.
 Inventories: converter lines 3723→3690, blank checks 416→415, main Java 120241→120109; snapshots 33,
 definitions 2 and Support 206 remain open. Baseline diff empty. WP-40 remains in progress.
+
+## WP-40 direct factual pivot reports
+
+Deleted ExcelPivotTableSnapshot and its source/anchor/field/data-field hierarchy. The pivot reader
+constructs PivotTableReport directly, retaining factual range labels and existing typed identities.
+Removed the runtime pivot conversion and passed report lists directly. Runtime PivotLocation and
+column-axis structures remain backend concepts, not wire mirrors. Updated scalar analysis evidence
+and real workbook assertions to read typed values; retained save/reopen, lifecycle and health checks.
+
+Initial compilation exposed one RangeLabel evidence boundary; all source sets then compiled (23s).
+Behavior/static/parity run passed except three raw-string-versus-value-object assertions (39s).
+Focused retry exposed two further typed source fields (12s); corrected and focused tests pass (15s).
+Nested compile caught scalar shape assertions for typed report fields (2s); corrected, deterministic
+check/all retained seeds pass (20s). ./gradlew check passes (4m13s), all 143 golden cases unchanged.
+No active mutation/fuzz campaign. Inventories: snapshots 33→32, converter lines 3690→3613, blank
+checks 415→413, main Java 120109→119901; definitions 2 and Support 206 remain open. Baseline diff empty.

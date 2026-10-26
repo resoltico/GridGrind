@@ -91,7 +91,7 @@ final class WorkbookInvariantWorkbookChecks {
   }
 
   private static void requireEnginePivotTableShape(
-      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot pivotTable) {
+      dev.erst.gridgrind.core.model.pivot.PivotTableReport pivotTable) {
     WorkbookInvariantEngineShapeChecks.requireEnginePivotTableShape(pivotTable);
   }
 }

@@ -85,7 +85,6 @@ import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureSnapshot;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -526,26 +525,33 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                 new dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult(
                     new StepId("pivots"),
                     List.of(
-                        new ExcelPivotTableSnapshot.Supported(
+                        new PivotTableReport.Supported(
                             "Sales Pivot 2026",
-                            "Report",
-                            new ExcelPivotTableSnapshot.Anchor("C5", "C5:G9"),
-                            new ExcelPivotTableSnapshot.Source.Table("SalesTable", "Data", "A1:D5"),
-                            List.of(new ExcelPivotTableSnapshot.Field(0, "Region")),
-                            List.of(new ExcelPivotTableSnapshot.Field(1, "Stage")),
-                            List.of(new ExcelPivotTableSnapshot.Field(2, "Owner")),
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+                            new PivotTableReport.Anchor(
+                                new dev.erst.gridgrind.core.vocabulary.CellAddress("C5"),
+                                new dev.erst.gridgrind.core.vocabulary.RangeLabel("C5:G9")),
+                            new PivotTableReport.PivotSourceReport.Table(
+                                new dev.erst.gridgrind.core.vocabulary.TableName("SalesTable"),
+                                new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:D5")),
+                            List.of(new PivotTableReport.Field(0, "Region")),
+                            List.of(new PivotTableReport.Field(1, "Stage")),
+                            List.of(new PivotTableReport.Field(2, "Owner")),
                             List.of(
-                                new ExcelPivotTableSnapshot.DataField(
+                                new PivotTableReport.DataField(
                                     3,
                                     "Amount",
                                     ExcelPivotDataConsolidateFunction.SUM,
                                     "Total Amount",
                                     Optional.of("#,##0.00"))),
                             true),
-                        new ExcelPivotTableSnapshot.Unsupported(
+                        new PivotTableReport.Unsupported(
                             "Broken Pivot",
-                            "Report",
-                            new ExcelPivotTableSnapshot.Anchor("A3", "A3:C8"),
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+                            new PivotTableReport.Anchor(
+                                new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+                                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A3:C8")),
                             "Pivot cache source no longer resolves cleanly.")))));
     WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
         assertInstanceOf(
@@ -609,33 +615,41 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                 new dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult(
                     new StepId("pivots"),
                     List.of(
-                        new ExcelPivotTableSnapshot.Supported(
+                        new PivotTableReport.Supported(
                             "Range Pivot",
-                            "Report",
-                            new ExcelPivotTableSnapshot.Anchor("C5", "C5:G9"),
-                            new ExcelPivotTableSnapshot.Source.Range("Data", "A1:D5"),
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+                            new PivotTableReport.Anchor(
+                                new dev.erst.gridgrind.core.vocabulary.CellAddress("C5"),
+                                new dev.erst.gridgrind.core.vocabulary.RangeLabel("C5:G9")),
+                            new PivotTableReport.PivotSourceReport.Range(
+                                new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:D5")),
                             List.of(),
                             List.of(),
                             List.of(),
                             List.of(
-                                new ExcelPivotTableSnapshot.DataField(
+                                new PivotTableReport.DataField(
                                     3,
                                     "Amount",
                                     ExcelPivotDataConsolidateFunction.SUM,
                                     "Total Amount",
                                     Optional.empty())),
                             false),
-                        new ExcelPivotTableSnapshot.Supported(
+                        new PivotTableReport.Supported(
                             "Named Range Pivot",
-                            "Report",
-                            new ExcelPivotTableSnapshot.Anchor("A3", "A3:E8"),
-                            new ExcelPivotTableSnapshot.Source.NamedRange(
-                                "PivotSource", "Data", "A1:D5"),
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Report"),
+                            new PivotTableReport.Anchor(
+                                new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+                                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A3:E8")),
+                            new PivotTableReport.PivotSourceReport.NamedRange(
+                                new dev.erst.gridgrind.core.vocabulary.DefinedName("PivotSource"),
+                                new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:D5")),
                             List.of(),
                             List.of(),
                             List.of(),
                             List.of(
-                                new ExcelPivotTableSnapshot.DataField(
+                                new PivotTableReport.DataField(
                                     3,
                                     "Amount",
                                     ExcelPivotDataConsolidateFunction.SUM,

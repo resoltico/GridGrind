@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.pivot;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -116,13 +117,13 @@ public final class ExcelPivotTableController {
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global name or all pivots. */
-  public List<ExcelPivotTableSnapshot> pivotTables(
+  public List<PivotTableReport> pivotTables(
       ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<PivotHandle> handles = selectHandles(workbook, selection);
-    List<ExcelPivotTableSnapshot> snapshots = new ArrayList<>(handles.size());
+    List<PivotTableReport> snapshots = new ArrayList<>(handles.size());
     for (PivotHandle handle : handles) {
       snapshots.add(ExcelPivotTableSnapshotSupport.snapshot(workbook.xssfWorkbook(), handle));
     }

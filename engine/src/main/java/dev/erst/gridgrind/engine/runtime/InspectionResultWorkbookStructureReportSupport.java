@@ -5,7 +5,6 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
-import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
@@ -15,12 +14,9 @@ import dev.erst.gridgrind.core.model.table.TableColumnReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
-import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
-import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableLabel;
-import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
@@ -34,7 +30,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 
 /** Converts workbook structure snapshots such as XML mappings, filters, tables, and pivots. */
 @SuppressWarnings(
@@ -171,75 +166,6 @@ final class InspectionResultWorkbookStructureReportSupport {
             snapshot.presentation().headerRowCellStyle(),
             snapshot.presentation().dataCellStyle(),
             snapshot.presentation().totalsRowCellStyle()));
-  }
-
-  static PivotTableReport toPivotTableReport(ExcelPivotTableSnapshot snapshot) {
-    return switch (snapshot) {
-      case ExcelPivotTableSnapshot.Supported supported ->
-          new PivotTableReport.Supported(
-              supported.name(),
-              new SheetName(supported.sheetName()),
-              new PivotTableReport.Anchor(
-                  new CellAddress(supported.anchor().topLeftAddress()),
-                  new RangeLabel(supported.anchor().locationRange())),
-              toPivotTableSourceReport(supported.source()),
-              supported.rowLabels().stream()
-                  .map(
-                      field ->
-                          new PivotTableReport.Field(
-                              field.sourceColumnIndex(), field.sourceColumnName()))
-                  .toList(),
-              supported.columnLabels().stream()
-                  .map(
-                      field ->
-                          new PivotTableReport.Field(
-                              field.sourceColumnIndex(), field.sourceColumnName()))
-                  .toList(),
-              supported.reportFilters().stream()
-                  .map(
-                      field ->
-                          new PivotTableReport.Field(
-                              field.sourceColumnIndex(), field.sourceColumnName()))
-                  .toList(),
-              supported.dataFields().stream()
-                  .map(
-                      dataField ->
-                          new PivotTableReport.DataField(
-                              dataField.sourceColumnIndex(),
-                              dataField.sourceColumnName(),
-                              dataField.function(),
-                              dataField.displayName(),
-                              dataField.valueFormat()))
-                  .toList(),
-              supported.valuesAxisOnColumns());
-      case ExcelPivotTableSnapshot.Unsupported unsupported ->
-          new PivotTableReport.Unsupported(
-              unsupported.name(),
-              new SheetName(unsupported.sheetName()),
-              new PivotTableReport.Anchor(
-                  new CellAddress(unsupported.anchor().topLeftAddress()),
-                  new RangeLabel(unsupported.anchor().locationRange())),
-              unsupported.detail());
-    };
-  }
-
-  private static PivotTableReport.PivotSourceReport toPivotTableSourceReport(
-      ExcelPivotTableSnapshot.Source source) {
-    return switch (source) {
-      case ExcelPivotTableSnapshot.Source.Range range ->
-          new PivotTableReport.PivotSourceReport.Range(
-              new SheetName(range.sheetName()), new RangeLabel(range.range()));
-      case ExcelPivotTableSnapshot.Source.NamedRange namedRange ->
-          new PivotTableReport.PivotSourceReport.NamedRange(
-              new DefinedName(namedRange.name()),
-              new SheetName(namedRange.sheetName()),
-              new RangeLabel(namedRange.range()));
-      case ExcelPivotTableSnapshot.Source.Table table ->
-          new PivotTableReport.PivotSourceReport.Table(
-              new TableName(table.name()),
-              new SheetName(table.sheetName()),
-              new RangeLabel(table.range()));
-    };
   }
 
   private static AutofilterFilterColumnReport toAutofilterFilterColumnReport(
