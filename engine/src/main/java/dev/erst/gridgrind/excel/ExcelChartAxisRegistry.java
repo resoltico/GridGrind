@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,17 +13,16 @@ import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 /** Thread-confined registry that creates and reuses POI axes for one authored chart. */
 final class ExcelChartAxisRegistry {
   private final XDDFChart chart;
-  private final Map<ExcelChartDefinition.Axis, XDDFChartAxis> axesByDefinition =
-      new ConcurrentHashMap<>();
+  private final Map<ChartAxisSpec, XDDFChartAxis> axesByDefinition = new ConcurrentHashMap<>();
 
   ExcelChartAxisRegistry(XDDFChart chart) {
     this.chart = Objects.requireNonNull(chart, "chart must not be null");
   }
 
-  CategoryValueAxes categoryValueAxes(List<ExcelChartDefinition.Axis> definitions) {
+  CategoryValueAxes categoryValueAxes(List<ChartAxisSpec> definitions) {
     XDDFChartAxis categoryAxis = null;
     XDDFValueAxis valueAxis = null;
-    for (ExcelChartDefinition.Axis definition : definitions) {
+    for (ChartAxisSpec definition : definitions) {
       XDDFChartAxis axis = axis(definition);
       if (definition.kind().isCategoryAxis()) {
         categoryAxis = axis;
@@ -42,7 +42,7 @@ final class ExcelChartAxisRegistry {
     return new CategoryValueAxes(categoryAxis, valueAxis);
   }
 
-  ScatterAxes scatterAxes(List<ExcelChartDefinition.Axis> definitions) {
+  ScatterAxes scatterAxes(List<ChartAxisSpec> definitions) {
     List<XDDFValueAxis> valueAxes =
         definitions.stream().map(this::axis).map(axis -> (XDDFValueAxis) axis).toList();
     if (valueAxes.size() != 2) {
@@ -52,11 +52,11 @@ final class ExcelChartAxisRegistry {
     return new ScatterAxes(valueAxes.getFirst(), valueAxes.get(1));
   }
 
-  SurfaceAxes surfaceAxes(List<ExcelChartDefinition.Axis> definitions) {
+  SurfaceAxes surfaceAxes(List<ChartAxisSpec> definitions) {
     XDDFChartAxis categoryAxis = null;
     XDDFValueAxis valueAxis = null;
     XDDFSeriesAxis seriesAxis = null;
-    for (ExcelChartDefinition.Axis definition : definitions) {
+    for (ChartAxisSpec definition : definitions) {
       XDDFChartAxis axis = axis(definition);
       if (definition.kind().isCategoryAxis()) {
         categoryAxis = axis;
@@ -76,7 +76,7 @@ final class ExcelChartAxisRegistry {
     return new SurfaceAxes(categoryAxis, valueAxis, seriesAxis);
   }
 
-  private XDDFChartAxis axis(ExcelChartDefinition.Axis definition) {
+  private XDDFChartAxis axis(ChartAxisSpec definition) {
     XDDFChartAxis existing = axesByDefinition.get(definition);
     if (existing != null) {
       return existing;

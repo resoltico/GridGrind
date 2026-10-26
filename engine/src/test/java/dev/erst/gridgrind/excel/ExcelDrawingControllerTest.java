@@ -3,6 +3,11 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
@@ -289,15 +294,15 @@ class ExcelDrawingControllerTest {
               ExcelChartTestSupport.barChart(
                   "OpsChart",
                   anchor(0, 0, 3, 4),
-                  new ExcelChartDefinition.Title.Formula("B1"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ChartTitleSpec.Formula("B1"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   ExcelChartBarDirection.COLUMN,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.None(),
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
       workbook
@@ -350,15 +355,15 @@ class ExcelDrawingControllerTest {
               ExcelChartTestSupport.barChart(
                   "OpsChart",
                   anchor(4, 1, 11, 16),
-                  new ExcelChartDefinition.Title.Text("Roadmap"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ResolvedChartTitle.Text("Roadmap"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   ExcelChartBarDirection.COLUMN,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.None(),
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
       workbook
@@ -378,15 +383,15 @@ class ExcelDrawingControllerTest {
               ExcelChartTestSupport.barChart(
                   "OpsChart",
                   anchor(4, 1, 11, 16),
-                  new ExcelChartDefinition.Title.Formula("D1"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ChartTitleSpec.Formula("D1"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   ExcelChartBarDirection.COLUMN,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.None(),
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
       sheet
@@ -395,15 +400,15 @@ class ExcelDrawingControllerTest {
               ExcelChartTestSupport.barChart(
                   "OpsChart",
                   anchor(4, 1, 11, 16),
-                  new ExcelChartDefinition.Title.Formula("E1"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ChartTitleSpec.Formula("E1"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   ExcelChartBarDirection.COLUMN,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.None(),
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
       workbook
@@ -449,53 +454,53 @@ class ExcelDrawingControllerTest {
       sheet
           .drawings()
           .setChart(
-              new ExcelChartDefinition(
+              new ResolvedChart(
                   "ComboChart",
                   anchor(4, 1, 11, 16),
-                  new ExcelChartDefinition.Title.Text("Roadmap"),
-                  new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                  new ResolvedChartTitle.Text("Roadmap"),
+                  new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   List.of(
-                      new ExcelChartDefinition.Bar(
+                      new ResolvedChart.Bar(
                           true,
                           ExcelChartBarDirection.COLUMN,
                           ExcelChartBarGrouping.CLUSTERED,
                           Optional.empty(),
                           Optional.empty(),
                           List.of(
-                              new ExcelChartDefinition.Axis(
+                              new ChartAxisSpec(
                                   ExcelChartAxisKind.CATEGORY,
                                   ExcelChartAxisPosition.BOTTOM,
                                   ExcelChartAxisCrosses.AUTO_ZERO,
                                   true),
-                              new ExcelChartDefinition.Axis(
+                              new ChartAxisSpec(
                                   ExcelChartAxisKind.VALUE,
                                   ExcelChartAxisPosition.LEFT,
                                   ExcelChartAxisCrosses.AUTO_ZERO,
                                   true)),
                           List.of(
-                              new ExcelChartDefinition.Series(
-                                  new ExcelChartDefinition.Title.Text("Plan"),
+                              new ResolvedChart.Series(
+                                  new ResolvedChartTitle.Text("Plan"),
                                   ExcelChartTestSupport.ref("A2:A4"),
                                   ExcelChartTestSupport.ref("B2:B4")))),
-                      new ExcelChartDefinition.Line(
+                      new ResolvedChart.Line(
                           false,
                           ExcelChartGrouping.STANDARD,
                           List.of(
-                              new ExcelChartDefinition.Axis(
+                              new ChartAxisSpec(
                                   ExcelChartAxisKind.CATEGORY,
                                   ExcelChartAxisPosition.BOTTOM,
                                   ExcelChartAxisCrosses.AUTO_ZERO,
                                   true),
-                              new ExcelChartDefinition.Axis(
+                              new ChartAxisSpec(
                                   ExcelChartAxisKind.VALUE,
                                   ExcelChartAxisPosition.LEFT,
                                   ExcelChartAxisCrosses.AUTO_ZERO,
                                   true)),
                           List.of(
-                              new ExcelChartDefinition.Series(
-                                  new ExcelChartDefinition.Title.Text("Actual"),
+                              new ResolvedChart.Series(
+                                  new ResolvedChartTitle.Text("Actual"),
                                   ExcelChartTestSupport.ref("A2:A4"),
                                   ExcelChartTestSupport.ref("C2:C4")))))));
       workbook
@@ -1012,15 +1017,15 @@ class ExcelDrawingControllerTest {
               ExcelChartTestSupport.barChart(
                   "ComboChart",
                   anchor(4, 1, 11, 16),
-                  new ExcelChartDefinition.Title.Text("Roadmap"),
-                  new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                  new ResolvedChartTitle.Text("Roadmap"),
+                  new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
                   ExcelChartDisplayBlanksAs.SPAN,
                   false,
                   true,
                   ExcelChartBarDirection.COLUMN,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.Formula("B1"),
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.Formula("B1"),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
       ExcelChartSnapshot replaced = sheet.drawings().charts().getFirst();
@@ -1290,74 +1295,74 @@ class ExcelDrawingControllerTest {
     }
   }
 
-  private static ExcelChartDefinition initialChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
+  private static ResolvedChart initialChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
     return ExcelChartTestSupport.barChart(
         "OpsChart",
         anchor,
-        new ExcelChartDefinition.Title.Text("Roadmap"),
-        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+        new ResolvedChartTitle.Text("Roadmap"),
+        new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
         true,
         ExcelChartBarDirection.COLUMN,
         List.of(
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Formula("B1"),
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("B1"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("B2:B4")),
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Formula("C1"),
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("C1"),
                 ExcelChartTestSupport.ref("ChartCategories"),
                 ExcelChartTestSupport.ref("ChartActual"))));
   }
 
-  private static ExcelChartDefinition updatedChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
+  private static ResolvedChart updatedChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
     return ExcelChartTestSupport.barChart(
         "OpsChart",
         anchor,
-        new ExcelChartDefinition.Title.Text("Actual focus"),
-        new ExcelChartDefinition.Legend.Hidden(),
+        new ResolvedChartTitle.Text("Actual focus"),
+        new ChartLegendSpec.Hidden(),
         ExcelChartDisplayBlanksAs.ZERO,
         true,
         false,
         ExcelChartBarDirection.BAR,
         List.of(
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Formula("C1"),
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("C1"),
                 ExcelChartTestSupport.ref("ChartCategories"),
                 ExcelChartTestSupport.ref("ChartActual"))));
   }
 
-  private static ExcelChartDefinition lineChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
+  private static ResolvedChart lineChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
     return ExcelChartTestSupport.lineChart(
         "OpsChart",
         anchor,
-        new ExcelChartDefinition.Title.Text("Line focus"),
-        new ExcelChartDefinition.Legend.Hidden(),
+        new ResolvedChartTitle.Text("Line focus"),
+        new ChartLegendSpec.Hidden(),
         ExcelChartDisplayBlanksAs.ZERO,
         true,
         false,
         List.of(
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Formula("C1"),
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("C1"),
                 ExcelChartTestSupport.ref("ChartCategories"),
                 ExcelChartTestSupport.ref("ChartActual"))));
   }
 
-  private static ExcelChartDefinition invalidBarChartDefinition(
+  private static ResolvedChart invalidBarChartDefinition(
       String name, DrawingAnchorSpec.TwoCell anchor) {
     return ExcelChartTestSupport.barChart(
         name,
         anchor,
-        new ExcelChartDefinition.Title.Text("Broken"),
-        new ExcelChartDefinition.Legend.Hidden(),
+        new ResolvedChartTitle.Text("Broken"),
+        new ChartLegendSpec.Hidden(),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
         true,
         ExcelChartBarDirection.COLUMN,
         List.of(
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Text("Broken"),
+            new ResolvedChart.Series(
+                new ResolvedChartTitle.Text("Broken"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("A2:A4"))));
   }

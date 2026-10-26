@@ -3,7 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import java.util.Optional;
 
 /** Samples cartesian, bar, line, radar, and scatter plot families for paired chart surfaces. */
@@ -15,7 +15,7 @@ final class OperationSequenceChartCartesianPlotSupport {
     return nextChartPlot(plotKind, varyColors, data, protocolPlotFactories());
   }
 
-  static ExcelChartDefinition.Plot nextExcelChartPlotDefinition(
+  static ResolvedChart.Plot nextExcelChartPlotDefinition(
       int plotKind, boolean varyColors, GridGrindFuzzData data) {
     return nextChartPlot(plotKind, varyColors, data, excelPlotFactories());
   }
@@ -120,20 +120,20 @@ final class OperationSequenceChartCartesianPlotSupport {
   }
 
   private static ChartCartesianPlotFactories<
-          ExcelChartDefinition.Axis, ExcelChartDefinition.Series, ExcelChartDefinition.Plot>
+          ChartAxisSpec, ResolvedChart.Series, ResolvedChart.Plot>
       excelPlotFactories() {
     return new ChartCartesianPlotFactories<>(
         OperationSequenceChartFactory::nextExcelChartAxesCategory,
         OperationSequenceChartFactory::nextExcelChartAxesScatter,
         OperationSequenceChartFactory::nextExcelChartSeries,
-        ExcelChartDefinition.Area::new,
-        ExcelChartDefinition.Area3D::new,
-        ExcelChartDefinition.Bar::new,
-        ExcelChartDefinition.Bar3D::new,
-        ExcelChartDefinition.Line::new,
-        ExcelChartDefinition.Line3D::new,
-        ExcelChartDefinition.Radar::new,
-        ExcelChartDefinition.Scatter::new);
+        ResolvedChart.Area::new,
+        ResolvedChart.Area3D::new,
+        ResolvedChart.Bar::new,
+        ResolvedChart.Bar3D::new,
+        ResolvedChart.Line::new,
+        ResolvedChart.Line3D::new,
+        ResolvedChart.Radar::new,
+        ResolvedChart.Scatter::new);
   }
 
   private static IllegalArgumentException unsupportedPlotKind(int plotKind) {

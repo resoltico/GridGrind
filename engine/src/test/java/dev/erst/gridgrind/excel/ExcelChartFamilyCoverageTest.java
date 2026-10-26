@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -40,7 +44,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "AreaOps",
                   ExcelChartTestSupport.anchor(1, 1, 7, 11),
-                  new ExcelChartDefinition.Area(
+                  new ResolvedChart.Area(
                       true,
                       ExcelChartGrouping.STACKED,
                       categoryAxes(),
@@ -51,7 +55,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "Area3DOps",
                   ExcelChartTestSupport.anchor(8, 1, 14, 11),
-                  new ExcelChartDefinition.Area3D(
+                  new ResolvedChart.Area3D(
                       false,
                       ExcelChartGrouping.PERCENT_STACKED,
                       Optional.of(140),
@@ -63,7 +67,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "BarOps",
                   ExcelChartTestSupport.anchor(15, 1, 21, 11),
-                  new ExcelChartDefinition.Bar(
+                  new ResolvedChart.Bar(
                       true,
                       ExcelChartBarDirection.BAR,
                       ExcelChartBarGrouping.STACKED,
@@ -77,7 +81,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "Bar3DOps",
                   ExcelChartTestSupport.anchor(22, 1, 28, 11),
-                  new ExcelChartDefinition.Bar3D(
+                  new ResolvedChart.Bar3D(
                       false,
                       ExcelChartBarDirection.COLUMN,
                       ExcelChartBarGrouping.PERCENT_STACKED,
@@ -92,7 +96,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "DoughnutOps",
                   ExcelChartTestSupport.anchor(29, 1, 35, 11),
-                  new ExcelChartDefinition.Doughnut(
+                  new ResolvedChart.Doughnut(
                       true,
                       Optional.of(35),
                       Optional.of(65),
@@ -103,7 +107,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "LineOps",
                   ExcelChartTestSupport.anchor(36, 1, 42, 11),
-                  new ExcelChartDefinition.Line(
+                  new ResolvedChart.Line(
                       false,
                       ExcelChartGrouping.PERCENT_STACKED,
                       categoryAxes(),
@@ -122,7 +126,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "Line3DOps",
                   ExcelChartTestSupport.anchor(43, 1, 49, 11),
-                  new ExcelChartDefinition.Line3D(
+                  new ResolvedChart.Line3D(
                       true,
                       ExcelChartGrouping.STACKED,
                       Optional.of(175),
@@ -142,7 +146,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "PieOps",
                   ExcelChartTestSupport.anchor(50, 1, 56, 11),
-                  new ExcelChartDefinition.Pie(
+                  new ResolvedChart.Pie(
                       true,
                       Optional.of(120),
                       List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, 45L)))));
@@ -152,7 +156,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "Pie3DOps",
                   ExcelChartTestSupport.anchor(57, 1, 63, 11),
-                  new ExcelChartDefinition.Pie3D(
+                  new ResolvedChart.Pie3D(
                       false, List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, 10L)))));
       sheet
           .drawings()
@@ -160,7 +164,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "RadarOps",
                   ExcelChartTestSupport.anchor(64, 1, 70, 11),
-                  new ExcelChartDefinition.Radar(
+                  new ResolvedChart.Radar(
                       true,
                       ExcelChartRadarStyle.MARKER,
                       categoryAxes(),
@@ -171,7 +175,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "ScatterOps",
                   ExcelChartTestSupport.anchor(71, 1, 77, 11),
-                  new ExcelChartDefinition.Scatter(
+                  new ResolvedChart.Scatter(
                       false,
                       ExcelChartScatterStyle.SMOOTH_MARKER,
                       scatterAxes(),
@@ -190,7 +194,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "SurfaceOps",
                   ExcelChartTestSupport.anchor(78, 1, 84, 11),
-                  new ExcelChartDefinition.Surface(
+                  new ResolvedChart.Surface(
                       true,
                       true,
                       surfaceAxes(),
@@ -201,7 +205,7 @@ class ExcelChartFamilyCoverageTest {
               chart(
                   "Surface3DOps",
                   ExcelChartTestSupport.anchor(85, 1, 91, 11),
-                  new ExcelChartDefinition.Surface3D(
+                  new ResolvedChart.Surface3D(
                       false,
                       false,
                       surfaceAxes(),
@@ -311,19 +315,19 @@ class ExcelChartFamilyCoverageTest {
     }
   }
 
-  private static ExcelChartDefinition chart(
-      String name, DrawingAnchorSpec.TwoCell anchor, ExcelChartDefinition.Plot plot) {
-    return new ExcelChartDefinition(
+  private static ResolvedChart chart(
+      String name, DrawingAnchorSpec.TwoCell anchor, ResolvedChart.Plot plot) {
+    return new ResolvedChart(
         name,
         anchor,
-        new ExcelChartDefinition.Title.Text(name),
-        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+        new ResolvedChartTitle.Text(name),
+        new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
         List.of(plot));
   }
 
-  private static ExcelChartDefinition.Series series(
+  private static ResolvedChart.Series series(
       String title,
       String categories,
       String values,
@@ -331,8 +335,8 @@ class ExcelChartFamilyCoverageTest {
       ExcelChartMarkerStyle markerStyle,
       Short markerSize,
       Long explosion) {
-    return new ExcelChartDefinition.Series(
-        new ExcelChartDefinition.Title.Text(title),
+    return new ResolvedChart.Series(
+        new ResolvedChartTitle.Text(title),
         ExcelChartTestSupport.ref(categories),
         ExcelChartTestSupport.ref(values),
         Optional.ofNullable(smooth),
@@ -341,55 +345,55 @@ class ExcelChartFamilyCoverageTest {
         Optional.ofNullable(explosion));
   }
 
-  private static List<ExcelChartDefinition.Axis> categoryAxes() {
+  private static List<ChartAxisSpec> categoryAxes() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.MIN,
             true));
   }
 
-  private static List<ExcelChartDefinition.Axis> dateAxes() {
+  private static List<ChartAxisSpec> dateAxes() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.DATE, ExcelChartAxisPosition.TOP, ExcelChartAxisCrosses.MAX, true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.RIGHT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  private static List<ExcelChartDefinition.Axis> scatterAxes() {
+  private static List<ChartAxisSpec> scatterAxes() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.MIN,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  private static List<ExcelChartDefinition.Axis> surfaceAxes() {
+  private static List<ChartAxisSpec> surfaceAxes() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE, ExcelChartAxisPosition.LEFT, ExcelChartAxisCrosses.MIN, true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.SERIES,
             ExcelChartAxisPosition.RIGHT,
             ExcelChartAxisCrosses.MAX,

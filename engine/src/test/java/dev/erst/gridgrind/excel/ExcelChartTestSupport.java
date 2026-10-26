@@ -1,5 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -25,42 +30,40 @@ final class ExcelChartTestSupport {
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  static ExcelChartDefinition.DataSource.Reference ref(String formula) {
-    return new ExcelChartDefinition.DataSource.Reference(formula);
+  static ChartDataSourceSpec.Reference ref(String formula) {
+    return new ChartDataSourceSpec.Reference(formula);
   }
 
-  static ExcelChartDefinition lineChart(
+  static ResolvedChart lineChart(
       String name,
       DrawingAnchorSpec.TwoCell anchor,
-      ExcelChartDefinition.Title title,
-      ExcelChartDefinition.Legend legend,
+      ResolvedChartTitle title,
+      ChartLegendSpec legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       boolean plotOnlyVisibleCells,
       boolean varyColors,
-      List<ExcelChartDefinition.Series> series) {
-    return new ExcelChartDefinition(
+      List<ResolvedChart.Series> series) {
+    return new ResolvedChart(
         name,
         anchor,
         title,
         legend,
         displayBlanksAs,
         plotOnlyVisibleCells,
-        List.of(
-            new ExcelChartDefinition.Line(
-                varyColors, ExcelChartGrouping.STANDARD, axes(), series)));
+        List.of(new ResolvedChart.Line(varyColors, ExcelChartGrouping.STANDARD, axes(), series)));
   }
 
-  static ExcelChartDefinition barChart(
+  static ResolvedChart barChart(
       String name,
       DrawingAnchorSpec.TwoCell anchor,
-      ExcelChartDefinition.Title title,
-      ExcelChartDefinition.Legend legend,
+      ResolvedChartTitle title,
+      ChartLegendSpec legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       boolean plotOnlyVisibleCells,
       boolean varyColors,
       ExcelChartBarDirection barDirection,
-      List<ExcelChartDefinition.Series> series) {
-    return new ExcelChartDefinition(
+      List<ResolvedChart.Series> series) {
+    return new ResolvedChart(
         name,
         anchor,
         title,
@@ -68,7 +71,7 @@ final class ExcelChartTestSupport {
         displayBlanksAs,
         plotOnlyVisibleCells,
         List.of(
-            new ExcelChartDefinition.Bar(
+            new ResolvedChart.Bar(
                 varyColors,
                 barDirection,
                 ExcelChartBarGrouping.CLUSTERED,
@@ -78,26 +81,24 @@ final class ExcelChartTestSupport {
                 series)));
   }
 
-  static ExcelChartDefinition pieChart(
+  static ResolvedChart pieChart(
       String name,
       DrawingAnchorSpec.TwoCell anchor,
-      ExcelChartDefinition.Title title,
-      ExcelChartDefinition.Legend legend,
+      ResolvedChartTitle title,
+      ChartLegendSpec legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       boolean plotOnlyVisibleCells,
       boolean varyColors,
       Integer firstSliceAngle,
-      List<ExcelChartDefinition.Series> series) {
-    return new ExcelChartDefinition(
+      List<ResolvedChart.Series> series) {
+    return new ResolvedChart(
         name,
         anchor,
         title,
         legend,
         displayBlanksAs,
         plotOnlyVisibleCells,
-        List.of(
-            new ExcelChartDefinition.Pie(
-                varyColors, Optional.ofNullable(firstSliceAngle), series)));
+        List.of(new ResolvedChart.Pie(varyColors, Optional.ofNullable(firstSliceAngle), series)));
   }
 
   static ExcelChartSnapshot chart(List<ExcelChartSnapshot> charts, String name) {
@@ -116,14 +117,14 @@ final class ExcelChartTestSupport {
     return plotType.cast(chart.plots().getFirst());
   }
 
-  private static List<ExcelChartDefinition.Axis> axes() {
+  private static List<ChartAxisSpec> axes() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,

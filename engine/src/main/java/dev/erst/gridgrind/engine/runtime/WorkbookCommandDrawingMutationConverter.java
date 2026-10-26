@@ -24,7 +24,7 @@ final class WorkbookCommandDrawingMutationConverter {
       case DrawingMutationAction.SetChart setChart ->
           new WorkbookDrawingCommand.SetChart(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
-              WorkbookCommandDrawingInputConverter.toExcelChartDefinition(setChart.chart()));
+              WorkbookCommandDrawingInputConverter.toResolvedChart(setChart.chart()));
       case DrawingMutationAction.SetShape setShape ->
           new WorkbookDrawingCommand.SetShape(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),

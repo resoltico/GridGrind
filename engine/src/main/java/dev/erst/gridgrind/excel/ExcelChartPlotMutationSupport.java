@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import java.util.List;
 import org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData;
@@ -27,7 +29,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Plot plot) {
+      ResolvedChart.Plot plot) {
     createPlot(sheet, chart, axisRegistry, plot, null);
   }
 
@@ -35,32 +37,31 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Plot plot,
+      ResolvedChart.Plot plot,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     switch (plot) {
-      case ExcelChartDefinition.Area area ->
+      case ResolvedChart.Area area ->
           createAreaPlot(sheet, chart, axisRegistry, area, formulaRuntime);
-      case ExcelChartDefinition.Area3D area3D ->
+      case ResolvedChart.Area3D area3D ->
           createArea3DPlot(sheet, chart, axisRegistry, area3D, formulaRuntime);
-      case ExcelChartDefinition.Bar bar ->
-          createBarPlot(sheet, chart, axisRegistry, bar, formulaRuntime);
-      case ExcelChartDefinition.Bar3D bar3D ->
+      case ResolvedChart.Bar bar -> createBarPlot(sheet, chart, axisRegistry, bar, formulaRuntime);
+      case ResolvedChart.Bar3D bar3D ->
           createBar3DPlot(sheet, chart, axisRegistry, bar3D, formulaRuntime);
-      case ExcelChartDefinition.Doughnut doughnut ->
+      case ResolvedChart.Doughnut doughnut ->
           createDoughnutPlot(sheet, chart, doughnut, formulaRuntime);
-      case ExcelChartDefinition.Line line ->
+      case ResolvedChart.Line line ->
           createLinePlot(sheet, chart, axisRegistry, line, formulaRuntime);
-      case ExcelChartDefinition.Line3D line3D ->
+      case ResolvedChart.Line3D line3D ->
           createLine3DPlot(sheet, chart, axisRegistry, line3D, formulaRuntime);
-      case ExcelChartDefinition.Pie pie -> createPiePlot(sheet, chart, pie, formulaRuntime);
-      case ExcelChartDefinition.Pie3D pie3D -> createPie3DPlot(sheet, chart, pie3D, formulaRuntime);
-      case ExcelChartDefinition.Radar radar ->
+      case ResolvedChart.Pie pie -> createPiePlot(sheet, chart, pie, formulaRuntime);
+      case ResolvedChart.Pie3D pie3D -> createPie3DPlot(sheet, chart, pie3D, formulaRuntime);
+      case ResolvedChart.Radar radar ->
           createRadarPlot(sheet, chart, axisRegistry, radar, formulaRuntime);
-      case ExcelChartDefinition.Scatter scatter ->
+      case ResolvedChart.Scatter scatter ->
           createScatterPlot(sheet, chart, axisRegistry, scatter, formulaRuntime);
-      case ExcelChartDefinition.Surface surface ->
+      case ResolvedChart.Surface surface ->
           createSurfacePlot(sheet, chart, axisRegistry, surface, formulaRuntime);
-      case ExcelChartDefinition.Surface3D surface3D ->
+      case ResolvedChart.Surface3D surface3D ->
           createSurface3DPlot(sheet, chart, axisRegistry, surface3D, formulaRuntime);
     }
   }
@@ -69,7 +70,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Area area,
+      ResolvedChart.Area area,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(area.axes());
     XDDFAreaChartData areaData =
@@ -88,7 +89,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Area3D area3D,
+      ResolvedChart.Area3D area3D,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(area3D.axes());
     XDDFArea3DChartData areaData =
@@ -108,7 +109,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Bar bar,
+      ResolvedChart.Bar bar,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(bar.axes());
     XDDFBarChartData barData =
@@ -130,7 +131,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Bar3D bar3D,
+      ResolvedChart.Bar3D bar3D,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(bar3D.axes());
     XDDFBar3DChartData barData =
@@ -152,7 +153,7 @@ final class ExcelChartPlotMutationSupport {
   private static void createDoughnutPlot(
       XSSFSheet sheet,
       XSSFChart chart,
-      ExcelChartDefinition.Doughnut doughnut,
+      ResolvedChart.Doughnut doughnut,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     XDDFDoughnutChartData doughnutData =
         (XDDFDoughnutChartData)
@@ -169,7 +170,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Line line,
+      ResolvedChart.Line line,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(line.axes());
     XDDFLineChartData lineData =
@@ -188,7 +189,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Line3D line3D,
+      ResolvedChart.Line3D line3D,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(line3D.axes());
     XDDFLine3DChartData lineData =
@@ -207,7 +208,7 @@ final class ExcelChartPlotMutationSupport {
   private static void createPiePlot(
       XSSFSheet sheet,
       XSSFChart chart,
-      ExcelChartDefinition.Pie pie,
+      ResolvedChart.Pie pie,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     XDDFPieChartData pieData =
         (XDDFPieChartData)
@@ -222,7 +223,7 @@ final class ExcelChartPlotMutationSupport {
   private static void createPie3DPlot(
       XSSFSheet sheet,
       XSSFChart chart,
-      ExcelChartDefinition.Pie3D pie3D,
+      ResolvedChart.Pie3D pie3D,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     XDDFPie3DChartData pieData =
         (XDDFPie3DChartData)
@@ -237,7 +238,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Radar radar,
+      ResolvedChart.Radar radar,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(radar.axes());
     XDDFRadarChartData radarData =
@@ -256,7 +257,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Scatter scatter,
+      ResolvedChart.Scatter scatter,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.ScatterAxes axes = axisRegistry.scatterAxes(scatter.axes());
     XDDFScatterChartData scatterData =
@@ -275,7 +276,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Surface surface,
+      ResolvedChart.Surface surface,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.SurfaceAxes axes = axisRegistry.surfaceAxes(surface.axes());
     XDDFSurfaceChartData surfaceData =
@@ -295,7 +296,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
-      ExcelChartDefinition.Surface3D surface3D,
+      ResolvedChart.Surface3D surface3D,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.SurfaceAxes axes = axisRegistry.surfaceAxes(surface3D.axes());
     XDDFSurface3DChartData surfaceData =
@@ -314,9 +315,9 @@ final class ExcelChartPlotMutationSupport {
   private static void addSeries(
       XSSFSheet sheet,
       XDDFChartData data,
-      List<ExcelChartDefinition.Series> definitions,
+      List<ResolvedChart.Series> definitions,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
-    for (ExcelChartDefinition.Series definition : definitions) {
+    for (ResolvedChart.Series definition : definitions) {
       XDDFChartData.Series series =
           data.addSeries(
               ExcelChartSourceSupport.toCategoryDataSource(
@@ -331,7 +332,7 @@ final class ExcelChartPlotMutationSupport {
   private static void applySeriesTitle(
       XSSFSheet sheet,
       XDDFChartData.Series series,
-      ExcelChartDefinition.Title title,
+      ResolvedChartTitle title,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     switch (ExcelChartMutationSupport.prepareSeriesTitle(sheet, title, formulaRuntime)) {
       case PreparedSeriesTitleNone _ -> {
@@ -343,8 +344,7 @@ final class ExcelChartPlotMutationSupport {
     }
   }
 
-  static void applySeriesOptions(
-      XDDFChartData.Series series, ExcelChartDefinition.Series definition) {
+  static void applySeriesOptions(XDDFChartData.Series series, ResolvedChart.Series definition) {
     switch (series) {
       case XDDFLineChartData.Series lineSeries -> {
         definition.smooth().ifPresent(lineSeries::setSmooth);

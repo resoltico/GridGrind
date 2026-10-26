@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
@@ -42,7 +43,7 @@ public sealed interface WorkbookDrawingCommand extends WorkbookCommand
   }
 
   /** Creates or mutates one supported simple chart on a single sheet. */
-  record SetChart(String sheetName, ExcelChartDefinition chart) implements WorkbookDrawingCommand {
+  record SetChart(String sheetName, ResolvedChart chart) implements WorkbookDrawingCommand {
     public SetChart {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(chart, "chart must not be null");

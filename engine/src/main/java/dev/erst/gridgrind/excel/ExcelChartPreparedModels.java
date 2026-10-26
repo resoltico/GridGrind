@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -47,7 +48,7 @@ sealed interface PreparedChartDefinition
   PreparedChartTitle title();
 
   /** Returns the validated legend payload. */
-  ExcelChartDefinition.Legend legend();
+  ChartLegendSpec legend();
 
   /** Returns the validated blank-cell display behavior. */
   ExcelChartDisplayBlanksAs displayBlanksAs();
@@ -68,7 +69,7 @@ record PreparedBarChart(
     String name,
     DrawingAnchorSpec.TwoCell anchor,
     PreparedChartTitle title,
-    ExcelChartDefinition.Legend legend,
+    ChartLegendSpec legend,
     ExcelChartDisplayBlanksAs displayBlanksAs,
     boolean plotOnlyVisibleCells,
     boolean varyColors,
@@ -90,7 +91,7 @@ record PreparedLineChart(
     String name,
     DrawingAnchorSpec.TwoCell anchor,
     PreparedChartTitle title,
-    ExcelChartDefinition.Legend legend,
+    ChartLegendSpec legend,
     ExcelChartDisplayBlanksAs displayBlanksAs,
     boolean plotOnlyVisibleCells,
     boolean varyColors,
@@ -110,7 +111,7 @@ record PreparedPieChart(
     String name,
     DrawingAnchorSpec.TwoCell anchor,
     PreparedChartTitle title,
-    ExcelChartDefinition.Legend legend,
+    ChartLegendSpec legend,
     ExcelChartDisplayBlanksAs displayBlanksAs,
     boolean plotOnlyVisibleCells,
     boolean varyColors,

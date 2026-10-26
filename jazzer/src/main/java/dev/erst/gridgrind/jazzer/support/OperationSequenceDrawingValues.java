@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
@@ -119,8 +120,8 @@ final class OperationSequenceDrawingValues {
         data.consumeBoolean() ? Optional.of("Queue preview") : Optional.empty());
   }
 
-  static ExcelChartDefinition nextExcelChartDefinition(GridGrindFuzzData data) {
-    return OperationSequenceChartFactory.nextExcelChartDefinition(data);
+  static ResolvedChart nextResolvedChart(GridGrindFuzzData data) {
+    return OperationSequenceChartFactory.nextResolvedChart(data);
   }
 
   static ExcelShapeDefinition nextExcelShapeDefinition(GridGrindFuzzData data) {

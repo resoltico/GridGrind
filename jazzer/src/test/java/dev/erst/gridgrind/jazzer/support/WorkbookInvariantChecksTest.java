@@ -4,7 +4,12 @@ import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.assertThat;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
@@ -152,7 +157,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -1143,20 +1147,19 @@ class WorkbookInvariantChecksTest {
               List.of(
                   new WorkbookDrawingCommand.SetChart(
                       "Ops",
-                      new ExcelChartDefinition(
+                      new ResolvedChart(
                           "OpsChart",
                           new DrawingAnchorSpec.TwoCell(
                               new DrawingMarkerSpec(0, 0, 0, 0),
                               new DrawingMarkerSpec(2, 8, 0, 0),
                               dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
                                   .MOVE_AND_RESIZE),
-                          new ExcelChartDefinition.Title.Text("Roadmap"),
-                          new ExcelChartDefinition.Legend.Visible(
-                              ExcelChartLegendPosition.TOP_RIGHT),
+                          new ResolvedChartTitle.Text("Roadmap"),
+                          new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
                           ExcelChartDisplayBlanksAs.SPAN,
                           false,
                           List.of(
-                              new ExcelChartDefinition.Bar(
+                              new ResolvedChart.Bar(
                                   true,
                                   ExcelChartBarDirection.COLUMN,
                                   ExcelChartBarGrouping.CLUSTERED,
@@ -1164,12 +1167,10 @@ class WorkbookInvariantChecksTest {
                                   Optional.empty(),
                                   excelCategoryAxes(),
                                   List.of(
-                                      new ExcelChartDefinition.Series(
-                                          new ExcelChartDefinition.Title.Text("Actual"),
-                                          new ExcelChartDefinition.DataSource.Reference(
-                                              "Ops!$A$2:$A$4"),
-                                          new ExcelChartDefinition.DataSource.Reference(
-                                              "Ops!$B$2:$B$4"),
+                                      new ResolvedChart.Series(
+                                          new ResolvedChartTitle.Text("Actual"),
+                                          new ChartDataSourceSpec.Reference("Ops!$A$2:$A$4"),
+                                          new ChartDataSourceSpec.Reference("Ops!$B$2:$B$4"),
                                           Optional.empty(),
                                           Optional.empty(),
                                           Optional.empty(),
@@ -1414,14 +1415,14 @@ class WorkbookInvariantChecksTest {
             true));
   }
 
-  private static List<ExcelChartDefinition.Axis> excelCategoryAxes() {
+  private static List<ChartAxisSpec> excelCategoryAxes() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,

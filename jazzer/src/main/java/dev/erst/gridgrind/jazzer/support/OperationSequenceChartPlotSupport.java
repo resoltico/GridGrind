@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 
 /** Routes chart-plot sampling to the bounded plot-family helpers. */
 final class OperationSequenceChartPlotSupport {
@@ -20,7 +20,7 @@ final class OperationSequenceChartPlotSupport {
     };
   }
 
-  static ExcelChartDefinition.Plot nextExcelChartPlotDefinition(GridGrindFuzzData data) {
+  static ResolvedChart.Plot nextExcelChartPlotDefinition(GridGrindFuzzData data) {
     boolean varyColors = data.consumeBoolean();
     int plotKind = nextPlotKind(data);
     return switch (plotKind) {

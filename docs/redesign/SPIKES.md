@@ -1816,3 +1816,24 @@ No mutation or active fuzz campaign ran.
 Inventories: converter lines 4300→4252, main Java 121920→121771; snapshots 38, definitions 12,
 Support 206 and blank checks 434 remain open. Baseline diff empty. Shared source-free drawing
 geometry now unblocks moving actual source-resolved picture/chart/shape payloads to core.
+
+## WP-40 resolved chart ownership and shared source-free components
+
+Deleted ExcelChartDefinition. Backend chart preparation/writers consume core ResolvedChart; its
+series/plots differ from authored specs because title sources are materialized. ResolvedChartTitle
+shares the existing ChartTitleSpec.None and Formula records, adding only the text alternative that
+actually changes contract. Axis, legend and data-source mirrors are deleted and their core specs
+are reused directly; corresponding identity converters are removed. Shared core chart validation
+helpers replace copied list/text helpers. Existing wire annotations stay on the original records;
+resolved contracts are not new wire unions. Capability evidence points to the real core record.
+
+All engine/core/parity source sets compiled first pass (33s). Focused core/JSON/engine/14 parity
+and static checks passed (70s); nested deterministic check and all retained seed replay passed
+(18s). ./gradlew check passed (3m6s): core 346, JSON 348, engine 1483 plus 14 parity, CLI 588,
+architecture 14 plus 12 rule tests, zero failures/errors/skips. All 143 golden cases are unchanged.
+No mutation or active fuzz campaign ran.
+
+Inventories: definitions 12→11, converter lines 4252→4204, blank checks 434→432, main Java
+121771→121635. Snapshots 38 and Support 206 remain open. Baseline diff empty. The shared
+closed-type approach now serves real chart titles as well as cell writes, without copying source-free
+variants. Remaining resolved drawing/binary inputs and command/target/plan cutover remain WP-40.

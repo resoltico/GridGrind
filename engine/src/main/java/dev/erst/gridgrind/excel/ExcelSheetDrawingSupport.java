@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
@@ -50,7 +51,7 @@ final class ExcelSheetDrawingSupport {
     return owner;
   }
 
-  ExcelSheet setChart(ExcelChartDefinition definition, ExcelSheet owner) {
+  ExcelSheet setChart(ResolvedChart definition, ExcelSheet owner) {
     Objects.requireNonNull(definition, "definition must not be null");
     drawingController.setChart(xssfSheet(), definition, formulaRuntime);
     return owner;

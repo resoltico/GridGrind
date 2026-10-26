@@ -11,6 +11,8 @@ import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
@@ -70,7 +72,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
@@ -503,31 +504,30 @@ class AdvancedMutationCommandConverterTest {
                         new ChartPlotSpec.Pie(false, Optional.of(120), List.of(secondSeries))))));
 
     assertEquals("Ops", lineCommand.sheetName());
-    ExcelChartDefinition lineChart = lineCommand.chart();
-    ExcelChartDefinition.Line linePlot =
-        assertInstanceOf(ExcelChartDefinition.Line.class, lineChart.plots().getFirst());
-    assertEquals(new ExcelChartDefinition.Title.Text("Trend"), lineChart.title());
-    assertEquals(new ExcelChartDefinition.Legend.Hidden(), lineChart.legend());
+    ResolvedChart lineChart = lineCommand.chart();
+    ResolvedChart.Line linePlot =
+        assertInstanceOf(ResolvedChart.Line.class, lineChart.plots().getFirst());
+    assertEquals(new ResolvedChartTitle.Text("Trend"), lineChart.title());
+    assertEquals(new ChartLegendSpec.Hidden(), lineChart.legend());
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, lineChart.displayBlanksAs());
     assertFalse(lineChart.plotOnlyVisibleCells());
     assertTrue(linePlot.varyColors());
     assertEquals(
-        chartDefinitionSeries(new ExcelChartDefinition.Title.Formula("B1"), "A2:A4", "B2:B4"),
+        chartDefinitionSeries(new ChartTitleSpec.Formula("B1"), "A2:A4", "B2:B4"),
         linePlot.series().getFirst());
 
-    ExcelChartDefinition pieChart = pieCommand.chart();
-    ExcelChartDefinition.Pie piePlot =
-        assertInstanceOf(ExcelChartDefinition.Pie.class, pieChart.plots().getFirst());
-    assertEquals(new ExcelChartDefinition.Title.Formula("C1"), pieChart.title());
-    assertEquals(
-        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT), pieChart.legend());
+    ResolvedChart pieChart = pieCommand.chart();
+    ResolvedChart.Pie piePlot =
+        assertInstanceOf(ResolvedChart.Pie.class, pieChart.plots().getFirst());
+    assertEquals(new ChartTitleSpec.Formula("C1"), pieChart.title());
+    assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), pieChart.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, pieChart.displayBlanksAs());
     assertTrue(pieChart.plotOnlyVisibleCells());
     assertFalse(piePlot.varyColors());
     assertEquals(Optional.of(120), piePlot.firstSliceAngle());
     assertEquals(
         chartDefinitionSeries(
-            new ExcelChartDefinition.Title.Text("Actual"), "ChartCategories", "ChartActual"),
+            new ResolvedChartTitle.Text("Actual"), "ChartCategories", "ChartActual"),
         piePlot.series().getFirst());
   }
 
@@ -588,20 +588,15 @@ class AdvancedMutationCommandConverterTest {
                         "ChartCategories",
                         "ChartActual"))));
 
-    ExcelChartDefinition bar =
-        WorkbookCommandDrawingInputConverter.toExcelChartDefinition(barInput);
-    ExcelChartDefinition.Line linePlot =
+    ResolvedChart bar = WorkbookCommandDrawingInputConverter.toResolvedChart(barInput);
+    ResolvedChart.Line linePlot =
         assertInstanceOf(
-            ExcelChartDefinition.Line.class,
-            WorkbookCommandDrawingInputConverter.toExcelChartDefinition(lineInput)
-                .plots()
-                .getFirst());
-    ExcelChartDefinition.Pie piePlot =
+            ResolvedChart.Line.class,
+            WorkbookCommandDrawingInputConverter.toResolvedChart(lineInput).plots().getFirst());
+    ResolvedChart.Pie piePlot =
         assertInstanceOf(
-            ExcelChartDefinition.Pie.class,
-            WorkbookCommandDrawingInputConverter.toExcelChartDefinition(pieInput)
-                .plots()
-                .getFirst());
+            ResolvedChart.Pie.class,
+            WorkbookCommandDrawingInputConverter.toResolvedChart(pieInput).plots().getFirst());
     WorkbookDrawingCommand.SetChart barCommand =
         assertInstanceOf(
             WorkbookDrawingCommand.SetChart.class,
@@ -609,32 +604,24 @@ class AdvancedMutationCommandConverterTest {
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetChart(barInput)));
 
-    assertEquals(new ExcelChartDefinition.Title.Formula("Summary!$B$1"), bar.title());
-    assertEquals(
-        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP), bar.legend());
+    assertEquals(new ChartTitleSpec.Formula("Summary!$B$1"), bar.title());
+    assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP), bar.legend());
     assertEquals(ExcelChartDisplayBlanksAs.SPAN, bar.displayBlanksAs());
     assertFalse(bar.plotOnlyVisibleCells());
-    ExcelChartDefinition.Bar barPlot =
-        assertInstanceOf(ExcelChartDefinition.Bar.class, bar.plots().getFirst());
+    ResolvedChart.Bar barPlot = assertInstanceOf(ResolvedChart.Bar.class, bar.plots().getFirst());
     assertTrue(barPlot.varyColors());
     assertEquals(ExcelChartBarDirection.BAR, barPlot.barDirection());
     assertEquals(ExcelChartBarGrouping.CLUSTERED, barPlot.grouping());
     assertEquals(
-        chartDefinitionSeries(
-            new ExcelChartDefinition.Title.None(), "Summary!$A$2:$A$4", "Summary!$B$2:$B$4"),
+        chartDefinitionSeries(new ChartTitleSpec.None(), "Summary!$A$2:$A$4", "Summary!$B$2:$B$4"),
         barPlot.series().getFirst());
-    ExcelChartDefinition line =
-        WorkbookCommandDrawingInputConverter.toExcelChartDefinition(lineInput);
-    assertEquals(new ExcelChartDefinition.Title.Text("Trend"), line.title());
-    assertEquals(new ExcelChartDefinition.Legend.Hidden(), line.legend());
-    assertEquals(
-        new ExcelChartDefinition.Title.Formula("Summary!$C$1"),
-        linePlot.series().getFirst().title());
-    ExcelChartDefinition pie =
-        WorkbookCommandDrawingInputConverter.toExcelChartDefinition(pieInput);
-    assertEquals(new ExcelChartDefinition.Title.Text("Share"), pie.title());
-    assertEquals(
-        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.LEFT), pie.legend());
+    ResolvedChart line = WorkbookCommandDrawingInputConverter.toResolvedChart(lineInput);
+    assertEquals(new ResolvedChartTitle.Text("Trend"), line.title());
+    assertEquals(new ChartLegendSpec.Hidden(), line.legend());
+    assertEquals(new ChartTitleSpec.Formula("Summary!$C$1"), linePlot.series().getFirst().title());
+    ResolvedChart pie = WorkbookCommandDrawingInputConverter.toResolvedChart(pieInput);
+    assertEquals(new ResolvedChartTitle.Text("Share"), pie.title());
+    assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.LEFT), pie.legend());
     assertTrue(piePlot.varyColors());
     assertEquals(Optional.of(90), piePlot.firstSliceAngle());
     assertEquals("Ops", barCommand.sheetName());
@@ -903,12 +890,12 @@ class AdvancedMutationCommandConverterTest {
         Optional.empty());
   }
 
-  private static ExcelChartDefinition.Series chartDefinitionSeries(
-      ExcelChartDefinition.Title title, String categoriesFormula, String valuesFormula) {
-    return new ExcelChartDefinition.Series(
+  private static ResolvedChart.Series chartDefinitionSeries(
+      ResolvedChartTitle title, String categoriesFormula, String valuesFormula) {
+    return new ResolvedChart.Series(
         title,
-        new ExcelChartDefinition.DataSource.Reference(categoriesFormula),
-        new ExcelChartDefinition.DataSource.Reference(valuesFormula),
+        new ChartDataSourceSpec.Reference(categoriesFormula),
+        new ChartDataSourceSpec.Reference(valuesFormula),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),

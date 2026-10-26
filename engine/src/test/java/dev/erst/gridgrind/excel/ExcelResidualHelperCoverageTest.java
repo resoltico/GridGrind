@@ -4,6 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
@@ -191,7 +196,7 @@ class ExcelResidualHelperCoverageTest {
       assertEquals(
           2,
           ExcelChartSourceSupport.toValueDataSource(
-                  sheet, new ExcelChartDefinition.DataSource.Reference("LocalNums"))
+                  sheet, new ChartDataSourceSpec.Reference("LocalNums"))
               .getPointCount());
       assertTrue(ExcelChartSourceSupport.resolveChartSource(sheet, "LocalNums").numeric());
       assertTrue(ExcelChartSourceSupport.resolveChartSource(sheet, "WorkbookNums").numeric());
@@ -202,13 +207,13 @@ class ExcelResidualHelperCoverageTest {
       assertEquals(
           2,
           ExcelChartSourceSupport.toValueDataSource(
-                  sheet, new ExcelChartDefinition.DataSource.NumericLiteral(List.of(3d, 4d)))
+                  sheet, new ChartDataSourceSpec.NumericLiteral(List.of(3d, 4d)))
               .getPointCount());
       assertThrows(
           IllegalArgumentException.class,
           () ->
               ExcelChartSourceSupport.toValueDataSource(
-                  sheet, new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan"))));
+                  sheet, new ChartDataSourceSpec.StringLiteral(List.of("Jan"))));
 
       CTUnsignedInt knownAxisId = CTUnsignedInt.Factory.newInstance();
       knownAxisId.setVal(scratchAxis.getId());
@@ -230,15 +235,15 @@ class ExcelResidualHelperCoverageTest {
 
       ExcelChartMutationSupport.createChart(
           sheet,
-          new ExcelChartDefinition(
+          new ResolvedChart(
               "Bar3DNoShape",
               ExcelChartTestSupport.anchor(23, 1, 29, 10),
-              new ExcelChartDefinition.Title.Text("Bar 3D"),
-              new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+              new ResolvedChartTitle.Text("Bar 3D"),
+              new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
               ExcelChartDisplayBlanksAs.GAP,
               true,
               List.of(
-                  new ExcelChartDefinition.Bar3D(
+                  new ResolvedChart.Bar3D(
                       false,
                       ExcelChartBarDirection.COLUMN,
                       ExcelChartBarGrouping.CLUSTERED,
@@ -247,10 +252,10 @@ class ExcelResidualHelperCoverageTest {
                       Optional.empty(),
                       List.of(axis(ExcelChartAxisKind.CATEGORY), axis(ExcelChartAxisKind.VALUE)),
                       List.of(
-                          new ExcelChartDefinition.Series(
+                          new ResolvedChart.Series(
                               null,
-                              new ExcelChartDefinition.DataSource.Reference("A2:A4"),
-                              new ExcelChartDefinition.DataSource.Reference("B2:B4")))))));
+                              new ChartDataSourceSpec.Reference("A2:A4"),
+                              new ChartDataSourceSpec.Reference("B2:B4")))))));
 
       XSSFChart mutationChart =
           drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 30, 1, 36, 10));
@@ -359,26 +364,25 @@ class ExcelResidualHelperCoverageTest {
               () ->
                   controller.setChart(
                       chartSheet,
-                      new ExcelChartDefinition(
+                      new ResolvedChart(
                           "BrokenSurface",
                           ExcelChartTestSupport.anchor(1, 1, 7, 10),
-                          new ExcelChartDefinition.Title.Text("Broken"),
-                          new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+                          new ResolvedChartTitle.Text("Broken"),
+                          new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
                           ExcelChartDisplayBlanksAs.GAP,
                           true,
                           List.of(
-                              new ExcelChartDefinition.Surface(
+                              new ResolvedChart.Surface(
                                   true,
                                   true,
                                   List.of(
                                       axis(ExcelChartAxisKind.CATEGORY),
                                       axis(ExcelChartAxisKind.VALUE)),
                                   List.of(
-                                      new ExcelChartDefinition.Series(
+                                      new ResolvedChart.Series(
                                           null,
-                                          new ExcelChartDefinition.DataSource.Reference("A2:A4"),
-                                          new ExcelChartDefinition.DataSource.Reference(
-                                              "B2:B4"))))))));
+                                          new ChartDataSourceSpec.Reference("A2:A4"),
+                                          new ChartDataSourceSpec.Reference("B2:B4"))))))));
       assertTrue(invalidSurfaceFailure.getMessage().contains("Surface plots must declare"));
       assertTrue(chartSheet.createDrawingPatriarch().getCharts().isEmpty());
 
@@ -645,20 +649,20 @@ class ExcelResidualHelperCoverageTest {
   private static void applySeriesOptionBranches(XSSFChart chart) throws Exception {
     var categories = XDDFDataSourcesFactory.fromArray(new String[] {"Jan", "Feb"});
     var values = XDDFDataSourcesFactory.fromArray(new Double[] {10d, 12d});
-    ExcelChartDefinition.Series markerSeries =
-        new ExcelChartDefinition.Series(
+    ResolvedChart.Series markerSeries =
+        new ResolvedChart.Series(
             null,
-            new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan", "Feb")),
-            new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d, 12d)),
+            new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+            new ChartDataSourceSpec.NumericLiteral(List.of(10d, 12d)),
             Optional.of(true),
             Optional.of(ExcelChartMarkerStyle.SQUARE),
             Optional.of((short) 9),
             Optional.of(20L));
-    ExcelChartDefinition.Series noOptionsSeries =
-        new ExcelChartDefinition.Series(
+    ResolvedChart.Series noOptionsSeries =
+        new ResolvedChart.Series(
             null,
-            new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan", "Feb")),
-            new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d, 12d)),
+            new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+            new ChartDataSourceSpec.NumericLiteral(List.of(10d, 12d)),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -699,11 +703,11 @@ class ExcelResidualHelperCoverageTest {
     ExcelChartPlotMutationSupport.applySeriesOptions(scatterSeries, markerSeries);
     ExcelChartPlotMutationSupport.applySeriesOptions(scatterSeries, noOptionsSeries);
 
-    ExcelChartDefinition.Series explodedSeries =
-        new ExcelChartDefinition.Series(
+    ResolvedChart.Series explodedSeries =
+        new ResolvedChart.Series(
             null,
-            new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan", "Feb")),
-            new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d, 12d)),
+            new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+            new ChartDataSourceSpec.NumericLiteral(List.of(10d, 12d)),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -807,7 +811,7 @@ class ExcelResidualHelperCoverageTest {
         Optional.of(new ExcelBinaryData(new byte[] {1})));
   }
 
-  private static ExcelChartDefinition.Axis axis(ExcelChartAxisKind kind) {
+  private static ChartAxisSpec axis(ExcelChartAxisKind kind) {
     ExcelChartAxisPosition position =
         switch (kind) {
           case CATEGORY -> ExcelChartAxisPosition.BOTTOM;
@@ -815,7 +819,7 @@ class ExcelResidualHelperCoverageTest {
           case SERIES -> ExcelChartAxisPosition.RIGHT;
           case VALUE -> ExcelChartAxisPosition.LEFT;
         };
-    return new ExcelChartDefinition.Axis(kind, position, ExcelChartAxisCrosses.AUTO_ZERO, true);
+    return new ChartAxisSpec(kind, position, ExcelChartAxisCrosses.AUTO_ZERO, true);
   }
 
   private static void seedChartData(XSSFSheet sheet) {

@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import java.util.List;
 import java.util.Objects;
@@ -19,31 +23,27 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTTx;
 public final class ExcelChartMutationSupport {
   private ExcelChartMutationSupport() {}
 
-  public static void validateChart(XSSFSheet sheet, ExcelChartDefinition definition) {
+  public static void validateChart(XSSFSheet sheet, ResolvedChart definition) {
     validateChart(sheet, definition, null);
   }
 
   public static void validateChart(
-      XSSFSheet sheet,
-      ExcelChartDefinition definition,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, ResolvedChart definition, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
     validateChartTitle(sheet, definition.title(), formulaRuntime);
-    for (ExcelChartDefinition.Plot plot : definition.plots()) {
+    for (ResolvedChart.Plot plot : definition.plots()) {
       validatePlot(sheet, plot, formulaRuntime);
     }
   }
 
-  public static void createChart(XSSFSheet sheet, ExcelChartDefinition definition) {
+  public static void createChart(XSSFSheet sheet, ResolvedChart definition) {
     createChart(sheet, definition, null);
   }
 
   public static void createChart(
-      XSSFSheet sheet,
-      ExcelChartDefinition definition,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, ResolvedChart definition, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
@@ -55,23 +55,21 @@ public final class ExcelChartMutationSupport {
     applyCommonChartState(sheet, chart, definition, formulaRuntime);
 
     ExcelChartAxisRegistry axisRegistry = new ExcelChartAxisRegistry(chart);
-    for (ExcelChartDefinition.Plot plot : definition.plots()) {
+    for (ResolvedChart.Plot plot : definition.plots()) {
       ExcelChartPlotMutationSupport.createPlot(sheet, chart, axisRegistry, plot, formulaRuntime);
     }
   }
 
-  static PreparedSeriesTitle prepareSeriesTitle(XSSFSheet sheet, ExcelChartDefinition.Title title) {
+  static PreparedSeriesTitle prepareSeriesTitle(XSSFSheet sheet, ResolvedChartTitle title) {
     return prepareSeriesTitle(sheet, title, null);
   }
 
   static PreparedSeriesTitle prepareSeriesTitle(
-      XSSFSheet sheet,
-      ExcelChartDefinition.Title title,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, ResolvedChartTitle title, @Nullable ExcelFormulaRuntime formulaRuntime) {
     return switch (title) {
-      case ExcelChartDefinition.Title.None _ -> new PreparedSeriesTitleNone();
-      case ExcelChartDefinition.Title.Text text -> new PreparedSeriesTitleText(text.text());
-      case ExcelChartDefinition.Title.Formula formula -> {
+      case ChartTitleSpec.None _ -> new PreparedSeriesTitleNone();
+      case ResolvedChartTitle.Text text -> new PreparedSeriesTitleText(text.text());
+      case ChartTitleSpec.Formula formula -> {
         CellReference reference =
             ExcelChartSourceSupport.resolveSingleCellReference(
                 sheet,
@@ -84,10 +82,8 @@ public final class ExcelChartMutationSupport {
   }
 
   private static void validateChartTitle(
-      XSSFSheet sheet,
-      ExcelChartDefinition.Title title,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
-    if (title instanceof ExcelChartDefinition.Title.Formula formula) {
+      XSSFSheet sheet, ResolvedChartTitle title, @Nullable ExcelFormulaRuntime formulaRuntime) {
+    if (title instanceof ChartTitleSpec.Formula formula) {
       CellReference reference =
           ExcelChartSourceSupport.resolveSingleCellReference(
               sheet,
@@ -98,31 +94,29 @@ public final class ExcelChartMutationSupport {
   }
 
   private static void validatePlot(
-      XSSFSheet sheet,
-      ExcelChartDefinition.Plot plot,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
-    for (ExcelChartDefinition.Series series : plotSeries(plot)) {
+      XSSFSheet sheet, ResolvedChart.Plot plot, @Nullable ExcelFormulaRuntime formulaRuntime) {
+    for (ResolvedChart.Series series : plotSeries(plot)) {
       ExcelChartSourceSupport.toCategoryDataSource(sheet, series.categories(), formulaRuntime);
       ExcelChartSourceSupport.toValueDataSource(sheet, series.values(), formulaRuntime);
       prepareSeriesTitle(sheet, series.title(), formulaRuntime);
     }
   }
 
-  private static List<ExcelChartDefinition.Series> plotSeries(ExcelChartDefinition.Plot plot) {
+  private static List<ResolvedChart.Series> plotSeries(ResolvedChart.Plot plot) {
     return switch (plot) {
-      case ExcelChartDefinition.Area area -> area.series();
-      case ExcelChartDefinition.Area3D area3D -> area3D.series();
-      case ExcelChartDefinition.Bar bar -> bar.series();
-      case ExcelChartDefinition.Bar3D bar3D -> bar3D.series();
-      case ExcelChartDefinition.Doughnut doughnut -> doughnut.series();
-      case ExcelChartDefinition.Line line -> line.series();
-      case ExcelChartDefinition.Line3D line3D -> line3D.series();
-      case ExcelChartDefinition.Pie pie -> pie.series();
-      case ExcelChartDefinition.Pie3D pie3D -> pie3D.series();
-      case ExcelChartDefinition.Radar radar -> radar.series();
-      case ExcelChartDefinition.Scatter scatter -> scatter.series();
-      case ExcelChartDefinition.Surface surface -> surface.series();
-      case ExcelChartDefinition.Surface3D surface3D -> surface3D.series();
+      case ResolvedChart.Area area -> area.series();
+      case ResolvedChart.Area3D area3D -> area3D.series();
+      case ResolvedChart.Bar bar -> bar.series();
+      case ResolvedChart.Bar3D bar3D -> bar3D.series();
+      case ResolvedChart.Doughnut doughnut -> doughnut.series();
+      case ResolvedChart.Line line -> line.series();
+      case ResolvedChart.Line3D line3D -> line3D.series();
+      case ResolvedChart.Pie pie -> pie.series();
+      case ResolvedChart.Pie3D pie3D -> pie3D.series();
+      case ResolvedChart.Radar radar -> radar.series();
+      case ResolvedChart.Scatter scatter -> scatter.series();
+      case ResolvedChart.Surface surface -> surface.series();
+      case ResolvedChart.Surface3D surface3D -> surface3D.series();
     };
   }
 
@@ -165,7 +159,7 @@ public final class ExcelChartMutationSupport {
   private static void applyCommonChartState(
       XSSFSheet sheet,
       XSSFChart chart,
-      ExcelChartDefinition definition,
+      ResolvedChart definition,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     applyChartTitle(sheet, chart, definition.title(), formulaRuntime);
     applyChartLegend(chart, definition.legend());
@@ -176,12 +170,12 @@ public final class ExcelChartMutationSupport {
   private static void applyChartTitle(
       XSSFSheet sheet,
       XSSFChart chart,
-      ExcelChartDefinition.Title title,
+      ResolvedChartTitle title,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     switch (title) {
-      case ExcelChartDefinition.Title.None _ -> chart.removeTitle();
-      case ExcelChartDefinition.Title.Text text -> chart.setTitleText(text.text());
-      case ExcelChartDefinition.Title.Formula formula -> {
+      case ChartTitleSpec.None _ -> chart.removeTitle();
+      case ResolvedChartTitle.Text text -> chart.setTitleText(text.text());
+      case ChartTitleSpec.Formula formula -> {
         CellReference reference =
             ExcelChartSourceSupport.resolveSingleCellReference(
                 sheet,
@@ -217,10 +211,10 @@ public final class ExcelChartMutationSupport {
     cache.getPtArray(0).setV(cachedText);
   }
 
-  private static void applyChartLegend(XSSFChart chart, ExcelChartDefinition.Legend legend) {
+  private static void applyChartLegend(XSSFChart chart, ChartLegendSpec legend) {
     switch (legend) {
-      case ExcelChartDefinition.Legend.Hidden _ -> chart.deleteLegend();
-      case ExcelChartDefinition.Legend.Visible visible ->
+      case ChartLegendSpec.Hidden _ -> chart.deleteLegend();
+      case ChartLegendSpec.Visible visible ->
           chart
               .getOrAddLegend()
               .setPosition(ExcelChartPoiBridge.toPoiLegendPosition(visible.position()));

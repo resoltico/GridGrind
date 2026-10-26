@@ -14,7 +14,7 @@ public sealed interface ChartTitleSpec
         dev.erst.gridgrind.core.model.chart.ChartTitleSpec.Formula {
   /** Remove any chart or series title. */
   @Variant(id = "NONE", summary = "Remove any chart or series title.")
-  record None() implements ChartTitleSpec {}
+  record None() implements ChartTitleSpec, ResolvedChartTitle {}
 
   /** Use a static text title. */
   @Variant(id = "TEXT", summary = "Use one explicit static title.")
@@ -31,7 +31,7 @@ public sealed interface ChartTitleSpec
   @Variant(
       id = "FORMULA",
       summary = "Bind the chart or series title to one workbook formula that resolves to one cell.")
-  record Formula(String formula) implements ChartTitleSpec {
+  record Formula(String formula) implements ChartTitleSpec, ResolvedChartTitle {
     public Formula {
       formula = ChartSpec.requireNonBlank(formula, "formula");
       FormulaInputSecurity.rejectDde(formula); // LIM-033

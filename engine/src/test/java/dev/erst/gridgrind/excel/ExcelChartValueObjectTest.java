@@ -4,6 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -34,9 +39,9 @@ class ExcelChartValueObjectTest {
   @Test
   void definitionShapesAndCommandWrappersValidateCanonicalState() {
     DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 6, 10);
-    ExcelChartDefinition.Series definitionSeries =
-        new ExcelChartDefinition.Series(
-            new ExcelChartDefinition.Title.None(),
+    ResolvedChart.Series definitionSeries =
+        new ResolvedChart.Series(
+            new ChartTitleSpec.None(),
             ExcelChartTestSupport.ref("A2:A4"),
             ExcelChartTestSupport.ref("B2:B4"),
             Optional.empty(),
@@ -44,27 +49,27 @@ class ExcelChartValueObjectTest {
             Optional.of((short) 8),
             Optional.of(45L));
 
-    ExcelChartDefinition pieDefinition =
+    ResolvedChart pieDefinition =
         ExcelChartTestSupport.pieChart(
             "OpsPie",
             anchor,
-            new ExcelChartDefinition.Title.Text("Share"),
-            new ExcelChartDefinition.Legend.Hidden(),
+            new ResolvedChartTitle.Text("Share"),
+            new ChartLegendSpec.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
             true,
             45,
             List.of(definitionSeries));
-    ExcelChartDefinition.Pie piePlot =
-        assertInstanceOf(ExcelChartDefinition.Pie.class, pieDefinition.plots().getFirst());
+    ResolvedChart.Pie piePlot =
+        assertInstanceOf(ResolvedChart.Pie.class, pieDefinition.plots().getFirst());
     assertEquals(Optional.of(45), piePlot.firstSliceAngle());
 
-    ExcelChartDefinition noAnglePie =
+    ResolvedChart noAnglePie =
         ExcelChartTestSupport.pieChart(
             "NullAnglePie",
             anchor,
-            new ExcelChartDefinition.Title.None(),
-            new ExcelChartDefinition.Legend.Hidden(),
+            new ChartTitleSpec.None(),
+            new ChartLegendSpec.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
             false,
@@ -72,10 +77,9 @@ class ExcelChartValueObjectTest {
             List.of(definitionSeries));
     assertEquals(
         Optional.empty(),
-        assertInstanceOf(ExcelChartDefinition.Pie.class, noAnglePie.plots().getFirst())
-            .firstSliceAngle());
+        assertInstanceOf(ResolvedChart.Pie.class, noAnglePie.plots().getFirst()).firstSliceAngle());
 
-    assertThrows(IllegalArgumentException.class, () -> new ExcelChartDefinition.Title.Text(" "));
+    assertThrows(IllegalArgumentException.class, () -> new ResolvedChartTitle.Text(" "));
     assertThrows(IllegalArgumentException.class, () -> ExcelChartTestSupport.ref(" "));
     assertThrows(
         IllegalArgumentException.class,
@@ -83,8 +87,8 @@ class ExcelChartValueObjectTest {
             ExcelChartTestSupport.lineChart(
                 "OpsLine",
                 anchor,
-                new ExcelChartDefinition.Title.None(),
-                new ExcelChartDefinition.Legend.Hidden(),
+                new ChartTitleSpec.None(),
+                new ChartLegendSpec.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,
                 true,
                 false,
@@ -194,62 +198,62 @@ class ExcelChartValueObjectTest {
   @Test
   void preparedModelsAndAllModeledPlotFamiliesRetainCanonicalState() throws Exception {
     DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(2, 2, 8, 14);
-    List<ExcelChartDefinition.Axis> categoryAxes =
+    List<ChartAxisSpec> categoryAxes =
         List.of(
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 true),
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
                 ExcelChartAxisCrosses.MIN,
                 false));
-    List<ExcelChartDefinition.Axis> dateAxes =
+    List<ChartAxisSpec> dateAxes =
         List.of(
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.DATE,
                 ExcelChartAxisPosition.TOP,
                 ExcelChartAxisCrosses.MAX,
                 true),
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.RIGHT,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 true));
-    List<ExcelChartDefinition.Axis> scatterAxes =
+    List<ChartAxisSpec> scatterAxes =
         List.of(
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.BOTTOM,
                 ExcelChartAxisCrosses.MIN,
                 true),
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 true));
-    List<ExcelChartDefinition.Axis> surfaceAxes =
+    List<ChartAxisSpec> surfaceAxes =
         List.of(
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 true),
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
                 ExcelChartAxisCrosses.MIN,
                 true),
-            new ExcelChartDefinition.Axis(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.SERIES,
                 ExcelChartAxisPosition.RIGHT,
                 ExcelChartAxisCrosses.MAX,
                 false));
-    ExcelChartDefinition.Series definitionSeries =
-        new ExcelChartDefinition.Series(
-            new ExcelChartDefinition.Title.Text("Plan"),
+    ResolvedChart.Series definitionSeries =
+        new ResolvedChart.Series(
+            new ResolvedChartTitle.Text("Plan"),
             ExcelChartTestSupport.ref("A2:A4"),
             ExcelChartTestSupport.ref("B2:B4"),
             Optional.of(true),
@@ -257,17 +261,17 @@ class ExcelChartValueObjectTest {
             Optional.of((short) 10),
             Optional.of(25L));
 
-    List<ExcelChartDefinition.Plot> definitionPlots =
+    List<ResolvedChart.Plot> definitionPlots =
         List.of(
-            new ExcelChartDefinition.Area(
+            new ResolvedChart.Area(
                 true, ExcelChartGrouping.STACKED, categoryAxes, List.of(definitionSeries)),
-            new ExcelChartDefinition.Area3D(
+            new ResolvedChart.Area3D(
                 false,
                 ExcelChartGrouping.PERCENT_STACKED,
                 Optional.of(120),
                 dateAxes,
                 List.of(definitionSeries)),
-            new ExcelChartDefinition.Bar(
+            new ResolvedChart.Bar(
                 true,
                 ExcelChartBarDirection.BAR,
                 ExcelChartBarGrouping.STACKED,
@@ -275,7 +279,7 @@ class ExcelChartValueObjectTest {
                 Optional.of(40),
                 categoryAxes,
                 List.of(definitionSeries)),
-            new ExcelChartDefinition.Bar3D(
+            new ResolvedChart.Bar3D(
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.PERCENT_STACKED,
@@ -284,30 +288,29 @@ class ExcelChartValueObjectTest {
                 Optional.of(ExcelChartBarShape.CYLINDER),
                 categoryAxes,
                 List.of(definitionSeries)),
-            new ExcelChartDefinition.Doughnut(
+            new ResolvedChart.Doughnut(
                 true, Optional.of(30), Optional.of(65), List.of(definitionSeries)),
-            new ExcelChartDefinition.Line(
+            new ResolvedChart.Line(
                 false, ExcelChartGrouping.STANDARD, categoryAxes, List.of(definitionSeries)),
-            new ExcelChartDefinition.Line3D(
+            new ResolvedChart.Line3D(
                 true,
                 ExcelChartGrouping.STACKED,
                 Optional.of(175),
                 categoryAxes,
                 List.of(definitionSeries)),
-            new ExcelChartDefinition.Pie(true, Optional.of(120), List.of(definitionSeries)),
-            new ExcelChartDefinition.Pie3D(false, List.of(definitionSeries)),
-            new ExcelChartDefinition.Radar(
+            new ResolvedChart.Pie(true, Optional.of(120), List.of(definitionSeries)),
+            new ResolvedChart.Pie3D(false, List.of(definitionSeries)),
+            new ResolvedChart.Radar(
                 true, ExcelChartRadarStyle.MARKER, categoryAxes, List.of(definitionSeries)),
-            new ExcelChartDefinition.Scatter(
+            new ResolvedChart.Scatter(
                 false,
                 ExcelChartScatterStyle.SMOOTH_MARKER,
                 scatterAxes,
                 List.of(definitionSeries)),
-            new ExcelChartDefinition.Surface(true, true, surfaceAxes, List.of(definitionSeries)),
-            new ExcelChartDefinition.Surface3D(
-                false, false, surfaceAxes, List.of(definitionSeries)));
+            new ResolvedChart.Surface(true, true, surfaceAxes, List.of(definitionSeries)),
+            new ResolvedChart.Surface3D(false, false, surfaceAxes, List.of(definitionSeries)));
     assertEquals(13, definitionPlots.size());
-    assertInstanceOf(ExcelChartDefinition.Surface3D.class, definitionPlots.getLast());
+    assertInstanceOf(ResolvedChart.Surface3D.class, definitionPlots.getLast());
 
     ExcelChartSnapshot.Series snapshotSeries =
         new ExcelChartSnapshot.Series(
@@ -444,7 +447,7 @@ class ExcelChartValueObjectTest {
               "OpsBar",
               anchor,
               new PreparedChartTitleText("Roadmap"),
-              new ExcelChartDefinition.Legend.Hidden(),
+              new ChartLegendSpec.Hidden(),
               ExcelChartDisplayBlanksAs.GAP,
               true,
               false,
@@ -455,7 +458,7 @@ class ExcelChartValueObjectTest {
               "OpsLine",
               anchor,
               new PreparedChartTitleFormula("1.0", new CellReference("Charts", 0, 3, true, true)),
-              new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+              new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
               ExcelChartDisplayBlanksAs.SPAN,
               false,
               true,
@@ -465,7 +468,7 @@ class ExcelChartValueObjectTest {
               "OpsPie",
               anchor,
               new PreparedChartTitleNone(),
-              new ExcelChartDefinition.Legend.Hidden(),
+              new ChartLegendSpec.Hidden(),
               ExcelChartDisplayBlanksAs.ZERO,
               true,
               true,

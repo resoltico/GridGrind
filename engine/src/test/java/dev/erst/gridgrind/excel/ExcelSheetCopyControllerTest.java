@@ -2,6 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
@@ -178,15 +182,15 @@ class ExcelSheetCopyControllerTest {
               ExcelChartTestSupport.barChart(
                   "OpsChart",
                   ExcelChartTestSupport.anchor(6, 1, 12, 14),
-                  new ExcelChartDefinition.Title.Text("Roadmap"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ResolvedChartTitle.Text("Roadmap"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   ExcelChartBarDirection.COLUMN,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.Text("Plan"),
+                      new ResolvedChart.Series(
+                          new ResolvedChartTitle.Text("Plan"),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
 
@@ -269,15 +273,15 @@ class ExcelSheetCopyControllerTest {
               ExcelChartTestSupport.barChart(
                   "OpsBar",
                   ExcelChartTestSupport.anchor(0, 5, 6, 16),
-                  new ExcelChartDefinition.Title.Text("Plan"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ResolvedChartTitle.Text("Plan"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   ExcelChartBarDirection.COLUMN,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.Text("Plan"),
+                      new ResolvedChart.Series(
+                          new ResolvedChartTitle.Text("Plan"),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
       source
@@ -286,14 +290,14 @@ class ExcelSheetCopyControllerTest {
               ExcelChartTestSupport.lineChart(
                   "OpsLine",
                   ExcelChartTestSupport.anchor(7, 5, 13, 16),
-                  new ExcelChartDefinition.Title.Formula("C1"),
-                  new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+                  new ChartTitleSpec.Formula("C1"),
+                  new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
                   ExcelChartDisplayBlanksAs.SPAN,
                   true,
                   false,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.Text("Actual"),
+                      new ResolvedChart.Series(
+                          new ResolvedChartTitle.Text("Actual"),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("C2:C4")))));
 
@@ -330,15 +334,15 @@ class ExcelSheetCopyControllerTest {
               ExcelChartTestSupport.barChart(
                   "NamedRangeChart",
                   ExcelChartTestSupport.anchor(4, 1, 10, 14),
-                  new ExcelChartDefinition.Title.Text("Named ranges"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ResolvedChartTitle.Text("Named ranges"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   ExcelChartBarDirection.COLUMN,
                   List.of(
-                      new ExcelChartDefinition.Series(
-                          new ExcelChartDefinition.Title.Text("Plan"),
+                      new ResolvedChart.Series(
+                          new ResolvedChartTitle.Text("Plan"),
                           ExcelChartTestSupport.ref("ChartCategories"),
                           ExcelChartTestSupport.ref("ChartPlan")))));
 

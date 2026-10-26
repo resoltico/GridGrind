@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 
 /** Samples pie-like chart plot families for paired protocol and engine surfaces. */
 final class OperationSequenceChartSlicePlotSupport {
@@ -28,22 +28,22 @@ final class OperationSequenceChartSlicePlotSupport {
     };
   }
 
-  static ExcelChartDefinition.Plot nextExcelChartPlotDefinition(
+  static ResolvedChart.Plot nextExcelChartPlotDefinition(
       int plotKind, boolean varyColors, GridGrindFuzzData data) {
     return switch (plotKind) {
       case 4 ->
-          new ExcelChartDefinition.Doughnut(
+          new ResolvedChart.Doughnut(
               varyColors,
               OperationSequenceChartFactory.nextOptionalInt(data, 0, 360),
               OperationSequenceChartFactory.nextOptionalInt(data, 10, 90),
               OperationSequenceChartFactory.nextExcelChartSeries(data, true));
       case 7 ->
-          new ExcelChartDefinition.Pie(
+          new ResolvedChart.Pie(
               varyColors,
               OperationSequenceChartFactory.nextOptionalInt(data, 0, 360),
               OperationSequenceChartFactory.nextExcelChartSeries(data, true));
       case 8 ->
-          new ExcelChartDefinition.Pie3D(
+          new ResolvedChart.Pie3D(
               varyColors, OperationSequenceChartFactory.nextExcelChartSeries(data, true));
       default -> throw unsupportedPlotKind(plotKind);
     };

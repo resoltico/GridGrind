@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
@@ -47,7 +48,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
@@ -78,8 +78,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             inputPlots(inlineSeries(TextSourceSpec.inline("Series"))));
-    ExcelChartDefinition definition =
-        WorkbookCommandDrawingInputConverter.toExcelChartDefinition(chart);
+    ResolvedChart definition = WorkbookCommandDrawingInputConverter.toResolvedChart(chart);
     WorkbookDrawingCommand.SetChart chartCommand =
         assertInstanceOf(
             WorkbookDrawingCommand.SetChart.class,
@@ -104,8 +103,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
     assertEquals(
         List.of("Jan", "Feb"),
         assertInstanceOf(
-                ExcelChartDefinition.DataSource.StringLiteral.class,
-                assertInstanceOf(ExcelChartDefinition.Area.class, definition.plots().getFirst())
+                ChartDataSourceSpec.StringLiteral.class,
+                assertInstanceOf(ResolvedChart.Area.class, definition.plots().getFirst())
                     .series()
                     .getFirst()
                     .categories())
@@ -113,15 +112,15 @@ class SpreadsheetSurfaceConverterCoverageTest {
     assertEquals(
         List.of(10.0d, 18.0d),
         assertInstanceOf(
-                ExcelChartDefinition.DataSource.NumericLiteral.class,
-                assertInstanceOf(ExcelChartDefinition.Area.class, definition.plots().getFirst())
+                ChartDataSourceSpec.NumericLiteral.class,
+                assertInstanceOf(ResolvedChart.Area.class, definition.plots().getFirst())
                     .series()
                     .getFirst()
                     .values())
             .values());
     assertEquals(
         Optional.of(ExcelChartBarShape.CONE),
-        assertInstanceOf(ExcelChartDefinition.Bar3D.class, definition.plots().get(3)).shape());
+        assertInstanceOf(ResolvedChart.Bar3D.class, definition.plots().get(3)).shape());
     assertEquals(chartCommand.chart(), definition);
     assertEquals(Optional.empty(), signatureLine.plainSignatureFormat());
     assertEquals(Optional.empty(), signatureLine.plainSignature());
@@ -658,19 +657,19 @@ class SpreadsheetSurfaceConverterCoverageTest {
 
   private static List<Class<?>> expectedDefinitionPlotTypes() {
     return List.of(
-        ExcelChartDefinition.Area.class,
-        ExcelChartDefinition.Area3D.class,
-        ExcelChartDefinition.Bar.class,
-        ExcelChartDefinition.Bar3D.class,
-        ExcelChartDefinition.Doughnut.class,
-        ExcelChartDefinition.Line.class,
-        ExcelChartDefinition.Line3D.class,
-        ExcelChartDefinition.Pie.class,
-        ExcelChartDefinition.Pie3D.class,
-        ExcelChartDefinition.Radar.class,
-        ExcelChartDefinition.Scatter.class,
-        ExcelChartDefinition.Surface.class,
-        ExcelChartDefinition.Surface3D.class);
+        ResolvedChart.Area.class,
+        ResolvedChart.Area3D.class,
+        ResolvedChart.Bar.class,
+        ResolvedChart.Bar3D.class,
+        ResolvedChart.Doughnut.class,
+        ResolvedChart.Line.class,
+        ResolvedChart.Line3D.class,
+        ResolvedChart.Pie.class,
+        ResolvedChart.Pie3D.class,
+        ResolvedChart.Radar.class,
+        ResolvedChart.Scatter.class,
+        ResolvedChart.Surface.class,
+        ResolvedChart.Surface3D.class);
   }
 
   private static List<Class<?>> expectedReportPlotTypes() {

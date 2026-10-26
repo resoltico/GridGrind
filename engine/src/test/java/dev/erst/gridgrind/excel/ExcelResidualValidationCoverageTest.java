@@ -5,6 +5,9 @@ import static dev.erst.gridgrind.excel.ExcelSignatureLineSnapshotTestSupport.sig
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
@@ -47,10 +50,10 @@ class ExcelResidualValidationCoverageTest {
             Optional.empty(),
             List.of(linkedCell),
             List.of(linkedTable));
-    ExcelChartDefinition.DataSource.StringLiteral stringCategories =
-        new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan"));
-    ExcelChartDefinition.DataSource.NumericLiteral numericValues =
-        new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d));
+    ChartDataSourceSpec.StringLiteral stringCategories =
+        new ChartDataSourceSpec.StringLiteral(List.of("Jan"));
+    ChartDataSourceSpec.NumericLiteral numericValues =
+        new ChartDataSourceSpec.NumericLiteral(List.of(10d));
 
     assertThrows(IllegalArgumentException.class, () -> new ResolvedArrayFormula(" "));
     assertThrows(
@@ -101,7 +104,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartDefinition.Series(
+            new ResolvedChart.Series(
                 null,
                 stringCategories,
                 numericValues,
@@ -112,7 +115,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartDefinition.Series(
+            new ResolvedChart.Series(
                 null,
                 stringCategories,
                 numericValues,
@@ -121,12 +124,12 @@ class ExcelResidualValidationCoverageTest {
                 Optional.of((short) 73),
                 Optional.empty()));
     assertInstanceOf(
-        ExcelChartDefinition.Title.None.class,
-        new ExcelChartDefinition.Series(null, stringCategories, numericValues).title());
+        ChartTitleSpec.None.class,
+        new ResolvedChart.Series(null, stringCategories, numericValues).title());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartDefinition.Series(
+            new ResolvedChart.Series(
                 null,
                 stringCategories,
                 numericValues,

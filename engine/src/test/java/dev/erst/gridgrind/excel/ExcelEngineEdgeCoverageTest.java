@@ -10,6 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
@@ -737,8 +741,8 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Text("Plan"),
+            new ResolvedChart.Series(
+                new ResolvedChartTitle.Text("Plan"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("B2:B4"),
                 Optional.empty(),
@@ -748,18 +752,18 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Text("Plan"),
+            new ResolvedChart.Series(
+                new ResolvedChartTitle.Text("Plan"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("B2:B4"),
                 Optional.empty(),
                 Optional.of(ExcelChartMarkerStyle.CIRCLE),
                 Optional.of((short) 10),
                 Optional.of(-1L)));
-    ExcelChartDefinition.Series defaultTitleSeries =
-        new ExcelChartDefinition.Series(
+    ResolvedChart.Series defaultTitleSeries =
+        new ResolvedChart.Series(
             null, ExcelChartTestSupport.ref("A2:A4"), ExcelChartTestSupport.ref("B2:B4"));
-    assertInstanceOf(ExcelChartDefinition.Title.None.class, defaultTitleSeries.title());
+    assertInstanceOf(ChartTitleSpec.None.class, defaultTitleSeries.title());
 
     assertThrows(
         IllegalArgumentException.class,
@@ -842,17 +846,17 @@ class ExcelEngineEdgeCoverageTest {
 
       XDDFDataSource<?> stringLiteral =
           ExcelChartSourceSupport.toCategoryDataSource(
-              sheet, new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan", "Feb")));
+              sheet, new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")));
       assertFalse(stringLiteral.isNumeric());
       XDDFDataSource<?> numericLiteral =
           ExcelChartSourceSupport.toCategoryDataSource(
-              sheet, new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d, 12d)));
+              sheet, new ChartDataSourceSpec.NumericLiteral(List.of(10d, 12d)));
       assertTrue(numericLiteral.isNumeric());
       assertThrows(
           IllegalArgumentException.class,
           () ->
               ExcelChartSourceSupport.toValueDataSource(
-                  sheet, new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan"))));
+                  sheet, new ChartDataSourceSpec.StringLiteral(List.of("Jan"))));
 
       Name sheetScoped = workbook.createName();
       sheetScoped.setNameName("SheetScopedValues");

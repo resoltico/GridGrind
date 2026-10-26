@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import java.io.IOException;
@@ -106,15 +109,15 @@ class ExcelSheetCloneChartPreparationSupportTest {
             ExcelChartTestSupport.barChart(
                 "NamedRangeChart",
                 ExcelChartTestSupport.anchor(4, 1, 10, 14),
-                new ExcelChartDefinition.Title.Text("Named ranges"),
-                new ExcelChartDefinition.Legend.Hidden(),
+                new ResolvedChartTitle.Text("Named ranges"),
+                new ChartLegendSpec.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,
                 true,
                 false,
                 ExcelChartBarDirection.COLUMN,
                 List.of(
-                    new ExcelChartDefinition.Series(
-                        new ExcelChartDefinition.Title.Text("Plan"),
+                    new ResolvedChart.Series(
+                        new ResolvedChartTitle.Text("Plan"),
                         ExcelChartTestSupport.ref("ChartCategories"),
                         ExcelChartTestSupport.ref("ChartPlan")))));
     return source.xssfSheet();

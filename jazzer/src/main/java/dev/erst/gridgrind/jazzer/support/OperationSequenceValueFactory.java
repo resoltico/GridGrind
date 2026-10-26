@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
@@ -151,8 +152,8 @@ final class OperationSequenceValueFactory {
     return OperationSequenceDrawingValues.nextExcelPictureDefinition(data);
   }
 
-  static ExcelChartDefinition nextExcelChartDefinition(GridGrindFuzzData data) {
-    return OperationSequenceDrawingValues.nextExcelChartDefinition(data);
+  static ResolvedChart nextResolvedChart(GridGrindFuzzData data) {
+    return OperationSequenceDrawingValues.nextResolvedChart(data);
   }
 
   static ExcelShapeDefinition nextExcelShapeDefinition(GridGrindFuzzData data) {

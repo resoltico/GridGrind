@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.excel.DrawingObjectNotFoundException;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelFormulaRuntime;
 import dev.erst.gridgrind.excel.ExcelIoSupport;
@@ -137,14 +137,12 @@ public final class ExcelDrawingController {
             description -> picture.getCTPicture().getNvPicPr().getCNvPr().setDescr(description));
   }
 
-  public void setChart(XSSFSheet sheet, ExcelChartDefinition definition) {
+  public void setChart(XSSFSheet sheet, ResolvedChart definition) {
     setChart(sheet, definition, null);
   }
 
   public void setChart(
-      XSSFSheet sheet,
-      ExcelChartDefinition definition,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, ResolvedChart definition, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 

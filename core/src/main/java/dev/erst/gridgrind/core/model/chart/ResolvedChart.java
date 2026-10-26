@@ -1,33 +1,31 @@
-package dev.erst.gridgrind.excel;
+package dev.erst.gridgrind.core.model.chart;
+
+import static dev.erst.gridgrind.core.model.chart.ChartSpec.copyNonEmptyValues;
+import static dev.erst.gridgrind.core.model.chart.ChartSpec.requireNonBlank;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarShape;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Authored chart definition used by workbook-core mutations. */
-public record ExcelChartDefinition(
+/** Materialized chart whose title sources have become text; source-free options remain shared. */
+public record ResolvedChart(
     String name,
     DrawingAnchorSpec.TwoCell anchor,
-    Title title,
-    Legend legend,
+    ResolvedChartTitle title,
+    ChartLegendSpec legend,
     ExcelChartDisplayBlanksAs displayBlanksAs,
     boolean plotOnlyVisibleCells,
     List<Plot> plots) {
-  public ExcelChartDefinition {
+  public ResolvedChart {
     requireNonBlank(name, "name");
     Objects.requireNonNull(anchor, "anchor must not be null");
     Objects.requireNonNull(title, "title must not be null");
@@ -36,68 +34,17 @@ public record ExcelChartDefinition(
     plots = copyNonEmptyValues(plots, "plots");
   }
 
-  /** Supported authored chart title shapes. */
-  public sealed interface Title permits Title.None, Title.Text, Title.Formula {
-
-    /** Explicitly remove any chart or series title. */
-    record None() implements Title {}
-
-    /** Static text title. */
-    record Text(String text) implements Title {
-      public Text {
-        Objects.requireNonNull(text, "text must not be null");
-        if (text.isBlank()) {
-          throw new IllegalArgumentException("text must not be blank");
-        }
-      }
-    }
-
-    /** Formula-backed title. */
-    record Formula(String formula) implements Title {
-      public Formula {
-        formula = requireNonBlank(formula, "formula");
-      }
-    }
-  }
-
-  /** Supported authored legend states. */
-  public sealed interface Legend permits Legend.Hidden, Legend.Visible {
-
-    /** Hide the chart legend entirely. */
-    record Hidden() implements Legend {}
-
-    /** Show the legend at the requested position. */
-    record Visible(ExcelChartLegendPosition position) implements Legend {
-      public Visible {
-        Objects.requireNonNull(position, "position must not be null");
-      }
-    }
-  }
-
-  /** Authored axis definition. */
-  public record Axis(
-      ExcelChartAxisKind kind,
-      ExcelChartAxisPosition position,
-      ExcelChartAxisCrosses crosses,
-      boolean visible) {
-    public Axis {
-      Objects.requireNonNull(kind, "kind must not be null");
-      Objects.requireNonNull(position, "position must not be null");
-      Objects.requireNonNull(crosses, "crosses must not be null");
-    }
-  }
-
   /** One authored chart series. */
   public record Series(
-      Title title,
-      DataSource categories,
-      DataSource values,
+      ResolvedChartTitle title,
+      ChartDataSourceSpec categories,
+      ChartDataSourceSpec values,
       Optional<Boolean> smooth,
       Optional<ExcelChartMarkerStyle> markerStyle,
       Optional<Short> markerSize,
       Optional<Long> explosion) {
     public Series {
-      title = title == null ? new Title.None() : title;
+      title = title == null ? new ChartTitleSpec.None() : title;
       Objects.requireNonNull(categories, "categories must not be null");
       Objects.requireNonNull(values, "values must not be null");
       Objects.requireNonNull(smooth, "smooth must not be null");
@@ -114,7 +61,8 @@ public record ExcelChartDefinition(
     }
 
     /** Convenience overload for authored series that only need title, categories, and values. */
-    public Series(Title title, DataSource categories, DataSource values) {
+    public Series(
+        ResolvedChartTitle title, ChartDataSourceSpec categories, ChartDataSourceSpec values) {
       this(
           title,
           categories,
@@ -123,32 +71,6 @@ public record ExcelChartDefinition(
           Optional.empty(),
           Optional.empty(),
           Optional.empty());
-    }
-  }
-
-  /** Authored chart data source. */
-  public sealed interface DataSource
-      permits DataSource.Reference, DataSource.StringLiteral, DataSource.NumericLiteral {
-
-    /** Workbook-bound chart source formula. */
-    record Reference(String formula) implements DataSource {
-      public Reference {
-        formula = requireNonBlank(formula, "formula");
-      }
-    }
-
-    /** Literal string source stored directly inside the chart part. */
-    record StringLiteral(List<String> values) implements DataSource {
-      public StringLiteral {
-        values = copyValues(values, "values");
-      }
-    }
-
-    /** Literal numeric source stored directly inside the chart part. */
-    record NumericLiteral(List<Double> values) implements DataSource {
-      public NumericLiteral {
-        values = copyValues(values, "values");
-      }
     }
   }
 
@@ -169,7 +91,10 @@ public record ExcelChartDefinition(
           Surface3D {}
 
   public record Area(
-      boolean varyColors, ExcelChartGrouping grouping, List<Axis> axes, List<Series> series)
+      boolean varyColors,
+      ExcelChartGrouping grouping,
+      List<ChartAxisSpec> axes,
+      List<Series> series)
       implements Plot {
     public Area {
       Objects.requireNonNull(grouping, "grouping must not be null");
@@ -182,7 +107,7 @@ public record ExcelChartDefinition(
       boolean varyColors,
       ExcelChartGrouping grouping,
       Optional<Integer> gapDepth,
-      List<Axis> axes,
+      List<ChartAxisSpec> axes,
       List<Series> series)
       implements Plot {
     public Area3D {
@@ -199,7 +124,7 @@ public record ExcelChartDefinition(
       ExcelChartBarGrouping grouping,
       Optional<Integer> gapWidth,
       Optional<Integer> overlap,
-      List<Axis> axes,
+      List<ChartAxisSpec> axes,
       List<Series> series)
       implements Plot {
     public Bar {
@@ -219,7 +144,7 @@ public record ExcelChartDefinition(
       Optional<Integer> gapDepth,
       Optional<Integer> gapWidth,
       Optional<ExcelChartBarShape> shape,
-      List<Axis> axes,
+      List<ChartAxisSpec> axes,
       List<Series> series)
       implements Plot {
     public Bar3D {
@@ -247,7 +172,10 @@ public record ExcelChartDefinition(
   }
 
   public record Line(
-      boolean varyColors, ExcelChartGrouping grouping, List<Axis> axes, List<Series> series)
+      boolean varyColors,
+      ExcelChartGrouping grouping,
+      List<ChartAxisSpec> axes,
+      List<Series> series)
       implements Plot {
     public Line {
       Objects.requireNonNull(grouping, "grouping must not be null");
@@ -260,7 +188,7 @@ public record ExcelChartDefinition(
       boolean varyColors,
       ExcelChartGrouping grouping,
       Optional<Integer> gapDepth,
-      List<Axis> axes,
+      List<ChartAxisSpec> axes,
       List<Series> series)
       implements Plot {
     public Line3D {
@@ -286,7 +214,7 @@ public record ExcelChartDefinition(
   }
 
   public record Radar(
-      boolean varyColors, ExcelChartRadarStyle style, List<Axis> axes, List<Series> series)
+      boolean varyColors, ExcelChartRadarStyle style, List<ChartAxisSpec> axes, List<Series> series)
       implements Plot {
     public Radar {
       Objects.requireNonNull(style, "style must not be null");
@@ -296,7 +224,10 @@ public record ExcelChartDefinition(
   }
 
   public record Scatter(
-      boolean varyColors, ExcelChartScatterStyle style, List<Axis> axes, List<Series> series)
+      boolean varyColors,
+      ExcelChartScatterStyle style,
+      List<ChartAxisSpec> axes,
+      List<Series> series)
       implements Plot {
     public Scatter {
       Objects.requireNonNull(style, "style must not be null");
@@ -305,7 +236,8 @@ public record ExcelChartDefinition(
     }
   }
 
-  public record Surface(boolean varyColors, boolean wireframe, List<Axis> axes, List<Series> series)
+  public record Surface(
+      boolean varyColors, boolean wireframe, List<ChartAxisSpec> axes, List<Series> series)
       implements Plot {
     public Surface {
       axes = copyNonEmptyValues(axes, "axes");
@@ -314,35 +246,11 @@ public record ExcelChartDefinition(
   }
 
   public record Surface3D(
-      boolean varyColors, boolean wireframe, List<Axis> axes, List<Series> series) implements Plot {
+      boolean varyColors, boolean wireframe, List<ChartAxisSpec> axes, List<Series> series)
+      implements Plot {
     public Surface3D {
       axes = copyNonEmptyValues(axes, "axes");
       series = copyNonEmptyValues(series, "series");
     }
-  }
-
-  private static <T> List<T> copyNonEmptyValues(List<T> values, String fieldName) {
-    List<T> copiedValues = copyValues(values, fieldName);
-    if (copiedValues.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be empty");
-    }
-    return copiedValues;
-  }
-
-  private static <T> List<T> copyValues(List<T> values, String fieldName) {
-    Objects.requireNonNull(values, fieldName + " must not be null");
-    List<T> copiedValues = new ArrayList<>(values.size());
-    for (T value : values) {
-      copiedValues.add(Objects.requireNonNull(value, fieldName + " must not contain null values"));
-    }
-    return List.copyOf(copiedValues);
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

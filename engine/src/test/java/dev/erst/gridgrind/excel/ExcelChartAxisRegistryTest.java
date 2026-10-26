@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -26,14 +27,14 @@ class ExcelChartAxisRegistryTest {
 
       XSSFChart categoryChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 1, 8, 12));
       ExcelChartAxisRegistry categoryRegistry = new ExcelChartAxisRegistry(categoryChart);
-      ExcelChartDefinition.Axis categoryAxis =
-          new ExcelChartDefinition.Axis(
+      ChartAxisSpec categoryAxis =
+          new ChartAxisSpec(
               ExcelChartAxisKind.CATEGORY,
               ExcelChartAxisPosition.BOTTOM,
               ExcelChartAxisCrosses.AUTO_ZERO,
               true);
-      ExcelChartDefinition.Axis valueAxis =
-          new ExcelChartDefinition.Axis(
+      ChartAxisSpec valueAxis =
+          new ChartAxisSpec(
               ExcelChartAxisKind.VALUE,
               ExcelChartAxisPosition.LEFT,
               ExcelChartAxisCrosses.MIN,
@@ -52,12 +53,12 @@ class ExcelChartAxisRegistryTest {
       ExcelChartAxisRegistry.CategoryValueAxes datedAxes =
           datedRegistry.categoryValueAxes(
               List.of(
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.DATE,
                       ExcelChartAxisPosition.TOP,
                       ExcelChartAxisCrosses.MAX,
                       true),
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.VALUE,
                       ExcelChartAxisPosition.RIGHT,
                       ExcelChartAxisCrosses.AUTO_ZERO,
@@ -70,12 +71,12 @@ class ExcelChartAxisRegistryTest {
       ExcelChartAxisRegistry.ScatterAxes scatterAxes =
           scatterRegistry.scatterAxes(
               List.of(
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.VALUE,
                       ExcelChartAxisPosition.BOTTOM,
                       ExcelChartAxisCrosses.MIN,
                       true),
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.VALUE,
                       ExcelChartAxisPosition.LEFT,
                       ExcelChartAxisCrosses.AUTO_ZERO,
@@ -88,17 +89,17 @@ class ExcelChartAxisRegistryTest {
       ExcelChartAxisRegistry.SurfaceAxes surfaceAxes =
           surfaceRegistry.surfaceAxes(
               List.of(
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.DATE,
                       ExcelChartAxisPosition.TOP,
                       ExcelChartAxisCrosses.MAX,
                       true),
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.VALUE,
                       ExcelChartAxisPosition.LEFT,
                       ExcelChartAxisCrosses.AUTO_ZERO,
                       true),
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.SERIES,
                       ExcelChartAxisPosition.RIGHT,
                       ExcelChartAxisCrosses.MIN,
@@ -113,17 +114,17 @@ class ExcelChartAxisRegistryTest {
       ExcelChartAxisRegistry.SurfaceAxes categoricalSurfaceAxes =
           categorySurfaceRegistry.surfaceAxes(
               List.of(
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.CATEGORY,
                       ExcelChartAxisPosition.BOTTOM,
                       ExcelChartAxisCrosses.AUTO_ZERO,
                       true),
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.VALUE,
                       ExcelChartAxisPosition.LEFT,
                       ExcelChartAxisCrosses.MIN,
                       true),
-                  new ExcelChartDefinition.Axis(
+                  new ChartAxisSpec(
                       ExcelChartAxisKind.SERIES,
                       ExcelChartAxisPosition.RIGHT,
                       ExcelChartAxisCrosses.MAX,
@@ -146,12 +147,12 @@ class ExcelChartAxisRegistryTest {
               () ->
                   categoryRegistry.categoryValueAxes(
                       List.of(
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.CATEGORY,
                               ExcelChartAxisPosition.BOTTOM,
                               ExcelChartAxisCrosses.AUTO_ZERO,
                               true),
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.SERIES,
                               ExcelChartAxisPosition.RIGHT,
                               ExcelChartAxisCrosses.MAX,
@@ -165,7 +166,7 @@ class ExcelChartAxisRegistryTest {
               () ->
                   categoryRegistry.categoryValueAxes(
                       List.of(
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.CATEGORY,
                               ExcelChartAxisPosition.BOTTOM,
                               ExcelChartAxisCrosses.AUTO_ZERO,
@@ -180,7 +181,7 @@ class ExcelChartAxisRegistryTest {
               () ->
                   categoryRegistry.categoryValueAxes(
                       List.of(
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.VALUE,
                               ExcelChartAxisPosition.LEFT,
                               ExcelChartAxisCrosses.MIN,
@@ -197,7 +198,7 @@ class ExcelChartAxisRegistryTest {
               () ->
                   scatterRegistry.scatterAxes(
                       List.of(
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.VALUE,
                               ExcelChartAxisPosition.BOTTOM,
                               ExcelChartAxisCrosses.AUTO_ZERO,
@@ -213,12 +214,12 @@ class ExcelChartAxisRegistryTest {
               () ->
                   surfaceRegistry.surfaceAxes(
                       List.of(
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.CATEGORY,
                               ExcelChartAxisPosition.BOTTOM,
                               ExcelChartAxisCrosses.AUTO_ZERO,
                               true),
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.VALUE,
                               ExcelChartAxisPosition.LEFT,
                               ExcelChartAxisCrosses.MIN,
@@ -233,12 +234,12 @@ class ExcelChartAxisRegistryTest {
               () ->
                   surfaceRegistry.surfaceAxes(
                       List.of(
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.VALUE,
                               ExcelChartAxisPosition.LEFT,
                               ExcelChartAxisCrosses.MIN,
                               true),
-                          new ExcelChartDefinition.Axis(
+                          new ChartAxisSpec(
                               ExcelChartAxisKind.SERIES,
                               ExcelChartAxisPosition.RIGHT,
                               ExcelChartAxisCrosses.MAX,

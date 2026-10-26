@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -33,7 +34,7 @@ public final class ExcelSheetDrawings {
   }
 
   /** Creates or mutates one supported simple chart on this sheet. */
-  public ExcelSheetDrawings setChart(ExcelChartDefinition definition) {
+  public ExcelSheetDrawings setChart(ResolvedChart definition) {
     drawingSupport.setChart(definition, sheet);
     return this;
   }

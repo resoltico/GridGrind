@@ -6,6 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
@@ -43,12 +47,11 @@ class ExcelChartWrapperCoverageTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Charts");
       ExcelChartTestSupport.seedChartData(sheet);
-      ExcelChartDefinition definition = lineChartDefinition("OpsChart");
+      ResolvedChart definition = lineChartDefinition("OpsChart");
 
       ExcelChartMutationSupport.validateChart(sheet, definition);
       PreparedSeriesTitle preparedTitle =
-          ExcelChartMutationSupport.prepareSeriesTitle(
-              sheet, new ExcelChartDefinition.Title.Formula("B1"));
+          ExcelChartMutationSupport.prepareSeriesTitle(sheet, new ChartTitleSpec.Formula("B1"));
       ExcelChartSnapshot.Title.Formula resolvedSeriesTitle =
           assertInstanceOf(
               ExcelChartSnapshot.Title.Formula.class,
@@ -100,7 +103,7 @@ class ExcelChartWrapperCoverageTest {
 
       XSSFSheet facadeSheet = workbook.createSheet("Facade");
       ExcelChartTestSupport.seedChartData(facadeSheet);
-      ExcelChartDefinition facadeChart = lineChartDefinition("FacadeChart");
+      ResolvedChart facadeChart = lineChartDefinition("FacadeChart");
       ExcelDrawingChartSupport.validateChart(facadeSheet, facadeChart);
       ExcelDrawingChartSupport.createChart(facadeSheet, facadeChart);
 
@@ -284,18 +287,18 @@ class ExcelChartWrapperCoverageTest {
         Optional.empty(), ExcelChartRelationSupport.chartRelationId(attributeLessChartNode()));
   }
 
-  private static ExcelChartDefinition lineChartDefinition(String name) {
+  private static ResolvedChart lineChartDefinition(String name) {
     return ExcelChartTestSupport.lineChart(
         name,
         ExcelChartTestSupport.anchor(1, 5, 10, 18),
-        new ExcelChartDefinition.Title.Text("Ops"),
-        new ExcelChartDefinition.Legend.Hidden(),
+        new ResolvedChartTitle.Text("Ops"),
+        new ChartLegendSpec.Hidden(),
         ExcelChartDisplayBlanksAs.GAP,
         true,
         false,
         List.of(
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Formula("B1"),
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("B1"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("B2:B4"),
                 Optional.empty(),

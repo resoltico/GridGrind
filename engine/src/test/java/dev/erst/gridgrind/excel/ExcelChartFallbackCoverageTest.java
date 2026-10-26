@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -310,12 +312,12 @@ class ExcelChartFallbackCoverageTest {
           sheet,
           chart,
           axisRegistry,
-          new ExcelChartDefinition.Line(
+          new ResolvedChart.Line(
               false,
               ExcelChartGrouping.STANDARD,
               axes(),
               List.of(
-                  new ExcelChartDefinition.Series(
+                  new ResolvedChart.Series(
                       null,
                       ExcelChartTestSupport.ref("A2:A4"),
                       ExcelChartTestSupport.ref("B2:B4"),
@@ -329,14 +331,14 @@ class ExcelChartFallbackCoverageTest {
     }
   }
 
-  private static List<ExcelChartDefinition.Axis> axes() {
+  private static List<ChartAxisSpec> axes() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,

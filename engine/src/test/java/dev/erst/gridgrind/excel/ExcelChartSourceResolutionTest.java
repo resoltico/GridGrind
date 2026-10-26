@@ -6,6 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -32,7 +37,7 @@ class ExcelChartSourceResolutionTest {
                   "FormulaTitle",
                   ExcelChartTestSupport.ref("NumericCategories"),
                   ExcelChartTestSupport.ref("ChartActual"),
-                  new ExcelChartDefinition.Title.Formula("=B1")));
+                  new ChartTitleSpec.Formula("=B1")));
       ExcelChartSnapshot formulaTitleChart =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "FormulaTitle");
       ExcelChartSnapshot.Title.Formula chartTitle =
@@ -52,7 +57,7 @@ class ExcelChartSourceResolutionTest {
                   "SparseCategoriesChart",
                   ExcelChartTestSupport.ref("SparseCategories"),
                   ExcelChartTestSupport.ref("ChartActual"),
-                  new ExcelChartDefinition.Title.None()));
+                  new ChartTitleSpec.None()));
       ExcelChartSnapshot sparseChart =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "SparseCategoriesChart");
       assertEquals(
@@ -72,7 +77,7 @@ class ExcelChartSourceResolutionTest {
                   "FormulaCategoriesChart",
                   ExcelChartTestSupport.ref("FormulaCategories"),
                   ExcelChartTestSupport.ref("FormulaValues"),
-                  new ExcelChartDefinition.Title.None()));
+                  new ChartTitleSpec.None()));
       ExcelChartSnapshot formulaCategoriesChart =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "FormulaCategoriesChart");
       assertEquals(
@@ -95,7 +100,7 @@ class ExcelChartSourceResolutionTest {
                           "LocalCategoriesChart",
                           ExcelChartTestSupport.ref("LocalCategories"),
                           ExcelChartTestSupport.ref("ChartActual"),
-                          new ExcelChartDefinition.Title.None())));
+                          new ChartTitleSpec.None())));
 
       sheet
           .drawings()
@@ -104,7 +109,7 @@ class ExcelChartSourceResolutionTest {
                   "CrossSheetCategoriesChart",
                   ExcelChartTestSupport.ref("'Other'!A2:A4"),
                   ExcelChartTestSupport.ref("ChartActual"),
-                  new ExcelChartDefinition.Title.None()));
+                  new ChartTitleSpec.None()));
       ExcelChartSnapshot crossSheetChart =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "CrossSheetCategoriesChart");
       assertEquals(
@@ -186,21 +191,21 @@ class ExcelChartSourceResolutionTest {
     }
   }
 
-  private static ExcelChartDefinition chart(
+  private static ResolvedChart chart(
       String name,
-      ExcelChartDefinition.DataSource categories,
-      ExcelChartDefinition.DataSource values,
-      ExcelChartDefinition.Title title) {
+      ChartDataSourceSpec categories,
+      ChartDataSourceSpec values,
+      ResolvedChartTitle title) {
     return ExcelChartTestSupport.lineChart(
         name,
         ExcelChartTestSupport.anchor(4, 16, 10, 30),
         title,
-        new ExcelChartDefinition.Legend.Hidden(),
+        new ChartLegendSpec.Hidden(),
         ExcelChartDisplayBlanksAs.GAP,
         true,
         false,
         List.of(
-            new ExcelChartDefinition.Series(
+            new ResolvedChart.Series(
                 null,
                 categories,
                 values,
@@ -213,8 +218,8 @@ class ExcelChartSourceResolutionTest {
   private static void assertFailureMessage(
       ExcelSheet sheet,
       String name,
-      ExcelChartDefinition.DataSource categories,
-      ExcelChartDefinition.DataSource values,
+      ChartDataSourceSpec categories,
+      ChartDataSourceSpec values,
       String expectedMessagePart) {
     IllegalArgumentException failure =
         assertThrows(
@@ -222,8 +227,7 @@ class ExcelChartSourceResolutionTest {
             () ->
                 sheet
                     .drawings()
-                    .setChart(
-                        chart(name, categories, values, new ExcelChartDefinition.Title.None())));
+                    .setChart(chart(name, categories, values, new ChartTitleSpec.None())));
     assertTrue(failure.getMessage().contains(expectedMessagePart));
   }
 

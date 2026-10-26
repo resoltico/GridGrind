@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,17 +83,15 @@ final class ExcelChartSourceSupport {
   }
 
   static org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> toCategoryDataSource(
-      XSSFSheet sheet, ExcelChartDefinition.DataSource source) {
+      XSSFSheet sheet, ChartDataSourceSpec source) {
     return toCategoryDataSource(sheet, source, null);
   }
 
   static org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> toCategoryDataSource(
-      XSSFSheet sheet,
-      ExcelChartDefinition.DataSource source,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, ChartDataSourceSpec source, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return switch (source) {
-      case ExcelChartDefinition.DataSource.Reference reference -> {
+      case ChartDataSourceSpec.Reference reference -> {
         ResolvedChartSource resolved =
             resolveChartSource(sheet, reference.formula(), formulaRuntime);
         yield resolved.numeric()
@@ -101,28 +100,28 @@ final class ExcelChartSourceSupport {
             : org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
                 resolved.stringValues().toArray(String[]::new), resolved.referenceFormula());
       }
-      case ExcelChartDefinition.DataSource.StringLiteral literal ->
+      case ChartDataSourceSpec.StringLiteral literal ->
           org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
               literal.values().toArray(String[]::new));
-      case ExcelChartDefinition.DataSource.NumericLiteral literal ->
+      case ChartDataSourceSpec.NumericLiteral literal ->
           org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
               literal.values().toArray(Double[]::new));
     };
   }
 
   static org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<? extends Number>
-      toValueDataSource(XSSFSheet sheet, ExcelChartDefinition.DataSource source) {
+      toValueDataSource(XSSFSheet sheet, ChartDataSourceSpec source) {
     return toValueDataSource(sheet, source, null);
   }
 
   static org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<? extends Number>
       toValueDataSource(
           XSSFSheet sheet,
-          ExcelChartDefinition.DataSource source,
+          ChartDataSourceSpec source,
           @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return switch (source) {
-      case ExcelChartDefinition.DataSource.Reference reference -> {
+      case ChartDataSourceSpec.Reference reference -> {
         ResolvedChartSource resolved =
             resolveChartSource(sheet, reference.formula(), formulaRuntime);
         if (!resolved.numeric()) {
@@ -132,9 +131,9 @@ final class ExcelChartSourceSupport {
         yield org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
             resolved.numericValues().toArray(Double[]::new), resolved.referenceFormula());
       }
-      case ExcelChartDefinition.DataSource.StringLiteral _ ->
+      case ChartDataSourceSpec.StringLiteral _ ->
           throw new IllegalArgumentException("Chart value source must be numeric");
-      case ExcelChartDefinition.DataSource.NumericLiteral literal ->
+      case ChartDataSourceSpec.NumericLiteral literal ->
           org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
               literal.values().toArray(Double[]::new));
     };

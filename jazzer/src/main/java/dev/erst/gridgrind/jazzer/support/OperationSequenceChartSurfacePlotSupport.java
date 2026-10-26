@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 
 /** Samples surface chart plot families for paired protocol and engine surfaces. */
 final class OperationSequenceChartSurfacePlotSupport {
@@ -26,17 +26,17 @@ final class OperationSequenceChartSurfacePlotSupport {
     };
   }
 
-  static ExcelChartDefinition.Plot nextExcelChartPlotDefinition(
+  static ResolvedChart.Plot nextExcelChartPlotDefinition(
       int plotKind, boolean varyColors, GridGrindFuzzData data) {
     return switch (plotKind) {
       case 11 ->
-          new ExcelChartDefinition.Surface(
+          new ResolvedChart.Surface(
               varyColors,
               data.consumeBoolean(),
               OperationSequenceChartFactory.nextExcelChartAxesSurface(),
               OperationSequenceChartFactory.nextExcelChartSeries(data, false));
       case 12 ->
-          new ExcelChartDefinition.Surface3D(
+          new ResolvedChart.Surface3D(
               varyColors,
               data.consumeBoolean(),
               OperationSequenceChartFactory.nextExcelChartAxesSurface(),

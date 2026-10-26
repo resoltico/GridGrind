@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
@@ -282,19 +286,19 @@ final class WorkbookSampleFixtures {
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static ExcelChartDefinition chartDefinition(DrawingAnchorSpec.TwoCell anchor) {
+  private static ResolvedChart chartDefinition(DrawingAnchorSpec.TwoCell anchor) {
     return ExcelChartTestSupport.barChart(
         "BudgetChart",
         anchor,
-        new ExcelChartDefinition.Title.Text("Roadmap"),
-        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+        new ResolvedChartTitle.Text("Roadmap"),
+        new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
         true,
         ExcelChartBarDirection.COLUMN,
         List.of(
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Formula("B1"),
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("B1"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("B2:B4"))));
   }

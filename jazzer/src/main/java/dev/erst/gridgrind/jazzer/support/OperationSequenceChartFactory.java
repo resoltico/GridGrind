@@ -7,6 +7,8 @@ import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -19,7 +21,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +42,8 @@ final class OperationSequenceChartFactory {
         List.of(nextChartPlotInput(data)));
   }
 
-  static ExcelChartDefinition nextExcelChartDefinition(GridGrindFuzzData data) {
-    return new ExcelChartDefinition(
+  static ResolvedChart nextResolvedChart(GridGrindFuzzData data) {
+    return new ResolvedChart(
         DRAWING_CHART_NAME,
         OperationSequenceValueFactory.nextDrawingAnchorInput(data),
         nextExcelChartTitle(data),
@@ -60,11 +61,11 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static ExcelChartDefinition.Title nextExcelChartTitle(GridGrindFuzzData data) {
+  private static ResolvedChartTitle nextExcelChartTitle(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
-      case 0 -> new ExcelChartDefinition.Title.None();
-      case 1 -> new ExcelChartDefinition.Title.Text("Chart " + data.consumeInt(0, 9));
-      default -> new ExcelChartDefinition.Title.Formula(data.consumeBoolean() ? "B1" : "C1");
+      case 0 -> new ChartTitleSpec.None();
+      case 1 -> new ResolvedChartTitle.Text("Chart " + data.consumeInt(0, 9));
+      default -> new ChartTitleSpec.Formula(data.consumeBoolean() ? "B1" : "C1");
     };
   }
 
@@ -74,10 +75,10 @@ final class OperationSequenceChartFactory {
         : new ChartLegendSpec.Visible(nextChartLegendPosition(data));
   }
 
-  private static ExcelChartDefinition.Legend nextExcelChartLegend(GridGrindFuzzData data) {
+  private static ChartLegendSpec nextExcelChartLegend(GridGrindFuzzData data) {
     return data.consumeBoolean()
-        ? new ExcelChartDefinition.Legend.Hidden()
-        : new ExcelChartDefinition.Legend.Visible(nextChartLegendPosition(data));
+        ? new ChartLegendSpec.Hidden()
+        : new ChartLegendSpec.Visible(nextChartLegendPosition(data));
   }
 
   private static ExcelChartLegendPosition nextChartLegendPosition(GridGrindFuzzData data) {
@@ -150,7 +151,7 @@ final class OperationSequenceChartFactory {
     return OperationSequenceChartPlotSupport.nextChartPlotInput(data);
   }
 
-  private static ExcelChartDefinition.Plot nextExcelChartPlotDefinition(GridGrindFuzzData data) {
+  private static ResolvedChart.Plot nextExcelChartPlotDefinition(GridGrindFuzzData data) {
     return OperationSequenceChartPlotSupport.nextExcelChartPlotDefinition(data);
   }
 
@@ -207,47 +208,47 @@ final class OperationSequenceChartFactory {
             true));
   }
 
-  static List<ExcelChartDefinition.Axis> nextExcelChartAxesCategory() {
+  static List<ChartAxisSpec> nextExcelChartAxesCategory() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  static List<ExcelChartDefinition.Axis> nextExcelChartAxesScatter() {
+  static List<ChartAxisSpec> nextExcelChartAxesScatter() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  static List<ExcelChartDefinition.Axis> nextExcelChartAxesSurface() {
+  static List<ChartAxisSpec> nextExcelChartAxesSurface() {
     return List.of(
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ExcelChartDefinition.Axis(
+        new ChartAxisSpec(
             ExcelChartAxisKind.SERIES,
             ExcelChartAxisPosition.RIGHT,
             ExcelChartAxisCrosses.AUTO_ZERO,
@@ -263,9 +264,8 @@ final class OperationSequenceChartFactory {
     return List.copyOf(series);
   }
 
-  static List<ExcelChartDefinition.Series> nextExcelChartSeries(
-      GridGrindFuzzData data, boolean pieChart) {
-    List<ExcelChartDefinition.Series> series = new ArrayList<>();
+  static List<ResolvedChart.Series> nextExcelChartSeries(GridGrindFuzzData data, boolean pieChart) {
+    List<ResolvedChart.Series> series = new ArrayList<>();
     series.add(nextExcelChartSeries(data, "B1", "B2:B4"));
     if (!pieChart && data.consumeBoolean()) {
       series.add(nextExcelChartSeries(data, "C1", "C2:C4"));
@@ -289,12 +289,12 @@ final class OperationSequenceChartFactory {
             : Optional.empty());
   }
 
-  private static ExcelChartDefinition.Series nextExcelChartSeries(
+  private static ResolvedChart.Series nextExcelChartSeries(
       GridGrindFuzzData data, String titleFormula, String valuesFormula) {
-    return new ExcelChartDefinition.Series(
+    return new ResolvedChart.Series(
         data.consumeBoolean()
-            ? new ExcelChartDefinition.Title.Formula(titleFormula)
-            : new ExcelChartDefinition.Title.Text("Series " + data.consumeInt(0, 9)),
+            ? new ChartTitleSpec.Formula(titleFormula)
+            : new ResolvedChartTitle.Text("Series " + data.consumeInt(0, 9)),
         nextExcelChartDataSource(data, "A2:A4", data.consumeBoolean()),
         nextExcelChartDataSource(data, valuesFormula, true),
         Optional.empty(),
@@ -316,15 +316,15 @@ final class OperationSequenceChartFactory {
     return new ChartDataSourceSpec.StringLiteral(nextStringLiteralValues(data));
   }
 
-  private static ExcelChartDefinition.DataSource nextExcelChartDataSource(
+  private static ChartDataSourceSpec nextExcelChartDataSource(
       GridGrindFuzzData data, String formula, boolean numeric) {
     if (data.consumeBoolean()) {
-      return new ExcelChartDefinition.DataSource.Reference(formula);
+      return new ChartDataSourceSpec.Reference(formula);
     }
     if (numeric) {
-      return new ExcelChartDefinition.DataSource.NumericLiteral(nextNumericLiteralValues(data));
+      return new ChartDataSourceSpec.NumericLiteral(nextNumericLiteralValues(data));
     }
-    return new ExcelChartDefinition.DataSource.StringLiteral(nextStringLiteralValues(data));
+    return new ChartDataSourceSpec.StringLiteral(nextStringLiteralValues(data));
   }
 
   private static List<Double> nextNumericLiteralValues(GridGrindFuzzData data) {

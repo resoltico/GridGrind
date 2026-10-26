@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.nio.charset.StandardCharsets;
@@ -171,8 +172,7 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
                   org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
                       new Double[] {1d}));
       Object noTitle =
-          ExcelChartMutationSupport.prepareSeriesTitle(
-              sheet, new ExcelChartDefinition.Title.None());
+          ExcelChartMutationSupport.prepareSeriesTitle(sheet, new ChartTitleSpec.None());
       ExcelChartMutationSupport.applySeriesTitle(barSeries, (PreparedSeriesTitle) noTitle);
       assertFalse(barSeries.getCTBarSer().isSetTx());
 

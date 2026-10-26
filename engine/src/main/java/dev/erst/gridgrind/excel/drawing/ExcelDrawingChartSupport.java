@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
-import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.excel.ExcelChartMutationSupport;
 import dev.erst.gridgrind.excel.ExcelChartRelationSupport;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
@@ -42,25 +42,21 @@ public final class ExcelDrawingChartSupport {
     return ExcelChartSnapshotSupport.snapshotChart(chart, graphicFrame, formulaRuntime);
   }
 
-  public static void createChart(XSSFSheet sheet, ExcelChartDefinition definition) {
+  public static void createChart(XSSFSheet sheet, ResolvedChart definition) {
     createChart(sheet, definition, null);
   }
 
   public static void createChart(
-      XSSFSheet sheet,
-      ExcelChartDefinition definition,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, ResolvedChart definition, @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartMutationSupport.createChart(sheet, definition, formulaRuntime);
   }
 
-  public static void validateChart(XSSFSheet sheet, ExcelChartDefinition definition) {
+  public static void validateChart(XSSFSheet sheet, ResolvedChart definition) {
     validateChart(sheet, definition, null);
   }
 
   public static void validateChart(
-      XSSFSheet sheet,
-      ExcelChartDefinition definition,
-      @Nullable ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, ResolvedChart definition, @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartMutationSupport.validateChart(sheet, definition, formulaRuntime);
   }
 

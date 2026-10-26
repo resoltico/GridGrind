@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
@@ -77,13 +81,13 @@ class ExcelChartReadbackTest {
               ExcelChartTestSupport.lineChart(
                   "ProjectedLoad",
                   anchor(1, 5, 10, 18),
-                  new ExcelChartDefinition.Title.Text("Projected Load"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ResolvedChartTitle.Text("Projected Load"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   List.of(
-                      new ExcelChartDefinition.Series(
+                      new ResolvedChart.Series(
                           null,
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("C2:C4")))));
@@ -136,13 +140,13 @@ class ExcelChartReadbackTest {
               ExcelChartTestSupport.lineChart(
                   "ProjectedLoad",
                   anchor(1, 5, 10, 18),
-                  new ExcelChartDefinition.Title.Formula("B1"),
-                  new ExcelChartDefinition.Legend.Hidden(),
+                  new ChartTitleSpec.Formula("B1"),
+                  new ChartLegendSpec.Hidden(),
                   ExcelChartDisplayBlanksAs.GAP,
                   true,
                   false,
                   List.of(
-                      new ExcelChartDefinition.Series(
+                      new ResolvedChart.Series(
                           null,
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
