@@ -7,6 +7,8 @@ import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
@@ -31,6 +33,60 @@ import org.junit.jupiter.api.Test;
 
 /** Tests for direct conditional-formatting authoring, introspection, and health analysis. */
 class ExcelConditionalFormattingControllerTest {
+  @Test
+  void normalizesAuthoredFormulasAtPoiBoundary() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Data");
+      var controller = new ExcelConditionalFormattingController();
+      controller.setConditionalFormatting(
+          sheet,
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("A1:A3"),
+              List.of(
+                  new ConditionalFormattingRuleSpec.FormulaRule(
+                      " =A1>0 ", true, Optional.empty()))));
+      assertEquals(
+          "A1>0",
+          sheet
+              .getSheetConditionalFormatting()
+              .getConditionalFormattingAt(0)
+              .getRule(0)
+              .getFormula1());
+    }
+  }
+
+  @Test
+  void invalidReplacementFormulaPreservesExistingConditionalFormatting() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Data");
+      var controller = new ExcelConditionalFormattingController();
+      controller.setConditionalFormatting(
+          sheet,
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("A1:A3"),
+              List.of(
+                  new ConditionalFormattingRuleSpec.FormulaRule("A1>0", true, Optional.empty()))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              controller.setConditionalFormatting(
+                  sheet,
+                  new ExcelConditionalFormattingBlockDefinition(
+                      List.of("A1:A3"),
+                      List.of(
+                          new ConditionalFormattingRuleSpec.FormulaRule(
+                              " = ", true, Optional.empty())))));
+      assertEquals(1, sheet.getSheetConditionalFormatting().getNumConditionalFormattings());
+      assertEquals(
+          "A1>0",
+          sheet
+              .getSheetConditionalFormatting()
+              .getConditionalFormattingAt(0)
+              .getRule(0)
+              .getFormula1());
+    }
+  }
+
   private final ExcelConditionalFormattingController controller =
       new ExcelConditionalFormattingController();
 
@@ -160,7 +216,7 @@ class ExcelConditionalFormattingControllerTest {
   }
 
   @Test
-  void authoredBlocksCanPersistDifferentialRuleFamiliesWithoutStyles() throws Exception {
+  void authoredBarriersCanPersistWithoutStyles() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
       seedConditionalFormattingValues(sheet);
@@ -170,27 +226,26 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A3"),
               List.of(
-                  new ExcelConditionalFormattingRule.FormulaRule("A1>0", false, Optional.empty()),
-                  new ExcelConditionalFormattingRule.CellValueRule(
+                  new ConditionalFormattingRuleSpec.FormulaRule("A1>0", true, Optional.empty()),
+                  new ConditionalFormattingRuleSpec.CellValueRule(
                       ExcelComparisonOperator.GREATER_THAN,
                       "1",
                       Optional.empty(),
-                      false,
+                      true,
                       Optional.empty()),
-                  new ExcelConditionalFormattingRule.Top10Rule(
-                      10, false, false, false, Optional.empty()))));
+                  new ConditionalFormattingRuleSpec.Top10Rule(
+                      true, 10, false, false, Optional.empty()))));
 
       assertEquals(
           List.of(
               new ExcelConditionalFormattingBlockSnapshot(
                   List.of("A1:A3"),
                   List.of(
-                      new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
-                          1, false, "A1>0", null),
+                      new ExcelConditionalFormattingRuleSnapshot.FormulaRule(1, true, "A1>0", null),
                       new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
-                          2, false, ExcelComparisonOperator.GREATER_THAN, "1", null, null),
+                          2, true, ExcelComparisonOperator.GREATER_THAN, "1", null, null),
                       new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
-                          3, false, 10, false, false, null)))),
+                          3, true, 10, false, false, null)))),
           controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
     }
   }
@@ -206,29 +261,24 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A3"),
               List.of(
-                  new ExcelConditionalFormattingRule.ColorScaleRule(
+                  new ConditionalFormattingRuleSpec.ColorScaleRule(
+                      false,
                       List.of(
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.MIN, null, null),
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.PERCENTILE, null, 50.0d),
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                          new ConditionalFormattingThresholdSpec.Min(),
+                          new ConditionalFormattingThresholdSpec.Percentile(50.0d),
+                          new ConditionalFormattingThresholdSpec.Max()),
                       List.of(
                           ColorSpec.rgb(new RgbHex("#AA2211")),
                           ColorSpec.rgb(new RgbHex("#FFDD55")),
-                          ColorSpec.rgb(new RgbHex("#11CC66"))),
-                      false),
-                  new ExcelConditionalFormattingRule.DataBarRule(
+                          ColorSpec.rgb(new RgbHex("#11CC66")))),
+                  new ConditionalFormattingRuleSpec.DataBarRule(
+                      false,
                       ColorSpec.rgb(new RgbHex("#123456")),
                       true,
                       10,
                       90,
-                      new ExcelConditionalFormattingThreshold(
-                          ExcelConditionalFormattingThresholdType.MIN, null, null),
-                      new ExcelConditionalFormattingThreshold(
-                          ExcelConditionalFormattingThresholdType.MAX, null, null),
-                      false))));
+                      new ConditionalFormattingThresholdSpec.Min(),
+                      new ConditionalFormattingThresholdSpec.Max()))));
 
       assertEquals(
           List.of(
@@ -272,18 +322,15 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A3"),
               List.of(
-                  new ExcelConditionalFormattingRule.IconSetRule(
+                  new ConditionalFormattingRuleSpec.IconSetRule(
+                      true,
                       ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
                       true,
                       false,
                       List.of(
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.FORMULA, "A1*2", null),
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.NUMBER, null, 40.0d),
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                      true))));
+                          new ConditionalFormattingThresholdSpec.Formula("A1*2"),
+                          new ConditionalFormattingThresholdSpec.Numeric(40.0d),
+                          new ConditionalFormattingThresholdSpec.Max())))));
 
       assertEquals(
           List.of(
@@ -318,9 +365,9 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A3"),
               List.of(
-                  new ExcelConditionalFormattingRule.Top10Rule(
-                      7,
+                  new ConditionalFormattingRuleSpec.Top10Rule(
                       true,
+                      7,
                       true,
                       true,
                       Optional.of(
@@ -373,7 +420,7 @@ class ExcelConditionalFormattingControllerTest {
               new ExcelConditionalFormattingBlockDefinition(
                   List.of("A1:A2"),
                   List.of(
-                      new ExcelConditionalFormattingRule.CellValueRule(
+                      new ConditionalFormattingRuleSpec.CellValueRule(
                           ExcelComparisonOperator.GREATER_THAN,
                           "1",
                           Optional.empty(),
@@ -821,7 +868,7 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A2"),
               List.of(
-                  new ExcelConditionalFormattingRule.CellValueRule(
+                  new ConditionalFormattingRuleSpec.CellValueRule(
                       ExcelComparisonOperator.GREATER_THAN,
                       "#REF!",
                       Optional.empty(),
@@ -859,7 +906,7 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A2"),
               List.of(
-                  new ExcelConditionalFormattingRule.CellValueRule(
+                  new ConditionalFormattingRuleSpec.CellValueRule(
                       ExcelComparisonOperator.BETWEEN,
                       "1",
                       Optional.of("#REF!"),
@@ -898,7 +945,7 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A3"),
               List.of(
-                  new ExcelConditionalFormattingRule.FormulaRule(
+                  new ConditionalFormattingRuleSpec.FormulaRule(
                       "A1>0",
                       false,
                       Optional.of(
@@ -930,7 +977,7 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A3"),
               List.of(
-                  new ExcelConditionalFormattingRule.CellValueRule(
+                  new ConditionalFormattingRuleSpec.CellValueRule(
                       ExcelComparisonOperator.BETWEEN,
                       "1",
                       Optional.of("10"),
@@ -1007,9 +1054,9 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A3"),
               List.of(
-                  new ExcelConditionalFormattingRule.Top10Rule(
-                      5,
+                  new ConditionalFormattingRuleSpec.Top10Rule(
                       false,
+                      5,
                       false,
                       false,
                       Optional.of(
@@ -1159,7 +1206,7 @@ class ExcelConditionalFormattingControllerTest {
               new ExcelConditionalFormattingBlockDefinition(
                   List.of("A1:A2"),
                   List.of(
-                      new ExcelConditionalFormattingRule.FormulaRule(
+                      new ConditionalFormattingRuleSpec.FormulaRule(
                           "#REF!",
                           false,
                           Optional.of(
@@ -1187,7 +1234,7 @@ class ExcelConditionalFormattingControllerTest {
     return new ExcelConditionalFormattingBlockDefinition(
         List.of(range),
         List.of(
-            new ExcelConditionalFormattingRule.FormulaRule(
+            new ConditionalFormattingRuleSpec.FormulaRule(
                 "A1>10",
                 true,
                 Optional.of(
@@ -1209,7 +1256,7 @@ class ExcelConditionalFormattingControllerTest {
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty()))))),
-            new ExcelConditionalFormattingRule.CellValueRule(
+            new ConditionalFormattingRuleSpec.CellValueRule(
                 ExcelComparisonOperator.BETWEEN,
                 "1",
                 Optional.of("9"),
@@ -1231,7 +1278,7 @@ class ExcelConditionalFormattingControllerTest {
     return new ExcelConditionalFormattingBlockDefinition(
         List.of(range),
         List.of(
-            new ExcelConditionalFormattingRule.FormulaRule(
+            new ConditionalFormattingRuleSpec.FormulaRule(
                 range.startsWith("B") ? "B1>5" : "C1=\"Ready\"",
                 false,
                 Optional.of(

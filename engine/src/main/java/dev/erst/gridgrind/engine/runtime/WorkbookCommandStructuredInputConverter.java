@@ -4,9 +4,7 @@ import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
@@ -18,7 +16,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,63 +62,7 @@ final class WorkbookCommandStructuredInputConverter {
 
   static ExcelConditionalFormattingBlockDefinition toExcelConditionalFormattingBlock(
       List<String> ranges, ConditionalFormattingSpec definition) {
-    return new ExcelConditionalFormattingBlockDefinition(
-        ranges,
-        definition.rules().stream()
-            .map(WorkbookCommandStructuredInputConverter::toExcelConditionalFormattingRule)
-            .toList());
-  }
-
-  static ExcelConditionalFormattingRule toExcelConditionalFormattingRule(
-      ConditionalFormattingRuleSpec rule) {
-    return switch (rule) {
-      case ConditionalFormattingRuleSpec.FormulaRule formulaRule ->
-          new ExcelConditionalFormattingRule.FormulaRule(
-              formulaRule.formula(), formulaRule.stopIfTrue(), formulaRule.style());
-      case ConditionalFormattingRuleSpec.CellValueRule cellValueRule ->
-          new ExcelConditionalFormattingRule.CellValueRule(
-              cellValueRule.operator(),
-              cellValueRule.formula1(),
-              cellValueRule.formula2(),
-              cellValueRule.stopIfTrue(),
-              cellValueRule.style());
-      case ConditionalFormattingRuleSpec.ColorScaleRule colorScaleRule ->
-          new ExcelConditionalFormattingRule.ColorScaleRule(
-              colorScaleRule.thresholds().stream()
-                  .map(
-                      WorkbookCommandStructuredInputConverter
-                          ::toExcelConditionalFormattingThreshold)
-                  .toList(),
-              colorScaleRule.colors().stream().map(color -> color).toList(),
-              colorScaleRule.stopIfTrue());
-      case ConditionalFormattingRuleSpec.DataBarRule dataBarRule ->
-          new ExcelConditionalFormattingRule.DataBarRule(
-              dataBarRule.color(),
-              dataBarRule.iconOnly(),
-              dataBarRule.widthMin(),
-              dataBarRule.widthMax(),
-              toExcelConditionalFormattingThreshold(dataBarRule.minThreshold()),
-              toExcelConditionalFormattingThreshold(dataBarRule.maxThreshold()),
-              dataBarRule.stopIfTrue());
-      case ConditionalFormattingRuleSpec.IconSetRule iconSetRule ->
-          new ExcelConditionalFormattingRule.IconSetRule(
-              iconSetRule.iconSet(),
-              iconSetRule.iconOnly(),
-              iconSetRule.reversed(),
-              iconSetRule.thresholds().stream()
-                  .map(
-                      WorkbookCommandStructuredInputConverter
-                          ::toExcelConditionalFormattingThreshold)
-                  .toList(),
-              iconSetRule.stopIfTrue());
-      case ConditionalFormattingRuleSpec.Top10Rule top10Rule ->
-          new ExcelConditionalFormattingRule.Top10Rule(
-              top10Rule.rank(),
-              top10Rule.percent(),
-              top10Rule.bottom(),
-              top10Rule.stopIfTrue(),
-              top10Rule.style());
-    };
+    return new ExcelConditionalFormattingBlockDefinition(ranges, definition.rules());
   }
 
   static ExcelAutofilterFilterColumn toExcelAutofilterFilterColumn(
@@ -188,42 +129,6 @@ final class WorkbookCommandStructuredInputConverter {
       case AutofilterSortConditionSpec.Icon icon ->
           new ExcelAutofilterSortCondition.Icon(
               icon.range().value(), icon.descending(), icon.iconId());
-    };
-  }
-
-  private static dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold
-      toExcelConditionalFormattingThreshold(ConditionalFormattingThresholdSpec threshold) {
-    return switch (threshold) {
-      case ConditionalFormattingThresholdSpec.Min _ ->
-          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.MIN,
-              null,
-              null);
-      case ConditionalFormattingThresholdSpec.Max _ ->
-          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.MAX,
-              null,
-              null);
-      case ConditionalFormattingThresholdSpec.Numeric number ->
-          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.NUMBER,
-              null,
-              number.value());
-      case ConditionalFormattingThresholdSpec.Percent percent ->
-          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.PERCENT,
-              null,
-              percent.value());
-      case ConditionalFormattingThresholdSpec.Percentile percentile ->
-          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.PERCENTILE,
-              null,
-              percentile.value());
-      case ConditionalFormattingThresholdSpec.Formula formula ->
-          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.FORMULA,
-              formula.formula(),
-              null);
     };
   }
 }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -7,7 +8,7 @@ import java.util.Set;
 
 /** One authored conditional-formatting block with target ranges and ordered rule definitions. */
 public record ExcelConditionalFormattingBlockDefinition(
-    List<String> ranges, List<ExcelConditionalFormattingRule> rules) {
+    List<String> ranges, List<ConditionalFormattingRuleSpec> rules) {
   public ExcelConditionalFormattingBlockDefinition {
     ranges = copyRanges(ranges);
     rules = copyRules(rules);
@@ -32,11 +33,11 @@ public record ExcelConditionalFormattingBlockDefinition(
     return copy;
   }
 
-  private static List<ExcelConditionalFormattingRule> copyRules(
-      List<ExcelConditionalFormattingRule> rules) {
+  private static List<ConditionalFormattingRuleSpec> copyRules(
+      List<ConditionalFormattingRuleSpec> rules) {
     Objects.requireNonNull(rules, "rules must not be null");
-    List<ExcelConditionalFormattingRule> copy = List.copyOf(rules);
-    for (ExcelConditionalFormattingRule rule : copy) {
+    List<ConditionalFormattingRuleSpec> copy = List.copyOf(rules);
+    for (ConditionalFormattingRuleSpec rule : copy) {
       Objects.requireNonNull(rule, "rules must not contain null values");
     }
     return copy;

@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
@@ -275,8 +276,8 @@ class ExcelConditionalFormattingDomainModelTest {
 
   @Test
   void enforcesBlockAndThresholdInvariants() {
-    ExcelConditionalFormattingRule.FormulaRule rule =
-        new ExcelConditionalFormattingRule.FormulaRule(
+    ConditionalFormattingRuleSpec.FormulaRule rule =
+        new ConditionalFormattingRuleSpec.FormulaRule(
             "=A1>0",
             true,
             Optional.of(
@@ -294,7 +295,7 @@ class ExcelConditionalFormattingDomainModelTest {
         new ExcelConditionalFormattingBlockDefinition(List.of("A1:A3"), List.of(rule));
 
     assertEquals(List.of("A1:A3"), definition.ranges());
-    assertEquals("A1>0", rule.formula());
+    assertEquals("=A1>0", rule.formula());
     assertDoesNotThrow(
         () ->
             new ExcelConditionalFormattingThresholdSnapshot(
@@ -363,8 +364,8 @@ class ExcelConditionalFormattingDomainModelTest {
         new ExcelConditionalFormattingThresholdSnapshot(
             ExcelConditionalFormattingThresholdType.MIN, null, 0.0d);
 
-    ExcelConditionalFormattingRule.CellValueRule authoredCellValueRule =
-        new ExcelConditionalFormattingRule.CellValueRule(
+    ConditionalFormattingRuleSpec.CellValueRule authoredCellValueRule =
+        new ConditionalFormattingRuleSpec.CellValueRule(
             ExcelComparisonOperator.BETWEEN, "=1", Optional.of("=9"), false, Optional.of(style));
     ExcelConditionalFormattingRuleSnapshot.ColorScaleRule colorScaleRule =
         new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
@@ -378,13 +379,13 @@ class ExcelConditionalFormattingDomainModelTest {
             false,
             List.of(threshold));
 
-    assertEquals("1", authoredCellValueRule.formula1());
-    assertEquals("9", authoredCellValueRule.formula2().orElseThrow());
+    assertEquals("=1", authoredCellValueRule.formula1());
+    assertEquals("=9", authoredCellValueRule.formula2().orElseThrow());
     assertEquals(List.of("#102030"), colorScaleRule.colors());
     assertEquals(ExcelConditionalFormattingIconSet.GYR_3_ARROW, iconSetRule.iconSet());
 
     assertDoesNotThrow(
-        () -> new ExcelConditionalFormattingRule.FormulaRule("=A1>0", true, Optional.empty()));
+        () -> new ConditionalFormattingRuleSpec.FormulaRule("=A1>0", true, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelConditionalFormattingRuleSnapshot.FormulaRule(-1, false, "A1>0", snapshot));

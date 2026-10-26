@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -400,7 +401,7 @@ class ExcelWorkbookTest {
               new ExcelConditionalFormattingBlockDefinition(
                   List.of("B2:B4"),
                   List.of(
-                      new ExcelConditionalFormattingRule.FormulaRule(
+                      new ConditionalFormattingRuleSpec.FormulaRule(
                           "B2>0",
                           true,
                           Optional.of(

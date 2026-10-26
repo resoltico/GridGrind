@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
@@ -246,7 +247,7 @@ final class WorkbookSampleFixtures {
             new ExcelConditionalFormattingBlockDefinition(
                 List.of("A2:A5"),
                 List.of(
-                    new ExcelConditionalFormattingRule.FormulaRule(
+                    new ConditionalFormattingRuleSpec.FormulaRule(
                         "A2>0",
                         true,
                         Optional.of(

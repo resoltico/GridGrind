@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
@@ -39,7 +40,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -186,7 +186,7 @@ class XlsxRoundTripVerifierTest {
                         new ExcelConditionalFormattingBlockDefinition(
                             List.of("B2:B4"),
                             List.of(
-                                new ExcelConditionalFormattingRule.FormulaRule(
+                                new ConditionalFormattingRuleSpec.FormulaRule(
                                     "B2>0",
                                     true,
                                     Optional.of(

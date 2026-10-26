@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,18 +24,18 @@ class ExcelConditionalFormattingOperatorPersistenceTest {
     List<ExcelComparisonOperator> operators = List.of(ExcelComparisonOperator.values());
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var sheet = workbook.createSheet("Rules");
-      List<ExcelConditionalFormattingRule> rules =
+      List<ConditionalFormattingRuleSpec> rules =
           operators.stream()
-              .<ExcelConditionalFormattingRule>map(
+              .<ConditionalFormattingRuleSpec>map(
                   operator ->
-                      new ExcelConditionalFormattingRule.CellValueRule(
+                      new ConditionalFormattingRuleSpec.CellValueRule(
                           operator,
                           "10",
                           switch (operator) {
                             case BETWEEN, NOT_BETWEEN -> Optional.of("20");
                             default -> Optional.empty();
                           },
-                          false,
+                          true,
                           Optional.empty()))
               .toList();
       new ExcelConditionalFormattingController()

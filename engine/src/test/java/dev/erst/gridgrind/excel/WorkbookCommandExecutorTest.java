@@ -26,6 +26,7 @@ import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
@@ -353,7 +354,7 @@ class WorkbookCommandExecutorTest {
                       new ExcelConditionalFormattingBlockDefinition(
                           List.of("A1"),
                           List.of(
-                              new ExcelConditionalFormattingRule.FormulaRule(
+                              new ConditionalFormattingRuleSpec.FormulaRule(
                                   "A1>0",
                                   false,
                                   Optional.of(
@@ -664,7 +665,7 @@ class WorkbookCommandExecutorTest {
               new ExcelConditionalFormattingBlockDefinition(
                   List.of("A1:A3"),
                   List.of(
-                      new ExcelConditionalFormattingRule.FormulaRule(
+                      new ConditionalFormattingRuleSpec.FormulaRule(
                           "A1>0",
                           true,
                           Optional.of(

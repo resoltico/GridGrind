@@ -1,13 +1,11 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
-import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.ss.formula.FormulaType;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetProtection;
 
@@ -60,7 +58,7 @@ final class ExcelSheetCopySupport {
   }
 
   static void replaceConditionalFormatting(
-      List<ExcelConditionalFormattingBlockDefinition> blocks,
+      List<org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting> blocks,
       ExcelSheet targetSheet,
       ExcelWorkbook workbook,
       String sourceSheetName,
@@ -109,24 +107,8 @@ final class ExcelSheetCopySupport {
     ExcelSheetCopyTableSupport.requireNoTables(sheet, sheetName);
   }
 
-  static List<ExcelConditionalFormattingBlockDefinition> supportedConditionalFormatting(
-      List<ExcelConditionalFormattingBlockSnapshot> blocks, String sourceSheetName) {
-    return ExcelSheetCopyConditionalFormattingSupport.supportedConditionalFormatting(
-        blocks, sourceSheetName);
-  }
-
   static List<CTDataValidation> copiedDataValidations(XSSFSheet sourcePoiSheet) {
     return ExcelSheetCopyValidationSupport.copiedDataValidations(sourcePoiSheet);
-  }
-
-  static ExcelConditionalFormattingRule copyableRule(
-      ExcelConditionalFormattingRuleSnapshot rule, String sourceSheetName) {
-    return ExcelSheetCopyConditionalFormattingSupport.copyableRule(rule, sourceSheetName);
-  }
-
-  static Optional<DifferentialStylePatch> copyableStyle(
-      @Nullable ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
-    return ExcelSheetCopyConditionalFormattingSupport.copyableStyle(style, sourceSheetName);
   }
 
   static Optional<ExcelAutofilterSnapshot.SheetOwned> sheetOwnedAutofilter(

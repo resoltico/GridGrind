@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
@@ -17,12 +19,11 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfType;
 final class ExcelConditionalFormattingAuthoringSupport {
   void setConditionalFormatting(XSSFSheet sheet, ExcelConditionalFormattingBlockDefinition block) {
     List<ExcelRange> targetRanges = block.ranges().stream().map(ExcelRange::parse).toList();
-    removeIntersectingBlocks(sheet, targetRanges);
-
     XSSFConditionalFormattingRule[] rules =
         block.rules().stream()
             .map(rule -> createRule(sheet, rule))
             .toArray(XSSFConditionalFormattingRule[]::new);
+    removeIntersectingBlocks(sheet, targetRanges);
     int blockIndex =
         sheet
             .getSheetConditionalFormatting()
@@ -37,7 +38,7 @@ final class ExcelConditionalFormattingAuthoringSupport {
     for (int ruleIndex = 0; ruleIndex < block.rules().size(); ruleIndex++) {
       CTCfRule ctRule = ctBlock.getCfRuleArray(ruleIndex);
       switch (block.rules().get(ruleIndex)) {
-        case ExcelConditionalFormattingRule.FormulaRule formulaRule -> {
+        case ConditionalFormattingRuleSpec.FormulaRule formulaRule -> {
           ctRule.setStopIfTrue(formulaRule.stopIfTrue());
           formulaRule
               .style()
@@ -46,7 +47,7 @@ final class ExcelConditionalFormattingAuthoringSupport {
                       ExcelConditionalFormattingStyleSupport.applyStyle(
                           sheet.getWorkbook(), ctRule, style));
         }
-        case ExcelConditionalFormattingRule.CellValueRule cellValueRule -> {
+        case ConditionalFormattingRuleSpec.CellValueRule cellValueRule -> {
           ctRule.setStopIfTrue(cellValueRule.stopIfTrue());
           cellValueRule
               .style()
@@ -55,13 +56,13 @@ final class ExcelConditionalFormattingAuthoringSupport {
                       ExcelConditionalFormattingStyleSupport.applyStyle(
                           sheet.getWorkbook(), ctRule, style));
         }
-        case ExcelConditionalFormattingRule.ColorScaleRule colorScaleRule ->
+        case ConditionalFormattingRuleSpec.ColorScaleRule colorScaleRule ->
             ctRule.setStopIfTrue(colorScaleRule.stopIfTrue());
-        case ExcelConditionalFormattingRule.DataBarRule dataBarRule ->
+        case ConditionalFormattingRuleSpec.DataBarRule dataBarRule ->
             ctRule.setStopIfTrue(dataBarRule.stopIfTrue());
-        case ExcelConditionalFormattingRule.IconSetRule iconSetRule ->
+        case ConditionalFormattingRuleSpec.IconSetRule iconSetRule ->
             ctRule.setStopIfTrue(iconSetRule.stopIfTrue());
-        case ExcelConditionalFormattingRule.Top10Rule top10Rule -> {
+        case ConditionalFormattingRuleSpec.Top10Rule top10Rule -> {
           ctRule.setStopIfTrue(top10Rule.stopIfTrue());
           top10Rule
               .style()
@@ -87,34 +88,38 @@ final class ExcelConditionalFormattingAuthoringSupport {
   }
 
   private XSSFConditionalFormattingRule createRule(
-      XSSFSheet sheet, ExcelConditionalFormattingRule rule) {
+      XSSFSheet sheet, ConditionalFormattingRuleSpec rule) {
     return switch (rule) {
-      case ExcelConditionalFormattingRule.FormulaRule formulaRule ->
+      case ConditionalFormattingRuleSpec.FormulaRule formulaRule ->
           sheet
               .getSheetConditionalFormatting()
-              .createConditionalFormattingRule(formulaRule.formula());
-      case ExcelConditionalFormattingRule.CellValueRule cellValueRule ->
+              .createConditionalFormattingRule(
+                  ExcelComparisonFormulaSupport.normalizeFormula(formulaRule.formula(), "formula"));
+      case ConditionalFormattingRuleSpec.CellValueRule cellValueRule ->
           cellValueRule.formula2().isEmpty()
               ? sheet
                   .getSheetConditionalFormatting()
                   .createConditionalFormattingRule(
                       ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
                           cellValueRule.operator()),
-                      cellValueRule.formula1())
+                      ExcelComparisonFormulaSupport.normalizeFormula(
+                          cellValueRule.formula1(), "formula1"))
               : sheet
                   .getSheetConditionalFormatting()
                   .createConditionalFormattingRule(
                       ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
                           cellValueRule.operator()),
-                      cellValueRule.formula1(),
-                      cellValueRule.formula2().orElseThrow());
-      case ExcelConditionalFormattingRule.ColorScaleRule colorScaleRule ->
+                      ExcelComparisonFormulaSupport.normalizeFormula(
+                          cellValueRule.formula1(), "formula1"),
+                      ExcelComparisonFormulaSupport.normalizeFormula(
+                          cellValueRule.formula2().orElseThrow(), "formula2"));
+      case ConditionalFormattingRuleSpec.ColorScaleRule colorScaleRule ->
           createColorScaleRule(sheet, colorScaleRule);
-      case ExcelConditionalFormattingRule.DataBarRule dataBarRule ->
+      case ConditionalFormattingRuleSpec.DataBarRule dataBarRule ->
           createDataBarRule(sheet, dataBarRule);
-      case ExcelConditionalFormattingRule.IconSetRule iconSetRule ->
+      case ConditionalFormattingRuleSpec.IconSetRule iconSetRule ->
           createIconSetRule(sheet, iconSetRule);
-      case ExcelConditionalFormattingRule.Top10Rule _ ->
+      case ConditionalFormattingRuleSpec.Top10Rule _ ->
           sheet
               .getSheetConditionalFormatting()
               .createConditionalFormattingRule(ComparisonOperator.GT, "0");
@@ -122,7 +127,7 @@ final class ExcelConditionalFormattingAuthoringSupport {
   }
 
   private XSSFConditionalFormattingRule createColorScaleRule(
-      XSSFSheet sheet, ExcelConditionalFormattingRule.ColorScaleRule rule) {
+      XSSFSheet sheet, ConditionalFormattingRuleSpec.ColorScaleRule rule) {
     XSSFConditionalFormattingRule created =
         sheet.getSheetConditionalFormatting().createConditionalFormattingColorScaleRule();
     var formatting = created.getColorScaleFormatting();
@@ -139,7 +144,7 @@ final class ExcelConditionalFormattingAuthoringSupport {
   }
 
   private XSSFConditionalFormattingRule createDataBarRule(
-      XSSFSheet sheet, ExcelConditionalFormattingRule.DataBarRule rule) {
+      XSSFSheet sheet, ConditionalFormattingRuleSpec.DataBarRule rule) {
     XSSFConditionalFormattingRule created =
         sheet
             .getSheetConditionalFormatting()
@@ -155,7 +160,7 @@ final class ExcelConditionalFormattingAuthoringSupport {
   }
 
   private XSSFConditionalFormattingRule createIconSetRule(
-      XSSFSheet sheet, ExcelConditionalFormattingRule.IconSetRule rule) {
+      XSSFSheet sheet, ConditionalFormattingRuleSpec.IconSetRule rule) {
     XSSFConditionalFormattingRule created =
         sheet
             .getSheetConditionalFormatting()
@@ -173,17 +178,33 @@ final class ExcelConditionalFormattingAuthoringSupport {
 
   private static void applyThreshold(
       ConditionalFormattingThreshold threshold,
-      ExcelConditionalFormattingThreshold authoredThreshold) {
-    threshold.setRangeType(ExcelConditionalFormattingPoiBridge.toPoi(authoredThreshold.type()));
-    if (authoredThreshold.formula() != null) {
-      threshold.setFormula(authoredThreshold.formula());
-    } else if (authoredThreshold.value() != null) {
-      threshold.setValue(authoredThreshold.value());
+      ConditionalFormattingThresholdSpec authoredThreshold) {
+    switch (authoredThreshold) {
+      case ConditionalFormattingThresholdSpec.Min _ ->
+          threshold.setRangeType(ConditionalFormattingThreshold.RangeType.MIN);
+      case ConditionalFormattingThresholdSpec.Max _ ->
+          threshold.setRangeType(ConditionalFormattingThreshold.RangeType.MAX);
+      case ConditionalFormattingThresholdSpec.Numeric value -> {
+        threshold.setRangeType(ConditionalFormattingThreshold.RangeType.NUMBER);
+        threshold.setValue(value.value());
+      }
+      case ConditionalFormattingThresholdSpec.Percent value -> {
+        threshold.setRangeType(ConditionalFormattingThreshold.RangeType.PERCENT);
+        threshold.setValue(value.value());
+      }
+      case ConditionalFormattingThresholdSpec.Percentile value -> {
+        threshold.setRangeType(ConditionalFormattingThreshold.RangeType.PERCENTILE);
+        threshold.setValue(value.value());
+      }
+      case ConditionalFormattingThresholdSpec.Formula value -> {
+        threshold.setRangeType(ConditionalFormattingThreshold.RangeType.FORMULA);
+        threshold.setFormula(value.formula());
+      }
     }
   }
 
   private static void applyTop10Rule(
-      CTCfRule ctRule, ExcelConditionalFormattingRule.Top10Rule top10Rule) {
+      CTCfRule ctRule, ConditionalFormattingRuleSpec.Top10Rule top10Rule) {
     while (ctRule.sizeOfFormulaArray() > 0) {
       ctRule.removeFormula(0);
     }

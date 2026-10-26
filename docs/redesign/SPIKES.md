@@ -2028,3 +2028,32 @@ checks pass (41s). Nested compile found one stale qualified fixture name (8s); c
 check/all retained seeds pass (21s). ./gradlew check passes (2m59s), all 143 golden cases unchanged.
 No active mutation/fuzz campaign ran. Inventories: converter lines 3919→3874, blank checks 418→417,
 main Java 120751→120662; snapshots 34, definitions 2 and Support 206 remain open. Baseline diff empty.
+
+## WP-40 core conditional-formatting rules and factual sheet copy
+
+Deleted ExcelConditionalFormattingRule and ExcelConditionalFormattingThreshold. Adapters accept
+existing core rule/threshold variants directly; removed their conversion switches. Record-order
+fixture edits preserve the authored meaning. Authored formulas remain unchanged in core and normalize
+at POI creation. Two real POI regressions failed before correction (12s; full XML retained): padded
+formula storage and invalid replacement preservation. They now pass; rule creation/validation precedes
+removing overlaps. Removed conversion-only tests and used explicit barriers for styleless authored
+fixtures. Factual styleless rules remain supported through the copy path below.
+
+Challenge: parity's advanced sheet-copy case failed because existing styleless, non-barrier rules
+cannot pass strict authored constructors. The former engine mirror had masked that distinction.
+Corrected the method, not the authored requirement: snapshot validated conditional-format XML, keep
+unsupported-rule/style rejection before cloning, copy XML and retarget formula operands and formula
+thresholds directly. This preserves observed rules without authored reconstruction and deletes the
+report-to-authoring conversion chain. Runtime copy snapshot holds CTConditionalFormatting payloads.
+New real workbook regressions verify styleless formula retargeting/source preservation and unsupported
+style rejection before destination creation. No new compatibility model or authored variant added.
+
+Initial compile caught the factual UNALLOCATED enum case and stale conversion-only assertions.
+Parity failure drove the copy correction; subsequent compile/static failures were missing import,
+nullable style annotation and a loop allocation. Focused engine/14 parity/static checks pass (25s);
+all new regressions pass. Nested deterministic check/all retained seeds pass (16s). Root ./gradlew
+check passes (3m02s): core 355, JSON 348, engine 1476 plus 14 parity, CLI 588, zero failures/errors/skips.
+All 143 golden cases unchanged; no active mutation/fuzz campaign. Inventories: converter lines
+3874→3779, blank checks 417→416, main Java 120662→120273. Snapshots 34, definitions 2 and Support
+206 remain open. Baseline diff empty. The selected-range block and named-range definition, factual
+model drain and real resolved plan/step/target execution cutover remain WP-40 work.

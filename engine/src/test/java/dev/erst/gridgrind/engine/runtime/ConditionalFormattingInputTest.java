@@ -13,7 +13,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -70,7 +69,7 @@ class ConditionalFormattingInputTest {
         new ExcelConditionalFormattingBlockDefinition(
             List.of("A1:A3"),
             List.of(
-                new ExcelConditionalFormattingRule.FormulaRule(
+                new ConditionalFormattingRuleSpec.FormulaRule(
                     "A1>0",
                     true,
                     Optional.of(
@@ -95,7 +94,7 @@ class ConditionalFormattingInputTest {
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty()))))),
-                new ExcelConditionalFormattingRule.CellValueRule(
+                new ConditionalFormattingRuleSpec.CellValueRule(
                     ExcelComparisonOperator.BETWEEN,
                     "1",
                     Optional.of("9"),
@@ -234,30 +233,5 @@ class ConditionalFormattingInputTest {
 
     assertTrue(missingUpperBoundFailure.getMessage().contains("formula2"));
     assertTrue(unexpectedUpperBoundFailure.getMessage().contains("formula2"));
-  }
-
-  @Test
-  void allowsStyleLessDifferentialRuleFamiliesOnlyAsStopIfTrueBarriers() {
-    assertEquals(
-        new ExcelConditionalFormattingRule.FormulaRule("A1>0", true, Optional.empty()),
-        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleSpec.FormulaRule("A1>0", true, Optional.empty())));
-    assertEquals(
-        new ExcelConditionalFormattingRule.CellValueRule(
-            ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty(), true, Optional.empty()),
-        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleSpec.CellValueRule(
-                ExcelComparisonOperator.GREATER_THAN,
-                "1",
-                Optional.empty(),
-                true,
-                Optional.empty())));
-    assertEquals(
-        new ExcelConditionalFormattingRule.Top10Rule(10, false, false, true, Optional.empty()),
-        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleSpec.Top10Rule(true, 10, false, false, Optional.empty())));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ConditionalFormattingRuleSpec.FormulaRule("A1>0", false, Optional.empty()));
   }
 }

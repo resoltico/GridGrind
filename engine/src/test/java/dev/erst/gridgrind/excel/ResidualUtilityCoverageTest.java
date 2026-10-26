@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
@@ -74,8 +75,8 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new ExcelConditionalFormattingRule.Top10Rule(
-                        0, false, false, false, Optional.empty()))
+                    new ConditionalFormattingRuleSpec.Top10Rule(
+                        false, 0, false, false, Optional.empty()))
             .getMessage());
     assertEquals(
         "mode must not be null",

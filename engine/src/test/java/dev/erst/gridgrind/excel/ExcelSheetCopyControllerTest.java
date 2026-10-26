@@ -22,11 +22,14 @@ import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -36,8 +39,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
-import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -52,6 +53,7 @@ import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFComment;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
@@ -63,6 +65,57 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationType;
 
 /** Tests for sheet-copy planning and validation helpers. */
 class ExcelSheetCopyControllerTest {
+  @Test
+  void copyPreservesObservedStylelessRuleAndRetargetsFormula() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Source");
+      var source = workbook.xssfWorkbook().getSheet("Source");
+      var formatting = source.getSheetConditionalFormatting();
+      formatting.addConditionalFormatting(
+          new CellRangeAddress[] {CellRangeAddress.valueOf("A1:A3")},
+          formatting.createConditionalFormattingRule("Source!A1>0"));
+      new ExcelSheetCopyController()
+          .copySheet(workbook, "Source", "Copied", new ExcelSheetCopyPosition.AppendAtEnd());
+      var copied =
+          workbook
+              .xssfWorkbook()
+              .getSheet("Copied")
+              .getSheetConditionalFormatting()
+              .getConditionalFormattingAt(0)
+              .getRule(0);
+      assertEquals("Copied!A1>0", copied.getFormula1());
+      assertFalse(copied.getStopIfTrue());
+      assertNull(copied.getFontFormatting());
+      assertEquals(
+          "Source!A1>0", formatting.getConditionalFormattingAt(0).getRule(0).getFormula1());
+    }
+  }
+
+  @Test
+  void copyRejectsUnsupportedStyleBeforeCloning() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Source");
+      var source = workbook.xssfWorkbook().getSheet("Source");
+      var formatting = source.getSheetConditionalFormatting();
+      var rule = formatting.createConditionalFormattingRule("A1>0");
+      formatting.addConditionalFormatting(
+          new CellRangeAddress[] {CellRangeAddress.valueOf("A1:A3")}, rule);
+      var style = org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf.Factory.newInstance();
+      style.addNewFont().addNewName().setVal("Unsupported font family");
+      ExcelConditionalFormattingStyleSupport.attachStyle(
+          workbook.xssfWorkbook().getStylesSource(),
+          source.getCTWorksheet().getConditionalFormattingArray(0).getCfRuleArray(0),
+          style);
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              new ExcelSheetCopyController()
+                  .copySheet(
+                      workbook, "Source", "Copied", new ExcelSheetCopyPosition.AppendAtEnd()));
+      assertEquals(1, workbook.xssfWorkbook().getNumberOfSheets());
+    }
+  }
+
   private static final byte[] PNG_PIXEL_BYTES =
       Base64.getDecoder()
           .decode(
@@ -663,48 +716,41 @@ class ExcelSheetCopyControllerTest {
               new ExcelConditionalFormattingBlockDefinition(
                   List.of("C2:C3"),
                   List.of(
-                      new ExcelConditionalFormattingRule.FormulaRule(
-                          "SUM(Source!$B$2:$B$3)>0", false, Optional.empty()),
-                      new ExcelConditionalFormattingRule.CellValueRule(
+                      new ConditionalFormattingRuleSpec.FormulaRule(
+                          "SUM(Source!$B$2:$B$3)>0", true, Optional.empty()),
+                      new ConditionalFormattingRuleSpec.CellValueRule(
                           ExcelComparisonOperator.GREATER_THAN,
                           "SUM(Source!$B$2:$B$3)",
                           Optional.empty(),
-                          false,
+                          true,
                           Optional.empty()),
-                      new ExcelConditionalFormattingRule.ColorScaleRule(
+                      new ConditionalFormattingRuleSpec.ColorScaleRule(
+                          false,
                           List.of(
-                              new ExcelConditionalFormattingThreshold(
-                                  ExcelConditionalFormattingThresholdType.MIN, null, null),
-                              new ExcelConditionalFormattingThreshold(
-                                  ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                              new ConditionalFormattingThresholdSpec.Min(),
+                              new ConditionalFormattingThresholdSpec.Max()),
                           List.of(
                               ColorSpec.rgb(new RgbHex("#112233")),
-                              ColorSpec.rgb(new RgbHex("#445566"))),
-                          false),
-                      new ExcelConditionalFormattingRule.DataBarRule(
+                              ColorSpec.rgb(new RgbHex("#445566")))),
+                      new ConditionalFormattingRuleSpec.DataBarRule(
+                          false,
                           ColorSpec.rgb(new RgbHex("#223344")),
                           false,
                           0,
                           100,
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.MIN, null, null),
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.MAX, null, null),
-                          false),
-                      new ExcelConditionalFormattingRule.IconSetRule(
+                          new ConditionalFormattingThresholdSpec.Min(),
+                          new ConditionalFormattingThresholdSpec.Max()),
+                      new ConditionalFormattingRuleSpec.IconSetRule(
+                          false,
                           ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
                           false,
                           true,
                           List.of(
-                              new ExcelConditionalFormattingThreshold(
-                                  ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
-                              new ExcelConditionalFormattingThreshold(
-                                  ExcelConditionalFormattingThresholdType.PERCENT, null, 50.0d),
-                              new ExcelConditionalFormattingThreshold(
-                                  ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                          false),
-                      new ExcelConditionalFormattingRule.Top10Rule(
-                          5, false, false, false, Optional.empty()))));
+                              new ConditionalFormattingThresholdSpec.Percent(0.0d),
+                              new ConditionalFormattingThresholdSpec.Percent(50.0d),
+                              new ConditionalFormattingThresholdSpec.Max())),
+                      new ConditionalFormattingRuleSpec.Top10Rule(
+                          true, 5, false, false, Optional.empty()))));
       workbook
           .tables()
           .setTable(
@@ -968,124 +1014,6 @@ class ExcelSheetCopyControllerTest {
   }
 
   @Test
-  void supportedConditionalFormattingCopiesEverySupportedRuleFamily() {
-    ExcelConditionalFormattingBlockSnapshot supportedBlock =
-        new ExcelConditionalFormattingBlockSnapshot(
-            List.of("A1:A2"),
-            List.of(
-                new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
-                    1, true, "A1>0", supportedStyle()),
-                new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
-                    2, false, ExcelComparisonOperator.GREATER_THAN, "0", null, supportedStyle())));
-
-    assertEquals(
-        1,
-        ExcelSheetCopyController.supportedConditionalFormatting(List.of(supportedBlock), "Source")
-            .size());
-    assertInstanceOf(
-        ExcelConditionalFormattingRule.ColorScaleRule.class,
-        ExcelSheetCopyController.copyableRule(
-            new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
-                1,
-                false,
-                List.of(
-                    new ExcelConditionalFormattingThresholdSnapshot(
-                        ExcelConditionalFormattingThresholdType.MIN, null, null),
-                    new ExcelConditionalFormattingThresholdSnapshot(
-                        ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                List.of("#102030", "#405060")),
-            "Source"));
-    assertInstanceOf(
-        ExcelConditionalFormattingRule.DataBarRule.class,
-        ExcelSheetCopyController.copyableRule(
-            new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
-                1,
-                false,
-                "#102030",
-                false,
-                0,
-                100,
-                new ExcelConditionalFormattingThresholdSnapshot(
-                    ExcelConditionalFormattingThresholdType.MIN, null, null),
-                new ExcelConditionalFormattingThresholdSnapshot(
-                    ExcelConditionalFormattingThresholdType.MAX, null, null)),
-            "Source"));
-    assertInstanceOf(
-        ExcelConditionalFormattingRule.IconSetRule.class,
-        ExcelSheetCopyController.copyableRule(
-            new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
-                1,
-                false,
-                ExcelConditionalFormattingIconSet.GYR_3_ARROW,
-                false,
-                false,
-                List.of(
-                    new ExcelConditionalFormattingThresholdSnapshot(
-                        ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
-                    new ExcelConditionalFormattingThresholdSnapshot(
-                        ExcelConditionalFormattingThresholdType.MIN, null, null),
-                    new ExcelConditionalFormattingThresholdSnapshot(
-                        ExcelConditionalFormattingThresholdType.MAX, null, null))),
-            "Source"));
-    assertInstanceOf(
-        ExcelConditionalFormattingRule.Top10Rule.class,
-        ExcelSheetCopyController.copyableRule(
-            new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
-                1, false, 10, true, false, supportedStyle()),
-            "Source"));
-    assertInstanceOf(
-        ExcelConditionalFormattingRule.FormulaRule.class,
-        ExcelSheetCopyController.copyableRule(
-            new ExcelConditionalFormattingRuleSnapshot.FormulaRule(1, false, "A1>0", null),
-            "Source"));
-    assertInstanceOf(
-        ExcelConditionalFormattingRule.CellValueRule.class,
-        ExcelSheetCopyController.copyableRule(
-            new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
-                1, false, ExcelComparisonOperator.GREATER_THAN, "0", null, null),
-            "Source"));
-    assertInstanceOf(
-        ExcelConditionalFormattingRule.Top10Rule.class,
-        ExcelSheetCopyController.copyableRule(
-            new ExcelConditionalFormattingRuleSnapshot.Top10Rule(1, false, 10, false, false, null),
-            "Source"));
-    assertEquals(
-        "cannot copy sheet 'Source': unsupported conditional-formatting rule 'TOP10' is not copyable",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    ExcelSheetCopyController.copyableRule(
-                        new ExcelConditionalFormattingRuleSnapshot.UnsupportedRule(
-                            1, false, "TOP10", "detail"),
-                        "Source"))
-            .getMessage());
-  }
-
-  @Test
-  void copyableStyleRejectsUnsupportedDifferentialStyleFeatures() {
-    IllegalArgumentException failure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                ExcelSheetCopyController.copyableStyle(
-                    new ExcelDifferentialStyleSnapshot(
-                        "0.00",
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT)),
-                    "Source"));
-    assertEquals(
-        "cannot copy sheet 'Source': conditional-formatting rules with unsupported differential-style features are not copyable",
-        failure.getMessage());
-  }
-
-  @Test
   void sheetOwnedAutofilterRangeHandlesEmptySheetOwnedAndInvalidTableOwnedStates() {
     assertEquals(Optional.empty(), ExcelSheetCopyController.sheetOwnedAutofilter(List.of()));
     assertEquals(
@@ -1223,16 +1151,14 @@ class ExcelSheetCopyControllerTest {
             new ExcelConditionalFormattingBlockDefinition(
                 List.of("I2:I3"),
                 List.of(
-                    new ExcelConditionalFormattingRule.FormulaRule(
-                        "SUM(Source!$B$2:$B$3)>0",
-                        false,
-                        ExcelSheetCopyController.copyableStyle(supportedStyle(), "Source")),
-                    new ExcelConditionalFormattingRule.CellValueRule(
+                    new ConditionalFormattingRuleSpec.FormulaRule(
+                        "SUM(Source!$B$2:$B$3)>0", false, Optional.of(supportedStyle())),
+                    new ConditionalFormattingRuleSpec.CellValueRule(
                         ExcelComparisonOperator.BETWEEN,
                         "1",
                         Optional.of("SUM(Source!$B$2:$B$3)"),
                         false,
-                        ExcelSheetCopyController.copyableStyle(supportedStyle(), "Source")))));
+                        Optional.of(supportedStyle())))));
     workbook
         .names()
         .setNamedRange(
@@ -1315,9 +1241,17 @@ class ExcelSheetCopyControllerTest {
             new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4)));
   }
 
-  private static ExcelDifferentialStyleSnapshot supportedStyle() {
-    return new ExcelDifferentialStyleSnapshot(
-        "0.00", null, null, null, null, null, null, null, null, List.of());
+  private static DifferentialStylePatch supportedStyle() {
+    return new DifferentialStylePatch(
+        Optional.of("0.00"),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   private static SheetProtectionSettings protectionSettings() {

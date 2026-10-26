@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
@@ -55,7 +56,7 @@ class WorkbookAnalyzerTest {
               new ExcelConditionalFormattingBlockDefinition(
                   List.of("B2:B3"),
                   List.of(
-                      new ExcelConditionalFormattingRule.FormulaRule(
+                      new ConditionalFormattingRuleSpec.FormulaRule(
                           "B2>0",
                           false,
                           Optional.of(

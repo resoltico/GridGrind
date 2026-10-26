@@ -472,7 +472,8 @@ class SequenceIntrospectionTest {
                 new dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition(
                     List.of("A2:A5"),
                     List.of(
-                        new dev.erst.gridgrind.excel.ExcelConditionalFormattingRule.FormulaRule(
+                        new dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec
+                            .FormulaRule(
                             "A2>0",
                             true,
                             Optional.of(

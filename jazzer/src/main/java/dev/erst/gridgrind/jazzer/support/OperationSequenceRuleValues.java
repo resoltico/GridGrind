@@ -107,9 +107,9 @@ final class OperationSequenceRuleValues {
         List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
         List.of(
             data.consumeBoolean()
-                ? new ExcelConditionalFormattingRule.FormulaRule(
+                ? new ConditionalFormattingRuleSpec.FormulaRule(
                     "A1>0", data.consumeBoolean(), Optional.of(nextExcelDifferentialStyle(data)))
-                : new ExcelConditionalFormattingRule.CellValueRule(
+                : new ConditionalFormattingRuleSpec.CellValueRule(
                     ExcelComparisonOperator.GREATER_THAN,
                     "1",
                     Optional.empty(),

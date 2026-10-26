@@ -30,6 +30,8 @@ import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
@@ -566,39 +568,29 @@ class ExcelAdvancedValueObjectTest {
               ExcelConditionalFormattingPoiBridge.toPoi(type)));
     }
 
-    var min =
-        new ExcelConditionalFormattingThreshold(
-            ExcelConditionalFormattingThresholdType.MIN, null, null);
-    var percentile =
-        new ExcelConditionalFormattingThreshold(
-            ExcelConditionalFormattingThresholdType.PERCENTILE, null, 50.0d);
-    var max =
-        new ExcelConditionalFormattingThreshold(
-            ExcelConditionalFormattingThresholdType.MAX, null, null);
+    var min = new ConditionalFormattingThresholdSpec.Min();
+    var percentile = new ConditionalFormattingThresholdSpec.Percentile(50.0d);
+    var max = new ConditionalFormattingThresholdSpec.Max();
     var colorScale =
-        new ExcelConditionalFormattingRule.ColorScaleRule(
+        new ConditionalFormattingRuleSpec.ColorScaleRule(
+            false,
             List.of(min, percentile, max),
             List.of(
                 ColorSpec.rgb(new RgbHex("#112233")),
                 ColorSpec.rgb(new RgbHex("#445566")),
-                ColorSpec.rgb(new RgbHex("#778899"))),
-            false);
+                ColorSpec.rgb(new RgbHex("#778899"))));
     var dataBar =
-        new ExcelConditionalFormattingRule.DataBarRule(
-            ColorSpec.rgb(new RgbHex("#102030")), true, 10, 90, min, max, false);
+        new ConditionalFormattingRuleSpec.DataBarRule(
+            false, ColorSpec.rgb(new RgbHex("#102030")), true, 10, 90, min, max);
     var iconSetRule =
-        new ExcelConditionalFormattingRule.IconSetRule(
+        new ConditionalFormattingRuleSpec.IconSetRule(
+            false,
             ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
             true,
             true,
-            List.of(
-                new ExcelConditionalFormattingThreshold(
-                    ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
-                percentile,
-                max),
-            false);
+            List.of(new ConditionalFormattingThresholdSpec.Percent(0.0d), percentile, max));
     var top10 =
-        new ExcelConditionalFormattingRule.Top10Rule(10, true, false, false, Optional.empty());
+        new ConditionalFormattingRuleSpec.Top10Rule(true, 10, true, false, Optional.empty());
     var anchor = new CommentAnchorSpec(1, 2, 3, 4);
 
     assertEquals(3, colorScale.thresholds().size());
@@ -608,80 +600,75 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(1, anchor.firstColumn());
 
     assertThrows(
+        IllegalArgumentException.class, () -> new ConditionalFormattingThresholdSpec.Formula(" "));
+    assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelConditionalFormattingThreshold(
-                ExcelConditionalFormattingThresholdType.NUMBER, " ", null));
+        () -> new ConditionalFormattingThresholdSpec.Numeric(Double.NaN));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingThreshold(
-                ExcelConditionalFormattingThresholdType.NUMBER, null, Double.NaN));
+            new ConditionalFormattingRuleSpec.ColorScaleRule(
+                false, List.of(min), List.of(ColorSpec.rgb(new RgbHex("#112233")))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRule.ColorScaleRule(
-                List.of(min), List.of(ColorSpec.rgb(new RgbHex("#112233"))), false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelConditionalFormattingRule.ColorScaleRule(
-                List.of(min, max), List.of(ColorSpec.rgb(new RgbHex("#112233"))), false));
+            new ConditionalFormattingRuleSpec.ColorScaleRule(
+                false, List.of(min, max), List.of(ColorSpec.rgb(new RgbHex("#112233")))));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelConditionalFormattingRule.ColorScaleRule(
-                null, List.of(ColorSpec.rgb(new RgbHex("#112233"))), false));
+            new ConditionalFormattingRuleSpec.ColorScaleRule(
+                false, null, List.of(ColorSpec.rgb(new RgbHex("#112233")))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRule.DataBarRule(
-                ColorSpec.rgb(new RgbHex("#102030")), false, 10, 9, min, max, false));
+            new ConditionalFormattingRuleSpec.DataBarRule(
+                false, ColorSpec.rgb(new RgbHex("#102030")), false, 10, 9, min, max));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelConditionalFormattingRule.DataBarRule(null, false, 0, 0, min, max, false));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new ExcelConditionalFormattingRule.DataBarRule(
-                ColorSpec.rgb(new RgbHex("#102030")), false, 0, 0, null, max, false));
+        () -> new ConditionalFormattingRuleSpec.DataBarRule(false, null, false, 0, 0, min, max));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelConditionalFormattingRule.DataBarRule(
-                ColorSpec.rgb(new RgbHex("#102030")), false, 0, 0, min, null, false));
+            new ConditionalFormattingRuleSpec.DataBarRule(
+                false, ColorSpec.rgb(new RgbHex("#102030")), false, 0, 0, null, max));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new ConditionalFormattingRuleSpec.DataBarRule(
+                false, ColorSpec.rgb(new RgbHex("#102030")), false, 0, 0, min, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRule.DataBarRule(
-                ColorSpec.rgb(new RgbHex("#102030")), false, -1, 0, min, max, false));
+            new ConditionalFormattingRuleSpec.DataBarRule(
+                false, ColorSpec.rgb(new RgbHex("#102030")), false, -1, 0, min, max));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRule.DataBarRule(
-                ColorSpec.rgb(new RgbHex("#102030")), false, 0, -1, min, max, false));
+            new ConditionalFormattingRuleSpec.DataBarRule(
+                false, ColorSpec.rgb(new RgbHex("#102030")), false, 0, -1, min, max));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRule.DataBarRule(
-                ColorSpec.rgb(new RgbHex("#102030")), false, 101, 101, min, max, false));
+            new ConditionalFormattingRuleSpec.DataBarRule(
+                false, ColorSpec.rgb(new RgbHex("#102030")), false, 101, 101, min, max));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRule.DataBarRule(
-                ColorSpec.rgb(new RgbHex("#102030")), false, 0, 101, min, max, false));
+            new ConditionalFormattingRuleSpec.DataBarRule(
+                false, ColorSpec.rgb(new RgbHex("#102030")), false, 0, 101, min, max));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelConditionalFormattingRule.IconSetRule(
+            new ConditionalFormattingRuleSpec.IconSetRule(
+                false,
                 ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
                 false,
                 false,
-                List.of(min, max),
-                false));
+                List.of(min, max)));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelConditionalFormattingRule.Top10Rule(0, false, false, false, null));
+        () -> new ConditionalFormattingRuleSpec.Top10Rule(false, 0, false, false, null));
     assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(-1, 0, 1, 1));
     assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(1, 0, 0, 1));
     assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(1, 2, 1, 1));

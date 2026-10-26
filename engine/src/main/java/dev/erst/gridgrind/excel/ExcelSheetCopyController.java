@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
-import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -116,8 +115,7 @@ final class ExcelSheetCopyController {
         sourceSheet.layout().mergedRegions(),
         sourceSheet.annotations().comments(new ExcelCellSelection.AllUsedCells()),
         ExcelSheetCopySupport.copiedDataValidations(sourcePoiSheet),
-        ExcelSheetCopySupport.supportedConditionalFormatting(
-            sourceSheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()), sheetName),
+        ExcelSheetCopyConditionalFormattingSupport.snapshot(sourcePoiSheet, sheetName),
         ExcelSheetCopySupport.sheetOwnedAutofilter(
             autofilterController.sheetOwnedAutofilters(sourcePoiSheet)),
         ExcelSheetCopySupport.tablesOnSheet(sourcePoiSheet));
@@ -185,24 +183,6 @@ final class ExcelSheetCopyController {
     ExcelSheetCopySupport.requireNoTables(sheet, sheetName);
   }
 
-  /** Returns only copyable conditional-formatting blocks for one source sheet. */
-  static List<ExcelConditionalFormattingBlockDefinition> supportedConditionalFormatting(
-      List<ExcelConditionalFormattingBlockSnapshot> blocks, String sourceSheetName) {
-    return ExcelSheetCopySupport.supportedConditionalFormatting(blocks, sourceSheetName);
-  }
-
-  /** Converts one persisted conditional-formatting rule into a copyable authoring rule. */
-  static ExcelConditionalFormattingRule copyableRule(
-      ExcelConditionalFormattingRuleSnapshot rule, String sourceSheetName) {
-    return ExcelSheetCopySupport.copyableRule(rule, sourceSheetName);
-  }
-
-  /** Converts one supported differential style into its copyable authoring form. */
-  static Optional<DifferentialStylePatch> copyableStyle(
-      ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
-    return ExcelSheetCopySupport.copyableStyle(style, sourceSheetName);
-  }
-
   /** Returns the one sheet-owned autofilter snapshot when present. */
   static Optional<ExcelAutofilterSnapshot.SheetOwned> sheetOwnedAutofilter(
       List<ExcelAutofilterSnapshot> autofilters) {
@@ -222,7 +202,8 @@ final class ExcelSheetCopyController {
       List<WorkbookSheetResult.MergedRegion> mergedRegions,
       List<WorkbookSheetResult.CellComment> comments,
       List<CTDataValidation> dataValidations,
-      List<ExcelConditionalFormattingBlockDefinition> conditionalFormattingBlocks,
+      List<org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting>
+          conditionalFormattingBlocks,
       Optional<ExcelAutofilterSnapshot.SheetOwned> sheetAutofilter,
       List<ExcelTableSnapshot> tables) {
     private ExcelSheetCopySnapshot {

@@ -44,8 +44,6 @@ import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
@@ -62,8 +60,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
-import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -78,8 +74,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -628,94 +622,6 @@ class AdvancedMutationCommandConverterTest {
     assertEquals(Optional.of(90), piePlot.firstSliceAngle());
     assertEquals("Ops", barCommand.sheetName());
     assertEquals(bar, barCommand.chart());
-  }
-
-  @Test
-  void convertsAdvancedConditionalFormattingPayloads() {
-    assertEquals(
-        new ExcelConditionalFormattingRule.ColorScaleRule(
-            List.of(
-                new ExcelConditionalFormattingThreshold(
-                    ExcelConditionalFormattingThresholdType.MIN, null, null),
-                new ExcelConditionalFormattingThreshold(
-                    ExcelConditionalFormattingThresholdType.MAX, null, null)),
-            List.of(ColorSpec.rgb(new RgbHex("#112233")), ColorSpec.rgb(new RgbHex("#AABBCC"))),
-            true),
-        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleSpec.ColorScaleRule(
-                true,
-                List.of(
-                    new ConditionalFormattingThresholdSpec.Min(),
-                    new ConditionalFormattingThresholdSpec.Max()),
-                List.of(
-                    ColorSpec.rgb(new RgbHex("#112233")), ColorSpec.rgb(new RgbHex("#AABBCC"))))));
-
-    assertEquals(
-        new ExcelConditionalFormattingRule.DataBarRule(
-            ColorSpec.theme(4, 0.25d),
-            true,
-            10,
-            90,
-            new ExcelConditionalFormattingThreshold(
-                ExcelConditionalFormattingThresholdType.NUMBER, null, 0.0d),
-            new ExcelConditionalFormattingThreshold(
-                ExcelConditionalFormattingThresholdType.PERCENTILE, null, 90.0d),
-            false),
-        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleSpec.DataBarRule(
-                false,
-                ColorSpec.theme(4, 0.25d),
-                true,
-                10,
-                90,
-                new ConditionalFormattingThresholdSpec.Numeric(0.0d),
-                new ConditionalFormattingThresholdSpec.Percentile(90.0d))));
-
-    ExcelConditionalFormattingRule.ColorScaleRule formulaThresholdRule =
-        assertInstanceOf(
-            ExcelConditionalFormattingRule.ColorScaleRule.class,
-            WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-                new ConditionalFormattingRuleSpec.ColorScaleRule(
-                    false,
-                    List.of(
-                        new ConditionalFormattingThresholdSpec.Formula("A1"),
-                        new ConditionalFormattingThresholdSpec.Percent(100.0d)),
-                    List.of(
-                        ColorSpec.rgb(new RgbHex("#112233")),
-                        ColorSpec.rgb(new RgbHex("#AABBCC"))))));
-    assertEquals(
-        new ExcelConditionalFormattingThreshold(
-            ExcelConditionalFormattingThresholdType.FORMULA, "A1", null),
-        formulaThresholdRule.thresholds().getFirst());
-
-    assertEquals(
-        new ExcelConditionalFormattingRule.IconSetRule(
-            ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
-            false,
-            true,
-            List.of(
-                new ExcelConditionalFormattingThreshold(
-                    ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
-                new ExcelConditionalFormattingThreshold(
-                    ExcelConditionalFormattingThresholdType.PERCENT, null, 33.0d),
-                new ExcelConditionalFormattingThreshold(
-                    ExcelConditionalFormattingThresholdType.PERCENT, null, 67.0d)),
-            true),
-        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleSpec.IconSetRule(
-                true,
-                ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
-                false,
-                true,
-                List.of(
-                    new ConditionalFormattingThresholdSpec.Percent(0.0d),
-                    new ConditionalFormattingThresholdSpec.Percent(33.0d),
-                    new ConditionalFormattingThresholdSpec.Percent(67.0d)))));
-
-    assertEquals(
-        new ExcelConditionalFormattingRule.Top10Rule(7, true, false, true, Optional.empty()),
-        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleSpec.Top10Rule(true, 7, true, false, Optional.empty())));
   }
 
   @Test
