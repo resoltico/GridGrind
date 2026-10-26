@@ -1,23 +1,23 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 
 /** Samples surface chart plot families for paired protocol and engine surfaces. */
 final class OperationSequenceChartSurfacePlotSupport {
   private OperationSequenceChartSurfacePlotSupport() {}
 
-  static ChartPlotInput nextChartPlotInput(
+  static ChartPlotSpec nextChartPlotInput(
       int plotKind, boolean varyColors, GridGrindFuzzData data) {
     return switch (plotKind) {
       case 11 ->
-          new ChartPlotInput.Surface(
+          new ChartPlotSpec.Surface(
               varyColors,
               data.consumeBoolean(),
               OperationSequenceChartFactory.nextChartAxesInputSurface(),
               OperationSequenceChartFactory.nextChartSeriesInputs(data, false));
       case 12 ->
-          new ChartPlotInput.Surface3D(
+          new ChartPlotSpec.Surface3D(
               varyColors,
               data.consumeBoolean(),
               OperationSequenceChartFactory.nextChartAxesInputSurface(),

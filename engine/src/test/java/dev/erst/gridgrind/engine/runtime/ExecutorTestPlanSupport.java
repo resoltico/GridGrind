@@ -1,34 +1,34 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.PictureInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
-import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
-import dev.erst.gridgrind.core.model.style.CellBorderInput;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
-import dev.erst.gridgrind.core.model.style.CellFontInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.FontHeightInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -40,8 +40,8 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.result.WorkbookResult;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -80,12 +80,12 @@ final class ExecutorTestPlanSupport {
   }
 
   static PendingMutation mutate(StructuredMutationAction.SetTable action) {
-    TableInput table = action.table();
+    TableSpec table = action.table();
     return mutate(new TableSelector.ByNameOnSheet(table.name(), table.sheetName()), action);
   }
 
   static PendingMutation mutate(StructuredMutationAction.SetPivotTable action) {
-    PivotTableInput pivotTable = action.pivotTable();
+    PivotTableSpec pivotTable = action.pivotTable();
     return mutate(
         new PivotTableSelector.ByNameOnSheet(pivotTable.name(), pivotTable.sheetName()), action);
   }
@@ -110,51 +110,51 @@ final class ExecutorTestPlanSupport {
     return inspections == null ? List.of() : List.of(inspections);
   }
 
-  static CalculationPolicyInput calculateAll() {
-    return CalculationPolicyInput.strategy(new CalculationStrategyInput.EvaluateAll());
+  static CalculationPolicySpec calculateAll() {
+    return CalculationPolicySpec.strategy(new CalculationStrategySpec.EvaluateAll());
   }
 
-  static CalculationPolicyInput calculateAllAndMarkRecalculateOnOpen() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
+  static CalculationPolicySpec calculateAllAndMarkRecalculateOnOpen() {
+    return new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), true);
   }
 
-  static CalculationPolicyInput deferCalculation() {
-    return CalculationPolicyInput.strategy(new CalculationStrategyInput.DeferredCalculation());
+  static CalculationPolicySpec deferCalculation() {
+    return CalculationPolicySpec.strategy(new CalculationStrategySpec.DeferredCalculation());
   }
 
-  static CalculationPolicyInput requireEvaluation() {
-    return CalculationPolicyInput.strategy(new CalculationStrategyInput.RequireEvaluation());
+  static CalculationPolicySpec requireEvaluation() {
+    return CalculationPolicySpec.strategy(new CalculationStrategySpec.RequireEvaluation());
   }
 
-  static CalculationPolicyInput calculateTargets(
+  static CalculationPolicySpec calculateTargets(
       dev.erst.gridgrind.core.model.formula.FormulaCellTarget... cells) {
-    return CalculationPolicyInput.strategy(
-        new CalculationStrategyInput.EvaluateTargets(List.of(cells)));
+    return CalculationPolicySpec.strategy(
+        new CalculationStrategySpec.EvaluateTargets(List.of(cells)));
   }
 
-  static CalculationPolicyInput clearFormulaCaches() {
-    return CalculationPolicyInput.strategy(new CalculationStrategyInput.ClearCachesOnly());
+  static CalculationPolicySpec clearFormulaCaches() {
+    return CalculationPolicySpec.strategy(new CalculationStrategySpec.ClearCachesOnly());
   }
 
-  static CalculationPolicyInput markRecalculateOnOpen() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true);
+  static CalculationPolicySpec markRecalculateOnOpen() {
+    return new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), true);
   }
 
-  static ExecutionPolicyInput executionPolicy(CalculationPolicyInput calculation) {
-    return ExecutionPolicyInput.calculation(calculation);
+  static ExecutionPolicySpec executionPolicy(CalculationPolicySpec calculation) {
+    return ExecutionPolicySpec.calculation(calculation);
   }
 
-  static ExecutionPolicyInput executionPolicy(
-      ExecutionModeInput mode, CalculationPolicyInput calculation) {
-    return ExecutionPolicyInput.modeAndCalculation(mode, calculation);
+  static ExecutionPolicySpec executionPolicy(
+      ExecutionModeSpec mode, CalculationPolicySpec calculation) {
+    return ExecutionPolicySpec.modeAndCalculation(mode, calculation);
   }
 
-  static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+  static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
   }
 
-  static BinarySourceInput binary(String value) {
-    return BinarySourceInput.inlineBase64(value);
+  static BinarySourceSpec binary(String value) {
+    return BinarySourceSpec.inlineBase64(value);
   }
 
   static <T> Optional<T> maybe(T value) {
@@ -167,15 +167,15 @@ final class ExecutorTestPlanSupport {
         : Optional.of(new dev.erst.gridgrind.core.source.SecretReference(value));
   }
 
-  static CellFontInput fontInput(
+  static CellFontPatch fontInput(
       Boolean bold,
       Boolean italic,
       String fontName,
-      FontHeightInput fontHeight,
-      ColorInput fontColor,
+      FontHeightSpec fontHeight,
+      ColorSpec fontColor,
       Boolean underline,
       Boolean strikeout) {
-    return new CellFontInput(
+    return new CellFontPatch(
         maybe(bold),
         maybe(italic),
         maybe(fontName),
@@ -185,14 +185,14 @@ final class ExecutorTestPlanSupport {
         maybe(strikeout));
   }
 
-  static CellStylePatchInput styleInput(
+  static CellStylePatch styleInput(
       String numberFormat,
-      CellAlignmentInput alignment,
-      CellFontInput font,
-      CellFillInput fill,
-      CellBorderInput border,
-      CellProtectionInput protection) {
-    return new CellStylePatchInput(
+      CellAlignmentPatch alignment,
+      CellFontPatch font,
+      CellFillSpec fill,
+      CellBorderPatch border,
+      CellProtectionPatch protection) {
+    return new CellStylePatch(
         maybe(numberFormat),
         maybe(alignment),
         maybe(font),
@@ -201,72 +201,72 @@ final class ExecutorTestPlanSupport {
         maybe(protection));
   }
 
-  static CellInput.Text textCell(String value) {
-    return new CellInput.Text(TextSourceInput.inline(value));
+  static CellValueSpec.Text textCell(String value) {
+    return new CellValueSpec.Text(TextSourceSpec.inline(value));
   }
 
-  static CellInput.Formula formulaCell(String value) {
-    return new CellInput.Formula(TextSourceInput.inline(value));
+  static CellValueSpec.Formula formulaCell(String value) {
+    return new CellValueSpec.Formula(TextSourceSpec.inline(value));
   }
 
-  static RichTextRunInput richTextRun(String value) {
-    return new RichTextRunInput(text(value), Optional.empty());
+  static RichTextRunSpec richTextRun(String value) {
+    return new RichTextRunSpec(text(value), Optional.empty());
   }
 
-  static RichTextRunInput richTextRun(String value, CellFontInput font) {
-    return new RichTextRunInput(text(value), maybe(font));
+  static RichTextRunSpec richTextRun(String value, CellFontPatch font) {
+    return new RichTextRunSpec(text(value), maybe(font));
   }
 
-  static RichTextRunInput richTextRun(TextSourceInput source, CellFontInput font) {
-    return new RichTextRunInput(source, maybe(font));
+  static RichTextRunSpec richTextRun(TextSourceSpec source, CellFontPatch font) {
+    return new RichTextRunSpec(source, maybe(font));
   }
 
-  static HeaderFooterTextInput headerFooter(String left, String center, String right) {
-    return new HeaderFooterTextInput(text(left), text(center), text(right));
+  static HeaderFooterTextSpec headerFooter(String left, String center, String right) {
+    return new HeaderFooterTextSpec(text(left), text(center), text(right));
   }
 
-  static DataValidationPromptInput prompt(String title, String body, Boolean showPromptBox) {
-    return new DataValidationPromptInput(
+  static DataValidationPromptSpec prompt(String title, String body, Boolean showPromptBox) {
+    return new DataValidationPromptSpec(
         text(title), text(body), Objects.requireNonNullElse(showPromptBox, true));
   }
 
-  static DataValidationErrorAlertInput errorAlert(
+  static DataValidationErrorAlertSpec errorAlert(
       ExcelDataValidationErrorStyle style, String title, String body, Boolean showErrorBox) {
-    return new DataValidationErrorAlertInput(
+    return new DataValidationErrorAlertSpec(
         style, text(title), text(body), Objects.requireNonNullElse(showErrorBox, true));
   }
 
-  static DataValidationInput dataValidation(
-      DataValidationRuleInput rule,
+  static DataValidationSpec dataValidation(
+      DataValidationRuleSpec rule,
       boolean allowBlank,
       boolean suppressDropDownArrow,
-      DataValidationPromptInput prompt,
-      DataValidationErrorAlertInput errorAlert) {
-    return new DataValidationInput(
+      DataValidationPromptSpec prompt,
+      DataValidationErrorAlertSpec errorAlert) {
+    return new DataValidationSpec(
         rule, allowBlank, suppressDropDownArrow, maybe(prompt), maybe(errorAlert));
   }
 
-  static PictureInput picture(
-      String name, PictureDataInput image, DrawingAnchorInput anchor, TextSourceInput description) {
-    return new PictureInput(name, image, anchor, maybe(description));
+  static PictureSpec picture(
+      String name, PictureDataSpec image, DrawingAnchorSpec anchor, TextSourceSpec description) {
+    return new PictureSpec(name, image, anchor, maybe(description));
   }
 
-  static ShapeInput simpleShape(
-      String name, DrawingAnchorInput anchor, String presetGeometryToken, TextSourceInput text) {
-    return new ShapeInput.SimpleShape(name, anchor, presetGeometryToken, maybe(text));
+  static ShapeSpec simpleShape(
+      String name, DrawingAnchorSpec anchor, String presetGeometryToken, TextSourceSpec text) {
+    return new ShapeSpec.SimpleShape(name, anchor, presetGeometryToken, maybe(text));
   }
 
-  static ShapeInput connectorShape(String name, DrawingAnchorInput anchor) {
-    return new ShapeInput.Connector(name, anchor);
+  static ShapeSpec connectorShape(String name, DrawingAnchorSpec anchor) {
+    return new ShapeSpec.Connector(name, anchor);
   }
 
-  static WorkbookProtectionInput workbookProtection(
+  static WorkbookProtectionSpec workbookProtection(
       boolean structureLocked,
       boolean windowsLocked,
       boolean revisionsLocked,
       String workbookPassword,
       String revisionsPassword) {
-    return new WorkbookProtectionInput(
+    return new WorkbookProtectionSpec(
         structureLocked,
         windowsLocked,
         revisionsLocked,
@@ -325,8 +325,8 @@ final class ExecutorTestPlanSupport {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         steps(mutations, assertions, inspections));
   }
 
@@ -338,8 +338,8 @@ final class ExecutorTestPlanSupport {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         steps(mutations, inspections));
   }
 
@@ -351,32 +351,32 @@ final class ExecutorTestPlanSupport {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        Objects.requireNonNullElseGet(execution, ExecutionPolicySpec::defaults),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, assertions, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return request(
@@ -386,8 +386,8 @@ final class ExecutorTestPlanSupport {
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
     return request(
@@ -402,92 +402,92 @@ final class ExecutorTestPlanSupport {
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      FormulaEnvironmentInput formulaEnvironment,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        ExecutionPolicySpec.defaults(),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, assertions, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      FormulaEnvironmentInput formulaEnvironment,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        ExecutionPolicySpec.defaults(),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      FormulaEnvironmentInput formulaEnvironment,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        ExecutionPolicySpec.defaults(),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionModeInput executionMode,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionModeSpec executionMode,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.mode(
-            Objects.requireNonNullElseGet(executionMode, ExecutionModeInput::defaults)),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        ExecutionPolicySpec.mode(
+            Objects.requireNonNullElseGet(executionMode, ExecutionModeSpec::defaults)),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, assertions, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionModeInput executionMode,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionModeSpec executionMode,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.mode(
-            Objects.requireNonNullElseGet(executionMode, ExecutionModeInput::defaults)),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        ExecutionPolicySpec.mode(
+            Objects.requireNonNullElseGet(executionMode, ExecutionModeSpec::defaults)),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionModeInput executionMode,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionModeSpec executionMode,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.mode(
-            Objects.requireNonNullElseGet(executionMode, ExecutionModeInput::defaults)),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        ExecutionPolicySpec.mode(
+            Objects.requireNonNullElseGet(executionMode, ExecutionModeSpec::defaults)),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, inspections));
   }
 

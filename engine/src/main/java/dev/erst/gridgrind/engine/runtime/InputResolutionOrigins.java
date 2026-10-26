@@ -3,8 +3,8 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.core.problem.RequestIntake;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
@@ -47,11 +47,11 @@ final class InputResolutionOrigins {
     if (value == null || value instanceof WireString) {
       return;
     }
-    if (value instanceof TextSourceInput textSource) {
+    if (value instanceof TextSourceSpec textSource) {
       locations.put(textSource, locationFor(textSource, jsonPath, requestAnalysis));
       return;
     }
-    if (value instanceof BinarySourceInput binarySource) {
+    if (value instanceof BinarySourceSpec binarySource) {
       locations.put(binarySource, locationFor(binarySource, jsonPath, requestAnalysis));
       return;
     }
@@ -78,12 +78,12 @@ final class InputResolutionOrigins {
   }
 
   private static JsonLocation locationFor(
-      TextSourceInput source, String sourcePath, Optional<RequestIntake> requestAnalysis) {
+      TextSourceSpec source, String sourcePath, Optional<RequestIntake> requestAnalysis) {
     return locationFor(sourcePath, sourceField(source), requestAnalysis);
   }
 
   private static JsonLocation locationFor(
-      BinarySourceInput source, String sourcePath, Optional<RequestIntake> requestAnalysis) {
+      BinarySourceSpec source, String sourcePath, Optional<RequestIntake> requestAnalysis) {
     return locationFor(sourcePath, sourceField(source), requestAnalysis);
   }
 
@@ -95,19 +95,19 @@ final class InputResolutionOrigins {
         .orElseGet(() -> JsonLocation.pathOnly(jsonPath));
   }
 
-  static String sourceField(TextSourceInput source) {
+  static String sourceField(TextSourceSpec source) {
     return switch (source) {
-      case TextSourceInput.Inline _ -> "text";
-      case TextSourceInput.Utf8File _ -> "path";
-      case TextSourceInput.StandardInput _ -> "type";
+      case TextSourceSpec.Inline _ -> "text";
+      case TextSourceSpec.Utf8File _ -> "path";
+      case TextSourceSpec.Stdin _ -> "type";
     };
   }
 
-  static String sourceField(BinarySourceInput source) {
+  static String sourceField(BinarySourceSpec source) {
     return switch (source) {
-      case BinarySourceInput.InlineBase64 _ -> "base64Data";
-      case BinarySourceInput.File _ -> "path";
-      case BinarySourceInput.StandardInput _ -> "type";
+      case BinarySourceSpec.InlineBase64 _ -> "base64Data";
+      case BinarySourceSpec.File _ -> "path";
+      case BinarySourceSpec.Stdin _ -> "type";
     };
   }
 

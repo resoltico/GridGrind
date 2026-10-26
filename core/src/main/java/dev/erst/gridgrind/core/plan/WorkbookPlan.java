@@ -4,10 +4,10 @@ import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.metadata.WireDefault;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.problem.DuplicateStepId;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
@@ -36,11 +36,11 @@ public record WorkbookPlan(
     WorkbookSource source,
     WorkbookPersistence persistence,
     @ProtocolField(optional = true)
-        @WireDefault(factory = ExecutionPolicyInput.class, method = "defaults", omit = true)
-        ExecutionPolicyInput execution,
+        @WireDefault(factory = ExecutionPolicySpec.class, method = "defaults", omit = true)
+        ExecutionPolicySpec execution,
     @ProtocolField(optional = true)
-        @WireDefault(factory = FormulaEnvironmentInput.class, method = "empty", omit = true)
-        FormulaEnvironmentInput formulaEnvironment,
+        @WireDefault(factory = FormulaEnvironmentSpec.class, method = "empty", omit = true)
+        FormulaEnvironmentSpec formulaEnvironment,
     List<WorkbookStep> steps) {
   /** Normalizes one authored plan instance. */
   public WorkbookPlan {
@@ -59,8 +59,8 @@ public record WorkbookPlan(
   public static WorkbookPlan standard(
       WorkbookSource source,
       WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<WorkbookStep> steps) {
     return new WorkbookPlan(
         GridGrindProtocolVersion.current(),
@@ -77,8 +77,8 @@ public record WorkbookPlan(
       PlanId planId,
       WorkbookSource source,
       WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<WorkbookStep> steps) {
     return new WorkbookPlan(
         GridGrindProtocolVersion.current(),
@@ -96,8 +96,8 @@ public record WorkbookPlan(
       PlanId planId,
       WorkbookSource source,
       WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<WorkbookStep> steps) {
     return new WorkbookPlan(
         protocolVersion,
@@ -110,17 +110,17 @@ public record WorkbookPlan(
   }
 
   /** Returns the effective execution policy after default normalization. */
-  public ExecutionPolicyInput effectiveExecution() {
+  public ExecutionPolicySpec effectiveExecution() {
     return execution;
   }
 
   /** Returns the normalized execution mode family after request-default expansion. */
-  public ExecutionModeInput executionMode() {
+  public ExecutionModeSpec executionMode() {
     return execution.mode();
   }
 
   /** Returns the effective execution mode family after default normalization. */
-  public ExecutionModeInput effectiveExecutionMode() {
+  public ExecutionModeSpec effectiveExecutionMode() {
     return effectiveExecution().effectiveMode();
   }
 
@@ -130,12 +130,12 @@ public record WorkbookPlan(
   }
 
   /** Returns the effective calculation policy after default normalization. */
-  public CalculationPolicyInput calculationPolicy() {
+  public CalculationPolicySpec calculationPolicy() {
     return effectiveExecution().effectiveCalculation();
   }
 
   /** Returns the effective assertion policy after default normalization. */
-  public AssertionModeInput assertionMode() {
+  public AssertionModeSpec assertionMode() {
     return effectiveExecution().effectiveAssertionMode();
   }
 
@@ -194,7 +194,7 @@ public record WorkbookPlan(
                     dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues
                         .WORKBOOK_PATH_SUFFIX)
             String path,
-        Optional<OoxmlOpenSecurityInput> security)
+        Optional<OoxmlOpenSecuritySpec> security)
         implements WorkbookSource {
       public ExistingFile {
         requireXlsxWorkbookPath(path);
@@ -209,7 +209,7 @@ public record WorkbookPlan(
       }
 
       /** Opens the existing workbook at the supplied path with explicit package-open settings. */
-      public ExistingFile(String path, OoxmlOpenSecurityInput security) {
+      public ExistingFile(String path, OoxmlOpenSecuritySpec security) {
         this(path, Optional.of(Objects.requireNonNull(security, "security must not be null")));
       }
     }
@@ -236,14 +236,14 @@ public record WorkbookPlan(
         summary =
             "Overwrite the opened source workbook at source.path. No path field is accepted on OVERWRITE; the write target is the same path opened by the EXISTING source. persistence.security is required and declares both final OOXML encryption and signature dispositions. The response persistence.type echoes OVERWRITE, includes sourcePath (the original source path string) whenever an EXISTING source path was available, and otherwise omits sourcePath instead of inventing one. It carries write.status=WRITTEN with executionPath after a successful save or write.status=NOT_WRITTEN when the run fails before any file is updated.",
         noteRefs = {"requestOwnedPathRule"})
-    record Overwrite(Optional<OoxmlPersistenceSecurityInput> security)
+    record Overwrite(Optional<OoxmlPersistenceSecuritySpec> security)
         implements WorkbookPersistence {
       public Overwrite {
         security = normalizePersistenceSecurity(security);
       }
 
       /** Overwrites the source workbook with explicit package-security persistence settings. */
-      public Overwrite(OoxmlPersistenceSecurityInput security) {
+      public Overwrite(OoxmlPersistenceSecuritySpec security) {
         this(Optional.of(Objects.requireNonNull(security, "security must not be null")));
       }
     }
@@ -262,7 +262,7 @@ public record WorkbookPlan(
                         .WORKBOOK_PATH_SUFFIX)
             String path,
         IfExists ifExists,
-        Optional<OoxmlPersistenceSecurityInput> security)
+        Optional<OoxmlPersistenceSecuritySpec> security)
         implements WorkbookPersistence {
       public SaveAs {
         requireXlsxWorkbookPath(path);
@@ -276,7 +276,7 @@ public record WorkbookPlan(
       }
 
       /** Saves the workbook to the supplied path with explicit package-security settings. */
-      public SaveAs(String path, IfExists ifExists, OoxmlPersistenceSecurityInput security) {
+      public SaveAs(String path, IfExists ifExists, OoxmlPersistenceSecuritySpec security) {
         this(
             path,
             ifExists,
@@ -362,15 +362,15 @@ public record WorkbookPlan(
     return path.substring(lastDot);
   }
 
-  private static Optional<OoxmlOpenSecurityInput> normalizeOpenSecurity(
-      Optional<OoxmlOpenSecurityInput> security) {
-    Optional<OoxmlOpenSecurityInput> normalized =
+  private static Optional<OoxmlOpenSecuritySpec> normalizeOpenSecurity(
+      Optional<OoxmlOpenSecuritySpec> security) {
+    Optional<OoxmlOpenSecuritySpec> normalized =
         Objects.requireNonNull(security, "security must not be null");
     return normalized.filter(value -> value.passwordRef().isPresent());
   }
 
-  private static Optional<OoxmlPersistenceSecurityInput> normalizePersistenceSecurity(
-      Optional<OoxmlPersistenceSecurityInput> security) {
+  private static Optional<OoxmlPersistenceSecuritySpec> normalizePersistenceSecurity(
+      Optional<OoxmlPersistenceSecuritySpec> security) {
     return Objects.requireNonNull(security, "security must not be null");
   }
 }

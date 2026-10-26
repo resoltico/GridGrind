@@ -23,7 +23,7 @@ public final class GridGrindCli {
         GridGrindEngine.requestDoctor(),
         new CliRequestReader(),
         new CliResponseWriter(),
-        StandardInputInteractivity.currentProcess());
+        StdinInteractivity.currentProcess());
   }
 
   static GridGrindCli forTesting(GridGrindRequestExecutor executor) {
@@ -32,7 +32,7 @@ public final class GridGrindCli {
         GridGrindEngine.requestDoctor(),
         new CliRequestReader(),
         new CliResponseWriter(),
-        StandardInputInteractivity.never());
+        StdinInteractivity.never());
   }
 
   static GridGrindCli forTesting(

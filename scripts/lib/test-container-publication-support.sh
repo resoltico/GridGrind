@@ -130,7 +130,7 @@ case "${command}" in
                         nestedTypes:executionModeTypes)
                             emit_fixture_file "${FAKE_DOCKER_EXECUTION_MODE_TYPES_OUTPUT_FILE:?}"
                             ;;
-                        plainTypes:executionPolicyInputType)
+                        plainTypes:executionPolicySpecType)
                             emit_fixture_file "${FAKE_DOCKER_EXECUTION_POLICY_INPUT_TYPE_OUTPUT_FILE:?}"
                             ;;
                         *)

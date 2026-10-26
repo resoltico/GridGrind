@@ -3,11 +3,11 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
@@ -124,14 +124,14 @@ class HostAcceptancePolicyValidatorTest {
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.ExistingFile(
                     "input.xlsx",
-                    new dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput(
+                    new dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec(
                         java.util.Optional.of(
                             new dev.erst.gridgrind.core.source.SecretReference(
                                 "source-password")))),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
                     "output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-                ExecutionPolicyInput.defaults(),
-                FormulaEnvironmentInput.empty(),
+                ExecutionPolicySpec.defaults(),
+                FormulaEnvironmentSpec.empty(),
                 List.of())));
     assertEquals(
         List.of("host opaque-part preservation requires a persisted workbook artifact"),
@@ -139,8 +139,8 @@ class HostAcceptancePolicyValidatorTest {
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                ExecutionPolicyInput.defaults(),
-                FormulaEnvironmentInput.empty(),
+                ExecutionPolicySpec.defaults(),
+                FormulaEnvironmentSpec.empty(),
                 List.of())));
     assertTrue(
         violationsFor(
@@ -148,8 +148,8 @@ class HostAcceptancePolicyValidatorTest {
                     new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         "output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-                    ExecutionPolicyInput.defaults(),
-                    FormulaEnvironmentInput.empty(),
+                    ExecutionPolicySpec.defaults(),
+                    FormulaEnvironmentSpec.empty(),
                     List.of()))
             .isEmpty());
   }
@@ -199,19 +199,19 @@ class HostAcceptancePolicyValidatorTest {
   }
 
   private static WorkbookPlan streamingPlan() {
-    return plan(ExecutionPolicyInput.mode(new ExecutionModeInput.StreamingWrite()));
+    return plan(ExecutionPolicySpec.mode(new ExecutionModeSpec.StreamingWrite()));
   }
 
   private static WorkbookPlan fullPlan() {
-    return plan(ExecutionPolicyInput.defaults());
+    return plan(ExecutionPolicySpec.defaults());
   }
 
-  private static WorkbookPlan plan(ExecutionPolicyInput execution) {
+  private static WorkbookPlan plan(ExecutionPolicySpec execution) {
     return WorkbookPlan.standard(
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         execution,
-        FormulaEnvironmentInput.empty(),
+        FormulaEnvironmentSpec.empty(),
         List.of());
   }
 

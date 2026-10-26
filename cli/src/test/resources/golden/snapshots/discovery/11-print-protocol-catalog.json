@@ -8,7 +8,7 @@
       "lookupId" : "SET_COMMENT",
       "qualifiedId" : "mutationActionTypes:SET_COMMENT",
       "summary" : "Replace the plain-text comment attached to a single cell.",
-      "supportingQualifiedIds" : [ "commentInputType:CommentInput", "plainTypes:commentInputType", "cellFontInputType:CellFontInput", "richTextRunInputType:RichTextRunInput", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "fontHeightInputTypes:POINTS", "nestedTypes:textSourceInputTypes", "plainTypes:cellFontInputType", "plainTypes:richTextRunInputType", "nestedTypes:fontHeightInputTypes" ]
+      "supportingQualifiedIds" : [ "commentSpecType:CommentSpec", "plainTypes:commentSpecType", "cellFontPatchType:CellFontPatch", "richTextRunSpecType:RichTextRunSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "fontHeightSpecTypes:POINTS", "nestedTypes:textSourceSpecTypes", "plainTypes:cellFontPatchType", "plainTypes:richTextRunSpecType", "nestedTypes:fontHeightSpecTypes" ]
     }, {
       "catalogGroup" : "assertionTypes",
       "kind" : "ENTRY",
@@ -33,14 +33,14 @@
       "lookupId" : "APPEND_ROW",
       "qualifiedId" : "mutationActionTypes:APPEND_ROW",
       "summary" : "Append a new row of typed or compact homogeneous values after the last occupied row.",
-      "supportingQualifiedIds" : [ "cellFontInputType:CellFontInput", "cellInputTypes:BLANK", "cellInputTypes:BOOLEAN", "cellInputTypes:DATE", "cellInputTypes:DATE_TIME", "cellInputTypes:ERROR", "cellInputTypes:FORMULA", "cellInputTypes:NUMBER", "cellInputTypes:RAW_FORMULA", "cellInputTypes:RICH_TEXT", "cellInputTypes:TEXT", "cellRowInputTypes:BOOLEAN", "cellRowInputTypes:DATE", "cellRowInputTypes:DATE_TIME", "cellRowInputTypes:ERROR", "cellRowInputTypes:FORMULA", "cellRowInputTypes:NUMBER", "cellRowInputTypes:TEXT", "cellRowInputTypes:TYPED", "richTextRunInputType:RichTextRunInput", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "fontHeightInputTypes:POINTS", "nestedTypes:cellInputTypes", "nestedTypes:cellRowInputTypes", "nestedTypes:textSourceInputTypes", "plainTypes:cellFontInputType", "plainTypes:richTextRunInputType", "nestedTypes:fontHeightInputTypes" ]
+      "supportingQualifiedIds" : [ "cellFontPatchType:CellFontPatch", "cellRowSpecTypes:BOOLEAN", "cellRowSpecTypes:DATE", "cellRowSpecTypes:DATE_TIME", "cellRowSpecTypes:ERROR", "cellRowSpecTypes:FORMULA", "cellRowSpecTypes:NUMBER", "cellRowSpecTypes:TEXT", "cellRowSpecTypes:TYPED", "cellValueSpecTypes:BLANK", "cellValueSpecTypes:BOOLEAN", "cellValueSpecTypes:DATE", "cellValueSpecTypes:DATE_TIME", "cellValueSpecTypes:ERROR", "cellValueSpecTypes:FORMULA", "cellValueSpecTypes:NUMBER", "cellValueSpecTypes:RAW_FORMULA", "cellValueSpecTypes:RICH_TEXT", "cellValueSpecTypes:TEXT", "richTextRunSpecType:RichTextRunSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "fontHeightSpecTypes:POINTS", "nestedTypes:cellRowSpecTypes", "nestedTypes:cellValueSpecTypes", "nestedTypes:textSourceSpecTypes", "plainTypes:cellFontPatchType", "plainTypes:richTextRunSpecType", "nestedTypes:fontHeightSpecTypes" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_RANGE",
       "qualifiedId" : "mutationActionTypes:SET_RANGE",
       "summary" : "Write a rectangular grid of typed or compact homogeneous values.",
-      "supportingQualifiedIds" : [ "cellFontInputType:CellFontInput", "cellGridInputTypes:BOOLEAN", "cellGridInputTypes:DATE", "cellGridInputTypes:DATE_TIME", "cellGridInputTypes:ERROR", "cellGridInputTypes:FORMULA", "cellGridInputTypes:NUMBER", "cellGridInputTypes:TEXT", "cellGridInputTypes:TYPED", "cellInputTypes:BLANK", "cellInputTypes:BOOLEAN", "cellInputTypes:DATE", "cellInputTypes:DATE_TIME", "cellInputTypes:ERROR", "cellInputTypes:FORMULA", "cellInputTypes:NUMBER", "cellInputTypes:RAW_FORMULA", "cellInputTypes:RICH_TEXT", "cellInputTypes:TEXT", "richTextRunInputType:RichTextRunInput", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "fontHeightInputTypes:POINTS", "nestedTypes:cellGridInputTypes", "nestedTypes:cellInputTypes", "nestedTypes:textSourceInputTypes", "plainTypes:cellFontInputType", "plainTypes:richTextRunInputType", "nestedTypes:fontHeightInputTypes" ]
+      "supportingQualifiedIds" : [ "cellFontPatchType:CellFontPatch", "cellGridSpecTypes:BOOLEAN", "cellGridSpecTypes:DATE", "cellGridSpecTypes:DATE_TIME", "cellGridSpecTypes:ERROR", "cellGridSpecTypes:FORMULA", "cellGridSpecTypes:NUMBER", "cellGridSpecTypes:TEXT", "cellGridSpecTypes:TYPED", "cellValueSpecTypes:BLANK", "cellValueSpecTypes:BOOLEAN", "cellValueSpecTypes:DATE", "cellValueSpecTypes:DATE_TIME", "cellValueSpecTypes:ERROR", "cellValueSpecTypes:FORMULA", "cellValueSpecTypes:NUMBER", "cellValueSpecTypes:RAW_FORMULA", "cellValueSpecTypes:RICH_TEXT", "cellValueSpecTypes:TEXT", "richTextRunSpecType:RichTextRunSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "fontHeightSpecTypes:POINTS", "nestedTypes:cellGridSpecTypes", "nestedTypes:cellValueSpecTypes", "nestedTypes:textSourceSpecTypes", "plainTypes:cellFontPatchType", "plainTypes:richTextRunSpecType", "nestedTypes:fontHeightSpecTypes" ]
     }, {
       "catalogGroup" : "workbookStepTypes",
       "kind" : "ENTRY",
@@ -59,14 +59,14 @@
       "lookupId" : "SET_SHEET_PRESENTATION",
       "qualifiedId" : "mutationActionTypes:SET_SHEET_PRESENTATION",
       "summary" : "Apply supported sheet-presentation state such as display flags and defaults.",
-      "supportingQualifiedIds" : [ "ignoredErrorInputType:IgnoredErrorInput", "plainTypes:ignoredErrorInputType" ]
+      "supportingQualifiedIds" : [ "ignoredErrorSpecType:IgnoredErrorSpec", "plainTypes:ignoredErrorSpecType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_CHART",
       "qualifiedId" : "mutationActionTypes:SET_CHART",
       "summary" : "Create or mutate one supported simple chart on one sheet.",
-      "supportingQualifiedIds" : [ "nestedTypes:chartTitleInputTypes", "chartTitleInputTypes:TEXT", "drawingAnchorInputTypes:TWO_CELL", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "chartInputType:ChartInput", "chartTitleInputTypes:FORMULA", "drawingMarkerInputType:DrawingMarkerInput", "nestedTypes:textSourceInputTypes", "nestedTypes:drawingAnchorInputTypes", "plainTypes:chartInputType", "plainTypes:drawingMarkerInputType" ]
+      "supportingQualifiedIds" : [ "nestedTypes:chartTitleSpecTypes", "chartTitleSpecTypes:TEXT", "drawingAnchorSpecTypes:TWO_CELL", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "chartSpecType:ChartSpec", "chartTitleSpecTypes:FORMULA", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:textSourceSpecTypes", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:chartSpecType", "plainTypes:drawingMarkerSpecType" ]
     }, {
       "catalogGroup" : "assertionTypes",
       "kind" : "ENTRY",
@@ -106,7 +106,7 @@
       "lookupId" : "SET_CELL",
       "qualifiedId" : "mutationActionTypes:SET_CELL",
       "summary" : "Write one typed value to a single cell.",
-      "supportingQualifiedIds" : [ "cellFontInputType:CellFontInput", "cellInputTypes:BLANK", "cellInputTypes:BOOLEAN", "cellInputTypes:DATE", "cellInputTypes:DATE_TIME", "cellInputTypes:ERROR", "cellInputTypes:FORMULA", "cellInputTypes:NUMBER", "cellInputTypes:RAW_FORMULA", "cellInputTypes:RICH_TEXT", "cellInputTypes:TEXT", "richTextRunInputType:RichTextRunInput", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "fontHeightInputTypes:POINTS", "nestedTypes:cellInputTypes", "nestedTypes:textSourceInputTypes", "plainTypes:cellFontInputType", "plainTypes:richTextRunInputType", "nestedTypes:fontHeightInputTypes" ]
+      "supportingQualifiedIds" : [ "cellFontPatchType:CellFontPatch", "cellValueSpecTypes:BLANK", "cellValueSpecTypes:BOOLEAN", "cellValueSpecTypes:DATE", "cellValueSpecTypes:DATE_TIME", "cellValueSpecTypes:ERROR", "cellValueSpecTypes:FORMULA", "cellValueSpecTypes:NUMBER", "cellValueSpecTypes:RAW_FORMULA", "cellValueSpecTypes:RICH_TEXT", "cellValueSpecTypes:TEXT", "richTextRunSpecType:RichTextRunSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "fontHeightSpecTypes:POINTS", "nestedTypes:cellValueSpecTypes", "nestedTypes:textSourceSpecTypes", "plainTypes:cellFontPatchType", "plainTypes:richTextRunSpecType", "nestedTypes:fontHeightSpecTypes" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
@@ -156,7 +156,7 @@
       "lookupId" : "APPLY_STYLE",
       "qualifiedId" : "mutationActionTypes:APPLY_STYLE",
       "summary" : "Apply a style patch to every cell in the selected range.",
-      "supportingQualifiedIds" : [ "cellAlignmentInputType:CellAlignmentInput", "cellBorderInputType:CellBorderInput", "cellFillInputTypes:GRADIENT", "cellFillInputTypes:PATTERN_BACKGROUND", "cellFillInputTypes:PATTERN_FOREGROUND", "cellFillInputTypes:PATTERN_FOREGROUND_BACKGROUND", "cellFillInputTypes:PATTERN_ONLY", "cellFontInputType:CellFontInput", "cellGradientFillInputTypes:LINEAR", "cellGradientFillInputTypes:PATH", "cellGradientStopInputType:CellGradientStopInput", "cellProtectionInputType:CellProtectionInput", "cellStylePatchInputType:CellStylePatchInput", "borderSideInputType:BorderSideInput", "fontHeightInputTypes:POINTS", "nestedTypes:cellFillInputTypes", "nestedTypes:cellGradientFillInputTypes", "plainTypes:cellAlignmentInputType", "plainTypes:cellBorderInputType", "plainTypes:cellFontInputType", "plainTypes:cellGradientStopInputType", "plainTypes:cellProtectionInputType", "plainTypes:cellStylePatchInputType", "nestedTypes:fontHeightInputTypes", "plainTypes:borderSideInputType" ]
+      "supportingQualifiedIds" : [ "cellAlignmentPatchType:CellAlignmentPatch", "cellBorderPatchType:CellBorderPatch", "cellFillSpecTypes:GRADIENT", "cellFillSpecTypes:PATTERN_BACKGROUND", "cellFillSpecTypes:PATTERN_FOREGROUND", "cellFillSpecTypes:PATTERN_FOREGROUND_BACKGROUND", "cellFillSpecTypes:PATTERN_ONLY", "cellFontPatchType:CellFontPatch", "cellGradientFillSpecTypes:LINEAR", "cellGradientFillSpecTypes:PATH", "cellGradientStopSpecType:CellGradientStopSpec", "cellProtectionPatchType:CellProtectionPatch", "cellStylePatchType:CellStylePatch", "borderSidePatchType:BorderSidePatch", "fontHeightSpecTypes:POINTS", "nestedTypes:cellFillSpecTypes", "nestedTypes:cellGradientFillSpecTypes", "plainTypes:cellAlignmentPatchType", "plainTypes:cellBorderPatchType", "plainTypes:cellFontPatchType", "plainTypes:cellGradientStopSpecType", "plainTypes:cellProtectionPatchType", "plainTypes:cellStylePatchType", "nestedTypes:fontHeightSpecTypes", "plainTypes:borderSidePatchType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
@@ -187,7 +187,7 @@
       "lookupId" : "SET_ARRAY_FORMULA",
       "qualifiedId" : "mutationActionTypes:SET_ARRAY_FORMULA",
       "summary" : "Author one contiguous single-cell or multi-cell array-formula group.",
-      "supportingQualifiedIds" : [ "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "arrayFormulaInputType:ArrayFormulaInput", "nestedTypes:textSourceInputTypes", "plainTypes:arrayFormulaInputType" ]
+      "supportingQualifiedIds" : [ "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "arrayFormulaSpecType:ArrayFormulaSpec", "nestedTypes:textSourceSpecTypes", "plainTypes:arrayFormulaSpecType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
@@ -232,7 +232,7 @@
       "lookupId" : "SET_DRAWING_OBJECT_ANCHOR",
       "qualifiedId" : "mutationActionTypes:SET_DRAWING_OBJECT_ANCHOR",
       "summary" : "Move one existing drawing object by replacing its anchor authoritatively.",
-      "supportingQualifiedIds" : [ "drawingAnchorInputTypes:TWO_CELL", "drawingMarkerInputType:DrawingMarkerInput", "nestedTypes:drawingAnchorInputTypes", "plainTypes:drawingMarkerInputType" ]
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:drawingMarkerSpecType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
@@ -246,7 +246,7 @@
       "lookupId" : "SET_SHAPE",
       "qualifiedId" : "mutationActionTypes:SET_SHAPE",
       "summary" : "Create or replace one simple-shape or connector drawing object on one sheet.",
-      "supportingQualifiedIds" : [ "drawingAnchorInputTypes:TWO_CELL", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "drawingMarkerInputType:DrawingMarkerInput", "shapeInputTypes:CONNECTOR", "shapeInputTypes:SIMPLE_SHAPE", "nestedTypes:textSourceInputTypes", "nestedTypes:drawingAnchorInputTypes", "nestedTypes:shapeInputTypes", "plainTypes:drawingMarkerInputType" ]
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "drawingMarkerSpecType:DrawingMarkerSpec", "shapeSpecTypes:CONNECTOR", "shapeSpecTypes:SIMPLE_SHAPE", "nestedTypes:textSourceSpecTypes", "nestedTypes:drawingAnchorSpecTypes", "nestedTypes:shapeSpecTypes", "plainTypes:drawingMarkerSpecType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
@@ -260,7 +260,7 @@
       "lookupId" : "SET_TABLE",
       "qualifiedId" : "mutationActionTypes:SET_TABLE",
       "summary" : "Create or replace one workbook-global table definition.",
-      "supportingQualifiedIds" : [ "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "tableInputType:TableInput", "nestedTypes:textSourceInputTypes", "plainTypes:tableInputType" ]
+      "supportingQualifiedIds" : [ "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "tableSpecType:TableSpec", "nestedTypes:textSourceSpecTypes", "plainTypes:tableSpecType" ]
     }, {
       "catalogGroup" : "workbookStepTypes",
       "kind" : "ENTRY",
@@ -273,56 +273,56 @@
       "lookupId" : "IMPORT_CUSTOM_XML_MAPPING",
       "qualifiedId" : "mutationActionTypes:IMPORT_CUSTOM_XML_MAPPING",
       "summary" : "Import one XML document into one existing workbook custom-XML mapping.",
-      "supportingQualifiedIds" : [ "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "nestedTypes:textSourceInputTypes" ]
+      "supportingQualifiedIds" : [ "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "nestedTypes:textSourceSpecTypes" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_AUTOFILTER",
       "qualifiedId" : "mutationActionTypes:SET_AUTOFILTER",
       "summary" : "Create or replace one sheet-level autofilter range.",
-      "supportingQualifiedIds" : [ "autofilterSortConditionInputTypes:CELL_COLOR", "autofilterFilterCriterionInputTypes:COLOR", "autofilterFilterCriterionInputTypes:VALUES", "autofilterSortConditionInputTypes:VALUE", "nestedTypes:autofilterFilterCriterionInputTypes", "nestedTypes:autofilterSortConditionInputTypes" ]
+      "supportingQualifiedIds" : [ "autofilterSortConditionSpecTypes:CELL_COLOR", "autofilterFilterCriterionSpecTypes:COLOR", "autofilterFilterCriterionSpecTypes:VALUES", "autofilterSortConditionSpecTypes:VALUE", "nestedTypes:autofilterFilterCriterionSpecTypes", "nestedTypes:autofilterSortConditionSpecTypes" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_CONDITIONAL_FORMATTING",
       "qualifiedId" : "mutationActionTypes:SET_CONDITIONAL_FORMATTING",
       "summary" : "Create or replace one logical conditional-formatting block over explicit sheet ranges.",
-      "supportingQualifiedIds" : [ "conditionalFormattingRuleInputTypes:CELL_VALUE_RULE", "borderSideInputType:BorderSideInput", "fontHeightInputTypes:POINTS", "nestedTypes:conditionalFormattingRuleInputTypes", "nestedTypes:fontHeightInputTypes", "plainTypes:borderSideInputType" ]
+      "supportingQualifiedIds" : [ "conditionalFormattingRuleSpecTypes:CELL_VALUE_RULE", "borderSidePatchType:BorderSidePatch", "fontHeightSpecTypes:POINTS", "nestedTypes:conditionalFormattingRuleSpecTypes", "nestedTypes:fontHeightSpecTypes", "plainTypes:borderSidePatchType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_DATA_VALIDATION",
       "qualifiedId" : "mutationActionTypes:SET_DATA_VALIDATION",
       "summary" : "Create or replace one data-validation rule over the requested sheet range.",
-      "supportingQualifiedIds" : [ "dataValidationRuleInputTypes:TEXT_LENGTH", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "dataValidationErrorAlertInputType:DataValidationErrorAlertInput", "dataValidationPromptInputType:DataValidationPromptInput", "nestedTypes:textSourceInputTypes", "nestedTypes:dataValidationRuleInputTypes", "plainTypes:dataValidationErrorAlertInputType", "plainTypes:dataValidationPromptInputType" ]
+      "supportingQualifiedIds" : [ "dataValidationRuleSpecTypes:TEXT_LENGTH", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "dataValidationErrorAlertSpecType:DataValidationErrorAlertSpec", "dataValidationPromptSpecType:DataValidationPromptSpec", "nestedTypes:textSourceSpecTypes", "nestedTypes:dataValidationRuleSpecTypes", "plainTypes:dataValidationErrorAlertSpecType", "plainTypes:dataValidationPromptSpecType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_EMBEDDED_OBJECT",
       "qualifiedId" : "mutationActionTypes:SET_EMBEDDED_OBJECT",
       "summary" : "Create or replace one embedded-object drawing object on one sheet.",
-      "supportingQualifiedIds" : [ "drawingAnchorInputTypes:TWO_CELL", "drawingMarkerInputType:DrawingMarkerInput", "nestedTypes:drawingAnchorInputTypes", "plainTypes:drawingMarkerInputType" ]
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:drawingMarkerSpecType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_PICTURE",
       "qualifiedId" : "mutationActionTypes:SET_PICTURE",
       "summary" : "Create or replace one picture-backed drawing object on one sheet.",
-      "supportingQualifiedIds" : [ "drawingAnchorInputTypes:TWO_CELL", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "drawingMarkerInputType:DrawingMarkerInput", "nestedTypes:textSourceInputTypes", "nestedTypes:drawingAnchorInputTypes", "plainTypes:drawingMarkerInputType" ]
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:textSourceSpecTypes", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:drawingMarkerSpecType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_PRINT_LAYOUT",
       "qualifiedId" : "mutationActionTypes:SET_PRINT_LAYOUT",
       "summary" : "Apply supported print-layout state to a sheet.",
-      "supportingQualifiedIds" : [ "headerFooterTextInputType:HeaderFooterTextInput", "textSourceInputTypes:INLINE", "textSourceInputTypes:STANDARD_INPUT", "textSourceInputTypes:UTF8_FILE", "nestedTypes:textSourceInputTypes", "plainTypes:headerFooterTextInputType" ]
+      "supportingQualifiedIds" : [ "headerFooterTextSpecType:HeaderFooterTextSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "nestedTypes:textSourceSpecTypes", "plainTypes:headerFooterTextSpecType" ]
     }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_SIGNATURE_LINE",
       "qualifiedId" : "mutationActionTypes:SET_SIGNATURE_LINE",
       "summary" : "Create or replace one signature-line drawing object on one sheet.",
-      "supportingQualifiedIds" : [ "drawingAnchorInputTypes:TWO_CELL", "drawingMarkerInputType:DrawingMarkerInput", "nestedTypes:drawingAnchorInputTypes", "plainTypes:drawingMarkerInputType" ]
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:drawingMarkerSpecType" ]
     }, {
       "catalogGroup" : "assertionTypes",
       "kind" : "ENTRY",
@@ -444,14 +444,14 @@
     }, {
       "catalogGroup" : "nestedTypes",
       "kind" : "NESTED_GROUP",
-      "lookupId" : "calculationStrategyInputTypes",
-      "qualifiedId" : "nestedTypes:calculationStrategyInputTypes",
+      "lookupId" : "calculationStrategySpecTypes",
+      "qualifiedId" : "nestedTypes:calculationStrategySpecTypes",
       "summary" : "Nested type group with discriminator type and 6 variants."
     }, {
       "catalogGroup" : "nestedTypes",
       "kind" : "NESTED_GROUP",
-      "lookupId" : "ooxmlPersistenceEncryptionInputTypes",
-      "qualifiedId" : "nestedTypes:ooxmlPersistenceEncryptionInputTypes",
+      "lookupId" : "ooxmlPersistenceEncryptionSpecTypes",
+      "qualifiedId" : "nestedTypes:ooxmlPersistenceEncryptionSpecTypes",
       "summary" : "Nested type group with discriminator type and 3 variants."
     }, {
       "catalogGroup" : "nestedTypes",

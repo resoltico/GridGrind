@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -84,9 +84,9 @@ class RequestPreflightFormulaEnvironmentTest {
     return WorkbookPlan.standard(
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
-        ExecutionPolicyInput.defaults(),
-        new FormulaEnvironmentInput(
-            List.of(new FormulaExternalWorkbookInput("External.xlsx", externalWorkbookPath)),
+        ExecutionPolicySpec.defaults(),
+        new FormulaEnvironmentSpec(
+            List.of(new FormulaExternalWorkbookSpec("External.xlsx", externalWorkbookPath)),
             FormulaMissingWorkbookPolicy.ERROR,
             List.of()),
         List.of());

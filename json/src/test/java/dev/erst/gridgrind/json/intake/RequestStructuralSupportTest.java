@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -50,13 +50,13 @@ class RequestStructuralSupportTest {
 
     RequestRecordValidator.validate(
         new RequestJsonString(0, "not-an-object"),
-        OoxmlEncryptionInput.class,
+        OoxmlEncryptionSpec.class,
         "encryption",
         0,
         problems);
     RequestRecordValidator.validate(
         object(member("password", new RequestJsonNumber(1, "7"))),
-        OoxmlEncryptionInput.class,
+        OoxmlEncryptionSpec.class,
         "encryption",
         0,
         problems);
@@ -131,7 +131,7 @@ class RequestStructuralSupportTest {
     RequestNodeValidator.validateNode(new RequestJsonNull(3), String.class, "value", 3, problems);
     RequestNonContainerNodeValidator.validate(
         object(member("password", new RequestJsonString(4, "secret"))),
-        OoxmlEncryptionInput.class,
+        OoxmlEncryptionSpec.class,
         "encryption",
         4,
         problems);
@@ -238,7 +238,7 @@ class RequestStructuralSupportTest {
     assertTrue(
         bindNode(
                 new RequestJsonString(8, "not-an-encryption-object"),
-                OoxmlEncryptionInput.class,
+                OoxmlEncryptionSpec.class,
                 "encryption",
                 noProblems)
             .isEmpty());
@@ -366,8 +366,8 @@ class RequestStructuralSupportTest {
             Optional.of(new PlanId("plan")),
             Optional.of(new WorkbookPlan.WorkbookSource.New()),
             Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-            Optional.of(ExecutionPolicyInput.defaults()),
-            Optional.of(FormulaEnvironmentInput.empty()));
+            Optional.of(ExecutionPolicySpec.defaults()),
+            Optional.of(FormulaEnvironmentSpec.empty()));
     RequestBoundFragments complete =
         new RequestBoundFragments(completeRoot, Optional.of(List.of()));
 
@@ -387,8 +387,8 @@ class RequestStructuralSupportTest {
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-                    Optional.of(ExecutionPolicyInput.defaults()),
-                    Optional.of(FormulaEnvironmentInput.empty())),
+                    Optional.of(ExecutionPolicySpec.defaults()),
+                    Optional.of(FormulaEnvironmentSpec.empty())),
                 Optional.of(List.of()))
             .completePlan()
             .isPresent());
@@ -400,8 +400,8 @@ class RequestStructuralSupportTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-                    Optional.of(ExecutionPolicyInput.defaults()),
-                    Optional.of(FormulaEnvironmentInput.empty())),
+                    Optional.of(ExecutionPolicySpec.defaults()),
+                    Optional.of(FormulaEnvironmentSpec.empty())),
                 Optional.of(List.of())),
             new RequestBoundFragments(
                 new RequestBoundRoot(
@@ -409,17 +409,8 @@ class RequestStructuralSupportTest {
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.empty(),
-                    Optional.of(ExecutionPolicyInput.defaults()),
-                    Optional.of(FormulaEnvironmentInput.empty())),
-                Optional.of(List.of())),
-            new RequestBoundFragments(
-                new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V3),
-                    Optional.empty(),
-                    Optional.of(new WorkbookPlan.WorkbookSource.New()),
-                    Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-                    Optional.empty(),
-                    Optional.of(FormulaEnvironmentInput.empty())),
+                    Optional.of(ExecutionPolicySpec.defaults()),
+                    Optional.of(FormulaEnvironmentSpec.empty())),
                 Optional.of(List.of())),
             new RequestBoundFragments(
                 new RequestBoundRoot(
@@ -427,7 +418,16 @@ class RequestStructuralSupportTest {
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-                    Optional.of(ExecutionPolicyInput.defaults()),
+                    Optional.empty(),
+                    Optional.of(FormulaEnvironmentSpec.empty())),
+                Optional.of(List.of())),
+            new RequestBoundFragments(
+                new RequestBoundRoot(
+                    Optional.of(GridGrindProtocolVersion.V3),
+                    Optional.empty(),
+                    Optional.of(new WorkbookPlan.WorkbookSource.New()),
+                    Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
+                    Optional.of(ExecutionPolicySpec.defaults()),
                     Optional.empty()),
                 Optional.of(List.of())));
     for (RequestBoundFragments incomplete : incompleteFragments) {

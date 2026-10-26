@@ -3,20 +3,20 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.layout.PaneInput;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -69,7 +69,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         mutate(
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.SetComment(
-                CommentInput.plain(text("Review"), "GridGrind", false))),
+                CommentSpec.plain(text("Review"), "GridGrind", false))),
         exception,
         "Budget",
         "A1",
@@ -105,7 +105,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
-                    new DataValidationRuleInput.TextLength(
+                    new DataValidationRuleSpec.TextLength(
                         ExcelComparisonOperator.LESS_OR_EQUAL, "20", java.util.Optional.empty()),
                     true,
                     false,
@@ -165,12 +165,12 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
     assertWriteContext(
         mutate(
             new StructuredMutationAction.SetTable(
-                TableInput.withDefaultMetadata(
+                TableSpec.withDefaultMetadata(
                     new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:C4"),
                     false,
-                    new TableStyleInput.None()))),
+                    new TableStyleSpec.None()))),
         exception,
         "Budget",
         null,
@@ -260,7 +260,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("C1:D2")),
                 new CellMutationAction.SetRange(
-                    new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                         List.of(List.of(textCell("x")))))),
             invalidFormula));
     assertEquals(
@@ -304,7 +304,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetComment(
-                    CommentInput.plain(text("Review"), "GridGrind", false))),
+                    CommentSpec.plain(text("Review"), "GridGrind", false))),
             invalidFormula));
     assertNull(
         rangeFor(
@@ -384,19 +384,19 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new WorkbookMutationAction.UngroupColumns()),
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
-                new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1))),
+                new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 1, 1, 1))),
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetSheetZoom(125)),
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetPrintLayout(
-                    PrintLayoutInput.withDefaultSetup(
-                        new PrintAreaInput.Range(new RangeRef("A1:B12")),
+                    PrintLayoutSpec.withDefaultSetup(
+                        new PrintAreaSpec.Range(new RangeRef("A1:B12")),
                         ExcelPrintOrientation.LANDSCAPE,
-                        new PrintScalingInput.Fit(1, 0),
-                        new PrintTitleRowsInput.Band(0, 0),
-                        new PrintTitleColumnsInput.Band(0, 0),
+                        new PrintScalingSpec.Fit(1, 0),
+                        new PrintTitleRowsSpec.Band(0, 0),
+                        new PrintTitleColumnsSpec.Band(0, 0),
                         headerFooter("Budget", "", ""),
                         headerFooter("", "Page &P", "")))),
             mutate(
@@ -408,7 +408,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
                 new CellMutationAction.SetRange(
-                    new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                         List.of(List.of(textCell("x")))))),
             mutate(
                 new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
@@ -423,7 +423,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetComment(
-                    CommentInput.plain(text("Review"), "GridGrind", false))),
+                    CommentSpec.plain(text("Review"), "GridGrind", false))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearComment()),
@@ -441,7 +441,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
                 new StructuredMutationAction.SetDataValidation(
                     dataValidation(
-                        new DataValidationRuleInput.TextLength(
+                        new DataValidationRuleSpec.TextLength(
                             ExcelComparisonOperator.LESS_OR_EQUAL,
                             "20",
                             java.util.Optional.empty()),
@@ -467,12 +467,12 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new StructuredMutationAction.ClearAutofilter()),
             mutate(
                 new StructuredMutationAction.SetTable(
-                    TableInput.withDefaultMetadata(
+                    TableSpec.withDefaultMetadata(
                         new TableName("BudgetTable"),
                         new SheetName("Budget"),
                         new RangeRef("A1:C4"),
                         false,
-                        new TableStyleInput.None()))),
+                        new TableStyleSpec.None()))),
             mutate(
                 new TableSelector.ByNameOnSheet(
                     new TableName("BudgetTable"), new SheetName("Budget")),
@@ -480,7 +480,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new CellMutationAction.AppendRow(
-                    new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                         List.of(textCell("x"))))),
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
@@ -495,18 +495,18 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         namedRangeNameFor(
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
-                new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1))),
+                new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 1, 1, 1))),
             missingNamedRange));
   }
 
-  private static ConditionalFormattingDefinitionInput singleFormulaConditionalFormattingBlock() {
-    return new ConditionalFormattingDefinitionInput(
+  private static ConditionalFormattingSpec singleFormulaConditionalFormattingBlock() {
+    return new ConditionalFormattingSpec(
         List.of(
-            new ConditionalFormattingRuleInput.FormulaRule(
+            new ConditionalFormattingRuleSpec.FormulaRule(
                 "B2>0",
                 true,
                 java.util.Optional.of(
-                    new DifferentialStyleInput(
+                    new DifferentialStylePatch(
                         Optional.empty(),
                         Optional.of(true),
                         Optional.empty(),

@@ -18,7 +18,7 @@ final class FullXssfStepLoop {
   }
 
   Optional<WorkbookResult> execute(
-      FullXssfWorkflowState state, dev.erst.gridgrind.core.plan.ExecutionModeInput executionMode) {
+      FullXssfWorkflowState state, dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode) {
     List<WorkbookStep> steps = state.executionContext().request().steps();
     for (int stepIndex = 0; stepIndex < steps.size(); stepIndex++) {
       Optional<WorkbookResult> failure =
@@ -32,7 +32,7 @@ final class FullXssfStepLoop {
 
   private Optional<WorkbookResult> executeStep(
       FullXssfWorkflowState state,
-      dev.erst.gridgrind.core.plan.ExecutionModeInput executionMode,
+      dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode,
       int stepIndex,
       WorkbookStep step) {
     FullXssfCalculationCheckpoint.Result checkpoint =

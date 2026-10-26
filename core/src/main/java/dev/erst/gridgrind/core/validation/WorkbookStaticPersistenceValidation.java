@@ -21,7 +21,7 @@ final class WorkbookStaticPersistenceValidation {
               "OVERWRITE persistence requires an EXISTING source; a NEW workbook has no source"
                   + " file to overwrite"));
     }
-    java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput>
+    java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
         security = persistenceSecurity(persistence);
     if (source instanceof WorkbookPlan.WorkbookSource.ExistingFile
         && isWriting(persistence)
@@ -40,7 +40,7 @@ final class WorkbookStaticPersistenceValidation {
   }
 
   private static java.util.Optional<
-          dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput>
+          dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
       persistenceSecurity(WorkbookPlan.WorkbookPersistence persistence) {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();

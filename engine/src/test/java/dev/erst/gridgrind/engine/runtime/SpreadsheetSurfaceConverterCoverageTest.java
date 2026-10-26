@@ -6,20 +6,20 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.chart.ChartAxisInput;
-import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
@@ -27,8 +27,8 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -70,15 +70,15 @@ import org.junit.jupiter.api.Test;
 class SpreadsheetSurfaceConverterCoverageTest {
   @Test
   void workbookCommandConverterCoversEveryExtendedChartPlotAndNullSignaturePreview() {
-    ChartInput chart =
-        new ChartInput(
+    ChartSpec chart =
+        new ChartSpec(
             "ExtendedChart",
             inputAnchor(),
-            new ChartTitleInput.Text(TextSourceInput.inline("Extended")),
-            new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            new ChartTitleSpec.Text(TextSourceSpec.inline("Extended")),
+            new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
             false,
-            inputPlots(inlineSeries(TextSourceInput.inline("Series"))));
+            inputPlots(inlineSeries(TextSourceSpec.inline("Series"))));
     ExcelChartDefinition definition =
         WorkbookCommandDrawingInputConverter.toExcelChartDefinition(chart);
     WorkbookDrawingCommand.SetChart chartCommand =
@@ -89,7 +89,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
                 new DrawingMutationAction.SetChart(chart)));
     ExcelSignatureLineDefinition signatureLine =
         WorkbookCommandDrawingInputConverter.toExcelSignatureLineDefinition(
-            new SignatureLineInput(
+            new SignatureLineSpec(
                 "OpsSignature",
                 inputAnchor(),
                 false,
@@ -193,29 +193,29 @@ class SpreadsheetSurfaceConverterCoverageTest {
     Files.writeString(
         workingDirectory.resolve("series-title.txt"), "Resolved Series", StandardCharsets.UTF_8);
 
-    ChartInput fileBackedChart =
-        new ChartInput(
+    ChartSpec fileBackedChart =
+        new ChartSpec(
             "ExtendedChart",
             inputAnchor(),
-            new ChartTitleInput.Text(TextSourceInput.inline("Extended")),
-            new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT),
+            new ChartTitleSpec.Text(TextSourceSpec.inline("Extended")),
+            new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
             ExcelChartDisplayBlanksAs.GAP,
             true,
-            inputPlots(inlineSeries(TextSourceInput.utf8File("series-title.txt"))));
-    ChartInput standardInputChart =
-        new ChartInput(
+            inputPlots(inlineSeries(TextSourceSpec.utf8File("series-title.txt"))));
+    ChartSpec standardInputChart =
+        new ChartSpec(
             "ExtendedChart",
             inputAnchor(),
-            new ChartTitleInput.None(),
-            new ChartLegendInput.Hidden(),
+            new ChartTitleSpec.None(),
+            new ChartLegendSpec.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
-            inputPlots(inlineSeries(TextSourceInput.standardInput())));
+            inputPlots(inlineSeries(TextSourceSpec.standardInput())));
     DrawingMutationAction.SetChart chartAction =
         new DrawingMutationAction.SetChart(fileBackedChart);
     DrawingMutationAction.SetSignatureLine signatureAction =
         new DrawingMutationAction.SetSignatureLine(
-            new SignatureLineInput(
+            new SignatureLineSpec(
                 "OpsSignature",
                 inputAnchor(),
                 true,
@@ -228,23 +228,23 @@ class SpreadsheetSurfaceConverterCoverageTest {
                 java.util.Optional.empty()));
     DrawingMutationAction.SetChart stableChartAction =
         new DrawingMutationAction.SetChart(
-            new ChartInput(
+            new ChartSpec(
                 "StableChart",
                 inputAnchor(),
-                new ChartTitleInput.None(),
-                new ChartLegendInput.Hidden(),
+                new ChartTitleSpec.None(),
+                new ChartLegendSpec.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,
                 true,
-                inputPlots(inlineSeries(TextSourceInput.inline("Stable Series")))));
+                inputPlots(inlineSeries(TextSourceSpec.inline("Stable Series")))));
     DrawingMutationAction.SetSignatureLine stableSignatureAction =
         new DrawingMutationAction.SetSignatureLine(signatureLineWithInlineBinary());
     StructuredMutationAction.ImportCustomXmlMapping inlineImportAction =
         new StructuredMutationAction.ImportCustomXmlMapping(
-            new CustomXmlImportInput(
+            new CustomXmlImportSpec(
                 new CustomXmlMappingLocator(1L, "CORSO_mapping"),
-                TextSourceInput.inline("<root/>")));
+                TextSourceSpec.inline("<root/>")));
 
-    for (ChartPlotInput plot : standardInputChart.plots()) {
+    for (ChartPlotSpec plot : standardInputChart.plots()) {
       assertTrue(SourceBackedInputRequirements.requiresStandardInput(plot));
     }
     assertTrue(SourceBackedInputRequirements.requiresStandardInput(standardInputChart));
@@ -253,7 +253,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
         SourceBackedInputRequirements.requiresStandardInput(signatureLineWithInlineBinary()));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new SignatureLineInput(
+            new SignatureLineSpec(
                 "OpsSignature",
                 inputAnchor(),
                 true,
@@ -266,30 +266,29 @@ class SpreadsheetSurfaceConverterCoverageTest {
                 java.util.Optional.empty())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CustomXmlImportInput(
-                new CustomXmlMappingLocator(1L, "CORSO_mapping"),
-                TextSourceInput.standardInput())));
+            new CustomXmlImportSpec(
+                new CustomXmlMappingLocator(1L, "CORSO_mapping"), TextSourceSpec.standardInput())));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CustomXmlImportInput(
+            new CustomXmlImportSpec(
                 new CustomXmlMappingLocator(1L, "CORSO_mapping"),
-                TextSourceInput.inline("<root/>"))));
+                TextSourceSpec.inline("<root/>"))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new DrawingMutationAction.SetSignatureLine(signatureLineWithStdIn())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.ImportCustomXmlMapping(
-                new CustomXmlImportInput(
+                new CustomXmlImportSpec(
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"),
-                    TextSourceInput.standardInput()))));
+                    TextSourceSpec.standardInput()))));
 
     WorkbookPlan plan =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-chart"),
@@ -314,11 +313,11 @@ class SpreadsheetSurfaceConverterCoverageTest {
             DrawingMutationAction.SetChart.class,
             assertInstanceOf(MutationStep.class, resolved.steps().get(0)).action());
     assertEquals(expectedInputPlotTypes(), plotTypes(resolvedChartAction.chart().plots()));
-    for (ChartPlotInput plot : resolvedChartAction.chart().plots()) {
-      ChartSeriesInput series = firstSeries(plot);
-      ChartTitleInput.Text title = assertInstanceOf(ChartTitleInput.Text.class, series.title());
+    for (ChartPlotSpec plot : resolvedChartAction.chart().plots()) {
+      ChartSeriesSpec series = firstSeries(plot);
+      ChartTitleSpec.Text title = assertInstanceOf(ChartTitleSpec.Text.class, series.title());
       assertEquals(
-          "Resolved Series", assertInstanceOf(TextSourceInput.Inline.class, title.source()).text());
+          "Resolved Series", assertInstanceOf(TextSourceSpec.Inline.class, title.source()).text());
     }
     assertSame(
         signatureAction, assertInstanceOf(MutationStep.class, resolved.steps().get(1)).action());
@@ -329,8 +328,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("stable-chart"),
@@ -354,8 +353,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
         assertInstanceOf(MutationStep.class, stableResolved.steps().get(1)).action());
   }
 
-  private static SignatureLineInput signatureLineWithStdIn() {
-    return new SignatureLineInput(
+  private static SignatureLineSpec signatureLineWithStdIn() {
+    return new SignatureLineSpec(
         "OpsSignature",
         inputAnchor(),
         true,
@@ -366,11 +365,11 @@ class SpreadsheetSurfaceConverterCoverageTest {
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.of(
-            new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.standardInput())));
+            new PictureDataSpec(ExcelPictureFormat.PNG, BinarySourceSpec.standardInput())));
   }
 
-  private static SignatureLineInput signatureLineWithInlineBinary() {
-    return new SignatureLineInput(
+  private static SignatureLineSpec signatureLineWithInlineBinary() {
+    return new SignatureLineSpec(
         "OpsSignature",
         inputAnchor(),
         true,
@@ -381,14 +380,14 @@ class SpreadsheetSurfaceConverterCoverageTest {
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.of(
-            new PictureDataInput(
-                ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64("cGF5bG9hZA=="))));
+            new PictureDataSpec(
+                ExcelPictureFormat.PNG, BinarySourceSpec.inlineBase64("cGF5bG9hZA=="))));
   }
 
-  private static DrawingAnchorInput.TwoCell inputAnchor() {
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(1, 2, 0, 0),
-        new DrawingMarkerInput(8, 14, 0, 0),
+  private static DrawingAnchorSpec.TwoCell inputAnchor() {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(1, 2, 0, 0),
+        new DrawingMarkerSpec(8, 14, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
@@ -399,11 +398,11 @@ class SpreadsheetSurfaceConverterCoverageTest {
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static ChartSeriesInput inlineSeries(TextSourceInput title) {
-    return new ChartSeriesInput(
-        new ChartTitleInput.Text(title),
-        new ChartDataSourceInput.StringLiteral(List.of("Jan", "Feb")),
-        new ChartDataSourceInput.NumericLiteral(List.of(10.0d, 18.0d)),
+  private static ChartSeriesSpec inlineSeries(TextSourceSpec title) {
+    return new ChartSeriesSpec(
+        new ChartTitleSpec.Text(title),
+        new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+        new ChartDataSourceSpec.NumericLiteral(List.of(10.0d, 18.0d)),
         Optional.of(true),
         Optional.of(ExcelChartMarkerStyle.DIAMOND),
         Optional.of((short) 6),
@@ -421,7 +420,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
         Optional.of(4L));
   }
 
-  private static List<ChartPlotInput> inputPlots(ChartSeriesInput series) {
+  private static List<ChartPlotSpec> inputPlots(ChartSeriesSpec series) {
     return plotVariants().stream().map(variant -> variant.inputFactory().apply(series)).toList();
   }
 
@@ -433,14 +432,14 @@ class SpreadsheetSurfaceConverterCoverageTest {
     return List.of(
         new PlotVariant(
             series ->
-                new ChartPlotInput.Area(
+                new ChartPlotSpec.Area(
                     false, ExcelChartGrouping.STANDARD, inputAxes(), List.of(series)),
             series ->
                 new ExcelChartSnapshot.Area(
                     false, ExcelChartGrouping.STANDARD, snapshotAxes(), List.of(series))),
         new PlotVariant(
             series ->
-                new ChartPlotInput.Area3D(
+                new ChartPlotSpec.Area3D(
                     false,
                     ExcelChartGrouping.PERCENT_STACKED,
                     Optional.of(24),
@@ -455,7 +454,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     List.of(series))),
         new PlotVariant(
             series ->
-                new ChartPlotInput.Bar(
+                new ChartPlotSpec.Bar(
                     false,
                     ExcelChartBarDirection.COLUMN,
                     ExcelChartBarGrouping.CLUSTERED,
@@ -474,7 +473,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     List.of(series))),
         new PlotVariant(
             series ->
-                new ChartPlotInput.Bar3D(
+                new ChartPlotSpec.Bar3D(
                     true,
                     ExcelChartBarDirection.BAR,
                     ExcelChartBarGrouping.STACKED,
@@ -495,21 +494,20 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     List.of(series))),
         new PlotVariant(
             series ->
-                new ChartPlotInput.Doughnut(
-                    true, Optional.of(30), Optional.of(55), List.of(series)),
+                new ChartPlotSpec.Doughnut(true, Optional.of(30), Optional.of(55), List.of(series)),
             series ->
                 new ExcelChartSnapshot.Doughnut(
                     true, Optional.of(30), Optional.of(55), List.of(series))),
         new PlotVariant(
             series ->
-                new ChartPlotInput.Line(
+                new ChartPlotSpec.Line(
                     false, ExcelChartGrouping.STANDARD, inputAxes(), List.of(series)),
             series ->
                 new ExcelChartSnapshot.Line(
                     false, ExcelChartGrouping.STANDARD, snapshotAxes(), List.of(series))),
         new PlotVariant(
             series ->
-                new ChartPlotInput.Line3D(
+                new ChartPlotSpec.Line3D(
                     false,
                     ExcelChartGrouping.STANDARD,
                     Optional.of(18),
@@ -523,21 +521,21 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     snapshotAxes(),
                     List.of(series))),
         new PlotVariant(
-            series -> new ChartPlotInput.Pie(true, Optional.of(90), List.of(series)),
+            series -> new ChartPlotSpec.Pie(true, Optional.of(90), List.of(series)),
             series -> new ExcelChartSnapshot.Pie(true, Optional.of(90), List.of(series))),
         new PlotVariant(
-            series -> new ChartPlotInput.Pie3D(true, List.of(series)),
+            series -> new ChartPlotSpec.Pie3D(true, List.of(series)),
             series -> new ExcelChartSnapshot.Pie3D(true, List.of(series))),
         new PlotVariant(
             series ->
-                new ChartPlotInput.Radar(
+                new ChartPlotSpec.Radar(
                     false, ExcelChartRadarStyle.FILLED, inputAxes(), List.of(series)),
             series ->
                 new ExcelChartSnapshot.Radar(
                     false, ExcelChartRadarStyle.FILLED, snapshotAxes(), List.of(series))),
         new PlotVariant(
             series ->
-                new ChartPlotInput.Scatter(
+                new ChartPlotSpec.Scatter(
                     false,
                     ExcelChartScatterStyle.SMOOTH_MARKER,
                     scatterInputAxes(),
@@ -549,59 +547,58 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     scatterSnapshotAxes(),
                     List.of(series))),
         new PlotVariant(
-            series -> new ChartPlotInput.Surface(false, true, surfaceInputAxes(), List.of(series)),
+            series -> new ChartPlotSpec.Surface(false, true, surfaceInputAxes(), List.of(series)),
             series ->
                 new ExcelChartSnapshot.Surface(
                     false, true, surfaceSnapshotAxes(), List.of(series))),
         new PlotVariant(
-            series ->
-                new ChartPlotInput.Surface3D(true, false, surfaceInputAxes(), List.of(series)),
+            series -> new ChartPlotSpec.Surface3D(true, false, surfaceInputAxes(), List.of(series)),
             series ->
                 new ExcelChartSnapshot.Surface3D(
                     true, false, surfaceSnapshotAxes(), List.of(series))));
   }
 
-  private static List<ChartAxisInput> inputAxes() {
+  private static List<ChartAxisSpec> inputAxes() {
     return List.of(
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  private static List<ChartAxisInput> scatterInputAxes() {
+  private static List<ChartAxisSpec> scatterInputAxes() {
     return List.of(
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  private static List<ChartAxisInput> surfaceInputAxes() {
+  private static List<ChartAxisSpec> surfaceInputAxes() {
     return List.of(
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.SERIES,
             ExcelChartAxisPosition.RIGHT,
             ExcelChartAxisCrosses.AUTO_ZERO,
@@ -691,44 +688,44 @@ class SpreadsheetSurfaceConverterCoverageTest {
 
   private static List<Class<?>> expectedInputPlotTypes() {
     return List.of(
-        ChartPlotInput.Area.class,
-        ChartPlotInput.Area3D.class,
-        ChartPlotInput.Bar.class,
-        ChartPlotInput.Bar3D.class,
-        ChartPlotInput.Doughnut.class,
-        ChartPlotInput.Line.class,
-        ChartPlotInput.Line3D.class,
-        ChartPlotInput.Pie.class,
-        ChartPlotInput.Pie3D.class,
-        ChartPlotInput.Radar.class,
-        ChartPlotInput.Scatter.class,
-        ChartPlotInput.Surface.class,
-        ChartPlotInput.Surface3D.class);
+        ChartPlotSpec.Area.class,
+        ChartPlotSpec.Area3D.class,
+        ChartPlotSpec.Bar.class,
+        ChartPlotSpec.Bar3D.class,
+        ChartPlotSpec.Doughnut.class,
+        ChartPlotSpec.Line.class,
+        ChartPlotSpec.Line3D.class,
+        ChartPlotSpec.Pie.class,
+        ChartPlotSpec.Pie3D.class,
+        ChartPlotSpec.Radar.class,
+        ChartPlotSpec.Scatter.class,
+        ChartPlotSpec.Surface.class,
+        ChartPlotSpec.Surface3D.class);
   }
 
   private record PlotVariant(
-      Function<ChartSeriesInput, ChartPlotInput> inputFactory,
+      Function<ChartSeriesSpec, ChartPlotSpec> inputFactory,
       Function<ExcelChartSnapshot.Series, ExcelChartSnapshot.Plot> snapshotFactory) {}
 
   private static List<Class<?>> plotTypes(List<?> plots) {
     return plots.stream().<Class<?>>map(Object::getClass).toList();
   }
 
-  private static ChartSeriesInput firstSeries(ChartPlotInput plot) {
+  private static ChartSeriesSpec firstSeries(ChartPlotSpec plot) {
     return switch (plot) {
-      case ChartPlotInput.Area area -> area.series().getFirst();
-      case ChartPlotInput.Area3D area3D -> area3D.series().getFirst();
-      case ChartPlotInput.Bar bar -> bar.series().getFirst();
-      case ChartPlotInput.Bar3D bar3D -> bar3D.series().getFirst();
-      case ChartPlotInput.Doughnut doughnut -> doughnut.series().getFirst();
-      case ChartPlotInput.Line line -> line.series().getFirst();
-      case ChartPlotInput.Line3D line3D -> line3D.series().getFirst();
-      case ChartPlotInput.Pie pie -> pie.series().getFirst();
-      case ChartPlotInput.Pie3D pie3D -> pie3D.series().getFirst();
-      case ChartPlotInput.Radar radar -> radar.series().getFirst();
-      case ChartPlotInput.Scatter scatter -> scatter.series().getFirst();
-      case ChartPlotInput.Surface surface -> surface.series().getFirst();
-      case ChartPlotInput.Surface3D surface3D -> surface3D.series().getFirst();
+      case ChartPlotSpec.Area area -> area.series().getFirst();
+      case ChartPlotSpec.Area3D area3D -> area3D.series().getFirst();
+      case ChartPlotSpec.Bar bar -> bar.series().getFirst();
+      case ChartPlotSpec.Bar3D bar3D -> bar3D.series().getFirst();
+      case ChartPlotSpec.Doughnut doughnut -> doughnut.series().getFirst();
+      case ChartPlotSpec.Line line -> line.series().getFirst();
+      case ChartPlotSpec.Line3D line3D -> line3D.series().getFirst();
+      case ChartPlotSpec.Pie pie -> pie.series().getFirst();
+      case ChartPlotSpec.Pie3D pie3D -> pie3D.series().getFirst();
+      case ChartPlotSpec.Radar radar -> radar.series().getFirst();
+      case ChartPlotSpec.Scatter scatter -> scatter.series().getFirst();
+      case ChartPlotSpec.Surface surface -> surface.series().getFirst();
+      case ChartPlotSpec.Surface3D surface3D -> surface3D.series().getFirst();
     };
   }
 }

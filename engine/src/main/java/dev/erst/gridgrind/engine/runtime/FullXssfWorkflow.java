@@ -63,7 +63,7 @@ final class FullXssfWorkflow {
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
-      dev.erst.gridgrind.core.plan.ExecutionModeInput executionMode,
+      dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {

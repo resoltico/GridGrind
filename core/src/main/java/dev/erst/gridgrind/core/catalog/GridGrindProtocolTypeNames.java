@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.core.catalog;
 
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -37,9 +37,9 @@ public final class GridGrindProtocolTypeNames {
   private static final Map<Class<?>, String> INSPECTION_QUERY_TYPE_NAMES =
       typeNamesByClass(InspectionQuery.class);
   private static final Map<Class<?>, String> CALCULATION_STRATEGY_TYPE_NAMES =
-      typeNamesByClass(CalculationStrategyInput.class);
+      typeNamesByClass(CalculationStrategySpec.class);
   private static final Map<Class<?>, String> EXECUTION_MODE_TYPE_NAMES =
-      typeNamesByClass(ExecutionModeInput.class);
+      typeNamesByClass(ExecutionModeSpec.class);
 
   private GridGrindProtocolTypeNames() {}
 
@@ -82,15 +82,15 @@ public final class GridGrindProtocolTypeNames {
 
   /** Returns the canonical wire id for one calculation-strategy subtype. */
   public static String calculationStrategyTypeName(
-      Class<? extends CalculationStrategyInput> calculationStrategyClass) {
+      Class<? extends CalculationStrategySpec> calculationStrategyClass) {
     return requiredTypeName(
-        CALCULATION_STRATEGY_TYPE_NAMES, calculationStrategyClass, "CalculationStrategyInput");
+        CALCULATION_STRATEGY_TYPE_NAMES, calculationStrategyClass, "CalculationStrategySpec");
   }
 
   /** Returns the canonical wire id for one execution-mode subtype. */
   public static String executionModeTypeName(
-      Class<? extends ExecutionModeInput> executionModeClass) {
-    return requiredTypeName(EXECUTION_MODE_TYPE_NAMES, executionModeClass, "ExecutionModeInput");
+      Class<? extends ExecutionModeSpec> executionModeClass) {
+    return requiredTypeName(EXECUTION_MODE_TYPE_NAMES, executionModeClass, "ExecutionModeSpec");
   }
 
   /** Returns the annotation-owned subtype id map for one sealed wire family. */

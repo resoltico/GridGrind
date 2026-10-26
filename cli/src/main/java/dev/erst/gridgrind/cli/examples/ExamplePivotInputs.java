@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -13,35 +13,35 @@ import java.util.Optional;
 final class ExamplePivotInputs {
   private ExamplePivotInputs() {}
 
-  static PivotTableInput regionalTotalsPivotFromRange(
+  static PivotTableSpec regionalTotalsPivotFromRange(
       String pivotName, String reportSheetName, String sourceSheetName, String sourceRangeAddress) {
     return regionalTotalsPivot(
         pivotName,
         reportSheetName,
-        new PivotTableInput.PivotSourceSpec.Range(
+        new PivotTableSpec.PivotSourceSpec.Range(
             new SheetName(sourceSheetName), new RangeRef(sourceRangeAddress)));
   }
 
-  static PivotTableInput regionalTotalsPivotFromTable(
+  static PivotTableSpec regionalTotalsPivotFromTable(
       String pivotName, String reportSheetName, String sourceTableName) {
     return regionalTotalsPivot(
         pivotName,
         reportSheetName,
-        new PivotTableInput.PivotSourceSpec.Table(new TableName(sourceTableName)));
+        new PivotTableSpec.PivotSourceSpec.Table(new TableName(sourceTableName)));
   }
 
-  private static PivotTableInput regionalTotalsPivot(
-      String pivotName, String reportSheetName, PivotTableInput.PivotSourceSpec source) {
-    return new PivotTableInput(
+  private static PivotTableSpec regionalTotalsPivot(
+      String pivotName, String reportSheetName, PivotTableSpec.PivotSourceSpec source) {
+    return new PivotTableSpec(
         pivotName,
         new SheetName(reportSheetName),
         source,
-        new PivotTableInput.Anchor(new CellAddress("A3")),
+        new PivotTableSpec.Anchor(new CellAddress("A3")),
         List.of("Region"),
         List.of("Stage"),
         List.of(),
         List.of(
-            new PivotTableInput.DataField(
+            new PivotTableSpec.DataField(
                 "Amount",
                 ExcelPivotDataConsolidateFunction.SUM,
                 "Total Amount",

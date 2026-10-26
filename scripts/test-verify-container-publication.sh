@@ -145,7 +145,7 @@ grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --l
     "verifier did not inspect the latest tag scoped catalog group surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup nestedTypes:executionModeTypes' "${fake_log}" || die \
     "verifier did not inspect the latest tag nested catalog group surface"
-grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup plainTypes:executionPolicyInputType' "${fake_log}" || die \
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup plainTypes:executionPolicySpecType' "${fake_log}" || die \
     "verifier did not inspect the latest tag plain catalog group surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-recipe-catalog' "${fake_log}" || die \
     "verifier did not inspect the latest tag recipe-catalog surface"

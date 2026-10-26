@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
@@ -26,7 +26,7 @@ class DataValidationEntryReportTest {
         new DataValidationEntryReport.Supported(
             ranges,
             new DataValidationEntryReport.DataValidationDefinitionReport(
-                new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done")),
+                new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
                 true,
                 false,
                 Optional.empty(),
@@ -48,7 +48,7 @@ class DataValidationEntryReportTest {
             new DataValidationEntryReport.Supported(
                 List.of(),
                 new DataValidationEntryReport.DataValidationDefinitionReport(
-                    new DataValidationRuleInput.ExplicitList(List.of("Queued")),
+                    new DataValidationRuleSpec.ExplicitList(List.of("Queued")),
                     false,
                     false,
                     Optional.empty(),
@@ -146,16 +146,16 @@ class DataValidationEntryReportTest {
                 Optional.empty(),
                 Optional.empty()));
 
-    assertInstanceOf(DataValidationRuleInput.ExplicitList.class, explicitList.rule());
+    assertInstanceOf(DataValidationRuleSpec.ExplicitList.class, explicitList.rule());
     assertTrue(explicitList.prompt().isPresent());
     assertTrue(explicitList.errorAlert().isPresent());
-    assertInstanceOf(DataValidationRuleInput.FormulaList.class, formulaList.rule());
-    assertInstanceOf(DataValidationRuleInput.WholeNumber.class, wholeNumber.rule());
-    assertInstanceOf(DataValidationRuleInput.DecimalNumber.class, decimal.rule());
-    assertInstanceOf(DataValidationRuleInput.DateRule.class, date.rule());
-    assertInstanceOf(DataValidationRuleInput.TimeRule.class, time.rule());
-    assertInstanceOf(DataValidationRuleInput.TextLength.class, textLength.rule());
-    assertInstanceOf(DataValidationRuleInput.CustomFormula.class, custom.rule());
+    assertInstanceOf(DataValidationRuleSpec.FormulaList.class, formulaList.rule());
+    assertInstanceOf(DataValidationRuleSpec.WholeNumber.class, wholeNumber.rule());
+    assertInstanceOf(DataValidationRuleSpec.DecimalNumber.class, decimal.rule());
+    assertInstanceOf(DataValidationRuleSpec.DateRule.class, date.rule());
+    assertInstanceOf(DataValidationRuleSpec.TimeRule.class, time.rule());
+    assertInstanceOf(DataValidationRuleSpec.TextLength.class, textLength.rule());
+    assertInstanceOf(DataValidationRuleSpec.CustomFormula.class, custom.rule());
     assertThrows(
         NullPointerException.class,
         () -> InspectionResultValidationReportSupport.toDataValidationDefinitionReport(null));
@@ -172,8 +172,8 @@ class DataValidationEntryReportTest {
                 Optional.empty(),
                 Optional.empty()));
 
-    DataValidationRuleInput.ExplicitList rule =
-        assertInstanceOf(DataValidationRuleInput.ExplicitList.class, report.rule());
+    DataValidationRuleSpec.ExplicitList rule =
+        assertInstanceOf(DataValidationRuleSpec.ExplicitList.class, report.rule());
     assertEquals(List.of(), rule.values());
   }
 

@@ -2,7 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.Base64;
 import java.util.Optional;
@@ -49,9 +49,9 @@ public final class WorkbookInvariantChecks {
     }
   }
 
-  static void requireNonBlank(TextSourceInput value, String fieldName) {
+  static void requireNonBlank(TextSourceSpec value, String fieldName) {
     require(value != null, fieldName + " must not be null");
-    if (value instanceof TextSourceInput.Inline inline) {
+    if (value instanceof TextSourceSpec.Inline inline) {
       require(!inline.text().isBlank(), fieldName + " must not be blank");
     }
   }

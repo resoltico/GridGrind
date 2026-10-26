@@ -8,22 +8,22 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
@@ -105,12 +105,12 @@ class ExecutorPolicyCoverageTest {
                     new TableSelector.ByNameOnSheet(
                         new TableName("OtherTable"), new SheetName("Budget")),
                     new StructuredMutationAction.SetTable(
-                        TableInput.withDefaultMetadata(
+                        TableSpec.withDefaultMetadata(
                             new TableName("BudgetTable"),
                             new SheetName("Budget"),
                             new RangeRef("A1:B2"),
                             false,
-                            new TableStyleInput.None()))));
+                            new TableStyleSpec.None()))));
     assertEquals(
         "SET_TABLE target must match table.name and table.sheetName", tableMismatch.getMessage());
 
@@ -122,12 +122,12 @@ class ExecutorPolicyCoverageTest {
                     new TableSelector.ByNameOnSheet(
                         new TableName("BudgetTable"), new SheetName("Archive")),
                     new StructuredMutationAction.SetTable(
-                        TableInput.withDefaultMetadata(
+                        TableSpec.withDefaultMetadata(
                             new TableName("BudgetTable"),
                             new SheetName("Budget"),
                             new RangeRef("A1:B2"),
                             false,
-                            new TableStyleInput.None()))));
+                            new TableStyleSpec.None()))));
     assertEquals(
         "SET_TABLE target must match table.name and table.sheetName",
         tableSheetMismatch.getMessage());
@@ -139,17 +139,17 @@ class ExecutorPolicyCoverageTest {
                 WorkbookCommandConverter.toCommand(
                     new PivotTableSelector.ByNameOnSheet("OtherPivot", new SheetName("Budget")),
                     new StructuredMutationAction.SetPivotTable(
-                        new PivotTableInput(
+                        new PivotTableSpec(
                             "SalesPivot",
                             new SheetName("Budget"),
-                            new PivotTableInput.PivotSourceSpec.NamedRange(
+                            new PivotTableSpec.PivotSourceSpec.NamedRange(
                                 new DefinedName("BudgetSource")),
-                            new PivotTableInput.Anchor(new CellAddress("B3")),
+                            new PivotTableSpec.Anchor(new CellAddress("B3")),
                             List.of(),
                             List.of(),
                             List.of(),
                             List.of(
-                                new PivotTableInput.DataField(
+                                new PivotTableSpec.DataField(
                                     "Amount",
                                     dev.erst.gridgrind.core.vocabulary
                                         .ExcelPivotDataConsolidateFunction.SUM,
@@ -166,17 +166,17 @@ class ExecutorPolicyCoverageTest {
                 WorkbookCommandConverter.toCommand(
                     new PivotTableSelector.ByNameOnSheet("SalesPivot", new SheetName("Archive")),
                     new StructuredMutationAction.SetPivotTable(
-                        new PivotTableInput(
+                        new PivotTableSpec(
                             "SalesPivot",
                             new SheetName("Budget"),
-                            new PivotTableInput.PivotSourceSpec.NamedRange(
+                            new PivotTableSpec.PivotSourceSpec.NamedRange(
                                 new DefinedName("BudgetSource")),
-                            new PivotTableInput.Anchor(new CellAddress("B3")),
+                            new PivotTableSpec.Anchor(new CellAddress("B3")),
                             List.of(),
                             List.of(),
                             List.of(),
                             List.of(
-                                new PivotTableInput.DataField(
+                                new PivotTableSpec.DataField(
                                     "Amount",
                                     dev.erst.gridgrind.core.vocabulary
                                         .ExcelPivotDataConsolidateFunction.SUM,
@@ -340,15 +340,14 @@ class ExecutorPolicyCoverageTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             List.of(),
             List.of());
-    ExecutionModeInput defaults =
-        DefaultGridGrindRequestExecutor.executionMode(defaultModesRequest);
-    assertInstanceOf(ExecutionModeInput.FullXssf.class, defaults);
+    ExecutionModeSpec defaults = DefaultGridGrindRequestExecutor.executionMode(defaultModesRequest);
+    assertInstanceOf(ExecutionModeSpec.FullXssf.class, defaults);
 
     WorkbookPlan eventReadRequest =
         request(
             new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/book.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionModeInput.eventRead(),
+            ExecutionModeSpec.eventRead(),
             null,
             List.of(),
             List.of(
@@ -356,7 +355,7 @@ class ExecutorPolicyCoverageTest {
                     "workbook",
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
-    ExecutionModeInput eventModes = DefaultGridGrindRequestExecutor.executionMode(eventReadRequest);
+    ExecutionModeSpec eventModes = DefaultGridGrindRequestExecutor.executionMode(eventReadRequest);
     assertTrue(
         DefaultGridGrindRequestExecutor.directEventReadEligible(eventReadRequest, eventModes));
 
@@ -364,7 +363,7 @@ class ExecutorPolicyCoverageTest {
         request(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionModeInput.streamingWrite(),
+            ExecutionModeSpec.streamingWrite(),
             null,
             List.of(),
             List.of(
@@ -413,27 +412,27 @@ class ExecutorPolicyCoverageTest {
               new WorkbookPlan.WorkbookPersistence.SaveAs(
                   "/tmp/out.xlsx",
                   WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                  new OoxmlPersistenceSecurityInput(
-                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                  new OoxmlPersistenceSecuritySpec(
+                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec
                           .Encrypt(
-                          new OoxmlEncryptionInput(
+                          new OoxmlEncryptionSpec(
                               new dev.erst.gridgrind.core.source.SecretReference("output-password"),
                               ExcelOoxmlWriteCipher.AES_256,
                               ExcelOoxmlWriteHash.SHA_512)),
-                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput
+                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec
                           .None())),
               prepared.bindings());
       ExcelOoxmlPersistenceOptions overwriteOptions =
           ExecutionRequestPaths.persistenceOptions(
               new WorkbookPlan.WorkbookPersistence.Overwrite(
-                  new OoxmlPersistenceSecurityInput(
-                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                  new OoxmlPersistenceSecuritySpec(
+                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec
                           .Encrypt(
-                          new OoxmlEncryptionInput(
+                          new OoxmlEncryptionSpec(
                               new dev.erst.gridgrind.core.source.SecretReference("output-password"),
                               ExcelOoxmlWriteCipher.AES_256,
                               ExcelOoxmlWriteHash.SHA_512)),
-                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput
+                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec
                           .None())),
               prepared.bindings());
       assertTrue(noneOptions.writesPlaintextUnsigned());
@@ -461,7 +460,7 @@ class ExecutorPolicyCoverageTest {
             ExecutionRequestPaths.sourceEncryptionPassword(
                 new WorkbookPlan.WorkbookSource.ExistingFile(
                     "/tmp/in.xlsx",
-                    new OoxmlOpenSecurityInput(
+                    new OoxmlOpenSecuritySpec(
                         java.util.Optional.of(
                             new dev.erst.gridgrind.core.source.SecretReference("open-secret"))))));
   }
@@ -526,7 +525,7 @@ class ExecutorPolicyCoverageTest {
               workbookSupport.persistStreamingWorkbook(
                   overwriteMaterialized,
                   new WorkbookPlan.WorkbookPersistence.Overwrite(
-                      OoxmlPersistenceSecurityInput.none()),
+                      OoxmlPersistenceSecuritySpec.none()),
                   new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString()),
                   prepared.bindings(),
                   StagedArtifactAcceptance.none()));
@@ -543,7 +542,7 @@ class ExecutorPolicyCoverageTest {
                   workbookSupport.persistStreamingWorkbook(
                       materialized,
                       new WorkbookPlan.WorkbookPersistence.Overwrite(
-                          OoxmlPersistenceSecurityInput.none()),
+                          OoxmlPersistenceSecuritySpec.none()),
                       new WorkbookPlan.WorkbookSource.New(),
                       prepared.bindings(),
                       StagedArtifactAcceptance.none()));
@@ -613,30 +612,30 @@ class ExecutorPolicyCoverageTest {
   }
 
   private static void assertActionDiagnostics() {
-    CellMutationAction.SetCell setBlank = new CellMutationAction.SetCell(new CellInput.Blank());
+    CellMutationAction.SetCell setBlank = new CellMutationAction.SetCell(new CellValueSpec.Blank());
     CellMutationAction.SetCell setText = new CellMutationAction.SetCell(textCell("plain text"));
     CellMutationAction.SetCell setRichText =
-        new CellMutationAction.SetCell(new CellInput.RichText(List.of(richTextRun("rich"))));
+        new CellMutationAction.SetCell(new CellValueSpec.RichText(List.of(richTextRun("rich"))));
     CellMutationAction.SetCell setNumeric =
-        new CellMutationAction.SetCell(new CellInput.NumberValue(12.5));
+        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(12.5));
     CellMutationAction.SetCell setBoolean =
-        new CellMutationAction.SetCell(new CellInput.BooleanValue(true));
+        new CellMutationAction.SetCell(new CellValueSpec.BooleanValue(true));
     CellMutationAction.SetCell setDate =
-        new CellMutationAction.SetCell(new CellInput.Date(LocalDate.parse("2026-04-17")));
+        new CellMutationAction.SetCell(new CellValueSpec.Date(LocalDate.parse("2026-04-17")));
     CellMutationAction.SetCell setDateTime =
         new CellMutationAction.SetCell(
-            new CellInput.DateTime(LocalDateTime.parse("2026-04-17T09:10:11")));
+            new CellValueSpec.DateTime(LocalDateTime.parse("2026-04-17T09:10:11")));
     CellMutationAction.SetCell setFormula =
         new CellMutationAction.SetCell(formulaCell("SUM(A1:A2)"));
     StructuredMutationAction.SetPivotTable pivotFromRange =
         pivotTableAction(
-            new PivotTableInput.PivotSourceSpec.Range(
+            new PivotTableSpec.PivotSourceSpec.Range(
                 new SheetName("Budget"), new RangeRef("A1:B5")));
     StructuredMutationAction.SetPivotTable pivotFromNamedRange =
         pivotTableAction(
-            new PivotTableInput.PivotSourceSpec.NamedRange(new DefinedName("BudgetSource")));
+            new PivotTableSpec.PivotSourceSpec.NamedRange(new DefinedName("BudgetSource")));
     StructuredMutationAction.SetPivotTable pivotFromTable =
-        pivotTableAction(new PivotTableInput.PivotSourceSpec.Table(new TableName("BudgetTable")));
+        pivotTableAction(new PivotTableSpec.PivotSourceSpec.Table(new TableName("BudgetTable")));
     StructuredMutationAction.SetNamedRange sheetScopedNamedRange =
         new StructuredMutationAction.SetNamedRange(
             new DefinedName("LocalTotal"),
@@ -957,7 +956,7 @@ class ExecutorPolicyCoverageTest {
     CellMutationAction.SetCell setText = new CellMutationAction.SetCell(textCell("plain text"));
     StructuredMutationAction.SetPivotTable pivotFromRange =
         pivotTableAction(
-            new PivotTableInput.PivotSourceSpec.Range(
+            new PivotTableSpec.PivotSourceSpec.Range(
                 new SheetName("Budget"), new RangeRef("A1:B5")));
     MutationStep pivotStep =
         new MutationStep(
@@ -1002,18 +1001,18 @@ class ExecutorPolicyCoverageTest {
   }
 
   private static StructuredMutationAction.SetPivotTable pivotTableAction(
-      PivotTableInput.PivotSourceSpec source) {
+      PivotTableSpec.PivotSourceSpec source) {
     return new StructuredMutationAction.SetPivotTable(
-        new PivotTableInput(
+        new PivotTableSpec(
             "SalesPivot",
             new SheetName("Budget"),
             source,
-            new PivotTableInput.Anchor(new CellAddress("C5")),
+            new PivotTableSpec.Anchor(new CellAddress("C5")),
             List.of(),
             List.of(),
             List.of(),
             List.of(
-                new PivotTableInput.DataField(
+                new PivotTableSpec.DataField(
                     "Amount",
                     dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction.SUM,
                     "Amount",
@@ -1022,13 +1021,13 @@ class ExecutorPolicyCoverageTest {
 
   private static StructuredMutationAction.SetConditionalFormatting conditionalFormattingAction() {
     return new StructuredMutationAction.SetConditionalFormatting(
-        new ConditionalFormattingDefinitionInput(
+        new ConditionalFormattingSpec(
             List.of(
-                new ConditionalFormattingRuleInput.FormulaRule(
+                new ConditionalFormattingRuleSpec.FormulaRule(
                     "B2>0",
                     true,
                     java.util.Optional.of(
-                        new DifferentialStyleInput(
+                        new DifferentialStylePatch(
                             Optional.empty(),
                             Optional.of(true),
                             Optional.empty(),

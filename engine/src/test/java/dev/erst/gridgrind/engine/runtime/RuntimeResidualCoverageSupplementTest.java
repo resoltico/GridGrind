@@ -7,19 +7,19 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.value.CellGridInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -70,28 +70,28 @@ class RuntimeResidualCoverageSupplementTest {
             new TableRowSelector.ByKeyCell(
                 table,
                 "Owner",
-                new CellInput.Formula(TextSourceInput.utf8File("formulas/amount.txt"))));
+                new CellValueSpec.Formula(TextSourceSpec.utf8File("formulas/amount.txt"))));
     ExecutionJournal.Target standardInputFormulaTarget =
         ExecutionJournalTargetResolver.summaryTarget(
             new TableRowSelector.ByKeyCell(
-                table, "Owner", new CellInput.Formula(TextSourceInput.standardInput())));
+                table, "Owner", new CellValueSpec.Formula(TextSourceSpec.standardInput())));
 
     assertEquals(
         "RichText[runs=1]",
         ExecutionJournalTargetResolver.summarizeCellInput(
-            new CellInput.RichText(
-                List.of(new RichTextRunInput(TextSourceInput.inline("Ada"), Optional.empty())))));
+            new CellValueSpec.RichText(
+                List.of(new RichTextRunSpec(TextSourceSpec.inline("Ada"), Optional.empty())))));
     assertEquals(
         "Error[error=#REF!]",
-        ExecutionJournalTargetResolver.summarizeCellInput(new CellInput.ErrorValue("#REF!")));
+        ExecutionJournalTargetResolver.summarizeCellInput(new CellValueSpec.ErrorValue("#REF!")));
     assertEquals(
         "Date[value=2026-06-12]",
         ExecutionJournalTargetResolver.summarizeCellInput(
-            new CellInput.Date(LocalDate.of(2026, 6, 12))));
+            new CellValueSpec.Date(LocalDate.of(2026, 6, 12))));
     assertEquals(
         "DateTime[value=2026-06-12T09:30]",
         ExecutionJournalTargetResolver.summarizeCellInput(
-            new CellInput.DateTime(LocalDateTime.of(2026, 6, 12, 9, 30))));
+            new CellValueSpec.DateTime(LocalDateTime.of(2026, 6, 12, 9, 30))));
     assertEquals(
         "Row where Owner=Formula[path=formulas/amount.txt] in Table BudgetTable",
         fileFormulaTarget.label());
@@ -104,9 +104,9 @@ class RuntimeResidualCoverageSupplementTest {
   void executionActionDiagnosticFieldsOmitNonInlineFormulaSources() {
     CellMutationAction.SetCell fileBackedFormula =
         new CellMutationAction.SetCell(
-            new CellInput.Formula(TextSourceInput.utf8File("formulas/value.txt")));
+            new CellValueSpec.Formula(TextSourceSpec.utf8File("formulas/value.txt")));
     CellMutationAction.SetCell standardInputFormula =
-        new CellMutationAction.SetCell(new CellInput.Formula(TextSourceInput.standardInput()));
+        new CellMutationAction.SetCell(new CellValueSpec.Formula(TextSourceSpec.standardInput()));
 
     assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.formulaFor(fileBackedFormula));
     assertEquals(
@@ -122,9 +122,9 @@ class RuntimeResidualCoverageSupplementTest {
             "unused".getBytes(StandardCharsets.UTF_8),
             ExecutionGrantTestSupport.noPublicationWithStandardInput(List.of()));
     CellMutationAction.SetRange compactRange =
-        new CellMutationAction.SetRange(new CellGridInput.TextRows(List.of(List.of("Ada"))));
+        new CellMutationAction.SetRange(new CellGridSpec.TextRows(List.of(List.of("Ada"))));
     CellMutationAction.AppendRow compactRow =
-        new CellMutationAction.AppendRow(new CellRowInput.TextValues(List.of("Ada")));
+        new CellMutationAction.AppendRow(new CellRowSpec.TextValues(List.of("Ada")));
 
     assertSame(compactRange, SourceBackedMutationActionResolver.resolve(compactRange, bindings));
     assertSame(compactRow, SourceBackedMutationActionResolver.resolve(compactRow, bindings));
@@ -138,14 +138,14 @@ class RuntimeResidualCoverageSupplementTest {
             Path.of("tmp", "runtime-residual-supplement"),
             Path.of("tmp", "runtime-residual-supplement", "temp-root"),
             ExecutionGrantTestSupport.noPublication());
-    CellInput.ErrorValue errorValue = new CellInput.ErrorValue("#REF!");
+    CellValueSpec.ErrorValue errorValue = new CellValueSpec.ErrorValue("#REF!");
 
     assertSame(errorValue, SourceBackedPlanResolver.resolveCellInput(errorValue, bindings));
     assertEquals(
         "#REF!",
         assertInstanceOf(
                 ExcelCellValue.ErrorValue.class,
-                WorkbookCommandCellInputConverter.toExcelCellValue(errorValue))
+                WorkbookCommandCellValueSpecConverter.toExcelCellValue(errorValue))
             .value());
   }
 
@@ -157,7 +157,7 @@ class RuntimeResidualCoverageSupplementTest {
 
       boolean matched =
           SemanticSelectorResolver.matchesKeyCell(
-              snapshot, new CellInput.ErrorValue("#REF!"), false);
+              snapshot, new CellValueSpec.ErrorValue("#REF!"), false);
 
       assertFalse(matched);
     }
@@ -172,9 +172,9 @@ class RuntimeResidualCoverageSupplementTest {
                 WorkbookCommandStructuredMutationConverter.toCommand(
                     new RangeSelector.AllOnSheet(new SheetName("Budget")),
                     new StructuredMutationAction.SetConditionalFormatting(
-                        new ConditionalFormattingDefinitionInput(
+                        new ConditionalFormattingSpec(
                             List.of(
-                                new ConditionalFormattingRuleInput.FormulaRule(
+                                new ConditionalFormattingRuleSpec.FormulaRule(
                                     "A1>0", true, Optional.empty()))))));
 
     assertEquals(

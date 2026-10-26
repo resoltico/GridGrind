@@ -7,18 +7,18 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.formula.InvalidRawFormulaTextException;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -34,8 +34,8 @@ import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -68,10 +68,10 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.RichText(
+                        new CellValueSpec.RichText(
                             List.of(
-                                new RichTextRunInput(
-                                    new TextSourceInput.Utf8File("space.txt"),
+                                new RichTextRunSpec(
+                                    new TextSourceSpec.Utf8File("space.txt"),
                                     java.util.Optional.empty())))))));
 
     WorkbookPlan resolved =
@@ -84,9 +84,9 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         assertInstanceOf(
             CellMutationAction.SetCell.class,
             ((MutationStep) resolved.steps().getFirst()).action());
-    CellInput.RichText richTextValue =
-        assertInstanceOf(CellInput.RichText.class, richTextAction.value());
-    assertEquals(" ", ((TextSourceInput.Inline) richTextValue.runs().getFirst().source()).text());
+    CellValueSpec.RichText richTextValue =
+        assertInstanceOf(CellValueSpec.RichText.class, richTextAction.value());
+    assertEquals(" ", ((TextSourceSpec.Inline) richTextValue.runs().getFirst().source()).text());
   }
 
   @Test
@@ -96,7 +96,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         new MutationStep(
             new StepId("mutate-inline"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-            new CellMutationAction.SetCell(new CellInput.Text(TextSourceInput.inline("Owner"))));
+            new CellMutationAction.SetCell(new CellValueSpec.Text(TextSourceSpec.inline("Owner"))));
     InspectionStep inspectionStep =
         new InspectionStep(
             new StepId("inspect-inline"),
@@ -104,7 +104,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                 new TableRowSelector.ByKeyCell(
                     new TableSelector.ByName(new TableName("BudgetTable")),
                     "Item",
-                    new CellInput.Text(TextSourceInput.inline("Hosting"))),
+                    new CellValueSpec.Text(TextSourceSpec.inline("Hosting"))),
                 "Amount"),
             new SheetIntrospectionQuery.GetCells());
     AssertionStep assertionStep =
@@ -114,7 +114,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                 new TableRowSelector.ByKeyCell(
                     new TableSelector.ByName(new TableName("BudgetTable")),
                     "Item",
-                    new CellInput.Text(TextSourceInput.inline("Hosting"))),
+                    new CellValueSpec.Text(TextSourceSpec.inline("Hosting"))),
                 "Amount"),
             new CellAssertion.CellValue(
                 new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(125.0)));
@@ -124,8 +124,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
                 List.of(mutationStep, inspectionStep, assertionStep)),
             ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
@@ -142,18 +142,18 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new StepId("range-inline"),
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                     List.of(
                         List.of(
-                            new CellInput.Text(TextSourceInput.inline("Owner")),
-                            new CellInput.NumberValue(42.0d))))));
+                            new CellValueSpec.Text(TextSourceSpec.inline("Owner")),
+                            new CellValueSpec.NumberValue(42.0d))))));
     MutationStep commentStep =
         new MutationStep(
             new StepId("comment-inline"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.SetComment(
-                new CommentInput(
-                    TextSourceInput.inline("Ada"),
+                new CommentSpec(
+                    TextSourceSpec.inline("Ada"),
                     "Ada",
                     false,
                     java.util.Optional.empty(),
@@ -164,43 +164,43 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetPicture(
                 picture(
-                    "Logo", inlinePictureData(), twoCellAnchor(), TextSourceInput.inline("Logo"))));
+                    "Logo", inlinePictureData(), twoCellAnchor(), TextSourceSpec.inline("Logo"))));
     MutationStep shapeStep =
         new MutationStep(
             new StepId("shape-inline"),
             new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetShape(
                 simpleShape(
-                    "Shape", twoCellAnchor(), "roundRect", TextSourceInput.inline("Shape"))));
+                    "Shape", twoCellAnchor(), "roundRect", TextSourceSpec.inline("Shape"))));
     MutationStep validationStep =
         new MutationStep(
             new StepId("validation-inline"),
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
-                    new DataValidationRuleInput.ExplicitList(List.of("Open")),
+                    new DataValidationRuleSpec.ExplicitList(List.of("Open")),
                     false,
                     false,
-                    new DataValidationPromptInput(
-                        TextSourceInput.inline("Prompt"), TextSourceInput.inline("Body"), false),
-                    new DataValidationErrorAlertInput(
+                    new DataValidationPromptSpec(
+                        TextSourceSpec.inline("Prompt"), TextSourceSpec.inline("Body"), false),
+                    new DataValidationErrorAlertSpec(
                         ExcelDataValidationErrorStyle.STOP,
-                        TextSourceInput.inline("Error"),
-                        TextSourceInput.inline("Try again"),
+                        TextSourceSpec.inline("Error"),
+                        TextSourceSpec.inline("Try again"),
                         false))));
     MutationStep tableStep =
         new MutationStep(
             new StepId("table-inline"),
             new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget")),
             new StructuredMutationAction.SetTable(
-                new TableInput(
+                new TableSpec(
                     new TableName("BudgetTable"),
                     new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                     new RangeRef("A1:B2"),
                     false,
                     true,
-                    new TableStyleInput.Named("TableStyleMedium2", false, false, true, false),
-                    TextSourceInput.inline("Budget table"),
+                    new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false),
+                    TextSourceSpec.inline("Budget table"),
                     false,
                     false,
                     false,
@@ -214,22 +214,22 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetPrintLayout(
                 printLayoutWithHeaderAndFooter(
-                    new HeaderFooterTextInput(
-                        TextSourceInput.inline("left"),
-                        TextSourceInput.inline("center"),
-                        TextSourceInput.inline("right")),
-                    new HeaderFooterTextInput(
-                        TextSourceInput.inline("footer-left"),
-                        TextSourceInput.inline("footer-center"),
-                        TextSourceInput.inline("footer-right")))));
+                    new HeaderFooterTextSpec(
+                        TextSourceSpec.inline("left"),
+                        TextSourceSpec.inline("center"),
+                        TextSourceSpec.inline("right")),
+                    new HeaderFooterTextSpec(
+                        TextSourceSpec.inline("footer-left"),
+                        TextSourceSpec.inline("footer-center"),
+                        TextSourceSpec.inline("footer-right")))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
                 List.of(
                     rangeStep,
                     commentStep,
@@ -272,21 +272,21 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new StepId("formula-inline-prefix"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.SetCell(
-                new CellInput.Formula(TextSourceInput.inline("SUM(B2:B3)"))));
+                new CellValueSpec.Formula(TextSourceSpec.inline("SUM(B2:B3)"))));
     MutationStep commentStep =
         new MutationStep(
             new StepId("comment-mixed"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.SetComment(
-                new CommentInput(
-                    TextSourceInput.inline("Ada Lovelace"),
+                new CommentSpec(
+                    TextSourceSpec.inline("Ada Lovelace"),
                     "Ada",
                     false,
                     java.util.Optional.of(
                         List.of(
-                            new RichTextRunInput(
-                                TextSourceInput.inline("Ada"), java.util.Optional.empty()),
-                            richTextRun(TextSourceInput.utf8File("comment-run.txt"), null))),
+                            new RichTextRunSpec(
+                                TextSourceSpec.inline("Ada"), java.util.Optional.empty()),
+                            richTextRun(TextSourceSpec.utf8File("comment-run.txt"), null))),
                     java.util.Optional.empty())));
     MutationStep pictureStep =
         new MutationStep(
@@ -295,23 +295,23 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new DrawingMutationAction.SetPicture(
                 picture(
                     "Logo",
-                    new PictureDataInput(
-                        ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64("cGF5bG9hZA")),
+                    new PictureDataSpec(
+                        ExcelPictureFormat.PNG, BinarySourceSpec.inlineBase64("cGF5bG9hZA")),
                     twoCellAnchor(),
-                    TextSourceInput.utf8File("picture-description.txt"))));
+                    TextSourceSpec.utf8File("picture-description.txt"))));
     MutationStep embeddedObjectStep =
         new MutationStep(
             new StepId("embedded-mixed"),
             new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetEmbeddedObject(
-                new EmbeddedObjectInput(
+                new EmbeddedObjectSpec(
                     "Payload",
                     "Payload",
                     "payload.bin",
                     "open",
-                    BinarySourceInput.inlineBase64("cGF5bG9hZA=="),
-                    new PictureDataInput(
-                        ExcelPictureFormat.PNG, BinarySourceInput.file("preview.bin")),
+                    BinarySourceSpec.inlineBase64("cGF5bG9hZA=="),
+                    new PictureDataSpec(
+                        ExcelPictureFormat.PNG, BinarySourceSpec.file("preview.bin")),
                     twoCellAnchor())));
     MutationStep promptValidationStep =
         new MutationStep(
@@ -319,12 +319,12 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
-                    new DataValidationRuleInput.ExplicitList(List.of("Open")),
+                    new DataValidationRuleSpec.ExplicitList(List.of("Open")),
                     false,
                     false,
-                    new DataValidationPromptInput(
-                        TextSourceInput.inline("Prompt"),
-                        TextSourceInput.utf8File("prompt-body.txt"),
+                    new DataValidationPromptSpec(
+                        TextSourceSpec.inline("Prompt"),
+                        TextSourceSpec.utf8File("prompt-body.txt"),
                         false),
                     null)));
     MutationStep errorValidationStep =
@@ -333,14 +333,14 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B1")),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
-                    new DataValidationRuleInput.ExplicitList(List.of("Open")),
+                    new DataValidationRuleSpec.ExplicitList(List.of("Open")),
                     false,
                     false,
                     null,
-                    new DataValidationErrorAlertInput(
+                    new DataValidationErrorAlertSpec(
                         ExcelDataValidationErrorStyle.STOP,
-                        TextSourceInput.inline("Error"),
-                        TextSourceInput.utf8File("error-body.txt"),
+                        TextSourceSpec.inline("Error"),
+                        TextSourceSpec.utf8File("error-body.txt"),
                         false))));
     MutationStep printLayoutStep =
         new MutationStep(
@@ -348,21 +348,21 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetPrintLayout(
                 printLayoutWithHeaderAndFooter(
-                    new HeaderFooterTextInput(
-                        TextSourceInput.inline("left"),
-                        TextSourceInput.utf8File("header-center.txt"),
-                        TextSourceInput.inline("right")),
-                    new HeaderFooterTextInput(
-                        TextSourceInput.inline("footer-left"),
-                        TextSourceInput.inline("footer-center"),
-                        TextSourceInput.inline("footer-right")))));
+                    new HeaderFooterTextSpec(
+                        TextSourceSpec.inline("left"),
+                        TextSourceSpec.utf8File("header-center.txt"),
+                        TextSourceSpec.inline("right")),
+                    new HeaderFooterTextSpec(
+                        TextSourceSpec.inline("footer-left"),
+                        TextSourceSpec.inline("footer-center"),
+                        TextSourceSpec.inline("footer-right")))));
 
     WorkbookPlan plan =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of(
                 formulaStep,
                 commentStep,
@@ -388,11 +388,11 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         assertInstanceOf(
             CellMutationAction.SetCell.class,
             assertInstanceOf(MutationStep.class, resolved.steps().get(0)).action());
-    CellInput.Formula resolvedFormula =
-        assertInstanceOf(CellInput.Formula.class, resolvedFormulaAction.value());
+    CellValueSpec.Formula resolvedFormula =
+        assertInstanceOf(CellValueSpec.Formula.class, resolvedFormulaAction.value());
     assertEquals(
         "SUM(B2:B3)",
-        assertInstanceOf(TextSourceInput.Inline.class, resolvedFormula.source()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, resolvedFormula.source()).text());
 
     CellMutationAction.SetComment resolvedCommentAction =
         assertInstanceOf(
@@ -400,7 +400,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(1)).action());
     assertEquals(
         " Lovelace",
-        ((TextSourceInput.Inline)
+        ((TextSourceSpec.Inline)
                 resolvedCommentAction.comment().runs().orElseThrow().get(1).source())
             .text());
 
@@ -410,11 +410,11 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(2)).action());
     assertEquals(
         "cGF5bG9hZA==",
-        ((BinarySourceInput.InlineBase64) resolvedPictureAction.picture().image().source())
+        ((BinarySourceSpec.InlineBase64) resolvedPictureAction.picture().image().source())
             .base64Data());
     assertEquals(
         "Queue preview",
-        ((TextSourceInput.Inline) resolvedPictureAction.picture().description().orElseThrow())
+        ((TextSourceSpec.Inline) resolvedPictureAction.picture().description().orElseThrow())
             .text());
 
     DrawingMutationAction.SetEmbeddedObject resolvedEmbeddedAction =
@@ -423,7 +423,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(3)).action());
     assertEquals(
         Base64.getEncoder().encodeToString(pngBytes()),
-        ((BinarySourceInput.InlineBase64)
+        ((BinarySourceSpec.InlineBase64)
                 resolvedEmbeddedAction.embeddedObject().previewImage().source())
             .base64Data());
 
@@ -433,7 +433,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(4)).action());
     assertEquals(
         "Pick one value",
-        ((TextSourceInput.Inline)
+        ((TextSourceSpec.Inline)
                 resolvedPromptValidation.validation().prompt().orElseThrow().text())
             .text());
 
@@ -443,7 +443,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(5)).action());
     assertEquals(
         "Try again",
-        ((TextSourceInput.Inline)
+        ((TextSourceSpec.Inline)
                 resolvedErrorValidation.validation().errorAlert().orElseThrow().text())
             .text());
 
@@ -453,7 +453,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(6)).action());
     assertEquals(
         "Centered",
-        ((TextSourceInput.Inline) resolvedPrintLayout.printLayout().header().center()).text());
+        ((TextSourceSpec.Inline) resolvedPrintLayout.printLayout().header().center()).text());
   }
 
   @Test
@@ -471,10 +471,10 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                 new TableRowSelector.ByKeyCell(
                     new TableSelector.ByName(new TableName("BudgetTable")),
                     "Item",
-                    new CellInput.Text(TextSourceInput.utf8File("item.txt"))),
+                    new CellValueSpec.Text(TextSourceSpec.utf8File("item.txt"))),
                 "Amount"),
             new CellMutationAction.SetCell(
-                new CellInput.Text(TextSourceInput.utf8File("value.txt"))));
+                new CellValueSpec.Text(TextSourceSpec.utf8File("value.txt"))));
     MutationStep pictureDescriptionOnlyChanged =
         new MutationStep(
             new StepId("picture-description-only"),
@@ -484,34 +484,34 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                     "Logo",
                     inlinePictureData(),
                     twoCellAnchor(),
-                    TextSourceInput.utf8File("value.txt"))));
+                    TextSourceSpec.utf8File("value.txt"))));
     MutationStep footerOnlyChanged =
         new MutationStep(
             new StepId("footer-only-changed"),
             new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetPrintLayout(
                 printLayoutWithHeaderAndFooter(
-                    new HeaderFooterTextInput(
-                        TextSourceInput.inline("header-left"),
-                        TextSourceInput.inline("header-center"),
-                        TextSourceInput.inline("header-right")),
-                    new HeaderFooterTextInput(
-                        TextSourceInput.inline("footer-left"),
-                        TextSourceInput.inline("footer-center"),
-                        TextSourceInput.utf8File("footer-right.txt")))));
+                    new HeaderFooterTextSpec(
+                        TextSourceSpec.inline("header-left"),
+                        TextSourceSpec.inline("header-center"),
+                        TextSourceSpec.inline("header-right")),
+                    new HeaderFooterTextSpec(
+                        TextSourceSpec.inline("footer-left"),
+                        TextSourceSpec.inline("footer-center"),
+                        TextSourceSpec.utf8File("footer-right.txt")))));
     MutationStep formulaAlreadyInline =
         new MutationStep(
             new StepId("formula-inline-stable"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
             new CellMutationAction.SetCell(
-                new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)"))));
+                new CellValueSpec.Formula(TextSourceSpec.inline("SUM(A1:A2)"))));
 
     WorkbookPlan plan =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of(
                 targetAndActionChanged,
                 pictureDescriptionOnlyChanged,
@@ -553,44 +553,45 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                 workingDirectory.resolve("raw-formula.txt"),
                 workingDirectory.resolve("invalid-raw-formula.txt")));
 
-    TextSourceInput.Inline stableSource = TextSourceInput.inline("SUM(A1:A2)");
+    TextSourceSpec.Inline stableSource = TextSourceSpec.inline("SUM(A1:A2)");
     assertSame(stableSource, SourceBackedPlanResolver.resolveFormulaSource(stableSource, bindings));
 
     assertThrows(
         IllegalArgumentException.class,
         () ->
             SourceBackedPlanResolver.resolveFormulaSource(
-                TextSourceInput.inline("=SUM(B1:B2)"), bindings));
+                TextSourceSpec.inline("=SUM(B1:B2)"), bindings));
 
     assertEquals(
         "SUM(C1:C2)",
-        ((TextSourceInput.Inline)
+        ((TextSourceSpec.Inline)
                 SourceBackedPlanResolver.resolveFormulaSource(
-                    TextSourceInput.utf8File("formula.txt"), bindings))
+                    TextSourceSpec.utf8File("formula.txt"), bindings))
             .text());
     assertEquals(
         "LAMBDA(x,x+1)(A1)",
-        ((TextSourceInput.Inline)
+        ((TextSourceSpec.Inline)
                 SourceBackedPlanResolver.resolveRawFormulaSource(
-                    TextSourceInput.utf8File("raw-formula.txt"), bindings))
+                    TextSourceSpec.utf8File("raw-formula.txt"), bindings))
             .text());
     assertThrows(
         InvalidRawFormulaTextException.class,
         () ->
             SourceBackedPlanResolver.resolveRawFormulaSource(
-                TextSourceInput.utf8File("invalid-raw-formula.txt"), bindings));
-    CellInput.RawFormula inlineRawFormula =
-        new CellInput.RawFormula(TextSourceInput.inline("LAMBDA(x,x+1)(A1)"));
+                TextSourceSpec.utf8File("invalid-raw-formula.txt"), bindings));
+    CellValueSpec.RawFormula inlineRawFormula =
+        new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"));
     assertSame(
         inlineRawFormula, SourceBackedPlanResolver.resolveCellInput(inlineRawFormula, bindings));
     assertEquals(
         "LAMBDA(x,x+1)(A1)",
         assertInstanceOf(
-                TextSourceInput.Inline.class,
+                TextSourceSpec.Inline.class,
                 assertInstanceOf(
-                        CellInput.RawFormula.class,
+                        CellValueSpec.RawFormula.class,
                         SourceBackedPlanResolver.resolveCellInput(
-                            new CellInput.RawFormula(TextSourceInput.utf8File("raw-formula.txt")),
+                            new CellValueSpec.RawFormula(
+                                TextSourceSpec.utf8File("raw-formula.txt")),
                             bindings))
                     .source())
             .text());
@@ -600,27 +601,27 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new StepId("formula-inline-stable"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.SetCell(
-                new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)"))));
+                new CellValueSpec.Formula(TextSourceSpec.inline("SUM(A1:A2)"))));
     MutationStep secondInline =
         new MutationStep(
             new StepId("formula-inline-prefixed"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A2")),
             new CellMutationAction.SetCell(
-                new CellInput.Formula(TextSourceInput.inline("SUM(B1:B2)"))));
+                new CellValueSpec.Formula(TextSourceSpec.inline("SUM(B1:B2)"))));
     MutationStep fileBacked =
         new MutationStep(
             new StepId("formula-file-backed"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A3")),
             new CellMutationAction.SetCell(
-                new CellInput.Formula(TextSourceInput.utf8File("formula.txt"))));
+                new CellValueSpec.Formula(TextSourceSpec.utf8File("formula.txt"))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
                 List.of(stableInline, secondInline, fileBacked)),
             bindings);
 
@@ -633,8 +634,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     assertEquals(
         "SUM(B1:B2)",
         assertInstanceOf(
-                TextSourceInput.Inline.class,
-                assertInstanceOf(CellInput.Formula.class, prefixedAction.value()).source())
+                TextSourceSpec.Inline.class,
+                assertInstanceOf(CellValueSpec.Formula.class, prefixedAction.value()).source())
             .text());
 
     CellMutationAction.SetCell fileBackedAction =
@@ -644,8 +645,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     assertEquals(
         "SUM(C1:C2)",
         assertInstanceOf(
-                TextSourceInput.Inline.class,
-                assertInstanceOf(CellInput.Formula.class, fileBackedAction.value()).source())
+                TextSourceSpec.Inline.class,
+                assertInstanceOf(CellValueSpec.Formula.class, fileBackedAction.value()).source())
             .text());
   }
 }

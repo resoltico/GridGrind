@@ -6,15 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
-import dev.erst.gridgrind.core.model.value.CellGridInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -22,7 +22,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -53,18 +53,18 @@ class RequestPreflightTest {
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "signed.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                new OoxmlPersistenceSecurityInput(
-                    new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                new OoxmlPersistenceSecuritySpec(
+                    new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec
                         .None(),
-                    new OoxmlPersistenceSignatureInput.Sign(
-                        OoxmlSignatureInput.sameKeyPassword(
+                    new OoxmlPersistenceSignatureSpec.Sign(
+                        OoxmlSignatureSpec.sameKeyPassword(
                             "missing-signing-material.p12",
                             new dev.erst.gridgrind.core.source.SecretReference("signing-password"),
                             Optional.empty(),
                             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                             Optional.empty())))),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
 
     RequestPreflight.Result result =
@@ -104,20 +104,20 @@ class RequestPreflightTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("missing-source.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-title"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(new TextSourceInput.Utf8File("missing-title.txt")))),
+                        new CellValueSpec.Text(new TextSourceSpec.Utf8File("missing-title.txt")))),
                 new MutationStep(
                     new StepId("set-subtitle"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A2")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(
-                            new TextSourceInput.Utf8File("missing-subtitle.txt"))))));
+                        new CellValueSpec.Text(
+                            new TextSourceSpec.Utf8File("missing-subtitle.txt"))))));
     Path tempRoot = temporaryDirectory.resolve("scratch");
 
     RequestPreflight.Result result =
@@ -158,11 +158,11 @@ class RequestPreflightTest {
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "signed.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                new OoxmlPersistenceSecurityInput(
-                    new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                new OoxmlPersistenceSecuritySpec(
+                    new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec
                         .None(),
-                    new OoxmlPersistenceSignatureInput.Sign(
-                        new OoxmlSignatureInput(
+                    new OoxmlPersistenceSignatureSpec.Sign(
+                        new OoxmlSignatureSpec(
                             signedWorkbook.pkcs12Path().toString(),
                             new dev.erst.gridgrind.core.source.SecretReference(
                                 "wrong-keystore-password"),
@@ -171,8 +171,8 @@ class RequestPreflightTest {
                             Optional.of(signedWorkbook.alias()),
                             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                             Optional.empty())))),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     ExecutionInputBindings rawBindings =
         new ExecutionInputBindings(
@@ -310,20 +310,20 @@ class RequestPreflightTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-values"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetRange(
-                        new CellGridInput.Typed(
+                        new CellGridSpec.Typed(
                             List.of(
                                 List.of(
-                                    new CellInput.Text(
-                                        new TextSourceInput.Utf8File("missing-first.txt")),
-                                    new CellInput.Text(
-                                        new TextSourceInput.Utf8File("missing-second.txt")))))))));
+                                    new CellValueSpec.Text(
+                                        new TextSourceSpec.Utf8File("missing-first.txt")),
+                                    new CellValueSpec.Text(
+                                        new TextSourceSpec.Utf8File("missing-second.txt")))))))));
 
     RequestPreflight.Result result =
         RequestPreflight.verify(
@@ -357,27 +357,25 @@ class RequestPreflightTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-rich-text"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetRange(
-                        new CellGridInput.Typed(
+                        new CellGridSpec.Typed(
                             List.of(
                                 List.of(
-                                    new CellInput.RichText(
+                                    new CellValueSpec.RichText(
                                         List.of(
-                                            new dev.erst.gridgrind.core.model.style
-                                                .RichTextRunInput(
-                                                new TextSourceInput.Utf8File("missing-run.txt"),
+                                            new dev.erst.gridgrind.core.model.style.RichTextRunSpec(
+                                                new TextSourceSpec.Utf8File("missing-run.txt"),
                                                 java.util.Optional.empty()))),
-                                    new CellInput.RichText(
+                                    new CellValueSpec.RichText(
                                         List.of(
-                                            new dev.erst.gridgrind.core.model.style
-                                                .RichTextRunInput(
-                                                new TextSourceInput.Utf8File("empty-run.txt"),
+                                            new dev.erst.gridgrind.core.model.style.RichTextRunSpec(
+                                                new TextSourceSpec.Utf8File("empty-run.txt"),
                                                 java.util.Optional.empty()))))))))));
 
     RequestPreflight.Result result =
@@ -402,13 +400,13 @@ class RequestPreflightTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-value"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)))));
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0)))));
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             temporaryDirectory,
@@ -445,13 +443,13 @@ class RequestPreflightTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("ensure-budget"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d)))));
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0d)))));
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             temporaryDirectory,
@@ -490,8 +488,8 @@ class RequestPreflightTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 absoluteOutput.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     RequestPreflight.Result saveAsResult =
         RequestPreflight.verify(
@@ -513,9 +511,9 @@ class RequestPreflightTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     RequestPreflight.Result invalidOverwriteResult =
         RequestPreflight.verify(
@@ -536,12 +534,12 @@ class RequestPreflightTest {
         plan(
             new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx"),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()));
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()));
     WorkbookPlan newOverwrite =
         plan(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()));
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()));
 
     RequestPreflightPaths.PersistenceTarget target =
         RequestPreflightPaths.persistenceTarget(existingOverwrite).orElseThrow();
@@ -630,8 +628,8 @@ class RequestPreflightTest {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         List.of());
   }
 

@@ -186,7 +186,7 @@ public final class ExecutionInputBindings {
         switch (grant) {
           case GridGrindExecutionGrant.Bounded bounded ->
               bounded.readableResources().stream()
-                  .anyMatch(GridGrindExecutionGrant.ReadAuthority.StandardInput.class::isInstance);
+                  .anyMatch(GridGrindExecutionGrant.ReadAuthority.Stdin.class::isInstance);
         };
     if (!allowed) {
       throw new ExecutionAuthorityDeniedException(

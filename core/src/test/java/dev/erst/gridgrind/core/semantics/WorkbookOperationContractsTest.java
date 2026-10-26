@@ -3,12 +3,12 @@ package dev.erst.gridgrind.core.semantics;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.AnalysisAssertion;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import java.util.List;
@@ -90,8 +90,8 @@ class WorkbookOperationContractsTest {
     assertEquals(
         "execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: MUTATION",
         WorkbookOperationContracts.executionModeViolation(
-                new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)),
-                new ExecutionModeInput.EventRead())
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0)),
+                new ExecutionModeSpec.EventRead())
             .orElseThrow());
   }
 

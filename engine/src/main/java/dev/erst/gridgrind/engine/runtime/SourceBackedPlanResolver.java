@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -10,8 +10,8 @@ import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -108,46 +108,46 @@ public final class SourceBackedPlanResolver {
     return SourceBackedMutationActionResolver.resolve(action, bindings);
   }
 
-  static CellInput resolveCellInput(CellInput value, ExecutionInputBindings bindings)
+  static CellValueSpec resolveCellInput(CellValueSpec value, ExecutionInputBindings bindings)
       throws IOException {
     return switch (value) {
-      case CellInput.Blank blank -> blank;
-      case CellInput.Text text -> {
-        TextSourceInput resolvedSource =
+      case CellValueSpec.Blank blank -> blank;
+      case CellValueSpec.Text text -> {
+        TextSourceSpec resolvedSource =
             resolveTextSource(text.source(), bindings, true, "cell text");
         yield sameReference(resolvedSource, text.source())
             ? text
-            : new CellInput.Text(resolvedSource);
+            : new CellValueSpec.Text(resolvedSource);
       }
-      case CellInput.RichText richText -> {
+      case CellValueSpec.RichText richText -> {
         var resolvedRuns =
             SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings);
         yield sameReference(resolvedRuns, richText.runs())
             ? richText
-            : new CellInput.RichText(resolvedRuns);
+            : new CellValueSpec.RichText(resolvedRuns);
       }
-      case CellInput.NumberValue numberValue -> numberValue;
-      case CellInput.BooleanValue booleanValue -> booleanValue;
-      case CellInput.ErrorValue errorValue -> errorValue;
-      case CellInput.Date date -> date;
-      case CellInput.DateTime dateTime -> dateTime;
-      case CellInput.Formula formula -> {
-        TextSourceInput resolvedSource = resolveFormulaSource(formula.source(), bindings);
+      case CellValueSpec.NumberValue numberValue -> numberValue;
+      case CellValueSpec.BooleanValue booleanValue -> booleanValue;
+      case CellValueSpec.ErrorValue errorValue -> errorValue;
+      case CellValueSpec.Date date -> date;
+      case CellValueSpec.DateTime dateTime -> dateTime;
+      case CellValueSpec.Formula formula -> {
+        TextSourceSpec resolvedSource = resolveFormulaSource(formula.source(), bindings);
         yield sameReference(resolvedSource, formula.source())
             ? formula
-            : new CellInput.Formula(resolvedSource);
+            : new CellValueSpec.Formula(resolvedSource);
       }
-      case CellInput.RawFormula rawFormula -> {
-        TextSourceInput resolvedSource = resolveRawFormulaSource(rawFormula.source(), bindings);
+      case CellValueSpec.RawFormula rawFormula -> {
+        TextSourceSpec resolvedSource = resolveRawFormulaSource(rawFormula.source(), bindings);
         yield sameReference(resolvedSource, rawFormula.source())
             ? rawFormula
-            : new CellInput.RawFormula(resolvedSource);
+            : new CellValueSpec.RawFormula(resolvedSource);
       }
     };
   }
 
-  static TextSourceInput resolveTextSource(
-      TextSourceInput source,
+  static TextSourceSpec resolveTextSource(
+      TextSourceSpec source,
       ExecutionInputBindings bindings,
       boolean requireNonBlank,
       String inputKind)
@@ -165,39 +165,39 @@ public final class SourceBackedPlanResolver {
         bindings,
         () -> {
           String resolvedText = resolveText(source, bindings, requireNonBlank, inputKind);
-          return source instanceof TextSourceInput.Inline
+          return source instanceof TextSourceSpec.Inline
               ? source
-              : new TextSourceInput.Inline(resolvedText);
+              : new TextSourceSpec.Inline(resolvedText);
         });
   }
 
-  static TextSourceInput resolveFormulaSource(
-      TextSourceInput source, ExecutionInputBindings bindings) throws IOException {
-    TextSourceInput resolvedSource = resolveTextSource(source, bindings, true, "formula");
-    if (!(resolvedSource instanceof TextSourceInput.Inline inline)) {
+  static TextSourceSpec resolveFormulaSource(TextSourceSpec source, ExecutionInputBindings bindings)
+      throws IOException {
+    TextSourceSpec resolvedSource = resolveTextSource(source, bindings, true, "formula");
+    if (!(resolvedSource instanceof TextSourceSpec.Inline inline)) {
       return source;
     }
     String resolvedText = inline.text();
-    new CellInput.Formula(new TextSourceInput.Inline(resolvedText));
-    return source instanceof TextSourceInput.Inline
+    new CellValueSpec.Formula(new TextSourceSpec.Inline(resolvedText));
+    return source instanceof TextSourceSpec.Inline
         ? source
-        : new TextSourceInput.Inline(resolvedText);
+        : new TextSourceSpec.Inline(resolvedText);
   }
 
-  static TextSourceInput resolveRawFormulaSource(
-      TextSourceInput source, ExecutionInputBindings bindings) throws IOException {
-    TextSourceInput resolvedSource = resolveTextSource(source, bindings, true, "raw formula");
-    if (!(resolvedSource instanceof TextSourceInput.Inline inline)) {
+  static TextSourceSpec resolveRawFormulaSource(
+      TextSourceSpec source, ExecutionInputBindings bindings) throws IOException {
+    TextSourceSpec resolvedSource = resolveTextSource(source, bindings, true, "raw formula");
+    if (!(resolvedSource instanceof TextSourceSpec.Inline inline)) {
       return source;
     }
-    TextSourceInput.Inline validated =
-        (TextSourceInput.Inline)
-            new CellInput.RawFormula(new TextSourceInput.Inline(inline.text())).source();
-    return source instanceof TextSourceInput.Inline ? source : validated;
+    TextSourceSpec.Inline validated =
+        (TextSourceSpec.Inline)
+            new CellValueSpec.RawFormula(new TextSourceSpec.Inline(inline.text())).source();
+    return source instanceof TextSourceSpec.Inline ? source : validated;
   }
 
-  static BinarySourceInput resolveBinarySource(
-      BinarySourceInput source, ExecutionInputBindings bindings, String inputKind)
+  static BinarySourceSpec resolveBinarySource(
+      BinarySourceSpec source, ExecutionInputBindings bindings, String inputKind)
       throws IOException {
     if (!bindings.hasRequestPathAccess()) {
       try (RequestPathAccess access =
@@ -211,15 +211,15 @@ public final class SourceBackedPlanResolver {
         bindings,
         () -> {
           String resolvedBase64 = resolveBinaryBase64(source, bindings, inputKind);
-          return source instanceof BinarySourceInput.InlineBase64 inline
+          return source instanceof BinarySourceSpec.InlineBase64 inline
                   && inline.base64Data().equals(resolvedBase64)
               ? source
-              : new BinarySourceInput.InlineBase64(resolvedBase64);
+              : new BinarySourceSpec.InlineBase64(resolvedBase64);
         });
   }
 
   private static String resolveText(
-      TextSourceInput source,
+      TextSourceSpec source,
       ExecutionInputBindings bindings,
       boolean requireNonBlank,
       String inputKind)
@@ -227,9 +227,9 @@ public final class SourceBackedPlanResolver {
     Objects.requireNonNull(source, "source must not be null");
     String text =
         switch (source) {
-          case TextSourceInput.Inline inline -> inline.text();
-          case TextSourceInput.Utf8File file -> readUtf8File(file.path(), bindings, inputKind);
-          case TextSourceInput.StandardInput _ -> readStandardInputText(bindings, inputKind);
+          case TextSourceSpec.Inline inline -> inline.text();
+          case TextSourceSpec.Utf8File file -> readUtf8File(file.path(), bindings, inputKind);
+          case TextSourceSpec.Stdin _ -> readStandardInputText(bindings, inputKind);
         };
     if (requireNonBlank && text.isBlank()) {
       throw new IllegalArgumentException(inputKind + " must not be blank");
@@ -261,15 +261,15 @@ public final class SourceBackedPlanResolver {
   }
 
   private static String resolveBinaryBase64(
-      BinarySourceInput source, ExecutionInputBindings bindings, String inputKind)
+      BinarySourceSpec source, ExecutionInputBindings bindings, String inputKind)
       throws IOException {
     Objects.requireNonNull(source, "source must not be null");
     byte[] bytes =
         switch (source) {
-          case BinarySourceInput.InlineBase64 inline ->
+          case BinarySourceSpec.InlineBase64 inline ->
               Base64.getDecoder().decode(inline.base64Data());
-          case BinarySourceInput.File file -> readBinaryFile(file.path(), bindings, inputKind);
-          case BinarySourceInput.StandardInput _ -> standardInputBytes(bindings, inputKind);
+          case BinarySourceSpec.File file -> readBinaryFile(file.path(), bindings, inputKind);
+          case BinarySourceSpec.Stdin _ -> standardInputBytes(bindings, inputKind);
         };
     if (bytes.length == 0) {
       throw new IllegalArgumentException(inputKind + " must not be empty");
@@ -335,24 +335,24 @@ public final class SourceBackedPlanResolver {
     T resolve() throws IOException;
   }
 
-  static List<List<CellInput>> resolveRows(
-      List<List<CellInput>> rows, ExecutionInputBindings bindings) throws IOException {
-    List<List<CellInput>> resolvedRows = new ArrayList<>(rows.size());
+  static List<List<CellValueSpec>> resolveRows(
+      List<List<CellValueSpec>> rows, ExecutionInputBindings bindings) throws IOException {
+    List<List<CellValueSpec>> resolvedRows = new ArrayList<>(rows.size());
     boolean changed = false;
-    for (List<CellInput> row : rows) {
-      List<CellInput> resolvedRow = resolveCells(row, bindings);
+    for (List<CellValueSpec> row : rows) {
+      List<CellValueSpec> resolvedRow = resolveCells(row, bindings);
       resolvedRows.add(resolvedRow);
       changed |= !sameReference(resolvedRow, row);
     }
     return changed ? List.copyOf(resolvedRows) : rows;
   }
 
-  static List<CellInput> resolveCells(List<CellInput> values, ExecutionInputBindings bindings)
-      throws IOException {
-    List<CellInput> resolvedValues = new ArrayList<>(values.size());
+  static List<CellValueSpec> resolveCells(
+      List<CellValueSpec> values, ExecutionInputBindings bindings) throws IOException {
+    List<CellValueSpec> resolvedValues = new ArrayList<>(values.size());
     boolean changed = false;
-    for (CellInput value : values) {
-      CellInput resolvedValue = resolveCellInput(value, bindings);
+    for (CellValueSpec value : values) {
+      CellValueSpec resolvedValue = resolveCellInput(value, bindings);
       resolvedValues.add(resolvedValue);
       changed |= !sameReference(resolvedValue, value);
     }

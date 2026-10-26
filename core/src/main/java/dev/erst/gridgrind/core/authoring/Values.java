@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.authoring;
 
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -192,32 +192,32 @@ public final class Values {
     return List.copyOf(Arrays.asList(cells));
   }
 
-  static CellInput toCellInput(CellValue value) {
+  static CellValueSpec toCellInput(CellValue value) {
     return switch (Objects.requireNonNull(value, "value must not be null")) {
-      case Blank _ -> new CellInput.Blank();
-      case Text text -> new CellInput.Text(toTextSourceInput(text.source()));
-      case NumericValue number -> new CellInput.NumberValue(number.value());
-      case BooleanValue booleanValue -> new CellInput.BooleanValue(booleanValue.value());
-      case ErrorValue error -> new CellInput.ErrorValue(error.value());
-      case DateValue date -> new CellInput.Date(date.value());
-      case DateTimeValue dateTime -> new CellInput.DateTime(dateTime.value());
-      case Formula formula -> new CellInput.Formula(toTextSourceInput(formula.source()));
+      case Blank _ -> new CellValueSpec.Blank();
+      case Text text -> new CellValueSpec.Text(toTextSourceInput(text.source()));
+      case NumericValue number -> new CellValueSpec.NumberValue(number.value());
+      case BooleanValue booleanValue -> new CellValueSpec.BooleanValue(booleanValue.value());
+      case ErrorValue error -> new CellValueSpec.ErrorValue(error.value());
+      case DateValue date -> new CellValueSpec.Date(date.value());
+      case DateTimeValue dateTime -> new CellValueSpec.DateTime(dateTime.value());
+      case Formula formula -> new CellValueSpec.Formula(toTextSourceInput(formula.source()));
     };
   }
 
-  static CommentInput toCommentInput(Comment comment) {
+  static CommentSpec toCommentInput(Comment comment) {
     Comment nonNullComment = Objects.requireNonNull(comment, "comment must not be null");
-    return CommentInput.plain(
+    return CommentSpec.plain(
         toTextSourceInput(nonNullComment.source()),
         nonNullComment.author(),
         nonNullComment.visible());
   }
 
-  static TextSourceInput toTextSourceInput(TextSource source) {
+  static TextSourceSpec toTextSourceInput(TextSource source) {
     return switch (Objects.requireNonNull(source, "source must not be null")) {
-      case InlineText inline -> TextSourceInput.inline(inline.text());
-      case Utf8FileText file -> TextSourceInput.utf8File(file.path().toString());
-      case StandardInputText _ -> TextSourceInput.standardInput();
+      case InlineText inline -> TextSourceSpec.inline(inline.text());
+      case Utf8FileText file -> TextSourceSpec.utf8File(file.path().toString());
+      case StandardInputText _ -> TextSourceSpec.standardInput();
     };
   }
 }

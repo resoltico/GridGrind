@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
@@ -20,7 +20,7 @@ final class SourceBackedSelectorResolver {
           : new TableCellSelector.ByColumnName(resolvedRow, tableCell.columnName());
     }
     if (selector instanceof TableRowSelector.ByKeyCell byKeyCell) {
-      CellInput resolvedValue =
+      CellValueSpec resolvedValue =
           SourceBackedPlanResolver.resolveCellInput(byKeyCell.expectedValue(), bindings);
       return sameReference(resolvedValue, byKeyCell.expectedValue())
           ? byKeyCell

@@ -7,10 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
@@ -104,10 +104,10 @@ class GridGrindPlanTest {
             Optional.of(new PlanId("canonical-plan")),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.journal(
-                new dev.erst.gridgrind.core.plan.ExecutionJournalInput(
+            ExecutionPolicySpec.journal(
+                new dev.erst.gridgrind.core.plan.ExecutionJournalSpec(
                     ExecutionJournalLevel.NORMAL)),
-            FormulaEnvironmentInput.empty(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
 
     WorkbookPlan roundTrip = GridGrindPlan.from(canonical).toPlan();
@@ -122,8 +122,8 @@ class GridGrindPlanTest {
             new PlanId("imported"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("mutation-001"),
@@ -171,17 +171,17 @@ class GridGrindPlanTest {
     assertInstanceOf(
         WorkbookPlan.WorkbookPersistence.Overwrite.class,
         GridGrindPlan.open(tempDir.resolve("source.xlsx"))
-            .overwrite(OoxmlPersistenceSecurityInput.none())
+            .overwrite(OoxmlPersistenceSecuritySpec.none())
             .toPlan()
             .persistence());
     assertEquals(
-        OoxmlPersistenceSecurityInput.none(),
+        OoxmlPersistenceSecuritySpec.none(),
         ((WorkbookPlan.WorkbookPersistence.SaveAs)
                 GridGrindPlan.open(tempDir.resolve("source.xlsx"))
                     .saveAs(
                         tempDir.resolve("copy.xlsx"),
                         WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                        OoxmlPersistenceSecurityInput.none())
+                        OoxmlPersistenceSecuritySpec.none())
                     .toPlan()
                     .persistence())
             .security()

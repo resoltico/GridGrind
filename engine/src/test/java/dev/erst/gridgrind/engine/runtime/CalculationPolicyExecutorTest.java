@@ -15,9 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -49,7 +49,7 @@ import org.junit.jupiter.api.Test;
 class CalculationPolicyExecutorTest {
   @Test
   void normalizesPoliciesAndExposesModeGuards() {
-    CalculationPolicyInput normalized = CalculationPolicyExecutor.normalize(null);
+    CalculationPolicySpec normalized = CalculationPolicyExecutor.normalize(null);
 
     assertTrue(normalized.isDefault());
     assertTrue(CalculationPolicyExecutor.allowsEventRead(null));
@@ -88,7 +88,7 @@ class CalculationPolicyExecutorTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       CalculationPolicyExecutor.ExecutionOutcome doNotCalculate =
-          CalculationPolicyExecutor.execute(workbook, CalculationPolicyInput.defaults(), 0, false);
+          CalculationPolicyExecutor.execute(workbook, CalculationPolicySpec.defaults(), 0, false);
 
       assertEquals(CalculationExecutionStatus.NOT_REQUESTED, doNotCalculate.report().status());
       assertFalse(doNotCalculate.report().markRecalculateOnOpenApplied());
@@ -124,7 +124,7 @@ class CalculationPolicyExecutorTest {
       workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(5.0d));
       workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
-      CalculationPolicyInput targeted =
+      CalculationPolicySpec targeted =
           calculateTargets(
               new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
                   new SheetName("Budget"), new CellAddress("B1")));
@@ -152,7 +152,7 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyExecutor.ExecutionOutcome clearCaches =
           CalculationPolicyExecutor.execute(
               workbook,
-              new CalculationPolicyInput(new CalculationStrategyInput.ClearCachesOnly(), true),
+              new CalculationPolicySpec(new CalculationStrategySpec.ClearCachesOnly(), true),
               0,
               false);
       CalculationPolicyExecutor.ExecutionOutcome markOnly =
@@ -169,9 +169,9 @@ class CalculationPolicyExecutorTest {
       workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(5.0d));
       workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
-      CalculationPolicyInput targetedAndMarked =
-          new CalculationPolicyInput(
-              new CalculationStrategyInput.EvaluateTargets(
+      CalculationPolicySpec targetedAndMarked =
+          new CalculationPolicySpec(
+              new CalculationStrategySpec.EvaluateTargets(
                   List.of(
                       new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
                           new SheetName("Budget"), new CellAddress("B1")))),
@@ -337,8 +337,8 @@ class CalculationPolicyExecutorTest {
   void lenientEvaluationLeavesUnevaluableFormulasUntouchedAndReportsPartial() throws Exception {
     try (ExcelWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
-      CalculationPolicyInput lenientAndMarked =
-          new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
+      CalculationPolicySpec lenientAndMarked =
+          new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), true);
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, lenientAndMarked);
       CalculationPolicyExecutor.ExecutionOutcome execution =
@@ -378,7 +378,7 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyExecutor.ExecutionOutcome markedExecution =
           CalculationPolicyExecutor.execute(
               workbook,
-              new CalculationPolicyInput(new CalculationStrategyInput.DeferredCalculation(), true),
+              new CalculationPolicySpec(new CalculationStrategySpec.DeferredCalculation(), true),
               preflight.evaluationTargetCount(),
               preflight.hasUnevaluableFormula());
       assertEquals(CalculationExecutionStatus.SUCCEEDED, markedExecution.report().status());
@@ -390,7 +390,7 @@ class CalculationPolicyExecutorTest {
   void lenientTargetedEvaluationLeavesUnevaluableTargetsUntouched() throws Exception {
     try (ExcelWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
-      CalculationPolicyInput targeted =
+      CalculationPolicySpec targeted =
           calculateTargets(
               new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
                   new SheetName("Ops"), new CellAddress("A1")));
@@ -419,15 +419,15 @@ class CalculationPolicyExecutorTest {
       sheet.cells().setCell("B1", ExcelCellValue.formula("C1+1"));
       sheet.cells().setCell("C1", ExcelCellValue.formula("B1+1"));
 
-      CalculationPolicyInput doNotCalculate = CalculationPolicyInput.defaults();
-      CalculationPolicyInput deferred = deferCalculation();
-      CalculationPolicyInput clearCaches = clearFormulaCaches();
-      CalculationPolicyInput evaluateAll = calculateAll();
-      CalculationPolicyInput evaluateTargets =
+      CalculationPolicySpec doNotCalculate = CalculationPolicySpec.defaults();
+      CalculationPolicySpec deferred = deferCalculation();
+      CalculationPolicySpec clearCaches = clearFormulaCaches();
+      CalculationPolicySpec evaluateAll = calculateAll();
+      CalculationPolicySpec evaluateTargets =
           calculateTargets(
               new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
                   new SheetName("Budget"), new CellAddress("A1")));
-      CalculationPolicyInput requireEvaluation = requireEvaluation();
+      CalculationPolicySpec requireEvaluation = requireEvaluation();
 
       assertTrue(CalculationPolicyExecutor.preflight(workbook, doNotCalculate).report().isEmpty());
       assertTrue(CalculationPolicyExecutor.preflight(workbook, clearCaches).report().isEmpty());

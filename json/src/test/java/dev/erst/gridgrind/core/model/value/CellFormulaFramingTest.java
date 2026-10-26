@@ -12,7 +12,7 @@ import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.problem.FormulaRequestException;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import org.junit.jupiter.api.Test;
 
@@ -22,37 +22,37 @@ class CellFormulaFramingTest {
   void rejectsLeadingEqualsAndEmptyFormulaBodiesForBothInputVariants() {
     assertThrows(
         InvalidFormulaInputException.class,
-        () -> new CellInput.Formula(TextSourceInput.inline("=SUM(A1:A2)")));
+        () -> new CellValueSpec.Formula(TextSourceSpec.inline("=SUM(A1:A2)")));
     assertThrows(
         InvalidRawFormulaTextException.class,
-        () -> new CellInput.RawFormula(TextSourceInput.inline("=LAMBDA(x,x)(A1)")));
+        () -> new CellValueSpec.RawFormula(TextSourceSpec.inline("=LAMBDA(x,x)(A1)")));
     assertThrows(
         InvalidFormulaInputException.class,
-        () -> new CellInput.Formula(TextSourceInput.inline(" ")));
+        () -> new CellValueSpec.Formula(TextSourceSpec.inline(" ")));
     assertThrows(
         InvalidRawFormulaTextException.class,
-        () -> new CellInput.RawFormula(TextSourceInput.inline(" ")));
+        () -> new CellValueSpec.RawFormula(TextSourceSpec.inline(" ")));
   }
 
   @Test
   void enforcesDistinctNormalAndOpaqueFormulaTextContracts() {
     assertThrows(
         InvalidFormulaInputException.class,
-        () -> new CellInput.Formula(TextSourceInput.inline("{=A1:A2}")));
+        () -> new CellValueSpec.Formula(TextSourceSpec.inline("{=A1:A2}")));
     assertEquals(
         "{=A1",
-        ((TextSourceInput.Inline) new CellInput.Formula(TextSourceInput.inline("{=A1")).source())
+        ((TextSourceSpec.Inline) new CellValueSpec.Formula(TextSourceSpec.inline("{=A1")).source())
             .text());
     assertThrows(
         InvalidRawFormulaTextException.class,
-        () -> new CellInput.RawFormula(TextSourceInput.inline("A1\u0001+B1")));
+        () -> new CellValueSpec.RawFormula(TextSourceSpec.inline("A1\u0001+B1")));
     assertThrows(
         InvalidRawFormulaTextException.class,
-        () -> new CellInput.RawFormula(TextSourceInput.inline("A1\uD800+B1")));
+        () -> new CellValueSpec.RawFormula(TextSourceSpec.inline("A1\uD800+B1")));
 
-    CellInput.RawFormula raw =
-        new CellInput.RawFormula(TextSourceInput.inline("\"<b>\"&A1\t\n\r\uD83D\uDE00"));
-    assertEquals("\"<b>\"&A1\t\n\r\uD83D\uDE00", ((TextSourceInput.Inline) raw.source()).text());
+    CellValueSpec.RawFormula raw =
+        new CellValueSpec.RawFormula(TextSourceSpec.inline("\"<b>\"&A1\t\n\r\uD83D\uDE00"));
+    assertEquals("\"<b>\"&A1\t\n\r\uD83D\uDE00", ((TextSourceSpec.Inline) raw.source()).text());
     FormulaTextValidation.requireXml10CharacterData(
         new String(
             new int[] {0x9, 0xA, 0xD, 0x20, 0xD7FF, 0xE000, 0xFFFD, 0x10000, 0x10FFFF}, 0, 9));
@@ -63,12 +63,12 @@ class CellFormulaFramingTest {
 
   @Test
   void preservesOpaqueFormulaBodiesWithoutApplyingNormalFormulaSecurityRules() {
-    CellInput.RawFormula raw =
-        new CellInput.RawFormula(TextSourceInput.inline("LAMBDA(x,x+1)(A1)"));
+    CellValueSpec.RawFormula raw =
+        new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"));
 
-    assertEquals("LAMBDA(x,x+1)(A1)", ((TextSourceInput.Inline) raw.source()).text());
-    TextSourceInput.Utf8File fileSource = TextSourceInput.utf8File("raw-formula.txt");
-    assertEquals(fileSource, new CellInput.RawFormula(fileSource).source());
+    assertEquals("LAMBDA(x,x+1)(A1)", ((TextSourceSpec.Inline) raw.source()).text());
+    TextSourceSpec.Utf8File fileSource = TextSourceSpec.utf8File("raw-formula.txt");
+    assertEquals(fileSource, new CellValueSpec.RawFormula(fileSource).source());
   }
 
   @Test
@@ -96,7 +96,7 @@ class CellFormulaFramingTest {
     MutationStep step = assertInstanceOf(MutationStep.class, plan.steps().getFirst());
     CellMutationAction.SetCell setCell =
         assertInstanceOf(CellMutationAction.SetCell.class, step.action());
-    assertInstanceOf(CellInput.RawFormula.class, setCell.value());
+    assertInstanceOf(CellValueSpec.RawFormula.class, setCell.value());
   }
 
   @Test

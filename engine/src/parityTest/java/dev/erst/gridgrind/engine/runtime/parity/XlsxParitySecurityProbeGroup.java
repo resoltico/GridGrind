@@ -4,16 +4,16 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.inspect
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 import static dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -55,7 +55,7 @@ final class XlsxParitySecurityProbeGroup {
     WorkbookResult response =
         XlsxParityGridGrind.executeReadWorkbook(
             largeSheet.workbookPath(),
-            ExecutionModeInput.eventRead(),
+            ExecutionModeSpec.eventRead(),
             inspect(
                 "workbook",
                 new WorkbookSelector.Current(),
@@ -100,14 +100,15 @@ final class XlsxParitySecurityProbeGroup {
           mutate(
               new SheetSelector.ByName(new SheetName("Streamed")),
               new CellMutationAction.AppendRow(
-                  new CellRowInput.Typed(
+                  new CellRowSpec.Typed(
                       List.of(
-                          text("R" + rowIndex), new CellInput.NumberValue((double) rowIndex))))));
+                          text("R" + rowIndex),
+                          new CellValueSpec.NumberValue((double) rowIndex))))));
     }
     WorkbookResult.Success streamed =
         XlsxParityGridGrind.writeNewWorkbook(
             gridGrindWorkbook,
-            ExecutionModeInput.streamingWrite(),
+            ExecutionModeSpec.streamingWrite(),
             operations,
             inspect(
                 "workbook",
@@ -142,7 +143,7 @@ final class XlsxParitySecurityProbeGroup {
   static ProbeResult probeEncryptionGap(ProbeContext context) {
     XlsxParityScenarios.MaterializedScenario encrypted =
         context.scenario(XlsxParityScenarios.ENCRYPTED_WORKBOOK);
-    OoxmlOpenSecurityInput sourceSecurity = encryptedOpenSecurity();
+    OoxmlOpenSecuritySpec sourceSecurity = encryptedOpenSecurity();
     boolean poiSourceOpens = XlsxParityOracle.encryptedWorkbookOpens(encrypted.workbookPath());
 
     WorkbookResult.Success sourceRead =
@@ -170,9 +171,9 @@ final class XlsxParitySecurityProbeGroup {
             encrypted.workbookPath(),
             sourceSecurity,
             preservedOutput,
-            new OoxmlPersistenceSecurityInput(
-                new OoxmlPersistenceEncryptionInput.PreserveSource(),
-                new OoxmlPersistenceSignatureInput.None()),
+            new OoxmlPersistenceSecuritySpec(
+                new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+                new OoxmlPersistenceSignatureSpec.None()),
             null,
             List.of(
                 mutate(
@@ -205,14 +206,14 @@ final class XlsxParitySecurityProbeGroup {
     WorkbookResult.Success authoredSave =
         XlsxParityGridGrind.writeNewWorkbook(
             authoredOutput,
-            new OoxmlPersistenceSecurityInput(
-                new OoxmlPersistenceEncryptionInput.Encrypt(
-                    new OoxmlEncryptionInput(
+            new OoxmlPersistenceSecuritySpec(
+                new OoxmlPersistenceEncryptionSpec.Encrypt(
+                    new OoxmlEncryptionSpec(
                         new dev.erst.gridgrind.core.source.SecretReference("output-password"),
                         ExcelOoxmlWriteCipher.AES_256,
                         ExcelOoxmlWriteHash.SHA_512)),
-                new OoxmlPersistenceSignatureInput.None()),
-            (ExecutionModeInput) null,
+                new OoxmlPersistenceSignatureSpec.None()),
+            (ExecutionModeSpec) null,
             List.of(
                 mutate(
                     new SheetSelector.ByName(new SheetName("Secure")),
@@ -298,7 +299,7 @@ final class XlsxParitySecurityProbeGroup {
     WorkbookResult wrongPasswordResponse =
         XlsxParityGridGrind.executeReadWorkbook(
             encrypted.workbookPath(),
-            new OoxmlOpenSecurityInput(
+            new OoxmlOpenSecuritySpec(
                 java.util.Optional.of(
                     new dev.erst.gridgrind.core.source.SecretReference("wrong-password"))),
             inspect(
@@ -361,7 +362,7 @@ final class XlsxParitySecurityProbeGroup {
             unsignedMutationSource.workbookPath(),
             null,
             unsignedOutput,
-            OoxmlPersistenceSecurityInput.none(),
+            OoxmlPersistenceSecuritySpec.none(),
             null,
             List.of(
                 mutate(
@@ -393,9 +394,9 @@ final class XlsxParitySecurityProbeGroup {
             resignSource.workbookPath(),
             null,
             resignedOutput,
-            new OoxmlPersistenceSecurityInput(
-                new OoxmlPersistenceEncryptionInput.None(),
-                new OoxmlPersistenceSignatureInput.Sign(
+            new OoxmlPersistenceSecuritySpec(
+                new OoxmlPersistenceEncryptionSpec.None(),
+                new OoxmlPersistenceSignatureSpec.Sign(
                     signingInput(
                         resignSource.attachment(XlsxParityScenarios.SIGNING_PKCS12_ATTACHMENT),
                         "GridGrind parity re-sign"))),
@@ -427,13 +428,13 @@ final class XlsxParitySecurityProbeGroup {
     WorkbookResult.Success authoredSave =
         XlsxParityGridGrind.writeNewWorkbook(
             authoredOutput,
-            new OoxmlPersistenceSecurityInput(
-                new OoxmlPersistenceEncryptionInput.None(),
-                new OoxmlPersistenceSignatureInput.Sign(
+            new OoxmlPersistenceSecuritySpec(
+                new OoxmlPersistenceEncryptionSpec.None(),
+                new OoxmlPersistenceSignatureSpec.Sign(
                     signingInput(
                         signed.attachment(XlsxParityScenarios.SIGNING_PKCS12_ATTACHMENT),
                         "GridGrind parity authored signature"))),
-            (ExecutionModeInput) null,
+            (ExecutionModeSpec) null,
             List.of(
                 mutate(
                     new SheetSelector.ByName(new SheetName("Signed")),

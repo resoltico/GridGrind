@@ -3,18 +3,18 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.layout.PaneInput;
-import dev.erst.gridgrind.core.model.layout.SheetDefaultsInput;
-import dev.erst.gridgrind.core.model.layout.SheetDisplayInput;
-import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryInput;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.validation.IgnoredErrorInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
@@ -173,7 +173,7 @@ class DefaultGridGrindRequestExecutorMutationContextTranslationTest
     ExecutorTestPlanSupport.PendingMutation setSheetPane =
         mutate(
             new SheetSelector.ByName(new SheetName("Budget")),
-            new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1)));
+            new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 1, 1, 1)));
     ExecutorTestPlanSupport.PendingMutation setSheetZoom =
         mutate(
             new SheetSelector.ByName(new SheetName("Budget")),
@@ -182,25 +182,25 @@ class DefaultGridGrindRequestExecutorMutationContextTranslationTest
         mutate(
             new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetSheetPresentation(
-                new SheetPresentationInput(
-                    new SheetDisplayInput(false, false, false, true, true),
-                    Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
-                    new SheetOutlineSummaryInput(false, false),
-                    new SheetDefaultsInput(11, 18.5d),
+                new SheetPresentationSpec(
+                    new SheetDisplaySpec(false, false, false, true, true),
+                    Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
+                    new SheetOutlineSummarySpec(false, false),
+                    new SheetDefaultsSpec(11, 18.5d),
                     List.of(
-                        new IgnoredErrorInput(
+                        new IgnoredErrorSpec(
                             new RangeRef("A1:B2"),
                             List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))))));
     ExecutorTestPlanSupport.PendingMutation setPrintLayout =
         mutate(
             new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetPrintLayout(
-                PrintLayoutInput.withDefaultSetup(
-                    new PrintAreaInput.Range(new RangeRef("A1:B12")),
+                PrintLayoutSpec.withDefaultSetup(
+                    new PrintAreaSpec.Range(new RangeRef("A1:B12")),
                     ExcelPrintOrientation.LANDSCAPE,
-                    new PrintScalingInput.Fit(1, 0),
-                    new PrintTitleRowsInput.Band(0, 0),
-                    new PrintTitleColumnsInput.Band(0, 0),
+                    new PrintScalingSpec.Fit(1, 0),
+                    new PrintTitleRowsSpec.Band(0, 0),
+                    new PrintTitleColumnsSpec.Band(0, 0),
                     headerFooter("Budget", "", ""),
                     headerFooter("", "Page &P", ""))));
     ExecutorTestPlanSupport.PendingMutation clearPrintLayout =

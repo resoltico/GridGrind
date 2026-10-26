@@ -20,8 +20,8 @@ import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
@@ -155,12 +155,12 @@ final class TabularReportTaskRecipe {
             new StepId("set-report-table"),
             ExampleSelectors.table("QuarterlyReport", "Report"),
             new StructuredMutationAction.SetTable(
-                TableInput.withDefaultMetadata(
+                TableSpec.withDefaultMetadata(
                     new TableName("QuarterlyReport"),
                     new SheetName("Report"),
                     new RangeRef("A1:C4"),
                     false,
-                    new TableStyleInput.Named("TableStyleMedium2", false, false, true, false)))),
+                    new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false)))),
         ExampleSteps.step(
             new StepId("auto-size-report"),
             ExampleSelectors.sheet("Report"),

@@ -68,7 +68,7 @@ final class RequestPreflightWorkbookSource {
 
   private static void validateSourcePersistencePolicy(
       WorkbookPlan request, ExcelWorkbook workbook) {
-    java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput>
+    java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
         security =
             switch (request.persistence()) {
               case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
@@ -78,7 +78,7 @@ final class RequestPreflightWorkbookSource {
     if (security.isPresent()
         && security.orElseThrow().encryption()
             instanceof
-            dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.PreserveSource
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.PreserveSource
         && workbook.persistence().loadedPackageSecurity().encryption()
             instanceof dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot.None) {
       throw new EncryptionSourceNotEncryptedException();
@@ -86,7 +86,7 @@ final class RequestPreflightWorkbookSource {
     if (security.isPresent()
         && security.orElseThrow().encryption()
             instanceof
-            dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.PreserveSource) {
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.PreserveSource) {
       ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
           workbook.persistence().loadedPackageSecurity(),
           workbook.persistence().sourceEncryptionPassword(),

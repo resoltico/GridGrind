@@ -391,8 +391,8 @@ Type-specific fields:
 
 **fontHeight read-back shape:** `style.font.fontHeight` is a plain object with both `twips` and
 `points` fields: `{"twips": 260, "points": 13}`. This differs from the write-side
-`FontHeightInput` format which uses a discriminated `{"type": "POINTS", "points": 13}` object.
-Agents that read a font height and want to write it back must use the `FontHeightInput` write
+`FontHeightSpec` format which uses a discriminated `{"type": "POINTS", "points": 13}` object.
+Agents that read a font height and want to write it back must use the `FontHeightSpec` write
 format, not the read-back shape.
 
 **read-side color and gradient shape:** factual read results use structured color objects rather
@@ -401,7 +401,7 @@ than raw `#RRGGBB` strings. `style.font.fontColor`, `style.fill.foregroundColor`
 `rgb` plus optional `theme`, `indexed`, and `tint` facts when Excel stores them. Gradient fills
 come back under `style.fill.gradient` with `type`, optional geometry (`degree`, `left`, `right`,
 `top`, `bottom`), and ordered `stops` carrying `position` plus structured colors. The write-side
-style contract now uses the same structured color families via `ColorInput` plus explicit fill
+style contract now uses the same structured color families via `ColorSpec` plus explicit fill
 variants under `style.fill.kind`. Agents that read a `CellColorReport` and want to write it back
 can preserve the same color semantics, but they must still translate read-side report objects into
 the matching write-side request types and choose the correct `style.fill.kind` variant instead of

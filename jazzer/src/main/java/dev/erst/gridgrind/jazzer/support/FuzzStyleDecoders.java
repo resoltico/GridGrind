@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.style.CellFontInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -168,16 +168,16 @@ final class FuzzStyleDecoders {
     };
   }
 
-  static Optional<CellFontInput> toCellFontInput(@Nullable ExcelCellFont font) {
+  static Optional<CellFontPatch> toCellFontInput(@Nullable ExcelCellFont font) {
     if (font == null) {
       return Optional.empty();
     }
     return Optional.of(
-        new CellFontInput(
+        new CellFontPatch(
             font.bold(),
             font.italic(),
             font.fontName(),
-            font.fontHeight().map(height -> new FontHeightInput.Twips(height.twips())),
+            font.fontHeight().map(height -> new FontHeightSpec.Twips(height.twips())),
             font.fontColor().flatMap(FuzzStyleDecoders::toColorInput),
             font.underline(),
             font.strikeout()));
@@ -320,7 +320,7 @@ final class FuzzStyleDecoders {
     return data.consumeRegularDouble(-1.0d, 1.0d);
   }
 
-  private static Optional<ColorInput> toColorInput(ExcelColor color) {
+  private static Optional<ColorSpec> toColorInput(ExcelColor color) {
     if (color == null) {
       return Optional.empty();
     }
@@ -328,16 +328,16 @@ final class FuzzStyleDecoders {
         switch (color) {
           case ExcelColor.Rgb rgb ->
               rgb.tint().isPresent()
-                  ? ColorInput.rgb(new RgbHex(rgb.rgb()), rgb.tint().orElseThrow())
-                  : ColorInput.rgb(new RgbHex(rgb.rgb()));
+                  ? ColorSpec.rgb(new RgbHex(rgb.rgb()), rgb.tint().orElseThrow())
+                  : ColorSpec.rgb(new RgbHex(rgb.rgb()));
           case ExcelColor.Theme theme ->
               theme.tint().isPresent()
-                  ? ColorInput.theme(theme.theme(), theme.tint().orElseThrow())
-                  : ColorInput.theme(theme.theme());
+                  ? ColorSpec.theme(theme.theme(), theme.tint().orElseThrow())
+                  : ColorSpec.theme(theme.theme());
           case ExcelColor.Indexed indexed ->
               indexed.tint().isPresent()
-                  ? ColorInput.indexed(indexed.indexed(), indexed.tint().orElseThrow())
-                  : ColorInput.indexed(indexed.indexed());
+                  ? ColorSpec.indexed(indexed.indexed(), indexed.tint().orElseThrow())
+                  : ColorSpec.indexed(indexed.indexed());
         });
   }
 

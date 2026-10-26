@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -23,72 +23,71 @@ import org.jspecify.annotations.Nullable;
 final class CalculationPolicyExecutor {
   private CalculationPolicyExecutor() {}
 
-  static CalculationPolicyInput normalize(CalculationPolicyInput policy) {
-    return policy == null ? CalculationPolicyInput.defaults() : policy;
+  static CalculationPolicySpec normalize(CalculationPolicySpec policy) {
+    return policy == null ? CalculationPolicySpec.defaults() : policy;
   }
 
-  static boolean allowsEventRead(CalculationPolicyInput policy) {
+  static boolean allowsEventRead(CalculationPolicySpec policy) {
     return normalize(policy).allowsEventRead();
   }
 
-  static boolean allowsStreamingWrite(CalculationPolicyInput policy) {
+  static boolean allowsStreamingWrite(CalculationPolicySpec policy) {
     return normalize(policy).allowsStreamingWrite();
   }
 
-  static boolean requiresMutationPrefix(CalculationPolicyInput policy) {
+  static boolean requiresMutationPrefix(CalculationPolicySpec policy) {
     return normalize(policy).requiresMutationPrefix();
   }
 
-  static CalculationReport notRequestedReport(CalculationPolicyInput policy) {
-    CalculationPolicyInput effective = normalize(policy);
+  static CalculationReport notRequestedReport(CalculationPolicySpec policy) {
+    CalculationPolicySpec effective = normalize(policy);
     return new CalculationReport(
         effective,
         new CalculationReport.Execution(CalculationExecutionStatus.NOT_REQUESTED, 0, false, false));
   }
 
-  static PreflightOutcome preflight(ExcelWorkbook workbook, CalculationPolicyInput policy) {
+  static PreflightOutcome preflight(ExcelWorkbook workbook, CalculationPolicySpec policy) {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    CalculationPolicyInput effective = normalize(policy);
+    CalculationPolicySpec effective = normalize(policy);
     return switch (effective.effectiveStrategy()) {
-      case CalculationStrategyInput.DoNotCalculate _ ->
+      case CalculationStrategySpec.DoNotCalculate _ ->
           new PreflightOutcome(Optional.empty(), 0, false, Optional.empty());
-      case CalculationStrategyInput.DeferredCalculation _ -> preflightLenientAll(workbook);
-      case CalculationStrategyInput.ClearCachesOnly _ ->
+      case CalculationStrategySpec.DeferredCalculation _ -> preflightLenientAll(workbook);
+      case CalculationStrategySpec.ClearCachesOnly _ ->
           new PreflightOutcome(Optional.empty(), 0, false, Optional.empty());
-      case CalculationStrategyInput.EvaluateAll _ -> preflightLenientAll(workbook);
-      case CalculationStrategyInput.EvaluateTargets evaluateTargets ->
+      case CalculationStrategySpec.EvaluateAll _ -> preflightLenientAll(workbook);
+      case CalculationStrategySpec.EvaluateTargets evaluateTargets ->
           preflightLenientTargets(workbook, evaluateTargets);
-      case CalculationStrategyInput.RequireEvaluation _ -> preflightAll(workbook);
+      case CalculationStrategySpec.RequireEvaluation _ -> preflightAll(workbook);
     };
   }
 
   static ExecutionOutcome execute(
       ExcelWorkbook workbook,
-      CalculationPolicyInput policy,
+      CalculationPolicySpec policy,
       int evaluationTargetCount,
       boolean hasUnevaluableFormula) {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    CalculationPolicyInput effective = normalize(policy);
+    CalculationPolicySpec effective = normalize(policy);
     return switch (effective.effectiveStrategy()) {
-      case CalculationStrategyInput.DoNotCalculate _ -> executeDoNotCalculate(workbook, effective);
-      case CalculationStrategyInput.DeferredCalculation _ -> executeDeferred(workbook, effective);
-      case CalculationStrategyInput.ClearCachesOnly _ ->
-          executeClearCachesOnly(workbook, effective);
-      case CalculationStrategyInput.EvaluateAll _ ->
+      case CalculationStrategySpec.DoNotCalculate _ -> executeDoNotCalculate(workbook, effective);
+      case CalculationStrategySpec.DeferredCalculation _ -> executeDeferred(workbook, effective);
+      case CalculationStrategySpec.ClearCachesOnly _ -> executeClearCachesOnly(workbook, effective);
+      case CalculationStrategySpec.EvaluateAll _ ->
           hasUnevaluableFormula
               ? executePartial(workbook, effective)
               : executeEvaluateAll(workbook, effective, evaluationTargetCount);
-      case CalculationStrategyInput.EvaluateTargets evaluateTargets ->
+      case CalculationStrategySpec.EvaluateTargets evaluateTargets ->
           hasUnevaluableFormula
               ? executePartial(workbook, effective)
               : executeEvaluateTargets(workbook, effective, evaluateTargets, evaluationTargetCount);
-      case CalculationStrategyInput.RequireEvaluation _ ->
+      case CalculationStrategySpec.RequireEvaluation _ ->
           executeEvaluateAll(workbook, effective, evaluationTargetCount);
     };
   }
 
   static CalculationReport report(
-      CalculationPolicyInput policy,
+      CalculationPolicySpec policy,
       Optional<CalculationReport.Preflight> preflight,
       CalculationReport.Execution execution) {
     return new CalculationReport(normalize(policy), preflight, execution);
@@ -105,7 +104,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static PreflightOutcome preflightTargets(
-      ExcelWorkbook workbook, CalculationStrategyInput.EvaluateTargets strategy) {
+      ExcelWorkbook workbook, CalculationStrategySpec.EvaluateTargets strategy) {
     List<ExcelFormulaCellTarget> targets = toExcelFormulaTargets(strategy.cells());
     List<ExcelFormulaCapabilityAssessment> assessments =
         workbook.formulas().assessCapabilities(targets);
@@ -113,7 +112,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static PreflightOutcome preflightLenientTargets(
-      ExcelWorkbook workbook, CalculationStrategyInput.EvaluateTargets strategy) {
+      ExcelWorkbook workbook, CalculationStrategySpec.EvaluateTargets strategy) {
     return withoutBlockingFailure(preflightTargets(workbook, strategy));
   }
 
@@ -153,7 +152,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeDoNotCalculate(
-      ExcelWorkbook workbook, CalculationPolicyInput policy) {
+      ExcelWorkbook workbook, CalculationPolicySpec policy) {
     boolean marked = false;
     if (policy.markRecalculateOnOpen()) {
       workbook.formulas().markRecalculateOnOpen();
@@ -166,7 +165,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeDeferred(
-      ExcelWorkbook workbook, CalculationPolicyInput policy) {
+      ExcelWorkbook workbook, CalculationPolicySpec policy) {
     boolean marked = false;
     if (policy.markRecalculateOnOpen()) {
       workbook.formulas().markRecalculateOnOpen();
@@ -179,7 +178,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeClearCachesOnly(
-      ExcelWorkbook workbook, CalculationPolicyInput policy) {
+      ExcelWorkbook workbook, CalculationPolicySpec policy) {
     try {
       workbook.formulas().clearCaches();
       boolean marked = false;
@@ -203,7 +202,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeEvaluateAll(
-      ExcelWorkbook workbook, CalculationPolicyInput policy, int evaluationTargetCount) {
+      ExcelWorkbook workbook, CalculationPolicySpec policy, int evaluationTargetCount) {
     try {
       workbook.formulas().evaluateAll();
       boolean marked = false;
@@ -229,8 +228,8 @@ final class CalculationPolicyExecutor {
 
   private static ExecutionOutcome executeEvaluateTargets(
       ExcelWorkbook workbook,
-      CalculationPolicyInput policy,
-      CalculationStrategyInput.EvaluateTargets strategy,
+      CalculationPolicySpec policy,
+      CalculationStrategySpec.EvaluateTargets strategy,
       int evaluationTargetCount) {
     List<ExcelFormulaCellTarget> targets = toExcelFormulaTargets(strategy.cells());
     try {
@@ -257,7 +256,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executePartial(
-      ExcelWorkbook workbook, CalculationPolicyInput policy) {
+      ExcelWorkbook workbook, CalculationPolicySpec policy) {
     boolean marked = false;
     if (policy.markRecalculateOnOpen()) {
       workbook.formulas().markRecalculateOnOpen();

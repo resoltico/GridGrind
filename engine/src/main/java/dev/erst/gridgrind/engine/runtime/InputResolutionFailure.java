@@ -2,8 +2,8 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,12 +27,12 @@ record InputResolutionFailure(
 
   private static InputReference inputReference(Object source) {
     return switch (source) {
-      case TextSourceInput.Utf8File file -> InputReference.path("source-backed text", file.path());
-      case TextSourceInput.StandardInput _ -> InputReference.kind("source-backed text");
-      case BinarySourceInput.File file -> InputReference.path("source-backed binary", file.path());
-      case BinarySourceInput.StandardInput _ -> InputReference.kind("source-backed binary");
-      case TextSourceInput.Inline _ -> InputReference.unknown();
-      case BinarySourceInput.InlineBase64 _ -> InputReference.unknown();
+      case TextSourceSpec.Utf8File file -> InputReference.path("source-backed text", file.path());
+      case TextSourceSpec.Stdin _ -> InputReference.kind("source-backed text");
+      case BinarySourceSpec.File file -> InputReference.path("source-backed binary", file.path());
+      case BinarySourceSpec.Stdin _ -> InputReference.kind("source-backed binary");
+      case TextSourceSpec.Inline _ -> InputReference.unknown();
+      case BinarySourceSpec.InlineBase64 _ -> InputReference.unknown();
       case null -> InputReference.unknown();
       default -> InputReference.unknown();
     };

@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.core.model.value.CellGridInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.util.List;
 
 /** Shared cell and row literal helpers for shipped example workbook plans. */
@@ -11,31 +11,31 @@ final class ExampleCellValues {
   private ExampleCellValues() {}
 
   @SafeVarargs
-  static CellGridInput rows(CellRowInput... rows) {
-    return new CellGridInput.Typed(List.of(rows).stream().map(CellRowInput::toCellInputs).toList());
+  static CellGridSpec rows(CellRowSpec... rows) {
+    return new CellGridSpec.Typed(List.of(rows).stream().map(CellRowSpec::toCellInputs).toList());
   }
 
-  static CellRowInput row(CellInput... cells) {
-    return new CellRowInput.Typed(List.of(cells));
+  static CellRowSpec row(CellValueSpec... cells) {
+    return new CellRowSpec.Typed(List.of(cells));
   }
 
-  static CellInput.Text text(String value) {
-    return new CellInput.Text(TextSourceInput.inline(value));
+  static CellValueSpec.Text text(String value) {
+    return new CellValueSpec.Text(TextSourceSpec.inline(value));
   }
 
-  static CellInput.Text textFile(String path) {
-    return new CellInput.Text(TextSourceInput.utf8File(path));
+  static CellValueSpec.Text textFile(String path) {
+    return new CellValueSpec.Text(TextSourceSpec.utf8File(path));
   }
 
-  static CellInput.Formula formula(String value) {
-    return new CellInput.Formula(TextSourceInput.inline(value));
+  static CellValueSpec.Formula formula(String value) {
+    return new CellValueSpec.Formula(TextSourceSpec.inline(value));
   }
 
-  static CellInput.NumberValue number(double value) {
-    return new CellInput.NumberValue(value);
+  static CellValueSpec.NumberValue number(double value) {
+    return new CellValueSpec.NumberValue(value);
   }
 
-  static CellInput.BooleanValue bool(boolean value) {
-    return new CellInput.BooleanValue(value);
+  static CellValueSpec.BooleanValue bool(boolean value) {
+    return new CellValueSpec.BooleanValue(value);
   }
 }

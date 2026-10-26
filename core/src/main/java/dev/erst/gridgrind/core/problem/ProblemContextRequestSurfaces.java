@@ -59,10 +59,10 @@ public interface ProblemContextRequestSurfaces {
 
   /** Concrete request input source, never encoded with a nullable path. */
   @Union(discriminator = "type")
-  sealed interface RequestInput permits RequestInput.StandardInput, RequestInput.RequestFile {
+  sealed interface RequestInput permits RequestInput.Stdin, RequestInput.RequestFile {
     /** Returns the request-input variant for standard input. */
     static RequestInput standardInput() {
-      return new StandardInput();
+      return new Stdin();
     }
 
     /** Returns the request-input variant for one concrete file path. */
@@ -74,13 +74,13 @@ public interface ProblemContextRequestSurfaces {
     default Optional<String> requestPathValue() {
       return switch (this) {
         case RequestFile requestFile -> Optional.of(requestFile.requestPath());
-        case StandardInput _ -> Optional.empty();
+        case Stdin _ -> Optional.empty();
       };
     }
 
     /** JSON request was read from standard input. */
     @Variant(id = "STANDARD_INPUT", summary = "JSON request was read from standard input.")
-    record StandardInput() implements RequestInput {}
+    record Stdin() implements RequestInput {}
 
     /** JSON request was read from one file path. */
     @Variant(id = "FILE", summary = "JSON request was read from one file path.")

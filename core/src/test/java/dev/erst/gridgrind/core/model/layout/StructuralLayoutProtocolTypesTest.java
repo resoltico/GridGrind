@@ -3,22 +3,22 @@ package dev.erst.gridgrind.core.model.layout;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
 import dev.erst.gridgrind.core.model.print.PrintAreaReport;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingReport;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.validation.IgnoredErrorInput;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -101,72 +101,72 @@ class StructuralLayoutProtocolTypesTest {
 
   @Test
   void paneInputVariantsValidateTheirContracts() {
-    assertEquals(new PaneInput.None(), new PaneInput.None());
-    assertEquals(new PaneInput.Frozen(1, 2, 1, 2), new PaneInput.Frozen(1, 2, 1, 2));
+    assertEquals(new PaneSpec.None(), new PaneSpec.None());
+    assertEquals(new PaneSpec.Frozen(1, 2, 1, 2), new PaneSpec.Frozen(1, 2, 1, 2));
     assertEquals(
-        new PaneInput.Split(0, 1800, 0, 3, ExcelPaneRegion.LOWER_LEFT),
-        new PaneInput.Split(0, 1800, 0, 3, ExcelPaneRegion.LOWER_LEFT));
+        new PaneSpec.Split(0, 1800, 0, 3, ExcelPaneRegion.LOWER_LEFT),
+        new PaneSpec.Split(0, 1800, 0, 3, ExcelPaneRegion.LOWER_LEFT));
 
-    assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(-1, 2, 1, 2));
+    assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(-1, 2, 1, 2));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PaneInput.Split(0, 0, 0, 0, ExcelPaneRegion.UPPER_LEFT));
+        () -> new PaneSpec.Split(0, 0, 0, 0, ExcelPaneRegion.UPPER_LEFT));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PaneInput.Split(0, 1800, 1, 3, ExcelPaneRegion.LOWER_LEFT));
+        () -> new PaneSpec.Split(0, 1800, 1, 3, ExcelPaneRegion.LOWER_LEFT));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PaneInput.Split(1200, 0, 2, 1, ExcelPaneRegion.UPPER_RIGHT));
-    assertThrows(NullPointerException.class, () -> new PaneInput.Split(1200, 1800, 2, 3, null));
+        () -> new PaneSpec.Split(1200, 0, 2, 1, ExcelPaneRegion.UPPER_RIGHT));
+    assertThrows(NullPointerException.class, () -> new PaneSpec.Split(1200, 1800, 2, 3, null));
   }
 
   @Test
   void printAreaAndScalingInputsCoverDefaultsAndBounds() {
-    assertEquals(new PrintAreaInput.None(), new PrintAreaInput.None());
+    assertEquals(new PrintAreaSpec.None(), new PrintAreaSpec.None());
     assertEquals(
-        new PrintAreaInput.Range(new RangeRef("A1:C10")),
-        new PrintAreaInput.Range(new RangeRef("A1:C10")));
-    assertThrows(IllegalArgumentException.class, () -> new PrintAreaInput.Range(new RangeRef(" ")));
+        new PrintAreaSpec.Range(new RangeRef("A1:C10")),
+        new PrintAreaSpec.Range(new RangeRef("A1:C10")));
+    assertThrows(IllegalArgumentException.class, () -> new PrintAreaSpec.Range(new RangeRef(" ")));
 
-    assertEquals(new PrintScalingInput.Automatic(), new PrintScalingInput.Automatic());
-    assertEquals(new PrintScalingInput.Fit(1, 0), new PrintScalingInput.Fit(1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new PrintScalingInput.Fit(-1, 0));
+    assertEquals(new PrintScalingSpec.Automatic(), new PrintScalingSpec.Automatic());
+    assertEquals(new PrintScalingSpec.Fit(1, 0), new PrintScalingSpec.Fit(1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PrintScalingSpec.Fit(-1, 0));
     assertThrows(
-        IllegalArgumentException.class, () -> new PrintScalingInput.Fit(Short.MAX_VALUE + 1, 1));
+        IllegalArgumentException.class, () -> new PrintScalingSpec.Fit(Short.MAX_VALUE + 1, 1));
   }
 
   @Test
   void printTitleInputsCoverNoneBandsAndBounds() {
-    assertEquals(new PrintTitleRowsInput.None(), new PrintTitleRowsInput.None());
-    assertEquals(new PrintTitleRowsInput.Band(0, 1), new PrintTitleRowsInput.Band(0, 1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsInput.Band(-1, 1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsInput.Band(0, -1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsInput.Band(2, 1));
+    assertEquals(new PrintTitleRowsSpec.None(), new PrintTitleRowsSpec.None());
+    assertEquals(new PrintTitleRowsSpec.Band(0, 1), new PrintTitleRowsSpec.Band(0, 1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(-1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(0, -1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(2, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PrintTitleRowsInput.Band(0, PrintTitleRowsInput.MAX_ROW_INDEX + 1));
+        () -> new PrintTitleRowsSpec.Band(0, PrintTitleRowsSpec.MAX_ROW_INDEX + 1));
 
-    assertEquals(new PrintTitleColumnsInput.None(), new PrintTitleColumnsInput.None());
-    assertEquals(new PrintTitleColumnsInput.Band(0, 1), new PrintTitleColumnsInput.Band(0, 1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsInput.Band(-1, 1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsInput.Band(0, -1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsInput.Band(2, 1));
+    assertEquals(new PrintTitleColumnsSpec.None(), new PrintTitleColumnsSpec.None());
+    assertEquals(new PrintTitleColumnsSpec.Band(0, 1), new PrintTitleColumnsSpec.Band(0, 1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(-1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(0, -1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(2, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PrintTitleColumnsInput.Band(0, PrintTitleColumnsInput.MAX_COLUMN_INDEX + 1));
+        () -> new PrintTitleColumnsSpec.Band(0, PrintTitleColumnsSpec.MAX_COLUMN_INDEX + 1));
   }
 
   @Test
   void printLayoutInputNormalizesNullsToSupportedDefaults() {
-    PrintLayoutInput input = PrintLayoutInput.defaults();
+    PrintLayoutSpec input = PrintLayoutSpec.defaults();
 
-    assertEquals(new PrintAreaInput.None(), input.printArea());
+    assertEquals(new PrintAreaSpec.None(), input.printArea());
     assertEquals(ExcelPrintOrientation.PORTRAIT, input.orientation());
-    assertEquals(new PrintScalingInput.Automatic(), input.scaling());
-    assertEquals(new PrintTitleRowsInput.None(), input.repeatingRows());
-    assertEquals(new PrintTitleColumnsInput.None(), input.repeatingColumns());
-    assertEquals(HeaderFooterTextInput.blank(), input.header());
-    assertEquals(HeaderFooterTextInput.blank(), input.footer());
+    assertEquals(new PrintScalingSpec.Automatic(), input.scaling());
+    assertEquals(new PrintTitleRowsSpec.None(), input.repeatingRows());
+    assertEquals(new PrintTitleColumnsSpec.None(), input.repeatingColumns());
+    assertEquals(HeaderFooterTextSpec.blank(), input.header());
+    assertEquals(HeaderFooterTextSpec.blank(), input.footer());
   }
 
   @Test
@@ -270,34 +270,34 @@ class StructuralLayoutProtocolTypesTest {
 
   @Test
   void sheetPresentationInputsAndReportsNormalizeAndValidate() {
-    SheetPresentationInput defaultPresentation = SheetPresentationInput.defaults();
-    SheetPresentationInput explicitPresentation =
-        new SheetPresentationInput(
-            new SheetDisplayInput(false, false, false, true, true),
-            java.util.Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
-            new SheetOutlineSummaryInput(false, false),
-            new SheetDefaultsInput(11, 18.5d),
+    SheetPresentationSpec defaultPresentation = SheetPresentationSpec.defaults();
+    SheetPresentationSpec explicitPresentation =
+        new SheetPresentationSpec(
+            new SheetDisplaySpec(false, false, false, true, true),
+            java.util.Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
+            new SheetOutlineSummarySpec(false, false),
+            new SheetDefaultsSpec(11, 18.5d),
             java.util.List.of(
-                new IgnoredErrorInput(
+                new IgnoredErrorSpec(
                     new RangeRef("A1:B2"),
                     java.util.List.of(
                         dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType.FORMULA))));
 
-    assertEquals(SheetDisplayInput.defaults(), defaultPresentation.display());
+    assertEquals(SheetDisplaySpec.defaults(), defaultPresentation.display());
     assertEquals(java.util.Optional.empty(), defaultPresentation.tabColor());
-    assertEquals(SheetOutlineSummaryInput.defaults(), defaultPresentation.outlineSummary());
-    assertEquals(SheetDefaultsInput.defaults(), defaultPresentation.sheetDefaults());
+    assertEquals(SheetOutlineSummarySpec.defaults(), defaultPresentation.outlineSummary());
+    assertEquals(SheetDefaultsSpec.defaults(), defaultPresentation.sheetDefaults());
     assertEquals(java.util.List.of(), defaultPresentation.ignoredErrors());
     assertEquals(
-        new SheetDisplayInput(false, false, false, true, true), explicitPresentation.display());
+        new SheetDisplaySpec(false, false, false, true, true), explicitPresentation.display());
     assertEquals(
-        java.util.Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
+        java.util.Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
         explicitPresentation.tabColor());
-    assertEquals(new SheetOutlineSummaryInput(false, false), explicitPresentation.outlineSummary());
-    assertEquals(new SheetDefaultsInput(11, 18.5d), explicitPresentation.sheetDefaults());
+    assertEquals(new SheetOutlineSummarySpec(false, false), explicitPresentation.outlineSummary());
+    assertEquals(new SheetDefaultsSpec(11, 18.5d), explicitPresentation.sheetDefaults());
     assertEquals(
         java.util.List.of(
-            new IgnoredErrorInput(
+            new IgnoredErrorSpec(
                 new RangeRef("A1:B2"), java.util.List.of(ExcelIgnoredErrorType.FORMULA))),
         explicitPresentation.ignoredErrors());
     assertEquals(
@@ -325,32 +325,32 @@ class StructuralLayoutProtocolTypesTest {
             java.util.List.of(
                 new IgnoredErrorReport(
                     new RangeLabel("A1:B2"), java.util.List.of(ExcelIgnoredErrorType.FORMULA)))));
-    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsInput(0, 15.0d));
+    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsSpec(0, 15.0d));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new SheetDefaultsInput(ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH + 1, 15.0d));
+        () -> new SheetDefaultsSpec(ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH + 1, 15.0d));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new SheetDefaultsInput(8, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
+        () -> new SheetDefaultsSpec(8, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
     assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsReport(8, 0.0d));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new SheetPresentationInput(
-                SheetDisplayInput.defaults(),
+            new SheetPresentationSpec(
+                SheetDisplaySpec.defaults(),
                 java.util.Optional.empty(),
-                SheetOutlineSummaryInput.defaults(),
-                SheetDefaultsInput.defaults(),
+                SheetOutlineSummarySpec.defaults(),
+                SheetDefaultsSpec.defaults(),
                 java.util.List.of(
-                    new IgnoredErrorInput(
+                    new IgnoredErrorSpec(
                         new RangeRef("A1"), java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
-                    new IgnoredErrorInput(
+                    new IgnoredErrorSpec(
                         new RangeRef("A1"),
                         java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new IgnoredErrorInput(
+            new IgnoredErrorSpec(
                 new RangeRef("A1"),
                 java.util.List.of(ExcelIgnoredErrorType.FORMULA, ExcelIgnoredErrorType.FORMULA)));
     assertThrows(
@@ -384,40 +384,39 @@ class StructuralLayoutProtocolTypesTest {
 
   @Test
   void sheetDisplayDefaultsAndIgnoredErrorDtosCoverConstructorBranches() {
+    assertEquals(SheetDisplaySpec.defaults(), new SheetDisplaySpec(true, true, true, false, false));
     assertEquals(
-        SheetDisplayInput.defaults(), new SheetDisplayInput(true, true, true, false, false));
+        new SheetDisplaySpec(false, false, true, true, false),
+        new SheetDisplaySpec(false, false, true, true, false));
+    assertEquals(SheetOutlineSummarySpec.defaults(), new SheetOutlineSummarySpec(true, true));
     assertEquals(
-        new SheetDisplayInput(false, false, true, true, false),
-        new SheetDisplayInput(false, false, true, true, false));
-    assertEquals(SheetOutlineSummaryInput.defaults(), new SheetOutlineSummaryInput(true, true));
-    assertEquals(
-        new SheetOutlineSummaryInput(true, false), new SheetOutlineSummaryInput(true, false));
-    assertEquals(SheetDefaultsInput.defaults(), new SheetDefaultsInput(8, 15.0d));
-    assertEquals(new SheetDefaultsInput(8, 18.5d), new SheetDefaultsInput(8, 18.5d));
+        new SheetOutlineSummarySpec(true, false), new SheetOutlineSummarySpec(true, false));
+    assertEquals(SheetDefaultsSpec.defaults(), new SheetDefaultsSpec(8, 15.0d));
+    assertEquals(new SheetDefaultsSpec(8, 18.5d), new SheetDefaultsSpec(8, 18.5d));
     assertEquals(SheetDefaultsReport.defaults(), new SheetDefaultsReport(8, 15.0d));
 
     java.util.List<ExcelIgnoredErrorType> errorTypesWithNull =
         new java.util.ArrayList<>(java.util.Arrays.asList(ExcelIgnoredErrorType.FORMULA, null));
-    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsInput(8, 0.0d));
+    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsSpec(8, 0.0d));
     assertThrows(
-        IllegalArgumentException.class, () -> new SheetDefaultsInput(8, Double.POSITIVE_INFINITY));
+        IllegalArgumentException.class, () -> new SheetDefaultsSpec(8, Double.POSITIVE_INFINITY));
     assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsReport(0, 15.0d));
     assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsReport(8, Double.NaN));
     assertThrows(
         NullPointerException.class,
-        () -> new IgnoredErrorInput(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
+        () -> new IgnoredErrorSpec(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new IgnoredErrorInput(
+            new IgnoredErrorSpec(
                 new RangeRef(" "), java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
-    assertThrows(NullPointerException.class, () -> new IgnoredErrorInput(new RangeRef("A1"), null));
+    assertThrows(NullPointerException.class, () -> new IgnoredErrorSpec(new RangeRef("A1"), null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new IgnoredErrorInput(new RangeRef("A1"), java.util.List.of()));
+        () -> new IgnoredErrorSpec(new RangeRef("A1"), java.util.List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> new IgnoredErrorInput(new RangeRef("A1"), errorTypesWithNull));
+        () -> new IgnoredErrorSpec(new RangeRef("A1"), errorTypesWithNull));
     assertThrows(
         NullPointerException.class,
         () -> new IgnoredErrorReport(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));

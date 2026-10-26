@@ -22,7 +22,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - Updated the GitHub Actions pins to `actions/checkout` `6.0.3` and `gradle/actions` `6.1.1`,
   including the Gradle wrapper-validation workflow.
 - Completed the compact cell-payload model migration across the contract, examples, and tooling:
-  structured row and range writes now revolve around the typed `CellRowInput`, `CellGridInput`,
+  structured row and range writes now revolve around the typed `CellRowSpec`, `CellGridSpec`,
   and `CellScalarValue` families end to end, while selector validation and JSON-problem
   translation now live on narrower role-owned seams instead of monolithic helper buckets.
 - Re-segmented the developer-facing authoring and discovery internals around role-owned helpers:
@@ -62,11 +62,11 @@ For the current unreleased stream and the most recent releases, use the root [CH
   default, and Docker publication fakes mirror the same stderr/catalog behavior instead of
   preserving the older release-surface shape.
 - Repaired the Docker `STREAMING_WRITE` smoke scenario and selector-contract guard to use the
-  current `CellRowInput` wrapper for `APPEND_ROW`, preventing stale flat row payloads from hiding
+  current `CellRowSpec` wrapper for `APPEND_ROW`, preventing stale flat row payloads from hiding
   in release-surface shell requests until runtime.
 - Brought Jazzer support generation and promoted protocol-request seeds back into line with the
   compact cell-payload contract by treating authored error cells as value-bearing during XLSX
-  round-trip expectations and refreshing the promoted request metadata after `PrintSetupInput`
+  round-trip expectations and refreshing the promoted request metadata after `PrintSetupSpec`
   became a fully required shape.
 
 ## [0.67.0] - 2026-06-05
@@ -254,7 +254,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - Updated `docker-smoke.sh` status checks from `"SUCCESS"` to `"SUCCEEDED"` to match the `GridGrindResponse` envelope vocabulary change; the five grep assertions now consistently use the protocol-aligned discriminator value.
 - Added `/.gradle-home/` to `.gitignore` and to the hygiene-script local-state and generated-state allowlists; the project-local Gradle user home was appearing as an unexpected root entry when `GRADLE_USER_HOME` pointed at the project root.
 - Removed a duplicate "REQUIRES_EXAMPLE_ASSETS needs copied examples/ assets beside the request" sentence from the `--help-guidance` Discovery section; the same information was already expressed in the preceding workspace-mode description line.
-- Replaced the vague "Use bare group names first and qualify only when ids collide" phrasing in the `--lookup` flag description and the protocol-catalog Discovery notes with concrete examples of what is addressable by bare name: individual type ids (`SET_CELL`, `ENSURE_SHEET`, `GET_CELLS`), nested/plain type-group names (`cellInputTypes`, `calculationStrategyTypes`), and top-level operation category names (`mutationActionTypes`, `assertionTypes`, `inspectionQueryTypes`) all resolve unqualified.
+- Replaced the vague "Use bare group names first and qualify only when ids collide" phrasing in the `--lookup` flag description and the protocol-catalog Discovery notes with concrete examples of what is addressable by bare name: individual type ids (`SET_CELL`, `ENSURE_SHEET`, `GET_CELLS`), nested/plain type-group names (`cellValueSpecTypes`, `calculationStrategyTypes`), and top-level operation category names (`mutationActionTypes`, `assertionTypes`, `inspectionQueryTypes`) all resolve unqualified.
 - Added `--print-protocol-catalog --search <term>` as the first suggestion and updated the resolution text for `INVALID_REQUEST_SHAPE` failures so agents and operators see the right discovery command when a type discriminator value is wrong; the previous guidance pointed only to `--doctor-request` and `--help-protocol`, neither of which lists valid type values.
 - Added `// LIM-001` traceability comments to `SelectorValueValidation.requireWindowSize` and `WorkbookReadCommand.requireWindowSize`, closing the audit gap identified in the limitations registry for the 250,000-cell read-window cap; also corrected the `LIMITATIONS.md` Code field which incorrectly named `requireWindowWithinLimit` instead of `requireWindowSize`.
 - Added `// LIM-006A` traceability comment to `WorkbookStepValidation.requireStepId` to mark the step-id character-set enforcement site for the LIM-006A registry entry.
@@ -279,16 +279,16 @@ For the current unreleased stream and the most recent releases, use the root [CH
 ### Security
 
 - Named-range formula injection rejection (`LIM-032`): `NamedRangeTarget.Formula` now calls `FormulaInputSecurity.rejectDde`, blocking `DDE(` and `WEBSERVICE(` payloads; named-range formulas are stored in the xlsx defined-names part and auto-evaluated by Excel on open, making them as dangerous as cell-formula injection.
-- Chart title formula injection rejection (`LIM-033`): `ChartTitleInput.Formula` now calls `FormulaInputSecurity.rejectDde`; chart title formulas are stored in the chart XML and evaluated automatically when Excel renders the chart, giving them the same auto-execute risk as cell formulas.
-- UDF formula template injection rejection (`LIM-034`): `FormulaUdfFunctionInput.formulaTemplate` now calls `FormulaInputSecurity.rejectDde`; applied as defense-in-depth since POI's evaluator does not execute DDE or `WEBSERVICE` server-side and templates are not written to xlsx output.
+- Chart title formula injection rejection (`LIM-033`): `ChartTitleSpec.Formula` now calls `FormulaInputSecurity.rejectDde`; chart title formulas are stored in the chart XML and evaluated automatically when Excel renders the chart, giving them the same auto-execute risk as cell formulas.
+- UDF formula template injection rejection (`LIM-034`): `FormulaUdfFunctionSpec.formulaTemplate` now calls `FormulaInputSecurity.rejectDde`; applied as defense-in-depth since POI's evaluator does not execute DDE or `WEBSERVICE` server-side and templates are not written to xlsx output.
 - Documented three accepted limitations in `LIMITATIONS.md`: `LIM-035` (`HYPERLINK()` formula content not validated against the URL scheme allowlist — requires user click, not auto-executed), `LIM-036` (`RTD()` not blocked — Windows/COM only, no-op on macOS/Linux), and `LIM-037` (`WorkbookFactory` may open XLS files named `.xlsx` — relates to `LIM-002`; no injection risk).
-- Source file path confinement (`LIM-030`): `SourceBackedPathResolver.resolvePath` now delegates to `ExecutionRequestPaths.normalizePath` (`LIM-025`, `LIM-029`), preventing relative path traversal via `TextSourceInput.Utf8File` and `BinarySourceInput.File` inputs; previously a caller could submit `"../../etc/shadow"` as a source file path and read arbitrary server-side files whose content would appear in cell values or formula strings returned in the response.
+- Source file path confinement (`LIM-030`): `SourceBackedPathResolver.resolvePath` now delegates to `ExecutionRequestPaths.normalizePath` (`LIM-025`, `LIM-029`), preventing relative path traversal via `TextSourceSpec.Utf8File` and `BinarySourceSpec.File` inputs; previously a caller could submit `"../../etc/shadow"` as a source file path and read arbitrary server-side files whose content would appear in cell values or formula strings returned in the response.
 - `WEBSERVICE` formula rejection (`LIM-031`): `FormulaInputSecurity.rejectDde` now also rejects formulas beginning with `WEBSERVICE(` (case-insensitive, after stripping `=` or `{=…}` prefix); `WEBSERVICE` causes Excel to make outbound HTTP requests during formula evaluation, making it a data-exfiltration vector when the generated workbook is opened by downstream users.
 - Relative path traversal prevention (`LIM-025`): `ExecutionRequestPaths.normalizePath` now verifies that relative paths resolve within the working directory; paths using `../` components to escape are rejected with `INVALID_REQUEST`. Absolute paths remain allowed as explicit references.
-- DDE formula injection rejection (`LIM-023`): `CellInput.Formula` now rejects inline formula sources that begin with `DDE(` (case-insensitive, after stripping the leading `=`) to prevent malicious DDE calls from being written into saved workbooks.
+- DDE formula injection rejection (`LIM-023`): `CellValueSpec.Formula` now rejects inline formula sources that begin with `DDE(` (case-insensitive, after stripping the leading `=`) to prevent malicious DDE calls from being written into saved workbooks.
 - Explicit ZIP decompression limits (`LIM-026`): `ExcelWorkbookOpenSupport` now explicitly configures Apache POI `ZipSecureFile` with a 100 MiB maximum decompressed entry size and a 1:100 minimum inflate ratio, replacing implicit reliance on POI defaults.
 - Step count limit (`LIM-024`): `WorkbookPlan` now enforces a maximum of 10,000 steps per request, preventing unbounded resource consumption from pathological inputs that could otherwise exhaust execution time or memory under the 16 MiB JSON cap.
-- DDE rejection extended to all formula inputs (`LIM-027`): `FormulaInputSecurity.rejectDde` now guards every formula-bearing input type — `ArrayFormulaInput`, all `DataValidationRuleInput` formula fields, `ConditionalFormattingRuleInput` formula fields, `ConditionalFormattingThresholdInput.formula`, and `ChartDataSourceInput.Reference.formula` — closing the gap left by the original `LIM-023` fix which only covered `CellInput.Formula`.
+- DDE rejection extended to all formula inputs (`LIM-027`): `FormulaInputSecurity.rejectDde` now guards every formula-bearing input type — `ArrayFormulaSpec`, all `DataValidationRuleSpec` formula fields, `ConditionalFormattingRuleSpec` formula fields, `ConditionalFormattingThresholdSpec.formula`, and `ChartDataSourceSpec.Reference.formula` — closing the gap left by the original `LIM-023` fix which only covered `CellValueSpec.Formula`.
 - URL scheme allowlist for hyperlinks (`LIM-028`): `HyperlinkTarget.Url` now accepts only `http`, `https`, `ftp`, and `ftps` schemes; previously any non-`file`/`mailto` URI scheme was accepted, allowing `javascript:`, `vbscript:`, `ms-excel:`, and `ldap:` URLs to be written into workbooks.
 - Symlink confinement detection (`LIM-029`): `ExecutionRequestPaths.normalizePath` now walks each path component and verifies that symbolic links within the working directory resolve to targets still inside it, closing the bypass of the lexicographic `LIM-025` traversal check.
 
@@ -916,7 +916,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
   of depending on flaky local clone/push transport behavior.
 - `--print-protocol-catalog --operation` now exposes the nested and plain type groups that
   operators actually need for black-box request authoring. Type-group lookups such as
-  `nestedTypes:cellInputTypes` and `plainTypes:chartInputType` now work directly instead of
+  `nestedTypes:cellValueSpecTypes` and `plainTypes:chartSpecType` now work directly instead of
   forcing callers to download and parse the full catalog just to discover cell, chart, or source
   payload shapes.
 - Formula-backed chart references now evaluate authoritatively during chart authoring and
@@ -1406,7 +1406,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 
 ### Fixed
 
-- `ExecutionModeInput.isDefault()` is now JSON-ignored, so request round-trips no longer leak a
+- `ExecutionModeSpec.isDefault()` is now JSON-ignored, so request round-trips no longer leak a
   stray `executionMode.default` field.
 - The streaming writer now owns row advancement explicitly and disposes SXSSF temp files on close
   instead of relying on incidental POI state.
@@ -1972,7 +1972,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
   Jackson internal configuration-advice message
   (`"set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false'
   to allow"`) leaked directly into the `InvalidRequestShapeException` message seen by agents.
-- Protocol catalog `DifferentialStyleInput` descriptor now lists all nine optional fields
+- Protocol catalog `DifferentialStylePatch` descriptor now lists all nine optional fields
   (`numberFormat`, `bold`, `italic`, `fontHeight`, `fontColor`, `underline`, `strikeout`,
   `fillColor`, `border`). Previously the field list was empty, so `--describe-type` showed no
   fields at all for this type.
@@ -2058,13 +2058,13 @@ For the current unreleased stream and the most recent releases, use the root [CH
 ### Added
 
 - New Jazzer protocol-request regression seed `pane_and_print_reset_request` covering the
-  previously untested pane and print-layout variants: `PaneInput.NONE` (reset), `PaneInput.SPLIT`
-  (x/y offsets with active-pane region), `PrintAreaInput.NONE`, `PrintScalingInput.AUTOMATIC`,
+  previously untested pane and print-layout variants: `PaneSpec.NONE` (reset), `PaneSpec.SPLIT`
+  (x/y offsets with active-pane region), `PrintAreaSpec.NONE`, `PrintScalingSpec.AUTOMATIC`,
   and `CLEAR_PRINT_LAYOUT`. The existing `structural_layout_request` seed only covered `FROZEN`
   panes with `FIT` scaling.
 - Protocol catalog now publishes `paneTypes`, `printAreaTypes`, `printScalingTypes`,
   `printTitleRowsTypes`, and `printTitleColumnsTypes` as nested type groups, and
-  `headerFooterTextInputType` and `printLayoutInputType` as plain type groups. Agents using
+  `headerFooterTextSpecType` and `printLayoutSpecType` as plain type groups. Agents using
   `--print-protocol-catalog` or `--describe-operation SET_SHEET_PANE` / `SET_PRINT_LAYOUT`
   previously received dangling `NESTED_TYPE_GROUP` or `PLAIN_TYPE_GROUP` references with no
   matching catalog entry; those entries are now present and complete.
@@ -2245,8 +2245,8 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - `ANALYZE_WORKBOOK_FINDINGS` now aggregates data-validation findings alongside formula,
   hyperlink, and named-range findings.
 - Protocol discovery now publishes `rangeSelectionTypes`, `dataValidationRuleTypes`,
-  `dataValidationInputType`, `dataValidationPromptInputType`, and
-  `dataValidationErrorAlertInputType`, so black-box consumers can author the full validation
+  `dataValidationSpecType`, `dataValidationPromptSpecType`, and
+  `dataValidationErrorAlertSpecType`, so black-box consumers can author the full validation
   workflow without shape inference.
 - Developer docs, the Jazzer coverage inventory, and the Apache POI parity inventory now treat
   data validation as shipped behavior instead of a planned gap.
@@ -2566,7 +2566,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
   `effectiveType`, `displayValue`, `style`, `metadata`, and type-specific value fields
   (`stringValue`, `numberValue`, `booleanValue`, `errorValue`, `formula`, `evaluation`).
 - `GET_CELLS` summary now explicitly states that `style.fontHeight` in read responses is a plain
-  object with both `twips` and `points` fields, not the discriminated `FontHeightInput` write
+  object with both `twips` and `points` fields, not the discriminated `FontHeightSpec` write
   format. `GET_WINDOW` summary cross-references the `GET_CELLS` cell snapshot shape.
 - `fontHeightTypes` entries in `--print-protocol-catalog` now document the write format and the
   read-back shape asymmetry so agents can round-trip font height without format confusion.
@@ -2606,7 +2606,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - `--help` output now includes a one-line product description sourced from `gradle.properties`
   as the single canonical definition.
 - Protocol catalog now enumerates five plain (non-polymorphic) request types:
-  `CommentInput`, `NamedRangeTarget`, `CellStyleInput`, `CellBorderInput`, and
+  `CommentSpec`, `NamedRangeTarget`, `CellStyleInput`, `CellBorderPatch`, and
   `CellBorderSideInput`, with their required and optional fields listed.
 - Sheet name length validation: `ENSURE_SHEET`, `RENAME_SHEET`, `SET_NAMED_RANGE`, and every
   other operation that accepts a `sheetName` now rejects names longer than 31 characters with
@@ -2865,8 +2865,8 @@ For the current unreleased stream and the most recent releases, use the root [CH
   a non-negative value for array-position references.
 - `ExcelSheet.snapshot` formula expression extracted before the try block so the catch arm can
   reference it without a ternary inside the catch, removing an unreachable branch.
-- `GridGrindService.formulaFor` `when op.value() instanceof CellInput.Formula` guard replaced
-  with an inner exhaustive switch over the sealed `CellInput` type, eliminating the guard-false
+- `GridGrindService.formulaFor` `when op.value() instanceof CellValueSpec.Formula` guard replaced
+  with an inner exhaustive switch over the sealed `CellValueSpec` type, eliminating the guard-false
   synthetic branch that JaCoCo counted as a missed branch.
 
 ## [0.3.0] - 2026-03-25
@@ -2877,7 +2877,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
   mode no longer accepts a `path` field; it always overwrites the source file.
 - `AUTO_SIZE_COLUMNS` operation no longer accepts a `columns` field; it always auto-sizes all
   populated columns on the sheet.
-- `CellInput.Date` component field renamed from `localDate` to `date`; `CellInput.DateTime`
+- `CellValueSpec.Date` component field renamed from `localDate` to `date`; `CellValueSpec.DateTime`
   component field renamed from `localDateTime` to `dateTime`.
 
 ## [0.2.0] - 2026-03-25

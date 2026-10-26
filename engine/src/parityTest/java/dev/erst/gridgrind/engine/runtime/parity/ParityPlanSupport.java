@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime.parity;
 
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -42,12 +42,12 @@ final class ParityPlanSupport {
   }
 
   static PendingMutation mutate(StructuredMutationAction.SetTable action) {
-    TableInput table = action.table();
+    TableSpec table = action.table();
     return mutate(new TableSelector.ByNameOnSheet(table.name(), table.sheetName()), action);
   }
 
   static PendingMutation mutate(StructuredMutationAction.SetPivotTable action) {
-    PivotTableInput pivotTable = action.pivotTable();
+    PivotTableSpec pivotTable = action.pivotTable();
     return mutate(
         new PivotTableSelector.ByNameOnSheet(pivotTable.name(), pivotTable.sheetName()), action);
   }
@@ -60,35 +60,35 @@ final class ParityPlanSupport {
     return new InspectionStep(new StepId(stepId), target, query);
   }
 
-  static CalculationPolicyInput calculateAll() {
-    return CalculationPolicyInput.strategy(new CalculationStrategyInput.EvaluateAll());
+  static CalculationPolicySpec calculateAll() {
+    return CalculationPolicySpec.strategy(new CalculationStrategySpec.EvaluateAll());
   }
 
-  static CalculationPolicyInput calculateAllAndMarkRecalculateOnOpen() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
+  static CalculationPolicySpec calculateAllAndMarkRecalculateOnOpen() {
+    return new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), true);
   }
 
-  static CalculationPolicyInput calculateTargets(
+  static CalculationPolicySpec calculateTargets(
       dev.erst.gridgrind.core.model.formula.FormulaCellTarget... cells) {
-    return CalculationPolicyInput.strategy(
-        new CalculationStrategyInput.EvaluateTargets(List.of(cells)));
+    return CalculationPolicySpec.strategy(
+        new CalculationStrategySpec.EvaluateTargets(List.of(cells)));
   }
 
-  static CalculationPolicyInput clearFormulaCaches() {
-    return CalculationPolicyInput.strategy(new CalculationStrategyInput.ClearCachesOnly());
+  static CalculationPolicySpec clearFormulaCaches() {
+    return CalculationPolicySpec.strategy(new CalculationStrategySpec.ClearCachesOnly());
   }
 
-  static CalculationPolicyInput markRecalculateOnOpen() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true);
+  static CalculationPolicySpec markRecalculateOnOpen() {
+    return new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), true);
   }
 
-  static ExecutionPolicyInput executionPolicy(CalculationPolicyInput calculation) {
-    return ExecutionPolicyInput.calculation(calculation);
+  static ExecutionPolicySpec executionPolicy(CalculationPolicySpec calculation) {
+    return ExecutionPolicySpec.calculation(calculation);
   }
 
-  static ExecutionPolicyInput executionPolicy(
-      dev.erst.gridgrind.core.plan.ExecutionModeInput mode, CalculationPolicyInput calculation) {
-    return ExecutionPolicyInput.modeAndCalculation(mode, calculation);
+  static ExecutionPolicySpec executionPolicy(
+      dev.erst.gridgrind.core.plan.ExecutionModeSpec mode, CalculationPolicySpec calculation) {
+    return ExecutionPolicySpec.modeAndCalculation(mode, calculation);
   }
 
   static MutationStep materializeMutation(PendingMutation mutation, int stepIndex) {
@@ -121,37 +121,37 @@ final class ParityPlanSupport {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      FormulaEnvironmentInput formulaEnvironment,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        ExecutionPolicySpec.defaults(),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults),
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        Objects.requireNonNullElseGet(execution, ExecutionPolicySpec::defaults),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty),
         steps(mutations, inspections));
   }
 

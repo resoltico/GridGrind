@@ -19,22 +19,22 @@ class AuthoringPublicSurfaceTest {
       Set.of(
           "dev.erst.gridgrind.engine.api.",
           "dev.erst.gridgrind.engine.runtime.",
-          "dev.erst.gridgrind.core.model.value.CellInput",
+          "dev.erst.gridgrind.core.model.value.CellValueSpec",
           "dev.erst.gridgrind.core.model.value.CellScalarValue",
-          "dev.erst.gridgrind.core.model.chart.ChartInput",
-          "dev.erst.gridgrind.core.model.drawing.CommentInput",
-          "dev.erst.gridgrind.core.model.validation.DataValidationInput",
+          "dev.erst.gridgrind.core.model.chart.ChartSpec",
+          "dev.erst.gridgrind.core.model.drawing.CommentSpec",
+          "dev.erst.gridgrind.core.model.validation.DataValidationSpec",
           "dev.erst.gridgrind.core.result.WorkbookResult",
           "dev.erst.gridgrind.core.model.value.HyperlinkTarget",
           "dev.erst.gridgrind.core.vocabulary.NamedRangeScope",
           "dev.erst.gridgrind.core.model.formula.NamedRangeTarget",
-          "dev.erst.gridgrind.core.model.pivot.PivotTableInput",
-          "dev.erst.gridgrind.core.model.print.PrintLayoutInput",
-          "dev.erst.gridgrind.core.model.layout.SheetPresentationInput",
-          "dev.erst.gridgrind.core.model.table.TableInput",
-          "dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput",
-          "dev.erst.gridgrind.core.source.BinarySourceInput",
-          "dev.erst.gridgrind.core.source.TextSourceInput");
+          "dev.erst.gridgrind.core.model.pivot.PivotTableSpec",
+          "dev.erst.gridgrind.core.model.print.PrintLayoutSpec",
+          "dev.erst.gridgrind.core.model.layout.SheetPresentationSpec",
+          "dev.erst.gridgrind.core.model.table.TableSpec",
+          "dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec",
+          "dev.erst.gridgrind.core.source.BinarySourceSpec",
+          "dev.erst.gridgrind.core.source.TextSourceSpec");
 
   @Test
   void coreAuthoringDoesNotRequireEngineOrPoi() throws Exception {

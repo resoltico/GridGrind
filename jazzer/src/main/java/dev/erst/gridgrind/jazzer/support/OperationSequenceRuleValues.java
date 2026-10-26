@@ -3,14 +3,14 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport.*;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
@@ -31,27 +31,27 @@ import java.util.stream.Stream;
 final class OperationSequenceRuleValues {
   private OperationSequenceRuleValues() {}
 
-  static DataValidationInput nextDataValidationInput(GridGrindFuzzData data) {
-    return new DataValidationInput(
+  static DataValidationSpec nextDataValidationInput(GridGrindFuzzData data) {
+    return new DataValidationSpec(
         data.consumeBoolean()
-            ? new DataValidationRuleInput.ExplicitList(nextExplicitValidationValues(data))
-            : new DataValidationRuleInput.WholeNumber(
+            ? new DataValidationRuleSpec.ExplicitList(nextExplicitValidationValues(data))
+            : new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
         data.consumeBoolean(),
         data.consumeBoolean(),
         data.consumeBoolean()
             ? Optional.of(
-                new DataValidationPromptInput(
-                    TextSourceInput.inline("Status"),
-                    TextSourceInput.inline("Use an allowed value."),
+                new DataValidationPromptSpec(
+                    TextSourceSpec.inline("Status"),
+                    TextSourceSpec.inline("Use an allowed value."),
                     data.consumeBoolean()))
             : Optional.empty(),
         data.consumeBoolean()
             ? Optional.of(
-                new DataValidationErrorAlertInput(
+                new DataValidationErrorAlertSpec(
                     ExcelDataValidationErrorStyle.STOP,
-                    TextSourceInput.inline("Invalid"),
-                    TextSourceInput.inline("Use an allowed value."),
+                    TextSourceSpec.inline("Invalid"),
+                    TextSourceSpec.inline("Use an allowed value."),
                     data.consumeBoolean()))
             : Optional.empty());
   }
@@ -83,14 +83,14 @@ final class OperationSequenceRuleValues {
     return data.consumeBoolean() ? List.of("Queued", "Done") : List.of("x".repeat(253));
   }
 
-  static ConditionalFormattingDefinitionInput nextConditionalFormattingInput(
+  static ConditionalFormattingSpec nextConditionalFormattingInput(
       GridGrindFuzzData data) {
-    return new ConditionalFormattingDefinitionInput(
+    return new ConditionalFormattingSpec(
         List.of(
             data.consumeBoolean()
-                ? new ConditionalFormattingRuleInput.FormulaRule(
+                ? new ConditionalFormattingRuleSpec.FormulaRule(
                     "A1>0", data.consumeBoolean(), Optional.of(nextDifferentialStyleInput(data)))
-                : new ConditionalFormattingRuleInput.CellValueRule(
+                : new ConditionalFormattingRuleSpec.CellValueRule(
                     ExcelComparisonOperator.GREATER_THAN,
                     "1",
                     Optional.empty(),
@@ -114,21 +114,21 @@ final class OperationSequenceRuleValues {
                     Optional.of(nextExcelDifferentialStyle(data)))));
   }
 
-  static DifferentialStyleInput nextDifferentialStyleInput(GridGrindFuzzData data) {
+  static DifferentialStylePatch nextDifferentialStyleInput(GridGrindFuzzData data) {
     boolean includeNumberFormat = data.consumeBoolean();
     Boolean bold = data.consumeBoolean() ? Boolean.TRUE : null;
     Boolean italic = data.consumeBoolean() ? Boolean.TRUE : null;
-    ColorInput fontColor = data.consumeBoolean() ? nextColorInput(data) : null;
+    ColorSpec fontColor = data.consumeBoolean() ? nextColorInput(data) : null;
     Boolean underline = data.consumeBoolean() ? Boolean.TRUE : null;
     Boolean strikeout = data.consumeBoolean() ? Boolean.TRUE : null;
-    ColorInput fillColor = data.consumeBoolean() ? nextColorInput(data) : null;
+    ColorSpec fillColor = data.consumeBoolean() ? nextColorInput(data) : null;
     String numberFormat =
         includeNumberFormat
                 || Stream.of(bold, italic, fontColor, underline, strikeout, fillColor)
                     .allMatch(Objects::isNull)
             ? "0.00"
             : null;
-    return new DifferentialStyleInput(
+    return new DifferentialStylePatch(
         Optional.ofNullable(numberFormat),
         Optional.ofNullable(bold),
         Optional.ofNullable(italic),
@@ -166,12 +166,12 @@ final class OperationSequenceRuleValues {
         Optional.empty());
   }
 
-  private static ColorInput nextColorInput(GridGrindFuzzData data) {
+  private static ColorSpec nextColorInput(GridGrindFuzzData data) {
     Optional<Double> tint = nextTint(data);
     return switch (Math.floorMod(data.consumeByte(), 3)) {
-      case 0 -> new ColorInput.Rgb(new RgbHex("#102030"), tint);
-      case 1 -> new ColorInput.Theme(data.consumeInt(0, 11), tint);
-      default -> new ColorInput.Indexed(data.consumeInt(0, 63), tint);
+      case 0 -> new ColorSpec.Rgb(new RgbHex("#102030"), tint);
+      case 1 -> new ColorSpec.Theme(data.consumeInt(0, 11), tint);
+      default -> new ColorSpec.Indexed(data.consumeInt(0, 63), tint);
     };
   }
 

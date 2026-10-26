@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
@@ -23,7 +23,7 @@ import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
 import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
@@ -115,24 +115,24 @@ class WorkbookResultTest {
     WorkbookPlan overwriteExistingRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("fixtures/budget.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecuritySpec.none()),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan saveAsRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "fixtures/output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan impossibleOverwriteRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecuritySpec.none()),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
 
     WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
@@ -166,30 +166,30 @@ class WorkbookResultTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan saveAsRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "fixtures/output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan overwriteRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("fixtures/input.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecuritySpec.none()),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan overwriteNewRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecuritySpec.none()),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookResultPersistence.PublicationOutcome publication =
         new WorkbookResultPersistence.PublicationOutcome.NotPublished(

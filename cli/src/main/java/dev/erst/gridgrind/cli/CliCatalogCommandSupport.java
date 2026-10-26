@@ -90,7 +90,7 @@ final class CliCatalogCommandSupport {
                 "Resolve one top-level protocol type such as mutationActionTypes:SET_CELL."),
             new ProtocolCatalogLookupNamespace(
                 "nestedTypes:<group>",
-                "Resolve one nested tagged-union group such as nestedTypes:cellInputTypes."),
+                "Resolve one nested tagged-union group such as nestedTypes:cellValueSpecTypes."),
             new ProtocolCatalogLookupNamespace(
                 "plainTypes:<group>",
                 "Resolve one plain record group such as plainTypes:sheetSummaryReport."),

@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.catalog.GridGrindContractText;
-import dev.erst.gridgrind.core.plan.AssertionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
@@ -27,15 +27,15 @@ import org.junit.jupiter.api.Test;
 class CalculationContractTypesTest {
   @Test
   void validatesCalculationStrategiesAndExecutionPolicyDefaults() {
-    CalculationStrategyInput.DoNotCalculate doNotCalculate =
-        new CalculationStrategyInput.DoNotCalculate();
-    CalculationStrategyInput.DeferredCalculation deferredCalculation =
-        new CalculationStrategyInput.DeferredCalculation();
-    CalculationStrategyInput.EvaluateAll evaluateAll = new CalculationStrategyInput.EvaluateAll();
-    CalculationStrategyInput.ClearCachesOnly clearCachesOnly =
-        new CalculationStrategyInput.ClearCachesOnly();
-    CalculationStrategyInput.EvaluateTargets evaluateTargets =
-        new CalculationStrategyInput.EvaluateTargets(
+    CalculationStrategySpec.DoNotCalculate doNotCalculate =
+        new CalculationStrategySpec.DoNotCalculate();
+    CalculationStrategySpec.DeferredCalculation deferredCalculation =
+        new CalculationStrategySpec.DeferredCalculation();
+    CalculationStrategySpec.EvaluateAll evaluateAll = new CalculationStrategySpec.EvaluateAll();
+    CalculationStrategySpec.ClearCachesOnly clearCachesOnly =
+        new CalculationStrategySpec.ClearCachesOnly();
+    CalculationStrategySpec.EvaluateTargets evaluateTargets =
+        new CalculationStrategySpec.EvaluateTargets(
             List.of(new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1"))));
 
     assertTrue(doNotCalculate.isDefault());
@@ -47,25 +47,25 @@ class CalculationContractTypesTest {
     assertEquals("CLEAR_CACHES_ONLY", clearCachesOnly.strategyType());
     assertEquals("EVALUATE_TARGETS", evaluateTargets.strategyType());
     assertThrows(
-        NullPointerException.class, () -> new CalculationStrategyInput.EvaluateTargets(null));
+        NullPointerException.class, () -> new CalculationStrategySpec.EvaluateTargets(null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CalculationStrategyInput.EvaluateTargets(List.of()));
+        () -> new CalculationStrategySpec.EvaluateTargets(List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> new CalculationStrategyInput.EvaluateTargets(List.of((FormulaCellTarget) null)));
+        () -> new CalculationStrategySpec.EvaluateTargets(List.of((FormulaCellTarget) null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CalculationStrategyInput.EvaluateTargets(
+            new CalculationStrategySpec.EvaluateTargets(
                 List.of(
                     new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")),
                     new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")))));
 
-    CalculationPolicyInput defaultPolicy = CalculationPolicyInput.defaults();
-    CalculationPolicyInput markedPolicy =
-        new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true);
-    CalculationPolicyInput targetedPolicy = CalculationPolicyInput.strategy(evaluateTargets);
+    CalculationPolicySpec defaultPolicy = CalculationPolicySpec.defaults();
+    CalculationPolicySpec markedPolicy =
+        new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), true);
+    CalculationPolicySpec targetedPolicy = CalculationPolicySpec.strategy(evaluateTargets);
 
     assertTrue(defaultPolicy.isDefault());
     assertEquals("DO_NOT_CALCULATE", defaultPolicy.effectiveStrategy().strategyType());
@@ -73,19 +73,19 @@ class CalculationContractTypesTest {
     assertTrue(markedPolicy.markRecalculateOnOpen());
     assertEquals(evaluateTargets, targetedPolicy.effectiveStrategy());
 
-    ExecutionPolicyInput defaultExecution =
-        new ExecutionPolicyInput(
-            ExecutionModeInput.defaults(),
-            ExecutionJournalInput.defaults(),
-            CalculationPolicyInput.defaults(),
-            AssertionModeInput.defaults());
-    ExecutionPolicyInput customExecution = ExecutionPolicyInput.calculation(markedPolicy);
+    ExecutionPolicySpec defaultExecution =
+        new ExecutionPolicySpec(
+            ExecutionModeSpec.defaults(),
+            ExecutionJournalSpec.defaults(),
+            CalculationPolicySpec.defaults(),
+            AssertionModeSpec.defaults());
+    ExecutionPolicySpec customExecution = ExecutionPolicySpec.calculation(markedPolicy);
 
     assertTrue(defaultExecution.isDefault());
-    assertEquals(ExecutionModeInput.defaults(), defaultExecution.mode());
-    assertEquals(ExecutionJournalInput.defaults(), defaultExecution.journal());
-    assertEquals(CalculationPolicyInput.defaults(), defaultExecution.calculation());
-    assertEquals(AssertionModeInput.FAIL_FAST, defaultExecution.assertionMode());
+    assertEquals(ExecutionModeSpec.defaults(), defaultExecution.mode());
+    assertEquals(ExecutionJournalSpec.defaults(), defaultExecution.journal());
+    assertEquals(CalculationPolicySpec.defaults(), defaultExecution.calculation());
+    assertEquals(AssertionModeSpec.FAIL_FAST, defaultExecution.assertionMode());
     assertFalse(customExecution.isDefault());
     assertEquals(markedPolicy, customExecution.effectiveCalculation());
     assertTrue(
@@ -96,55 +96,55 @@ class CalculationContractTypesTest {
 
   @Test
   void executionPolicyFactoriesAndNullRejectionBehavePrecisely() {
-    ExecutionPolicyInput defaultPolicy = ExecutionPolicyInput.defaults();
-    ExecutionPolicyInput customPolicy =
-        new ExecutionPolicyInput(
-            ExecutionModeInput.eventRead(),
-            new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-            new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true),
-            AssertionModeInput.defaults());
-    ExecutionModeInput defaultMode = ExecutionModeInput.defaults();
-    ExecutionModeInput customMode = ExecutionModeInput.eventRead();
-    ExecutionJournalInput defaultJournal = ExecutionJournalInput.defaults();
-    ExecutionJournalInput customJournal = new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE);
-    CalculationPolicyInput defaultCalculation = CalculationPolicyInput.defaults();
-    CalculationPolicyInput customCalculation =
-        new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
+    ExecutionPolicySpec defaultPolicy = ExecutionPolicySpec.defaults();
+    ExecutionPolicySpec customPolicy =
+        new ExecutionPolicySpec(
+            ExecutionModeSpec.eventRead(),
+            new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE),
+            new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), true),
+            AssertionModeSpec.defaults());
+    ExecutionModeSpec defaultMode = ExecutionModeSpec.defaults();
+    ExecutionModeSpec customMode = ExecutionModeSpec.eventRead();
+    ExecutionJournalSpec defaultJournal = ExecutionJournalSpec.defaults();
+    ExecutionJournalSpec customJournal = new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE);
+    CalculationPolicySpec defaultCalculation = CalculationPolicySpec.defaults();
+    CalculationPolicySpec customCalculation =
+        new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), true);
 
-    assertEquals(defaultPolicy, ExecutionPolicyInput.mode(defaultMode));
-    assertEquals(defaultPolicy, ExecutionPolicyInput.journal(defaultJournal));
-    assertEquals(defaultPolicy, ExecutionPolicyInput.calculation(defaultCalculation));
+    assertEquals(defaultPolicy, ExecutionPolicySpec.mode(defaultMode));
+    assertEquals(defaultPolicy, ExecutionPolicySpec.journal(defaultJournal));
+    assertEquals(defaultPolicy, ExecutionPolicySpec.calculation(defaultCalculation));
     assertEquals(
-        new ExecutionPolicyInput(
-            customMode, defaultJournal, defaultCalculation, AssertionModeInput.defaults()),
-        ExecutionPolicyInput.mode(customMode));
+        new ExecutionPolicySpec(
+            customMode, defaultJournal, defaultCalculation, AssertionModeSpec.defaults()),
+        ExecutionPolicySpec.mode(customMode));
     assertEquals(
-        new ExecutionPolicyInput(
-            defaultMode, customJournal, defaultCalculation, AssertionModeInput.defaults()),
-        ExecutionPolicyInput.journal(customJournal));
+        new ExecutionPolicySpec(
+            defaultMode, customJournal, defaultCalculation, AssertionModeSpec.defaults()),
+        ExecutionPolicySpec.journal(customJournal));
     assertEquals(
-        new ExecutionPolicyInput(
-            customMode, customJournal, defaultCalculation, AssertionModeInput.defaults()),
-        ExecutionPolicyInput.modeAndJournal(customMode, customJournal));
+        new ExecutionPolicySpec(
+            customMode, customJournal, defaultCalculation, AssertionModeSpec.defaults()),
+        ExecutionPolicySpec.modeAndJournal(customMode, customJournal));
     assertEquals(
-        new ExecutionPolicyInput(
-            customMode, defaultJournal, customCalculation, AssertionModeInput.defaults()),
-        ExecutionPolicyInput.modeAndCalculation(customMode, customCalculation));
+        new ExecutionPolicySpec(
+            customMode, defaultJournal, customCalculation, AssertionModeSpec.defaults()),
+        ExecutionPolicySpec.modeAndCalculation(customMode, customCalculation));
     assertEquals(
-        new ExecutionPolicyInput(
-            defaultMode, defaultJournal, defaultCalculation, AssertionModeInput.COLLECT),
-        ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT));
-    assertFalse(ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT).isDefault());
+        new ExecutionPolicySpec(
+            defaultMode, defaultJournal, defaultCalculation, AssertionModeSpec.COLLECT),
+        ExecutionPolicySpec.assertionMode(AssertionModeSpec.COLLECT));
+    assertFalse(ExecutionPolicySpec.assertionMode(AssertionModeSpec.COLLECT).isDefault());
     assertFalse(customPolicy.isDefault());
     assertTrue(defaultMode.isDefault());
     assertFalse(customMode.isDefault());
     assertEquals("EVENT_READ", customMode.modeType());
-    assertEquals("STREAMING_WRITE", ExecutionModeInput.streamingWrite().modeType());
+    assertEquals("STREAMING_WRITE", ExecutionModeSpec.streamingWrite().modeType());
     assertTrue(defaultJournal.isDefault());
     assertFalse(customJournal.isDefault());
     assertEquals(
-        ExecutionJournalLevel.SUMMARY, ExecutionJournalInput.effectiveLevel(defaultJournal));
-    assertThrows(NullPointerException.class, () -> ExecutionJournalInput.effectiveLevel(null));
+        ExecutionJournalLevel.SUMMARY, ExecutionJournalSpec.effectiveLevel(defaultJournal));
+    assertThrows(NullPointerException.class, () -> ExecutionJournalSpec.effectiveLevel(null));
   }
 
   @Test
@@ -173,14 +173,14 @@ class CalculationContractTypesTest {
         new CalculationReport.Execution(CalculationExecutionStatus.SUCCEEDED, 1, false, true);
     CalculationReport report =
         new CalculationReport(
-            new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true),
+            new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), true),
             preflight,
             execution);
 
     assertTrue(CalculationReport.notRequested().policy().isDefault());
     assertTrue(
         new CalculationReport(
-                CalculationPolicyInput.defaults(), java.util.Optional.empty(), execution)
+                CalculationPolicySpec.defaults(), java.util.Optional.empty(), execution)
             .policy()
             .isDefault());
     assertEquals(

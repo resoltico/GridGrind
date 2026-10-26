@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.chart.ChartAxisInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import java.util.Optional;
 
@@ -10,7 +10,7 @@ import java.util.Optional;
 final class OperationSequenceChartCartesianPlotSupport {
   private OperationSequenceChartCartesianPlotSupport() {}
 
-  static ChartPlotInput nextChartPlotInput(
+  static ChartPlotSpec nextChartPlotInput(
       int plotKind, boolean varyColors, GridGrindFuzzData data) {
     return nextChartPlot(plotKind, varyColors, data, protocolPlotFactories());
   }
@@ -103,20 +103,20 @@ final class OperationSequenceChartCartesianPlotSupport {
     };
   }
 
-  private static ChartCartesianPlotFactories<ChartAxisInput, ChartSeriesInput, ChartPlotInput>
+  private static ChartCartesianPlotFactories<ChartAxisSpec, ChartSeriesSpec, ChartPlotSpec>
       protocolPlotFactories() {
     return new ChartCartesianPlotFactories<>(
         OperationSequenceChartFactory::nextChartAxesInputCategory,
         OperationSequenceChartFactory::nextChartAxesInputScatter,
         OperationSequenceChartFactory::nextChartSeriesInputs,
-        ChartPlotInput.Area::new,
-        ChartPlotInput.Area3D::new,
-        ChartPlotInput.Bar::new,
-        ChartPlotInput.Bar3D::new,
-        ChartPlotInput.Line::new,
-        ChartPlotInput.Line3D::new,
-        ChartPlotInput.Radar::new,
-        ChartPlotInput.Scatter::new);
+        ChartPlotSpec.Area::new,
+        ChartPlotSpec.Area3D::new,
+        ChartPlotSpec.Bar::new,
+        ChartPlotSpec.Bar3D::new,
+        ChartPlotSpec.Line::new,
+        ChartPlotSpec.Line3D::new,
+        ChartPlotSpec.Radar::new,
+        ChartPlotSpec.Scatter::new);
   }
 
   private static ChartCartesianPlotFactories<

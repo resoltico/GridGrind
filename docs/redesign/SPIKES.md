@@ -995,3 +995,52 @@ remains outstanding until that consumer is verified. WP-21's full identifier/bla
 still outstanding; do not count the checkpoint as its completion. Next: WP-23 vocabulary, then
 schema intake and the remaining engine work; campaigns stay deferred until planned implementation
 is complete, with any justified interim campaign hard-capped at 120 seconds.
+
+### WP-23 authored-model naming checkpoint
+
+Renamed 83 authored top-level Input types to 75 Spec and eight Patch types, plus the nested
+CustomConditionSpec and transport Stdin names. Patch names are reserved for partial, optional-field
+updates with nonempty-constructor invariants; complete policy/definition choices use Spec.
+CellInput is now CellValueSpec, and ConditionalFormattingDefinitionInput is ConditionalFormattingSpec.
+There are no aliases. Java callers, reflective tokens, catalog ids/group references, current docs,
+scripts and fuzz source callers were migrated together. Historical CHANGELOG and redesign records
+were preserved. core/VOCABULARY.md documents these delivered conventions. An ArchUnit rule rejects
+Input/Dto/Snapshot/Definition suffixes in canonical model/source/plan packages, with four deliberately
+invalid fixture names detected by the negative control.
+
+Before changing snapshots, captured full catalog output from the prior packaged JAR and compared
+it with the renamed producer: exact structural equality after only reviewed type/group identifier
+substitution (catalog-names-review.json). Counts, field contracts, constraints, defaults, targets
+and operations were unchanged. Six packaged discovery outputs were independently compared with
+mapped prior snapshots. APPEND_ROW's support-id list has two score-tie segments whose qualified-id
+ordering changes with the new names; membership and all other fields stay identical. This is
+existing rank/qualified-id ordering, not a search behavior change. Discovery recording then passed
+both launchers. names-recorded-snapshot-review.json proves each retained snapshot delta:
+
+- discovery/1-help-protocol.json: one text value, updated model/group example names.
+- discovery/2-help-guidance.json: one text value, updated model/group example names.
+- discovery/3-help.json: two guidance/flag description values with current group names.
+- discovery/10-print-protocol-catalog.json: 135 identifier/reference values.
+- discovery/11-print-protocol-catalog.json: 212 identifier/reference values, including the two
+  score-tie support-list reorderings described above.
+- discovery/12-print-protocol-catalog.json: SET_CELL value-shape reference becomes cellValueSpecTypes.
+
+No execution, recipe, malformed-input or error snapshot changed. Golden normalization is unchanged;
+all 141 cases and their value-changing negative control pass in the final full check.
+
+The first focused command also pulled downstream tests through core's aggregate JaCoCo report; use
+explicit test/PMD tasks for focused iterations. It stopped on PMD's non-instantiable fixture namespace
+rule; converted that fixture namespace to an enum. Focused core/JSON/architecture checks then passed.
+Final ./gradlew check passed in 2m47s: core 328, JSON 333, engine 1511, CLI 598, architecture 39;
+no failures, errors or skips. No mutation or active fuzzing ran.
+
+Inventories: authored Input files 83 -> 0, Spec 75, Patch eight (a naming migration, not model deletion);
+reports remain 96; main Java 124461 -> 124513, tests 154570 -> 154573, converter lines 4695 -> 4700
+from wrapping longer names. Engine snapshots 51/definitions 13, Support 217, blank checks 438 remain.
+The external inventory tool now reads Union as well as JsonTypeInfo metadata and tracks Spec/Patch
+families: it reports actual remaining discriminators, not an empty obsolete annotation search.
+Before/after evidence is in wp-23/before and after-names. Baseline diff is empty; supplement absent.
+
+WP-23 remains open: normalize tag fields, unify cell values and reset the wire version to integer 1.
+Other pending WPs, including schema emission, remaining identifier validation, central engine
+refactoring and final campaigns, remain explicit rather than being counted as done here.

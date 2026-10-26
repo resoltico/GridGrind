@@ -5,21 +5,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
-import dev.erst.gridgrind.core.plan.AssertionModeInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
@@ -27,7 +27,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -119,7 +119,7 @@ class WorkbookStaticRequestContractTest {
             new StepId("range"),
             new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:C3")),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.core.model.value.CellGridInput.NumberRows(
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.NumberRows(
                     List.of(List.of(1.0d)))));
 
     WorkbookStaticViolation violation =
@@ -138,7 +138,7 @@ class WorkbookStaticRequestContractTest {
             new StepId("matching"),
             new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:B1")),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.core.model.value.CellGridInput.NumberRows(
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.NumberRows(
                     List.of(List.of(1.0d, 2.0d)))));
     MutationStep firstLargeRange =
         new MutationStep(
@@ -155,13 +155,13 @@ class WorkbookStaticRequestContractTest {
             new StepId("array-formula"),
             new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("C1:C2")),
             new CellMutationAction.SetArrayFormula(
-                new ArrayFormulaInput(TextSourceInput.inline("SUM(A1:A2)"))));
+                new ArrayFormulaSpec(TextSourceSpec.inline("SUM(A1:A2)"))));
     MutationStep styledRange =
         new MutationStep(
             new StepId("styled-range"),
             new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D1:D2")),
             new CellMutationAction.ApplyStyle(
-                new CellStylePatchInput(
+                new CellStylePatch(
                     Optional.of("0.00"),
                     Optional.empty(),
                     Optional.empty(),
@@ -172,7 +172,7 @@ class WorkbookStaticRequestContractTest {
         new MutationStep(
             new StepId("single-cell"),
             new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("E1")),
-            new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d)));
+            new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0d)));
     MutationStep workbookAction =
         new MutationStep(
             new StepId("workbook-action"),
@@ -207,9 +207,9 @@ class WorkbookStaticRequestContractTest {
             Optional.empty(),
             Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
             Optional.of(
-                ExecutionPolicyInput.modeAndCalculation(
-                    ExecutionModeInput.streamingWrite(),
-                    CalculationPolicyInput.strategy(new CalculationStrategyInput.EvaluateAll()))),
+                ExecutionPolicySpec.modeAndCalculation(
+                    ExecutionModeSpec.streamingWrite(),
+                    CalculationPolicySpec.strategy(new CalculationStrategySpec.EvaluateAll()))),
             List.of(
                 new WorkbookStaticStep(0, Optional.empty()),
                 new WorkbookStaticStep(1, Optional.of(appendStep("append"))),
@@ -235,29 +235,29 @@ class WorkbookStaticRequestContractTest {
   @Test
   void ownsEveryOperationModeBranch() {
     assertTrue(
-        CalculationPolicyInput.strategy(new CalculationStrategyInput.ClearCachesOnly())
+        CalculationPolicySpec.strategy(new CalculationStrategySpec.ClearCachesOnly())
             .requiresMutationPrefix());
     assertTrue(
-        CalculationPolicyInput.strategy(
-                new CalculationStrategyInput.EvaluateTargets(
+        CalculationPolicySpec.strategy(
+                new CalculationStrategySpec.EvaluateTargets(
                     List.of(
                         new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
                             new SheetName("Ops"), new CellAddress("A1")))))
             .requiresMutationPrefix());
     assertTrue(
         WorkbookOperationContracts.executionModeViolation(
-                new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)),
-                ExecutionModeInput.fullXssf())
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0)),
+                ExecutionModeSpec.fullXssf())
             .isEmpty());
     assertTrue(
         WorkbookOperationContracts.executionModeViolation(
                 new CellAssertion.CellValue(new CellScalarValue.Text("ready")),
-                ExecutionModeInput.streamingWrite())
+                ExecutionModeSpec.streamingWrite())
             .isEmpty());
     assertTrue(
         WorkbookOperationContracts.executionModeViolation(
                 new CellAssertion.CellValue(new CellScalarValue.Text("ready")),
-                ExecutionModeInput.eventRead())
+                ExecutionModeSpec.eventRead())
             .orElseThrow()
             .contains("unsupported step kind: ASSERTION"));
   }
@@ -270,7 +270,7 @@ class WorkbookStaticRequestContractTest {
             Optional.of(
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
                     "output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT)),
-            Optional.of(ExecutionPolicyInput.defaults()),
+            Optional.of(ExecutionPolicySpec.defaults()),
             List.of());
 
     assertEquals(
@@ -286,7 +286,7 @@ class WorkbookStaticRequestContractTest {
         new WorkbookStaticRequest(
             Optional.of(new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx")),
             Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-            Optional.of(ExecutionPolicyInput.defaults()),
+            Optional.of(ExecutionPolicySpec.defaults()),
             List.of());
 
     assertTrue(WorkbookStaticPersistenceValidation.validate(request).isEmpty());
@@ -298,7 +298,7 @@ class WorkbookStaticRequestContractTest {
         new WorkbookStaticRequest(
             Optional.of(new WorkbookPlan.WorkbookSource.New()),
             Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-            Optional.of(ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT)),
+            Optional.of(ExecutionPolicySpec.assertionMode(AssertionModeSpec.COLLECT)),
             List.of(
                 new WorkbookStaticStep(
                     0,
@@ -323,7 +323,7 @@ class WorkbookStaticRequestContractTest {
         new WorkbookStaticRequest(
             Optional.of(new WorkbookPlan.WorkbookSource.New()),
             Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-            Optional.of(ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT)),
+            Optional.of(ExecutionPolicySpec.assertionMode(AssertionModeSpec.COLLECT)),
             List.of(
                 new WorkbookStaticStep(0, Optional.empty()),
                 new WorkbookStaticStep(
@@ -348,7 +348,8 @@ class WorkbookStaticRequestContractTest {
         new MutationStep(
             new StepId("formula"),
             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-            new CellMutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("1+1"))));
+            new CellMutationAction.SetCell(
+                new CellValueSpec.Formula(TextSourceSpec.inline("1+1"))));
     MutationStep columnEdit =
         new MutationStep(
             new StepId("insert-column"),
@@ -386,7 +387,7 @@ class WorkbookStaticRequestContractTest {
             new StepId("raw-formula"),
             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A2")),
             new CellMutationAction.SetCell(
-                new CellInput.RawFormula(TextSourceInput.inline("RAW_FORMULA()"))));
+                new CellValueSpec.RawFormula(TextSourceSpec.inline("RAW_FORMULA()"))));
     assertEquals(
         List.of("steps[1].action"),
         WorkbookStaticFormulaColumnValidation.validate(
@@ -400,7 +401,7 @@ class WorkbookStaticRequestContractTest {
     return new WorkbookStaticRequest(
         Optional.of(new WorkbookPlan.WorkbookSource.New()),
         Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-        Optional.of(ExecutionPolicyInput.defaults()),
+        Optional.of(ExecutionPolicySpec.defaults()),
         java.util.stream.IntStream.range(0, steps.size())
             .mapToObj(index -> new WorkbookStaticStep(index, Optional.of(steps.get(index))))
             .toList());
@@ -411,6 +412,7 @@ class WorkbookStaticRequestContractTest {
         new StepId(stepId),
         new SheetSelector.ByName(new SheetName("Ops")),
         new CellMutationAction.AppendRow(
-            new CellRowInput.Typed(List.of(new CellInput.Text(TextSourceInput.inline("owner"))))));
+            new CellRowSpec.Typed(
+                List.of(new CellValueSpec.Text(TextSourceSpec.inline("owner"))))));
   }
 }

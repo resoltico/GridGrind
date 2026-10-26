@@ -3,8 +3,8 @@ package dev.erst.gridgrind.core.plan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.List;
@@ -49,15 +49,17 @@ class AssertionTypesTest {
   void expectedCellValueVariantsValidateAndExposeWireShape() {
     assertEquals(
         "source must not be null",
-        assertThrows(IllegalArgumentException.class, () -> new CellInput.Text(null)).getMessage());
+        assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.Text(null))
+            .getMessage());
     assertEquals(
         "number must be finite",
-        assertThrows(IllegalArgumentException.class, () -> new CellInput.NumberValue(Double.NaN))
+        assertThrows(
+                IllegalArgumentException.class, () -> new CellValueSpec.NumberValue(Double.NaN))
             .getMessage());
-    assertEquals(new CellInput.BooleanValue(true), new CellInput.BooleanValue(true));
+    assertEquals(new CellValueSpec.BooleanValue(true), new CellValueSpec.BooleanValue(true));
     assertEquals(
         "error must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> new CellInput.ErrorValue(" "))
+        assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.ErrorValue(" "))
             .getMessage());
     assertEquals(
         "expectedValue must not be null",

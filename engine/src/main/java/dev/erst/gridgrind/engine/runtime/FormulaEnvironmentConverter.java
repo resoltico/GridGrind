@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
-import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionInput;
-import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
 import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
 import dev.erst.gridgrind.excel.ExcelFormulaExternalWorkbookBinding;
 import dev.erst.gridgrind.excel.ExcelFormulaMissingWorkbookPolicy;
@@ -19,7 +19,7 @@ final class FormulaEnvironmentConverter {
   private FormulaEnvironmentConverter() {}
 
   static ExcelFormulaEnvironment toExcelFormulaEnvironment(
-      @Nullable FormulaEnvironmentInput input, ExecutionInputBindings bindings) throws IOException {
+      @Nullable FormulaEnvironmentSpec input, ExecutionInputBindings bindings) throws IOException {
     if (input == null) {
       return ExcelFormulaEnvironment.defaults();
     }
@@ -32,16 +32,16 @@ final class FormulaEnvironmentConverter {
   }
 
   private static List<ExcelFormulaExternalWorkbookBinding> externalWorkbookBindings(
-      FormulaEnvironmentInput input, ExecutionInputBindings bindings) throws IOException {
+      FormulaEnvironmentSpec input, ExecutionInputBindings bindings) throws IOException {
     List<ExcelFormulaExternalWorkbookBinding> bindingsByName = new ArrayList<>();
-    for (FormulaExternalWorkbookInput externalWorkbook : input.externalWorkbooks()) {
+    for (FormulaExternalWorkbookSpec externalWorkbook : input.externalWorkbooks()) {
       bindingsByName.add(toExcelFormulaExternalWorkbookBinding(externalWorkbook, bindings));
     }
     return List.copyOf(bindingsByName);
   }
 
   private static ExcelFormulaExternalWorkbookBinding toExcelFormulaExternalWorkbookBinding(
-      FormulaExternalWorkbookInput input, ExecutionInputBindings bindings) throws IOException {
+      FormulaExternalWorkbookSpec input, ExecutionInputBindings bindings) throws IOException {
     return new ExcelFormulaExternalWorkbookBinding(
         input.workbookName(),
         bindings
@@ -61,13 +61,13 @@ final class FormulaEnvironmentConverter {
     return ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE;
   }
 
-  private static ExcelFormulaUdfToolpack toExcelUdfToolpack(FormulaUdfToolpackInput input) {
+  private static ExcelFormulaUdfToolpack toExcelUdfToolpack(FormulaUdfToolpackSpec input) {
     return new ExcelFormulaUdfToolpack(
         input.name(),
         input.functions().stream().map(FormulaEnvironmentConverter::toExcelUdfFunction).toList());
   }
 
-  private static ExcelFormulaUdfFunction toExcelUdfFunction(FormulaUdfFunctionInput input) {
+  private static ExcelFormulaUdfFunction toExcelUdfFunction(FormulaUdfFunctionSpec input) {
     return new ExcelFormulaUdfFunction(
         input.name(),
         input.minimumArgumentCount(),

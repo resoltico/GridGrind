@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -52,7 +52,7 @@ final class ExecutionActionDiagnosticFields {
     }
     if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable) {
       if (setPivotTable.pivotTable().source()
-          instanceof PivotTableInput.PivotSourceSpec.Range range) {
+          instanceof PivotTableSpec.PivotSourceSpec.Range range) {
         return Optional.of(range.range().value());
       }
       return Optional.empty();
@@ -70,7 +70,7 @@ final class ExecutionActionDiagnosticFields {
   static Optional<String> formulaFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
     if (action instanceof CellMutationAction.SetCell setCell) {
-      return setCell.value() instanceof CellInput.Formula formula
+      return setCell.value() instanceof CellValueSpec.Formula formula
           ? inlineFormula(formula)
           : Optional.empty();
     }
@@ -98,18 +98,18 @@ final class ExecutionActionDiagnosticFields {
     }
     if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable
         && setPivotTable.pivotTable().source()
-            instanceof PivotTableInput.PivotSourceSpec.NamedRange namedRange) {
+            instanceof PivotTableSpec.PivotSourceSpec.NamedRange namedRange) {
       return Optional.of(namedRange.name().value());
     }
     return Optional.empty();
   }
 
-  private static Optional<String> inlineFormula(CellInput.Formula formula) {
+  private static Optional<String> inlineFormula(CellValueSpec.Formula formula) {
     return switch (formula.source()) {
-      case dev.erst.gridgrind.core.source.TextSourceInput.Inline inline ->
+      case dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline ->
           Optional.of(inline.text());
-      case dev.erst.gridgrind.core.source.TextSourceInput.Utf8File _ -> Optional.empty();
-      case dev.erst.gridgrind.core.source.TextSourceInput.StandardInput _ -> Optional.empty();
+      case dev.erst.gridgrind.core.source.TextSourceSpec.Utf8File _ -> Optional.empty();
+      case dev.erst.gridgrind.core.source.TextSourceSpec.Stdin _ -> Optional.empty();
     };
   }
 }

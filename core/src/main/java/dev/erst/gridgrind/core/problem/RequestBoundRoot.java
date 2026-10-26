@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.problem;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
@@ -14,8 +14,8 @@ public record RequestBoundRoot(
     Optional<PlanId> planId,
     Optional<WorkbookPlan.WorkbookSource> source,
     Optional<WorkbookPlan.WorkbookPersistence> persistence,
-    Optional<ExecutionPolicyInput> execution,
-    Optional<FormulaEnvironmentInput> formulaEnvironment) {
+    Optional<ExecutionPolicySpec> execution,
+    Optional<FormulaEnvironmentSpec> formulaEnvironment) {
   public RequestBoundRoot {
     protocolVersion = copy(protocolVersion, "protocolVersion");
     planId = copy(planId, "planId");

@@ -3,9 +3,9 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport.*;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
@@ -21,9 +21,9 @@ import java.util.*;
 final class OperationSequenceTabularValues {
   private OperationSequenceTabularValues() {}
 
-  static TableInput nextTableInput(
+  static TableSpec nextTableInput(
       GridGrindFuzzData data, String sheetName, String tableName, boolean validRange) {
-    return TableInput.withDefaultMetadata(
+    return TableSpec.withDefaultMetadata(
         new TableName(tableName),
         new SheetName(sheetName),
         new dev.erst.gridgrind.core.vocabulary.RangeRef(
@@ -42,11 +42,11 @@ final class OperationSequenceTabularValues {
         nextExcelTableStyle(data));
   }
 
-  static TableStyleInput nextTableStyleInput(GridGrindFuzzData data) {
+  static TableStyleSpec nextTableStyleInput(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new TableStyleInput.None();
+      case 0 -> new TableStyleSpec.None();
       default ->
-          new TableStyleInput.Named(
+          new TableStyleSpec.Named(
               data.consumeBoolean() ? "TableStyleMedium2" : "TableStyleLight9",
               data.consumeBoolean(),
               data.consumeBoolean(),
@@ -101,7 +101,7 @@ final class OperationSequenceTabularValues {
     };
   }
 
-  static PivotTableInput nextPivotTableInput(
+  static PivotTableSpec nextPivotTableInput(
       GridGrindFuzzData data,
       String targetSheet,
       String pivotTableName,
@@ -109,25 +109,25 @@ final class OperationSequenceTabularValues {
       String tableName,
       boolean validName,
       boolean validRange) {
-    return new PivotTableInput(
+    return new PivotTableSpec(
         validName ? pivotTableName : nextPivotTableName(data, false),
         new SheetName(targetSheet),
         nextPivotTableSource(data, targetSheet, namedRangeName, tableName, validName, validRange),
-        new PivotTableInput.Anchor(
+        new PivotTableSpec.Anchor(
             new dev.erst.gridgrind.core.vocabulary.CellAddress(
                 data.consumeBoolean() ? "F4" : "A6")),
         List.of("Month"),
         List.of(),
         List.of(),
         List.of(
-            new PivotTableInput.DataField(
+            new PivotTableSpec.DataField(
                 "Actual",
                 ExcelPivotDataConsolidateFunction.SUM,
                 "Total Actual",
                 Optional.empty())));
   }
 
-  static PivotTableInput.PivotSourceSpec nextPivotTableSource(
+  static PivotTableSpec.PivotSourceSpec nextPivotTableSource(
       GridGrindFuzzData data,
       String targetSheet,
       String namedRangeName,
@@ -136,16 +136,16 @@ final class OperationSequenceTabularValues {
       boolean validRange) {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
       case 0 ->
-          new PivotTableInput.PivotSourceSpec.Range(
+          new PivotTableSpec.PivotSourceSpec.Range(
               new SheetName(targetSheet),
               new dev.erst.gridgrind.core.vocabulary.RangeRef(
                   validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false)));
       case 1 ->
-          new PivotTableInput.PivotSourceSpec.NamedRange(
+          new PivotTableSpec.PivotSourceSpec.NamedRange(
               new dev.erst.gridgrind.core.vocabulary.DefinedName(
                   validName ? namedRangeName : nextNamedRangeName(data, false)));
       default ->
-          new PivotTableInput.PivotSourceSpec.Table(
+          new PivotTableSpec.PivotSourceSpec.Table(
               new dev.erst.gridgrind.core.vocabulary.TableName(
                   validName ? tableName : nextTableName(data, false, targetSheet)));
     };

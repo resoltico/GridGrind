@@ -276,7 +276,7 @@ verify_interactive_noarg_failure "${noargs_stdout_path}" "${interactive_launcher
 "${launcher[@]}" --print-protocol-catalog --lookup assertionTypes | tr -d '\r' > "${assertion_types_path}"
 "${launcher[@]}" --print-protocol-catalog --lookup inspectionQueryTypes | tr -d '\r' > "${inspection_query_types_path}"
 "${launcher[@]}" --print-protocol-catalog --lookup nestedTypes:executionModeTypes | tr -d '\r' > "${execution_mode_types_path}"
-"${launcher[@]}" --print-protocol-catalog --lookup plainTypes:executionPolicyInputType | tr -d '\r' > "${execution_policy_input_type_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup plainTypes:executionPolicySpecType | tr -d '\r' > "${execution_policy_input_type_path}"
 "${launcher[@]}" --print-recipe-catalog | tr -d '\r' > "${recipe_catalog_path}"
 "${launcher[@]}" --print-recipe-catalog --lookup BUDGET | tr -d '\r' > "${example_recipe_catalog_detail_path}"
 "${launcher[@]}" --print-recipe-catalog --lookup TABULAR_REPORT | tr -d '\r' > "${task_recipe_catalog_detail_path}"
@@ -424,8 +424,8 @@ for required_group in ("mutationActionTypes", "assertionTypes", "inspectionQuery
         die(f"protocol catalog index no longer advertises top-level group {required_group}")
 if "executionModeTypes" not in nested_type_groups:
     die("protocol catalog index no longer advertises nestedTypes:executionModeTypes")
-if "executionPolicyInputType" not in plain_type_groups:
-    die("protocol catalog index no longer advertises plainTypes:executionPolicyInputType")
+if "executionPolicySpecType" not in plain_type_groups:
+    die("protocol catalog index no longer advertises plainTypes:executionPolicySpecType")
 if "<topLevelGroup>:<id>" not in lookup_namespaces:
     die("protocol catalog index no longer publishes the top-level lookup namespace")
 if "nestedTypes:<group>" not in lookup_namespaces:
@@ -435,9 +435,9 @@ if "plainTypes:<group>" not in lookup_namespaces:
 
 execution_policy_summary = execution_policy_input_type["summary"]
 if "execution.journal" not in execution_policy_summary:
-    die("catalog executionPolicyInputType summary no longer advertises execution.journal")
+    die("catalog executionPolicySpecType summary no longer advertises execution.journal")
 if "execution.calculation" not in execution_policy_summary:
-    die("catalog executionPolicyInputType summary no longer advertises execution.calculation")
+    die("catalog executionPolicySpecType summary no longer advertises execution.calculation")
 
 for required_mode in ("FULL_XSSF", "EVENT_READ", "STREAMING_WRITE"):
     if required_mode not in execution_mode_types:

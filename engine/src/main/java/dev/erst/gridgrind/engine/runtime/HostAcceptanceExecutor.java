@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
@@ -82,7 +82,7 @@ final class HostAcceptanceExecutor {
                     assertion,
                     workbook,
                     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null"),
-                    new ExecutionModeInput.FullXssf()));
+                    new ExecutionModeSpec.FullXssf()));
           }
         }
         case GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts facts ->
@@ -207,7 +207,7 @@ final class HostAcceptanceExecutor {
     for (var inspection : inspections) {
       results.add(
           stepSupport.executeInspectionStep(
-              inspection, workbook, workbookLocation, new ExecutionModeInput.FullXssf()));
+              inspection, workbook, workbookLocation, new ExecutionModeSpec.FullXssf()));
     }
     return List.copyOf(results);
   }

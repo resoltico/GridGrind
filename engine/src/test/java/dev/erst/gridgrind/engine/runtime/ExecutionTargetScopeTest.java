@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
@@ -61,7 +61,7 @@ class ExecutionTargetScopeTest {
             new TableRowSelector.ByKeyCell(
                 new TableSelector.ByNameOnSheet(new TableName("Ledger"), new SheetName("Budget")),
                 "Owner",
-                new CellInput.Blank()),
+                new CellValueSpec.Blank()),
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByIndex(
                     new TableSelector.ByNameOnSheet(

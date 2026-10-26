@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
@@ -76,9 +76,9 @@ final class ExecutionStepSupport {
       InspectionStep inspectionStep,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      ExecutionModeInput executionMode)
+      ExecutionModeSpec executionMode)
       throws IOException {
-    if (!(executionMode instanceof ExecutionModeInput.EventRead)) {
+    if (!(executionMode instanceof ExecutionModeSpec.EventRead)) {
       return executeFullInspectionStep(inspectionStep, workbook, workbookLocation);
     }
     return executeEventInspectionAgainstWorkbook(inspectionStep, workbook);
@@ -88,9 +88,9 @@ final class ExecutionStepSupport {
       AssertionStep assertionStep,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      ExecutionModeInput executionMode)
+      ExecutionModeSpec executionMode)
       throws IOException, AssertionFailedException {
-    if (!(executionMode instanceof ExecutionModeInput.EventRead)) {
+    if (!(executionMode instanceof ExecutionModeSpec.EventRead)) {
       return assertionExecutor.execute(assertionStep, workbook, workbookLocation);
     }
     throw new IllegalStateException(
@@ -101,9 +101,9 @@ final class ExecutionStepSupport {
       AssertionStep assertionStep,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      ExecutionModeInput executionMode)
+      ExecutionModeSpec executionMode)
       throws IOException {
-    if (!(executionMode instanceof ExecutionModeInput.EventRead)) {
+    if (!(executionMode instanceof ExecutionModeSpec.EventRead)) {
       return assertionExecutor.executeCollecting(assertionStep, workbook, workbookLocation);
     }
     throw new IllegalStateException(
@@ -113,10 +113,10 @@ final class ExecutionStepSupport {
   InspectionResult executeInspectionAgainstMaterializedPath(
       InspectionStep inspectionStep,
       WorkbookLocation workbookLocation,
-      ExecutionModeInput executionMode,
+      ExecutionModeSpec executionMode,
       Path materializedPath)
       throws IOException {
-    if (!(executionMode instanceof ExecutionModeInput.EventRead)) {
+    if (!(executionMode instanceof ExecutionModeSpec.EventRead)) {
       return executeFullInspectionAgainstMaterializedPath(
           inspectionStep, workbookLocation, materializedPath);
     }
@@ -166,7 +166,7 @@ final class ExecutionStepSupport {
       ExcelStreamingWorkbookWriter writer,
       InspectionStep inspectionStep,
       WorkbookLocation workbookLocation,
-      ExecutionModeInput executionMode)
+      ExecutionModeSpec executionMode)
       throws IOException {
     Path tempPath =
         ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(

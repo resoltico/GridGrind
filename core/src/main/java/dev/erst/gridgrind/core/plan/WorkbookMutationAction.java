@@ -3,11 +3,11 @@ package dev.erst.gridgrind.core.plan;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.metadata.WireDefault;
-import dev.erst.gridgrind.core.model.layout.PaneInput;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -151,7 +151,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Enable workbook-level protection and optional password hashes.",
       targetSelectors = {WorkbookSelector.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetWorkbookProtection(WorkbookProtectionInput protection)
+  record SetWorkbookProtection(WorkbookProtectionSpec protection)
       implements WorkbookMutationAction {
     public SetWorkbookProtection {
       Objects.requireNonNull(protection, "protection must not be null");
@@ -356,7 +356,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Apply one explicit pane state to a sheet.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetSheetPane(PaneInput pane) implements WorkbookMutationAction {
+  record SetSheetPane(PaneSpec pane) implements WorkbookMutationAction {
     public SetSheetPane {
       Objects.requireNonNull(pane, "pane must not be null");
     }
@@ -380,7 +380,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Apply supported sheet-presentation state such as display flags and defaults.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetSheetPresentation(SheetPresentationInput presentation)
+  record SetSheetPresentation(SheetPresentationSpec presentation)
       implements WorkbookMutationAction {
     public SetSheetPresentation {
       Objects.requireNonNull(presentation, "presentation must not be null");
@@ -393,7 +393,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       summary = "Apply supported print-layout state to a sheet.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
-  record SetPrintLayout(PrintLayoutInput printLayout) implements WorkbookMutationAction {
+  record SetPrintLayout(PrintLayoutSpec printLayout) implements WorkbookMutationAction {
     public SetPrintLayout {
       Objects.requireNonNull(printLayout, "printLayout must not be null");
     }

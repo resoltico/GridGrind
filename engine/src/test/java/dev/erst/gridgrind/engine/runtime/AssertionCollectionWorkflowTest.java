@@ -10,17 +10,17 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.textCell
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
-import dev.erst.gridgrind.core.plan.AssertionModeInput;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionOutcome;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -44,7 +44,7 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT),
+                    ExecutionPolicySpec.assertionMode(AssertionModeSpec.COLLECT),
                     null,
                     mutations(
                         mutate(
@@ -100,11 +100,11 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    new ExecutionPolicyInput(
-                        ExecutionModeInput.streamingWrite(),
-                        ExecutionJournalInput.defaults(),
-                        CalculationPolicyInput.defaults(),
-                        AssertionModeInput.COLLECT),
+                    new ExecutionPolicySpec(
+                        ExecutionModeSpec.streamingWrite(),
+                        ExecutionJournalSpec.defaults(),
+                        CalculationPolicySpec.defaults(),
+                        AssertionModeSpec.COLLECT),
                     null,
                     mutations(
                         mutate(
@@ -113,7 +113,7 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                         mutate(
                             new SheetSelector.ByName(new SheetName("Stream")),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                     List.of(textCell("Owner"), textCell("Ada")))))),
                     assertions(
                         assertThat(

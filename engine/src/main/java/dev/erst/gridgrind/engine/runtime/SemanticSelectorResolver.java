@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -204,7 +204,7 @@ final class SemanticSelectorResolver {
   }
 
   static boolean matchesKeyCell(
-      ExcelCellSnapshot snapshot, CellInput expectedValue, boolean date1904) {
+      ExcelCellSnapshot snapshot, CellValueSpec expectedValue, boolean date1904) {
     return SemanticSelectorKeyMatchSupport.matchesKeyCell(snapshot, expectedValue, date1904);
   }
 

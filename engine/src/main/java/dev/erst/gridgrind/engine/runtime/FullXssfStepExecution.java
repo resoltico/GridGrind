@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.plan.AssertionModeInput;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
@@ -31,8 +31,8 @@ final class FullXssfStepExecution {
   java.util.Optional<AssertionFailedException> execute(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      ExecutionModeInput executionMode,
-      AssertionModeInput assertionMode,
+      ExecutionModeSpec executionMode,
+      AssertionModeSpec assertionMode,
       List<AssertionResult> assertions,
       List<InspectionResult> inspections,
       WorkbookStep step,
@@ -51,7 +51,7 @@ final class FullXssfStepExecution {
         yield java.util.Optional.empty();
       }
       case AssertionStep assertionStep -> {
-        if (assertionMode == AssertionModeInput.FAIL_FAST) {
+        if (assertionMode == AssertionModeSpec.FAIL_FAST) {
           assertions.add(
               stepSupport.executeAssertionStep(
                   assertionStep, workbook, workbookLocation, executionMode));

@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Test;
 class RuntimeShapeTextResolutionTest {
   @Test
   void sourceBackedStructuredResolutionBindsShapeTextFromStandardInput() throws Exception {
-    ShapeInput.SimpleShape shape =
-        new ShapeInput.SimpleShape(
-            "Queue Banner", anchor(), "rect", Optional.of(TextSourceInput.standardInput()));
+    ShapeSpec.SimpleShape shape =
+        new ShapeSpec.SimpleShape(
+            "Queue Banner", anchor(), "rect", Optional.of(TextSourceSpec.standardInput()));
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             Path.of("tmp", "runtime-residual-shape"),
@@ -30,34 +30,34 @@ class RuntimeShapeTextResolutionTest {
             "Queue ready".getBytes(StandardCharsets.UTF_8),
             ExecutionGrantTestSupport.noPublicationWithStandardInput(List.of()));
 
-    ShapeInput resolved = SourceBackedStructuredInputResolver.resolveShape(shape, bindings);
-    ShapeInput connector = new ShapeInput.Connector("Connector", anchor());
-    ShapeInput unresolvedConnector =
+    ShapeSpec resolved = SourceBackedStructuredInputResolver.resolveShape(shape, bindings);
+    ShapeSpec connector = new ShapeSpec.Connector("Connector", anchor());
+    ShapeSpec unresolvedConnector =
         SourceBackedStructuredInputResolver.resolveShape(connector, bindings);
-    ShapeInput unchangedShape =
-        new ShapeInput.SimpleShape(
-            "Inline Banner", anchor(), "rect", Optional.of(TextSourceInput.inline("Ready")));
-    ShapeInput unresolvedShape =
+    ShapeSpec unchangedShape =
+        new ShapeSpec.SimpleShape(
+            "Inline Banner", anchor(), "rect", Optional.of(TextSourceSpec.inline("Ready")));
+    ShapeSpec unresolvedShape =
         SourceBackedStructuredInputResolver.resolveShape(unchangedShape, bindings);
-    ShapeInput noTextShape =
-        new ShapeInput.SimpleShape("Silent Banner", anchor(), "rect", Optional.empty());
-    ShapeInput unresolvedNoTextShape =
+    ShapeSpec noTextShape =
+        new ShapeSpec.SimpleShape("Silent Banner", anchor(), "rect", Optional.empty());
+    ShapeSpec unresolvedNoTextShape =
         SourceBackedStructuredInputResolver.resolveShape(noTextShape, bindings);
 
-    assertInstanceOf(ShapeInput.SimpleShape.class, resolved);
+    assertInstanceOf(ShapeSpec.SimpleShape.class, resolved);
     assertNotSame(shape, resolved);
     assertEquals(
-        Optional.of(TextSourceInput.inline("Queue ready")),
-        ((ShapeInput.SimpleShape) resolved).text());
+        Optional.of(TextSourceSpec.inline("Queue ready")),
+        ((ShapeSpec.SimpleShape) resolved).text());
     assertEquals(connector, unresolvedConnector);
     assertSame(unchangedShape, unresolvedShape);
     assertSame(noTextShape, unresolvedNoTextShape);
   }
 
-  private static DrawingAnchorInput.TwoCell anchor() {
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(0, 0),
-        new DrawingMarkerInput(2, 2),
+  private static DrawingAnchorSpec.TwoCell anchor() {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(0, 0),
+        new DrawingMarkerSpec(2, 2),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 }

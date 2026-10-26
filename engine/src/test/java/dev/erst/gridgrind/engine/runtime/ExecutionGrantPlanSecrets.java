@@ -14,7 +14,7 @@ final class ExecutionGrantPlanSecrets {
     if (plan.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile) {
       existingFile
           .security()
-          .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
+          .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec::passwordRef)
           .ifPresent(references::add);
     }
     persistenceSecurity(plan.persistence()).ifPresent(security -> add(security, references));
@@ -22,7 +22,7 @@ final class ExecutionGrantPlanSecrets {
   }
 
   private static java.util.Optional<
-          dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput>
+          dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
       persistenceSecurity(WorkbookPlan.WorkbookPersistence persistence) {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
@@ -32,16 +32,15 @@ final class ExecutionGrantPlanSecrets {
   }
 
   private static void add(
-      dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput security,
+      dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec security,
       List<SecretReference> references) {
     if (security.encryption()
         instanceof
-        dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.Encrypt encrypt) {
+        dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.Encrypt encrypt) {
       references.add(encrypt.encryption().passwordRef());
     }
     if (security.signature()
-        instanceof
-        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.Sign sign) {
+        instanceof dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.Sign sign) {
       references.add(sign.signature().keystorePasswordRef());
       sign.signature().keyPasswordRef().ifPresent(references::add);
     }

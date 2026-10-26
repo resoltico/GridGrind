@@ -2,8 +2,8 @@ package dev.erst.gridgrind.core.validation;
 
 import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
@@ -23,12 +23,12 @@ final class WorkbookStaticExecutionValidation {
     if (request.execution().isEmpty()) {
       return List.of();
     }
-    ExecutionPolicyInput execution = request.execution().orElseThrow();
+    ExecutionPolicySpec execution = request.execution().orElseThrow();
     List<WorkbookStaticViolation> violations = new ArrayList<>();
     addCalculationOrderingViolation(violations, request.steps(), execution);
-    if (execution.mode() instanceof ExecutionModeInput.EventRead) {
+    if (execution.mode() instanceof ExecutionModeSpec.EventRead) {
       addEventReadViolations(violations, request.steps(), execution);
-    } else if (execution.mode() instanceof ExecutionModeInput.StreamingWrite) {
+    } else if (execution.mode() instanceof ExecutionModeSpec.StreamingWrite) {
       WorkbookStaticStreamingValidation.add(violations, request, execution);
     }
     return List.copyOf(violations);
@@ -37,7 +37,7 @@ final class WorkbookStaticExecutionValidation {
   private static void addCalculationOrderingViolation(
       List<WorkbookStaticViolation> violations,
       List<WorkbookStaticStep> steps,
-      ExecutionPolicyInput execution) {
+      ExecutionPolicySpec execution) {
     if (!execution.calculation().requiresMutationPrefix()) {
       return;
     }
@@ -66,7 +66,7 @@ final class WorkbookStaticExecutionValidation {
   private static void addEventReadViolations(
       List<WorkbookStaticViolation> violations,
       List<WorkbookStaticStep> steps,
-      ExecutionPolicyInput execution) {
+      ExecutionPolicySpec execution) {
     if (!execution.calculation().allowsEventRead()) {
       violations.add(
           new WorkbookStaticViolation("execution.mode", EVENT_READ.calculationFailureMessage()));
@@ -80,7 +80,7 @@ final class WorkbookStaticExecutionValidation {
   }
 
   private static Optional<String> executionModeViolation(
-      WorkbookStep step, ExecutionModeInput executionMode) {
+      WorkbookStep step, ExecutionModeSpec executionMode) {
     return switch (step) {
       case MutationStep mutation ->
           WorkbookOperationContracts.executionModeViolation(mutation.action(), executionMode);

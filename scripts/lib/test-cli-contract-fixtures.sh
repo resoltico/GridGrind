@@ -79,7 +79,7 @@ load_test_cli_contract_fixtures() {
         java -jar "${jar_path}" --print-protocol-catalog --lookup nestedTypes:executionModeTypes | tr -d '\r'
     )"
     success_execution_policy_input_type="$(
-        java -jar "${jar_path}" --print-protocol-catalog --lookup plainTypes:executionPolicyInputType | tr -d '\r'
+        java -jar "${jar_path}" --print-protocol-catalog --lookup plainTypes:executionPolicySpecType | tr -d '\r'
     )"
     success_recipe_catalog="$(
         java -jar "${jar_path}" --print-recipe-catalog | tr -d '\r'

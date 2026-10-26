@@ -3,9 +3,9 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -32,8 +32,8 @@ class ExecutionDirectEventReadWorkflowTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile(source.getFileName().toString()),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(new ExecutionModeInput.EventRead()),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.mode(new ExecutionModeSpec.EventRead()),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     ExecutionInputBindings rawBindings =
         new ExecutionInputBindings(

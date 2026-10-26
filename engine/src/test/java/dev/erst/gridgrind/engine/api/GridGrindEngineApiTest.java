@@ -128,7 +128,7 @@ class GridGrindEngineApiTest {
     SecretReference reference = new SecretReference("provider-password");
     GridGrindExecutionGrant.Bounded grant =
         new GridGrindExecutionGrant.Bounded(
-            List.of(new GridGrindExecutionGrant.ReadAuthority.StandardInput()),
+            List.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()),
             List.of("SET_CELL"),
             new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
             new GridGrindExecutionGrant.PublicationAuthority.None(),
@@ -156,8 +156,8 @@ class GridGrindEngineApiTest {
                 WorkbookPlan.standard(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-                    dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                    dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+                    dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
                     List.of()),
                 secretOnly));
   }

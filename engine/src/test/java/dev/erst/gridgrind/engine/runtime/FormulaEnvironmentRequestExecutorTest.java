@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionInput;
-import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
@@ -49,9 +49,9 @@ class FormulaEnvironmentRequestExecutorTest {
                         scenario.workbookPath().toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
                     executionPolicy(requireEvaluation()),
-                    new FormulaEnvironmentInput(
+                    new FormulaEnvironmentSpec(
                         List.of(
-                            new FormulaExternalWorkbookInput(
+                            new FormulaExternalWorkbookSpec(
                                 "referenced.xlsx", scenario.referencedWorkbookPath().toString())),
                         FormulaMissingWorkbookPolicy.ERROR,
                         List.of()),
@@ -91,7 +91,7 @@ class FormulaEnvironmentRequestExecutorTest {
                         scenario.workbookPath().toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
                     executionPolicy(calculateAll()),
-                    new FormulaEnvironmentInput(
+                    new FormulaEnvironmentSpec(
                         List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()),
                     List.of(),
                     List.of(
@@ -128,13 +128,13 @@ class FormulaEnvironmentRequestExecutorTest {
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
                     executionPolicy(calculateAll()),
-                    new FormulaEnvironmentInput(
+                    new FormulaEnvironmentSpec(
                         List.of(),
                         FormulaMissingWorkbookPolicy.ERROR,
                         List.of(
-                            new FormulaUdfToolpackInput(
+                            new FormulaUdfToolpackSpec(
                                 "math",
-                                List.of(new FormulaUdfFunctionInput("DOUBLE", 1, 1, "ARG1*2"))))),
+                                List.of(new FormulaUdfFunctionSpec("DOUBLE", 1, 1, "ARG1*2"))))),
                     List.of(),
                     List.of(
                         inspect(
@@ -206,7 +206,7 @@ class FormulaEnvironmentRequestExecutorTest {
                         mutate(
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
-                            new CellMutationAction.SetCell(new CellInput.NumberValue(2.0d))),
+                            new CellMutationAction.SetCell(new CellValueSpec.NumberValue(2.0d))),
                         mutate(
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("B1")),
@@ -218,7 +218,7 @@ class FormulaEnvironmentRequestExecutorTest {
                         mutate(
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
-                            new CellMutationAction.SetCell(new CellInput.NumberValue(4.0d)))),
+                            new CellMutationAction.SetCell(new CellValueSpec.NumberValue(4.0d)))),
                     inspections())));
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
@@ -249,7 +249,7 @@ class FormulaEnvironmentRequestExecutorTest {
                         mutate(
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
-                            new CellMutationAction.SetCell(new CellInput.NumberValue(2.0d))),
+                            new CellMutationAction.SetCell(new CellValueSpec.NumberValue(2.0d))),
                         mutate(
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("B1")),
@@ -269,8 +269,7 @@ class FormulaEnvironmentRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
-                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
-                            .none()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
                     executionPolicy(clearFormulaCaches()),
                     null,
                     List.of(),

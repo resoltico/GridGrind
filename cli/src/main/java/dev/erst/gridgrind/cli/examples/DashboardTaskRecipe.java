@@ -181,7 +181,7 @@ final class DashboardTaskRecipe {
             new StepId("author-dashboard-chart"),
             ExampleSelectors.sheet("Ops"),
             new DrawingMutationAction.SetChart(
-                ExampleChartInputs.clusteredColumnComparisonChart(
+                ExampleChartSpecs.clusteredColumnComparisonChart(
                     "DashboardChart",
                     ExampleDrawingAnchors.anchor(4, 0, 8, 12),
                     "Operations Dashboard",

@@ -608,7 +608,7 @@ supported presentation payload explicitly.
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `display` | Yes | Screen-view flags. Supply all nested fields explicitly. |
-| `tabColor` | No | Tab color using the normal `ColorInput` contract. Omit to clear the tab color. |
+| `tabColor` | No | Tab color using the normal `ColorSpec` contract. Omit to clear the tab color. |
 | `outlineSummary` | Yes | `rowSumsBelow` and `rowSumsRight`. Supply both values explicitly. |
 | `sheetDefaults` | Yes | Sheet-wide fallback sizing for rows and columns without explicit overrides. Supply both values explicitly. |
 | `ignoredErrors` | No | Authoritative list of ignored-error blocks. Omit or pass `[]` to clear all ignored-error suppression. |

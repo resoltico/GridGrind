@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,9 +27,9 @@ class GridGrindExecutionModeMetadataTest {
             IllegalArgumentException.class,
             () ->
                 new GridGrindExecutionModeMetadata.EventReadMode(
-                    ExecutionModeInput.EventRead.class,
+                    ExecutionModeSpec.EventRead.class,
                     List.of(),
-                    CalculationStrategyInput.DoNotCalculate.class,
+                    CalculationStrategySpec.DoNotCalculate.class,
                     false));
 
     assertEquals("allowedQueries must not be empty", failure.getMessage());
@@ -42,10 +42,10 @@ class GridGrindExecutionModeMetadataTest {
             IllegalArgumentException.class,
             () ->
                 new GridGrindExecutionModeMetadata.StreamingWriteMode(
-                    ExecutionModeInput.StreamingWrite.class,
+                    ExecutionModeSpec.StreamingWrite.class,
                     WorkbookPlan.WorkbookSource.New.class,
                     List.of(),
-                    CalculationStrategyInput.DoNotCalculate.class,
+                    CalculationStrategySpec.DoNotCalculate.class,
                     true));
 
     assertEquals("allowedActions must not be empty", failure.getMessage());

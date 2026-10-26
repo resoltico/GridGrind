@@ -52,7 +52,7 @@ final class ExecutionGrantValidator {
     if (request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile) {
       existingFile
           .security()
-          .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
+          .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec::passwordRef)
           .ifPresent(references::add);
     }
     switch (request.persistence()) {
@@ -80,24 +80,23 @@ final class ExecutionGrantValidator {
   }
 
   private static void addPersistenceSecrets(
-      java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput>
+      java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
           security,
       List<SecretReference> references) {
     security.ifPresent(
         value -> {
           switch (value.encryption()) {
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.None _ -> {}
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.None _ -> {}
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec
                         .PreserveSource
                     _ -> {}
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.Encrypt
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.Encrypt
                     encrypt ->
                 references.add(encrypt.encryption().passwordRef());
           }
           switch (value.signature()) {
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.None _ -> {}
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.Sign
-                    sign -> {
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.None _ -> {}
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.Sign sign -> {
               references.add(sign.signature().keystorePasswordRef());
               sign.signature().keyPasswordRef().ifPresent(references::add);
             }

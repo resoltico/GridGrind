@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.authoring;
 
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
@@ -62,10 +62,10 @@ public final class Tables {
     return new Definition(name, sheetName, range, totalsRowShown, style);
   }
 
-  static TableInput toTableInput(Definition definition) {
+  static TableSpec toTableInput(Definition definition) {
     Definition nonNullDefinition =
         Objects.requireNonNull(definition, "definition must not be null");
-    return TableInput.withDefaultMetadata(
+    return TableSpec.withDefaultMetadata(
         nonNullDefinition.name(),
         nonNullDefinition.sheetName(),
         nonNullDefinition.range(),
@@ -73,11 +73,11 @@ public final class Tables {
         toTableStyleInput(nonNullDefinition.style()));
   }
 
-  private static TableStyleInput toTableStyleInput(Style style) {
+  private static TableStyleSpec toTableStyleInput(Style style) {
     return switch (Objects.requireNonNull(style, "style must not be null")) {
-      case NoStyle _ -> new TableStyleInput.None();
+      case NoStyle _ -> new TableStyleSpec.None();
       case NamedStyle named ->
-          new TableStyleInput.Named(
+          new TableStyleSpec.Named(
               named.name(),
               named.showFirstColumn(),
               named.showLastColumn(),

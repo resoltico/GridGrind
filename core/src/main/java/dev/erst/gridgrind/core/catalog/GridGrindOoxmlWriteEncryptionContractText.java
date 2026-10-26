@@ -8,7 +8,7 @@ import java.util.Arrays;
 public final class GridGrindOoxmlWriteEncryptionContractText {
   private GridGrindOoxmlWriteEncryptionContractText() {}
 
-  /** One stable catalog summary for `OoxmlEncryptionInput`. */
+  /** One stable catalog summary for `OoxmlEncryptionSpec`. */
   public static String inputSummary() { // LIM-038
     return "OOXML package-encryption settings for workbook persistence."
         + " GridGrind writes AGILE packages only."

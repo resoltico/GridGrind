@@ -21,7 +21,7 @@ import dev.erst.gridgrind.core.model.value.CellTemporalKind;
 import dev.erst.gridgrind.core.model.value.CellTemporalReport;
 import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -256,39 +256,41 @@ class ReadbackSupportCoverageTest {
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             textSnapshot,
-            new dev.erst.gridgrind.core.model.value.CellInput.Text(TextSourceInput.inline("Ada")),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.Text(
+                TextSourceSpec.inline("Ada")),
             false));
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             numberSnapshot,
-            new dev.erst.gridgrind.core.model.value.CellInput.NumberValue(42.0d),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(42.0d),
             false));
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             booleanSnapshot,
-            new dev.erst.gridgrind.core.model.value.CellInput.BooleanValue(true),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.BooleanValue(true),
             false));
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             formulaSnapshot,
-            new dev.erst.gridgrind.core.model.value.CellInput.Formula(
-                TextSourceInput.inline("SUM(A1:A2)")),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.Formula(
+                TextSourceSpec.inline("SUM(A1:A2)")),
             false));
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
-            blankSnapshot, new dev.erst.gridgrind.core.model.value.CellInput.Blank(), false));
+            blankSnapshot, new dev.erst.gridgrind.core.model.value.CellValueSpec.Blank(), false));
     assertFalse(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             textSnapshot,
-            new dev.erst.gridgrind.core.model.value.CellInput.Text(TextSourceInput.inline("Grace")),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.Text(
+                TextSourceSpec.inline("Grace")),
             false));
     assertThrows(
         IllegalStateException.class,
         () ->
             SemanticSelectorKeyMatchSupport.matchesKeyCell(
                 textSnapshot,
-                new dev.erst.gridgrind.core.model.value.CellInput.Text(
-                    TextSourceInput.standardInput()),
+                new dev.erst.gridgrind.core.model.value.CellValueSpec.Text(
+                    TextSourceSpec.standardInput()),
                 false));
   }
 

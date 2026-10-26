@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
@@ -41,8 +41,8 @@ final class FullXssfHostAcceptance {
       return Optional.empty();
     }
     var policy =
-        new CalculationPolicyInput(
-            new CalculationStrategyInput.RequireEvaluation(),
+        new CalculationPolicySpec(
+            new CalculationStrategySpec.RequireEvaluation(),
             state.executionContext().request().calculationPolicy().markRecalculateOnOpen());
     ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
         calculationSupport.executeCalculationPolicy(

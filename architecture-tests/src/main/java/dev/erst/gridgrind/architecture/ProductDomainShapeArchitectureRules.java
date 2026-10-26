@@ -15,6 +15,26 @@ import java.util.stream.Stream;
 /** Defines bytecode rules for GridGrind's closed domain-union implementation shape. */
 enum ProductDomainShapeArchitectureRules {
   ;
+
+  static ArchRule canonicalModelNamesDescribeTheirRole() {
+    return classes()
+        .that()
+        .resideInAnyPackage(
+            "dev.erst.gridgrind.core.model..",
+            "dev.erst.gridgrind.core.source..",
+            "dev.erst.gridgrind.core.plan..")
+        .should()
+        .haveSimpleNameNotEndingWith("Input")
+        .andShould()
+        .haveSimpleNameNotEndingWith("Dto")
+        .andShould()
+        .haveSimpleNameNotEndingWith("Snapshot")
+        .andShould()
+        .haveSimpleNameNotEndingWith("Definition")
+        .because(
+            "canonical model names express authored specifications, patches or observed reports");
+  }
+
   private static final DescribedPredicate<JavaClass> SEALED_INTERFACES =
       new DescribedPredicate<>("sealed interfaces") {
         @Override

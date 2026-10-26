@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.value.CellGridInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
@@ -19,19 +19,19 @@ import java.util.Optional;
 final class FuzzValueDecoders {
   private FuzzValueDecoders() {}
 
-  static CellInput nextCellInput(GridGrindFuzzData data) {
+  static CellValueSpec nextCellInput(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     return switch (data.consumeInt(0, 7)) {
-      case 0 -> new CellInput.Blank();
-      case 1 -> new CellInput.Text(TextSourceInput.inline(FuzzAddressDecoders.nextText(data)));
+      case 0 -> new CellValueSpec.Blank();
+      case 1 -> new CellValueSpec.Text(TextSourceSpec.inline(FuzzAddressDecoders.nextText(data)));
       case 2 -> nextRichTextInput(data);
-      case 3 -> new CellInput.NumberValue(data.consumeRegularDouble(-1000.0d, 1000.0d));
-      case 4 -> new CellInput.BooleanValue(data.consumeBoolean());
+      case 3 -> new CellValueSpec.NumberValue(data.consumeRegularDouble(-1000.0d, 1000.0d));
+      case 4 -> new CellValueSpec.BooleanValue(data.consumeBoolean());
       case 5 ->
-          new CellInput.Date(LocalDate.of(2026, data.consumeInt(1, 12), data.consumeInt(1, 28)));
+          new CellValueSpec.Date(LocalDate.of(2026, data.consumeInt(1, 12), data.consumeInt(1, 28)));
       case 6 ->
-          new CellInput.DateTime(
+          new CellValueSpec.DateTime(
               LocalDateTime.of(
                   2026,
                   data.consumeInt(1, 12),
@@ -40,7 +40,7 @@ final class FuzzValueDecoders {
                   data.consumeInt(0, 59),
                   data.consumeInt(0, 59)));
       default ->
-          new CellInput.Formula(TextSourceInput.inline(FuzzAddressDecoders.nextFormula(data)));
+          new CellValueSpec.Formula(TextSourceSpec.inline(FuzzAddressDecoders.nextFormula(data)));
     };
   }
 
@@ -68,28 +68,28 @@ final class FuzzValueDecoders {
     };
   }
 
-  static CellGridInput nextProtocolGrid(GridGrindFuzzData data, int rowCount, int columnCount) {
+  static CellGridSpec nextProtocolGrid(GridGrindFuzzData data, int rowCount, int columnCount) {
     Objects.requireNonNull(data, "data must not be null");
 
-    List<List<CellInput>> rows = new ArrayList<>(rowCount);
+    List<List<CellValueSpec>> rows = new ArrayList<>(rowCount);
     for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-      List<CellInput> row = new ArrayList<>(columnCount);
+      List<CellValueSpec> row = new ArrayList<>(columnCount);
       for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
         row.add(nextCellInput(data));
       }
       rows.add(List.copyOf(row));
     }
-    return new CellGridInput.Typed(List.copyOf(rows));
+    return new CellGridSpec.Typed(List.copyOf(rows));
   }
 
-  static CellRowInput nextProtocolRow(GridGrindFuzzData data, int columnCount) {
+  static CellRowSpec nextProtocolRow(GridGrindFuzzData data, int columnCount) {
     Objects.requireNonNull(data, "data must not be null");
 
-    List<CellInput> values = new ArrayList<>(columnCount);
+    List<CellValueSpec> values = new ArrayList<>(columnCount);
     for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
       values.add(nextCellInput(data));
     }
-    return new CellRowInput.Typed(List.copyOf(values));
+    return new CellRowSpec.Typed(List.copyOf(values));
   }
 
   static List<List<ExcelCellValue>> nextExcelMatrix(
@@ -107,17 +107,17 @@ final class FuzzValueDecoders {
     return List.copyOf(rows);
   }
 
-  private static CellInput.RichText nextRichTextInput(GridGrindFuzzData data) {
+  private static CellValueSpec.RichText nextRichTextInput(GridGrindFuzzData data) {
     int runCount = data.consumeInt(1, 3);
-    List<RichTextRunInput> runs = new ArrayList<>(runCount);
+    List<RichTextRunSpec> runs = new ArrayList<>(runCount);
     for (int runIndex = 0; runIndex < runCount; runIndex++) {
       var fontPatch = data.consumeBoolean() ? FuzzStyleDecoders.nextRichTextFontPatch(data) : null;
       runs.add(
-          new RichTextRunInput(
-              TextSourceInput.inline(FuzzAddressDecoders.nextText(data)),
+          new RichTextRunSpec(
+              TextSourceSpec.inline(FuzzAddressDecoders.nextText(data)),
               FuzzStyleDecoders.toCellFontInput(fontPatch)));
     }
-    return new CellInput.RichText(List.copyOf(runs));
+    return new CellValueSpec.RichText(List.copyOf(runs));
   }
 
   private static ExcelRichText nextRichText(GridGrindFuzzData data) {

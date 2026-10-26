@@ -15,7 +15,7 @@ import dev.erst.gridgrind.cli.discovery.TaskPhase;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskTestFixtures;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.List;
@@ -93,7 +93,7 @@ class GridGrindAdHocTaskRequestScaffoldsTest {
     assertTrue(inputPath(request).contains("overwrite-existing"));
     assertEquals("OVERWRITE", persistenceType(request));
     assertEquals(
-        OoxmlPersistenceSecurityInput.none(),
+        OoxmlPersistenceSecuritySpec.none(),
         ((WorkbookPlan.WorkbookPersistence.Overwrite) request.persistence())
             .security()
             .orElseThrow());
@@ -144,7 +144,7 @@ class GridGrindAdHocTaskRequestScaffoldsTest {
     assertEquals("REPLACE", persistenceIfExists(saveAsRequest));
     assertEquals("starter-ad-hoc-export-output.xlsx", outputPath(saveAsRequest));
     assertEquals(
-        OoxmlPersistenceSecurityInput.none(),
+        OoxmlPersistenceSecuritySpec.none(),
         ((WorkbookPlan.WorkbookPersistence.SaveAs) saveAsRequest.persistence())
             .security()
             .orElseThrow());

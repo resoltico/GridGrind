@@ -9,7 +9,7 @@
       "name" : "value",
       "requirement" : "REQUIRED",
       "shape" : {
-        "group" : "cellInputTypes",
+        "group" : "cellValueSpecTypes",
         "kind" : "NESTED_TYPE_GROUP"
       }
     } ],

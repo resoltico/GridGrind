@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.excel.ExcelIgnoredError;
 import dev.erst.gridgrind.excel.ExcelSheetDefaults;
 import dev.erst.gridgrind.excel.ExcelSheetDisplay;
@@ -11,7 +11,7 @@ import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 final class WorkbookCommandPresentationInputConverter {
   private WorkbookCommandPresentationInputConverter() {}
 
-  static ExcelSheetPresentation toExcelSheetPresentation(SheetPresentationInput presentation) {
+  static ExcelSheetPresentation toExcelSheetPresentation(SheetPresentationSpec presentation) {
     return new ExcelSheetPresentation(
         new ExcelSheetDisplay(
             presentation.display().displayGridlines(),
@@ -19,7 +19,7 @@ final class WorkbookCommandPresentationInputConverter {
             presentation.display().displayRowColHeadings(),
             presentation.display().displayFormulas(),
             presentation.display().rightToLeft()),
-        presentation.tabColor().flatMap(WorkbookCommandCellInputConverter::toExcelColor),
+        presentation.tabColor().flatMap(WorkbookCommandCellValueSpecConverter::toExcelColor),
         new ExcelSheetOutlineSummary(
             presentation.outlineSummary().rowSumsBelow(),
             presentation.outlineSummary().rowSumsRight()),

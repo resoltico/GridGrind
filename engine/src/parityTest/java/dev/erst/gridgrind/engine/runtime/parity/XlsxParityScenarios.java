@@ -4,50 +4,50 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.calcula
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.executionPolicy;
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 
-import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.PictureInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.layout.PaneInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
-import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
-import dev.erst.gridgrind.core.model.style.CellBorderInput;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
-import dev.erst.gridgrind.core.model.style.CellFontInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.style.FontHeightInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
-import dev.erst.gridgrind.core.model.value.CellGridInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -56,8 +56,8 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
@@ -1223,83 +1223,84 @@ public final class XlsxParityScenarios {
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:D4")),
                     new CellMutationAction.SetRange(
-                        new CellGridInput.Typed(
+                        new CellGridSpec.Typed(
                             List.of(
                                 List.of(
                                     text("Quarterly Ops"),
-                                    new CellInput.Blank(),
+                                    new CellValueSpec.Blank(),
                                     text("Launch"),
                                     text("Link")),
                                 List.of(text("Owner"), text("Hours"), text("Ready"), text("Score")),
                                 List.of(
-                                    new CellInput.RichText(
+                                    new CellValueSpec.RichText(
                                         List.of(
                                             richTextRun(
                                                 "Ada",
-                                                new CellFontInput(
+                                                new CellFontPatch(
                                                     Optional.of(true),
                                                     Optional.empty(),
                                                     Optional.empty(),
                                                     Optional.empty(),
                                                     Optional.of(
-                                                        ColorInput.rgb(new RgbHex("#204060"))),
+                                                        ColorSpec.rgb(new RgbHex("#204060"))),
                                                     Optional.empty(),
                                                     Optional.empty())),
                                             richTextRun(
                                                 " Lovelace",
-                                                new CellFontInput(
+                                                new CellFontPatch(
                                                     Optional.empty(),
                                                     Optional.of(true),
                                                     Optional.empty(),
                                                     Optional.empty(),
                                                     Optional.of(
-                                                        ColorInput.rgb(new RgbHex("#4080A0"))),
+                                                        ColorSpec.rgb(new RgbHex("#4080A0"))),
                                                     Optional.empty(),
                                                     Optional.empty())))),
-                                    new CellInput.NumberValue(12.5d),
-                                    new CellInput.BooleanValue(true),
+                                    new CellValueSpec.NumberValue(12.5d),
+                                    new CellValueSpec.BooleanValue(true),
                                     formula("B3*2")),
                                 List.of(
-                                    new CellInput.Date(LocalDate.of(2026, 4, 1)),
-                                    new CellInput.DateTime(LocalDateTime.of(2026, 4, 1, 9, 30, 0)),
+                                    new CellValueSpec.Date(LocalDate.of(2026, 4, 1)),
+                                    new CellValueSpec.DateTime(
+                                        LocalDateTime.of(2026, 4, 1, 9, 30, 0)),
                                     text("Docs"),
-                                    new CellInput.NumberValue(99.0d)))))),
+                                    new CellValueSpec.NumberValue(99.0d)))))),
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:D4")),
                     new CellMutationAction.ApplyStyle(
-                        new CellStylePatchInput(
+                        new CellStylePatch(
                             Optional.empty(),
                             Optional.of(
-                                new CellAlignmentInput(
+                                new CellAlignmentPatch(
                                     Optional.of(true),
                                     Optional.of(ExcelHorizontalAlignment.CENTER),
                                     Optional.of(ExcelVerticalAlignment.CENTER),
                                     Optional.empty(),
                                     Optional.empty())),
                             Optional.of(
-                                new CellFontInput(
+                                new CellFontPatch(
                                     Optional.of(true),
                                     Optional.empty(),
                                     Optional.of("Aptos"),
-                                    Optional.of(new FontHeightInput.Points(new BigDecimal("11.5"))),
-                                    Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
+                                    Optional.of(new FontHeightSpec.Points(new BigDecimal("11.5"))),
+                                    Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                                     Optional.empty(),
                                     Optional.empty())),
                             Optional.of(
-                                CellFillInput.patternForeground(
-                                    ExcelFillPattern.SOLID, ColorInput.rgb(new RgbHex("#D9EAF7")))),
+                                CellFillSpec.patternForeground(
+                                    ExcelFillPattern.SOLID, ColorSpec.rgb(new RgbHex("#D9EAF7")))),
                             Optional.of(
-                                new CellBorderInput(
+                                new CellBorderPatch(
                                     Optional.of(
-                                        new BorderSideInput(
+                                        new BorderSidePatch(
                                             ExcelBorderStyle.THIN,
-                                            ColorInput.rgb(new RgbHex("#5B7C99")))),
+                                            ColorSpec.rgb(new RgbHex("#5B7C99")))),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty())),
                             Optional.of(
-                                new CellProtectionInput(Optional.of(true), Optional.empty()))))),
+                                new CellProtectionPatch(Optional.of(true), Optional.empty()))))),
                 mutate(
                     new ColumnBandSelector.Span(new SheetName("Ops"), 0, 1),
                     new WorkbookMutationAction.SetColumnWidth(18.0d)),
@@ -1314,19 +1315,19 @@ public final class XlsxParityScenarios {
                     new WorkbookMutationAction.GroupColumns(false)),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Ops")),
-                    new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1))),
+                    new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 1, 1, 1))),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Ops")),
                     new WorkbookMutationAction.SetSheetZoom(125)),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Ops")),
                     new WorkbookMutationAction.SetPrintLayout(
-                        PrintLayoutInput.withDefaultSetup(
-                            new PrintAreaInput.Range(new RangeRef("A1:D20")),
+                        PrintLayoutSpec.withDefaultSetup(
+                            new PrintAreaSpec.Range(new RangeRef("A1:D20")),
                             ExcelPrintOrientation.LANDSCAPE,
-                            new PrintScalingInput.Fit(1, 2),
-                            new PrintTitleRowsInput.Band(0, 1),
-                            new PrintTitleColumnsInput.Band(0, 0),
+                            new PrintScalingSpec.Fit(1, 2),
+                            new PrintTitleRowsSpec.Band(0, 1),
+                            new PrintTitleColumnsSpec.Band(0, 0),
                             headerFooter("Ops", "Quarterly", "2026"),
                             headerFooter("GridGrind", "Parity", "1")))),
                 mutate(
@@ -1349,8 +1350,8 @@ public final class XlsxParityScenarios {
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B3:B10")),
                     new StructuredMutationAction.SetDataValidation(
-                        new DataValidationInput(
-                            new DataValidationRuleInput.WholeNumber(
+                        new DataValidationSpec(
+                            new DataValidationRuleSpec.WholeNumber(
                                 ExcelComparisonOperator.BETWEEN, "1", Optional.of("40")),
                             false,
                             false,
@@ -1364,37 +1365,37 @@ public final class XlsxParityScenarios {
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D3:D4")),
                     new StructuredMutationAction.SetConditionalFormatting(
-                        new ConditionalFormattingDefinitionInput(
+                        new ConditionalFormattingSpec(
                             List.of(
-                                new ConditionalFormattingRuleInput.FormulaRule(
+                                new ConditionalFormattingRuleSpec.FormulaRule(
                                     "D3>20",
                                     false,
                                     Optional.of(
-                                        new DifferentialStyleInput(
+                                        new DifferentialStylePatch(
                                             Optional.empty(),
                                             Optional.of(true),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of(ColorInput.rgb(new RgbHex("#006100"))),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#006100"))),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of(ColorInput.rgb(new RgbHex("#C6EFCE"))),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#C6EFCE"))),
                                             Optional.empty()))),
-                                new ConditionalFormattingRuleInput.CellValueRule(
+                                new ConditionalFormattingRuleSpec.CellValueRule(
                                     ExcelComparisonOperator.LESS_THAN,
                                     "20",
                                     Optional.empty(),
                                     false,
                                     Optional.of(
-                                        new DifferentialStyleInput(
+                                        new DifferentialStylePatch(
                                             Optional.empty(),
                                             Optional.empty(),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of(ColorInput.rgb(new RgbHex("#9C0006"))),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#9C0006"))),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of(ColorInput.rgb(new RgbHex("#FFC7CE"))),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#FFC7CE"))),
                                             Optional.empty()))))))),
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A2:D4")),
@@ -1402,19 +1403,19 @@ public final class XlsxParityScenarios {
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Queue"), new RangeRef("A1:B3")),
                     new CellMutationAction.SetRange(
-                        new CellGridInput.Typed(
+                        new CellGridSpec.Typed(
                             List.of(
                                 List.of(text("Owner"), text("Task")),
                                 List.of(text("Ada"), text("Docs")),
                                 List.of(text("Grace"), text("Review")))))),
                 mutate(
                     new StructuredMutationAction.SetTable(
-                        TableInput.withDefaultMetadata(
+                        TableSpec.withDefaultMetadata(
                             new TableName("QueueTable"),
                             new SheetName("Queue"),
                             new RangeRef("A1:B3"),
                             false,
-                            new TableStyleInput.Named(
+                            new TableStyleSpec.Named(
                                 "TableStyleMedium2", false, false, true, false))))),
             List.of()));
   }
@@ -1432,11 +1433,11 @@ public final class XlsxParityScenarios {
             mutate(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetPicture(
-                    new PictureInput(
+                    new PictureSpec(
                         "OpsPicture",
                         pictureDataInput(),
                         twoCellAnchorInput(1, 1, 4, 6, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                        Optional.of(TextSourceInput.inline("Queue preview"))))),
+                        Optional.of(TextSourceSpec.inline("Queue preview"))))),
             mutate(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetShape(
@@ -1458,12 +1459,12 @@ public final class XlsxParityScenarios {
             mutate(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetEmbeddedObject(
-                    new EmbeddedObjectInput(
+                    new EmbeddedObjectSpec(
                         "OpsEmbed",
                         "Payload",
                         "payload.txt",
                         "payload.txt",
-                        BinarySourceInput.inlineBase64(
+                        BinarySourceSpec.inlineBase64(
                             Base64.getEncoder()
                                 .encodeToString(
                                     "GridGrind embedded payload".getBytes(StandardCharsets.UTF_8))),
@@ -1481,34 +1482,34 @@ public final class XlsxParityScenarios {
   }
 
   private static WorkbookPlan chartAuthoringRequest(Path workbookPath) {
-    ChartInput opsChart =
-        new ChartInput(
+    ChartSpec opsChart =
+        new ChartSpec(
             "OpsChart",
             twoCellAnchorInput(4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             chartTitle("Roadmap"),
-            new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             List.of(
-                new ChartPlotInput.Bar(
+                new ChartPlotSpec.Bar(
                     true,
                     ExcelChartBarDirection.COLUMN,
                     dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
                     Optional.empty(),
                     Optional.empty(),
                     List.of(
-                        new ChartSeriesInput(
-                            new ChartTitleInput.Formula("B1"),
-                            new ChartDataSourceInput.Reference("A2:A4"),
-                            new ChartDataSourceInput.Reference("B2:B4"),
+                        new ChartSeriesSpec(
+                            new ChartTitleSpec.Formula("B1"),
+                            new ChartDataSourceSpec.Reference("A2:A4"),
+                            new ChartDataSourceSpec.Reference("B2:B4"),
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty()),
-                        new ChartSeriesInput(
-                            new ChartTitleInput.Formula("C1"),
-                            new ChartDataSourceInput.Reference("ChartCategories"),
-                            new ChartDataSourceInput.Reference("ChartActual"),
+                        new ChartSeriesSpec(
+                            new ChartTitleSpec.Formula("C1"),
+                            new ChartDataSourceSpec.Reference("ChartCategories"),
+                            new ChartDataSourceSpec.Reference("ChartActual"),
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
@@ -1536,28 +1537,28 @@ public final class XlsxParityScenarios {
                 new CellMutationAction.SetCell(text("Jan"))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B2")),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(10d))),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(10d))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C2")),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(12d))),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(12d))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A3")),
                 new CellMutationAction.SetCell(text("Feb"))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B3")),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(18d))),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(18d))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C3")),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(16d))),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(16d))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A4")),
                 new CellMutationAction.SetCell(text("Mar"))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B4")),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(15d))),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(15d))),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C4")),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(21d))),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(21d))),
             mutate(
                 new StructuredMutationAction.SetNamedRange(
                     new DefinedName("ChartCategories"),
@@ -1617,7 +1618,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(text("Ada"))),
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D2")),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(10d))),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(10d))),
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A3")),
                     new CellMutationAction.SetCell(text("North"))),
@@ -1629,7 +1630,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(text("Ada"))),
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D3")),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(15d))),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(15d))),
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A4")),
                     new CellMutationAction.SetCell(text("South"))),
@@ -1641,7 +1642,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(text("Lin"))),
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D4")),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(7d))),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(7d))),
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A5")),
                     new CellMutationAction.SetCell(text("South"))),
@@ -1653,7 +1654,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(text("Lin"))),
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D5")),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(12d))),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(12d))),
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
                         new DefinedName("PivotSource"),
@@ -1661,43 +1662,43 @@ public final class XlsxParityScenarios {
                         NamedRangeTarget.range(new SheetName("Data"), new RangeRef("A1:D5")))),
                 mutate(
                     new StructuredMutationAction.SetTable(
-                        TableInput.withDefaultMetadata(
+                        TableSpec.withDefaultMetadata(
                             new TableName("SalesTable"),
                             new SheetName("Data"),
                             new RangeRef("A1:D5"),
                             false,
-                            new TableStyleInput.None()))),
+                            new TableStyleSpec.None()))),
                 mutate(
                     new StructuredMutationAction.SetPivotTable(
-                        new PivotTableInput(
+                        new PivotTableSpec(
                             "Sales Pivot",
                             new SheetName("RangeReport"),
-                            new PivotTableInput.PivotSourceSpec.Range(
+                            new PivotTableSpec.PivotSourceSpec.Range(
                                 new SheetName("Data"), new RangeRef("A1:D5")),
-                            new PivotTableInput.Anchor(new CellAddress("C5")),
+                            new PivotTableSpec.Anchor(new CellAddress("C5")),
                             List.of("Region"),
                             List.of("Stage"),
                             List.of(),
                             List.of(defaultPivotDataFieldInput())))),
                 mutate(
                     new StructuredMutationAction.SetPivotTable(
-                        new PivotTableInput(
+                        new PivotTableSpec(
                             "Named Pivot",
                             new SheetName("NamedReport"),
-                            new PivotTableInput.PivotSourceSpec.NamedRange(
+                            new PivotTableSpec.PivotSourceSpec.NamedRange(
                                 new DefinedName("PivotSource")),
-                            new PivotTableInput.Anchor(new CellAddress("A3")),
+                            new PivotTableSpec.Anchor(new CellAddress("A3")),
                             List.of("Region"),
                             List.of(),
                             List.of("Owner"),
                             List.of(defaultPivotDataFieldInput())))),
                 mutate(
                     new StructuredMutationAction.SetPivotTable(
-                        new PivotTableInput(
+                        new PivotTableSpec(
                             "Table Pivot",
                             new SheetName("TableReport"),
-                            new PivotTableInput.PivotSourceSpec.Table(new TableName("SalesTable")),
-                            new PivotTableInput.Anchor(new CellAddress("F4")),
+                            new PivotTableSpec.PivotSourceSpec.Table(new TableName("SalesTable")),
+                            new PivotTableSpec.Anchor(new CellAddress("F4")),
                             List.of("Stage"),
                             List.of(),
                             List.of(),
@@ -1705,81 +1706,78 @@ public final class XlsxParityScenarios {
             List.of()));
   }
 
-  private static PivotTableInput.DataField defaultPivotDataFieldInput() {
-    return new PivotTableInput.DataField(
+  private static PivotTableSpec.DataField defaultPivotDataFieldInput() {
+    return new PivotTableSpec.DataField(
         "Amount",
         dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction.SUM,
         "Total Amount",
         Optional.of("#,##0.00"));
   }
 
-  private static CellInput.Text text(String value) {
-    return new CellInput.Text(TextSourceInput.inline(value));
+  private static CellValueSpec.Text text(String value) {
+    return new CellValueSpec.Text(TextSourceSpec.inline(value));
   }
 
-  private static CellInput.Formula formula(String value) {
-    return new CellInput.Formula(TextSourceInput.inline(value));
+  private static CellValueSpec.Formula formula(String value) {
+    return new CellValueSpec.Formula(TextSourceSpec.inline(value));
   }
 
-  private static RichTextRunInput richTextRun(String value, CellFontInput font) {
-    return new RichTextRunInput(TextSourceInput.inline(value), Optional.ofNullable(font));
+  private static RichTextRunSpec richTextRun(String value, CellFontPatch font) {
+    return new RichTextRunSpec(TextSourceSpec.inline(value), Optional.ofNullable(font));
   }
 
-  private static HeaderFooterTextInput headerFooter(String left, String center, String right) {
-    return new HeaderFooterTextInput(
-        TextSourceInput.inline(left),
-        TextSourceInput.inline(center),
-        TextSourceInput.inline(right));
+  private static HeaderFooterTextSpec headerFooter(String left, String center, String right) {
+    return new HeaderFooterTextSpec(
+        TextSourceSpec.inline(left), TextSourceSpec.inline(center), TextSourceSpec.inline(right));
   }
 
-  private static CommentInput comment(String text, String author, boolean visible) {
-    return CommentInput.plain(TextSourceInput.inline(text), author, visible);
+  private static CommentSpec comment(String text, String author, boolean visible) {
+    return CommentSpec.plain(TextSourceSpec.inline(text), author, visible);
   }
 
-  private static DataValidationPromptInput prompt(
-      String title, String text, boolean showPromptBox) {
-    return new DataValidationPromptInput(
-        TextSourceInput.inline(title), TextSourceInput.inline(text), showPromptBox);
+  private static DataValidationPromptSpec prompt(String title, String text, boolean showPromptBox) {
+    return new DataValidationPromptSpec(
+        TextSourceSpec.inline(title), TextSourceSpec.inline(text), showPromptBox);
   }
 
-  private static DataValidationErrorAlertInput errorAlert(
+  private static DataValidationErrorAlertSpec errorAlert(
       ExcelDataValidationErrorStyle style, String title, String text, boolean showErrorBox) {
-    return new DataValidationErrorAlertInput(
-        style, TextSourceInput.inline(title), TextSourceInput.inline(text), showErrorBox);
+    return new DataValidationErrorAlertSpec(
+        style, TextSourceSpec.inline(title), TextSourceSpec.inline(text), showErrorBox);
   }
 
-  private static ChartTitleInput.Text chartTitle(String value) {
-    return new ChartTitleInput.Text(TextSourceInput.inline(value));
+  private static ChartTitleSpec.Text chartTitle(String value) {
+    return new ChartTitleSpec.Text(TextSourceSpec.inline(value));
   }
 
-  private static ShapeInput shape(
+  private static ShapeSpec shape(
       String name,
       ExcelAuthoredDrawingShapeKind kind,
-      DrawingAnchorInput anchor,
+      DrawingAnchorSpec anchor,
       String presetGeometryToken,
       String text) {
     return switch (kind) {
       case SIMPLE_SHAPE ->
-          new ShapeInput.SimpleShape(
+          new ShapeSpec.SimpleShape(
               name,
               anchor,
               presetGeometryToken,
-              Optional.ofNullable(text).map(TextSourceInput::inline));
-      case CONNECTOR -> new ShapeInput.Connector(name, anchor);
+              Optional.ofNullable(text).map(TextSourceSpec::inline));
+      case CONNECTOR -> new ShapeSpec.Connector(name, anchor);
     };
   }
 
-  private static PictureDataInput pictureDataInput() {
-    return new PictureDataInput(
+  private static PictureDataSpec pictureDataInput() {
+    return new PictureDataSpec(
         ExcelPictureFormat.PNG,
-        BinarySourceInput.inlineBase64(Base64.getEncoder().encodeToString(PNG_PIXEL_BYTES)));
+        BinarySourceSpec.inlineBase64(Base64.getEncoder().encodeToString(PNG_PIXEL_BYTES)));
   }
 
-  private static DrawingAnchorInput.TwoCell twoCellAnchorInput(
+  private static DrawingAnchorSpec.TwoCell twoCellAnchorInput(
       int fromColumn, int fromRow, int toColumn, int toRow, ExcelDrawingAnchorBehavior behavior) {
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(fromColumn, fromRow, 0, 0),
-        new DrawingMarkerInput(toColumn, toRow, 0, 0),
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(fromColumn, fromRow, 0, 0),
+        new DrawingMarkerSpec(toColumn, toRow, 0, 0),
         behavior);
   }
 

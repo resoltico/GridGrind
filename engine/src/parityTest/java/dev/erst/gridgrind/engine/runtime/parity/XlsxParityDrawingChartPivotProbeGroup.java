@@ -4,17 +4,17 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.inspect
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 import static dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
@@ -407,26 +407,26 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     XlsxParityScenarios.MaterializedScenario chart =
         context.copiedScenario(XlsxParityScenarios.CHART, "chart-mutation-source");
     Path outputPath = context.derivedWorkbook("chart-mutated");
-    ChartInput actualFocusChart =
-        new ChartInput(
+    ChartSpec actualFocusChart =
+        new ChartSpec(
             "OpsChart",
             twoCellAnchorInput(4, 1, 11, 17, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             chartTitle("Actual focus"),
-            new ChartLegendInput.Hidden(),
+            new ChartLegendSpec.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             true,
             List.of(
-                new ChartPlotInput.Bar(
+                new ChartPlotSpec.Bar(
                     false,
                     ExcelChartBarDirection.BAR,
                     dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
                     Optional.empty(),
                     Optional.empty(),
                     List.of(
-                        new ChartSeriesInput(
-                            new ChartTitleInput.Formula("C1"),
-                            new ChartDataSourceInput.Reference("A2:A4"),
-                            new ChartDataSourceInput.Reference("C2:C4"),
+                        new ChartSeriesSpec(
+                            new ChartTitleSpec.Formula("C1"),
+                            new ChartDataSourceSpec.Reference("A2:A4"),
+                            new ChartDataSourceSpec.Reference("C2:C4"),
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),
@@ -544,26 +544,26 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         XlsxParityGridGrind.read(
             success, "drawing", WorkbookAssetInspectionResult.DrawingObjectsResult.class);
     Path replacementPath = context.derivedWorkbook("chart-combo-replaced");
-    ChartInput replacementChart =
-        new ChartInput(
+    ChartSpec replacementChart =
+        new ChartSpec(
             "ComboChart",
             twoCellAnchorInput(4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             chartTitle("Roadmap"),
-            new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             List.of(
-                new ChartPlotInput.Bar(
+                new ChartPlotSpec.Bar(
                     true,
                     ExcelChartBarDirection.COLUMN,
                     dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
                     Optional.empty(),
                     Optional.empty(),
                     List.of(
-                        new ChartSeriesInput(
-                            new ChartTitleInput.Formula("B1"),
-                            new ChartDataSourceInput.Reference("A2:A4"),
-                            new ChartDataSourceInput.Reference("B2:B4"),
+                        new ChartSeriesSpec(
+                            new ChartTitleSpec.Formula("B1"),
+                            new ChartDataSourceSpec.Reference("A2:A4"),
+                            new ChartDataSourceSpec.Reference("B2:B4"),
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),
@@ -729,17 +729,17 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             List.of(
                 mutate(
                     new StructuredMutationAction.SetPivotTable(
-                        new PivotTableInput(
+                        new PivotTableSpec(
                             "Sales Pivot",
                             new SheetName("RangeReport"),
-                            new PivotTableInput.PivotSourceSpec.Range(
+                            new PivotTableSpec.PivotSourceSpec.Range(
                                 new SheetName("Data"), new RangeRef("A1:D5")),
-                            new PivotTableInput.Anchor(new CellAddress("D6")),
+                            new PivotTableSpec.Anchor(new CellAddress("D6")),
                             List.of("Stage"),
                             List.of("Region"),
                             List.of(),
                             List.of(
-                                new PivotTableInput.DataField(
+                                new PivotTableSpec.DataField(
                                     "Amount",
                                     dev.erst.gridgrind.core.vocabulary
                                         .ExcelPivotDataConsolidateFunction.SUM,

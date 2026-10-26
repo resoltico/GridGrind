@@ -3,60 +3,60 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
-import dev.erst.gridgrind.core.model.layout.PaneInput;
 import dev.erst.gridgrind.core.model.layout.PaneReport;
-import dev.erst.gridgrind.core.model.layout.SheetDefaultsInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
-import dev.erst.gridgrind.core.model.layout.SheetDisplayInput;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
-import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryInput;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.layout.WindowReport;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
-import dev.erst.gridgrind.core.model.print.PrintSetupInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.style.FontHeightInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
-import dev.erst.gridgrind.core.model.validation.IgnoredErrorInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
@@ -221,9 +221,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new PlanId("ledger-audit"),
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionPolicyInput.journal(
-                        new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-                    FormulaEnvironmentInput.empty(),
+                    ExecutionPolicySpec.journal(
+                        new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE)),
+                    FormulaEnvironmentSpec.empty(),
                     steps(
                         List.of(
                             mutate(
@@ -257,9 +257,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new PlanId("bad-open"),
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionPolicyInput.journal(
-                        new ExecutionJournalInput(ExecutionJournalLevel.NORMAL)),
-                    FormulaEnvironmentInput.empty(),
+                    ExecutionPolicySpec.journal(
+                        new ExecutionJournalSpec(ExecutionJournalLevel.NORMAL)),
+                    FormulaEnvironmentSpec.empty(),
                     List.of(
                         new InspectionStep(
                             new StepId("missing-sheet"),
@@ -300,25 +300,25 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                 List.of(
                                     textCell("Item"), textCell("Amount"), textCell("Billable"))))),
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                 List.of(
                                     textCell("Hosting"),
-                                    new CellInput.NumberValue(49.0),
-                                    new CellInput.BooleanValue(true))))),
+                                    new CellValueSpec.NumberValue(49.0),
+                                    new CellValueSpec.BooleanValue(true))))),
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                 List.of(
                                     textCell("Domain"),
-                                    new CellInput.NumberValue(12.0),
-                                    new CellInput.BooleanValue(false))))),
+                                    new CellValueSpec.NumberValue(12.0),
+                                    new CellValueSpec.BooleanValue(false))))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A4")),
                         new CellMutationAction.SetCell(textCell("Total"))),
@@ -401,18 +401,18 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = Files.createTempFile("gridgrind-drawing-request-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    DrawingAnchorInput.TwoCell firstAnchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(1, 1, 0, 0),
-            new DrawingMarkerInput(4, 6, 0, 0),
+    DrawingAnchorSpec.TwoCell firstAnchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(1, 1, 0, 0),
+            new DrawingMarkerSpec(4, 6, 0, 0),
             ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-    DrawingAnchorInput.TwoCell movedAnchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(6, 2, 0, 0),
-            new DrawingMarkerInput(9, 7, 0, 0),
+    DrawingAnchorSpec.TwoCell movedAnchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(6, 2, 0, 0),
+            new DrawingMarkerSpec(9, 7, 0, 0),
             ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
-    PictureDataInput pictureData =
-        new PictureDataInput(
+    PictureDataSpec pictureData =
+        new PictureDataSpec(
             ExcelPictureFormat.PNG,
             binary(
                 "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"));
@@ -440,7 +440,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         mutate(
                             new SheetSelector.ByName(new SheetName("Ops")),
                             new DrawingMutationAction.SetEmbeddedObject(
-                                new EmbeddedObjectInput(
+                                new EmbeddedObjectSpec(
                                     "OpsEmbed",
                                     "Payload",
                                     "payload.txt",
@@ -505,8 +505,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                     null,
                                     Boolean.TRUE,
                                     "Aptos",
-                                    new FontHeightInput.Twips(260),
-                                    ColorInput.rgb(new RgbHex("#112233")),
+                                    new FontHeightSpec.Twips(260),
+                                    ColorSpec.rgb(new RgbHex("#112233")),
                                     null,
                                     null),
                                 null,
@@ -561,7 +561,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new CellSelector.ByAddress(
                             new SheetName("Budget Review"), new CellAddress("A1")),
-                        new CellMutationAction.SetCell(new CellInput.NumberValue(1200.0))),
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1200.0))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                         new CellMutationAction.SetCell(formulaCell("Budget Review!A1"))))));
@@ -595,14 +595,14 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                 new WorkbookPlan.WorkbookPersistence.Overwrite(
-                    dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
+                    dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
                 mutations(
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                         new CellMutationAction.SetCell(textCell("After"))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B1")),
-                        new CellMutationAction.SetCell(new CellInput.NumberValue(12.0)))),
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(12.0)))),
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses(
@@ -658,44 +658,44 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new WorkbookMutationAction.SetRowHeight(28.5)),
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
-                        new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1))),
+                        new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 1, 1, 1))),
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.SetSheetZoom(125)),
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.SetSheetPresentation(
-                            new SheetPresentationInput(
-                                new SheetDisplayInput(false, false, false, true, true),
-                                Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
-                                new SheetOutlineSummaryInput(false, false),
-                                new SheetDefaultsInput(11, 18.5d),
+                            new SheetPresentationSpec(
+                                new SheetDisplaySpec(false, false, false, true, true),
+                                Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
+                                new SheetOutlineSummarySpec(false, false),
+                                new SheetDefaultsSpec(11, 18.5d),
                                 List.of(
-                                    new IgnoredErrorInput(
+                                    new IgnoredErrorSpec(
                                         new RangeRef("A1:B2"),
                                         List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))))),
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.SetPrintLayout(
-                            new PrintLayoutInput(
-                                new PrintAreaInput.Range(new RangeRef("A1:B12")),
+                            new PrintLayoutSpec(
+                                new PrintAreaSpec.Range(new RangeRef("A1:B12")),
                                 ExcelPrintOrientation.LANDSCAPE,
-                                new PrintScalingInput.Fit(1, 0),
-                                new PrintTitleRowsInput.Band(0, 0),
-                                new PrintTitleColumnsInput.Band(0, 0),
+                                new PrintScalingSpec.Fit(1, 0),
+                                new PrintTitleRowsSpec.Band(0, 0),
+                                new PrintTitleColumnsSpec.Band(0, 0),
                                 headerFooter("Budget", "", ""),
                                 headerFooter("", "Page &P", ""),
-                                new PrintSetupInput(
-                                    PrintSetupInput.defaults().margins(),
+                                new PrintSetupSpec(
+                                    PrintSetupSpec.defaults().margins(),
                                     true,
                                     false,
                                     false,
-                                    PrintSetupInput.defaults().paperSize(),
+                                    PrintSetupSpec.defaults().paperSize(),
                                     false,
                                     false,
-                                    PrintSetupInput.defaults().copies(),
+                                    PrintSetupSpec.defaults().copies(),
                                     false,
-                                    PrintSetupInput.defaults().firstPageNumber(),
+                                    PrintSetupSpec.defaults().firstPageNumber(),
                                     List.of(),
                                     List.of()))))),
                 inspect(
@@ -811,7 +811,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange(new SheetName("Layout"), new RangeRef("A1:F6")),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                 List.of(
                                     List.of(
                                         textCell("Item"),
@@ -822,35 +822,35 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                         textCell("Flag")),
                                     List.of(
                                         textCell("Hosting"),
-                                        new CellInput.NumberValue(42.0),
+                                        new CellValueSpec.NumberValue(42.0),
                                         textCell("Open"),
                                         textCell("Alpha"),
                                         textCell("Ada"),
                                         textCell("Y")),
                                     List.of(
                                         textCell("Support"),
-                                        new CellInput.NumberValue(84.0),
+                                        new CellValueSpec.NumberValue(84.0),
                                         textCell("Closed"),
                                         textCell("Beta"),
                                         textCell("Lin"),
                                         textCell("N")),
                                     List.of(
                                         textCell("Ops"),
-                                        new CellInput.NumberValue(168.0),
+                                        new CellValueSpec.NumberValue(168.0),
                                         textCell("Open"),
                                         textCell("Gamma"),
                                         textCell("Bea"),
                                         textCell("Y")),
                                     List.of(
                                         textCell("QA"),
-                                        new CellInput.NumberValue(21.0),
+                                        new CellValueSpec.NumberValue(21.0),
                                         textCell("Queued"),
                                         textCell("Delta"),
                                         textCell("Kai"),
                                         textCell("N")),
                                     List.of(
                                         textCell("Infra"),
-                                        new CellInput.NumberValue(7.0),
+                                        new CellValueSpec.NumberValue(7.0),
                                         textCell("Done"),
                                         textCell("Epsilon"),
                                         textCell("Mia"),
@@ -965,7 +965,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange(new SheetName("Moves"), new RangeRef("A1:D3")),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                 List.of(
                                     List.of(
                                         textCell("Item"),
@@ -974,12 +974,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                         textCell("Note")),
                                     List.of(
                                         textCell("Hosting"),
-                                        new CellInput.NumberValue(42.0),
+                                        new CellValueSpec.NumberValue(42.0),
                                         textCell("Open"),
                                         textCell("Alpha")),
                                     List.of(
                                         textCell("Support"),
-                                        new CellInput.NumberValue(84.0),
+                                        new CellValueSpec.NumberValue(84.0),
                                         textCell("Closed"),
                                         textCell("Beta")))))),
                     mutate(
@@ -1077,22 +1077,23 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             new RangeSelector.ByRange(
                                 new SheetName("Budget"), new RangeRef("A1:B3")),
                             new CellMutationAction.SetRange(
-                                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                     List.of(
                                         List.of(textCell("Item"), textCell("Qty")),
                                         List.of(
-                                            textCell("Hosting"), new CellInput.NumberValue(42.0)),
+                                            textCell("Hosting"),
+                                            new CellValueSpec.NumberValue(42.0)),
                                         List.of(
                                             textCell("Support"),
-                                            new CellInput.NumberValue(84.0)))))),
+                                            new CellValueSpec.NumberValue(84.0)))))),
                         mutate(
                             new StructuredMutationAction.SetTable(
-                                TableInput.withDefaultMetadata(
+                                TableSpec.withDefaultMetadata(
                                     new TableName("BudgetTable"),
                                     new SheetName("Budget"),
                                     new RangeRef("A1:B3"),
                                     false,
-                                    new TableStyleInput.None()))),
+                                    new TableStyleSpec.None()))),
                         mutate(
                             new RowBandSelector.Insertion(new SheetName("Budget"), 1, 1),
                             new WorkbookMutationAction.InsertRows())))));
@@ -1151,7 +1152,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new CellMutationAction.SetCell(textCell("Report"))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
-                        new CellMutationAction.SetCell(new CellInput.NumberValue(61.0))),
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(61.0))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                         new CellMutationAction.SetHyperlink(
@@ -1159,7 +1160,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                         new CellMutationAction.SetComment(
-                            CommentInput.plain(text("Review"), "GridGrind", true))),
+                            CommentSpec.plain(text("Review"), "GridGrind", true))),
                     ExecutorStructuredMutationTargets.namedRange(
                         new StructuredMutationAction.SetNamedRange(
                             new DefinedName("BudgetTotal"),
@@ -1273,7 +1274,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2:C5")),
                         new StructuredMutationAction.SetDataValidation(
                             dataValidation(
-                                new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done")),
+                                new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
                                 true,
                                 false,
                                 prompt("Status", "Pick one workflow state.", true),
@@ -1290,7 +1291,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("E2:E5")),
                         new StructuredMutationAction.SetDataValidation(
                             dataValidation(
-                                new DataValidationRuleInput.FormulaList("#REF!"),
+                                new DataValidationRuleSpec.FormulaList("#REF!"),
                                 false,
                                 false,
                                 null,
@@ -1328,7 +1329,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         explicitList.ranges().stream()
             .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
             .toList());
-    assertInstanceOf(DataValidationRuleInput.ExplicitList.class, explicitList.validation().rule());
+    assertInstanceOf(DataValidationRuleSpec.ExplicitList.class, explicitList.validation().rule());
     assertEquals(
         List.of("E2:E5"),
         brokenFormula.ranges().stream()
@@ -1336,7 +1337,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             .toList());
     assertEquals(
         "#REF!",
-        cast(DataValidationRuleInput.FormulaList.class, brokenFormula.validation().rule())
+        cast(DataValidationRuleSpec.FormulaList.class, brokenFormula.validation().rule())
             .formula());
     assertEquals(2, health.analysis().checkedValidationCount());
     assertEquals(1, health.analysis().summary().errorCount());
@@ -1365,13 +1366,14 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B5")),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                 List.of(
                                     List.of(textCell("Status"), textCell("Amount")),
-                                    List.of(textCell("Queued"), new CellInput.NumberValue(1.0)),
-                                    List.of(textCell("Done"), new CellInput.NumberValue(9.0)),
-                                    List.of(textCell("Done"), new CellInput.NumberValue(11.0)),
-                                    List.of(textCell("Queued"), new CellInput.NumberValue(4.0)))))),
+                                    List.of(textCell("Queued"), new CellValueSpec.NumberValue(1.0)),
+                                    List.of(textCell("Done"), new CellValueSpec.NumberValue(9.0)),
+                                    List.of(textCell("Done"), new CellValueSpec.NumberValue(11.0)),
+                                    List.of(
+                                        textCell("Queued"), new CellValueSpec.NumberValue(4.0)))))),
                     mutate(
                         new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
                         new StructuredMutationAction.SetConditionalFormatting(
@@ -1462,26 +1464,26 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:C4")),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                 List.of(
                                     List.of(
                                         textCell("Item"), textCell("Amount"), textCell("Billable")),
                                     List.of(
                                         textCell("Hosting"),
-                                        new CellInput.NumberValue(49.0),
-                                        new CellInput.BooleanValue(true)),
+                                        new CellValueSpec.NumberValue(49.0),
+                                        new CellValueSpec.BooleanValue(true)),
                                     List.of(
                                         textCell("Domain"),
-                                        new CellInput.NumberValue(12.0),
-                                        new CellInput.BooleanValue(false)),
+                                        new CellValueSpec.NumberValue(12.0),
+                                        new CellValueSpec.BooleanValue(false)),
                                     List.of(
                                         textCell("Support"),
-                                        new CellInput.NumberValue(18.0),
-                                        new CellInput.BooleanValue(true)))))),
+                                        new CellValueSpec.NumberValue(18.0),
+                                        new CellValueSpec.BooleanValue(true)))))),
                     mutate(
                         new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("E1:F3")),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                 List.of(
                                     List.of(textCell("Queue"), textCell("Owner")),
                                     List.of(textCell("Late invoices"), textCell("Marta")),
@@ -1491,12 +1493,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new StructuredMutationAction.SetAutofilter()),
                     mutate(
                         new StructuredMutationAction.SetTable(
-                            TableInput.withDefaultMetadata(
+                            TableSpec.withDefaultMetadata(
                                 new TableName("BudgetTable"),
                                 new SheetName("Budget"),
                                 new RangeRef("A1:C4"),
                                 false,
-                                new TableStyleInput.Named(
+                                new TableStyleSpec.Named(
                                     "TableStyleMedium2", false, false, true, false))))),
                 inspect(
                     "filters",
@@ -1598,30 +1600,30 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     }
   }
 
-  private static ConditionalFormattingDefinitionInput conditionalFormattingReadbackBlock() {
-    return new ConditionalFormattingDefinitionInput(
+  private static ConditionalFormattingSpec conditionalFormattingReadbackBlock() {
+    return new ConditionalFormattingSpec(
         List.of(
-            new ConditionalFormattingRuleInput.FormulaRule(
+            new ConditionalFormattingRuleSpec.FormulaRule(
                 "B2>5",
                 true,
                 java.util.Optional.of(
-                    new DifferentialStyleInput(
+                    new DifferentialStylePatch(
                         Optional.of("0.00"),
                         Optional.of(true),
                         Optional.empty(),
                         Optional.empty(),
-                        java.util.Optional.of(ColorInput.rgb(new RgbHex("#102030"))),
+                        java.util.Optional.of(ColorSpec.rgb(new RgbHex("#102030"))),
                         Optional.empty(),
                         Optional.empty(),
-                        java.util.Optional.of(ColorInput.rgb(new RgbHex("#E0F0AA"))),
+                        java.util.Optional.of(ColorSpec.rgb(new RgbHex("#E0F0AA"))),
                         java.util.Optional.empty()))),
-            new ConditionalFormattingRuleInput.CellValueRule(
+            new ConditionalFormattingRuleSpec.CellValueRule(
                 ExcelComparisonOperator.BETWEEN,
                 "1",
                 java.util.Optional.of("10"),
                 false,
                 java.util.Optional.of(
-                    new DifferentialStyleInput(
+                    new DifferentialStylePatch(
                         Optional.empty(),
                         Optional.empty(),
                         Optional.of(true),
@@ -1633,11 +1635,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         java.util.Optional.empty())))));
   }
 
-  private static CellInput.RichText budgetRichTextCell() {
-    return new CellInput.RichText(
+  private static CellValueSpec.RichText budgetRichTextCell() {
+    return new CellValueSpec.RichText(
         List.of(
             richTextRun("Budget"),
-            new RichTextRunInput(
+            new RichTextRunSpec(
                 text(" FY26"),
                 maybe(
                     fontInput(
@@ -1645,7 +1647,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         null,
                         null,
                         null,
-                        ColorInput.rgb(new RgbHex("#FF0000")),
+                        ColorSpec.rgb(new RgbHex("#FF0000")),
                         null,
                         null)))));
   }

@@ -217,7 +217,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
 
   @Test
   void ooxmlWriteEncryptionLookupPublishesModeLessStrongOnlyShape() throws IOException {
-    JsonNode encryption = protocolCatalogLookupJson("plainTypes:ooxmlEncryptionInputType");
+    JsonNode encryption = protocolCatalogLookupJson("plainTypes:ooxmlEncryptionSpecType");
     JsonNode type = encryption.path("type");
 
     assertFalse(type.path("fields").toString().contains("\"mode\""));
@@ -342,7 +342,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--lookup", "cellInputTypes:FORMULA"},
+                new String[] {"--print-protocol-catalog", "--lookup", "cellValueSpecTypes:FORMULA"},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -392,13 +392,15 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--lookup", "nestedTypes:cellInputTypes"},
+                new String[] {
+                  "--print-protocol-catalog", "--lookup", "nestedTypes:cellValueSpecTypes"
+                },
                 InputStream.nullInputStream(),
                 stdout);
 
     assertEquals(0, exitCode);
     JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
-    assertEquals("cellInputTypes", output.path("group").asText());
+    assertEquals("cellValueSpecTypes", output.path("group").asText());
     assertEquals("type", output.path("discriminatorField").asText());
     assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("\"TEXT\""));
   }
@@ -427,15 +429,15 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--lookup", "chartInputType"},
+                new String[] {"--print-protocol-catalog", "--lookup", "chartSpecType"},
                 InputStream.nullInputStream(),
                 stdout);
 
     assertEquals(0, exitCode);
     JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
-    assertEquals("chartInputType", output.path("group").asText());
+    assertEquals("chartSpecType", output.path("group").asText());
     String rendered = stdout.toString(StandardCharsets.UTF_8);
-    assertTrue(rendered.contains("\"ChartInput\""));
+    assertTrue(rendered.contains("\"ChartSpec\""));
     assertTrue(rendered.contains("\"plots\""));
   }
 
@@ -472,7 +474,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     CommandError failure = commandErrorOnStdout(stdout, stderr);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertTrue(failure.primaryProblem().message().contains("Ambiguous lookup id: FORMULA"));
-    assertTrue(failure.primaryProblem().message().contains("cellInputTypes:FORMULA"));
+    assertTrue(failure.primaryProblem().message().contains("cellValueSpecTypes:FORMULA"));
     assertTrue(failure.primaryProblem().message().contains("namedRangeReportTypes:FORMULA"));
   }
 

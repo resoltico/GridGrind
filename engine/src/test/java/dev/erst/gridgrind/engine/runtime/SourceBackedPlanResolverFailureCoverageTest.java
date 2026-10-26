@@ -7,16 +7,16 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -25,8 +25,8 @@ import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -62,7 +62,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(TextSourceInput.utf8File("blank.txt"))))));
+                        new CellValueSpec.Text(TextSourceSpec.utf8File("blank.txt"))))));
     assertEquals(
         "cell text must not be blank",
         assertThrows(
@@ -82,10 +82,10 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.RichText(
+                        new CellValueSpec.RichText(
                             List.of(
-                                new RichTextRunInput(
-                                    TextSourceInput.utf8File("empty.txt"),
+                                new RichTextRunSpec(
+                                    TextSourceSpec.utf8File("empty.txt"),
                                     java.util.Optional.empty())))))));
     assertEquals(
         "rich-text run must not be empty",
@@ -106,8 +106,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(
-                            TextSourceInput.utf8File(directory.getFileName().toString()))))));
+                        new CellValueSpec.Text(
+                            TextSourceSpec.utf8File(directory.getFileName().toString()))))));
     InputSourceReadException directoryFailure =
         assertThrows(
             InputSourceReadException.class,
@@ -126,7 +126,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(TextSourceInput.utf8File("\0bad"))))));
+                        new CellValueSpec.Text(TextSourceSpec.utf8File("\0bad"))))));
     InputSourceReadException invalidPathFailure =
         assertThrows(
             InputSourceReadException.class,
@@ -145,7 +145,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(TextSourceInput.utf8File("text-loop.txt"))))));
+                        new CellValueSpec.Text(TextSourceSpec.utf8File("text-loop.txt"))))));
     UnsafePathAccessException textLoopFailure =
         assertThrows(
             UnsafePathAccessException.class,
@@ -165,8 +165,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                     new DrawingMutationAction.SetPicture(
                         picture(
                             "Logo",
-                            new PictureDataInput(
-                                ExcelPictureFormat.PNG, BinarySourceInput.file("missing.bin")),
+                            new PictureDataSpec(
+                                ExcelPictureFormat.PNG, BinarySourceSpec.file("missing.bin")),
                             twoCellAnchor(),
                             null)))));
     InputSourceNotFoundException missingBinaryFailure =
@@ -189,8 +189,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                     new DrawingMutationAction.SetPicture(
                         picture(
                             "Logo",
-                            new PictureDataInput(
-                                ExcelPictureFormat.PNG, BinarySourceInput.file("binary-loop.bin")),
+                            new PictureDataSpec(
+                                ExcelPictureFormat.PNG, BinarySourceSpec.file("binary-loop.bin")),
                             twoCellAnchor(),
                             null)))));
     UnsafePathAccessException binaryLoopFailure =
@@ -218,7 +218,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                   mutate(
                       new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                       new CellMutationAction.SetCell(
-                          new CellInput.Text(TextSourceInput.utf8File("unreadable-text.txt"))))));
+                          new CellValueSpec.Text(
+                              TextSourceSpec.utf8File("unreadable-text.txt"))))));
       InputSourceReadException ioTextFailure =
           assertThrows(
               InputSourceReadException.class,
@@ -245,9 +246,9 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                       new DrawingMutationAction.SetPicture(
                           picture(
                               "Logo",
-                              new PictureDataInput(
+                              new PictureDataSpec(
                                   ExcelPictureFormat.PNG,
-                                  BinarySourceInput.file("unreadable-binary.bin")),
+                                  BinarySourceSpec.file("unreadable-binary.bin")),
                               twoCellAnchor(),
                               null)))));
       InputSourceReadException ioBinaryFailure =
@@ -270,12 +271,12 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 mutate(
                     new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetEmbeddedObject(
-                        new EmbeddedObjectInput(
+                        new EmbeddedObjectSpec(
                             "Payload",
                             "Payload",
                             "payload.bin",
                             "open",
-                            BinarySourceInput.standardInput(),
+                            BinarySourceSpec.standardInput(),
                             inlinePictureData(),
                             twoCellAnchor())))));
     assertEquals(
@@ -307,70 +308,70 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 new SheetIntrospectionQuery.GetCells())));
 
     assertFalse(
-        SourceBackedInputRequirements.requiresStandardInput(new CellInput.NumberValue(1.0d)));
+        SourceBackedInputRequirements.requiresStandardInput(new CellValueSpec.NumberValue(1.0d)));
     assertFalse(
-        SourceBackedInputRequirements.requiresStandardInput(new CellInput.BooleanValue(true)));
-    assertFalse(
-        SourceBackedInputRequirements.requiresStandardInput(
-            new CellInput.Date(LocalDate.of(2026, 4, 18))));
+        SourceBackedInputRequirements.requiresStandardInput(new CellValueSpec.BooleanValue(true)));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
+            new CellValueSpec.Date(LocalDate.of(2026, 4, 18))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CellInput.RawFormula(TextSourceInput.inline("LAMBDA(x,x+1)(A1)"))));
+            new CellValueSpec.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CellInput.RawFormula(TextSourceInput.standardInput())));
+            new CellValueSpec.RawFormula(TextSourceSpec.standardInput())));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CommentInput(
-                TextSourceInput.inline("Ada"),
+            new CommentSpec(
+                TextSourceSpec.inline("Ada"),
                 "Ada",
                 false,
                 java.util.Optional.of(
                     List.of(
-                        new RichTextRunInput(
-                            TextSourceInput.inline("Ada"), java.util.Optional.empty()))),
+                        new RichTextRunSpec(
+                            TextSourceSpec.inline("Ada"), java.util.Optional.empty()))),
                 java.util.Optional.empty())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CommentInput(
-                TextSourceInput.inline("Ada"),
+            new CommentSpec(
+                TextSourceSpec.inline("Ada"),
                 "Ada",
                 false,
                 java.util.Optional.of(
                     List.of(
-                        new RichTextRunInput(
-                            TextSourceInput.standardInput(), java.util.Optional.empty()))),
+                        new RichTextRunSpec(
+                            TextSourceSpec.standardInput(), java.util.Optional.empty()))),
                 java.util.Optional.empty())));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            picture("Logo", inlinePictureData(), twoCellAnchor(), TextSourceInput.inline("Logo"))));
+            picture("Logo", inlinePictureData(), twoCellAnchor(), TextSourceSpec.inline("Logo"))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             picture(
                 "Logo",
-                new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.standardInput()),
+                new PictureDataSpec(ExcelPictureFormat.PNG, BinarySourceSpec.standardInput()),
                 twoCellAnchor(),
                 null)));
 
-    assertFalse(SourceBackedInputRequirements.requiresStandardInput(new ChartTitleInput.None()));
+    assertFalse(SourceBackedInputRequirements.requiresStandardInput(new ChartTitleSpec.None()));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new ChartTitleInput.Formula("Budget!$A$1")));
+            new ChartTitleSpec.Formula("Budget!$A$1")));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new ChartTitleInput.Text(TextSourceInput.inline("Title"))));
+            new ChartTitleSpec.Text(TextSourceSpec.inline("Title"))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new ChartTitleInput.Text(TextSourceInput.standardInput())));
+            new ChartTitleSpec.Text(TextSourceSpec.standardInput())));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            simpleShape("Shape", twoCellAnchor(), "roundRect", TextSourceInput.inline("Shape"))));
+            simpleShape("Shape", twoCellAnchor(), "roundRect", TextSourceSpec.inline("Shape"))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             simpleShape("Shape", twoCellAnchor(), "roundRect", null)));
@@ -378,80 +379,80 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             dataValidation(
-                new DataValidationRuleInput.ExplicitList(List.of("Open")),
+                new DataValidationRuleSpec.ExplicitList(List.of("Open")),
                 false,
                 false,
-                new DataValidationPromptInput(
-                    TextSourceInput.inline("Prompt"), TextSourceInput.inline("Body"), false),
-                new DataValidationErrorAlertInput(
+                new DataValidationPromptSpec(
+                    TextSourceSpec.inline("Prompt"), TextSourceSpec.inline("Body"), false),
+                new DataValidationErrorAlertSpec(
                     ExcelDataValidationErrorStyle.STOP,
-                    TextSourceInput.inline("Alert"),
-                    TextSourceInput.inline("Body"),
+                    TextSourceSpec.inline("Alert"),
+                    TextSourceSpec.inline("Body"),
                     false))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             dataValidation(
-                new DataValidationRuleInput.ExplicitList(List.of("Open")),
+                new DataValidationRuleSpec.ExplicitList(List.of("Open")),
                 false,
                 false,
                 null,
-                new DataValidationErrorAlertInput(
+                new DataValidationErrorAlertSpec(
                     ExcelDataValidationErrorStyle.STOP,
-                    TextSourceInput.standardInput(),
-                    TextSourceInput.inline("Body"),
+                    TextSourceSpec.standardInput(),
+                    TextSourceSpec.inline("Body"),
                     false))));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new DataValidationPromptInput(
-                TextSourceInput.inline("Prompt"), TextSourceInput.inline("Body"), false)));
+            new DataValidationPromptSpec(
+                TextSourceSpec.inline("Prompt"), TextSourceSpec.inline("Body"), false)));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new DataValidationPromptInput(
-                TextSourceInput.inline("Prompt"), TextSourceInput.standardInput(), false)));
+            new DataValidationPromptSpec(
+                TextSourceSpec.inline("Prompt"), TextSourceSpec.standardInput(), false)));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new DataValidationErrorAlertInput(
+            new DataValidationErrorAlertSpec(
                 ExcelDataValidationErrorStyle.STOP,
-                TextSourceInput.inline("Alert"),
-                TextSourceInput.inline("Body"),
+                TextSourceSpec.inline("Alert"),
+                TextSourceSpec.inline("Body"),
                 false)));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new DataValidationErrorAlertInput(
+            new DataValidationErrorAlertSpec(
                 ExcelDataValidationErrorStyle.STOP,
-                TextSourceInput.standardInput(),
-                TextSourceInput.inline("Body"),
+                TextSourceSpec.standardInput(),
+                TextSourceSpec.inline("Body"),
                 false)));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             printLayoutWithHeader(
-                new HeaderFooterTextInput(
-                    TextSourceInput.inline("left"),
-                    TextSourceInput.inline("center"),
-                    TextSourceInput.inline("right")))));
+                new HeaderFooterTextSpec(
+                    TextSourceSpec.inline("left"),
+                    TextSourceSpec.inline("center"),
+                    TextSourceSpec.inline("right")))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             printLayoutWithFooter(
-                new HeaderFooterTextInput(
-                    TextSourceInput.standardInput(),
-                    TextSourceInput.inline(""),
-                    TextSourceInput.inline("")))));
+                new HeaderFooterTextSpec(
+                    TextSourceSpec.standardInput(),
+                    TextSourceSpec.inline(""),
+                    TextSourceSpec.inline("")))));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new HeaderFooterTextInput(
-                TextSourceInput.inline("left"),
-                TextSourceInput.inline("center"),
-                TextSourceInput.inline("right"))));
+            new HeaderFooterTextSpec(
+                TextSourceSpec.inline("left"),
+                TextSourceSpec.inline("center"),
+                TextSourceSpec.inline("right"))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new HeaderFooterTextInput(
-                TextSourceInput.inline("left"),
-                TextSourceInput.inline("center"),
-                TextSourceInput.standardInput())));
+            new HeaderFooterTextSpec(
+                TextSourceSpec.inline("left"),
+                TextSourceSpec.inline("center"),
+                TextSourceSpec.standardInput())));
 
     Path absoluteFile = Files.createTempFile("gridgrind-source-backed-absolute-", ".txt");
     try (RequestPathAccess access =
@@ -471,7 +472,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
   void rawFormulaResolutionRetainsAnUnresolvedSourceForBatchPreflightCollection()
       throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-raw-formula-resolution-");
-    TextSourceInput.Utf8File missingSource = TextSourceInput.utf8File("missing-formula.txt");
+    TextSourceSpec.Utf8File missingSource = TextSourceSpec.utf8File("missing-formula.txt");
     InputResolutionFailures failures = new InputResolutionFailures();
     ExecutionInputBindings bindings =
         ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)
@@ -493,7 +494,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(new TextSourceInput.Utf8File("missing.txt"))))));
+                        new CellValueSpec.Text(new TextSourceSpec.Utf8File("missing.txt"))))));
     InputSourceNotFoundException notFound =
         assertThrows(
             InputSourceNotFoundException.class,
@@ -511,7 +512,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(new TextSourceInput.StandardInput())))));
+                        new CellValueSpec.Text(new TextSourceSpec.Stdin())))));
     InputSourceUnavailableException unavailable =
         assertThrows(
             InputSourceUnavailableException.class,
@@ -525,7 +526,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
   @Test
   void binaryResolutionSupportsBothScopedAndPreparedPathCapabilities() throws Exception {
     Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-binary-");
-    BinarySourceInput.InlineBase64 inline = new BinarySourceInput.InlineBase64("AQI=");
+    BinarySourceSpec.InlineBase64 inline = new BinarySourceSpec.InlineBase64("AQI=");
     ExecutionInputBindings bindings =
         ExecutionInputBindingsFixtureSupport.bindings(workingDirectory);
 

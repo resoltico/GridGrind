@@ -1,18 +1,18 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.style.DifferentialBorderInput;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortConditionInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
@@ -33,7 +33,7 @@ final class WorkbookCommandStructuredInputConverter {
   private WorkbookCommandStructuredInputConverter() {}
 
   static ExcelDataValidationDefinition toExcelDataValidationDefinition(
-      DataValidationInput validation) {
+      DataValidationSpec validation) {
     return new ExcelDataValidationDefinition(
         toExcelDataValidationRule(validation.rule()),
         validation.allowBlank(),
@@ -46,34 +46,34 @@ final class WorkbookCommandStructuredInputConverter {
             .flatMap(WorkbookCommandStructuredInputConverter::toExcelDataValidationErrorAlert));
   }
 
-  static ExcelDataValidationRule toExcelDataValidationRule(DataValidationRuleInput rule) {
+  static ExcelDataValidationRule toExcelDataValidationRule(DataValidationRuleSpec rule) {
     return switch (rule) {
-      case DataValidationRuleInput.ExplicitList explicitList ->
+      case DataValidationRuleSpec.ExplicitList explicitList ->
           new ExcelDataValidationRule.ExplicitList(explicitList.values());
-      case DataValidationRuleInput.FormulaList formulaList ->
+      case DataValidationRuleSpec.FormulaList formulaList ->
           new ExcelDataValidationRule.FormulaList(formulaList.formula());
-      case DataValidationRuleInput.WholeNumber wholeNumber ->
+      case DataValidationRuleSpec.WholeNumber wholeNumber ->
           new ExcelDataValidationRule.WholeNumber(
               wholeNumber.operator(), wholeNumber.formula1(), wholeNumber.formula2());
-      case DataValidationRuleInput.DecimalNumber decimalNumber ->
+      case DataValidationRuleSpec.DecimalNumber decimalNumber ->
           new ExcelDataValidationRule.DecimalNumber(
               decimalNumber.operator(), decimalNumber.formula1(), decimalNumber.formula2());
-      case DataValidationRuleInput.DateRule dateRule ->
+      case DataValidationRuleSpec.DateRule dateRule ->
           new ExcelDataValidationRule.DateRule(
               dateRule.operator(), dateRule.formula1(), dateRule.formula2());
-      case DataValidationRuleInput.TimeRule timeRule ->
+      case DataValidationRuleSpec.TimeRule timeRule ->
           new ExcelDataValidationRule.TimeRule(
               timeRule.operator(), timeRule.formula1(), timeRule.formula2());
-      case DataValidationRuleInput.TextLength textLength ->
+      case DataValidationRuleSpec.TextLength textLength ->
           new ExcelDataValidationRule.TextLength(
               textLength.operator(), textLength.formula1(), textLength.formula2());
-      case DataValidationRuleInput.CustomFormula customFormula ->
+      case DataValidationRuleSpec.CustomFormula customFormula ->
           new ExcelDataValidationRule.CustomFormula(customFormula.formula());
     };
   }
 
   static Optional<ExcelDataValidationPrompt> toExcelDataValidationPrompt(
-      DataValidationPromptInput prompt) {
+      DataValidationPromptSpec prompt) {
     return prompt == null
         ? Optional.empty()
         : Optional.of(
@@ -84,7 +84,7 @@ final class WorkbookCommandStructuredInputConverter {
   }
 
   static Optional<ExcelDataValidationErrorAlert> toExcelDataValidationErrorAlert(
-      DataValidationErrorAlertInput errorAlert) {
+      DataValidationErrorAlertSpec errorAlert) {
     return errorAlert == null
         ? Optional.empty()
         : Optional.of(
@@ -97,7 +97,7 @@ final class WorkbookCommandStructuredInputConverter {
   }
 
   static ExcelConditionalFormattingBlockDefinition toExcelConditionalFormattingBlock(
-      List<String> ranges, ConditionalFormattingDefinitionInput definition) {
+      List<String> ranges, ConditionalFormattingSpec definition) {
     return new ExcelConditionalFormattingBlockDefinition(
         ranges,
         definition.rules().stream()
@@ -106,16 +106,16 @@ final class WorkbookCommandStructuredInputConverter {
   }
 
   static ExcelConditionalFormattingRule toExcelConditionalFormattingRule(
-      ConditionalFormattingRuleInput rule) {
+      ConditionalFormattingRuleSpec rule) {
     return switch (rule) {
-      case ConditionalFormattingRuleInput.FormulaRule formulaRule ->
+      case ConditionalFormattingRuleSpec.FormulaRule formulaRule ->
           new ExcelConditionalFormattingRule.FormulaRule(
               formulaRule.formula(),
               formulaRule.stopIfTrue(),
               formulaRule
                   .style()
                   .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialStyle));
-      case ConditionalFormattingRuleInput.CellValueRule cellValueRule ->
+      case ConditionalFormattingRuleSpec.CellValueRule cellValueRule ->
           new ExcelConditionalFormattingRule.CellValueRule(
               cellValueRule.operator(),
               cellValueRule.formula1(),
@@ -124,7 +124,7 @@ final class WorkbookCommandStructuredInputConverter {
               cellValueRule
                   .style()
                   .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialStyle));
-      case ConditionalFormattingRuleInput.ColorScaleRule colorScaleRule ->
+      case ConditionalFormattingRuleSpec.ColorScaleRule colorScaleRule ->
           new ExcelConditionalFormattingRule.ColorScaleRule(
               colorScaleRule.thresholds().stream()
                   .map(
@@ -134,13 +134,13 @@ final class WorkbookCommandStructuredInputConverter {
               colorScaleRule.colors().stream()
                   .map(
                       color ->
-                          WorkbookCommandCellInputConverter.toRequiredExcelColor(
+                          WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
                               color, "color-scale color"))
                   .toList(),
               colorScaleRule.stopIfTrue());
-      case ConditionalFormattingRuleInput.DataBarRule dataBarRule ->
+      case ConditionalFormattingRuleSpec.DataBarRule dataBarRule ->
           new ExcelConditionalFormattingRule.DataBarRule(
-              WorkbookCommandCellInputConverter.toRequiredExcelColor(
+              WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
                   dataBarRule.color(), "data-bar color"),
               dataBarRule.iconOnly(),
               dataBarRule.widthMin(),
@@ -148,7 +148,7 @@ final class WorkbookCommandStructuredInputConverter {
               toExcelConditionalFormattingThreshold(dataBarRule.minThreshold()),
               toExcelConditionalFormattingThreshold(dataBarRule.maxThreshold()),
               dataBarRule.stopIfTrue());
-      case ConditionalFormattingRuleInput.IconSetRule iconSetRule ->
+      case ConditionalFormattingRuleSpec.IconSetRule iconSetRule ->
           new ExcelConditionalFormattingRule.IconSetRule(
               iconSetRule.iconSet(),
               iconSetRule.iconOnly(),
@@ -159,7 +159,7 @@ final class WorkbookCommandStructuredInputConverter {
                           ::toExcelConditionalFormattingThreshold)
                   .toList(),
               iconSetRule.stopIfTrue());
-      case ConditionalFormattingRuleInput.Top10Rule top10Rule ->
+      case ConditionalFormattingRuleSpec.Top10Rule top10Rule ->
           new ExcelConditionalFormattingRule.Top10Rule(
               top10Rule.rank(),
               top10Rule.percent(),
@@ -171,7 +171,7 @@ final class WorkbookCommandStructuredInputConverter {
     };
   }
 
-  static Optional<ExcelDifferentialStyle> toExcelDifferentialStyle(DifferentialStyleInput style) {
+  static Optional<ExcelDifferentialStyle> toExcelDifferentialStyle(DifferentialStylePatch style) {
     if (style == null) {
       return Optional.empty();
     }
@@ -180,41 +180,47 @@ final class WorkbookCommandStructuredInputConverter {
             style.numberFormat(),
             style.bold(),
             style.italic(),
-            style.fontHeight().flatMap(WorkbookCommandCellInputConverter::toExcelFontHeight),
-            style.fontColor().flatMap(WorkbookCommandCellInputConverter::toExcelColor),
+            style.fontHeight().flatMap(WorkbookCommandCellValueSpecConverter::toExcelFontHeight),
+            style.fontColor().flatMap(WorkbookCommandCellValueSpecConverter::toExcelColor),
             style.underline(),
             style.strikeout(),
-            style.fillColor().flatMap(WorkbookCommandCellInputConverter::toExcelColor),
+            style.fillColor().flatMap(WorkbookCommandCellValueSpecConverter::toExcelColor),
             style
                 .border()
                 .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorder)));
   }
 
   static Optional<ExcelDifferentialBorder> toExcelDifferentialBorder(
-      DifferentialBorderInput border) {
+      DifferentialBorderPatch border) {
     if (border == null) {
       return Optional.empty();
     }
     return Optional.of(
         new ExcelDifferentialBorder(
-            border.all().flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide).orElse(null),
-            border.top().flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide).orElse(null),
+            border
+                .all()
+                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
+                .orElse(null),
+            border
+                .top()
+                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
+                .orElse(null),
             border
                 .right()
-                .flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide)
+                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
                 .orElse(null),
             border
                 .bottom()
-                .flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide)
+                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
                 .orElse(null),
             border
                 .left()
-                .flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide)
+                .flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorderSide)
                 .orElse(null)));
   }
 
   static ExcelAutofilterFilterColumn toExcelAutofilterFilterColumn(
-      AutofilterFilterColumnInput column) {
+      AutofilterFilterColumnSpec column) {
     return new ExcelAutofilterFilterColumn(
         column.columnId(),
         column.showButton(),
@@ -222,7 +228,7 @@ final class WorkbookCommandStructuredInputConverter {
   }
 
   static Optional<ExcelAutofilterSortState> toExcelAutofilterSortState(
-      AutofilterSortStateInput sortState) {
+      AutofilterSortStateSpec sortState) {
     if (sortState == null) {
       return Optional.empty();
     }
@@ -238,11 +244,11 @@ final class WorkbookCommandStructuredInputConverter {
   }
 
   private static ExcelAutofilterFilterCriterion toExcelAutofilterFilterCriterion(
-      AutofilterFilterCriterionInput criterion) {
+      AutofilterFilterCriterionSpec criterion) {
     return switch (criterion) {
-      case AutofilterFilterCriterionInput.Values values ->
+      case AutofilterFilterCriterionSpec.Values values ->
           new ExcelAutofilterFilterCriterion.Values(values.values(), values.includeBlank());
-      case AutofilterFilterCriterionInput.Custom custom ->
+      case AutofilterFilterCriterionSpec.Custom custom ->
           new ExcelAutofilterFilterCriterion.Custom(
               custom.and(),
               custom.conditions().stream()
@@ -251,73 +257,73 @@ final class WorkbookCommandStructuredInputConverter {
                           new ExcelAutofilterFilterCriterion.CustomCondition(
                               condition.operator(), condition.value()))
                   .toList());
-      case AutofilterFilterCriterionInput.Dynamic dynamic ->
+      case AutofilterFilterCriterionSpec.Dynamic dynamic ->
           new ExcelAutofilterFilterCriterion.Dynamic(
               dynamic.type(), dynamic.value().orElse(null), dynamic.maxValue().orElse(null));
-      case AutofilterFilterCriterionInput.Top10 top10 ->
+      case AutofilterFilterCriterionSpec.Top10 top10 ->
           new ExcelAutofilterFilterCriterion.Top10(top10.value(), top10.top(), top10.percent());
-      case AutofilterFilterCriterionInput.Color color ->
+      case AutofilterFilterCriterionSpec.Color color ->
           new ExcelAutofilterFilterCriterion.Color(
               color.cellColor(),
-              WorkbookCommandCellInputConverter.toRequiredExcelColor(
+              WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
                   color.color(), "autofilter color"));
-      case AutofilterFilterCriterionInput.Icon icon ->
+      case AutofilterFilterCriterionSpec.Icon icon ->
           new ExcelAutofilterFilterCriterion.Icon(icon.iconSet(), icon.iconId());
     };
   }
 
   private static ExcelAutofilterSortCondition toExcelAutofilterSortCondition(
-      AutofilterSortConditionInput condition) {
+      AutofilterSortConditionSpec condition) {
     return switch (condition) {
-      case AutofilterSortConditionInput.Value value ->
+      case AutofilterSortConditionSpec.Value value ->
           new ExcelAutofilterSortCondition.Value(value.range().value(), value.descending());
-      case AutofilterSortConditionInput.CellColor cellColor ->
+      case AutofilterSortConditionSpec.CellColor cellColor ->
           new ExcelAutofilterSortCondition.CellColor(
               cellColor.range().value(),
               cellColor.descending(),
-              WorkbookCommandCellInputConverter.toRequiredExcelColor(
+              WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
                   cellColor.color(), "autofilter cell sort color"));
-      case AutofilterSortConditionInput.FontColor fontColor ->
+      case AutofilterSortConditionSpec.FontColor fontColor ->
           new ExcelAutofilterSortCondition.FontColor(
               fontColor.range().value(),
               fontColor.descending(),
-              WorkbookCommandCellInputConverter.toRequiredExcelColor(
+              WorkbookCommandCellValueSpecConverter.toRequiredExcelColor(
                   fontColor.color(), "autofilter font sort color"));
-      case AutofilterSortConditionInput.Icon icon ->
+      case AutofilterSortConditionSpec.Icon icon ->
           new ExcelAutofilterSortCondition.Icon(
               icon.range().value(), icon.descending(), icon.iconId());
     };
   }
 
   private static dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold
-      toExcelConditionalFormattingThreshold(ConditionalFormattingThresholdInput threshold) {
+      toExcelConditionalFormattingThreshold(ConditionalFormattingThresholdSpec threshold) {
     return switch (threshold) {
-      case ConditionalFormattingThresholdInput.Min _ ->
+      case ConditionalFormattingThresholdSpec.Min _ ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
               dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.MIN,
               null,
               null);
-      case ConditionalFormattingThresholdInput.Max _ ->
+      case ConditionalFormattingThresholdSpec.Max _ ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
               dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.MAX,
               null,
               null);
-      case ConditionalFormattingThresholdInput.Numeric number ->
+      case ConditionalFormattingThresholdSpec.Numeric number ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
               dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.NUMBER,
               null,
               number.value());
-      case ConditionalFormattingThresholdInput.Percent percent ->
+      case ConditionalFormattingThresholdSpec.Percent percent ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
               dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.PERCENT,
               null,
               percent.value());
-      case ConditionalFormattingThresholdInput.Percentile percentile ->
+      case ConditionalFormattingThresholdSpec.Percentile percentile ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
               dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.PERCENTILE,
               null,
               percentile.value());
-      case ConditionalFormattingThresholdInput.Formula formula ->
+      case ConditionalFormattingThresholdSpec.Formula formula ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
               dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.FORMULA,
               formula.formula(),

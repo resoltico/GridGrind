@@ -24,7 +24,7 @@ final class ExecutionGrantTestSupport {
   }
 
   static GridGrindExecutionGrant.Bounded noPublicationWithStandardInput(List<String> operationIds) {
-    return grant(operationIds, List.of(new GridGrindExecutionGrant.ReadAuthority.StandardInput()));
+    return grant(operationIds, List.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()));
   }
 
   static GridGrindExecutionGrant.Bounded forPlan(

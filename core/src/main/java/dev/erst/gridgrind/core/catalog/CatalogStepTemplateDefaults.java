@@ -8,7 +8,7 @@ import java.util.Set;
  */
 final class CatalogStepTemplateDefaults {
   private static final Set<String> TYPED_CELL_INPUT_TEMPLATE_GROUPS =
-      Set.of("cellRowInputTypes", "cellGridInputTypes");
+      Set.of("cellRowSpecTypes", "cellGridSpecTypes");
   private static final Set<String> PRIMARY_SELECTOR_TYPE_IDS =
       Set.of(
           "SHEET_BY_NAME",
@@ -158,20 +158,20 @@ final class CatalogStepTemplateDefaults {
             "SET_SHEET_ZOOM",
             (catalog, object, recursionGuard, notes) -> object.put("zoomPercent", 100)),
         Map.entry(
-            "ChartSeriesInput",
+            "ChartSeriesSpec",
             (catalog, object, recursionGuard, notes) ->
                 object.put(
                     "title",
                     CatalogStepTemplateSupport.nestedGroupTemplate(
-                        catalog, "chartTitleInputTypes", recursionGuard, notes))),
+                        catalog, "chartTitleSpecTypes", recursionGuard, notes))),
         Map.entry(
-            "CellStylePatchInput",
+            "CellStylePatch",
             (catalog, object, recursionGuard, notes) -> object.put("numberFormat", "0.00")),
         Map.entry(
             "CustomXmlMappingLocator",
             (catalog, object, recursionGuard, notes) -> object.put("name", "Mapping1")),
         Map.entry(
-            "DifferentialStyleInput",
+            "DifferentialStylePatch",
             (catalog, object, recursionGuard, notes) -> object.put("bold", true)),
         Map.entry(
             "FORMULA_RULE",
@@ -189,7 +189,7 @@ final class CatalogStepTemplateDefaults {
               object.put("points", 1);
             }),
         Map.entry(
-            "SignatureLineInput",
+            "SignatureLineSpec",
             (catalog, object, recursionGuard, notes) -> object.put("caption", "Sign here")),
         Map.entry(
             "URL",

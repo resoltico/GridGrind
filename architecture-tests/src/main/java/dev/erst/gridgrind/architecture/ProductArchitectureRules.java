@@ -9,6 +9,10 @@ public enum ProductArchitectureRules {
   ;
 
   @ArchTest
+  static final ArchRule CANONICAL_MODEL_NAMES_DESCRIBE_THEIR_ROLE =
+      ProductDomainShapeArchitectureRules.canonicalModelNamesDescribeTheirRole();
+
+  @ArchTest
   static final ArchRule CORE_DOES_NOT_DEPEND_ON_WORKBOOK_OR_JSON_LIBRARIES =
       ProductDependencyArchitectureRules.coreDoesNotDependOnWorkbookOrJsonLibraries();
 

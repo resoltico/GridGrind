@@ -16,11 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
@@ -56,7 +56,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             executionPolicy(requireEvaluation()),
-            FormulaEnvironmentInput.empty(),
+            FormulaEnvironmentSpec.empty(),
             java.util.List.<WorkbookStep>of(
                 new MutationStep(
                     new StepId("step-01-ensure-sheet"),
@@ -70,7 +70,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new StepId("step-03-set-cell"),
                     new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.core.model.value.CellInput.NumberValue(1.0)))));
+                        new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1.0)))));
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
@@ -86,7 +86,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
         request(
             new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/calculation-event-read.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
+            executionPolicy(ExecutionModeSpec.eventRead(), calculateAll()),
             null,
             java.util.List.of(),
             java.util.List.of(
@@ -115,8 +115,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.core.model.value.CellInput.Formula(
-                            dev.erst.gridgrind.core.source.TextSourceInput.inline("ZZZZ(1)"))))),
+                        new dev.erst.gridgrind.core.model.value.CellValueSpec.Formula(
+                            dev.erst.gridgrind.core.source.TextSourceSpec.inline("ZZZZ(1)"))))),
             java.util.List.of());
 
     WorkbookResult.Success success =
@@ -149,8 +149,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.core.model.value.CellInput.Formula(
-                            dev.erst.gridgrind.core.source.TextSourceInput.inline(
+                        new dev.erst.gridgrind.core.model.value.CellValueSpec.Formula(
+                            dev.erst.gridgrind.core.source.TextSourceSpec.inline(
                                 "TEXTAFTER(\"a,b\",\",\")"))))),
             java.util.List.of(
                 inspect(
@@ -186,8 +186,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.core.model.value.CellInput.Formula(
-                            dev.erst.gridgrind.core.source.TextSourceInput.inline("ZZZZ(1)"))))),
+                        new dev.erst.gridgrind.core.model.value.CellValueSpec.Formula(
+                            dev.erst.gridgrind.core.source.TextSourceSpec.inline("ZZZZ(1)"))))),
             java.util.List.of());
 
     WorkbookResult.Success success =
@@ -220,7 +220,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
+                    executionPolicy(ExecutionModeSpec.streamingWrite(), markRecalculateOnOpen()),
                     null,
                     java.util.List.of(
                         mutate(

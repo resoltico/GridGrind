@@ -12,13 +12,12 @@ import org.junit.jupiter.api.Test;
 class CliRequestReadFailureSupportTest {
   @Test
   void requestInputTreatsImplicitAndExplicitStandardInputConsistently() {
-    RequestInput.StandardInput implicit =
+    RequestInput.Stdin implicit =
         assertInstanceOf(
-            RequestInput.StandardInput.class,
-            CliRequestReadFailureSupport.requestInput(Optional.empty()));
-    RequestInput.StandardInput explicit =
+            RequestInput.Stdin.class, CliRequestReadFailureSupport.requestInput(Optional.empty()));
+    RequestInput.Stdin explicit =
         assertInstanceOf(
-            RequestInput.StandardInput.class,
+            RequestInput.Stdin.class,
             CliRequestReadFailureSupport.requestInput(Optional.of(Path.of("-"))));
     RequestInput.RequestFile file =
         assertInstanceOf(

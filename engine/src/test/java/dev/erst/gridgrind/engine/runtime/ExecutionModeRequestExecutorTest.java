@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.catalog.GridGrindContractText;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
@@ -71,7 +71,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     reads)));
@@ -90,7 +90,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(
                         mutate(
@@ -121,12 +121,12 @@ class ExecutionModeRequestExecutorTest {
             mutate(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new CellMutationAction.AppendRow(
-                    new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                         List.of(textCell("Item"), textCell("Total"))))),
             mutate(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new CellMutationAction.AppendRow(
-                    new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                         List.of(textCell("Hosting"), formulaCell("2+3"))))));
     List<InspectionStep> reads =
         List.of(
@@ -148,7 +148,7 @@ class ExecutionModeRequestExecutorTest {
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-                    executionPolicy(ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
+                    executionPolicy(ExecutionModeSpec.streamingWrite(), markRecalculateOnOpen()),
                     null,
                     List.copyOf(operations),
                     List.copyOf(reads))));
@@ -191,7 +191,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(
                         mutate(
@@ -226,7 +226,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -266,9 +266,8 @@ class ExecutionModeRequestExecutorTest {
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         persistedCopy.toString(),
                         WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
-                            .none()),
-                    ExecutionModeInput.eventRead(),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -304,7 +303,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -326,7 +325,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of())));
@@ -345,7 +344,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -376,13 +375,13 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.streamingWrite(),
+                    ExecutionModeSpec.streamingWrite(),
                     null,
                     List.of(
                         mutate(
                             new SheetSelector.ByName(new SheetName("Ops")),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                     List.of(textCell("x")))))),
                     List.of())));
 
@@ -398,7 +397,7 @@ class ExecutionModeRequestExecutorTest {
         request(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionModeInput.streamingWrite(),
+            ExecutionModeSpec.streamingWrite(),
             null,
             List.of(
                 mutate(
@@ -432,7 +431,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.streamingWrite(),
+                    ExecutionModeSpec.streamingWrite(),
                     null,
                     List.of(
                         mutate(
@@ -467,7 +466,7 @@ class ExecutionModeRequestExecutorTest {
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-                    ExecutionModeInput.streamingWrite(),
+                    ExecutionModeSpec.streamingWrite(),
                     null,
                     List.of(
                         mutate(
@@ -498,7 +497,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -517,13 +516,13 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.streamingWrite(),
+                    ExecutionModeSpec.streamingWrite(),
                     null,
                     mutations(
                         mutate(
                             new SheetSelector.ByName(new SheetName("Ops")),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                     List.of(textCell("x")))))),
                     inspections())));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, existingStreamingSource.problem().code());
@@ -536,7 +535,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.streamingWrite(),
+                    ExecutionModeSpec.streamingWrite(),
                     null,
                     List.of(
                         mutate(
@@ -564,7 +563,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
+                    executionPolicy(ExecutionModeSpec.streamingWrite(), markRecalculateOnOpen()),
                     null,
                     List.of(),
                     List.of())));

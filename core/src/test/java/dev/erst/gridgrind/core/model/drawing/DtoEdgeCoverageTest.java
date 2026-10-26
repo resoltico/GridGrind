@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
-import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
@@ -504,17 +504,17 @@ class DtoEdgeCoverageTest {
 
     assertEquals(
         "leftmostColumn must be greater than or equal to splitColumn",
-        assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(2, 0, 1, 0))
+        assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(2, 0, 1, 0))
             .getMessage());
     assertEquals(
         "topRow must be greater than or equal to splitRow",
-        assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(0, 2, 0, 1))
+        assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(0, 2, 0, 1))
             .getMessage());
     assertEquals(
         "topRow must be 0 when ySplitPosition is 0: 1",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new PaneInput.Split(1, 0, 0, 1, ExcelPaneRegion.LOWER_RIGHT))
+                () -> new PaneSpec.Split(1, 0, 0, 1, ExcelPaneRegion.LOWER_RIGHT))
             .getMessage());
 
     assertEquals(

@@ -3,13 +3,13 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport.*;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
-import dev.erst.gridgrind.core.model.layout.PaneInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -27,29 +27,29 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 final class OperationSequenceLayoutValues {
   private OperationSequenceLayoutValues() {}
 
-  static PaneInput nextPaneInput(GridGrindFuzzData data) {
+  static PaneSpec nextPaneInput(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new PaneInput.None();
+      case 0 -> new PaneSpec.None();
       case 1 -> {
         int splitColumn = data.consumeInt(1, 3);
-        yield new PaneInput.Frozen(
+        yield new PaneSpec.Frozen(
             splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
       }
       case 2 -> {
         int splitRow = data.consumeInt(1, 3);
-        yield new PaneInput.Frozen(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
+        yield new PaneSpec.Frozen(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
       }
       case 3 -> {
         int splitColumn = data.consumeInt(1, 3);
         int splitRow = data.consumeInt(1, 3);
-        yield new PaneInput.Frozen(
+        yield new PaneSpec.Frozen(
             splitColumn,
             splitRow,
             data.consumeInt(splitColumn, splitColumn + 2),
             data.consumeInt(splitRow, splitRow + 2));
       }
       default ->
-          new PaneInput.Split(
+          new PaneSpec.Split(
               data.consumeInt(0, 2400),
               data.consumeInt(1, 2400),
               0,
@@ -89,29 +89,29 @@ final class OperationSequenceLayoutValues {
     };
   }
 
-  static PrintLayoutInput nextPrintLayoutInput(GridGrindFuzzData data) {
-    return PrintLayoutInput.withDefaultSetup(
+  static PrintLayoutSpec nextPrintLayoutInput(GridGrindFuzzData data) {
+    return PrintLayoutSpec.withDefaultSetup(
         data.consumeBoolean()
-            ? new PrintAreaInput.Range(new RangeRef("A1:C20"))
-            : new PrintAreaInput.None(),
+            ? new PrintAreaSpec.Range(new RangeRef("A1:C20"))
+            : new PrintAreaSpec.None(),
         data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
         data.consumeBoolean()
-            ? new PrintScalingInput.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
-            : new PrintScalingInput.Automatic(),
+            ? new PrintScalingSpec.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
+            : new PrintScalingSpec.Automatic(),
         data.consumeBoolean()
-            ? new PrintTitleRowsInput.Band(0, data.consumeInt(0, 2))
-            : new PrintTitleRowsInput.None(),
+            ? new PrintTitleRowsSpec.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleRowsSpec.None(),
         data.consumeBoolean()
-            ? new PrintTitleColumnsInput.Band(0, data.consumeInt(0, 2))
-            : new PrintTitleColumnsInput.None(),
-        new HeaderFooterTextInput(
-            TextSourceInput.inline("L" + data.consumeInt(0, 9)),
-            TextSourceInput.inline(""),
-            TextSourceInput.inline("R" + data.consumeInt(0, 9))),
-        new HeaderFooterTextInput(
-            TextSourceInput.inline(""),
-            TextSourceInput.inline("P" + data.consumeInt(0, 9)),
-            TextSourceInput.inline("")));
+            ? new PrintTitleColumnsSpec.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleColumnsSpec.None(),
+        new HeaderFooterTextSpec(
+            TextSourceSpec.inline("L" + data.consumeInt(0, 9)),
+            TextSourceSpec.inline(""),
+            TextSourceSpec.inline("R" + data.consumeInt(0, 9))),
+        new HeaderFooterTextSpec(
+            TextSourceSpec.inline(""),
+            TextSourceSpec.inline("P" + data.consumeInt(0, 9)),
+            TextSourceSpec.inline("")));
   }
 
   static ExcelPrintLayout nextExcelPrintLayout(GridGrindFuzzData data) {
@@ -258,7 +258,7 @@ final class OperationSequenceLayoutValues {
         yield new OperationSequenceValueFactory.WorkflowStorage(
             new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
             directory);
       }
       default -> {

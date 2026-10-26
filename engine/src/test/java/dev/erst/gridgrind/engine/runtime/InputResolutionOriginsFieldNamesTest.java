@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import org.junit.jupiter.api.Test;
 
 /** Verifies canonical record component names identify resolved source origins. */
@@ -11,7 +11,6 @@ class InputResolutionOriginsFieldNamesTest {
   void usesCanonicalRecordComponentNames() {
     assertEquals(
         "text",
-        InputResolutionOrigins.jsonFieldName(
-            TextSourceInput.Inline.class.getRecordComponents()[0]));
+        InputResolutionOrigins.jsonFieldName(TextSourceSpec.Inline.class.getRecordComponents()[0]));
   }
 }

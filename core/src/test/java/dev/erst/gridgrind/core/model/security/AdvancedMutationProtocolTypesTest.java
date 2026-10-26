@@ -6,60 +6,60 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
-import dev.erst.gridgrind.core.model.drawing.CommentAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.PictureInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
-import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
-import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.layout.SheetDefaultsInput;
-import dev.erst.gridgrind.core.model.layout.SheetDisplayInput;
-import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryInput;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
-import dev.erst.gridgrind.core.model.print.PrintMarginsInput;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
-import dev.erst.gridgrind.core.model.print.PrintSetupInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
-import dev.erst.gridgrind.core.model.style.CellFontInput;
-import dev.erst.gridgrind.core.model.style.CellGradientFillInput;
-import dev.erst.gridgrind.core.model.style.CellGradientStopInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortConditionInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
-import dev.erst.gridgrind.core.model.table.TableColumnInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput;
-import dev.erst.gridgrind.core.model.validation.IgnoredErrorInput;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
@@ -93,21 +93,20 @@ class AdvancedMutationProtocolTypesTest {
   @Test
   @SuppressWarnings("NullOptional") // The factory deliberately normalizes absent JSON optionals.
   void ooxmlSecurityInputsNormalizeAndValidate() {
-    OoxmlOpenSecurityInput openSecurity =
-        new OoxmlOpenSecurityInput(Optional.of(ref("source-pass")));
-    OoxmlEncryptionInput encryption = OoxmlEncryptionInput.strong(ref("persist-pass"));
-    OoxmlSignatureInput signature =
-        new OoxmlSignatureInput(
+    OoxmlOpenSecuritySpec openSecurity = new OoxmlOpenSecuritySpec(Optional.of(ref("source-pass")));
+    OoxmlEncryptionSpec encryption = OoxmlEncryptionSpec.strong(ref("persist-pass"));
+    OoxmlSignatureSpec signature =
+        new OoxmlSignatureSpec(
             "tmp/signing-material.p12",
             ref("keystore-pass"),
             Optional.of(ref("key-pass")),
             Optional.empty(),
             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
             Optional.empty());
-    OoxmlPersistenceSecurityInput persistence =
-        new OoxmlPersistenceSecurityInput(
-            new OoxmlPersistenceEncryptionInput.Encrypt(encryption),
-            new OoxmlPersistenceSignatureInput.Sign(signature));
+    OoxmlPersistenceSecuritySpec persistence =
+        new OoxmlPersistenceSecuritySpec(
+            new OoxmlPersistenceEncryptionSpec.Encrypt(encryption),
+            new OoxmlPersistenceSignatureSpec.Sign(signature));
 
     assertEquals(Optional.of(ref("source-pass")), openSecurity.passwordRef());
     assertEquals(ExcelOoxmlWriteCipher.AES_256, encryption.cipher());
@@ -118,24 +117,24 @@ class AdvancedMutationProtocolTypesTest {
     assertTrue(signature.description().isEmpty());
     assertEquals(
         encryption,
-        assertInstanceOf(OoxmlPersistenceEncryptionInput.Encrypt.class, persistence.encryption())
+        assertInstanceOf(OoxmlPersistenceEncryptionSpec.Encrypt.class, persistence.encryption())
             .encryption());
     assertEquals(
         signature,
-        assertInstanceOf(OoxmlPersistenceSignatureInput.Sign.class, persistence.signature())
+        assertInstanceOf(OoxmlPersistenceSignatureSpec.Sign.class, persistence.signature())
             .signature());
 
     assertThrows(IllegalArgumentException.class, () -> new SecretReference(" "));
     assertThrows(
         NullPointerException.class,
-        () -> new OoxmlEncryptionInput(ref("persist-pass"), null, ExcelOoxmlWriteHash.SHA_512));
+        () -> new OoxmlEncryptionSpec(ref("persist-pass"), null, ExcelOoxmlWriteHash.SHA_512));
     assertThrows(
         NullPointerException.class,
-        () -> new OoxmlEncryptionInput(ref("persist-pass"), ExcelOoxmlWriteCipher.AES_256, null));
+        () -> new OoxmlEncryptionSpec(ref("persist-pass"), ExcelOoxmlWriteCipher.AES_256, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new OoxmlSignatureInput(
+            new OoxmlSignatureSpec(
                 "tmp/signing-material.p12",
                 ref("keystore-pass"),
                 Optional.empty(),
@@ -145,7 +144,7 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new OoxmlSignatureInput(
+            new OoxmlSignatureSpec(
                 " ",
                 ref("keystore-pass"),
                 Optional.empty(),
@@ -153,24 +152,24 @@ class AdvancedMutationProtocolTypesTest {
                 ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                 Optional.empty()));
 
-    assertThrows(NullPointerException.class, () -> new OoxmlPersistenceSecurityInput(null, null));
+    assertThrows(NullPointerException.class, () -> new OoxmlPersistenceSecuritySpec(null, null));
   }
 
   @Test
   void ooxmlSecurityHelpersCollapseEmptyRequestState() {
-    OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput(Optional.empty());
-    OoxmlEncryptionInput encryption =
-        new OoxmlEncryptionInput(
+    OoxmlOpenSecuritySpec openSecurity = new OoxmlOpenSecuritySpec(Optional.empty());
+    OoxmlEncryptionSpec encryption =
+        new OoxmlEncryptionSpec(
             ref("persist-pass"), ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384);
-    OoxmlPersistenceSecurityInput encryptionAndUnsigned =
-        new OoxmlPersistenceSecurityInput(
-            new OoxmlPersistenceEncryptionInput.Encrypt(encryption),
-            new OoxmlPersistenceSignatureInput.None());
-    OoxmlPersistenceSecurityInput plaintextAndSigned =
-        new OoxmlPersistenceSecurityInput(
-            new OoxmlPersistenceEncryptionInput.None(),
-            new OoxmlPersistenceSignatureInput.Sign(
-                new OoxmlSignatureInput(
+    OoxmlPersistenceSecuritySpec encryptionAndUnsigned =
+        new OoxmlPersistenceSecuritySpec(
+            new OoxmlPersistenceEncryptionSpec.Encrypt(encryption),
+            new OoxmlPersistenceSignatureSpec.None());
+    OoxmlPersistenceSecuritySpec plaintextAndSigned =
+        new OoxmlPersistenceSecuritySpec(
+            new OoxmlPersistenceEncryptionSpec.None(),
+            new OoxmlPersistenceSignatureSpec.Sign(
+                new OoxmlSignatureSpec(
                     "tmp/signing-material.p12",
                     ref("keystore-pass"),
                     Optional.of(ref("key-pass")),
@@ -189,7 +188,7 @@ class AdvancedMutationProtocolTypesTest {
     assertTrue(unsecuredOverwrite.security().isEmpty());
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookPlan.WorkbookPersistence.Overwrite((OoxmlPersistenceSecurityInput) null));
+        () -> new WorkbookPlan.WorkbookPersistence.Overwrite((OoxmlPersistenceSecuritySpec) null));
     assertEquals(encryptionAndUnsigned, securedOverwrite.security().orElseThrow());
     assertEquals(
         plaintextAndSigned,
@@ -203,8 +202,8 @@ class AdvancedMutationProtocolTypesTest {
 
   @Test
   void workbookProtectionNamedRangeAndCommentInputsNormalizeAndValidate() {
-    WorkbookProtectionInput protection =
-        new WorkbookProtectionInput(
+    WorkbookProtectionSpec protection =
+        new WorkbookProtectionSpec(
             false, true, false, Optional.of(ref("book-secret")), Optional.of(ref("review-secret")));
 
     assertFalse(protection.structureLocked());
@@ -226,49 +225,49 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         NullPointerException.class, () -> new NamedRangeTarget.Range(null, new RangeRef("A1")));
 
-    CommentAnchorInput anchor = new CommentAnchorInput(1, 2, 4, 6);
+    CommentAnchorSpec anchor = new CommentAnchorSpec(1, 2, 4, 6);
     assertEquals(1, anchor.firstColumn());
     assertEquals(2, anchor.firstRow());
     assertEquals(4, anchor.lastColumn());
     assertEquals(6, anchor.lastRow());
-    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorInput(-1, 0, 0, 0));
-    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorInput(1, 0, 0, 0));
-    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorInput(0, 2, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(-1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(0, 2, 1, 1));
 
-    CommentInput richComment =
-        new CommentInput(
+    CommentSpec richComment =
+        new CommentSpec(
             text("Ada Lovelace"),
             "GridGrind",
             true,
             Optional.of(
                 List.of(
-                    new RichTextRunInput(text("Ada"), Optional.empty()),
-                    new RichTextRunInput(text(" Lovelace"), Optional.empty()))),
+                    new RichTextRunSpec(text("Ada"), Optional.empty()),
+                    new RichTextRunSpec(text(" Lovelace"), Optional.empty()))),
             Optional.of(anchor));
     assertTrue(richComment.visible());
     assertEquals(anchor, richComment.anchor().orElseThrow());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CommentInput(
+            new CommentSpec(
                 text("Ada"), "GridGrind", true, Optional.of(List.of()), Optional.empty()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new CommentInput(
+            new CommentSpec(
                 text("Ada"),
                 "GridGrind",
                 true,
-                Optional.of(List.of((RichTextRunInput) null)),
+                Optional.of(List.of((RichTextRunSpec) null)),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CommentInput(
+            new CommentSpec(
                 text("Ada Lovelace"),
                 "GridGrind",
                 true,
-                Optional.of(List.of(new RichTextRunInput(text("Ada"), Optional.empty()))),
+                Optional.of(List.of(new RichTextRunSpec(text("Ada"), Optional.empty()))),
                 Optional.empty()));
   }
 
@@ -278,23 +277,23 @@ class AdvancedMutationProtocolTypesTest {
 
   @Test
   void drawingInputsNormalizeAndValidate() {
-    DrawingMarkerInput from = new DrawingMarkerInput(1, 2, 3, 4);
-    DrawingMarkerInput to = new DrawingMarkerInput(4, 6);
-    DrawingAnchorInput.TwoCell anchor =
-        new DrawingAnchorInput.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
-    DrawingAnchorInput.TwoCell defaultAnchor = DrawingAnchorInput.TwoCell.moveAndResize(from, to);
-    PictureDataInput pictureData =
-        new PictureDataInput(
+    DrawingMarkerSpec from = new DrawingMarkerSpec(1, 2, 3, 4);
+    DrawingMarkerSpec to = new DrawingMarkerSpec(4, 6);
+    DrawingAnchorSpec.TwoCell anchor =
+        new DrawingAnchorSpec.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    DrawingAnchorSpec.TwoCell defaultAnchor = DrawingAnchorSpec.TwoCell.moveAndResize(from, to);
+    PictureDataSpec pictureData =
+        new PictureDataSpec(
             ExcelPictureFormat.PNG,
             binary(
                 "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"));
-    PictureInput picture =
-        new PictureInput("OpsPicture", pictureData, anchor, Optional.of(text("Queue preview")));
-    ShapeInput.SimpleShape shape =
-        new ShapeInput.SimpleShape("OpsShape", anchor, " rect ", Optional.of(text("Queue")));
-    ShapeInput.Connector connector = new ShapeInput.Connector("OpsConnector", anchor);
-    EmbeddedObjectInput embeddedObject =
-        new EmbeddedObjectInput(
+    PictureSpec picture =
+        new PictureSpec("OpsPicture", pictureData, anchor, Optional.of(text("Queue preview")));
+    ShapeSpec.SimpleShape shape =
+        new ShapeSpec.SimpleShape("OpsShape", anchor, " rect ", Optional.of(text("Queue")));
+    ShapeSpec.Connector connector = new ShapeSpec.Connector("OpsConnector", anchor);
+    EmbeddedObjectSpec embeddedObject =
+        new EmbeddedObjectSpec(
             "OpsEmbed",
             "Payload",
             "payload.txt",
@@ -302,8 +301,8 @@ class AdvancedMutationProtocolTypesTest {
             binary("cGF5bG9hZA=="),
             pictureData,
             anchor);
-    SignatureLineInput signatureLine =
-        new SignatureLineInput(
+    SignatureLineSpec signatureLine =
+        new SignatureLineSpec(
             "OpsSignature",
             anchor,
             true,
@@ -315,15 +314,15 @@ class AdvancedMutationProtocolTypesTest {
             java.util.Optional.of("invalid"),
             java.util.Optional.of(pictureData));
 
-    DrawingAnchorInput.TwoCell sameRowAnchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(1, 2, 0, 3),
-            new DrawingMarkerInput(2, 2, 0, 4),
+    DrawingAnchorSpec.TwoCell sameRowAnchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(1, 2, 0, 3),
+            new DrawingMarkerSpec(2, 2, 0, 4),
             ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-    DrawingAnchorInput.TwoCell sameColAnchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(1, 2, 3, 0),
-            new DrawingMarkerInput(1, 3, 4, 0),
+    DrawingAnchorSpec.TwoCell sameColAnchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(1, 2, 3, 0),
+            new DrawingMarkerSpec(1, 3, 4, 0),
             ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
 
     assertEquals(4, to.columnIndex());
@@ -340,67 +339,67 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals("Ada Lovelace", signatureLine.suggestedSigner().orElseThrow());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ShapeInput.SimpleShape("DefaultShape", anchor, " ", Optional.empty()));
+        () -> new ShapeSpec.SimpleShape("DefaultShape", anchor, " ", Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ShapeInput.SimpleShape("NullPreset", anchor, null, Optional.empty()));
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(-1, 0, 0, 0));
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, -1, 0, 0));
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, 0, -1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, 0, 0, -1));
+        () -> new ShapeSpec.SimpleShape("NullPreset", anchor, null, Optional.empty()));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerSpec(-1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerSpec(0, -1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerSpec(0, 0, -1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerSpec(0, 0, 0, -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingAnchorInput.TwoCell(
-                new DrawingMarkerInput(1, 2, 0, 0),
-                new DrawingMarkerInput(1, 1, 0, 0),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(1, 2, 0, 0),
+                new DrawingMarkerSpec(1, 1, 0, 0),
                 ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingAnchorInput.TwoCell(
-                new DrawingMarkerInput(2, 2, 0, 0),
-                new DrawingMarkerInput(1, 2, 0, 0),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(2, 2, 0, 0),
+                new DrawingMarkerSpec(1, 2, 0, 0),
                 ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingAnchorInput.TwoCell(
-                new DrawingMarkerInput(1, 2, 0, 4),
-                new DrawingMarkerInput(2, 2, 0, 3),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(1, 2, 0, 4),
+                new DrawingMarkerSpec(2, 2, 0, 3),
                 ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingAnchorInput.TwoCell(
-                new DrawingMarkerInput(1, 2, 4, 0),
-                new DrawingMarkerInput(1, 3, 3, 0),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(1, 2, 4, 0),
+                new DrawingMarkerSpec(1, 3, 3, 0),
                 ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
-    assertThrows(NullPointerException.class, () -> new DrawingAnchorInput.TwoCell(from, to, null));
+    assertThrows(NullPointerException.class, () -> new DrawingAnchorSpec.TwoCell(from, to, null));
     assertThrows(
-        NullPointerException.class, () -> new PictureDataInput(null, binary("cGF5bG9hZA==")));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new PictureDataInput(ExcelPictureFormat.PNG, binary(" ")));
+        NullPointerException.class, () -> new PictureDataSpec(null, binary("cGF5bG9hZA==")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PictureDataInput(ExcelPictureFormat.PNG, binary("not-base64")));
+        () -> new PictureDataSpec(ExcelPictureFormat.PNG, binary(" ")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PictureInput(" ", pictureData, anchor, Optional.empty()));
+        () -> new PictureDataSpec(ExcelPictureFormat.PNG, binary("not-base64")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PictureInput("OpsPicture", pictureData, anchor, Optional.of(text(" "))));
+        () -> new PictureSpec(" ", pictureData, anchor, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ShapeInput.SimpleShape(" ", anchor, "rect", Optional.empty()));
+        () -> new PictureSpec("OpsPicture", pictureData, anchor, Optional.of(text(" "))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ShapeInput.SimpleShape("OpsShape", anchor, "rect", Optional.of(text(" "))));
+        () -> new ShapeSpec.SimpleShape(" ", anchor, "rect", Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ShapeSpec.SimpleShape("OpsShape", anchor, "rect", Optional.of(text(" "))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new EmbeddedObjectInput(
+            new EmbeddedObjectSpec(
                 "OpsEmbed",
                 "Payload",
                 "payload.txt",
@@ -411,7 +410,7 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new EmbeddedObjectInput(
+            new EmbeddedObjectSpec(
                 "OpsEmbed",
                 "Payload",
                 "payload.txt",
@@ -422,7 +421,7 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new SignatureLineInput(
+            new SignatureLineSpec(
                 "OpsSignature",
                 anchor,
                 false,
@@ -436,7 +435,7 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new SignatureLineInput(
+            new SignatureLineSpec(
                 "OpsSignature",
                 anchor,
                 false,
@@ -451,59 +450,58 @@ class AdvancedMutationProtocolTypesTest {
 
   @Test
   void arrayFormulaInputsNormalizeInlineWrappers() {
-    ArrayFormulaInput wrapped = new ArrayFormulaInput(text("{=SUM(B2:B4*C2:C4)}"));
-    ArrayFormulaInput bare = new ArrayFormulaInput(text("SUM(B2:B4*C2:C4)"));
-    ArrayFormulaInput prefixed = new ArrayFormulaInput(text("=SUM(B2:B4*C2:C4)"));
+    ArrayFormulaSpec wrapped = new ArrayFormulaSpec(text("{=SUM(B2:B4*C2:C4)}"));
+    ArrayFormulaSpec bare = new ArrayFormulaSpec(text("SUM(B2:B4*C2:C4)"));
+    ArrayFormulaSpec prefixed = new ArrayFormulaSpec(text("=SUM(B2:B4*C2:C4)"));
 
     assertEquals(
-        "SUM(B2:B4*C2:C4)",
-        assertInstanceOf(TextSourceInput.Inline.class, wrapped.source()).text());
+        "SUM(B2:B4*C2:C4)", assertInstanceOf(TextSourceSpec.Inline.class, wrapped.source()).text());
     assertEquals(
-        "SUM(B2:B4*C2:C4)", assertInstanceOf(TextSourceInput.Inline.class, bare.source()).text());
+        "SUM(B2:B4*C2:C4)", assertInstanceOf(TextSourceSpec.Inline.class, bare.source()).text());
     assertEquals(
         "SUM(B2:B4*C2:C4)",
-        assertInstanceOf(TextSourceInput.Inline.class, prefixed.source()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, prefixed.source()).text());
 
-    assertThrows(IllegalArgumentException.class, () -> new ArrayFormulaInput(text(" ")));
-    assertThrows(IllegalArgumentException.class, () -> new ArrayFormulaInput(text("{=}")));
+    assertThrows(IllegalArgumentException.class, () -> new ArrayFormulaSpec(text(" ")));
+    assertThrows(IllegalArgumentException.class, () -> new ArrayFormulaSpec(text("{=}")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ArrayFormulaInput(text("DDE(\"cmd\",\"/C calc\",\"\")")));
+        () -> new ArrayFormulaSpec(text("DDE(\"cmd\",\"/C calc\",\"\")")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ArrayFormulaInput(text("=dde(\"cmd\",\"/C calc\",\"\")")));
+        () -> new ArrayFormulaSpec(text("=dde(\"cmd\",\"/C calc\",\"\")")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ArrayFormulaInput(text("{=DDE(\"cmd\",\"/C calc\",\"\")}")));
+        () -> new ArrayFormulaSpec(text("{=DDE(\"cmd\",\"/C calc\",\"\")}")));
   }
 
   @Test
   void customXmlInputsNormalizeAndValidate() {
     CustomXmlMappingLocator byId = new CustomXmlMappingLocator(1L, null);
     CustomXmlMappingLocator byName = new CustomXmlMappingLocator(null, "CORSO_mapping");
-    CustomXmlImportInput inlineImport =
-        new CustomXmlImportInput(byName, text("<CORSO><NOME>Grid</NOME></CORSO>"));
+    CustomXmlImportSpec inlineImport =
+        new CustomXmlImportSpec(byName, text("<CORSO><NOME>Grid</NOME></CORSO>"));
 
     assertEquals(1L, byId.mapId());
     assertEquals("CORSO_mapping", byName.name());
     assertEquals(byName, inlineImport.locator());
     assertEquals(
         "<CORSO><NOME>Grid</NOME></CORSO>",
-        assertInstanceOf(TextSourceInput.Inline.class, inlineImport.xml()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, inlineImport.xml()).text());
 
     assertThrows(IllegalArgumentException.class, () -> new CustomXmlMappingLocator(null, null));
     assertThrows(IllegalArgumentException.class, () -> new CustomXmlMappingLocator(0L, null));
-    assertThrows(IllegalArgumentException.class, () -> new CustomXmlImportInput(byId, text(" ")));
+    assertThrows(IllegalArgumentException.class, () -> new CustomXmlImportSpec(byId, text(" ")));
   }
 
   @Test
   void chartInputsNormalizeAndValidate() {
-    DrawingAnchorInput.TwoCell anchor =
-        DrawingAnchorInput.TwoCell.moveAndResize(
-            new DrawingMarkerInput(1, 2, 0, 0), new DrawingMarkerInput(6, 12, 0, 0));
-    ChartSeriesInput firstSeries = chartSeries(new ChartTitleInput.Formula("B1"), "A2:A4", "B2:B4");
-    ChartSeriesInput secondSeries = chartSeries(null, "ChartCategories", "ChartActual");
-    ChartInput bar =
+    DrawingAnchorSpec.TwoCell anchor =
+        DrawingAnchorSpec.TwoCell.moveAndResize(
+            new DrawingMarkerSpec(1, 2, 0, 0), new DrawingMarkerSpec(6, 12, 0, 0));
+    ChartSeriesSpec firstSeries = chartSeries(new ChartTitleSpec.Formula("B1"), "A2:A4", "B2:B4");
+    ChartSeriesSpec secondSeries = chartSeries(null, "ChartCategories", "ChartActual");
+    ChartSpec bar =
         chartInput(
             "OpsChart",
             anchor,
@@ -511,23 +509,23 @@ class AdvancedMutationProtocolTypesTest {
             null,
             null,
             null,
-            new ChartPlotInput.Bar(
+            new ChartPlotSpec.Bar(
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
                 Optional.empty(),
                 Optional.empty(),
                 List.of(firstSeries)));
-    ChartInput line =
+    ChartSpec line =
         chartInput(
             "TrendChart",
             anchor,
-            new ChartTitleInput.Text(text("Trend")),
-            new ChartLegendInput.Hidden(),
+            new ChartTitleSpec.Text(text("Trend")),
+            new ChartLegendSpec.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
-            new ChartPlotInput.Line(true, ExcelChartGrouping.STANDARD, List.of(secondSeries)));
-    ChartInput defaultLine =
+            new ChartPlotSpec.Line(true, ExcelChartGrouping.STANDARD, List.of(secondSeries)));
+    ChartSpec defaultLine =
         chartInput(
             "DefaultTrend",
             anchor,
@@ -535,8 +533,8 @@ class AdvancedMutationProtocolTypesTest {
             null,
             null,
             null,
-            new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(secondSeries)));
-    ChartInput pie =
+            new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(secondSeries)));
+    ChartSpec pie =
         chartInput(
             "ShareChart",
             anchor,
@@ -544,8 +542,8 @@ class AdvancedMutationProtocolTypesTest {
             null,
             null,
             null,
-            new ChartPlotInput.Pie(false, Optional.of(180), List.of(secondSeries)));
-    ChartInput defaultPie =
+            new ChartPlotSpec.Pie(false, Optional.of(180), List.of(secondSeries)));
+    ChartSpec defaultPie =
         chartInput(
             "DefaultShare",
             anchor,
@@ -553,54 +551,53 @@ class AdvancedMutationProtocolTypesTest {
             null,
             null,
             null,
-            new ChartPlotInput.Pie(false, Optional.empty(), List.of(secondSeries)));
-    ChartInput explicitPie =
+            new ChartPlotSpec.Pie(false, Optional.empty(), List.of(secondSeries)));
+    ChartSpec explicitPie =
         chartInput(
             "ExplicitShare",
             anchor,
-            new ChartTitleInput.Text(text("Share")),
-            new ChartLegendInput.Hidden(),
+            new ChartTitleSpec.Text(text("Share")),
+            new ChartLegendSpec.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
-            new ChartPlotInput.Pie(true, Optional.of(90), List.of(secondSeries)));
+            new ChartPlotSpec.Pie(true, Optional.of(90), List.of(secondSeries)));
 
-    ChartPlotInput.Bar barPlot = assertInstanceOf(ChartPlotInput.Bar.class, bar.plots().getFirst());
-    ChartPlotInput.Line linePlot =
-        assertInstanceOf(ChartPlotInput.Line.class, line.plots().getFirst());
-    ChartPlotInput.Line defaultLinePlot =
-        assertInstanceOf(ChartPlotInput.Line.class, defaultLine.plots().getFirst());
-    ChartPlotInput.Pie piePlot = assertInstanceOf(ChartPlotInput.Pie.class, pie.plots().getFirst());
-    ChartPlotInput.Pie defaultPiePlot =
-        assertInstanceOf(ChartPlotInput.Pie.class, defaultPie.plots().getFirst());
-    ChartPlotInput.Pie explicitPiePlot =
-        assertInstanceOf(ChartPlotInput.Pie.class, explicitPie.plots().getFirst());
+    ChartPlotSpec.Bar barPlot = assertInstanceOf(ChartPlotSpec.Bar.class, bar.plots().getFirst());
+    ChartPlotSpec.Line linePlot =
+        assertInstanceOf(ChartPlotSpec.Line.class, line.plots().getFirst());
+    ChartPlotSpec.Line defaultLinePlot =
+        assertInstanceOf(ChartPlotSpec.Line.class, defaultLine.plots().getFirst());
+    ChartPlotSpec.Pie piePlot = assertInstanceOf(ChartPlotSpec.Pie.class, pie.plots().getFirst());
+    ChartPlotSpec.Pie defaultPiePlot =
+        assertInstanceOf(ChartPlotSpec.Pie.class, defaultPie.plots().getFirst());
+    ChartPlotSpec.Pie explicitPiePlot =
+        assertInstanceOf(ChartPlotSpec.Pie.class, explicitPie.plots().getFirst());
 
-    assertTrue(bar.title() instanceof ChartTitleInput.None);
-    assertEquals(new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT), bar.legend());
+    assertTrue(bar.title() instanceof ChartTitleSpec.None);
+    assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), bar.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, bar.displayBlanksAs());
     assertTrue(bar.plotOnlyVisibleCells());
     assertFalse(barPlot.varyColors());
     assertEquals(ExcelChartBarDirection.COLUMN, barPlot.barDirection());
-    assertEquals("B1", ((ChartTitleInput.Formula) barPlot.series().getFirst().title()).formula());
-    assertTrue(secondSeries.title() instanceof ChartTitleInput.None);
+    assertEquals("B1", ((ChartTitleSpec.Formula) barPlot.series().getFirst().title()).formula());
+    assertTrue(secondSeries.title() instanceof ChartTitleSpec.None);
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, line.displayBlanksAs());
     assertFalse(line.plotOnlyVisibleCells());
     assertTrue(linePlot.varyColors());
     assertEquals(Optional.of(180), piePlot.firstSliceAngle());
-    assertTrue(defaultLine.title() instanceof ChartTitleInput.None);
-    assertEquals(
-        new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT), defaultLine.legend());
+    assertTrue(defaultLine.title() instanceof ChartTitleSpec.None);
+    assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), defaultLine.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultLine.displayBlanksAs());
     assertTrue(defaultLine.plotOnlyVisibleCells());
     assertFalse(defaultLinePlot.varyColors());
-    assertTrue(defaultPie.title() instanceof ChartTitleInput.None);
-    assertEquals(new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT), defaultPie.legend());
+    assertTrue(defaultPie.title() instanceof ChartTitleSpec.None);
+    assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), defaultPie.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultPie.displayBlanksAs());
     assertTrue(defaultPie.plotOnlyVisibleCells());
     assertFalse(defaultPiePlot.varyColors());
     assertEquals(Optional.empty(), defaultPiePlot.firstSliceAngle());
-    assertEquals(new ChartTitleInput.Text(text("Share")), explicitPie.title());
-    assertEquals(new ChartLegendInput.Hidden(), explicitPie.legend());
+    assertEquals(new ChartTitleSpec.Text(text("Share")), explicitPie.title());
+    assertEquals(new ChartLegendSpec.Hidden(), explicitPie.legend());
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, explicitPie.displayBlanksAs());
     assertFalse(explicitPie.plotOnlyVisibleCells());
     assertTrue(explicitPiePlot.varyColors());
@@ -616,7 +613,7 @@ class AdvancedMutationProtocolTypesTest {
                 null,
                 null,
                 null,
-                new ChartPlotInput.Bar(
+                new ChartPlotSpec.Bar(
                     false,
                     ExcelChartBarDirection.COLUMN,
                     ExcelChartBarGrouping.CLUSTERED,
@@ -633,27 +630,27 @@ class AdvancedMutationProtocolTypesTest {
                 null,
                 null,
                 null,
-                new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(firstSeries))));
+                new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(firstSeries))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartPlotInput.Pie(false, Optional.of(361), List.of(firstSeries)));
+        () -> new ChartPlotSpec.Pie(false, Optional.of(361), List.of(firstSeries)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartPlotInput.Pie(false, Optional.of(-1), List.of(firstSeries)));
-    assertThrows(IllegalArgumentException.class, () -> new ChartTitleInput.Text(text(" ")));
-    assertThrows(IllegalArgumentException.class, () -> new ChartTitleInput.Formula(" "));
-    assertThrows(NullPointerException.class, () -> new ChartLegendInput.Visible(null));
-    assertThrows(IllegalArgumentException.class, () -> new ChartDataSourceInput.Reference(" "));
+        () -> new ChartPlotSpec.Pie(false, Optional.of(-1), List.of(firstSeries)));
+    assertThrows(IllegalArgumentException.class, () -> new ChartTitleSpec.Text(text(" ")));
+    assertThrows(IllegalArgumentException.class, () -> new ChartTitleSpec.Formula(" "));
+    assertThrows(NullPointerException.class, () -> new ChartLegendSpec.Visible(null));
+    assertThrows(IllegalArgumentException.class, () -> new ChartDataSourceSpec.Reference(" "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartDataSourceInput.Reference("DDE(\"cmd\",\"/C calc\",\"\")"));
+        () -> new ChartDataSourceSpec.Reference("DDE(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartDataSourceInput.Reference("=dde(\"cmd\",\"/C calc\",\"\")"));
+        () -> new ChartDataSourceSpec.Reference("=dde(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ChartPlotInput.Bar(
+            new ChartPlotSpec.Bar(
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
@@ -663,34 +660,33 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ChartPlotInput.Line(
-                false, ExcelChartGrouping.STANDARD, List.of(firstSeries, null)));
+            new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(firstSeries, null)));
   }
 
   @Test
   void autofilterInputsNormalizeAndValidateAcrossAllCriterionFamilies() {
-    AutofilterSortConditionInput colorSort =
-        new AutofilterSortConditionInput.CellColor(
-            new RangeRef("B2:B9"), true, ColorInput.rgb(new RgbHex("#aabbcc")));
-    AutofilterSortConditionInput iconSort =
-        new AutofilterSortConditionInput.Icon(new RangeRef("C2:C9"), false, 2);
-    AutofilterSortStateInput sortState =
-        AutofilterSortStateInput.withoutSortMethod(
+    AutofilterSortConditionSpec colorSort =
+        new AutofilterSortConditionSpec.CellColor(
+            new RangeRef("B2:B9"), true, ColorSpec.rgb(new RgbHex("#aabbcc")));
+    AutofilterSortConditionSpec iconSort =
+        new AutofilterSortConditionSpec.Icon(new RangeRef("C2:C9"), false, 2);
+    AutofilterSortStateSpec sortState =
+        AutofilterSortStateSpec.withoutSortMethod(
             new RangeRef("A1:F9"), false, true, List.of(colorSort, iconSort));
-    AutofilterSortStateInput sortStateWithMethod =
-        new AutofilterSortStateInput(
+    AutofilterSortStateSpec sortStateWithMethod =
+        new AutofilterSortStateSpec(
             new RangeRef("A1:F9"),
             true,
             false,
             Optional.of(dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.PINYIN),
             List.of(colorSort));
 
-    AutofilterSortConditionInput.CellColor typedColorSort =
-        assertInstanceOf(AutofilterSortConditionInput.CellColor.class, colorSort);
-    AutofilterSortConditionInput.Icon typedIconSort =
-        assertInstanceOf(AutofilterSortConditionInput.Icon.class, iconSort);
+    AutofilterSortConditionSpec.CellColor typedColorSort =
+        assertInstanceOf(AutofilterSortConditionSpec.CellColor.class, colorSort);
+    AutofilterSortConditionSpec.Icon typedIconSort =
+        assertInstanceOf(AutofilterSortConditionSpec.Icon.class, iconSort);
     assertEquals(
-        "#AABBCC", assertInstanceOf(ColorInput.Rgb.class, typedColorSort.color()).rgb().value());
+        "#AABBCC", assertInstanceOf(ColorSpec.Rgb.class, typedColorSort.color()).rgb().value());
     assertEquals(2, typedIconSort.iconId());
     assertFalse(sortState.caseSensitive());
     assertTrue(sortState.columnSort());
@@ -700,51 +696,51 @@ class AdvancedMutationProtocolTypesTest {
         Optional.of(dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.PINYIN),
         sortStateWithMethod.sortMethod());
     assertEquals(
-        new AutofilterFilterCriterionInput.Dynamic("TODAY", Optional.empty(), Optional.empty()),
-        new AutofilterFilterCriterionInput.Dynamic("TODAY", Optional.empty(), Optional.empty()));
+        new AutofilterFilterCriterionSpec.Dynamic("TODAY", Optional.empty(), Optional.empty()),
+        new AutofilterFilterCriterionSpec.Dynamic("TODAY", Optional.empty(), Optional.empty()));
     assertThrows(
-        NullPointerException.class, () -> new AutofilterSortConditionInput.Value(null, false));
+        NullPointerException.class, () -> new AutofilterSortConditionSpec.Value(null, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            AutofilterSortStateInput.withoutSortMethod(
+            AutofilterSortStateSpec.withoutSortMethod(
                 new RangeRef(" "), false, false, List.of(colorSort)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterSortConditionInput.Value(new RangeRef(" "), false));
+        () -> new AutofilterSortConditionSpec.Value(new RangeRef(" "), false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterSortConditionInput.Icon(new RangeRef("A1:A2"), false, -1));
+        () -> new AutofilterSortConditionSpec.Icon(new RangeRef("A1:A2"), false, -1));
     assertThrows(
         NullPointerException.class,
         () ->
-            AutofilterSortStateInput.withoutSortMethod(
-                new RangeRef("A1:F9"), false, false, (List<AutofilterSortConditionInput>) null));
+            AutofilterSortStateSpec.withoutSortMethod(
+                new RangeRef("A1:F9"), false, false, (List<AutofilterSortConditionSpec>) null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            AutofilterSortStateInput.withoutSortMethod(
+            AutofilterSortStateSpec.withoutSortMethod(
                 new RangeRef("A1:F9"), false, false, List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            AutofilterSortStateInput.withoutSortMethod(
-                new RangeRef("A1:F9"), false, false, List.of((AutofilterSortConditionInput) null)));
+            AutofilterSortStateSpec.withoutSortMethod(
+                new RangeRef("A1:F9"), false, false, List.of((AutofilterSortConditionSpec) null)));
 
-    AutofilterFilterCriterionInput.Values values =
-        new AutofilterFilterCriterionInput.Values(List.of("Queued", "Ready"), true);
-    AutofilterFilterCriterionInput.Custom custom =
-        new AutofilterFilterCriterionInput.Custom(
-            true, List.of(new AutofilterFilterCriterionInput.CustomConditionInput("equal", "Ada")));
-    AutofilterFilterCriterionInput.Dynamic dynamic =
-        new AutofilterFilterCriterionInput.Dynamic("TODAY", Optional.of(1.0d), Optional.of(2.0d));
-    AutofilterFilterCriterionInput.Top10 top10 =
-        new AutofilterFilterCriterionInput.Top10(10, true, false);
-    AutofilterFilterCriterionInput.Color color =
-        new AutofilterFilterCriterionInput.Color(false, ColorInput.theme(3, 0.25d));
-    AutofilterFilterCriterionInput.Icon icon =
-        new AutofilterFilterCriterionInput.Icon("3TrafficLights1", 2);
-    AutofilterFilterColumnInput column = AutofilterFilterColumnInput.visibleButton(2L, values);
+    AutofilterFilterCriterionSpec.Values values =
+        new AutofilterFilterCriterionSpec.Values(List.of("Queued", "Ready"), true);
+    AutofilterFilterCriterionSpec.Custom custom =
+        new AutofilterFilterCriterionSpec.Custom(
+            true, List.of(new AutofilterFilterCriterionSpec.CustomConditionSpec("equal", "Ada")));
+    AutofilterFilterCriterionSpec.Dynamic dynamic =
+        new AutofilterFilterCriterionSpec.Dynamic("TODAY", Optional.of(1.0d), Optional.of(2.0d));
+    AutofilterFilterCriterionSpec.Top10 top10 =
+        new AutofilterFilterCriterionSpec.Top10(10, true, false);
+    AutofilterFilterCriterionSpec.Color color =
+        new AutofilterFilterCriterionSpec.Color(false, ColorSpec.theme(3, 0.25d));
+    AutofilterFilterCriterionSpec.Icon icon =
+        new AutofilterFilterCriterionSpec.Icon("3TrafficLights1", 2);
+    AutofilterFilterColumnSpec column = AutofilterFilterColumnSpec.visibleButton(2L, values);
 
     assertEquals(List.of("Queued", "Ready"), values.values());
     assertTrue(custom.and());
@@ -752,183 +748,181 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(Optional.of(1.0d), dynamic.value());
     assertEquals(Optional.of(2.0d), dynamic.maxValue());
     assertEquals(10, top10.value());
-    assertEquals(3, assertInstanceOf(ColorInput.Theme.class, color.color()).theme());
+    assertEquals(3, assertInstanceOf(ColorSpec.Theme.class, color.color()).theme());
     assertEquals("3TrafficLights1", icon.iconSet());
     assertTrue(column.showButton());
     assertEquals(values, column.criterion());
 
     assertThrows(
-        NullPointerException.class, () -> new AutofilterFilterCriterionInput.Values(null, false));
+        NullPointerException.class, () -> new AutofilterFilterCriterionSpec.Values(null, false));
     assertThrows(
         NullPointerException.class,
-        () -> new AutofilterFilterCriterionInput.Values(List.of("Queued", null), false));
+        () -> new AutofilterFilterCriterionSpec.Values(List.of("Queued", null), false));
     assertThrows(
-        NullPointerException.class, () -> new AutofilterFilterCriterionInput.Custom(true, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionInput.Custom(true, List.of()));
+        NullPointerException.class, () -> new AutofilterFilterCriterionSpec.Custom(true, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionInput.CustomConditionInput(" ", "Ada"));
+        () -> new AutofilterFilterCriterionSpec.Custom(true, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionInput.CustomConditionInput("equal", " "));
+        () -> new AutofilterFilterCriterionSpec.CustomConditionSpec(" ", "Ada"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionInput.Dynamic(" ", Optional.of(1.0d), Optional.empty()));
+        () -> new AutofilterFilterCriterionSpec.CustomConditionSpec("equal", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new AutofilterFilterCriterionSpec.Dynamic(" ", Optional.of(1.0d), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new AutofilterFilterCriterionInput.Dynamic(
+            new AutofilterFilterCriterionSpec.Dynamic(
                 "TODAY", Optional.of(Double.POSITIVE_INFINITY), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new AutofilterFilterCriterionInput.Dynamic(
+            new AutofilterFilterCriterionSpec.Dynamic(
                 "TODAY", Optional.of(1.0d), Optional.of(Double.NaN)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionInput.Top10(0, true, false));
+        () -> new AutofilterFilterCriterionSpec.Top10(0, true, false));
     assertThrows(
-        NullPointerException.class, () -> new AutofilterFilterCriterionInput.Color(true, null));
+        NullPointerException.class, () -> new AutofilterFilterCriterionSpec.Color(true, null));
     assertThrows(
-        IllegalArgumentException.class, () -> new AutofilterFilterCriterionInput.Icon(" ", 0));
+        IllegalArgumentException.class, () -> new AutofilterFilterCriterionSpec.Icon(" ", 0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionInput.Icon("3TrafficLights1", -1));
+        () -> new AutofilterFilterCriterionSpec.Icon("3TrafficLights1", -1));
     assertThrows(
-        IllegalArgumentException.class, () -> new AutofilterFilterColumnInput(-1L, true, values));
-    assertThrows(
-        NullPointerException.class, () -> new AutofilterFilterColumnInput(0L, false, null));
+        IllegalArgumentException.class, () -> new AutofilterFilterColumnSpec(-1L, true, values));
+    assertThrows(NullPointerException.class, () -> new AutofilterFilterColumnSpec(0L, false, null));
   }
 
   @Test
   void colorAndThresholdInputsNormalizeAndValidate() {
-    ColorInput.Rgb rgb = ColorInput.rgb(new RgbHex("#aabbcc"));
-    ColorInput.Rgb tintedRgb = ColorInput.rgb(new RgbHex("#112233"), 0.25d);
-    ColorInput.Theme themed = ColorInput.theme(4, 0.5d);
-    ColorInput.Indexed indexed = ColorInput.indexed(64);
+    ColorSpec.Rgb rgb = ColorSpec.rgb(new RgbHex("#aabbcc"));
+    ColorSpec.Rgb tintedRgb = ColorSpec.rgb(new RgbHex("#112233"), 0.25d);
+    ColorSpec.Theme themed = ColorSpec.theme(4, 0.5d);
+    ColorSpec.Indexed indexed = ColorSpec.indexed(64);
     assertEquals("#AABBCC", rgb.rgb().value());
     assertEquals("#112233", tintedRgb.rgb().value());
     assertEquals(Optional.of(0.25d), tintedRgb.tint());
     assertEquals(4, themed.theme());
     assertEquals(Optional.of(0.5d), themed.tint());
     assertEquals(64, indexed.indexed());
-    assertThrows(NullPointerException.class, () -> ColorInput.rgb(null));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.rgb(new RgbHex(" ")));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.rgb(new RgbHex("123456")));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.theme(-1));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.indexed(-1));
+    assertThrows(NullPointerException.class, () -> ColorSpec.rgb(null));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.rgb(new RgbHex(" ")));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.rgb(new RgbHex("123456")));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.theme(-1));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.indexed(-1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ColorInput.rgb(new RgbHex("#AABBCC"), Double.NEGATIVE_INFINITY));
+        () -> ColorSpec.rgb(new RgbHex("#AABBCC"), Double.NEGATIVE_INFINITY));
 
-    ConditionalFormattingThresholdInput.Formula threshold =
-        new ConditionalFormattingThresholdInput.Formula("A1*2");
+    ConditionalFormattingThresholdSpec.Formula threshold =
+        new ConditionalFormattingThresholdSpec.Formula("A1*2");
     assertEquals("A1*2", threshold.formula());
-    assertEquals(90.0d, new ConditionalFormattingThresholdInput.Percentile(90.0d).value());
-    assertEquals(0.0d, new ConditionalFormattingThresholdInput.Percent(0.0d).value());
-    assertEquals(100.0d, new ConditionalFormattingThresholdInput.Percent(100.0d).value());
-    assertEquals(0.0d, new ConditionalFormattingThresholdInput.Percentile(0.0d).value());
-    assertEquals(100.0d, new ConditionalFormattingThresholdInput.Percentile(100.0d).value());
+    assertEquals(90.0d, new ConditionalFormattingThresholdSpec.Percentile(90.0d).value());
+    assertEquals(0.0d, new ConditionalFormattingThresholdSpec.Percent(0.0d).value());
+    assertEquals(100.0d, new ConditionalFormattingThresholdSpec.Percent(100.0d).value());
+    assertEquals(0.0d, new ConditionalFormattingThresholdSpec.Percentile(0.0d).value());
+    assertEquals(100.0d, new ConditionalFormattingThresholdSpec.Percentile(100.0d).value());
+    assertThrows(
+        IllegalArgumentException.class, () -> new ConditionalFormattingThresholdSpec.Formula(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new ConditionalFormattingThresholdSpec.Formula(" "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ConditionalFormattingThresholdInput.Formula(null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ConditionalFormattingThresholdInput.Formula(" "));
+        () -> new ConditionalFormattingThresholdSpec.Numeric(Double.NEGATIVE_INFINITY));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ConditionalFormattingThresholdInput.Numeric(Double.NEGATIVE_INFINITY));
+        () -> new ConditionalFormattingThresholdSpec.Percent(Double.NaN));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ConditionalFormattingThresholdInput.Percent(Double.NaN));
+        () -> new ConditionalFormattingThresholdSpec.Percentile(Double.NaN));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ConditionalFormattingThresholdInput.Percentile(Double.NaN));
+        () -> new ConditionalFormattingThresholdSpec.Percent(-0.1d));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ConditionalFormattingThresholdInput.Percent(-0.1d));
+        () -> new ConditionalFormattingThresholdSpec.Percentile(100.1d));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ConditionalFormattingThresholdInput.Percentile(100.1d));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ConditionalFormattingThresholdInput.Formula("DDE(\"cmd\",\"/C calc\",\"\")"));
+        () -> new ConditionalFormattingThresholdSpec.Formula("DDE(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.ColorScaleRule(
+            new ConditionalFormattingRuleSpec.ColorScaleRule(
                 false,
-                List.of(new ConditionalFormattingThresholdInput.Min()),
-                List.of(ColorInput.rgb(new RgbHex("#112233")))));
+                List.of(new ConditionalFormattingThresholdSpec.Min()),
+                List.of(ColorSpec.rgb(new RgbHex("#112233")))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.ColorScaleRule(
+            new ConditionalFormattingRuleSpec.ColorScaleRule(
                 false,
                 List.of(
-                    new ConditionalFormattingThresholdInput.Min(),
-                    new ConditionalFormattingThresholdInput.Max()),
-                List.of(ColorInput.rgb(new RgbHex("#112233")))));
+                    new ConditionalFormattingThresholdSpec.Min(),
+                    new ConditionalFormattingThresholdSpec.Max()),
+                List.of(ColorSpec.rgb(new RgbHex("#112233")))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.DataBarRule(
+            new ConditionalFormattingRuleSpec.DataBarRule(
                 false,
-                ColorInput.rgb(new RgbHex("#112233")),
+                ColorSpec.rgb(new RgbHex("#112233")),
                 false,
                 -1,
                 90,
-                new ConditionalFormattingThresholdInput.Numeric(0.0d),
-                new ConditionalFormattingThresholdInput.Numeric(1.0d)));
+                new ConditionalFormattingThresholdSpec.Numeric(0.0d),
+                new ConditionalFormattingThresholdSpec.Numeric(1.0d)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.DataBarRule(
+            new ConditionalFormattingRuleSpec.DataBarRule(
                 false,
-                ColorInput.rgb(new RgbHex("#112233")),
+                ColorSpec.rgb(new RgbHex("#112233")),
                 false,
                 0,
                 -1,
-                new ConditionalFormattingThresholdInput.Numeric(0.0d),
-                new ConditionalFormattingThresholdInput.Numeric(1.0d)));
+                new ConditionalFormattingThresholdSpec.Numeric(0.0d),
+                new ConditionalFormattingThresholdSpec.Numeric(1.0d)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.DataBarRule(
+            new ConditionalFormattingRuleSpec.DataBarRule(
                 false,
-                ColorInput.rgb(new RgbHex("#112233")),
+                ColorSpec.rgb(new RgbHex("#112233")),
                 false,
                 10,
                 5,
-                new ConditionalFormattingThresholdInput.Numeric(0.0d),
-                new ConditionalFormattingThresholdInput.Numeric(1.0d)));
+                new ConditionalFormattingThresholdSpec.Numeric(0.0d),
+                new ConditionalFormattingThresholdSpec.Numeric(1.0d)));
     assertThrows(
         NullPointerException.class,
-        () -> new ConditionalFormattingRuleInput.IconSetRule(false, null, false, false, List.of()));
+        () -> new ConditionalFormattingRuleSpec.IconSetRule(false, null, false, false, List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.IconSetRule(
+            new ConditionalFormattingRuleSpec.IconSetRule(
                 false,
                 ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
                 false,
                 false,
                 List.of(
-                    new ConditionalFormattingThresholdInput.Percent(0.0d),
-                    new ConditionalFormattingThresholdInput.Percent(50.0d))));
+                    new ConditionalFormattingThresholdSpec.Percent(0.0d),
+                    new ConditionalFormattingThresholdSpec.Percent(50.0d))));
     assertThrows(
         NullPointerException.class,
-        () -> new ConditionalFormattingRuleInput.Top10Rule(false, 1, true, false, null));
+        () -> new ConditionalFormattingRuleSpec.Top10Rule(false, 1, true, false, null));
   }
 
   @Test
   void gradientAndStructuredStyleInputsNormalizeAndValidate() {
-    CellGradientStopInput start =
-        new CellGradientStopInput(0.0d, ColorInput.rgb(new RgbHex("#112233")));
-    CellGradientStopInput finish = new CellGradientStopInput(1.0d, ColorInput.theme(5, 0.2d));
-    CellGradientFillInput gradient =
-        CellGradientFillInput.path(
+    CellGradientStopSpec start =
+        new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233")));
+    CellGradientStopSpec finish = new CellGradientStopSpec(1.0d, ColorSpec.theme(5, 0.2d));
+    CellGradientFillSpec gradient =
+        CellGradientFillSpec.path(
             Optional.of(0.1d),
             Optional.of(0.2d),
             Optional.of(0.3d),
@@ -941,35 +935,35 @@ class AdvancedMutationProtocolTypesTest {
   }
 
   private void assertGradientInputsNormalizeAndValidate(
-      CellGradientStopInput start, CellGradientStopInput finish, CellGradientFillInput gradient) {
-    CellGradientFillInput.Path path = assertInstanceOf(CellGradientFillInput.Path.class, gradient);
+      CellGradientStopSpec start, CellGradientStopSpec finish, CellGradientFillSpec gradient) {
+    CellGradientFillSpec.Path path = assertInstanceOf(CellGradientFillSpec.Path.class, gradient);
     assertEquals(Optional.of(0.1d), path.left());
     assertEquals(Optional.of(0.2d), path.right());
     assertEquals(Optional.of(0.3d), path.top());
     assertEquals(Optional.of(0.4d), path.bottom());
     assertEquals(List.of(start, finish), path.stops());
     assertInstanceOf(
-        CellGradientFillInput.Linear.class,
-        CellGradientFillInput.linear(Optional.empty(), List.of(start, finish)));
+        CellGradientFillSpec.Linear.class,
+        CellGradientFillSpec.linear(Optional.empty(), List.of(start, finish)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellGradientStopInput(-0.1d, ColorInput.rgb(new RgbHex("#112233"))));
+        () -> new CellGradientStopSpec(-0.1d, ColorSpec.rgb(new RgbHex("#112233"))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellGradientStopInput(Double.NaN, ColorInput.rgb(new RgbHex("#112233"))));
+        () -> new CellGradientStopSpec(Double.NaN, ColorSpec.rgb(new RgbHex("#112233"))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellGradientStopInput(1.5d, ColorInput.rgb(new RgbHex("#112233"))));
-    assertThrows(NullPointerException.class, () -> new CellGradientStopInput(0.5d, null));
+        () -> new CellGradientStopSpec(1.5d, ColorSpec.rgb(new RgbHex("#112233"))));
+    assertThrows(NullPointerException.class, () -> new CellGradientStopSpec(0.5d, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            CellGradientFillInput.linear(
+            CellGradientFillSpec.linear(
                 Optional.of(Double.POSITIVE_INFINITY), List.of(start, finish)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            CellGradientFillInput.path(
+            CellGradientFillSpec.path(
                 Optional.of(Double.NaN),
                 Optional.of(0.2d),
                 Optional.of(0.3d),
@@ -977,24 +971,24 @@ class AdvancedMutationProtocolTypesTest {
                 List.of(start, finish)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> CellGradientFillInput.linear(Optional.empty(), List.of(start)));
+        () -> CellGradientFillSpec.linear(Optional.empty(), List.of(start)));
     assertThrows(
         NullPointerException.class,
-        () -> CellGradientFillInput.linear(Optional.empty(), List.of(start, null)));
+        () -> CellGradientFillSpec.linear(Optional.empty(), List.of(start, null)));
   }
 
   private void assertFontInputsNormalizeAndValidate() {
-    CellFontInput themedFont =
-        new CellFontInput(
+    CellFontPatch themedFont =
+        new CellFontPatch(
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.of(ColorInput.theme(2, 0.4d)),
+            Optional.of(ColorSpec.theme(2, 0.4d)),
             Optional.of(true),
             Optional.empty());
-    CellFontInput namedFont =
-        new CellFontInput(
+    CellFontPatch namedFont =
+        new CellFontPatch(
             Optional.empty(),
             Optional.empty(),
             Optional.of("Calibri"),
@@ -1002,13 +996,13 @@ class AdvancedMutationProtocolTypesTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
-    CellFontInput indexedFont =
-        new CellFontInput(
+    CellFontPatch indexedFont =
+        new CellFontPatch(
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.of(ColorInput.indexed(64)),
+            Optional.of(ColorSpec.indexed(64)),
             Optional.empty(),
             Optional.empty());
     assertThemeColor(themedFont.fontColor().orElseThrow(), 2, 0.4d);
@@ -1018,7 +1012,7 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CellFontInput(
+            new CellFontPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of(" "),
@@ -1029,7 +1023,7 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CellFontInput(
+            new CellFontPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -1037,100 +1031,100 @@ class AdvancedMutationProtocolTypesTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.theme(-1));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.indexed(-1));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.theme(-1));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.indexed(-1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ColorInput.rgb(new RgbHex("#112233"), Double.POSITIVE_INFINITY));
+        () -> ColorSpec.rgb(new RgbHex("#112233"), Double.POSITIVE_INFINITY));
   }
 
-  private void assertFillInputsNormalizeAndValidate(CellGradientFillInput gradient) {
-    CellFillInput.Gradient gradientFill =
-        assertInstanceOf(CellFillInput.Gradient.class, CellFillInput.gradient(gradient));
-    CellFillInput.PatternForeground themedFill =
+  private void assertFillInputsNormalizeAndValidate(CellGradientFillSpec gradient) {
+    CellFillSpec.Gradient gradientFill =
+        assertInstanceOf(CellFillSpec.Gradient.class, CellFillSpec.gradient(gradient));
+    CellFillSpec.PatternForeground themedFill =
         assertInstanceOf(
-            CellFillInput.PatternForeground.class,
-            CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.theme(2, 0.3d)));
-    CellFillInput.PatternForeground fgIndexedFill =
+            CellFillSpec.PatternForeground.class,
+            CellFillSpec.patternForeground(ExcelFillPattern.SOLID, ColorSpec.theme(2, 0.3d)));
+    CellFillSpec.PatternForeground fgIndexedFill =
         assertInstanceOf(
-            CellFillInput.PatternForeground.class,
-            CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.indexed(64)));
-    CellFillInput.PatternForeground fgIndexedTintedFill =
+            CellFillSpec.PatternForeground.class,
+            CellFillSpec.patternForeground(ExcelFillPattern.SOLID, ColorSpec.indexed(64)));
+    CellFillSpec.PatternForeground fgIndexedTintedFill =
         assertInstanceOf(
-            CellFillInput.PatternForeground.class,
-            CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.indexed(64, 0.3d)));
-    CellFillInput.PatternBackground bgIndexedFill =
+            CellFillSpec.PatternForeground.class,
+            CellFillSpec.patternForeground(ExcelFillPattern.SOLID, ColorSpec.indexed(64, 0.3d)));
+    CellFillSpec.PatternBackground bgIndexedFill =
         assertInstanceOf(
-            CellFillInput.PatternBackground.class,
-            CellFillInput.patternBackground(ExcelFillPattern.FINE_DOTS, ColorInput.indexed(64)));
+            CellFillSpec.PatternBackground.class,
+            CellFillSpec.patternBackground(ExcelFillPattern.FINE_DOTS, ColorSpec.indexed(64)));
     assertEquals(gradient, gradientFill.gradient());
     assertThemeColor(themedFill.foregroundColor(), 2, 0.3d);
     assertIndexedColor(fgIndexedFill.foregroundColor(), 64, null);
     assertIndexedColor(fgIndexedTintedFill.foregroundColor(), 64, 0.3d);
     assertIndexedColor(bgIndexedFill.backgroundColor(), 64, null);
-    assertThrows(NullPointerException.class, () -> CellFillInput.gradient(null));
-    assertThrows(NullPointerException.class, () -> CellFillInput.pattern(null));
+    assertThrows(NullPointerException.class, () -> CellFillSpec.gradient(null));
+    assertThrows(NullPointerException.class, () -> CellFillSpec.pattern(null));
     assertThrows(
         NullPointerException.class,
-        () -> CellFillInput.patternForeground(ExcelFillPattern.SOLID, null));
+        () -> CellFillSpec.patternForeground(ExcelFillPattern.SOLID, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> CellFillInput.patternForeground(ExcelFillPattern.NONE, ColorInput.theme(2)));
+        () -> CellFillSpec.patternForeground(ExcelFillPattern.NONE, ColorSpec.theme(2)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> CellFillInput.patternBackground(ExcelFillPattern.SOLID, ColorInput.indexed(64)));
+        () -> CellFillSpec.patternBackground(ExcelFillPattern.SOLID, ColorSpec.indexed(64)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            CellFillInput.patternColors(
+            CellFillSpec.patternColors(
                 ExcelFillPattern.SOLID,
-                ColorInput.rgb(new RgbHex("#112233")),
-                ColorInput.indexed(64)));
+                ColorSpec.rgb(new RgbHex("#112233")),
+                ColorSpec.indexed(64)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            CellFillInput.patternColors(
+            CellFillSpec.patternColors(
                 ExcelFillPattern.NONE,
-                ColorInput.rgb(new RgbHex("#112233")),
-                ColorInput.indexed(64)));
+                ColorSpec.rgb(new RgbHex("#112233")),
+                ColorSpec.indexed(64)));
     assertThrows(
         NullPointerException.class,
-        () -> CellFillInput.patternBackground(ExcelFillPattern.FINE_DOTS, null));
+        () -> CellFillSpec.patternBackground(ExcelFillPattern.FINE_DOTS, null));
     assertThrows(
         NullPointerException.class,
         () ->
-            CellFillInput.patternColors(
-                ExcelFillPattern.FINE_DOTS, ColorInput.rgb(new RgbHex("#112233")), null));
+            CellFillSpec.patternColors(
+                ExcelFillPattern.FINE_DOTS, ColorSpec.rgb(new RgbHex("#112233")), null));
   }
 
   private void assertBorderSideInputsNormalizeAndValidate() {
-    BorderSideInput noneStyleOnly = new BorderSideInput(ExcelBorderStyle.NONE);
-    BorderSideInput borderSide = new BorderSideInput(null, ColorInput.theme(1, 0.15d));
-    BorderSideInput indexedBorderSide = new BorderSideInput(null, ColorInput.indexed(64));
+    BorderSidePatch noneStyleOnly = new BorderSidePatch(ExcelBorderStyle.NONE);
+    BorderSidePatch borderSide = new BorderSidePatch(null, ColorSpec.theme(1, 0.15d));
+    BorderSidePatch indexedBorderSide = new BorderSidePatch(null, ColorSpec.indexed(64));
     assertEquals(Optional.of(ExcelBorderStyle.NONE), noneStyleOnly.style());
     assertThemeColor(borderSide.color().orElseThrow(), 1, 0.15d);
     assertIndexedColor(indexedBorderSide.color().orElseThrow(), 64, null);
     assertThrows(
         IllegalArgumentException.class,
-        () -> new BorderSideInput(Optional.empty(), Optional.empty()));
+        () -> new BorderSidePatch(Optional.empty(), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new BorderSideInput(ExcelBorderStyle.NONE, ColorInput.theme(1)));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.theme(-1));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.indexed(-1));
+        () -> new BorderSidePatch(ExcelBorderStyle.NONE, ColorSpec.theme(1)));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.theme(-1));
+    assertThrows(IllegalArgumentException.class, () -> ColorSpec.indexed(-1));
     assertThrows(
-        IllegalArgumentException.class, () -> ColorInput.theme(1, Double.POSITIVE_INFINITY));
+        IllegalArgumentException.class, () -> ColorSpec.theme(1, Double.POSITIVE_INFINITY));
   }
 
   @Test
   void printAndTableInputsNormalizeAndValidate() {
-    PrintMarginsInput margins = new PrintMarginsInput(0.5d, 0.6d, 0.7d, 0.8d, 0.3d, 0.2d);
-    PrintSetupInput explicitSetup =
-        new PrintSetupInput(
+    PrintMarginsSpec margins = new PrintMarginsSpec(0.5d, 0.6d, 0.7d, 0.8d, 0.3d, 0.2d);
+    PrintSetupSpec explicitSetup =
+        new PrintSetupSpec(
             margins, true, true, false, 9, true, false, 2, true, 4, List.of(6), List.of(3));
-    PrintSetupInput defaultLikeSetup =
-        new PrintSetupInput(
-            new PrintMarginsInput(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
+    PrintSetupSpec defaultLikeSetup =
+        new PrintSetupSpec(
+            new PrintMarginsSpec(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
             false,
             false,
             false,
@@ -1157,49 +1151,49 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(List.of(3), explicitSetup.columnBreaks());
     assertFalse(defaultLikeSetup.printGridlines());
     assertEquals(
-        new PrintMarginsInput(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d), defaultLikeSetup.margins());
+        new PrintMarginsSpec(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d), defaultLikeSetup.margins());
     assertEquals(0, defaultLikeSetup.paperSize());
     assertEquals(0, defaultLikeSetup.copies());
     assertEquals(0, defaultLikeSetup.firstPageNumber());
-    assertEquals(PrintSetupInput.defaults().margins(), PrintSetupInput.defaults().margins());
-    assertEquals(PrintSetupInput.defaults(), PrintLayoutInput.defaults().setup());
+    assertEquals(PrintSetupSpec.defaults().margins(), PrintSetupSpec.defaults().margins());
+    assertEquals(PrintSetupSpec.defaults(), PrintLayoutSpec.defaults().setup());
     assertEquals(
         explicitSetup,
-        new PrintLayoutInput(
-                new PrintAreaInput.None(),
+        new PrintLayoutSpec(
+                new PrintAreaSpec.None(),
                 ExcelPrintOrientation.PORTRAIT,
-                new PrintScalingInput.Automatic(),
-                new PrintTitleRowsInput.None(),
-                new PrintTitleColumnsInput.None(),
-                HeaderFooterTextInput.blank(),
-                HeaderFooterTextInput.blank(),
+                new PrintScalingSpec.Automatic(),
+                new PrintTitleRowsSpec.None(),
+                new PrintTitleColumnsSpec.None(),
+                HeaderFooterTextSpec.blank(),
+                HeaderFooterTextSpec.blank(),
                 explicitSetup)
             .setup());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PrintMarginsInput(-0.1d, 0.6d, 0.7d, 0.8d, 0.3d, 0.2d));
+        () -> new PrintMarginsSpec(-0.1d, 0.6d, 0.7d, 0.8d, 0.3d, 0.2d));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PrintMarginsInput(0.5d, 0.6d, 0.7d, 0.8d, Double.NaN, 0.2d));
+        () -> new PrintMarginsSpec(0.5d, 0.6d, 0.7d, 0.8d, Double.NaN, 0.2d));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PrintSetupInput(
+            new PrintSetupSpec(
                 margins, false, false, false, -1, false, false, 1, false, 1, List.of(), List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PrintSetupInput(
+            new PrintSetupSpec(
                 margins, false, false, false, 1, false, false, -1, false, 1, List.of(), List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PrintSetupInput(
+            new PrintSetupSpec(
                 margins, false, false, false, 1, false, false, 1, false, -1, List.of(), List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new PrintSetupInput(
+            new PrintSetupSpec(
                 margins,
                 false,
                 false,
@@ -1215,7 +1209,7 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PrintSetupInput(
+            new PrintSetupSpec(
                 margins,
                 false,
                 false,
@@ -1229,24 +1223,24 @@ class AdvancedMutationProtocolTypesTest {
                 List.of(-1),
                 List.of()));
 
-    TableColumnInput tableColumn = new TableColumnInput(0, "", "", " SUM ", "");
-    TableColumnInput blankTotalsFunction = new TableColumnInput(0, "", "", " ", "");
+    TableColumnSpec tableColumn = new TableColumnSpec(0, "", "", " SUM ", "");
+    TableColumnSpec blankTotalsFunction = new TableColumnSpec(0, "", "", " ", "");
     assertEquals("", tableColumn.uniqueName());
     assertEquals("", tableColumn.totalsRowLabel());
     assertEquals("sum", tableColumn.totalsRowFunction());
     assertEquals("", tableColumn.calculatedColumnFormula());
     assertEquals("", blankTotalsFunction.totalsRowFunction());
-    assertThrows(IllegalArgumentException.class, () -> new TableColumnInput(-1, "", "", "", ""));
-    assertThrows(NullPointerException.class, () -> new TableColumnInput(0, null, "", "", ""));
+    assertThrows(IllegalArgumentException.class, () -> new TableColumnSpec(-1, "", "", "", ""));
+    assertThrows(NullPointerException.class, () -> new TableColumnSpec(0, null, "", "", ""));
 
-    TableInput defaultedTable =
-        new TableInput(
+    TableSpec defaultedTable =
+        new TableSpec(
             new TableName("BudgetTable"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C4"),
             false,
             true,
-            new TableStyleInput.None(),
+            new TableStyleSpec.None(),
             text(""),
             false,
             false,
@@ -1255,14 +1249,14 @@ class AdvancedMutationProtocolTypesTest {
             "",
             "",
             List.of());
-    TableInput explicitTable =
-        new TableInput(
+    TableSpec explicitTable =
+        new TableSpec(
             new TableName("BudgetTable"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C4"),
             false,
             false,
-            new TableStyleInput.None(),
+            new TableStyleSpec.None(),
             text("Table note"),
             true,
             true,
@@ -1282,13 +1276,13 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new TableInput(
+            new TableSpec(
                 new TableName("BudgetTable"),
                 new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                 new RangeRef("A1:C4"),
                 false,
                 true,
-                new TableStyleInput.None(),
+                new TableStyleSpec.None(),
                 null,
                 false,
                 false,
@@ -1296,39 +1290,39 @@ class AdvancedMutationProtocolTypesTest {
                 null,
                 null,
                 null,
-                List.of((TableColumnInput) null)));
+                List.of((TableColumnSpec) null)));
   }
 
   @Test
   void sheetPresentationInputsNormalizeAndValidate() {
-    SheetPresentationInput explicitPresentation =
-        new SheetPresentationInput(
-            new SheetDisplayInput(false, false, true, true, true),
-            java.util.Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
-            new SheetOutlineSummaryInput(false, false),
-            new SheetDefaultsInput(12, 18.5d),
+    SheetPresentationSpec explicitPresentation =
+        new SheetPresentationSpec(
+            new SheetDisplaySpec(false, false, true, true, true),
+            java.util.Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
+            new SheetOutlineSummarySpec(false, false),
+            new SheetDefaultsSpec(12, 18.5d),
             List.of(
-                new IgnoredErrorInput(
+                new IgnoredErrorSpec(
                     new RangeRef("B2:B12"),
                     List.of(
                         ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
                         ExcelIgnoredErrorType.FORMULA))));
-    SheetPresentationInput defaultedPresentation = SheetPresentationInput.defaults();
+    SheetPresentationSpec defaultedPresentation = SheetPresentationSpec.defaults();
 
     assertEquals(
-        new SheetDisplayInput(false, false, true, true, true), explicitPresentation.display());
+        new SheetDisplaySpec(false, false, true, true, true), explicitPresentation.display());
     assertEquals(
-        java.util.Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
+        java.util.Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
         explicitPresentation.tabColor());
-    assertEquals(new SheetOutlineSummaryInput(false, false), explicitPresentation.outlineSummary());
-    assertEquals(new SheetDefaultsInput(12, 18.5d), explicitPresentation.sheetDefaults());
-    assertEquals(SheetDisplayInput.defaults(), defaultedPresentation.display());
-    assertEquals(SheetOutlineSummaryInput.defaults(), defaultedPresentation.outlineSummary());
-    assertEquals(SheetDefaultsInput.defaults(), defaultedPresentation.sheetDefaults());
+    assertEquals(new SheetOutlineSummarySpec(false, false), explicitPresentation.outlineSummary());
+    assertEquals(new SheetDefaultsSpec(12, 18.5d), explicitPresentation.sheetDefaults());
+    assertEquals(SheetDisplaySpec.defaults(), defaultedPresentation.display());
+    assertEquals(SheetOutlineSummarySpec.defaults(), defaultedPresentation.outlineSummary());
+    assertEquals(SheetDefaultsSpec.defaults(), defaultedPresentation.sheetDefaults());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new IgnoredErrorInput(
+            new IgnoredErrorSpec(
                 new RangeRef("B2:B12"),
                 List.of(
                     ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
@@ -1336,47 +1330,47 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new SheetPresentationInput(
-                SheetDisplayInput.defaults(),
+            new SheetPresentationSpec(
+                SheetDisplaySpec.defaults(),
                 java.util.Optional.empty(),
-                SheetOutlineSummaryInput.defaults(),
-                SheetDefaultsInput.defaults(),
+                SheetOutlineSummarySpec.defaults(),
+                SheetDefaultsSpec.defaults(),
                 List.of(
-                    new IgnoredErrorInput(
+                    new IgnoredErrorSpec(
                         new RangeRef("B2:B12"),
                         List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)),
-                    new IgnoredErrorInput(
+                    new IgnoredErrorSpec(
                         new RangeRef("B2:B12"), List.of(ExcelIgnoredErrorType.FORMULA)))));
   }
 
   @Test
   void pivotInputsSelectionsAndCellAddressValidationNormalizeAndValidate() {
-    PivotTableInput input =
-        new PivotTableInput(
+    PivotTableSpec input =
+        new PivotTableSpec(
             "Sales Pivot 2026",
             new SheetName("Report"),
-            new PivotTableInput.PivotSourceSpec.Range(new SheetName("Data"), new RangeRef("A1:D5")),
-            new PivotTableInput.Anchor(new CellAddress("$C$5")),
+            new PivotTableSpec.PivotSourceSpec.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+            new PivotTableSpec.Anchor(new CellAddress("$C$5")),
             List.of("Region"),
             List.of("Stage"),
             List.of("Owner"),
             List.of(
-                new PivotTableInput.DataField(
+                new PivotTableSpec.DataField(
                     "Amount",
                     ExcelPivotDataConsolidateFunction.SUM,
                     "Amount",
                     Optional.of("#,##0.00"))));
-    PivotTableInput tableSourceInput =
-        new PivotTableInput(
+    PivotTableSpec tableSourceInput =
+        new PivotTableSpec(
             "Sales Table Pivot",
             new SheetName("Report"),
-            new PivotTableInput.PivotSourceSpec.Table(new TableName("SalesTable2026")),
-            new PivotTableInput.Anchor(new CellAddress("D7")),
+            new PivotTableSpec.PivotSourceSpec.Table(new TableName("SalesTable2026")),
+            new PivotTableSpec.Anchor(new CellAddress("D7")),
             List.of(),
             List.of(),
             List.of(),
             List.of(
-                new PivotTableInput.DataField(
+                new PivotTableSpec.DataField(
                     "Amount",
                     ExcelPivotDataConsolidateFunction.SUM,
                     "Total Amount",
@@ -1393,42 +1387,42 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(List.of(), tableSourceInput.reportFilters());
     assertEquals(
         "SalesTable2026",
-        ((PivotTableInput.PivotSourceSpec.Table) tableSourceInput.source()).name().value());
+        ((PivotTableSpec.PivotSourceSpec.Table) tableSourceInput.source()).name().value());
     assertEquals("B12", ProtocolCellAddressValidation.validateAddress("B12"));
     assertThrows(
         IllegalArgumentException.class,
         () -> ProtocolCellAddressValidation.validateAddress("A1048577"));
     assertEquals(
         "PivotSource",
-        new PivotTableInput.PivotSourceSpec.NamedRange(new DefinedName("PivotSource"))
+        new PivotTableSpec.PivotSourceSpec.NamedRange(new DefinedName("PivotSource"))
             .name()
             .value());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.PivotSourceSpec.NamedRange(new DefinedName("Sales Pivot 2026")));
+        () -> new PivotTableSpec.PivotSourceSpec.NamedRange(new DefinedName("Sales Pivot 2026")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.PivotSourceSpec.Table(new TableName("Sales Table")));
+        () -> new PivotTableSpec.PivotSourceSpec.Table(new TableName("Sales Table")));
     assertThrows(
         NullPointerException.class,
-        () -> new PivotTableInput.PivotSourceSpec.Range(new SheetName("Data"), null));
+        () -> new PivotTableSpec.PivotSourceSpec.Range(new SheetName("Data"), null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.PivotSourceSpec.Range(new SheetName("Data"), new RangeRef(" ")));
+        () -> new PivotTableSpec.PivotSourceSpec.Range(new SheetName("Data"), new RangeRef(" ")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PivotTableInput(
+            new PivotTableSpec(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.PivotSourceSpec.Range(
+                new PivotTableSpec.PivotSourceSpec.Range(
                     new SheetName("Data"), new RangeRef("A1:D5")),
-                new PivotTableInput.Anchor(new CellAddress("C5")),
+                new PivotTableSpec.Anchor(new CellAddress("C5")),
                 List.of("Region"),
                 List.of("Stage"),
                 List.of("Owner"),
                 List.of(
-                    new PivotTableInput.DataField(
+                    new PivotTableSpec.DataField(
                         "Region",
                         ExcelPivotDataConsolidateFunction.SUM,
                         "Total",
@@ -1436,17 +1430,17 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PivotTableInput(
+            new PivotTableSpec(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.PivotSourceSpec.Range(
+                new PivotTableSpec.PivotSourceSpec.Range(
                     new SheetName("Data"), new RangeRef("A1:D5")),
-                new PivotTableInput.Anchor(new CellAddress("C5")),
+                new PivotTableSpec.Anchor(new CellAddress("C5")),
                 List.of("Region", "region"),
                 List.of(),
                 List.of(),
                 List.of(
-                    new PivotTableInput.DataField(
+                    new PivotTableSpec.DataField(
                         "Amount",
                         ExcelPivotDataConsolidateFunction.SUM,
                         "Total",
@@ -1454,17 +1448,17 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PivotTableInput(
+            new PivotTableSpec(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.PivotSourceSpec.Range(
+                new PivotTableSpec.PivotSourceSpec.Range(
                     new SheetName("Data"), new RangeRef("A1:D5")),
-                new PivotTableInput.Anchor(new CellAddress("C5")),
+                new PivotTableSpec.Anchor(new CellAddress("C5")),
                 List.of("Region"),
                 List.of("region"),
                 List.of(),
                 List.of(
-                    new PivotTableInput.DataField(
+                    new PivotTableSpec.DataField(
                         "Amount",
                         ExcelPivotDataConsolidateFunction.SUM,
                         "Total",
@@ -1472,17 +1466,17 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new PivotTableInput(
+            new PivotTableSpec(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.PivotSourceSpec.Range(
+                new PivotTableSpec.PivotSourceSpec.Range(
                     new SheetName("Data"), new RangeRef("A1:D5")),
-                new PivotTableInput.Anchor(new CellAddress("C5")),
+                new PivotTableSpec.Anchor(new CellAddress("C5")),
                 List.of((String) null),
                 List.of(),
                 List.of(),
                 List.of(
-                    new PivotTableInput.DataField(
+                    new PivotTableSpec.DataField(
                         "Amount",
                         ExcelPivotDataConsolidateFunction.SUM,
                         "Total",
@@ -1490,17 +1484,17 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PivotTableInput(
+            new PivotTableSpec(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.PivotSourceSpec.Range(
+                new PivotTableSpec.PivotSourceSpec.Range(
                     new SheetName("Data"), new RangeRef("A1:D5")),
-                new PivotTableInput.Anchor(new CellAddress("C5")),
+                new PivotTableSpec.Anchor(new CellAddress("C5")),
                 List.of(" "),
                 List.of(),
                 List.of(),
                 List.of(
-                    new PivotTableInput.DataField(
+                    new PivotTableSpec.DataField(
                         "Amount",
                         ExcelPivotDataConsolidateFunction.SUM,
                         "Total",
@@ -1508,12 +1502,12 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new PivotTableInput(
+            new PivotTableSpec(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.PivotSourceSpec.Range(
+                new PivotTableSpec.PivotSourceSpec.Range(
                     new SheetName("Data"), new RangeRef("A1:D5")),
-                new PivotTableInput.Anchor(new CellAddress("C5")),
+                new PivotTableSpec.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
                 List.of(),
@@ -1521,12 +1515,12 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PivotTableInput(
+            new PivotTableSpec(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.PivotSourceSpec.Range(
+                new PivotTableSpec.PivotSourceSpec.Range(
                     new SheetName("Data"), new RangeRef("A1:D5")),
-                new PivotTableInput.Anchor(new CellAddress("C5")),
+                new PivotTableSpec.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
                 List.of(),
@@ -1534,24 +1528,24 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PivotTableInput.DataField(
+            new PivotTableSpec.DataField(
                 "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new PivotTableInput.DataField("Amount", null, "Total", Optional.empty()));
+        () -> new PivotTableSpec.DataField("Amount", null, "Total", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PivotTableInput.DataField(
+            new PivotTableSpec.DataField(
                 " ", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PivotTableInput.DataField(
+            new PivotTableSpec.DataField(
                 "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.of(" ")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.Anchor(new CellAddress("Sheet1!A1")));
+        () -> new PivotTableSpec.Anchor(new CellAddress("Sheet1!A1")));
     assertThrows(
         NullPointerException.class, () -> ProtocolCellAddressValidation.validateAddress(null));
     assertThrows(
@@ -1575,50 +1569,50 @@ class AdvancedMutationProtocolTypesTest {
                 List.of("Sales Pivot 2026", "sales pivot 2026")));
   }
 
-  private static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+  private static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
   }
 
-  private static BinarySourceInput binary(String value) {
-    return BinarySourceInput.inlineBase64(value);
+  private static BinarySourceSpec binary(String value) {
+    return BinarySourceSpec.inlineBase64(value);
   }
 
-  private static void assertThemeColor(ColorInput color, int theme, Double tint) {
-    ColorInput.Theme themed = assertInstanceOf(ColorInput.Theme.class, color);
+  private static void assertThemeColor(ColorSpec color, int theme, Double tint) {
+    ColorSpec.Theme themed = assertInstanceOf(ColorSpec.Theme.class, color);
     assertEquals(theme, themed.theme());
     assertEquals(Optional.ofNullable(tint), themed.tint());
   }
 
-  private static void assertIndexedColor(ColorInput color, int indexed, Double tint) {
-    ColorInput.Indexed indexedColor = assertInstanceOf(ColorInput.Indexed.class, color);
+  private static void assertIndexedColor(ColorSpec color, int indexed, Double tint) {
+    ColorSpec.Indexed indexedColor = assertInstanceOf(ColorSpec.Indexed.class, color);
     assertEquals(indexed, indexedColor.indexed());
     assertEquals(Optional.ofNullable(tint), indexedColor.tint());
   }
 
-  private static ChartInput chartInput(
+  private static ChartSpec chartInput(
       String name,
-      DrawingAnchorInput.TwoCell anchor,
-      ChartTitleInput title,
-      ChartLegendInput legend,
+      DrawingAnchorSpec.TwoCell anchor,
+      ChartTitleSpec title,
+      ChartLegendSpec legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       Boolean plotOnlyVisibleCells,
-      ChartPlotInput plot) {
-    return new ChartInput(
+      ChartPlotSpec plot) {
+    return new ChartSpec(
         name,
         anchor,
-        title == null ? new ChartTitleInput.None() : title,
-        legend == null ? new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT) : legend,
+        title == null ? new ChartTitleSpec.None() : title,
+        legend == null ? new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT) : legend,
         displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs,
         plotOnlyVisibleCells == null ? Boolean.TRUE : plotOnlyVisibleCells,
         List.of(plot));
   }
 
-  private static ChartSeriesInput chartSeries(
-      ChartTitleInput title, String categoriesFormula, String valuesFormula) {
-    return new ChartSeriesInput(
-        title == null ? new ChartTitleInput.None() : title,
-        new ChartDataSourceInput.Reference(categoriesFormula),
-        new ChartDataSourceInput.Reference(valuesFormula),
+  private static ChartSeriesSpec chartSeries(
+      ChartTitleSpec title, String categoriesFormula, String valuesFormula) {
+    return new ChartSeriesSpec(
+        title == null ? new ChartTitleSpec.None() : title,
+        new ChartDataSourceSpec.Reference(categoriesFormula),
+        new ChartDataSourceSpec.Reference(valuesFormula),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),

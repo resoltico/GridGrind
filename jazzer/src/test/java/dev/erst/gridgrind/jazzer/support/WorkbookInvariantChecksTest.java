@@ -75,7 +75,7 @@ import dev.erst.gridgrind.core.model.table.TableHealthReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
@@ -294,7 +294,7 @@ class WorkbookInvariantChecksTest {
                         new DataValidationEntryReport.Supported(
                             List.of(new RangeLabel("A2:A5")),
                             new DataValidationEntryReport.DataValidationDefinitionReport(
-                                new DataValidationRuleInput.WholeNumber(
+                                new DataValidationRuleSpec.WholeNumber(
                                     ExcelComparisonOperator.GREATER_OR_EQUAL,
                                     "1",
                                     Optional.empty()),
@@ -1220,7 +1220,7 @@ class WorkbookInvariantChecksTest {
         existingRequest(
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 workbookPath.toString(),
-                new dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput(
+                new dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec(
                     java.util.Optional.of(
                         new dev.erst.gridgrind.core.source.SecretReference(
                             "source-open-password")))),

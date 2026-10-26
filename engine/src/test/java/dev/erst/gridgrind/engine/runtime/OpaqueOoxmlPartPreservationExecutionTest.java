@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -104,14 +104,14 @@ class OpaqueOoxmlPartPreservationExecutionTest {
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             output.toString(),
             WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         List.of(
             new MutationStep(
                 new StepId("update-report"),
                 new CellSelector.ByAddress(new SheetName("Report"), new CellAddress("A1")),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(2)))));
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(2)))));
   }
 
   private static GridGrindHostAcceptancePolicy preservationPolicy(String partName) {

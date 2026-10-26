@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.model.validation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import org.junit.jupiter.api.Test;
 
@@ -11,20 +11,20 @@ import org.junit.jupiter.api.Test;
 class ConditionalFormattingDataBarBoundsTest {
   @Test
   void rejectsWidthsAboveOneHundredAtEitherBound() {
-    assertEquals(1.0d, new ConditionalFormattingThresholdInput.Numeric(1.0d).value());
+    assertEquals(1.0d, new ConditionalFormattingThresholdSpec.Numeric(1.0d).value());
     assertThrows(IllegalArgumentException.class, () -> newDataBarRule(101, 101));
     assertThrows(IllegalArgumentException.class, () -> newDataBarRule(0, 101));
   }
 
-  private static ConditionalFormattingRuleInput.DataBarRule newDataBarRule(
+  private static ConditionalFormattingRuleSpec.DataBarRule newDataBarRule(
       int widthMin, int widthMax) {
-    return new ConditionalFormattingRuleInput.DataBarRule(
+    return new ConditionalFormattingRuleSpec.DataBarRule(
         false,
-        ColorInput.rgb(new RgbHex("#112233")),
+        ColorSpec.rgb(new RgbHex("#112233")),
         false,
         widthMin,
         widthMax,
-        new ConditionalFormattingThresholdInput.Numeric(0.0d),
-        new ConditionalFormattingThresholdInput.Numeric(1.0d));
+        new ConditionalFormattingThresholdSpec.Numeric(0.0d),
+        new ConditionalFormattingThresholdSpec.Numeric(1.0d));
   }
 }

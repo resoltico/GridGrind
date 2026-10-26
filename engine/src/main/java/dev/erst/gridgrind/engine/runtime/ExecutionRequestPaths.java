@@ -53,7 +53,7 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
           existingFile
               .security()
-              .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
+              .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec::passwordRef)
               .map(bindings::resolveSecret);
     };
   }
@@ -64,7 +64,7 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile -> {
         if (existingFile
             .security()
-            .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
+            .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec::passwordRef)
             .isPresent()) {
           throw new IllegalStateException(
               "source encryption references require execution bindings");

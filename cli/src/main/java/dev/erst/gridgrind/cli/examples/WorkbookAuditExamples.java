@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
 import dev.erst.gridgrind.core.plan.InspectionSurfaceQuery;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
@@ -16,7 +16,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
@@ -76,11 +76,11 @@ final class WorkbookAuditExamples {
         new PlanId("large-file-modes-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
-        new ExecutionPolicyInput(
-            ExecutionModeInput.streamingWrite(),
-            dev.erst.gridgrind.core.plan.ExecutionJournalInput.defaults(),
-            new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true),
-            dev.erst.gridgrind.core.plan.AssertionModeInput.defaults()),
+        new ExecutionPolicySpec(
+            ExecutionModeSpec.streamingWrite(),
+            dev.erst.gridgrind.core.plan.ExecutionJournalSpec.defaults(),
+            new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), true),
+            dev.erst.gridgrind.core.plan.AssertionModeSpec.defaults()),
         ExampleSteps.step(
             new StepId("step-01-ensure-sheet"),
             ExampleSelectors.sheet("Ledger"),
@@ -210,8 +210,8 @@ final class WorkbookAuditExamples {
             new StepId("step-04-set-comment"),
             ExampleSelectors.cell("Dashboard", "B4"),
             new CellMutationAction.SetComment(
-                CommentInput.plain(
-                    TextSourceInput.inline("Forecast uses the revenue and margin rows above."),
+                CommentSpec.plain(
+                    TextSourceSpec.inline("Forecast uses the revenue and margin rows above."),
                     "GridGrind",
                     true))),
         ExampleSteps.step(

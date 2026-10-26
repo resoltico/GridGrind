@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.catalog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
@@ -73,5 +73,5 @@ class CatalogEnumValueDocumentationSupportTest {
   }
 
   private record EnumDocFixture(
-      Optional<CellReadFacet> optionalFacet, Map<String, CellInput> cells) {}
+      Optional<CellReadFacet> optionalFacet, Map<String, CellValueSpec> cells) {}
 }

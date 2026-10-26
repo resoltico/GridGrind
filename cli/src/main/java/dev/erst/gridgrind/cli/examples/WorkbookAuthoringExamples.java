@@ -1,15 +1,15 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
-import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.plan.AnalysisAssertion;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
 import dev.erst.gridgrind.core.plan.InspectionSurfaceQuery;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
@@ -17,7 +17,7 @@ import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -60,17 +60,17 @@ final class WorkbookAuthoringExamples {
             new StepId("step-03-apply-header-style"),
             ExampleSelectors.range("Budget", "A1:C1"),
             new CellMutationAction.ApplyStyle(
-                new CellStylePatchInput(
+                new CellStylePatch(
                     Optional.empty(),
                     Optional.of(
-                        new CellAlignmentInput(
+                        new CellAlignmentPatch(
                             Optional.of(true),
                             Optional.of(ExcelHorizontalAlignment.CENTER),
                             Optional.of(ExcelVerticalAlignment.CENTER),
                             Optional.empty(),
                             Optional.empty())),
                     Optional.of(
-                        new dev.erst.gridgrind.core.model.style.CellFontInput(
+                        new dev.erst.gridgrind.core.model.style.CellFontPatch(
                             Optional.of(true),
                             Optional.empty(),
                             Optional.empty(),
@@ -85,10 +85,10 @@ final class WorkbookAuthoringExamples {
             new StepId("step-04-apply-number-style"),
             ExampleSelectors.range("Budget", "B2:B4"),
             new CellMutationAction.ApplyStyle(
-                new CellStylePatchInput(
+                new CellStylePatch(
                     Optional.of("#,##0.00"),
                     Optional.of(
-                        new CellAlignmentInput(
+                        new CellAlignmentPatch(
                             Optional.empty(),
                             Optional.of(ExcelHorizontalAlignment.RIGHT),
                             Optional.empty(),
@@ -156,8 +156,8 @@ final class WorkbookAuthoringExamples {
             new StepId("step-03-set-comment"),
             ExampleSelectors.cell("Template", "A1"),
             new CellMutationAction.SetComment(
-                CommentInput.plain(
-                    TextSourceInput.inline("Template owner column"), "GridGrind", false))),
+                CommentSpec.plain(
+                    TextSourceSpec.inline("Template owner column"), "GridGrind", false))),
         ExampleSteps.step(
             new StepId("step-04-copy-sheet"),
             ExampleSelectors.sheet("Template"),
@@ -177,7 +177,7 @@ final class WorkbookAuthoringExamples {
         new PlanId("assertion-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
-        ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
+        ExecutionPolicySpec.journal(new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE)),
         ExampleSteps.step(
             new StepId("ensure-budget"),
             ExampleSelectors.sheet("Budget"),
@@ -245,7 +245,7 @@ final class WorkbookAuthoringExamples {
             new StepId("author-array-group"),
             ExampleSelectors.range("Calc", "D2:D4"),
             new CellMutationAction.SetArrayFormula(
-                new ArrayFormulaInput(TextSourceInput.inline("{=B2:B4*C2:C4}")))),
+                new ArrayFormulaSpec(TextSourceSpec.inline("{=B2:B4*C2:C4}")))),
         ExampleSteps.read(
             new StepId("read-array-groups"),
             ExampleSelectors.sheet("Calc"),

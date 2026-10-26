@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.problem.FieldValidationNamingRule;
 import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.GridGrindRequestProblemSupport;
@@ -19,7 +19,7 @@ class MutationActionCoverageTest {
   @Test
   void discoversTargetsFromTheCanonicalOperationContract() {
     CellMutationAction.SetCell action =
-        new CellMutationAction.SetCell(new CellInput.NumberValue(1.0));
+        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0));
 
     assertEquals(
         List.of(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class),
@@ -60,7 +60,7 @@ class MutationActionCoverageTest {
   @Test
   void rectangularRowValidationRejectsEmptyRowsNullRowsAndNullCells() {
     MutationAction.Validation.requireRectangularRows(
-        List.of(List.of(new CellInput.Blank()), List.of(new CellInput.Blank())));
+        List.of(List.of(new CellValueSpec.Blank()), List.of(new CellValueSpec.Blank())));
 
     assertEquals(
         "rows must not be empty",
@@ -74,7 +74,7 @@ class MutationActionCoverageTest {
                 NullPointerException.class,
                 () ->
                     MutationAction.Validation.requireRectangularRows(
-                        Arrays.asList((List<CellInput>) null)))
+                        Arrays.asList((List<CellValueSpec>) null)))
             .getMessage());
     assertEquals(
         "rows must not contain null cell values",
@@ -82,7 +82,7 @@ class MutationActionCoverageTest {
                 NullPointerException.class,
                 () ->
                     MutationAction.Validation.requireRectangularRows(
-                        List.of(Arrays.asList(new CellInput.Blank(), null))))
+                        List.of(Arrays.asList(new CellValueSpec.Blank(), null))))
             .getMessage());
     assertEquals(
         "rows must not contain empty rows",
@@ -97,8 +97,8 @@ class MutationActionCoverageTest {
                 () ->
                     MutationAction.Validation.requireRectangularRows(
                         List.of(
-                            List.of(new CellInput.Blank()),
-                            List.of(new CellInput.Blank(), new CellInput.Blank()))))
+                            List.of(new CellValueSpec.Blank()),
+                            List.of(new CellValueSpec.Blank(), new CellValueSpec.Blank()))))
             .getMessage());
   }
 

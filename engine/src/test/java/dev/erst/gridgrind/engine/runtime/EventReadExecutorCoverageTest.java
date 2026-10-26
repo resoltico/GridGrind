@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
@@ -33,7 +33,7 @@ class EventReadExecutorCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -63,7 +63,7 @@ class EventReadExecutorCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -96,7 +96,7 @@ class EventReadExecutorCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -129,7 +129,7 @@ class EventReadExecutorCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -157,7 +157,7 @@ class EventReadExecutorCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(

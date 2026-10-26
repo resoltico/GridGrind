@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
@@ -116,7 +116,7 @@ public final class GridGrindRequestDoctor {
 
   private static RequestDoctorReport.Summary summaryFor(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
-    ExecutionModeInput executionMode = ExecutionWorkflowRouting.executionMode(request);
+    ExecutionModeSpec executionMode = ExecutionWorkflowRouting.executionMode(request);
     WorkbookPlan.StepPartition stepPartition = request.stepPartition();
     int mutationStepCount = stepPartition.mutations().size();
     int assertionStepCount = stepPartition.assertions().size();

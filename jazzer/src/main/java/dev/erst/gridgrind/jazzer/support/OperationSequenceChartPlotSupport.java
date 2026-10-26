@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 
 /** Routes chart-plot sampling to the bounded plot-family helpers. */
 final class OperationSequenceChartPlotSupport {
   private OperationSequenceChartPlotSupport() {}
 
-  static ChartPlotInput nextChartPlotInput(GridGrindFuzzData data) {
+  static ChartPlotSpec nextChartPlotInput(GridGrindFuzzData data) {
     boolean varyColors = data.consumeBoolean();
     int plotKind = nextPlotKind(data);
     return switch (plotKind) {

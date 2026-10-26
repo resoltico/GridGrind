@@ -18,6 +18,22 @@ import org.junit.jupiter.api.Test;
 /** One focused counterexample for each architecture property beyond JPMS enforcement. */
 class ArchitectureNegativeControlsTest {
   @Test
+  void modelNamesRejectRetiredGenericSuffixes() {
+    AssertionError failure =
+        assertThrows(
+            AssertionError.class,
+            () ->
+                ProductDomainShapeArchitectureRules.canonicalModelNamesDescribeTheirRole()
+                    .check(
+                        new ClassFileImporter()
+                            .importPackages("dev.erst.gridgrind.core.model.fixture")));
+    for (String name :
+        java.util.List.of("AuthoredInput", "AuthoredDto", "CellSnapshot", "CellDefinition")) {
+      assertTrue(failure.getMessage().contains(name), name);
+    }
+  }
+
+  @Test
   void coreRejectsWorkbookAndJsonLibraryDependencies() {
     AssertionError failure =
         assertThrows(

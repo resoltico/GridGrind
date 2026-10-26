@@ -63,7 +63,7 @@ public sealed interface GridGrindExecutionGrant permits GridGrindExecutionGrant.
   }
 
   /** One resource the trusted host permits the execution to read. */
-  sealed interface ReadAuthority permits ReadAuthority.File, ReadAuthority.StandardInput {
+  sealed interface ReadAuthority permits ReadAuthority.File, ReadAuthority.Stdin {
     /** Grants reading exactly one normalized file resource. */
     record File(Path path) implements ReadAuthority {
       public File {
@@ -72,7 +72,7 @@ public sealed interface GridGrindExecutionGrant permits GridGrindExecutionGrant.
     }
 
     /** Grants consumption of the host-bound standard-input payload. */
-    record StandardInput() implements ReadAuthority {}
+    record Stdin() implements ReadAuthority {}
   }
 
   /** Workbook scope the host permits a resolved operation footprint to affect or inspect. */

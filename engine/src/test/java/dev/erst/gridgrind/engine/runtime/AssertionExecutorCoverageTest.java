@@ -11,8 +11,8 @@ import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
@@ -20,18 +20,18 @@ import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
 import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
@@ -112,10 +112,10 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new CellMutationAction.SetCell(textCell("Ada"))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
-                        new CellMutationAction.SetCell(new CellInput.NumberValue(42.0d))),
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(42.0d))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("C2")),
-                        new CellMutationAction.SetCell(new CellInput.BooleanValue(true))),
+                        new CellMutationAction.SetCell(new CellValueSpec.BooleanValue(true))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("E2")),
                         new CellMutationAction.SetCell(formulaCell("1/0"))),
@@ -125,7 +125,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     mutate(
                         new WorkbookSelector.Current(),
                         new WorkbookMutationAction.SetWorkbookProtection(
-                            new WorkbookProtectionInput(
+                            new WorkbookProtectionSpec(
                                 true,
                                 false,
                                 false,
@@ -141,12 +141,12 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new TableSelector.ByNameOnSheet(
                             new TableName("BudgetTable"), new SheetName("Budget")),
                         new StructuredMutationAction.SetTable(
-                            TableInput.withDefaultMetadata(
+                            TableSpec.withDefaultMetadata(
                                 new TableName("BudgetTable"),
                                 new SheetName("Budget"),
                                 new RangeRef("A1:B2"),
                                 false,
-                                new TableStyleInput.None())))),
+                                new TableStyleSpec.None())))),
                 List.of(),
                 List.of())));
 
@@ -467,7 +467,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new CellMutationAction.SetCell(textCell("Ada"))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
-                        new CellMutationAction.SetCell(new CellInput.NumberValue(42.0d))),
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(42.0d))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("E2")),
                         new CellMutationAction.SetCell(formulaCell("1/0"))),
@@ -477,7 +477,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     mutate(
                         new WorkbookSelector.Current(),
                         new WorkbookMutationAction.SetWorkbookProtection(
-                            new WorkbookProtectionInput(
+                            new WorkbookProtectionSpec(
                                 true,
                                 false,
                                 false,
@@ -493,12 +493,12 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new TableSelector.ByNameOnSheet(
                             new TableName("BudgetTable"), new SheetName("Budget")),
                         new StructuredMutationAction.SetTable(
-                            TableInput.withDefaultMetadata(
+                            TableSpec.withDefaultMetadata(
                                 new TableName("BudgetTable"),
                                 new SheetName("Budget"),
                                 new RangeRef("A1:B2"),
                                 false,
-                                new TableStyleInput.None())))),
+                                new TableStyleSpec.None())))),
                 List.of(),
                 List.of())));
 
@@ -1207,7 +1207,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.streamingWrite(),
+                    ExecutionModeSpec.streamingWrite(),
                     null,
                     List.of(
                         mutate(
@@ -1216,7 +1216,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         mutate(
                             new SheetSelector.ByName(new SheetName("Ops")),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                     List.of(textCell("Owner"), textCell("Ada")))))),
                     List.of(
                         assertThat(
@@ -1246,7 +1246,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.streamingWrite(),
+                    ExecutionModeSpec.streamingWrite(),
                     null,
                     List.of(
                         mutate(
@@ -1255,7 +1255,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         mutate(
                             new SheetSelector.ByName(new SheetName("Ops")),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                     List.of(textCell("Owner"), textCell("Ada")))))),
                     List.of(
                         assertThat(
@@ -1293,7 +1293,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
-                    ExecutionModeInput.eventRead()));
+                    ExecutionModeSpec.eventRead()));
     assertTrue(assertionModeFailure.getMessage().contains("does not support assertion steps"));
 
     IllegalStateException collectingAssertionModeFailure =
@@ -1308,7 +1308,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
-                    ExecutionModeInput.eventRead()));
+                    ExecutionModeSpec.eventRead()));
     assertTrue(
         collectingAssertionModeFailure.getMessage().contains("does not support assertion steps"));
 
@@ -1330,7 +1330,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary()),
                 new WorkbookLocation.StoredWorkbook(workbookPath),
-                ExecutionModeInput.eventRead(),
+                ExecutionModeSpec.eventRead(),
                 workbookPath));
     assertEquals("event-summary", eventSummary.stepId().value());
 
@@ -1345,7 +1345,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         "workbook",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            ExecutionModeInput.eventRead()));
+            ExecutionModeSpec.eventRead()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1353,7 +1353,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 new WorkbookPlan.WorkbookPersistence.None(),
                 List.of(),
                 List.of()),
-            ExecutionModeInput.eventRead()));
+            ExecutionModeSpec.eventRead()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1366,7 +1366,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         "workbook",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            ExecutionModeInput.eventRead()));
+            ExecutionModeSpec.eventRead()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1377,7 +1377,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new SheetSelector.ByName(new SheetName("Ops")),
                         new WorkbookMutationAction.EnsureSheet())),
                 List.of()),
-            ExecutionModeInput.eventRead()));
+            ExecutionModeSpec.eventRead()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1389,7 +1389,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         "workbook",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            ExecutionModeInput.fullXssf()));
+            ExecutionModeSpec.fullXssf()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1401,7 +1401,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         "workbook",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            ExecutionModeInput.streamingWrite()));
+            ExecutionModeSpec.streamingWrite()));
 
     assertEquals(
         java.util.Optional.of("2+3"),
@@ -1416,7 +1416,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.streamingWrite(),
+                        ExecutionModeSpec.streamingWrite(),
                         null,
                         List.of(),
                         List.of(
@@ -1508,19 +1508,19 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
                 new SheetName("Budget"), new RangeRef("A1:B3")),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                     List.of(
                         List.of(textCell("Item"), textCell("Amount")),
-                        List.of(textCell("Hosting"), new CellInput.NumberValue(100.0)),
-                        List.of(textCell("Travel"), new CellInput.NumberValue(50.0)))))),
+                        List.of(textCell("Hosting"), new CellValueSpec.NumberValue(100.0)),
+                        List.of(textCell("Travel"), new CellValueSpec.NumberValue(50.0)))))),
         mutate(
             new StructuredMutationAction.SetTable(
-                TableInput.withDefaultMetadata(
+                TableSpec.withDefaultMetadata(
                     new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B3"),
                     false,
-                    new TableStyleInput.None()))));
+                    new TableStyleSpec.None()))));
   }
 
   @Test

@@ -64,7 +64,7 @@ class CliDiscoveryResidualCoverageTest {
                     "ENTRY",
                     "Create or mutate one supported simple chart on one sheet.",
                     List.of("SET_CHART"),
-                    List.of("chartInputType:ChartInput"))));
+                    List.of("chartSpecType:ChartSpec"))));
 
     byte[] bytes = GridGrindCliJsonCodecSupport.writeBytes(report);
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

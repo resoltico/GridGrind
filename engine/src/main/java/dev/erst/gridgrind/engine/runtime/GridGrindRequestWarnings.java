@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -71,14 +71,14 @@ final class GridGrindRequestWarnings {
       case CellMutationAction.SetCell setCell ->
           collectFromCellInput(setCell.value(), spacedSheetNames, offendingSheetNames);
       case CellMutationAction.SetRange setRange -> {
-        for (List<CellInput> row : setRange.rows().toCellInputRows()) {
-          for (CellInput cellInput : row) {
+        for (List<CellValueSpec> row : setRange.rows().toCellInputRows()) {
+          for (CellValueSpec cellInput : row) {
             collectFromCellInput(cellInput, spacedSheetNames, offendingSheetNames);
           }
         }
       }
       case CellMutationAction.AppendRow appendRow -> {
-        for (CellInput cellInput : appendRow.values().toCellInputs()) {
+        for (CellValueSpec cellInput : appendRow.values().toCellInputs()) {
           collectFromCellInput(cellInput, spacedSheetNames, offendingSheetNames);
         }
       }
@@ -108,12 +108,12 @@ final class GridGrindRequestWarnings {
   }
 
   private static void collectFromCellInput(
-      CellInput input, Set<String> spacedSheetNames, Set<String> offendingSheetNames) {
-    if (!(input instanceof CellInput.Formula formula)) {
+      CellValueSpec input, Set<String> spacedSheetNames, Set<String> offendingSheetNames) {
+    if (!(input instanceof CellValueSpec.Formula formula)) {
       return;
     }
     if (!(formula.source()
-        instanceof dev.erst.gridgrind.core.source.TextSourceInput.Inline inline)) {
+        instanceof dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline)) {
       return;
     }
     String formulaText = inline.text();

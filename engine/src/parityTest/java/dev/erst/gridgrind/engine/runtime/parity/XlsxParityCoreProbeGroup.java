@@ -10,22 +10,22 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
-import dev.erst.gridgrind.core.model.table.AutofilterSortConditionInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
-import dev.erst.gridgrind.core.model.value.CellGridInput;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -980,7 +980,7 @@ final class XlsxParityCoreProbeGroup {
                 mutate(
                     new WorkbookSelector.Current(),
                     new WorkbookMutationAction.SetWorkbookProtection(
-                        new WorkbookProtectionInput(
+                        new WorkbookProtectionSpec(
                             true,
                             true,
                             true,
@@ -1480,7 +1480,7 @@ final class XlsxParityCoreProbeGroup {
                     mutate(
                         new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A5:A6")),
                         new CellMutationAction.SetRange(
-                            new CellGridInput.Typed(
+                            new CellGridSpec.Typed(
                                 List.of(
                                     List.of(text("ThemeTintStyle")),
                                     List.of(text("GradientFillStyle")))))),
@@ -1750,18 +1750,18 @@ final class XlsxParityCoreProbeGroup {
                         new RangeSelector.ByRange(new SheetName("Advanced"), new RangeRef("A1:C5")),
                         new StructuredMutationAction.SetAutofilter(
                             List.of(
-                                new AutofilterFilterColumnInput(
+                                new AutofilterFilterColumnSpec(
                                     0L,
                                     true,
-                                    new AutofilterFilterCriterionInput.Values(
+                                    new AutofilterFilterCriterionSpec.Values(
                                         List.of("R1C0"), false))),
-                            new AutofilterSortStateInput(
+                            new AutofilterSortStateSpec(
                                 new RangeRef("A2:C5"),
                                 false,
                                 false,
                                 java.util.Optional.empty(),
                                 List.of(
-                                    new AutofilterSortConditionInput.Value(
+                                    new AutofilterSortConditionSpec.Value(
                                         new RangeRef("B2:B5"), true)))))),
                 inspect(
                     "filters",

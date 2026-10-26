@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,8 +28,8 @@ class SourceBackedPlanResolverRequestPathTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
@@ -57,7 +57,7 @@ class SourceBackedPlanResolverRequestPathTest {
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolveBinarySource(
-                    new BinarySourceInput.File("\u0000"), bindings, "picture payload"));
+                    new BinarySourceSpec.File("\u0000"), bindings, "picture payload"));
 
     assertEquals("picture payload", failure.inputKind());
   }
@@ -74,7 +74,7 @@ class SourceBackedPlanResolverRequestPathTest {
         RequestPathEscapeException.class,
         () ->
             SourceBackedPlanResolver.resolveBinarySource(
-                new BinarySourceInput.File("../outside.bin"), bindings, "picture payload"));
+                new BinarySourceSpec.File("../outside.bin"), bindings, "picture payload"));
   }
 
   @Test
@@ -85,7 +85,7 @@ class SourceBackedPlanResolverRequestPathTest {
             Files.createDirectory(root.resolve("temp")),
             ExecutionGrantTestSupport.noPublication());
     InputResolutionFailures failures = new InputResolutionFailures();
-    TextSourceInput.Utf8File missingFormula = TextSourceInput.utf8File("missing-formula.txt");
+    TextSourceSpec.Utf8File missingFormula = TextSourceSpec.utf8File("missing-formula.txt");
 
     assertSame(
         missingFormula,

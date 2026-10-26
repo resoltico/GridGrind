@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.authoring;
 
-import dev.erst.gridgrind.core.model.value.CellGridInput;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -26,7 +26,7 @@ public final class RangeTarget {
     return new PlannedMutation(
         selector,
         new CellMutationAction.SetRange(
-            new CellGridInput.Typed(
+            new CellGridSpec.Typed(
                 rows.stream()
                     .map(
                         row ->

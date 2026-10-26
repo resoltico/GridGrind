@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.semantics;
 import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.core.plan.Assertion;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.plan.MutationAction;
 import dev.erst.gridgrind.core.plan.Selector;
@@ -72,12 +72,12 @@ final class WorkbookOperationContract {
   }
 
   /** Returns the execution-mode incompatibility for this operation when one exists. */
-  Optional<String> executionModeViolation(ExecutionModeInput executionMode) {
+  Optional<String> executionModeViolation(ExecutionModeSpec executionMode) {
     Objects.requireNonNull(executionMode, "executionMode must not be null");
     return switch (executionMode) {
-      case ExecutionModeInput.FullXssf _ -> Optional.empty();
-      case ExecutionModeInput.EventRead _ -> eventReadViolation();
-      case ExecutionModeInput.StreamingWrite _ -> streamingWriteViolation();
+      case ExecutionModeSpec.FullXssf _ -> Optional.empty();
+      case ExecutionModeSpec.EventRead _ -> eventReadViolation();
+      case ExecutionModeSpec.StreamingWrite _ -> streamingWriteViolation();
     };
   }
 

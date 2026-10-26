@@ -19,23 +19,23 @@ class HyperlinkTargetTest {
 
     assertEquals(
         new ExcelHyperlink.Url("https://example.com/report"),
-        WorkbookCommandCellInputConverter.toExcelHyperlink(url));
+        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(url));
     assertEquals(
         new ExcelHyperlink.Email("team@example.com"),
-        WorkbookCommandCellInputConverter.toExcelHyperlink(email));
+        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(email));
     assertEquals(
         new ExcelHyperlink.Email("team@example.com"),
-        WorkbookCommandCellInputConverter.toExcelHyperlink(plainEmail));
+        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(plainEmail));
     assertEquals(
         new ExcelHyperlink.File("/tmp/report.xlsx"),
-        WorkbookCommandCellInputConverter.toExcelHyperlink(file));
+        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(file));
     assertEquals(
         new ExcelHyperlink.File("/tmp/report.xlsx"),
-        WorkbookCommandCellInputConverter.toExcelHyperlink(fileUri));
+        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(fileUri));
     assertEquals("/tmp/report.xlsx", fileUri.path());
     assertEquals(
         new ExcelHyperlink.Document("Budget!B4"),
-        WorkbookCommandCellInputConverter.toExcelHyperlink(document));
+        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(document));
   }
 
   @Test

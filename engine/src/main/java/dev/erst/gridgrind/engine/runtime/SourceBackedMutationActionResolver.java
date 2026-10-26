@@ -2,9 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
 
-import dev.erst.gridgrind.core.model.value.CellGridInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -75,7 +75,8 @@ final class SourceBackedMutationActionResolver {
 
   private static CellMutationAction resolveSetCell(
       CellMutationAction.SetCell setCell, ExecutionInputBindings bindings) throws IOException {
-    CellInput resolvedValue = SourceBackedPlanResolver.resolveCellInput(setCell.value(), bindings);
+    CellValueSpec resolvedValue =
+        SourceBackedPlanResolver.resolveCellInput(setCell.value(), bindings);
     return sameReference(resolvedValue, setCell.value())
         ? setCell
         : new CellMutationAction.SetCell(resolvedValue);
@@ -83,14 +84,14 @@ final class SourceBackedMutationActionResolver {
 
   private static CellMutationAction resolveSetRange(
       CellMutationAction.SetRange setRange, ExecutionInputBindings bindings) throws IOException {
-    if (!(setRange.rows() instanceof CellGridInput.Typed typedRows)) {
+    if (!(setRange.rows() instanceof CellGridSpec.Typed typedRows)) {
       return setRange;
     }
-    List<List<CellInput>> resolvedRows =
+    List<List<CellValueSpec>> resolvedRows =
         SourceBackedPlanResolver.resolveRows(typedRows.cells(), bindings);
     return sameReference(resolvedRows, typedRows.cells())
         ? setRange
-        : new CellMutationAction.SetRange(new CellGridInput.Typed(resolvedRows));
+        : new CellMutationAction.SetRange(new CellGridSpec.Typed(resolvedRows));
   }
 
   private static CellMutationAction resolveSetComment(
@@ -105,14 +106,14 @@ final class SourceBackedMutationActionResolver {
 
   private static CellMutationAction resolveAppendRow(
       CellMutationAction.AppendRow appendRow, ExecutionInputBindings bindings) throws IOException {
-    if (!(appendRow.values() instanceof CellRowInput.Typed typedValues)) {
+    if (!(appendRow.values() instanceof CellRowSpec.Typed typedValues)) {
       return appendRow;
     }
-    List<CellInput> resolvedValues =
+    List<CellValueSpec> resolvedValues =
         SourceBackedPlanResolver.resolveCells(typedValues.cells(), bindings);
     return sameReference(resolvedValues, typedValues.cells())
         ? appendRow
-        : new CellMutationAction.AppendRow(new CellRowInput.Typed(resolvedValues));
+        : new CellMutationAction.AppendRow(new CellRowSpec.Typed(resolvedValues));
   }
 
   private static DrawingMutationAction resolveSetPicture(

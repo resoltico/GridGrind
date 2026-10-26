@@ -60,8 +60,8 @@ class GridGrindJsonProblemSurfaceTest {
           WorkbookPlan.standard(
               new WorkbookPlan.WorkbookSource.New(),
               new WorkbookPlan.WorkbookPersistence.None(),
-              dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-              dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+              dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+              dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
               List.of()),
           false);
       assertFalse(outputStream.closed);

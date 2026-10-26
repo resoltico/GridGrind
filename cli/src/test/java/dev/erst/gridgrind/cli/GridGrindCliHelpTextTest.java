@@ -301,7 +301,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("--temp-root <path>"));
     assertTrue(protocol.contains("--pretty"));
     assertFalse(protocol.contains("--lookup GET_CELLS"));
-    assertFalse(protocol.contains("--lookup nestedTypes:cellInputTypes"));
+    assertFalse(protocol.contains("--lookup nestedTypes:cellValueSpecTypes"));
     assertFalse(protocol.contains("summary-first"));
     assertTrue(protocol.contains("execution.mode is a typed discriminator"));
     assertTrue(

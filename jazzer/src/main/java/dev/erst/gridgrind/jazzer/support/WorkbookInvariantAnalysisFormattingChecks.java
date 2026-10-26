@@ -244,7 +244,7 @@ final class WorkbookInvariantAnalysisFormattingChecks {
     WorkbookInvariantChecks.require(
         validation.rule() != null, "data validation rule must not be null");
     switch (validation.rule()) {
-      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.ExplicitList
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.ExplicitList
               explicitList -> {
         WorkbookInvariantChecks.require(
             explicitList.values() != null, "explicit list values must not be null");
@@ -253,22 +253,22 @@ final class WorkbookInvariantAnalysisFormattingChecks {
             .forEach(
                 value -> WorkbookInvariantChecks.requireNonBlank(value, "explicit list value"));
       }
-      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.FormulaList
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.FormulaList
               formulaList ->
           WorkbookInvariantChecks.requireNonBlank(formulaList.formula(), "formula list formula");
-      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.WholeNumber
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.WholeNumber
               wholeNumber ->
           requireComparisonRuleShape(wholeNumber.operator(), wholeNumber.formula1());
-      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.DecimalNumber
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.DecimalNumber
               decimalNumber ->
           requireComparisonRuleShape(decimalNumber.operator(), decimalNumber.formula1());
-      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.DateRule dateRule ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.DateRule dateRule ->
           requireComparisonRuleShape(dateRule.operator(), dateRule.formula1());
-      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.TimeRule timeRule ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.TimeRule timeRule ->
           requireComparisonRuleShape(timeRule.operator(), timeRule.formula1());
-      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.TextLength textLength ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.TextLength textLength ->
           requireComparisonRuleShape(textLength.operator(), textLength.formula1());
-      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.CustomFormula
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.CustomFormula
               customFormula ->
           WorkbookInvariantChecks.requireNonBlank(
               customFormula.formula(), "custom validation formula");

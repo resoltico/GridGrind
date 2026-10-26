@@ -55,7 +55,7 @@ GridGrind's mutation contract is source-backed for large text and binary payload
 body stays canonical JSON, while the authored value can come from inline literals, files in the
 execution environment, or bound stdin bytes.
 
-Text-bearing mutation fields use `TextSourceInput`:
+Text-bearing mutation fields use `TextSourceSpec`:
 
 ```json
 { "type": "INLINE", "text": "Quarterly note" }
@@ -63,7 +63,7 @@ Text-bearing mutation fields use `TextSourceInput`:
 { "type": "STANDARD_INPUT" }
 ```
 
-Binary-bearing mutation fields use `BinarySourceInput`:
+Binary-bearing mutation fields use `BinarySourceSpec`:
 
 ```json
 { "type": "INLINE_BASE64", "base64Data": "SGVsbG8=" }

@@ -70,7 +70,7 @@ Write a rectangular grid of typed values. The `rows` matrix must exactly match t
 `range`. Row count must equal `range` row span; column count of each row must equal `range`
 column span. Existing style, hyperlink, and comment state on the targeted cells is preserved.
 Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside
-`rows.cells` when you use the canonical `CellGridInput` wrapper with `type: "TYPED"`. Homogeneous
+`rows.cells` when you use the canonical `CellGridSpec` wrapper with `type: "TYPED"`. Homogeneous
 grids may use the compact scalar-family encodings instead.
 
 ```json

@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.metadata.Variant;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
-import dev.erst.gridgrind.core.model.value.CellGridInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import java.util.Objects;
 
@@ -18,7 +18,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Write one typed value to a single cell.",
       targetSelectors = {CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record SetCell(CellInput value) implements CellMutationAction {
+  record SetCell(CellValueSpec value) implements CellMutationAction {
     public SetCell {
       Objects.requireNonNull(value, "value must not be null");
     }
@@ -30,7 +30,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Write a rectangular grid of typed or compact homogeneous values.",
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record SetRange(CellGridInput rows) implements CellMutationAction {
+  record SetRange(CellGridSpec rows) implements CellMutationAction {
     public SetRange {
       Objects.requireNonNull(rows, "rows must not be null");
     }
@@ -52,7 +52,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Author one contiguous single-cell or multi-cell array-formula group.",
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record SetArrayFormula(ArrayFormulaInput formula) implements CellMutationAction {
+  record SetArrayFormula(ArrayFormulaSpec formula) implements CellMutationAction {
     public SetArrayFormula {
       Objects.requireNonNull(formula, "formula must not be null");
     }
@@ -96,7 +96,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Replace the plain-text comment attached to a single cell.",
       targetSelectors = {CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record SetComment(CommentInput comment) implements CellMutationAction {
+  record SetComment(CommentSpec comment) implements CellMutationAction {
     public SetComment {
       Objects.requireNonNull(comment, "comment must not be null");
     }
@@ -118,7 +118,7 @@ public sealed interface CellMutationAction extends MutationAction {
       summary = "Apply a style patch to every cell in the selected range.",
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record ApplyStyle(CellStylePatchInput style) implements CellMutationAction {
+  record ApplyStyle(CellStylePatch style) implements CellMutationAction {
     public ApplyStyle {
       Objects.requireNonNull(style, "style must not be null");
     }
@@ -131,7 +131,7 @@ public sealed interface CellMutationAction extends MutationAction {
           "Append a new row of typed or compact homogeneous values after the last occupied row.",
       targetSelectors = {SheetSelector.ByName.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.CELL_MUTATION)
-  record AppendRow(CellRowInput values) implements CellMutationAction {
+  record AppendRow(CellRowSpec values) implements CellMutationAction {
     public AppendRow {
       Objects.requireNonNull(values, "values must not be null");
     }

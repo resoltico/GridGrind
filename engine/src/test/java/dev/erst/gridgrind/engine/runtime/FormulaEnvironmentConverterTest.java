@@ -3,8 +3,8 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,9 +20,9 @@ class FormulaEnvironmentConverterTest {
   void materializesRelativeExternalWorkbookBindingsThroughTheExecutionRoot() throws Exception {
     Path references = Files.createDirectory(temporaryDirectory.resolve("refs"));
     Path externalWorkbook = Files.write(references.resolve("q1.xlsx"), new byte[] {1, 2, 3});
-    FormulaEnvironmentInput input =
-        new FormulaEnvironmentInput(
-            List.of(new FormulaExternalWorkbookInput("referenced.xlsx", "refs/q1.xlsx")),
+    FormulaEnvironmentSpec input =
+        new FormulaEnvironmentSpec(
+            List.of(new FormulaExternalWorkbookSpec("referenced.xlsx", "refs/q1.xlsx")),
             FormulaMissingWorkbookPolicy.ERROR,
             List.of());
 

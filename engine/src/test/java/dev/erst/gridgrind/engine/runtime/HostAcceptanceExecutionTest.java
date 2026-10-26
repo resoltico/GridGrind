@@ -6,16 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
@@ -146,8 +146,8 @@ class HostAcceptanceExecutionTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 output.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicyInput.mode(new ExecutionModeInput.StreamingWrite()),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.mode(new ExecutionModeSpec.StreamingWrite()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("ensure-report"),
@@ -157,7 +157,7 @@ class HostAcceptanceExecutionTest {
                     new StepId("append-total"),
                     new SheetSelector.ByName(new SheetName("Report")),
                     new CellMutationAction.AppendRow(
-                        new CellRowInput.Typed(List.of(new CellInput.NumberValue(1)))))));
+                        new CellRowSpec.Typed(List.of(new CellValueSpec.NumberValue(1)))))));
 
     WorkbookResult.Failure failure =
         assertInstanceOf(
@@ -185,8 +185,8 @@ class HostAcceptanceExecutionTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile(source.toString()),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(new ExecutionModeInput.EventRead()),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.mode(new ExecutionModeSpec.EventRead()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new InspectionStep(
                     new StepId("summary"),
@@ -267,9 +267,9 @@ class HostAcceptanceExecutionTest {
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             output.toString(),
             WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         reportSteps());
   }
 
@@ -282,7 +282,7 @@ class HostAcceptanceExecutionTest {
         new MutationStep(
             new StepId("write-total"),
             new CellSelector.ByAddress(new SheetName("Report"), new CellAddress("A1")),
-            new CellMutationAction.SetCell(new CellInput.NumberValue(1))));
+            new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1))));
   }
 
   private static GridGrindHostAcceptancePolicy failingHostTotal() {
@@ -315,14 +315,14 @@ class HostAcceptanceExecutionTest {
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             output.toString(),
             WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         List.of(
             new MutationStep(
                 new StepId("update-report"),
                 new CellSelector.ByAddress(new SheetName("Report"), new CellAddress(address)),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(value)))));
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(value)))));
   }
 
   private static GridGrindHostAcceptancePolicy preserveCell(String address) {

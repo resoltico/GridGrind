@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -111,7 +111,7 @@ class SelectorTypesTest {
         SelectorCardinality.EXACTLY_ONE, new TableRowSelector.ByIndex(table, 2).cardinality());
     assertEquals(
         SelectorCardinality.ZERO_OR_ONE,
-        new TableRowSelector.ByKeyCell(table, "Item", new CellInput.Text(text("Laptop")))
+        new TableRowSelector.ByKeyCell(table, "Item", new CellValueSpec.Text(text("Laptop")))
             .cardinality());
     assertEquals(
         SelectorCardinality.ZERO_OR_ONE,
@@ -280,7 +280,7 @@ class SelectorTypesTest {
   void tableRowAndCellSelectorsValidateComposition() {
     TableSelector.ByName table = new TableSelector.ByName(new TableName("BudgetTable"));
     TableRowSelector.ByKeyCell row =
-        new TableRowSelector.ByKeyCell(table, "Item", new CellInput.Text(text("Laptop")));
+        new TableRowSelector.ByKeyCell(table, "Item", new CellValueSpec.Text(text("Laptop")));
     TableCellSelector.ByColumnName cell = new TableCellSelector.ByColumnName(row, "Amount");
 
     assertEquals(table, row.table());
@@ -288,17 +288,17 @@ class SelectorTypesTest {
     assertEquals("Amount", cell.columnName());
     assertInstanceOf(
         TableRowSelector.ByKeyCell.class,
-        new TableRowSelector.ByKeyCell(table, "Item", new CellInput.Blank()));
+        new TableRowSelector.ByKeyCell(table, "Item", new CellValueSpec.Blank()));
     assertInstanceOf(
         TableRowSelector.ByKeyCell.class,
-        new TableRowSelector.ByKeyCell(table, "Item", new CellInput.NumberValue(42.0d)));
+        new TableRowSelector.ByKeyCell(table, "Item", new CellValueSpec.NumberValue(42.0d)));
     assertInstanceOf(
         TableRowSelector.ByKeyCell.class,
-        new TableRowSelector.ByKeyCell(table, "Item", new CellInput.BooleanValue(true)));
+        new TableRowSelector.ByKeyCell(table, "Item", new CellValueSpec.BooleanValue(true)));
     assertInstanceOf(
         TableRowSelector.ByKeyCell.class,
         new TableRowSelector.ByKeyCell(
-            table, "Item", new CellInput.Formula(TextSourceInput.inline("A1"))));
+            table, "Item", new CellValueSpec.Formula(TextSourceSpec.inline("A1"))));
     assertThrows(
         NullPointerException.class, () -> new TableRowSelector.ByKeyCell(table, "Item", null));
     assertThrows(
@@ -312,31 +312,31 @@ class SelectorTypesTest {
             new TableRowSelector.ByKeyCell(
                 new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
                 "Item",
-                new CellInput.Blank()));
+                new CellValueSpec.Blank()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new TableRowSelector.ByKeyCell(
                 table,
                 "Item",
-                new CellInput.RichText(
-                    List.of(new RichTextRunInput(text("Ada"), Optional.empty())))));
+                new CellValueSpec.RichText(
+                    List.of(new RichTextRunSpec(text("Ada"), Optional.empty())))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new TableRowSelector.ByKeyCell(
-                table, "Item", new CellInput.Date(LocalDate.of(2026, 4, 18))));
+                table, "Item", new CellValueSpec.Date(LocalDate.of(2026, 4, 18))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new TableRowSelector.ByKeyCell(
-                table, "Item", new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
+                table, "Item", new CellValueSpec.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
     assertThrows(
         IllegalArgumentException.class,
         () -> new TableCellSelector.ByColumnName(new TableRowSelector.AllRows(table), "Amount"));
   }
 
-  private static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+  private static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
   }
 }

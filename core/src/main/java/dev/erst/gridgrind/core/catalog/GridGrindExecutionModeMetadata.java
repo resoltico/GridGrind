@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.catalog;
 
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.plan.MutationAction;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
@@ -17,21 +17,21 @@ import java.util.Objects;
  * runtime error messages.
  */
 public final class GridGrindExecutionModeMetadata {
-  private static final FullXssfMode FULL_XSSF = new FullXssfMode(ExecutionModeInput.FullXssf.class);
+  private static final FullXssfMode FULL_XSSF = new FullXssfMode(ExecutionModeSpec.FullXssf.class);
   private static final EventReadMode EVENT_READ =
       new EventReadMode(
-          ExecutionModeInput.EventRead.class,
+          ExecutionModeSpec.EventRead.class,
           List.of(
               WorkbookIntrospectionQuery.GetWorkbookSummary.class,
               SheetIntrospectionQuery.GetSheetSummary.class),
-          CalculationStrategyInput.DoNotCalculate.class,
+          CalculationStrategySpec.DoNotCalculate.class,
           false);
   private static final StreamingWriteMode STREAMING_WRITE =
       new StreamingWriteMode(
-          ExecutionModeInput.StreamingWrite.class,
+          ExecutionModeSpec.StreamingWrite.class,
           WorkbookPlan.WorkbookSource.New.class,
           List.of(WorkbookMutationAction.EnsureSheet.class, CellMutationAction.AppendRow.class),
-          CalculationStrategyInput.DoNotCalculate.class,
+          CalculationStrategySpec.DoNotCalculate.class,
           true);
 
   private GridGrindExecutionModeMetadata() {}
@@ -52,7 +52,7 @@ public final class GridGrindExecutionModeMetadata {
   }
 
   /** Structured standard full-memory execution contract for `execution.mode.type=FULL_XSSF`. */
-  public record FullXssfMode(Class<? extends ExecutionModeInput> modeClass) {
+  public record FullXssfMode(Class<? extends ExecutionModeSpec> modeClass) {
     public FullXssfMode {
       Objects.requireNonNull(modeClass, "modeClass must not be null");
     }
@@ -71,9 +71,9 @@ public final class GridGrindExecutionModeMetadata {
 
   /** Structured low-memory summary-read contract for `execution.mode.type=EVENT_READ`. */
   public record EventReadMode(
-      Class<? extends ExecutionModeInput> modeClass,
+      Class<? extends ExecutionModeSpec> modeClass,
       List<Class<? extends InspectionQuery>> allowedQueries,
-      Class<? extends CalculationStrategyInput> requiredCalculationStrategy,
+      Class<? extends CalculationStrategySpec> requiredCalculationStrategy,
       boolean markRecalculateOnOpenAllowed) {
     public EventReadMode {
       Objects.requireNonNull(modeClass, "modeClass must not be null");
@@ -153,10 +153,10 @@ public final class GridGrindExecutionModeMetadata {
 
   /** Structured low-memory append-write contract for `execution.mode.type=STREAMING_WRITE`. */
   public record StreamingWriteMode(
-      Class<? extends ExecutionModeInput> modeClass,
+      Class<? extends ExecutionModeSpec> modeClass,
       Class<? extends WorkbookPlan.WorkbookSource> requiredSourceType,
       List<Class<? extends MutationAction>> allowedActions,
-      Class<? extends CalculationStrategyInput> requiredCalculationStrategy,
+      Class<? extends CalculationStrategySpec> requiredCalculationStrategy,
       boolean markRecalculateOnOpenAllowed) {
     public StreamingWriteMode {
       Objects.requireNonNull(modeClass, "modeClass must not be null");

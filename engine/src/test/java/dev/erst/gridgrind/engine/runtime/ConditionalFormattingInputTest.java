@@ -2,13 +2,13 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.DifferentialBorderInput;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.style.FontHeightInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -28,39 +28,39 @@ import org.junit.jupiter.api.Test;
 class ConditionalFormattingInputTest {
   @Test
   void validatesAndConvertsConditionalFormattingDefinition() {
-    ConditionalFormattingDefinitionInput input =
-        new ConditionalFormattingDefinitionInput(
+    ConditionalFormattingSpec input =
+        new ConditionalFormattingSpec(
             List.of(
-                new ConditionalFormattingRuleInput.FormulaRule(
+                new ConditionalFormattingRuleSpec.FormulaRule(
                     "A1>0",
                     true,
                     Optional.of(
-                        new DifferentialStyleInput(
+                        new DifferentialStylePatch(
                             Optional.of("0.00"),
                             Optional.of(true),
                             Optional.of(false),
-                            Optional.ofNullable(new FontHeightInput.Points(BigDecimal.valueOf(11))),
-                            Optional.of(ColorInput.rgb(new RgbHex("#102030"))),
+                            Optional.ofNullable(new FontHeightSpec.Points(BigDecimal.valueOf(11))),
+                            Optional.of(ColorSpec.rgb(new RgbHex("#102030"))),
                             Optional.of(true),
                             Optional.of(true),
-                            Optional.of(ColorInput.rgb(new RgbHex("#E0F0AA"))),
+                            Optional.of(ColorSpec.rgb(new RgbHex("#E0F0AA"))),
                             Optional.of(
-                                new DifferentialBorderInput(
+                                new DifferentialBorderPatch(
                                     Optional.of(
-                                        new BorderSideInput(
+                                        new BorderSidePatch(
                                             ExcelBorderStyle.THIN,
-                                            ColorInput.rgb(new RgbHex("#405060")))),
+                                            ColorSpec.rgb(new RgbHex("#405060")))),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty()))))),
-                new ConditionalFormattingRuleInput.CellValueRule(
+                new ConditionalFormattingRuleSpec.CellValueRule(
                     ExcelComparisonOperator.BETWEEN,
                     "1",
                     Optional.of("9"),
                     false,
                     Optional.of(
-                        new DifferentialStyleInput(
+                        new DifferentialStylePatch(
                             Optional.empty(),
                             Optional.empty(),
                             Optional.of(true),
@@ -68,7 +68,7 @@ class ConditionalFormattingInputTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
-                            Optional.of(ColorInput.rgb(new RgbHex("#AAEECC"))),
+                            Optional.of(ColorSpec.rgb(new RgbHex("#AAEECC"))),
                             Optional.empty())))));
 
     assertEquals(
@@ -119,19 +119,18 @@ class ConditionalFormattingInputTest {
 
   @Test
   void rejectsInvalidConditionalFormattingDefinitions() {
-    assertThrows(
-        IllegalArgumentException.class, () -> new ConditionalFormattingDefinitionInput(List.of()));
+    assertThrows(IllegalArgumentException.class, () -> new ConditionalFormattingSpec(List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> new ConditionalFormattingDefinitionInput(java.util.Collections.singletonList(null)));
+        () -> new ConditionalFormattingSpec(java.util.Collections.singletonList(null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.FormulaRule(
+            new ConditionalFormattingRuleSpec.FormulaRule(
                 " ",
                 false,
                 Optional.of(
-                    new DifferentialStyleInput(
+                    new DifferentialStylePatch(
                         Optional.empty(),
                         Optional.of(true),
                         Optional.empty(),
@@ -144,13 +143,13 @@ class ConditionalFormattingInputTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.CellValueRule(
+            new ConditionalFormattingRuleSpec.CellValueRule(
                 ExcelComparisonOperator.GREATER_THAN,
                 " ",
                 Optional.empty(),
                 false,
                 Optional.of(
-                    new DifferentialStyleInput(
+                    new DifferentialStylePatch(
                         Optional.empty(),
                         Optional.of(true),
                         Optional.empty(),
@@ -163,7 +162,7 @@ class ConditionalFormattingInputTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DifferentialStyleInput(
+            new DifferentialStylePatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -176,7 +175,7 @@ class ConditionalFormattingInputTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DifferentialStyleInput(
+            new DifferentialStylePatch(
                 Optional.of(" "),
                 Optional.empty(),
                 Optional.empty(),
@@ -189,7 +188,7 @@ class ConditionalFormattingInputTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DifferentialBorderInput(
+            new DifferentialBorderPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -197,13 +196,13 @@ class ConditionalFormattingInputTest {
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new BorderSideInput(Optional.empty(), Optional.empty()));
+        () -> new BorderSidePatch(Optional.empty(), Optional.empty()));
   }
 
   @Test
   void delegatesComparisonRuleSemanticsToEngineNormalization() {
-    DifferentialStyleInput style =
-        new DifferentialStyleInput(
+    DifferentialStylePatch style =
+        new DifferentialStylePatch(
             Optional.empty(),
             Optional.of(true),
             Optional.empty(),
@@ -218,7 +217,7 @@ class ConditionalFormattingInputTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ConditionalFormattingRuleInput.CellValueRule(
+                new ConditionalFormattingRuleSpec.CellValueRule(
                     ExcelComparisonOperator.BETWEEN,
                     "1",
                     Optional.empty(),
@@ -228,7 +227,7 @@ class ConditionalFormattingInputTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ConditionalFormattingRuleInput.CellValueRule(
+                new ConditionalFormattingRuleSpec.CellValueRule(
                     ExcelComparisonOperator.GREATER_THAN,
                     "1",
                     Optional.of("9"),
@@ -241,21 +240,19 @@ class ConditionalFormattingInputTest {
 
   @Test
   void convertsDifferentialBordersWithExplicitSides() {
-    DifferentialBorderInput border =
-        new DifferentialBorderInput(
+    DifferentialBorderPatch border =
+        new DifferentialBorderPatch(
             Optional.of(
-                new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb(new RgbHex("#102030")))),
+                new BorderSidePatch(ExcelBorderStyle.THIN, ColorSpec.rgb(new RgbHex("#102030")))),
             Optional.of(
-                new BorderSideInput(
-                    ExcelBorderStyle.DASHED, ColorInput.rgb(new RgbHex("#203040")))),
+                new BorderSidePatch(ExcelBorderStyle.DASHED, ColorSpec.rgb(new RgbHex("#203040")))),
             Optional.of(
-                new BorderSideInput(
-                    ExcelBorderStyle.DOUBLE, ColorInput.rgb(new RgbHex("#304050")))),
+                new BorderSidePatch(ExcelBorderStyle.DOUBLE, ColorSpec.rgb(new RgbHex("#304050")))),
             Optional.of(
-                new BorderSideInput(ExcelBorderStyle.HAIR, ColorInput.rgb(new RgbHex("#405060")))),
+                new BorderSidePatch(ExcelBorderStyle.HAIR, ColorSpec.rgb(new RgbHex("#405060")))),
             Optional.of(
-                new BorderSideInput(
-                    ExcelBorderStyle.DOTTED, ColorInput.rgb(new RgbHex("#506070")))));
+                new BorderSidePatch(
+                    ExcelBorderStyle.DOTTED, ColorSpec.rgb(new RgbHex("#506070")))));
 
     assertEquals(
         new ExcelDifferentialBorder(
@@ -277,12 +274,12 @@ class ConditionalFormattingInputTest {
     assertEquals(
         new ExcelConditionalFormattingRule.FormulaRule("A1>0", true, Optional.empty()),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.FormulaRule("A1>0", true, Optional.empty())));
+            new ConditionalFormattingRuleSpec.FormulaRule("A1>0", true, Optional.empty())));
     assertEquals(
         new ExcelConditionalFormattingRule.CellValueRule(
             ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty(), true, Optional.empty()),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.CellValueRule(
+            new ConditionalFormattingRuleSpec.CellValueRule(
                 ExcelComparisonOperator.GREATER_THAN,
                 "1",
                 Optional.empty(),
@@ -291,10 +288,9 @@ class ConditionalFormattingInputTest {
     assertEquals(
         new ExcelConditionalFormattingRule.Top10Rule(10, false, false, true, Optional.empty()),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.Top10Rule(
-                true, 10, false, false, Optional.empty())));
+            new ConditionalFormattingRuleSpec.Top10Rule(true, 10, false, false, Optional.empty())));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ConditionalFormattingRuleInput.FormulaRule("A1>0", false, Optional.empty()));
+        () -> new ConditionalFormattingRuleSpec.FormulaRule("A1>0", false, Optional.empty()));
   }
 }

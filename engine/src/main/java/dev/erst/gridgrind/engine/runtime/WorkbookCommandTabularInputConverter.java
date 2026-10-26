@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
@@ -12,7 +12,7 @@ import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 final class WorkbookCommandTabularInputConverter {
   private WorkbookCommandTabularInputConverter() {}
 
-  static ExcelTableDefinition toExcelTableDefinition(TableInput table) {
+  static ExcelTableDefinition toExcelTableDefinition(TableSpec table) {
     return new ExcelTableDefinition(
         table.name().value(),
         table.sheetName().value(),
@@ -39,7 +39,7 @@ final class WorkbookCommandTabularInputConverter {
             .toList());
   }
 
-  static ExcelPivotTableDefinition toExcelPivotTableDefinition(PivotTableInput pivotTable) {
+  static ExcelPivotTableDefinition toExcelPivotTableDefinition(PivotTableSpec pivotTable) {
     return new ExcelPivotTableDefinition(
         pivotTable.name(),
         pivotTable.sheetName().value(),
@@ -53,10 +53,10 @@ final class WorkbookCommandTabularInputConverter {
             .toList());
   }
 
-  static ExcelTableStyle toExcelTableStyle(TableStyleInput style) {
+  static ExcelTableStyle toExcelTableStyle(TableStyleSpec style) {
     return switch (style) {
-      case TableStyleInput.None _ -> new ExcelTableStyle.None();
-      case TableStyleInput.Named named ->
+      case TableStyleSpec.None _ -> new ExcelTableStyle.None();
+      case TableStyleSpec.Named named ->
           new ExcelTableStyle.Named(
               named.name(),
               named.showFirstColumn(),
@@ -67,20 +67,20 @@ final class WorkbookCommandTabularInputConverter {
   }
 
   private static ExcelPivotTableDefinition.Source toExcelPivotTableSource(
-      PivotTableInput.PivotSourceSpec source) {
+      PivotTableSpec.PivotSourceSpec source) {
     return switch (source) {
-      case PivotTableInput.PivotSourceSpec.Range range ->
+      case PivotTableSpec.PivotSourceSpec.Range range ->
           new ExcelPivotTableDefinition.Source.Range(
               range.sheetName().value(), range.range().value());
-      case PivotTableInput.PivotSourceSpec.NamedRange namedRange ->
+      case PivotTableSpec.PivotSourceSpec.NamedRange namedRange ->
           new ExcelPivotTableDefinition.Source.NamedRange(namedRange.name().value());
-      case PivotTableInput.PivotSourceSpec.Table table ->
+      case PivotTableSpec.PivotSourceSpec.Table table ->
           new ExcelPivotTableDefinition.Source.Table(table.name().value());
     };
   }
 
   private static ExcelPivotTableDefinition.DataField toExcelPivotTableDataField(
-      PivotTableInput.DataField dataField) {
+      PivotTableSpec.DataField dataField) {
     return new ExcelPivotTableDefinition.DataField(
         dataField.sourceColumnName(),
         dataField.function(),

@@ -417,7 +417,7 @@ class ExampleExecutionFixturesTest {
     if (request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile
         && existingFile
             .security()
-            .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
+            .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec::passwordRef)
             .equals(java.util.Optional.of(new SecretReference("source-open-password")))) {
       return ExecutionInputBindingsFixtureSupport.bindings(
           workspace,

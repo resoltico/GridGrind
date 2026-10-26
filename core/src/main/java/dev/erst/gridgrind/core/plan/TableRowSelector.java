@@ -2,7 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import java.util.Objects;
 
 /** Selects one or more logical rows within one selected table. */
@@ -48,7 +48,7 @@ public sealed interface TableRowSelector extends Selector
   @Variant(
       id = "TABLE_ROW_BY_KEY_CELL",
       summary = "Select one logical data row by matching one key-column cell value.")
-  record ByKeyCell(TableSelector table, String columnName, CellInput expectedValue)
+  record ByKeyCell(TableSelector table, String columnName, CellValueSpec expectedValue)
       implements TableRowSelector {
     public ByKeyCell {
       Objects.requireNonNull(table, "table must not be null");
@@ -71,13 +71,13 @@ public sealed interface TableRowSelector extends Selector
     return table;
   }
 
-  private static CellInput requireSupportedKeyValue(CellInput expectedValue) {
+  private static CellValueSpec requireSupportedKeyValue(CellValueSpec expectedValue) {
     Objects.requireNonNull(expectedValue, "expectedValue must not be null");
-    if (expectedValue instanceof CellInput.Blank
-        || expectedValue instanceof CellInput.Text
-        || expectedValue instanceof CellInput.NumberValue
-        || expectedValue instanceof CellInput.BooleanValue
-        || expectedValue instanceof CellInput.Formula) {
+    if (expectedValue instanceof CellValueSpec.Blank
+        || expectedValue instanceof CellValueSpec.Text
+        || expectedValue instanceof CellValueSpec.NumberValue
+        || expectedValue instanceof CellValueSpec.BooleanValue
+        || expectedValue instanceof CellValueSpec.Formula) {
       return expectedValue;
     }
     throw new IllegalArgumentException(

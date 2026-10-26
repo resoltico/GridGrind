@@ -10,12 +10,12 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
@@ -23,7 +23,7 @@ import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -52,8 +52,8 @@ import org.junit.jupiter.api.Test;
 class ExecutorConverterDelegationCoverageTest {
   @Test
   void workbookCommandConverterDelegatesRemainCovered() {
-    RichTextRunInput run =
-        new RichTextRunInput(TextSourceInput.inline("Bold"), java.util.Optional.empty());
+    RichTextRunSpec run =
+        new RichTextRunSpec(TextSourceSpec.inline("Bold"), java.util.Optional.empty());
 
     assertEquals(
         7L,
@@ -62,16 +62,17 @@ class ExecutorConverterDelegationCoverageTest {
             .mapId());
     assertEquals(
         "Bold",
-        WorkbookCommandCellInputConverter.toExcelRichText(new CellInput.RichText(List.of(run)))
+        WorkbookCommandCellValueSpecConverter.toExcelRichText(
+                new CellValueSpec.RichText(List.of(run)))
             .runs()
             .getFirst()
             .text());
-    assertEquals("Bold", WorkbookCommandCellInputConverter.toExcelRichTextRun(run).text());
-    assertTrue(WorkbookCommandCellInputConverter.toExcelCellAlignment(null).isEmpty());
-    assertTrue(WorkbookCommandCellInputConverter.toExcelCellFont(null).isEmpty());
-    assertTrue(WorkbookCommandCellInputConverter.toExcelCellFill(null).isEmpty());
-    assertTrue(WorkbookCommandCellInputConverter.toExcelCellProtection(null).isEmpty());
-    assertTrue(WorkbookCommandCellInputConverter.toExcelBorderSide(null).isEmpty());
+    assertEquals("Bold", WorkbookCommandCellValueSpecConverter.toExcelRichTextRun(run).text());
+    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelCellAlignment(null).isEmpty());
+    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelCellFont(null).isEmpty());
+    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelCellFill(null).isEmpty());
+    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelCellProtection(null).isEmpty());
+    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelBorderSide(null).isEmpty());
     assertTrue(WorkbookCommandStructuredInputConverter.toExcelDifferentialStyle(null).isEmpty());
   }
 
@@ -118,15 +119,14 @@ class ExecutorConverterDelegationCoverageTest {
     ExcelCellFill.PatternOnly patternOnly =
         assertInstanceOf(
             ExcelCellFill.PatternOnly.class,
-            WorkbookCommandCellInputConverter.toExcelCellFill(
-                    CellFillInput.pattern(ExcelFillPattern.NONE))
+            WorkbookCommandCellValueSpecConverter.toExcelCellFill(
+                    CellFillSpec.pattern(ExcelFillPattern.NONE))
                 .orElseThrow());
     ExcelCellFill.PatternBackground backgroundOnlyInput =
         assertInstanceOf(
             ExcelCellFill.PatternBackground.class,
-            WorkbookCommandCellInputConverter.toExcelCellFill(
-                    CellFillInput.patternBackground(
-                        ExcelFillPattern.BRICKS, ColorInput.indexed(10)))
+            WorkbookCommandCellValueSpecConverter.toExcelCellFill(
+                    CellFillSpec.patternBackground(ExcelFillPattern.BRICKS, ColorSpec.indexed(10)))
                 .orElseThrow());
     CellStyleReport backgroundOnlyReport =
         InspectionResultCellStyleReportSupport.toCellStyleReport(
@@ -157,7 +157,7 @@ class ExecutorConverterDelegationCoverageTest {
 
   @Test
   void familyMutationConvertersHandleRepresentativeInFamilyActions() {
-    CellMutationAction.SetCell setCell = new CellMutationAction.SetCell(new CellInput.Blank());
+    CellMutationAction.SetCell setCell = new CellMutationAction.SetCell(new CellValueSpec.Blank());
 
     WorkbookSheetCommand.CreateSheet createSheet =
         assertInstanceOf(

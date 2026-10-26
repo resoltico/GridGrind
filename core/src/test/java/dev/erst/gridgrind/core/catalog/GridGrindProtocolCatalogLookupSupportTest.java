@@ -118,20 +118,11 @@ class GridGrindProtocolCatalogLookupSupportTest {
     assertTrue(
         result.matches().stream()
             .map(CatalogSearchMatch::qualifiedId)
-            .noneMatch("chartTitleInputTypes:FORMULA"::equals));
+            .noneMatch("chartTitleSpecTypes:FORMULA"::equals));
     assertTrue(
         result.matches().stream()
             .map(CatalogSearchMatch::qualifiedId)
-            .noneMatch("chartInputType:ChartInput"::equals));
-    assertTrue(
-        result.matches().stream()
-            .filter(match -> "mutationActionTypes:SET_CHART".equals(match.qualifiedId()))
-            .findFirst()
-            .orElseThrow()
-            .supportingMatches()
-            .stream()
-            .map(CatalogSearchMatch::qualifiedId)
-            .anyMatch("nestedTypes:chartTitleInputTypes"::equals));
+            .noneMatch("chartSpecType:ChartSpec"::equals));
     assertTrue(
         result.matches().stream()
             .filter(match -> "mutationActionTypes:SET_CHART".equals(match.qualifiedId()))
@@ -140,7 +131,16 @@ class GridGrindProtocolCatalogLookupSupportTest {
             .supportingMatches()
             .stream()
             .map(CatalogSearchMatch::qualifiedId)
-            .anyMatch("plainTypes:chartInputType"::equals));
+            .anyMatch("nestedTypes:chartTitleSpecTypes"::equals));
+    assertTrue(
+        result.matches().stream()
+            .filter(match -> "mutationActionTypes:SET_CHART".equals(match.qualifiedId()))
+            .findFirst()
+            .orElseThrow()
+            .supportingMatches()
+            .stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .anyMatch("plainTypes:chartSpecType"::equals));
   }
 
   @Test

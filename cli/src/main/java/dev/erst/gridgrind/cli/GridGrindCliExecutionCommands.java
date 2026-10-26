@@ -287,10 +287,10 @@ final class GridGrindCliExecutionCommands {
 
   private Optional<InputStream> standardInputIfPresent(
       Optional<Path> requestPath, InputStream stdin) throws IOException {
-    return CliStandardInputSupport.ifPresent(requestPath, stdin, standardInputIsInteractive);
+    return CliStdinSupport.ifPresent(requestPath, stdin, standardInputIsInteractive);
   }
 
   private static boolean requestArrivesOnStandardInput(Optional<Path> requestPath) {
-    return CliStandardInputSupport.requestArrivesOnStandardInput(requestPath);
+    return CliStdinSupport.requestArrivesOnStandardInput(requestPath);
   }
 }

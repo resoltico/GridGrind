@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
@@ -46,7 +46,7 @@ final class ExecutionCalculationSupport {
   CalculationExecutionOutcome executeCalculationPolicy(
       ExcelWorkbook workbook,
       WorkbookPlan request,
-      CalculationPolicyInput calculationPolicy,
+      CalculationPolicySpec calculationPolicy,
       ExecutionJournalRecorder journal,
       @Nullable FormulaOriginTracker formulaOrigins,
       dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.@Nullable StepReference
@@ -55,8 +55,8 @@ final class ExecutionCalculationSupport {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(calculationPolicy, "calculationPolicy must not be null");
     Objects.requireNonNull(journal, "journal must not be null");
-    CalculationPolicyInput policy = calculationPolicy;
-    CalculationPolicyInput effectivePolicy = CalculationPolicyExecutor.normalize(policy);
+    CalculationPolicySpec policy = calculationPolicy;
+    CalculationPolicySpec effectivePolicy = CalculationPolicyExecutor.normalize(policy);
     if (effectivePolicy.isDefault()) {
       journal.markCalculationPreflightNotRequested();
       journal.markCalculationExecutionNotRequested();
@@ -67,9 +67,9 @@ final class ExecutionCalculationSupport {
     Optional<CalculationReport.Preflight> preflightReport = Optional.empty();
     int evaluationTargetCount = 0;
     boolean hasUnevaluableFormula = false;
-    if (!(effectivePolicy.effectiveStrategy() instanceof CalculationStrategyInput.DoNotCalculate)
+    if (!(effectivePolicy.effectiveStrategy() instanceof CalculationStrategySpec.DoNotCalculate)
         && !(effectivePolicy.effectiveStrategy()
-            instanceof CalculationStrategyInput.ClearCachesOnly)) {
+            instanceof CalculationStrategySpec.ClearCachesOnly)) {
       ExecutionJournalRecorder.PhaseHandle preflightPhase = journal.beginCalculationPreflight();
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, effectivePolicy);
@@ -121,8 +121,8 @@ final class ExecutionCalculationSupport {
     Objects.requireNonNull(writer, "writer must not be null");
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(journal, "journal must not be null");
-    CalculationPolicyInput policy = request.calculationPolicy();
-    CalculationPolicyInput effectivePolicy = CalculationPolicyExecutor.normalize(policy);
+    CalculationPolicySpec policy = request.calculationPolicy();
+    CalculationPolicySpec effectivePolicy = CalculationPolicyExecutor.normalize(policy);
     if (effectivePolicy.isDefault()) {
       journal.markCalculationPreflightNotRequested();
       journal.markCalculationExecutionNotRequested();

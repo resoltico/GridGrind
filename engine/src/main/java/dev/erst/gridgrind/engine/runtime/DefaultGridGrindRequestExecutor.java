@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -105,7 +105,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           new java.util.ArrayList<>(GridGrindRequestWarnings.collect(resolvedRequest));
       warnings.addAll(preflight.warnings());
 
-      ExecutionModeInput executionMode = executionMode(resolvedRequest);
+      ExecutionModeSpec executionMode = executionMode(resolvedRequest);
       if (directEventReadEligible(resolvedRequest, executionMode)) {
         return responseSupport.guardUnexpectedRuntime(
             protocolVersion,
@@ -115,7 +115,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                 workflowSupport.executeDirectEventReadWorkflow(
                     protocolVersion, resolvedRequest, warnings, journal, preparedBindings));
       }
-      if (executionMode instanceof ExecutionModeInput.StreamingWrite) {
+      if (executionMode instanceof ExecutionModeSpec.StreamingWrite) {
         return responseSupport.guardUnexpectedRuntime(
             protocolVersion,
             resolvedRequest,
@@ -191,11 +191,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         bindings);
   }
 
-  static boolean directEventReadEligible(WorkbookPlan request, ExecutionModeInput executionMode) {
+  static boolean directEventReadEligible(WorkbookPlan request, ExecutionModeSpec executionMode) {
     return ExecutionWorkflowRouting.directEventReadEligible(request, executionMode);
   }
 
-  static ExecutionModeInput executionMode(WorkbookPlan request) {
+  static ExecutionModeSpec executionMode(WorkbookPlan request) {
     return ExecutionWorkflowRouting.executionMode(request);
   }
 }

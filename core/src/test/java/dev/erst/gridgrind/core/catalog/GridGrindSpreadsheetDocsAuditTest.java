@@ -326,16 +326,16 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 normalizedOperations.contains(
-                    "bare `cellInputTypes` or `executionPolicyInputType` return one support group"),
+                    "bare `cellValueSpecTypes` or `executionPolicySpecType` return one support group"),
                 "operations doc must document bare support-group lookup"),
         () ->
             assertTrue(
-                normalizedOperations.contains("nestedTypes:executionModeInputTypes")
+                normalizedOperations.contains("nestedTypes:executionModeSpecTypes")
                     && normalizedOperations.contains("nested tagged-union group"),
                 "operations doc must document explicit nestedTypes lookup"),
         () ->
             assertTrue(
-                normalizedOperations.contains("plainTypes:executionPolicyInputType")
+                normalizedOperations.contains("plainTypes:executionPolicySpecType")
                     && normalizedOperations.contains("plain record group"),
                 "operations doc must document explicit plainTypes lookup"),
         () ->

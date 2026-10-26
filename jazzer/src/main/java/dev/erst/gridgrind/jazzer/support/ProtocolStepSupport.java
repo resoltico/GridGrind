@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -51,12 +51,12 @@ final class ProtocolStepSupport {
   }
 
   static PendingMutation mutate(StructuredMutationAction.SetTable action) {
-    TableInput table = action.table();
+    TableSpec table = action.table();
     return mutate(new TableSelector.ByNameOnSheet(table.name(), table.sheetName()), action);
   }
 
   static PendingMutation mutate(StructuredMutationAction.SetPivotTable action) {
-    PivotTableInput pivotTable = action.pivotTable();
+    PivotTableSpec pivotTable = action.pivotTable();
     return mutate(
         new PivotTableSelector.ByNameOnSheet(pivotTable.name(), pivotTable.sheetName()), action);
   }
@@ -73,30 +73,30 @@ final class ProtocolStepSupport {
     return new InspectionStep(new StepId(stepId), target, query);
   }
 
-  static CalculationPolicyInput calculateAll() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), false);
+  static CalculationPolicySpec calculateAll() {
+    return new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), false);
   }
 
-  static CalculationPolicyInput calculateAllAndMarkRecalculateOnOpen() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
+  static CalculationPolicySpec calculateAllAndMarkRecalculateOnOpen() {
+    return new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), true);
   }
 
-  static CalculationPolicyInput calculateTargets(
+  static CalculationPolicySpec calculateTargets(
       dev.erst.gridgrind.core.model.formula.FormulaCellTarget... cells) {
-    return new CalculationPolicyInput(
-        new CalculationStrategyInput.EvaluateTargets(List.of(cells)), false);
+    return new CalculationPolicySpec(
+        new CalculationStrategySpec.EvaluateTargets(List.of(cells)), false);
   }
 
-  static CalculationPolicyInput clearFormulaCaches() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.ClearCachesOnly(), false);
+  static CalculationPolicySpec clearFormulaCaches() {
+    return new CalculationPolicySpec(new CalculationStrategySpec.ClearCachesOnly(), false);
   }
 
-  static CalculationPolicyInput markRecalculateOnOpen() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true);
+  static CalculationPolicySpec markRecalculateOnOpen() {
+    return new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), true);
   }
 
-  static ExecutionPolicyInput executionPolicy(CalculationPolicyInput calculation) {
-    return ExecutionPolicyInput.calculation(calculation);
+  static ExecutionPolicySpec executionPolicy(CalculationPolicySpec calculation) {
+    return ExecutionPolicySpec.calculation(calculation);
   }
 
   static MutationStep materializeMutation(PendingMutation mutation, int stepIndex) {
@@ -146,32 +146,32 @@ final class ProtocolStepSupport {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         steps(mutations, assertions, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
     return WorkbookPlan.standard(
         source,
         persistence,
-        execution == null ? ExecutionPolicyInput.defaults() : execution,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        execution == null ? ExecutionPolicySpec.defaults() : execution,
+        formulaEnvironment == null ? FormulaEnvironmentSpec.empty() : formulaEnvironment,
         steps(mutations, assertions, inspections));
   }
 
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return request(
@@ -186,8 +186,8 @@ final class ProtocolStepSupport {
     return WorkbookPlan.standard(
         source,
         persistence,
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         steps(mutations, inspections));
   }
 

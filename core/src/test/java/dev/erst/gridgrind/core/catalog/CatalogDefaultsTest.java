@@ -3,9 +3,9 @@ package dev.erst.gridgrind.core.catalog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -18,20 +18,19 @@ import org.junit.jupiter.api.Test;
 class CatalogDefaultsTest {
   @Test
   void publishesConstantDefaultsForEnumsSourcesAndCollections() {
-    assertEquals(
-        Optional.of("AES_256"), field(OoxmlEncryptionInput.class, "cipher").defaultValue());
-    assertEquals(Optional.of("SHA_512"), field(OoxmlEncryptionInput.class, "hash").defaultValue());
+    assertEquals(Optional.of("AES_256"), field(OoxmlEncryptionSpec.class, "cipher").defaultValue());
+    assertEquals(Optional.of("SHA_512"), field(OoxmlEncryptionSpec.class, "hash").defaultValue());
     assertEquals(
         Optional.of(Map.of("type", "INLINE", "text", "")),
-        field(TableInput.class, "comment").defaultValue());
-    assertEquals(Optional.of(List.of()), field(TableInput.class, "columns").defaultValue());
-    assertEquals(Optional.of(true), field(TableInput.class, "hasAutofilter").defaultValue());
-    assertEquals(Optional.of(""), field(TableInput.class, "headerRowCellStyle").defaultValue());
+        field(TableSpec.class, "comment").defaultValue());
+    assertEquals(Optional.of(List.of()), field(TableSpec.class, "columns").defaultValue());
+    assertEquals(Optional.of(true), field(TableSpec.class, "hasAutofilter").defaultValue());
+    assertEquals(Optional.of(""), field(TableSpec.class, "headerRowCellStyle").defaultValue());
   }
 
   @Test
   void derivedDefaultsNameTheSourceWithoutInventingAConstant() {
-    FieldEntry display = field(PivotTableInput.DataField.class, "displayName");
+    FieldEntry display = field(PivotTableSpec.DataField.class, "displayName");
     assertEquals(FieldRequirement.OPTIONAL, display.requirement());
     assertEquals(Optional.of("sourceColumnName"), display.defaultFrom());
     assertEquals(Optional.empty(), display.defaultValue());

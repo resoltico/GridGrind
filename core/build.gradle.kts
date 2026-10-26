@@ -30,8 +30,8 @@ configure<PitestPluginExtension> {
         setOf(
             "dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation*",
             "dev.erst.gridgrind.core.vocabulary.RgbHex",
-            "dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput*",
-            "dev.erst.gridgrind.core.model.validation.DataValidationRuleInput*",
+            "dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec*",
+            "dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec*",
             "dev.erst.gridgrind.core.catalog.FieldConstraint*",
             "dev.erst.gridgrind.core.catalog.CatalogStepTemplateDefaults*",
             "dev.erst.gridgrind.core.catalog.CatalogStepTemplateSupport*",

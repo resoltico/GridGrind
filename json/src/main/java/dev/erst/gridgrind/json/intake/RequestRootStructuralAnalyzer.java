@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.json.intake;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
@@ -55,8 +55,8 @@ final class RequestRootStructuralAnalyzer {
     validateRootScalars(members, problems);
     validateRootMembers(members, "source", WorkbookPlan.WorkbookSource.class, problems);
     validateRootMembers(members, "persistence", WorkbookPlan.WorkbookPersistence.class, problems);
-    validateRootMembers(members, "execution", ExecutionPolicyInput.class, problems);
-    validateRootMembers(members, "formulaEnvironment", FormulaEnvironmentInput.class, problems);
+    validateRootMembers(members, "execution", ExecutionPolicySpec.class, problems);
+    validateRootMembers(members, "formulaEnvironment", FormulaEnvironmentSpec.class, problems);
     List<RequestJsonMember> stepMembers = members.membersNamed("steps");
     RequestStepFragmentCollector.validateAll(stepMembers, problems);
 
@@ -93,17 +93,17 @@ final class RequestRootStructuralAnalyzer {
                     diagnosticRedactor),
                 bindOrDefault(
                     members.member("execution"),
-                    ExecutionPolicyInput.class,
+                    ExecutionPolicySpec.class,
                     "execution",
-                    ExecutionPolicyInput.defaults(),
+                    ExecutionPolicySpec.defaults(),
                     problems,
                     bindingFailures,
                     diagnosticRedactor),
                 bindOrDefault(
                     members.member("formulaEnvironment"),
-                    FormulaEnvironmentInput.class,
+                    FormulaEnvironmentSpec.class,
                     "formulaEnvironment",
-                    FormulaEnvironmentInput.empty(),
+                    FormulaEnvironmentSpec.empty(),
                     problems,
                     bindingFailures,
                     diagnosticRedactor)),

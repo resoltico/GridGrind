@@ -11,14 +11,14 @@ import dev.erst.gridgrind.core.catalog.Catalog;
 import dev.erst.gridgrind.core.catalog.CatalogNote;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.core.catalog.TypeEntry;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.core.model.layout.WindowDimensionsReport;
 import dev.erst.gridgrind.core.model.layout.WindowReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -140,16 +140,16 @@ class GridGrindJsonCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan explicitRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(ExecutionModeInput.eventRead()),
-            new FormulaEnvironmentInput(
-                List.of(new FormulaExternalWorkbookInput("rates.xlsx", "tmp/rates.xlsx")),
+            ExecutionPolicySpec.mode(ExecutionModeSpec.eventRead()),
+            new FormulaEnvironmentSpec(
+                List.of(new FormulaExternalWorkbookSpec("rates.xlsx", "tmp/rates.xlsx")),
                 FormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
                 List.of()),
             List.of());
@@ -180,8 +180,8 @@ class GridGrindJsonCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     String requestJson = GridGrindJsonOutput.requestTree(request).toString();
 

@@ -3,8 +3,8 @@ package dev.erst.gridgrind.core.validation;
 import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -22,7 +22,7 @@ final class WorkbookStaticStreamingValidation {
   static void add(
       List<WorkbookStaticViolation> violations,
       WorkbookStaticRequest request,
-      ExecutionPolicyInput execution) {
+      ExecutionPolicySpec execution) {
     if (!execution.calculation().allowsStreamingWrite()) {
       violations.add(
           new WorkbookStaticViolation(
@@ -62,7 +62,7 @@ final class WorkbookStaticStreamingValidation {
       boolean everyPriorStepBound) {
     if (step instanceof MutationStep mutation) {
       WorkbookOperationContracts.executionModeViolation(
-              mutation.action(), ExecutionModeInput.streamingWrite())
+              mutation.action(), ExecutionModeSpec.streamingWrite())
           .ifPresent(
               message -> violations.add(new WorkbookStaticViolation("execution.mode", message)));
       if (mutation.action() instanceof CellMutationAction.AppendRow

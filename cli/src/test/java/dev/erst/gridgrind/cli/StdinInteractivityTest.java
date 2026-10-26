@@ -1,0 +1,135 @@
+package dev.erst.gridgrind.cli;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.cli.discovery.CommandError;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
+import org.junit.jupiter.api.Test;
+
+/** Focused coverage tests for CLI stdin interactivity detection. */
+class StdinInteractivityTest extends GridGrindCliTestSupport {
+  @Test
+  void currentProcessFactoryReturnsAnInstance() {
+    StdinInteractivity interactivity = StdinInteractivity.currentProcess();
+
+    assertNotNull(interactivity);
+    interactivity.getAsBoolean();
+  }
+
+  @Test
+  void neverFactoryReturnsSingletonInstance() {
+    assertSame(StdinInteractivity.never(), StdinInteractivity.never());
+  }
+
+  @Test
+  void reportsInteractiveWhenConsoleProbeSucceedsWithoutCallingNativeProbe() {
+    AtomicInteger nativeProbeCalls = new AtomicInteger();
+    StdinInteractivity interactivity =
+        new StdinInteractivity(
+            () -> true,
+            () -> {
+              nativeProbeCalls.incrementAndGet();
+              return false;
+            });
+
+    assertTrue(interactivity.getAsBoolean());
+    assertEquals(0, nativeProbeCalls.get());
+  }
+
+  @Test
+  void reportsInteractiveWhenNativeProbeSucceeds() {
+    StdinInteractivity interactivity = new StdinInteractivity(() -> false, () -> true);
+
+    assertTrue(interactivity.getAsBoolean());
+  }
+
+  @Test
+  void reportsNonInteractiveWhenBothProbesFail() {
+    StdinInteractivity interactivity = new StdinInteractivity(() -> false, () -> false);
+
+    assertFalse(interactivity.getAsBoolean());
+  }
+
+  @Test
+  void consoleHelperSkipsTerminalProbeWhenNoConsoleIsPresent() {
+    AtomicBoolean terminalProbeCalled = new AtomicBoolean();
+
+    boolean interactive =
+        StdinInteractivity.consoleIsInteractive(
+            false,
+            () -> {
+              terminalProbeCalled.set(true);
+              return true;
+            });
+
+    assertFalse(interactive);
+    assertFalse(terminalProbeCalled.get());
+  }
+
+  @Test
+  void consoleHelperReturnsTerminalProbeValueWhenConsoleIsPresent() {
+    assertTrue(StdinInteractivity.consoleIsInteractive(true, () -> true));
+    assertFalse(StdinInteractivity.consoleIsInteractive(true, () -> false));
+  }
+
+  @Test
+  void lazyBooleanSupplierBuildsDelegateOnceAndReusesIt() {
+    AtomicInteger factoryCalls = new AtomicInteger();
+    AtomicInteger delegateCalls = new AtomicInteger();
+    BooleanSupplier supplier =
+        new LazyBooleanSupplier(
+            () -> {
+              factoryCalls.incrementAndGet();
+              return () -> {
+                delegateCalls.incrementAndGet();
+                return true;
+              };
+            });
+
+    assertTrue(supplier.getAsBoolean());
+    assertTrue(supplier.getAsBoolean());
+    assertEquals(1, factoryCalls.get());
+    assertEquals(2, delegateCalls.get());
+  }
+
+  @Test
+  void productionConstructorUsesInteractiveDetectorWithoutReadingProvidedInput() throws Exception {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    try (InputStream blockingStdin =
+        new InputStream() {
+          @Override
+          public int read() {
+            throw new AssertionError("interactive no-arg execution must not read stdin");
+          }
+
+          @Override
+          public int read(byte[] b, int off, int len) {
+            throw new AssertionError("interactive no-arg execution must not read stdin");
+          }
+        }) {
+      int exitCode =
+          GridGrindCli.forTesting(
+                  (ignoredRequest, ignoredBindings, ignoredSink) -> {
+                    throw new AssertionError(
+                        "interactive no-arg execution must not execute a request");
+                  },
+                  () -> true)
+              .run(new String[0], blockingStdin, stdout, stderr);
+
+      CommandError failure = commandErrorOnStdout(stdout, stderr);
+      assertEquals(2, exitCode);
+      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+      assertTrue(failure.primaryProblem().message().contains("No request JSON was provided."));
+    }
+  }
+}

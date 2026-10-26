@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
@@ -15,14 +15,14 @@ final class ExampleWorkbookPlans {
       PlanId planId,
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
+      ExecutionPolicySpec execution,
       WorkbookStep... steps) {
     return WorkbookPlan.identified(
         planId,
         source,
         persistence,
         Objects.requireNonNull(execution, "execution must not be null"),
-        dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+        dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
         List.of(steps));
   }
 
@@ -31,7 +31,7 @@ final class ExampleWorkbookPlans {
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
       WorkbookStep... steps) {
-    return plan(planId, source, persistence, ExecutionPolicyInput.defaults(), steps);
+    return plan(planId, source, persistence, ExecutionPolicySpec.defaults(), steps);
   }
 
   static WorkbookPlan.WorkbookPersistence.SaveAs saveAs(String path) {
@@ -44,6 +44,6 @@ final class ExampleWorkbookPlans {
     return new WorkbookPlan.WorkbookPersistence.SaveAs(
         path,
         WorkbookPlan.WorkbookPersistence.IfExists.REPLACE,
-        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none());
+        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none());
   }
 }

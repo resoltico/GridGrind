@@ -72,7 +72,7 @@ several steps.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `values must serialize to at most 255 characters for Excel data validation; got {n}` |
 | **Applies to** | `EXPLICIT_LIST` data-validation rules |
-| **Code** | `DataValidationRuleInput.MAX_EXPLICIT_LIST_FORMULA_LENGTH // LIM-040` |
+| **Code** | `DataValidationRuleSpec.MAX_EXPLICIT_LIST_FORMULA_LENGTH // LIM-040` |
 | **UX** | Structured request validation before workbook execution |
 
 Excel data-validation explicit lists are stored as one quoted comma-separated formula. GridGrind
@@ -239,11 +239,11 @@ and default row-height values can still be reported above `409.0` instead of bei
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `CellInput.Formula` must not use the Excel DDE function |
+| **Limit** | `CellValueSpec.Formula` must not use the Excel DDE function |
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `source must not use the DDE function; DDE formula execution is a security risk` |
-| **Applies to** | Every `CellInput.Formula` with an `INLINE` source value |
-| **Code** | `CellInput.Formula // LIM-023` |
+| **Applies to** | Every `CellValueSpec.Formula` with an `INLINE` source value |
+| **Code** | `CellValueSpec.Formula // LIM-023` |
 | **UX** | Not surfaced in help (structural protocol rule) |
 
 Dynamic Data Exchange (DDE) formulas such as `DDE("cmd", "/C calc", "")` can invoke external
@@ -317,7 +317,7 @@ ratio beyond 1:100 triggers a `ZipBombException`, which GridGrind translates to 
 | **Category** | GridGrind |
 | **Limit** | DDE function forbidden in all formula-bearing inputs |
 | **Error** | `IllegalArgumentException`: formula must not use the DDE function |
-| **Applies to** | `ArrayFormulaInput`, `DataValidationRuleInput` formula fields, `ConditionalFormattingRuleInput` formula fields, `ConditionalFormattingThresholdInput.Formula`, `ChartDataSourceInput.Reference.formula` |
+| **Applies to** | `ArrayFormulaSpec`, `DataValidationRuleSpec` formula fields, `ConditionalFormattingRuleSpec` formula fields, `ConditionalFormattingThresholdSpec.Formula`, `ChartDataSourceSpec.Reference.formula` |
 | **Code** | `FormulaInputSecurity.rejectDde // LIM-027` (applied at each formula input site) |
 | **UX** | Not surfaced in help |
 
@@ -325,7 +325,7 @@ GridGrind rejects any formula string that begins with `DDE(` (case-insensitive, 
 `=` or `{=...}` prefixes first) across all formula-bearing input types. The DDE (Dynamic Data
 Exchange) function is a Windows IPC mechanism; embedding it in an xlsx workbook can trigger
 arbitrary command execution when the file is opened in Microsoft Excel. This guard extends the
-`CellInput.Formula` protection (LIM-023) to every remaining formula surface written to xlsx output.
+`CellValueSpec.Formula` protection (LIM-023) to every remaining formula surface written to xlsx output.
 
 ---
 
@@ -378,7 +378,7 @@ portable root-anchored atomic-resolve-and-commit primitive for that stronger gua
 | **Category** | GridGrind |
 | **Limit** | File-backed text and binary authored inputs are read only through the request-owned no-follow binding and are resolved before workbook mutation |
 | **Error** | `PATH_ESCAPES_ROOT`, `UNSAFE_PATH_ACCESS`, `INPUT_SOURCE_NOT_FOUND`, or `INPUT_SOURCE_IO_ERROR`, according to the proven fault |
-| **Applies to** | Every `TextSourceInput.Utf8File` and `BinarySourceInput.File` occurrence |
+| **Applies to** | Every `TextSourceSpec.Utf8File` and `BinarySourceSpec.File` occurrence |
 | **Code** | `SourceBackedPlanResolver.readUtf8File // LIM-030` |
 | **UX** | Doctor batches independent file-input findings with other phase-four failures |
 
@@ -435,13 +435,13 @@ with `kind: FORMULA` and a payload such as `DDE("cmd","/C calc","")` or
 | **Category** | GridGrind |
 | **Limit** | Chart title formula inputs must not use the `DDE` or `WEBSERVICE` functions |
 | **Error** | `IllegalArgumentException`: formula must not use the DDE/WEBSERVICE function |
-| **Applies to** | `ChartTitleInput.Formula` |
-| **Code** | `ChartTitleInput.Formula // LIM-033`; `FormulaInputSecurity.rejectDde // LIM-033` |
+| **Applies to** | `ChartTitleSpec.Formula` |
+| **Code** | `ChartTitleSpec.Formula // LIM-033`; `FormulaInputSecurity.rejectDde // LIM-033` |
 | **UX** | Not surfaced in help |
 
 Chart title formulas are stored in the chart XML and auto-evaluated when Excel renders the chart
-on workbook open. A `ChartTitleInput` with `type: FORMULA` and a DDE or WEBSERVICE payload executes
-without user interaction. `ChartTitleInput.Formula` now calls `FormulaInputSecurity.rejectDde`.
+on workbook open. A `ChartTitleSpec` with `type: FORMULA` and a DDE or WEBSERVICE payload executes
+without user interaction. `ChartTitleSpec.Formula` now calls `FormulaInputSecurity.rejectDde`.
 
 ---
 
@@ -452,8 +452,8 @@ without user interaction. `ChartTitleInput.Formula` now calls `FormulaInputSecur
 | **Category** | GridGrind |
 | **Limit** | UDF formula templates must not use the `DDE` or `WEBSERVICE` functions |
 | **Error** | `IllegalArgumentException`: formula must not use the DDE/WEBSERVICE function |
-| **Applies to** | `FormulaUdfFunctionInput.formulaTemplate` |
-| **Code** | `FormulaUdfFunctionInput // LIM-034`; `FormulaInputSecurity.rejectDde // LIM-034` |
+| **Applies to** | `FormulaUdfFunctionSpec.formulaTemplate` |
+| **Code** | `FormulaUdfFunctionSpec // LIM-034`; `FormulaInputSecurity.rejectDde // LIM-034` |
 | **UX** | Not surfaced in help |
 
 UDF formula templates are evaluated server-side only by Apache POI, which does not implement DDE
@@ -469,7 +469,7 @@ The guard is applied as defense-in-depth against future POI changes or alternati
 |:------|:------|
 | **Category** | GridGrind (accepted limitation) |
 | **Limit** | `HYPERLINK()` payloads inside formula strings are not inspected for URL scheme |
-| **Applies to** | `CellInput.Formula`, `NamedRangeTarget.Formula`, `ChartTitleInput.Formula` |
+| **Applies to** | `CellValueSpec.Formula`, `NamedRangeTarget.Formula`, `ChartTitleSpec.Formula` |
 | **Code** | none (accepted gap; `DDE` and `WEBSERVICE` are blocked by `FormulaInputSecurity.rejectDde`) |
 | **Relates to** | LIM-023, LIM-028, LIM-031 |
 
@@ -527,7 +527,7 @@ layer; the extension check in LIM-002 remains the defense against unrecognized o
 | **Limit** | Write-side OOXML package encryption authors AGILE only, defaults to `AES_256` / `SHA_512`, and allows only `AES_256` or `AES_192` plus `SHA_512`, `SHA_384`, or `SHA_256` |
 | **Error code** | `INVALID_REQUEST` |
 | **Applies to** | `persistence.security.encryption` policy axis |
-| **Code** | `OoxmlEncryptionInput.create // LIM-038`; `ExcelOoxmlPackagePersistenceSupport.preservedSourceEncryption // LIM-038` |
+| **Code** | `OoxmlEncryptionSpec.create // LIM-038`; `ExcelOoxmlPackagePersistenceSupport.preservedSourceEncryption // LIM-038` |
 | **UX** | `GridGrindOoxmlWriteEncryptionContractText.inputSummary // LIM-038`; `GridGrindOoxmlWriteEncryptionContractText.limitSummary // LIM-038` |
 
 GridGrind reads and reports broader factual OOXML encryption state than it authors. Inspection may
@@ -566,7 +566,7 @@ fails early before POI sees an oversized workbook shape.
 | **Limit** | 1,048,576 rows (2^20) |
 | **POI constant** | `SpreadsheetVersion.EXCEL2007.getMaxRows()` returns `0x100000` |
 | **Excel spec** | 1,048,576 |
-| **Code** | `ExcelRowSpan.MAX_ROW_INDEX`; `SelectorValueValidation.requireRowIndexWithinBounds // LIM-008`; `MutationAction.Validation.requireRowIndex // LIM-008`; `PrintTitleRowsInput.MAX_ROW_INDEX` |
+| **Code** | `ExcelRowSpan.MAX_ROW_INDEX`; `SelectorValueValidation.requireRowIndexWithinBounds // LIM-008`; `MutationAction.Validation.requireRowIndex // LIM-008`; `PrintTitleRowsSpec.MAX_ROW_INDEX` |
 | **UX** | Structured `INVALID_REQUEST` bounds failures for row selectors, structural edits, and print-title row bands |
 
 Last valid zero-based row index: 1,048,575.
@@ -585,7 +585,7 @@ errors to Apache POI.
 | **Limit** | 16,384 columns (2^14, column XFD) |
 | **POI constant** | `SpreadsheetVersion.EXCEL2007.getMaxColumns()` returns `0x4000` |
 | **Excel spec** | 16,384 |
-| **Code** | `ExcelColumnSpan.MAX_COLUMN_INDEX`; `SelectorValueValidation.requireColumnIndexWithinBounds // LIM-009`; `MutationAction.Validation.requireColumnIndex // LIM-009`; `PrintTitleColumnsInput.MAX_COLUMN_INDEX` |
+| **Code** | `ExcelColumnSpan.MAX_COLUMN_INDEX`; `SelectorValueValidation.requireColumnIndexWithinBounds // LIM-009`; `MutationAction.Validation.requireColumnIndex // LIM-009`; `PrintTitleColumnsSpec.MAX_COLUMN_INDEX` |
 | **UX** | Structured `INVALID_REQUEST` bounds failures for column selectors, structural edits, and print-title column bands |
 
 Last valid zero-based column index: 16,383.
@@ -743,7 +743,7 @@ Example messages:
 | **Message** | `execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
 | **Applies to** | top-level `execution.mode.type`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelEventWorkbookReader.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputTypes` catalog summary |
+| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeSpecTypes` catalog summary |
 
 `EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not
 materialize the full workbook object graph, so GridGrind restricts it to workbook and sheet
@@ -762,7 +762,7 @@ time instead of silently falling back to the normal in-memory executor.
 | **Message** | `execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
 | **Applies to** | top-level `execution.mode.type`, `source`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelStreamingWorkbookWriter.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputTypes` catalog summary |
+| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeSpecTypes` catalog summary |
 
 `STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only
 new workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced

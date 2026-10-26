@@ -5,51 +5,51 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
-import dev.erst.gridgrind.core.model.drawing.CommentAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.PictureInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
-import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
-import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.CellBorderInput;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
-import dev.erst.gridgrind.core.model.style.CellFontInput;
-import dev.erst.gridgrind.core.model.style.CellGradientFillInput;
-import dev.erst.gridgrind.core.model.style.CellGradientStopInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortConditionInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
@@ -119,15 +119,15 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
                 new CellMutationAction.SetComment(
-                    new CommentInput(
+                    new CommentSpec(
                         text("Ada Lovelace"),
                         "GridGrind",
                         true,
                         java.util.Optional.of(
                             List.of(
-                                new RichTextRunInput(text("Ada"), Optional.empty()),
-                                new RichTextRunInput(text(" Lovelace"), Optional.empty()))),
-                        java.util.Optional.of(new CommentAnchorInput(1, 2, 4, 6))))));
+                                new RichTextRunSpec(text("Ada"), Optional.empty()),
+                                new RichTextRunSpec(text(" Lovelace"), Optional.empty()))),
+                        java.util.Optional.of(new CommentAnchorSpec(1, 2, 4, 6))))));
     assertEquals(
         new ExcelComment(
             "Ada Lovelace",
@@ -147,7 +147,7 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new WorkbookSelector.Current(),
                 new WorkbookMutationAction.SetWorkbookProtection(
-                    new WorkbookProtectionInput(
+                    new WorkbookProtectionSpec(
                         false, true, false, Optional.empty(), Optional.empty()))));
     assertEquals(
         new ExcelWorkbookProtectionSettings(false, true, false, Optional.empty(), Optional.empty()),
@@ -214,13 +214,13 @@ class AdvancedMutationCommandConverterTest {
 
   @Test
   void convertsDrawingMutationOperations() {
-    DrawingAnchorInput.TwoCell anchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(1, 2, 3, 4),
-            new DrawingMarkerInput(4, 6, 7, 8),
+    DrawingAnchorSpec.TwoCell anchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(1, 2, 3, 4),
+            new DrawingMarkerSpec(4, 6, 7, 8),
             ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
-    PictureDataInput pictureData =
-        new PictureDataInput(ExcelPictureFormat.PNG, binary(PNG_PIXEL_BASE64));
+    PictureDataSpec pictureData =
+        new PictureDataSpec(ExcelPictureFormat.PNG, binary(PNG_PIXEL_BASE64));
 
     WorkbookDrawingCommand.SetPicture pictureCommand =
         assertInstanceOf(
@@ -228,7 +228,7 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetPicture(
-                    new PictureInput(
+                    new PictureSpec(
                         "OpsPicture", pictureData, anchor, Optional.of(text("Queue preview"))))));
     WorkbookDrawingCommand.SetSignatureLine signatureLineCommand =
         assertInstanceOf(
@@ -236,7 +236,7 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetSignatureLine(
-                    new SignatureLineInput(
+                    new SignatureLineSpec(
                         "OpsSignature",
                         anchor,
                         false,
@@ -253,7 +253,7 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetShape(
-                    new ShapeInput.SimpleShape(
+                    new ShapeSpec.SimpleShape(
                         "OpsShape", anchor, "rect", Optional.of(text("Queue"))))));
     WorkbookDrawingCommand.SetEmbeddedObject embeddedObjectCommand =
         assertInstanceOf(
@@ -261,7 +261,7 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetEmbeddedObject(
-                    new EmbeddedObjectInput(
+                    new EmbeddedObjectSpec(
                         "OpsEmbed",
                         "Payload",
                         "payload.txt",
@@ -347,7 +347,7 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new RangeSelector.ByRange(new SheetName("Calc"), new RangeRef("D2:D4")),
                 new CellMutationAction.SetArrayFormula(
-                    new ArrayFormulaInput(text("{=B2:B4*C2:C4}")))));
+                    new ArrayFormulaSpec(text("{=B2:B4*C2:C4}")))));
     WorkbookCellCommand.ClearArrayFormula clearArrayFormula =
         assertInstanceOf(
             WorkbookCellCommand.ClearArrayFormula.class,
@@ -370,7 +370,7 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new WorkbookSelector.Current(),
                 new StructuredMutationAction.ImportCustomXmlMapping(
-                    new CustomXmlImportInput(
+                    new CustomXmlImportSpec(
                         new CustomXmlMappingLocator(1L, "CORSO_mapping"),
                         text("<CORSO><NOME>Grid</NOME></CORSO>")))));
 
@@ -389,17 +389,17 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new PivotTableSelector.ByNameOnSheet("Sales Pivot 2026", new SheetName("Report")),
                 new StructuredMutationAction.SetPivotTable(
-                    new PivotTableInput(
+                    new PivotTableSpec(
                         "Sales Pivot 2026",
                         new SheetName("Report"),
-                        new PivotTableInput.PivotSourceSpec.Range(
+                        new PivotTableSpec.PivotSourceSpec.Range(
                             new SheetName("Data"), new RangeRef("A1:D5")),
-                        new PivotTableInput.Anchor(new CellAddress("C5")),
+                        new PivotTableSpec.Anchor(new CellAddress("C5")),
                         List.of("Region"),
                         List.of("Stage"),
                         List.of("Owner"),
                         List.of(
-                            new PivotTableInput.DataField(
+                            new PivotTableSpec.DataField(
                                 "Amount",
                                 ExcelPivotDataConsolidateFunction.SUM,
                                 "Amount",
@@ -410,17 +410,17 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new PivotTableSelector.ByNameOnSheet("Named Source Pivot", new SheetName("Report")),
                 new StructuredMutationAction.SetPivotTable(
-                    new PivotTableInput(
+                    new PivotTableSpec(
                         "Named Source Pivot",
                         new SheetName("Report"),
-                        new PivotTableInput.PivotSourceSpec.NamedRange(
+                        new PivotTableSpec.PivotSourceSpec.NamedRange(
                             new DefinedName("PivotSource")),
-                        new PivotTableInput.Anchor(new CellAddress("A3")),
+                        new PivotTableSpec.Anchor(new CellAddress("A3")),
                         List.of("Region"),
                         List.of(),
                         List.of(),
                         List.of(
-                            new PivotTableInput.DataField(
+                            new PivotTableSpec.DataField(
                                 "Amount",
                                 ExcelPivotDataConsolidateFunction.SUM,
                                 "Total Amount",
@@ -431,16 +431,16 @@ class AdvancedMutationCommandConverterTest {
             WorkbookCommandConverter.toCommand(
                 new PivotTableSelector.ByNameOnSheet("Table Source Pivot", new SheetName("Report")),
                 new StructuredMutationAction.SetPivotTable(
-                    new PivotTableInput(
+                    new PivotTableSpec(
                         "Table Source Pivot",
                         new SheetName("Report"),
-                        new PivotTableInput.PivotSourceSpec.Table(new TableName("SalesTable2026")),
-                        new PivotTableInput.Anchor(new CellAddress("G4")),
+                        new PivotTableSpec.PivotSourceSpec.Table(new TableName("SalesTable2026")),
+                        new PivotTableSpec.Anchor(new CellAddress("G4")),
                         List.of("Region"),
                         List.of(),
                         List.of(),
                         List.of(
-                            new PivotTableInput.DataField(
+                            new PivotTableSpec.DataField(
                                 "Amount",
                                 ExcelPivotDataConsolidateFunction.SUM,
                                 "Total Amount",
@@ -480,14 +480,14 @@ class AdvancedMutationCommandConverterTest {
 
   @Test
   void convertsChartMutationOperationsAcrossSupportedFamilies() {
-    DrawingAnchorInput.TwoCell anchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(1, 2, 3, 4),
-            new DrawingMarkerInput(7, 12, 0, 0),
+    DrawingAnchorSpec.TwoCell anchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(1, 2, 3, 4),
+            new DrawingMarkerSpec(7, 12, 0, 0),
             ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-    ChartSeriesInput firstSeries = chartSeries(new ChartTitleInput.Formula("B1"), "A2:A4", "B2:B4");
-    ChartSeriesInput secondSeries =
-        chartSeries(new ChartTitleInput.Text(text("Actual")), "ChartCategories", "ChartActual");
+    ChartSeriesSpec firstSeries = chartSeries(new ChartTitleSpec.Formula("B1"), "A2:A4", "B2:B4");
+    ChartSeriesSpec secondSeries =
+        chartSeries(new ChartTitleSpec.Text(text("Actual")), "ChartCategories", "ChartActual");
 
     WorkbookDrawingCommand.SetChart lineCommand =
         assertInstanceOf(
@@ -498,11 +498,11 @@ class AdvancedMutationCommandConverterTest {
                     chartInput(
                         "TrendChart",
                         anchor,
-                        new ChartTitleInput.Text(text("Trend")),
-                        new ChartLegendInput.Hidden(),
+                        new ChartTitleSpec.Text(text("Trend")),
+                        new ChartLegendSpec.Hidden(),
                         ExcelChartDisplayBlanksAs.ZERO,
                         false,
-                        new ChartPlotInput.Line(
+                        new ChartPlotSpec.Line(
                             true, ExcelChartGrouping.STANDARD, List.of(firstSeries))))));
     WorkbookDrawingCommand.SetChart pieCommand =
         assertInstanceOf(
@@ -513,11 +513,11 @@ class AdvancedMutationCommandConverterTest {
                     chartInput(
                         "ShareChart",
                         anchor,
-                        new ChartTitleInput.Formula("C1"),
+                        new ChartTitleSpec.Formula("C1"),
                         null,
                         null,
                         null,
-                        new ChartPlotInput.Pie(false, Optional.of(120), List.of(secondSeries))))));
+                        new ChartPlotSpec.Pie(false, Optional.of(120), List.of(secondSeries))))));
 
     assertEquals("Ops", lineCommand.sheetName());
     ExcelChartDefinition lineChart = lineCommand.chart();
@@ -550,58 +550,58 @@ class AdvancedMutationCommandConverterTest {
 
   @Test
   void directChartHelperConversionsCoverStandaloneSwitchBranches() {
-    DrawingAnchorInput.TwoCell anchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(2, 3, 0, 0),
-            new DrawingMarkerInput(9, 16, 0, 0),
+    DrawingAnchorSpec.TwoCell anchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(2, 3, 0, 0),
+            new DrawingMarkerSpec(9, 16, 0, 0),
             ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
-    ChartSeriesInput barSeries =
-        chartSeries(new ChartTitleInput.None(), "Summary!$A$2:$A$4", "Summary!$B$2:$B$4");
-    ChartInput barInput =
+    ChartSeriesSpec barSeries =
+        chartSeries(new ChartTitleSpec.None(), "Summary!$A$2:$A$4", "Summary!$B$2:$B$4");
+    ChartSpec barInput =
         chartInput(
             "OpsBar",
             anchor,
-            new ChartTitleInput.Formula("Summary!$B$1"),
-            new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP),
+            new ChartTitleSpec.Formula("Summary!$B$1"),
+            new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP),
             ExcelChartDisplayBlanksAs.SPAN,
             false,
-            new ChartPlotInput.Bar(
+            new ChartPlotSpec.Bar(
                 true,
                 ExcelChartBarDirection.BAR,
                 ExcelChartBarGrouping.CLUSTERED,
                 Optional.empty(),
                 Optional.empty(),
                 List.of(barSeries)));
-    ChartInput lineInput =
+    ChartSpec lineInput =
         chartInput(
             "OpsLine",
             anchor,
-            new ChartTitleInput.Text(text("Trend")),
-            new ChartLegendInput.Hidden(),
+            new ChartTitleSpec.Text(text("Trend")),
+            new ChartLegendSpec.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             true,
-            new ChartPlotInput.Line(
+            new ChartPlotSpec.Line(
                 false,
                 ExcelChartGrouping.STANDARD,
                 List.of(
                     chartSeries(
-                        new ChartTitleInput.Formula("Summary!$C$1"),
+                        new ChartTitleSpec.Formula("Summary!$C$1"),
                         "ChartCategories",
                         "ChartActual"))));
-    ChartInput pieInput =
+    ChartSpec pieInput =
         chartInput(
             "OpsPie",
             anchor,
-            new ChartTitleInput.Text(text("Share")),
-            new ChartLegendInput.Visible(ExcelChartLegendPosition.LEFT),
+            new ChartTitleSpec.Text(text("Share")),
+            new ChartLegendSpec.Visible(ExcelChartLegendPosition.LEFT),
             ExcelChartDisplayBlanksAs.GAP,
             true,
-            new ChartPlotInput.Pie(
+            new ChartPlotSpec.Pie(
                 true,
                 Optional.of(90),
                 List.of(
                     chartSeries(
-                        new ChartTitleInput.Text(text("Actual")),
+                        new ChartTitleSpec.Text(text("Actual")),
                         "ChartCategories",
                         "ChartActual"))));
 
@@ -661,34 +661,34 @@ class AdvancedMutationCommandConverterTest {
   @Test
   void convertsAdvancedStyleAndConditionalFormattingPayloads() {
     ExcelCellStyle style =
-        WorkbookCommandCellInputConverter.toExcelCellStyle(
-            new CellStylePatchInput(
+        WorkbookCommandCellValueSpecConverter.toExcelCellStyle(
+            new CellStylePatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of(
-                    new CellFontInput(
+                    new CellFontPatch(
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.of(ColorInput.theme(2, 0.4d)),
+                        Optional.of(ColorSpec.theme(2, 0.4d)),
                         Optional.of(true),
                         Optional.empty())),
                 Optional.of(
-                    CellFillInput.gradient(
-                        CellGradientFillInput.path(
+                    CellFillSpec.gradient(
+                        CellGradientFillSpec.path(
                             Optional.of(0.1d),
                             Optional.of(0.2d),
                             Optional.of(0.3d),
                             Optional.of(0.4d),
                             List.of(
-                                new CellGradientStopInput(
-                                    0.0d, ColorInput.rgb(new RgbHex("#112233"))),
-                                new CellGradientStopInput(1.0d, ColorInput.theme(5, 0.2d)))))),
+                                new CellGradientStopSpec(
+                                    0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
+                                new CellGradientStopSpec(1.0d, ColorSpec.theme(5, 0.2d)))))),
                 Optional.of(
-                    new CellBorderInput(
+                    new CellBorderPatch(
                         Optional.empty(),
-                        Optional.ofNullable(new BorderSideInput(null, ColorInput.theme(1, 0.15d))),
+                        Optional.ofNullable(new BorderSidePatch(null, ColorSpec.theme(1, 0.15d))),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty())),
@@ -738,14 +738,13 @@ class AdvancedMutationCommandConverterTest {
             List.of(ExcelColor.rgb("#112233"), ExcelColor.rgb("#AABBCC")),
             true),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.ColorScaleRule(
+            new ConditionalFormattingRuleSpec.ColorScaleRule(
                 true,
                 List.of(
-                    new ConditionalFormattingThresholdInput.Min(),
-                    new ConditionalFormattingThresholdInput.Max()),
+                    new ConditionalFormattingThresholdSpec.Min(),
+                    new ConditionalFormattingThresholdSpec.Max()),
                 List.of(
-                    ColorInput.rgb(new RgbHex("#112233")),
-                    ColorInput.rgb(new RgbHex("#AABBCC"))))));
+                    ColorSpec.rgb(new RgbHex("#112233")), ColorSpec.rgb(new RgbHex("#AABBCC"))))));
 
     assertEquals(
         new ExcelConditionalFormattingRule.DataBarRule(
@@ -759,27 +758,27 @@ class AdvancedMutationCommandConverterTest {
                 ExcelConditionalFormattingThresholdType.PERCENTILE, null, 90.0d),
             false),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.DataBarRule(
+            new ConditionalFormattingRuleSpec.DataBarRule(
                 false,
-                ColorInput.theme(4, 0.25d),
+                ColorSpec.theme(4, 0.25d),
                 true,
                 10,
                 90,
-                new ConditionalFormattingThresholdInput.Numeric(0.0d),
-                new ConditionalFormattingThresholdInput.Percentile(90.0d))));
+                new ConditionalFormattingThresholdSpec.Numeric(0.0d),
+                new ConditionalFormattingThresholdSpec.Percentile(90.0d))));
 
     ExcelConditionalFormattingRule.ColorScaleRule formulaThresholdRule =
         assertInstanceOf(
             ExcelConditionalFormattingRule.ColorScaleRule.class,
             WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-                new ConditionalFormattingRuleInput.ColorScaleRule(
+                new ConditionalFormattingRuleSpec.ColorScaleRule(
                     false,
                     List.of(
-                        new ConditionalFormattingThresholdInput.Formula("A1"),
-                        new ConditionalFormattingThresholdInput.Percent(100.0d)),
+                        new ConditionalFormattingThresholdSpec.Formula("A1"),
+                        new ConditionalFormattingThresholdSpec.Percent(100.0d)),
                     List.of(
-                        ColorInput.rgb(new RgbHex("#112233")),
-                        ColorInput.rgb(new RgbHex("#AABBCC"))))));
+                        ColorSpec.rgb(new RgbHex("#112233")),
+                        ColorSpec.rgb(new RgbHex("#AABBCC"))))));
     assertEquals(
         new ExcelConditionalFormattingThreshold(
             ExcelConditionalFormattingThresholdType.FORMULA, "A1", null),
@@ -799,27 +798,27 @@ class AdvancedMutationCommandConverterTest {
                     ExcelConditionalFormattingThresholdType.PERCENT, null, 67.0d)),
             true),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.IconSetRule(
+            new ConditionalFormattingRuleSpec.IconSetRule(
                 true,
                 ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
                 false,
                 true,
                 List.of(
-                    new ConditionalFormattingThresholdInput.Percent(0.0d),
-                    new ConditionalFormattingThresholdInput.Percent(33.0d),
-                    new ConditionalFormattingThresholdInput.Percent(67.0d)))));
+                    new ConditionalFormattingThresholdSpec.Percent(0.0d),
+                    new ConditionalFormattingThresholdSpec.Percent(33.0d),
+                    new ConditionalFormattingThresholdSpec.Percent(67.0d)))));
 
     assertEquals(
         new ExcelConditionalFormattingRule.Top10Rule(7, true, false, true, Optional.empty()),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.Top10Rule(true, 7, true, false, Optional.empty())));
+            new ConditionalFormattingRuleSpec.Top10Rule(true, 7, true, false, Optional.empty())));
   }
 
   @Test
   void executorContextHelpersReturnNoFalseMetadataForWorkbookProtectionOperations() {
     WorkbookMutationAction.SetWorkbookProtection setProtection =
         new WorkbookMutationAction.SetWorkbookProtection(
-            new WorkbookProtectionInput(
+            new WorkbookProtectionSpec(
                 true,
                 false,
                 true,
@@ -916,73 +915,73 @@ class AdvancedMutationCommandConverterTest {
   private static StructuredMutationAction.SetAutofilter advancedAutofilterAction() {
     return new StructuredMutationAction.SetAutofilter(
         List.of(
-            AutofilterFilterColumnInput.visibleButton(
-                0L, new AutofilterFilterCriterionInput.Values(List.of("Queued", "Ready"), true)),
-            new AutofilterFilterColumnInput(
+            AutofilterFilterColumnSpec.visibleButton(
+                0L, new AutofilterFilterCriterionSpec.Values(List.of("Queued", "Ready"), true)),
+            new AutofilterFilterColumnSpec(
                 1L,
                 false,
-                new AutofilterFilterCriterionInput.Custom(
+                new AutofilterFilterCriterionSpec.Custom(
                     true,
                     List.of(
-                        new AutofilterFilterCriterionInput.CustomConditionInput(
+                        new AutofilterFilterCriterionSpec.CustomConditionSpec(
                             "greaterThan", "5")))),
-            new AutofilterFilterColumnInput(
+            new AutofilterFilterColumnSpec(
                 2L,
                 true,
-                new AutofilterFilterCriterionInput.Dynamic(
+                new AutofilterFilterCriterionSpec.Dynamic(
                     "TODAY", java.util.Optional.of(1.0d), java.util.Optional.of(2.0d))),
-            new AutofilterFilterColumnInput(
-                3L, true, new AutofilterFilterCriterionInput.Top10(10, true, false)),
-            new AutofilterFilterColumnInput(
+            new AutofilterFilterColumnSpec(
+                3L, true, new AutofilterFilterCriterionSpec.Top10(10, true, false)),
+            new AutofilterFilterColumnSpec(
                 4L,
                 true,
-                new AutofilterFilterCriterionInput.Color(false, ColorInput.theme(3, 0.25d))),
-            new AutofilterFilterColumnInput(
-                5L, true, new AutofilterFilterCriterionInput.Icon("3TrafficLights1", 2))),
-        AutofilterSortStateInput.withoutSortMethod(
+                new AutofilterFilterCriterionSpec.Color(false, ColorSpec.theme(3, 0.25d))),
+            new AutofilterFilterColumnSpec(
+                5L, true, new AutofilterFilterCriterionSpec.Icon("3TrafficLights1", 2))),
+        AutofilterSortStateSpec.withoutSortMethod(
             new RangeRef("A2:F9"),
             false,
             true,
             List.of(
-                new AutofilterSortConditionInput.CellColor(
-                    new RangeRef("B2:B9"), true, ColorInput.rgb(new RgbHex("#AABBCC"))),
-                new AutofilterSortConditionInput.FontColor(
-                    new RangeRef("C2:C9"), false, ColorInput.theme(4, 0.15d)),
-                new AutofilterSortConditionInput.Icon(new RangeRef("C2:C9"), false, 2))));
+                new AutofilterSortConditionSpec.CellColor(
+                    new RangeRef("B2:B9"), true, ColorSpec.rgb(new RgbHex("#AABBCC"))),
+                new AutofilterSortConditionSpec.FontColor(
+                    new RangeRef("C2:C9"), false, ColorSpec.theme(4, 0.15d)),
+                new AutofilterSortConditionSpec.Icon(new RangeRef("C2:C9"), false, 2))));
   }
 
-  private static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+  private static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
   }
 
-  private static BinarySourceInput binary(String value) {
-    return BinarySourceInput.inlineBase64(value);
+  private static BinarySourceSpec binary(String value) {
+    return BinarySourceSpec.inlineBase64(value);
   }
 
-  private static ChartInput chartInput(
+  private static ChartSpec chartInput(
       String name,
-      DrawingAnchorInput.TwoCell anchor,
-      ChartTitleInput title,
-      ChartLegendInput legend,
+      DrawingAnchorSpec.TwoCell anchor,
+      ChartTitleSpec title,
+      ChartLegendSpec legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       Boolean plotOnlyVisibleCells,
-      ChartPlotInput plot) {
-    return new ChartInput(
+      ChartPlotSpec plot) {
+    return new ChartSpec(
         name,
         anchor,
-        title == null ? new ChartTitleInput.None() : title,
-        legend == null ? new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT) : legend,
+        title == null ? new ChartTitleSpec.None() : title,
+        legend == null ? new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT) : legend,
         displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs,
         plotOnlyVisibleCells == null ? Boolean.TRUE : plotOnlyVisibleCells,
         List.of(plot));
   }
 
-  private static ChartSeriesInput chartSeries(
-      ChartTitleInput title, String categoriesFormula, String valuesFormula) {
-    return new ChartSeriesInput(
+  private static ChartSeriesSpec chartSeries(
+      ChartTitleSpec title, String categoriesFormula, String valuesFormula) {
+    return new ChartSeriesSpec(
         title,
-        new ChartDataSourceInput.Reference(categoriesFormula),
-        new ChartDataSourceInput.Reference(valuesFormula),
+        new ChartDataSourceSpec.Reference(categoriesFormula),
+        new ChartDataSourceSpec.Reference(valuesFormula),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),

@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -80,7 +80,7 @@ class ExecutionStepSupportTest {
             support.executeInspectionAgainstMaterializedPath(
                 inspectionStep,
                 new WorkbookLocation.UnsavedWorkbook(),
-                ExecutionModeInput.fullXssf(),
+                ExecutionModeSpec.fullXssf(),
                 filesystemRoot));
   }
 }

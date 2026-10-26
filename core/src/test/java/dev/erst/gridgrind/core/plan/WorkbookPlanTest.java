@@ -5,15 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -31,8 +31,8 @@ class WorkbookPlanTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
 
     assertEquals(GridGrindProtocolVersion.current(), plan.protocolVersion());
@@ -51,8 +51,8 @@ class WorkbookPlanTest {
                 Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                ExecutionPolicyInput.defaults(),
-                FormulaEnvironmentInput.empty(),
+                ExecutionPolicySpec.defaults(),
+                FormulaEnvironmentSpec.empty(),
                 null));
   }
 
@@ -69,8 +69,8 @@ class WorkbookPlanTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             steps);
 
     steps.clear();
@@ -86,8 +86,8 @@ class WorkbookPlanTest {
                 WorkbookPlan.standard(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionPolicyInput.defaults(),
-                    FormulaEnvironmentInput.empty(),
+                    ExecutionPolicySpec.defaults(),
+                    FormulaEnvironmentSpec.empty(),
                     List.of(
                         new MutationStep(
                             new StepId("duplicate"),
@@ -119,12 +119,12 @@ class WorkbookPlanTest {
     assertTrue(
         new WorkbookPlan.WorkbookSource.ExistingFile(
                 "budget.xlsx",
-                new OoxmlOpenSecurityInput(Optional.of(new SecretReference("source-open"))))
+                new OoxmlOpenSecuritySpec(Optional.of(new SecretReference("source-open"))))
             .security()
             .isPresent());
     assertTrue(
         new WorkbookPlan.WorkbookSource.ExistingFile(
-                "budget.xlsx", new OoxmlOpenSecurityInput(Optional.empty()))
+                "budget.xlsx", new OoxmlOpenSecuritySpec(Optional.empty()))
             .security()
             .isEmpty());
 
@@ -159,25 +159,25 @@ class WorkbookPlanTest {
 
   @Test
   void supportsExecutionModeAndFormulaEnvironmentConstructors() {
-    FormulaEnvironmentInput formulaEnvironment =
-        new FormulaEnvironmentInput(
-            List.of(new FormulaExternalWorkbookInput("rates.xlsx", "tmp/rates.xlsx")),
+    FormulaEnvironmentSpec formulaEnvironment =
+        new FormulaEnvironmentSpec(
+            List.of(new FormulaExternalWorkbookSpec("rates.xlsx", "tmp/rates.xlsx")),
             FormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
             List.of());
     WorkbookPlan plan =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(ExecutionModeInput.eventRead()),
+            ExecutionPolicySpec.mode(ExecutionModeSpec.eventRead()),
             formulaEnvironment,
             List.of(
                 new MutationStep(
                     new StepId("set-cell"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-                    new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))))));
+                    new CellMutationAction.SetCell(new CellValueSpec.Text(text("Owner"))))));
 
-    assertInstanceOf(ExecutionModeInput.EventRead.class, plan.executionMode());
-    assertInstanceOf(ExecutionModeInput.EventRead.class, plan.effectiveExecutionMode());
+    assertInstanceOf(ExecutionModeSpec.EventRead.class, plan.executionMode());
+    assertInstanceOf(ExecutionModeSpec.EventRead.class, plan.effectiveExecutionMode());
     assertEquals(formulaEnvironment, plan.formulaEnvironment());
     assertEquals("set-cell", plan.steps().getFirst().stepId().value());
     assertThrows(
@@ -201,16 +201,16 @@ class WorkbookPlanTest {
             new PlanId("budget-audit"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.modeAndJournal(
-                ExecutionModeInput.fullXssf(),
-                new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.modeAndJournal(
+                ExecutionModeSpec.fullXssf(),
+                new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE)),
+            FormulaEnvironmentSpec.empty(),
             List.of());
 
     assertEquals("budget-audit", plan.planId().orElseThrow().value());
     assertEquals(ExecutionJournalLevel.VERBOSE, plan.journalLevel());
     assertEquals(ExecutionJournalLevel.VERBOSE, plan.execution().journal().level());
-    assertInstanceOf(ExecutionModeInput.FullXssf.class, plan.effectiveExecutionMode());
+    assertInstanceOf(ExecutionModeSpec.FullXssf.class, plan.effectiveExecutionMode());
     assertEquals(
         "planId must not be blank",
         assertThrows(
@@ -221,18 +221,17 @@ class WorkbookPlanTest {
                         new PlanId(" "),
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionPolicyInput.defaults(),
-                        FormulaEnvironmentInput.empty(),
+                        ExecutionPolicySpec.defaults(),
+                        FormulaEnvironmentSpec.empty(),
                         List.of()))
             .getMessage());
   }
 
   @Test
   void supportsExecutionPolicyConstructorAndDefaultEffectiveExecution() {
-    ExecutionPolicyInput executionPolicy =
-        ExecutionPolicyInput.modeAndJournal(
-            ExecutionModeInput.eventRead(),
-            new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY));
+    ExecutionPolicySpec executionPolicy =
+        ExecutionPolicySpec.modeAndJournal(
+            ExecutionModeSpec.eventRead(), new ExecutionJournalSpec(ExecutionJournalLevel.SUMMARY));
     WorkbookPlan explicitPlan =
         new WorkbookPlan(
             GridGrindProtocolVersion.current(),
@@ -240,14 +239,14 @@ class WorkbookPlanTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             executionPolicy,
-            FormulaEnvironmentInput.empty(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan defaultPlan =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     assertThrows(
         NullPointerException.class,
@@ -263,10 +262,10 @@ class WorkbookPlanTest {
 
     assertEquals(executionPolicy, explicitPlan.execution());
     assertEquals(ExecutionJournalLevel.SUMMARY, explicitPlan.journalLevel());
-    assertInstanceOf(ExecutionModeInput.EventRead.class, explicitPlan.executionMode());
+    assertInstanceOf(ExecutionModeSpec.EventRead.class, explicitPlan.executionMode());
     assertEquals(
         ExecutionJournalLevel.SUMMARY, defaultPlan.effectiveExecution().effectiveJournalLevel());
-    assertInstanceOf(ExecutionModeInput.FullXssf.class, defaultPlan.effectiveExecutionMode());
+    assertInstanceOf(ExecutionModeSpec.FullXssf.class, defaultPlan.effectiveExecutionMode());
     assertThrows(
         NullPointerException.class,
         () ->
@@ -275,7 +274,7 @@ class WorkbookPlanTest {
                 Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                ExecutionPolicyInput.defaults(),
+                ExecutionPolicySpec.defaults(),
                 null,
                 List.of()));
   }
@@ -287,13 +286,13 @@ class WorkbookPlanTest {
             new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx"),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "report.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-cell"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-                    new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))),
+                    new CellMutationAction.SetCell(new CellValueSpec.Text(text("Owner")))),
                 new AssertionStep(
                     new StepId("assert-cell"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
@@ -317,8 +316,8 @@ class WorkbookPlanTest {
                 WorkbookPlan.standard(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionPolicyInput.defaults(),
-                    FormulaEnvironmentInput.empty(),
+                    ExecutionPolicySpec.defaults(),
+                    FormulaEnvironmentSpec.empty(),
                     java.util.Arrays.asList(
                         new MutationStep(
                             new StepId("ok"),
@@ -353,13 +352,13 @@ class WorkbookPlanTest {
                 WorkbookPlan.standard(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionPolicyInput.defaults(),
-                    FormulaEnvironmentInput.empty(),
+                    ExecutionPolicySpec.defaults(),
+                    FormulaEnvironmentSpec.empty(),
                     manySteps));
     assertTrue(failure.getMessage().contains(String.valueOf(WorkbookPlan.MAX_STEPS)));
   }
 
-  private static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+  private static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
   }
 }

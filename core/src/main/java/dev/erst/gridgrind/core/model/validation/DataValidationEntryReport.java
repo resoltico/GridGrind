@@ -40,11 +40,11 @@ public sealed interface DataValidationEntryReport
 
   /** Protocol-facing supported validation definition. */
   record DataValidationDefinitionReport(
-      DataValidationRuleInput rule,
+      DataValidationRuleSpec rule,
       boolean allowBlank,
       boolean suppressDropDownArrow,
-      Optional<DataValidationPromptInput> prompt,
-      Optional<DataValidationErrorAlertInput> errorAlert) {
+      Optional<DataValidationPromptSpec> prompt,
+      Optional<DataValidationErrorAlertSpec> errorAlert) {
     public DataValidationDefinitionReport {
       Objects.requireNonNull(rule, "rule must not be null");
       Objects.requireNonNull(prompt, "prompt must not be null");

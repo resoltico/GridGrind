@@ -103,7 +103,7 @@ case "${1:-}" in
                 nestedTypes:executionModeTypes)
                     emit_fixture_file "${FAKE_GRIDGRIND_EXECUTION_MODE_TYPES_FILE:?}"
                     ;;
-                plainTypes:executionPolicyInputType)
+                plainTypes:executionPolicySpecType)
                     emit_fixture_file "${FAKE_GRIDGRIND_EXECUTION_POLICY_INPUT_TYPE_FILE:?}"
                     ;;
                 *)

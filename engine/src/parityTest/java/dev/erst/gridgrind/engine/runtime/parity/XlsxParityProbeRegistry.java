@@ -3,60 +3,60 @@ package dev.erst.gridgrind.engine.runtime.parity;
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.drawing.CommentAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionInput;
-import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
 import dev.erst.gridgrind.core.model.print.PrintAreaReport;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
-import dev.erst.gridgrind.core.model.print.PrintMarginsInput;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingReport;
-import dev.erst.gridgrind.core.model.print.PrintSetupInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintSetupReport;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
-import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.CellBorderInput;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
-import dev.erst.gridgrind.core.model.style.CellFontInput;
-import dev.erst.gridgrind.core.model.style.CellGradientFillInput;
-import dev.erst.gridgrind.core.model.style.CellGradientStopInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
-import dev.erst.gridgrind.core.model.table.TableColumnInput;
 import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
@@ -64,7 +64,7 @@ import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -187,37 +187,37 @@ final class XlsxParityProbeRegistry {
     };
   }
 
-  static FormulaEnvironmentInput externalFormulaEnvironment(Path referencedWorkbookPath) {
-    return new FormulaEnvironmentInput(
+  static FormulaEnvironmentSpec externalFormulaEnvironment(Path referencedWorkbookPath) {
+    return new FormulaEnvironmentSpec(
         List.of(
-            new FormulaExternalWorkbookInput(
+            new FormulaExternalWorkbookSpec(
                 "referenced.xlsx", referencedWorkbookPath.toAbsolutePath().toString())),
         FormulaMissingWorkbookPolicy.ERROR,
         List.of());
   }
 
-  static FormulaEnvironmentInput missingWorkbookCachedValueEnvironment() {
-    return new FormulaEnvironmentInput(
+  static FormulaEnvironmentSpec missingWorkbookCachedValueEnvironment() {
+    return new FormulaEnvironmentSpec(
         List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of());
   }
 
-  static FormulaEnvironmentInput udfFormulaEnvironment() {
-    return new FormulaEnvironmentInput(
+  static FormulaEnvironmentSpec udfFormulaEnvironment() {
+    return new FormulaEnvironmentSpec(
         List.of(),
         FormulaMissingWorkbookPolicy.ERROR,
         List.of(
-            new FormulaUdfToolpackInput(
-                "math", List.of(new FormulaUdfFunctionInput("DOUBLE", 1, "ARG1*2")))));
+            new FormulaUdfToolpackSpec(
+                "math", List.of(new FormulaUdfFunctionSpec("DOUBLE", 1, "ARG1*2")))));
   }
 
-  static OoxmlOpenSecurityInput encryptedOpenSecurity() {
-    return new OoxmlOpenSecurityInput(
+  static OoxmlOpenSecuritySpec encryptedOpenSecurity() {
+    return new OoxmlOpenSecuritySpec(
         java.util.Optional.of(
             new dev.erst.gridgrind.core.source.SecretReference("source-password")));
   }
 
-  static OoxmlSignatureInput signingInput(Path pkcs12Path, String description) {
-    return new OoxmlSignatureInput(
+  static OoxmlSignatureSpec signingInput(Path pkcs12Path, String description) {
+    return new OoxmlSignatureSpec(
         pkcs12Path.toAbsolutePath().toString(),
         new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
         java.util.Optional.of(new dev.erst.gridgrind.core.source.SecretReference("key-password")),
@@ -315,17 +315,17 @@ final class XlsxParityProbeRegistry {
         PrintSetupReport.defaults());
   }
 
-  static PrintLayoutInput advancedPrintLayoutInput() {
-    return new PrintLayoutInput(
-        new PrintAreaInput.None(),
+  static PrintLayoutSpec advancedPrintLayoutInput() {
+    return new PrintLayoutSpec(
+        new PrintAreaSpec.None(),
         ExcelPrintOrientation.PORTRAIT,
-        new PrintScalingInput.Automatic(),
-        new PrintTitleRowsInput.None(),
-        new PrintTitleColumnsInput.None(),
-        HeaderFooterTextInput.blank(),
-        HeaderFooterTextInput.blank(),
-        new PrintSetupInput(
-            new PrintMarginsInput(0.35d, 0.55d, 0.60d, 0.45d, 0.3d, 0.3d),
+        new PrintScalingSpec.Automatic(),
+        new PrintTitleRowsSpec.None(),
+        new PrintTitleColumnsSpec.None(),
+        HeaderFooterTextSpec.blank(),
+        HeaderFooterTextSpec.blank(),
+        new PrintSetupSpec(
+            new PrintMarginsSpec(0.35d, 0.55d, 0.60d, 0.45d, 0.3d, 0.3d),
             true,
             true,
             true,
@@ -339,52 +339,51 @@ final class XlsxParityProbeRegistry {
             List.of(3)));
   }
 
-  static CellStylePatchInput advancedThemedStyleInput() {
-    return new CellStylePatchInput(
+  static CellStylePatch advancedThemedStyleInput() {
+    return new CellStylePatch(
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.of(
-            new CellFontInput(
+            new CellFontPatch(
                 java.util.Optional.empty(),
                 java.util.Optional.of(true),
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
-                java.util.Optional.of(ColorInput.theme(6, -0.35d)),
+                java.util.Optional.of(ColorSpec.theme(6, -0.35d)),
                 java.util.Optional.empty(),
                 java.util.Optional.empty())),
         java.util.Optional.of(
-            CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.theme(3, 0.30d))),
+            CellFillSpec.patternForeground(ExcelFillPattern.SOLID, ColorSpec.theme(3, 0.30d))),
         java.util.Optional.of(
-            new CellBorderInput(
+            new CellBorderPatch(
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.of(
-                    new BorderSideInput(
+                    new BorderSidePatch(
                         ExcelBorderStyle.THIN,
-                        ColorInput.indexed(
-                            Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())))),
+                        ColorSpec.indexed(Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())))),
                 java.util.Optional.empty())),
         java.util.Optional.empty());
   }
 
-  static CellStylePatchInput advancedGradientStyleInput() {
-    return new CellStylePatchInput(
+  static CellStylePatch advancedGradientStyleInput() {
+    return new CellStylePatch(
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.of(
-            CellFillInput.gradient(
-                CellGradientFillInput.linear(
+            CellFillSpec.gradient(
+                CellGradientFillSpec.linear(
                     java.util.Optional.of(45.0d),
                     List.of(
-                        new CellGradientStopInput(0.0d, ColorInput.rgb(new RgbHex("#1F497D"))),
-                        new CellGradientStopInput(1.0d, ColorInput.theme(4, 0.45d)))))),
+                        new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#1F497D"))),
+                        new CellGradientStopSpec(1.0d, ColorSpec.theme(4, 0.45d)))))),
         java.util.Optional.empty(),
         java.util.Optional.empty());
   }
 
-  static CommentInput advancedCommentInput() {
+  static CommentSpec advancedCommentInput() {
     return comment(
         "Lead review scheduled",
         "GridGrind",
@@ -392,46 +391,46 @@ final class XlsxParityProbeRegistry {
         List.of(
             richTextRun(
                 "Lead",
-                new CellFontInput(
+                new CellFontPatch(
                     java.util.Optional.of(true),
                     java.util.Optional.empty(),
                     java.util.Optional.empty(),
                     java.util.Optional.empty(),
-                    java.util.Optional.of(ColorInput.theme(4, -0.20d)),
+                    java.util.Optional.of(ColorSpec.theme(4, -0.20d)),
                     java.util.Optional.empty(),
                     java.util.Optional.empty())),
             richTextRun(" ", null),
             richTextRun(
                 "review scheduled",
-                new CellFontInput(
+                new CellFontPatch(
                     java.util.Optional.empty(),
                     java.util.Optional.of(true),
                     java.util.Optional.empty(),
                     java.util.Optional.empty(),
                     java.util.Optional.of(
-                        ColorInput.indexed(
+                        ColorSpec.indexed(
                             Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex()))),
                     java.util.Optional.empty(),
                     java.util.Optional.empty()))),
-        new CommentAnchorInput(4, 1, 8, 7));
+        new CommentAnchorSpec(4, 1, 8, 7));
   }
 
-  static DrawingAnchorInput.TwoCell twoCellAnchorInput(
+  static DrawingAnchorSpec.TwoCell twoCellAnchorInput(
       int fromColumn, int fromRow, int toColumn, int toRow, ExcelDrawingAnchorBehavior behavior) {
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(fromColumn, fromRow, 0, 0),
-        new DrawingMarkerInput(toColumn, toRow, 0, 0),
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(fromColumn, fromRow, 0, 0),
+        new DrawingMarkerSpec(toColumn, toRow, 0, 0),
         behavior);
   }
 
-  static TableInput advancedTableInput() {
-    return new TableInput(
+  static TableSpec advancedTableInput() {
+    return new TableSpec(
         new TableName("AdvancedTable"),
         new dev.erst.gridgrind.core.vocabulary.SheetName("Advanced"),
         new RangeRef("H1:J5"),
         true,
         false,
-        new TableStyleInput.None(),
+        new TableStyleSpec.None(),
         inlineText("Parity advanced table"),
         true,
         true,
@@ -440,9 +439,9 @@ final class XlsxParityProbeRegistry {
         "ParityData",
         "ParityTotals",
         List.of(
-            new TableColumnInput(0, "", "Total", "", ""),
-            new TableColumnInput(1, "", "", "SUM", "[@Sales]*2"),
-            new TableColumnInput(2, "owner-unique", "", "", "")));
+            new TableColumnSpec(0, "", "Total", "", ""),
+            new TableColumnSpec(1, "", "", "SUM", "[@Sales]*2"),
+            new TableColumnSpec(2, "owner-unique", "", "", "")));
   }
 
   static List<PendingMutation> advancedConditionalFormattingMutations() {
@@ -450,54 +449,54 @@ final class XlsxParityProbeRegistry {
         mutate(
             new RangeSelector.ByRange(new SheetName("Advanced"), new RangeRef("L2:L5")),
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingDefinitionInput(
+                new ConditionalFormattingSpec(
                     List.of(
-                        new ConditionalFormattingRuleInput.ColorScaleRule(
+                        new ConditionalFormattingRuleSpec.ColorScaleRule(
                             false,
                             List.of(
-                                new ConditionalFormattingThresholdInput.Min(),
-                                new ConditionalFormattingThresholdInput.Percentile(50.0d),
-                                new ConditionalFormattingThresholdInput.Max()),
+                                new ConditionalFormattingThresholdSpec.Min(),
+                                new ConditionalFormattingThresholdSpec.Percentile(50.0d),
+                                new ConditionalFormattingThresholdSpec.Max()),
                             List.of(
-                                ColorInput.rgb(new RgbHex("#AA2211")),
-                                ColorInput.rgb(new RgbHex("#FFDD55")),
-                                ColorInput.rgb(new RgbHex("#11CC66"))))))));
+                                ColorSpec.rgb(new RgbHex("#AA2211")),
+                                ColorSpec.rgb(new RgbHex("#FFDD55")),
+                                ColorSpec.rgb(new RgbHex("#11CC66"))))))));
     PendingMutation dataBar =
         mutate(
             new RangeSelector.ByRange(new SheetName("Advanced"), new RangeRef("M2:M5")),
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingDefinitionInput(
+                new ConditionalFormattingSpec(
                     List.of(
-                        new ConditionalFormattingRuleInput.DataBarRule(
+                        new ConditionalFormattingRuleSpec.DataBarRule(
                             false,
-                            ColorInput.rgb(new RgbHex("#123456")),
+                            ColorSpec.rgb(new RgbHex("#123456")),
                             true,
                             10,
                             90,
-                            new ConditionalFormattingThresholdInput.Min(),
-                            new ConditionalFormattingThresholdInput.Max())))));
+                            new ConditionalFormattingThresholdSpec.Min(),
+                            new ConditionalFormattingThresholdSpec.Max())))));
     PendingMutation iconSet =
         mutate(
             new RangeSelector.ByRange(new SheetName("Advanced"), new RangeRef("N2:N5")),
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingDefinitionInput(
+                new ConditionalFormattingSpec(
                     List.of(
-                        new ConditionalFormattingRuleInput.IconSetRule(
+                        new ConditionalFormattingRuleSpec.IconSetRule(
                             false,
                             ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
                             true,
                             true,
                             List.of(
-                                new ConditionalFormattingThresholdInput.Percent(0.0d),
-                                new ConditionalFormattingThresholdInput.Percent(33.0d),
-                                new ConditionalFormattingThresholdInput.Percent(67.0d)))))));
+                                new ConditionalFormattingThresholdSpec.Percent(0.0d),
+                                new ConditionalFormattingThresholdSpec.Percent(33.0d),
+                                new ConditionalFormattingThresholdSpec.Percent(67.0d)))))));
     PendingMutation top10 =
         mutate(
             new RangeSelector.ByRange(new SheetName("Advanced"), new RangeRef("K2:K5")),
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingDefinitionInput(
+                new ConditionalFormattingSpec(
                     List.of(
-                        new ConditionalFormattingRuleInput.Top10Rule(
+                        new ConditionalFormattingRuleSpec.Top10Rule(
                             true, 10, false, false, java.util.Optional.empty())))));
     return List.of(colorScale, dataBar, iconSet, top10);
   }
@@ -705,38 +704,38 @@ final class XlsxParityProbeRegistry {
     return Math.abs(left - right) <= 0.000001d;
   }
 
-  static CellInput.Text text(String value) {
-    return new CellInput.Text(TextSourceInput.inline(value));
+  static CellValueSpec.Text text(String value) {
+    return new CellValueSpec.Text(TextSourceSpec.inline(value));
   }
 
-  static ChartTitleInput.Text chartTitle(String value) {
-    return new ChartTitleInput.Text(TextSourceInput.inline(value));
+  static ChartTitleSpec.Text chartTitle(String value) {
+    return new ChartTitleSpec.Text(TextSourceSpec.inline(value));
   }
 
-  static RichTextRunInput richTextRun(String value, CellFontInput font) {
-    return new RichTextRunInput(TextSourceInput.inline(value), java.util.Optional.ofNullable(font));
+  static RichTextRunSpec richTextRun(String value, CellFontPatch font) {
+    return new RichTextRunSpec(TextSourceSpec.inline(value), java.util.Optional.ofNullable(font));
   }
 
-  static CommentInput comment(String text, String author, boolean visible) {
-    return CommentInput.plain(TextSourceInput.inline(text), author, visible);
+  static CommentSpec comment(String text, String author, boolean visible) {
+    return CommentSpec.plain(TextSourceSpec.inline(text), author, visible);
   }
 
-  static CommentInput comment(
+  static CommentSpec comment(
       String text,
       String author,
       boolean visible,
-      List<RichTextRunInput> runs,
-      CommentAnchorInput anchor) {
-    return new CommentInput(
-        TextSourceInput.inline(text),
+      List<RichTextRunSpec> runs,
+      CommentAnchorSpec anchor) {
+    return new CommentSpec(
+        TextSourceSpec.inline(text),
         author,
         visible,
         java.util.Optional.of(runs),
         java.util.Optional.ofNullable(anchor));
   }
 
-  static TextSourceInput inlineText(String value) {
-    return TextSourceInput.inline(value);
+  static TextSourceSpec inlineText(String value) {
+    return TextSourceSpec.inline(value);
   }
 
   record ProbeResult(XlsxParityLedger.ExpectedOutcome outcome, String detail) {}

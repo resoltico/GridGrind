@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.semantics.OperationEffect;
 import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
@@ -131,12 +131,12 @@ class FieldConstraintTest {
         2,
         CatalogFieldConstraints.forComponent(StructuredMutationAction.SetNamedRange.class, "name")
             .size());
-    assertEquals(2, CatalogFieldConstraints.forComponent(TableInput.class, "name").size());
+    assertEquals(2, CatalogFieldConstraints.forComponent(TableSpec.class, "name").size());
     assertEquals(List.of(), CatalogFieldConstraints.forComponent(NamedRangeTarget.class, "name"));
     assertEquals(
         List.of(),
         CatalogFieldConstraints.forComponent(
             StructuredMutationAction.SetNamedRange.class, "range"));
-    assertEquals(List.of(), CatalogFieldConstraints.forComponent(TableInput.class, "range"));
+    assertEquals(List.of(), CatalogFieldConstraints.forComponent(TableSpec.class, "range"));
   }
 }

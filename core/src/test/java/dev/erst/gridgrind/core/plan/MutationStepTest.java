@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -25,7 +25,7 @@ class MutationStepTest {
         new MutationStep(
             new StepId("set-owner"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-            new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))));
+            new CellMutationAction.SetCell(new CellValueSpec.Text(text("Owner"))));
     MutationStep clearWorkbookProtection =
         new MutationStep(
             new StepId("clear-book-protection"),
@@ -45,7 +45,7 @@ class MutationStepTest {
             new MutationStep(
                 new StepId("bad-target"),
                 new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
-                new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))));
+                new CellMutationAction.SetCell(new CellValueSpec.Text(text("Owner")))));
   }
 
   @Test
@@ -72,7 +72,7 @@ class MutationStepTest {
             .getMessage());
   }
 
-  private static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+  private static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
   }
 }

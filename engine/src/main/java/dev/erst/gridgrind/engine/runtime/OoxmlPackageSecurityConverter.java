@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
@@ -20,14 +20,14 @@ final class OoxmlPackageSecurityConverter {
   private OoxmlPackageSecurityConverter() {}
 
   static ExcelOoxmlOpenOptions toExcelOpenOptions(
-      @Nullable OoxmlOpenSecurityInput input, ExecutionInputBindings bindings) {
+      @Nullable OoxmlOpenSecuritySpec input, ExecutionInputBindings bindings) {
     return input == null || input.passwordRef().isEmpty()
         ? new ExcelOoxmlOpenOptions.Unencrypted()
         : new ExcelOoxmlOpenOptions.Encrypted(
             bindings.resolveSecret(input.passwordRef().orElseThrow()));
   }
 
-  static ExcelOoxmlOpenOptions toExcelOpenOptions(@Nullable OoxmlOpenSecurityInput input) {
+  static ExcelOoxmlOpenOptions toExcelOpenOptions(@Nullable OoxmlOpenSecuritySpec input) {
     if (input == null || input.passwordRef().isEmpty()) {
       return new ExcelOoxmlOpenOptions.Unencrypted();
     }
@@ -35,7 +35,7 @@ final class OoxmlPackageSecurityConverter {
   }
 
   static ExcelOoxmlPersistenceOptions toExcelPersistenceOptions(
-      @Nullable OoxmlPersistenceSecurityInput input, ExecutionInputBindings bindings)
+      @Nullable OoxmlPersistenceSecuritySpec input, ExecutionInputBindings bindings)
       throws IOException {
     if (input == null) {
       return ExcelOoxmlPersistenceOptions.none();
@@ -46,36 +46,35 @@ final class OoxmlPackageSecurityConverter {
   }
 
   private static ExcelOoxmlPersistenceEncryption encryptionPolicy(
-      OoxmlPersistenceEncryptionInput input, ExecutionInputBindings bindings) {
+      OoxmlPersistenceEncryptionSpec input, ExecutionInputBindings bindings) {
     return switch (input) {
-      case OoxmlPersistenceEncryptionInput.None _ ->
-          new ExcelOoxmlPersistenceEncryption.Plaintext();
-      case OoxmlPersistenceEncryptionInput.Encrypt encrypt ->
+      case OoxmlPersistenceEncryptionSpec.None _ -> new ExcelOoxmlPersistenceEncryption.Plaintext();
+      case OoxmlPersistenceEncryptionSpec.Encrypt encrypt ->
           new ExcelOoxmlPersistenceEncryption.Encrypt(
               toExcelEncryptionOptions(encrypt.encryption(), bindings));
-      case OoxmlPersistenceEncryptionInput.PreserveSource _ ->
+      case OoxmlPersistenceEncryptionSpec.PreserveSource _ ->
           new ExcelOoxmlPersistenceEncryption.PreserveSource();
     };
   }
 
   private static ExcelOoxmlPersistenceSignature signaturePolicy(
-      OoxmlPersistenceSignatureInput input, ExecutionInputBindings bindings) throws IOException {
+      OoxmlPersistenceSignatureSpec input, ExecutionInputBindings bindings) throws IOException {
     return switch (input) {
-      case OoxmlPersistenceSignatureInput.None _ -> new ExcelOoxmlPersistenceSignature.Unsigned();
-      case OoxmlPersistenceSignatureInput.Sign sign ->
+      case OoxmlPersistenceSignatureSpec.None _ -> new ExcelOoxmlPersistenceSignature.Unsigned();
+      case OoxmlPersistenceSignatureSpec.Sign sign ->
           new ExcelOoxmlPersistenceSignature.Sign(
               toExcelSignatureOptions(sign.signature(), bindings));
     };
   }
 
   private static ExcelOoxmlEncryptionOptions toExcelEncryptionOptions(
-      OoxmlEncryptionInput input, ExecutionInputBindings bindings) {
+      OoxmlEncryptionSpec input, ExecutionInputBindings bindings) {
     return new ExcelOoxmlEncryptionOptions(
         bindings.resolveSecret(input.passwordRef()), input.cipher(), input.hash());
   }
 
   private static ExcelOoxmlSignatureOptions toExcelSignatureOptions(
-      OoxmlSignatureInput input, ExecutionInputBindings bindings) throws IOException {
+      OoxmlSignatureSpec input, ExecutionInputBindings bindings) throws IOException {
     try {
       return new ExcelOoxmlSignatureOptions(
           bindings

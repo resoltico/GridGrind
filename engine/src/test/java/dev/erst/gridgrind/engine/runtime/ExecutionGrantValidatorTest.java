@@ -3,12 +3,12 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -92,8 +92,8 @@ class ExecutionGrantValidatorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new dev.erst.gridgrind.core.plan.InspectionStep(
                     new StepId("summary"),
@@ -117,8 +117,8 @@ class ExecutionGrantValidatorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new dev.erst.gridgrind.core.plan.InspectionStep(
                     new StepId("summary"),
@@ -148,8 +148,8 @@ class ExecutionGrantValidatorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new dev.erst.gridgrind.core.plan.InspectionStep(
                     new StepId("summary"),
@@ -183,8 +183,8 @@ class ExecutionGrantValidatorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
             new WorkbookPlan.WorkbookPersistence.Overwrite(java.util.Optional.empty()),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
 
     assertEquals(
@@ -231,11 +231,11 @@ class ExecutionGrantValidatorTest {
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "report.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                new OoxmlPersistenceSecurityInput(
-                    new OoxmlPersistenceEncryptionInput.PreserveSource(),
-                    new OoxmlPersistenceSignatureInput.None())),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+                new OoxmlPersistenceSecuritySpec(
+                    new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+                    new OoxmlPersistenceSignatureSpec.None())),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     GridGrindExecutionGrant noSecretGrant =
         new GridGrindExecutionGrant.Bounded(
@@ -256,9 +256,9 @@ class ExecutionGrantValidatorTest {
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "report.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+                OoxmlPersistenceSecuritySpec.none()),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     assertTrue(ExecutionGrantValidator.violations(plaintext, noSecretGrant, root).isEmpty());
 
@@ -269,15 +269,15 @@ class ExecutionGrantValidatorTest {
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "report.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                new OoxmlPersistenceSecurityInput(
-                    new OoxmlPersistenceEncryptionInput.Encrypt(
-                        new OoxmlEncryptionInput(
+                new OoxmlPersistenceSecuritySpec(
+                    new OoxmlPersistenceEncryptionSpec.Encrypt(
+                        new OoxmlEncryptionSpec(
                             encryptionPassword,
                             ExcelOoxmlWriteCipher.AES_256,
                             ExcelOoxmlWriteHash.SHA_512)),
-                    new OoxmlPersistenceSignatureInput.None())),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+                    new OoxmlPersistenceSignatureSpec.None())),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     GridGrindExecutionGrant encryptedGrant =
         new GridGrindExecutionGrant.Bounded(
@@ -297,8 +297,8 @@ class ExecutionGrantValidatorTest {
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             "report.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         List.of(
             new MutationStep(
                 new StepId("ensure-sheet"),

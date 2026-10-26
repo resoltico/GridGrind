@@ -23,7 +23,7 @@ gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search validation --response validation-search.json
 gridgrind --print-protocol-catalog --lookup inspectionQueryTypes:GET_SHEET_LAYOUT
 gridgrind --print-protocol-catalog --lookup mutationActionTypes --response mutation-actions.json
-gridgrind --print-protocol-catalog --lookup nestedTypes:cellInputTypes --response cell-input-types.json
+gridgrind --print-protocol-catalog --lookup nestedTypes:cellValueSpecTypes --response cell-input-types.json
 gridgrind --print-recipe --lookup BUDGET --response budget-request.json
 gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
 gridgrind --print-recipe --lookup SHEET_MAINTENANCE --response sheet-maintenance.json

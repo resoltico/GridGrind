@@ -2,7 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.WorkflowStorage;
@@ -74,7 +74,7 @@ public final class OperationSequenceModel {
                 primarySheet,
                 secondarySheet,
                 OperationSequenceSelectorSupport.validFormulaAddress(data)),
-            FormulaEnvironmentInput.empty(),
+            FormulaEnvironmentSpec.empty(),
             mutations,
             assertions,
             inspections),

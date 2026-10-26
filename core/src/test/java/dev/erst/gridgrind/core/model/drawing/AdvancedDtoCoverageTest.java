@@ -12,7 +12,7 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
-import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
 import dev.erst.gridgrind.core.model.print.PrintSetupReport;
@@ -304,27 +304,27 @@ class AdvancedDtoCoverageTest {
                         -1))
             .getMessage());
 
-    PaneInput.Frozen frozen = new PaneInput.Frozen(1, 0, 1, 0);
+    PaneSpec.Frozen frozen = new PaneSpec.Frozen(1, 0, 1, 0);
     assertEquals(1, frozen.leftmostColumn());
     assertEquals(
         "splitColumn and splitRow must not both be 0",
-        assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(0, 0, 0, 0))
+        assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(0, 0, 0, 0))
             .getMessage());
     assertEquals(
         "leftmostColumn must be 0 when splitColumn is 0: 1",
-        assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(0, 1, 1, 1))
+        assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(0, 1, 1, 1))
             .getMessage());
     assertEquals(
         "topRow must be 0 when splitRow is 0: 1",
-        assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(1, 0, 1, 1))
+        assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(1, 0, 1, 1))
             .getMessage());
     assertEquals(
         "leftmostColumn must be 0 when xSplitPosition is 0: 1",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new PaneInput.Split(0, 1, 1, 0, ExcelPaneRegion.LOWER_RIGHT))
+                () -> new PaneSpec.Split(0, 1, 1, 0, ExcelPaneRegion.LOWER_RIGHT))
             .getMessage());
-    assertEquals(0, new PaneInput.Split(1, 0, 0, 0, ExcelPaneRegion.UPPER_RIGHT).topRow());
+    assertEquals(0, new PaneSpec.Split(1, 0, 0, 0, ExcelPaneRegion.UPPER_RIGHT).topRow());
 
     CellColorReport.Rgb rgb = CellColorReport.rgb(new RgbHex("#a1b2c3"));
     assertEquals("#A1B2C3", rgb.rgb().value());

@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.core.authoring;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
@@ -32,8 +32,8 @@ public final class GridGrindPlan {
   private Optional<PlanId> planId;
   private WorkbookPlan.WorkbookSource source;
   private WorkbookPlan.WorkbookPersistence persistence;
-  private ExecutionPolicyInput execution;
-  private FormulaEnvironmentInput formulaEnvironment;
+  private ExecutionPolicySpec execution;
+  private FormulaEnvironmentSpec formulaEnvironment;
   private final List<WorkbookStep> steps;
   private int mutationCount;
   private int inspectionCount;
@@ -45,8 +45,8 @@ public final class GridGrindPlan {
         Optional.empty(),
         source,
         new WorkbookPlan.WorkbookPersistence.None(),
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         List.of());
   }
 
@@ -55,8 +55,8 @@ public final class GridGrindPlan {
       Optional<PlanId> planId,
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<WorkbookStep> steps) {
     this.protocolVersion =
         Objects.requireNonNullElse(protocolVersion, GridGrindProtocolVersion.current());
@@ -64,9 +64,9 @@ public final class GridGrindPlan {
     this.source = Objects.requireNonNull(source, "source must not be null");
     this.persistence =
         Objects.requireNonNullElseGet(persistence, WorkbookPlan.WorkbookPersistence.None::new);
-    this.execution = Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults);
+    this.execution = Objects.requireNonNullElseGet(execution, ExecutionPolicySpec::defaults);
     this.formulaEnvironment =
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty);
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty);
     this.steps = new ArrayList<>(Objects.requireNonNull(steps, "steps must not be null"));
     recountStepIds(this.steps);
   }
@@ -129,7 +129,7 @@ public final class GridGrindPlan {
   public GridGrindPlan saveAs(
       Path path,
       WorkbookPlan.WorkbookPersistence.IfExists ifExists,
-      OoxmlPersistenceSecurityInput security) {
+      OoxmlPersistenceSecuritySpec security) {
     Objects.requireNonNull(path, "path must not be null");
     Objects.requireNonNull(ifExists, "ifExists must not be null");
     this.persistence =
@@ -141,7 +141,7 @@ public final class GridGrindPlan {
   }
 
   /** Overwrites the source workbook path with an explicit OOXML package-security policy. */
-  public GridGrindPlan overwrite(OoxmlPersistenceSecurityInput security) {
+  public GridGrindPlan overwrite(OoxmlPersistenceSecuritySpec security) {
     this.persistence =
         new WorkbookPlan.WorkbookPersistence.Overwrite(
             Objects.requireNonNull(security, "security must not be null"));
@@ -151,9 +151,9 @@ public final class GridGrindPlan {
   /** Sets the execution journal level while preserving any existing execution mode or policy. */
   public GridGrindPlan journal(ExecutionJournalLevel level) {
     this.execution =
-        new ExecutionPolicyInput(
+        new ExecutionPolicySpec(
             execution.mode(),
-            new ExecutionJournalInput(level),
+            new ExecutionJournalSpec(level),
             execution.calculation(),
             execution.assertionMode());
     return this;

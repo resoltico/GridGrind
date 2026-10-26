@@ -3,9 +3,9 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -33,8 +33,8 @@ class FullXssfWorkflowTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     ExecutionCalculationSupport calculationSupport = new ExecutionCalculationSupport(writer -> {});
     ExecutionResponseSupport responseSupport = responseSupport();
@@ -73,7 +73,7 @@ class FullXssfWorkflowTest {
                   GridGrindProtocolVersion.current(),
                   request,
                   workbook,
-                  new ExecutionModeInput.FullXssf(),
+                  new ExecutionModeSpec.FullXssf(),
                   new ArrayList<>(),
                   ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
                   bindings));
@@ -88,8 +88,8 @@ class FullXssfWorkflowTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     GridGrindHostAcceptancePolicy policy =
         new GridGrindHostAcceptancePolicy.RequireAll(
@@ -130,7 +130,7 @@ class FullXssfWorkflowTest {
               GridGrindProtocolVersion.current(),
               request,
               workbook,
-              new ExecutionModeInput.FullXssf(),
+              new ExecutionModeSpec.FullXssf(),
               new ArrayList<>(),
               ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
               bindings));
@@ -143,8 +143,8 @@ class FullXssfWorkflowTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(

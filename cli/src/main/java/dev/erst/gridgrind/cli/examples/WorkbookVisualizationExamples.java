@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
@@ -12,7 +12,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
@@ -39,7 +39,7 @@ final class WorkbookVisualizationExamples {
             new StepId("step-02-set-signature-line"),
             ExampleSelectors.sheet("Approvals"),
             new DrawingMutationAction.SetSignatureLine(
-                new SignatureLineInput(
+                new SignatureLineSpec(
                     "BudgetSignature",
                     ExampleDrawingAnchors.anchor(1, 1, 4, 6),
                     false,
@@ -50,9 +50,9 @@ final class WorkbookVisualizationExamples {
                     Optional.empty(),
                     Optional.of("invalid"),
                     Optional.of(
-                        new PictureDataInput(
+                        new PictureDataSpec(
                             ExcelPictureFormat.PNG,
-                            BinarySourceInput.inlineBase64(
+                            BinarySourceSpec.inlineBase64(
                                 TaskStarterRecipeSupport.onePixelPngBase64())))))),
         ExampleSteps.read(
             new StepId("step-03-read-drawing-objects"),
@@ -120,7 +120,7 @@ final class WorkbookVisualizationExamples {
             new StepId("step-05-set-chart"),
             ExampleSelectors.sheet("Ops"),
             new DrawingMutationAction.SetChart(
-                ExampleChartInputs.clusteredColumnComparisonChart(
+                ExampleChartSpecs.clusteredColumnComparisonChart(
                     "OpsChart",
                     ExampleDrawingAnchors.anchor(4, 0, 8, 12),
                     "Roadmap",

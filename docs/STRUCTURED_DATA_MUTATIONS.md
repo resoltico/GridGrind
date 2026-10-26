@@ -430,7 +430,7 @@ Append a single row of typed values after the last value-bearing row in a sheet.
 If the next append position lands on cells that already exist because they carry only style,
 hyperlink, or comment state, that existing state is preserved when values are written there.
 Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside
-`values.cells` when you use the canonical `CellRowInput` wrapper with `type: "TYPED"`.
+`values.cells` when you use the canonical `CellRowSpec` wrapper with `type: "TYPED"`.
 Homogeneous rows may use the compact scalar-family encodings instead.
 
 ```json
@@ -466,7 +466,7 @@ Homogeneous rows may use the compact scalar-family encodings instead.
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `target` | Yes | `BY_NAME` selector for the target sheet. |
-| `values` | Yes | `CellRowInput` wrapper for the appended row; use `type: "TYPED"` for mixed rows or one scalar-family variant for homogeneous rows. |
+| `values` | Yes | `CellRowSpec` wrapper for the appended row; use `type: "TYPED"` for mixed rows or one scalar-family variant for homogeneous rows. |
 
 Rows that contain only style, comment, or hyperlink metadata are ignored when locating the append
 position.

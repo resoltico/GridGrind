@@ -75,8 +75,8 @@ class CatalogStepTemplateSupportTest {
     assertEquals(1, CatalogStepTemplateDefaults.entryPreference("BOOLEAN"));
     assertEquals(2, CatalogStepTemplateDefaults.entryPreference("INLINE_BASE64"));
     assertEquals(3, CatalogStepTemplateDefaults.entryPreference("CUSTOM_ENTRY"));
-    assertEquals(-1, CatalogStepTemplateDefaults.entryPreference("cellRowInputTypes", "TYPED"));
-    assertEquals(0, CatalogStepTemplateDefaults.entryPreference("cellRowInputTypes", "INLINE"));
+    assertEquals(-1, CatalogStepTemplateDefaults.entryPreference("cellRowSpecTypes", "TYPED"));
+    assertEquals(0, CatalogStepTemplateDefaults.entryPreference("cellRowSpecTypes", "INLINE"));
     assertEquals(3, CatalogStepTemplateDefaults.entryPreference("unrelatedGroup", "TYPED"));
   }
 
@@ -153,7 +153,7 @@ class CatalogStepTemplateSupportTest {
   void differentialStyleTemplateDefaultProducesAnExecutableStylePlaceholder() {
     java.util.Map<String, Object> style = new java.util.LinkedHashMap<>();
     CatalogStepTemplateDefaults.buildTypeSpecificDefaults()
-        .get("DifferentialStyleInput")
+        .get("DifferentialStylePatch")
         .apply(
             GridGrindProtocolCatalog.catalog(),
             style,

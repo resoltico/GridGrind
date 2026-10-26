@@ -9,14 +9,14 @@ import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -117,7 +117,7 @@ final class DrawingAndSignatureWorkflowTaskRecipe {
             new StepId("set-signature-line"),
             ExampleSelectors.sheet("Approvals"),
             new DrawingMutationAction.SetSignatureLine(
-                new SignatureLineInput(
+                new SignatureLineSpec(
                     "WorkflowSignature",
                     ExampleDrawingAnchors.anchor(1, 1, 4, 6),
                     false,
@@ -128,9 +128,9 @@ final class DrawingAndSignatureWorkflowTaskRecipe {
                     Optional.empty(),
                     Optional.of("invalid"),
                     Optional.of(
-                        new PictureDataInput(
+                        new PictureDataSpec(
                             ExcelPictureFormat.PNG,
-                            BinarySourceInput.inlineBase64(
+                            BinarySourceSpec.inlineBase64(
                                 TaskStarterRecipeSupport.onePixelPngBase64())))))),
         ExampleSteps.read(
             new StepId("read-drawing-objects"),

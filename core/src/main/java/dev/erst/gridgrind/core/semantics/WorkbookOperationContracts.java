@@ -4,7 +4,7 @@ import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.core.plan.AnalysisAssertion;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.CompositeAssertion;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.plan.MutationAction;
 import dev.erst.gridgrind.core.plan.Selector;
@@ -44,7 +44,7 @@ public final class WorkbookOperationContracts {
 
   /** Returns the static execution-mode incompatibility for one bound operation. */
   public static java.util.Optional<String> executionModeViolation(
-      Object operation, ExecutionModeInput executionMode) {
+      Object operation, ExecutionModeSpec executionMode) {
     Object boundOperation = Objects.requireNonNull(operation, "operation must not be null");
     return contractFor(recordType(boundOperation.getClass()))
         .executionModeViolation(

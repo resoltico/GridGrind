@@ -4,32 +4,32 @@ import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.mutate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.core.model.chart.ChartAxisInput;
-import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.PictureInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -46,8 +46,8 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
@@ -162,7 +162,7 @@ class SequenceIntrospectionTest {
             mutate(
                 new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetComment(
-                    CommentInput.plain(TextSourceInput.inline("Review"), "GridGrind", false)))));
+                    CommentSpec.plain(TextSourceSpec.inline("Review"), "GridGrind", false)))));
     assertEquals(
         "CLEAR_COMMENT",
         mutationKind(
@@ -229,8 +229,8 @@ class SequenceIntrospectionTest {
             mutate(
                 new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2:A5")),
                 new StructuredMutationAction.SetDataValidation(
-                    new DataValidationInput(
-                        new DataValidationRuleInput.WholeNumber(
+                    new DataValidationSpec(
+                        new DataValidationRuleSpec.WholeNumber(
                             ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
                         false,
                         false,
@@ -248,13 +248,13 @@ class SequenceIntrospectionTest {
             mutate(
                 new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2:A5")),
                 new StructuredMutationAction.SetConditionalFormatting(
-                    new ConditionalFormattingDefinitionInput(
+                    new ConditionalFormattingSpec(
                         List.of(
-                            new ConditionalFormattingRuleInput.FormulaRule(
+                            new ConditionalFormattingRuleSpec.FormulaRule(
                                 "A2>0",
                                 true,
                                 Optional.of(
-                                    new DifferentialStyleInput(
+                                    new DifferentialStylePatch(
                                         Optional.of("0.00"),
                                         Optional.of(true),
                                         Optional.empty(),
@@ -287,12 +287,12 @@ class SequenceIntrospectionTest {
         mutationKind(
             mutate(
                 new StructuredMutationAction.SetTable(
-                    TableInput.withDefaultMetadata(
+                    TableSpec.withDefaultMetadata(
                         new TableName("BudgetTable"),
                         new SheetName("Budget"),
                         new RangeRef("A1:C4"),
                         false,
-                        new TableStyleInput.Named(
+                        new TableStyleSpec.Named(
                             "TableStyleMedium2", false, false, true, false))))));
     assertEquals(
         "DELETE_TABLE",
@@ -313,7 +313,7 @@ class SequenceIntrospectionTest {
             mutate(
                 new WorkbookSelector.Current(),
                 new WorkbookMutationAction.SetWorkbookProtection(
-                    new WorkbookProtectionInput(
+                    new WorkbookProtectionSpec(
                         true, false, false, Optional.empty(), Optional.empty())))));
     assertEquals(
         "CLEAR_WORKBOOK_PROTECTION",
@@ -327,7 +327,7 @@ class SequenceIntrospectionTest {
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetSheetPresentation(
-                    SheetPresentationInput.defaults()))));
+                    SheetPresentationSpec.defaults()))));
 
     assertEquals(
         1L,
@@ -719,49 +719,49 @@ class SequenceIntrospectionTest {
         false);
   }
 
-  private static DrawingAnchorInput.TwoCell protocolAnchor() {
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(0, 0, 0, 0),
-        new DrawingMarkerInput(2, 3, 0, 0),
+  private static DrawingAnchorSpec.TwoCell protocolAnchor() {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(0, 0, 0, 0),
+        new DrawingMarkerSpec(2, 3, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static PictureInput protocolPictureInput() {
-    return new PictureInput(
+  private static PictureSpec protocolPictureInput() {
+    return new PictureSpec(
         "OpsPicture",
-        new PictureDataInput(
-            ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64(PNG_PIXEL_BASE64)),
+        new PictureDataSpec(
+            ExcelPictureFormat.PNG, BinarySourceSpec.inlineBase64(PNG_PIXEL_BASE64)),
         protocolAnchor(),
-        Optional.of(TextSourceInput.inline("Queue preview")));
+        Optional.of(TextSourceSpec.inline("Queue preview")));
   }
 
-  private static ShapeInput protocolShapeInput() {
-    return new ShapeInput.SimpleShape(
-        "OpsShape", protocolAnchor(), "rect", Optional.of(TextSourceInput.inline("Queue")));
+  private static ShapeSpec protocolShapeInput() {
+    return new ShapeSpec.SimpleShape(
+        "OpsShape", protocolAnchor(), "rect", Optional.of(TextSourceSpec.inline("Queue")));
   }
 
-  private static EmbeddedObjectInput protocolEmbeddedObjectInput() {
-    return new EmbeddedObjectInput(
+  private static EmbeddedObjectSpec protocolEmbeddedObjectInput() {
+    return new EmbeddedObjectSpec(
         "OpsEmbed",
         "Ops payload",
         "ops-payload.txt",
         "open",
-        BinarySourceInput.inlineBase64("R3JpZEdyaW5kIHBheWxvYWQ="),
-        new PictureDataInput(
-            ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64(PNG_PIXEL_BASE64)),
+        BinarySourceSpec.inlineBase64("R3JpZEdyaW5kIHBheWxvYWQ="),
+        new PictureDataSpec(
+            ExcelPictureFormat.PNG, BinarySourceSpec.inlineBase64(PNG_PIXEL_BASE64)),
         protocolAnchor());
   }
 
-  private static ChartInput protocolChartInput() {
-    return new ChartInput(
+  private static ChartSpec protocolChartInput() {
+    return new ChartSpec(
         "OpsChart",
         protocolAnchor(),
-        new ChartTitleInput.Text(TextSourceInput.inline("Roadmap")),
-        new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+        new ChartTitleSpec.Text(TextSourceSpec.inline("Roadmap")),
+        new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
         List.of(
-            new ChartPlotInput.Bar(
+            new ChartPlotSpec.Bar(
                 true,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
@@ -769,27 +769,27 @@ class SequenceIntrospectionTest {
                 Optional.empty(),
                 protocolCategoryAxes(),
                 List.of(
-                    new ChartSeriesInput(
-                        new ChartTitleInput.Text(TextSourceInput.inline("Actual")),
-                        new ChartDataSourceInput.Reference("Budget!$A$2:$A$4"),
-                        new ChartDataSourceInput.Reference("Budget!$B$2:$B$4"),
+                    new ChartSeriesSpec(
+                        new ChartTitleSpec.Text(TextSourceSpec.inline("Actual")),
+                        new ChartDataSourceSpec.Reference("Budget!$A$2:$A$4"),
+                        new ChartDataSourceSpec.Reference("Budget!$B$2:$B$4"),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty())))));
   }
 
-  private static PivotTableInput protocolPivotTableInput() {
-    return new PivotTableInput(
+  private static PivotTableSpec protocolPivotTableInput() {
+    return new PivotTableSpec(
         "OpsPivot",
         new SheetName("Budget"),
-        new PivotTableInput.PivotSourceSpec.Range(new SheetName("Budget"), new RangeRef("A1:C4")),
-        new PivotTableInput.Anchor(new CellAddress("F4")),
+        new PivotTableSpec.PivotSourceSpec.Range(new SheetName("Budget"), new RangeRef("A1:C4")),
+        new PivotTableSpec.Anchor(new CellAddress("F4")),
         List.of("Month"),
         List.of(),
         List.of(),
         List.of(
-            new PivotTableInput.DataField(
+            new PivotTableSpec.DataField(
                 "Actual",
                 ExcelPivotDataConsolidateFunction.SUM,
                 "Total Actual",
@@ -869,14 +869,14 @@ class SequenceIntrospectionTest {
                         Optional.empty())))));
   }
 
-  private static List<ChartAxisInput> protocolCategoryAxes() {
+  private static List<ChartAxisSpec> protocolCategoryAxes() {
     return List.of(
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,

@@ -24,7 +24,7 @@
       "usage" : "Resolve one top-level protocol type such as mutationActionTypes:SET_CELL."
     }, {
       "shape" : "nestedTypes:<group>",
-      "usage" : "Resolve one nested tagged-union group such as nestedTypes:cellInputTypes."
+      "usage" : "Resolve one nested tagged-union group such as nestedTypes:cellValueSpecTypes."
     }, {
       "shape" : "plainTypes:<group>",
       "usage" : "Resolve one plain record group such as plainTypes:sheetSummaryReport."
@@ -46,10 +46,10 @@
       "group" : "windowReportTypes"
     }, {
       "entryIds" : [ "INLINE", "UTF8_FILE", "STANDARD_INPUT" ],
-      "group" : "textSourceInputTypes"
+      "group" : "textSourceSpecTypes"
     }, {
       "entryIds" : [ "INLINE_BASE64", "FILE", "STANDARD_INPUT" ],
-      "group" : "binarySourceInputTypes"
+      "group" : "binarySourceSpecTypes"
     }, {
       "entryIds" : [ "RANGE", "FORMULA" ],
       "group" : "namedRangeReportTypes"
@@ -82,31 +82,31 @@
       "group" : "drawingAnchorReportTypes"
     }, {
       "entryIds" : [ "BLANK", "TEXT", "RICH_TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA", "RAW_FORMULA" ],
-      "group" : "cellInputTypes"
+      "group" : "cellValueSpecTypes"
     }, {
       "entryIds" : [ "TYPED", "TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA" ],
-      "group" : "cellRowInputTypes"
+      "group" : "cellRowSpecTypes"
     }, {
       "entryIds" : [ "TYPED", "TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA" ],
-      "group" : "cellGridInputTypes"
+      "group" : "cellGridSpecTypes"
     }, {
       "entryIds" : [ "URL", "EMAIL", "FILE", "DOCUMENT" ],
       "group" : "hyperlinkTargetTypes"
     }, {
       "entryIds" : [ "NONE", "FROZEN", "SPLIT" ],
-      "group" : "paneInputTypes"
+      "group" : "paneSpecTypes"
     }, {
       "entryIds" : [ "APPEND_AT_END", "AT_INDEX" ],
       "group" : "sheetCopyPositionTypes"
     }, {
       "entryIds" : [ "VALUE", "CELL_COLOR", "FONT_COLOR", "ICON" ],
-      "group" : "autofilterSortConditionInputTypes"
+      "group" : "autofilterSortConditionSpecTypes"
     }, {
       "entryIds" : [ "RANGE", "FORMULA" ],
       "group" : "namedRangeTargetTypes"
     }, {
       "entryIds" : [ "SIMPLE_SHAPE", "CONNECTOR" ],
-      "group" : "shapeInputTypes"
+      "group" : "shapeSpecTypes"
     }, {
       "entryIds" : [ "WORKBOOK_CURRENT" ],
       "group" : "workbookSelectorTypes"
@@ -154,7 +154,7 @@
       "group" : "pivotTableSelectorTypes"
     }, {
       "entryIds" : [ "FULL_XSSF", "EVENT_READ", "STREAMING_WRITE" ],
-      "group" : "executionModeInputTypes"
+      "group" : "executionModeSpecTypes"
     }, {
       "entryIds" : [ "NOT_STARTED", "NOT_REQUESTED", "SUCCEEDED", "FAILED" ],
       "group" : "phaseTypes"
@@ -169,43 +169,43 @@
       "group" : "ooxmlEncryptionReportTypes"
     }, {
       "entryIds" : [ "NONE", "ENCRYPT", "PRESERVE_SOURCE" ],
-      "group" : "ooxmlPersistenceEncryptionInputTypes"
+      "group" : "ooxmlPersistenceEncryptionSpecTypes"
     }, {
       "entryIds" : [ "NONE", "SIGN" ],
-      "group" : "ooxmlPersistenceSignatureInputTypes"
+      "group" : "ooxmlPersistenceSignatureSpecTypes"
     }, {
       "entryIds" : [ "STEP", "REQUEST_PATH", "REQUEST_BYTE_OFFSET", "FORMULA_CELL" ],
       "group" : "requestWarningLocationTypes"
     }, {
       "entryIds" : [ "TWO_CELL" ],
-      "group" : "drawingAnchorInputTypes"
+      "group" : "drawingAnchorSpecTypes"
     }, {
       "entryIds" : [ "AREA", "AREA_3D", "BAR", "BAR_3D", "DOUGHNUT", "LINE", "LINE_3D", "PIE", "PIE_3D", "RADAR", "SCATTER", "SURFACE", "SURFACE_3D" ],
-      "group" : "chartPlotInputTypes"
+      "group" : "chartPlotSpecTypes"
     }, {
       "entryIds" : [ "NONE", "TEXT", "FORMULA" ],
-      "group" : "chartTitleInputTypes"
+      "group" : "chartTitleSpecTypes"
     }, {
       "entryIds" : [ "HIDDEN", "VISIBLE" ],
-      "group" : "chartLegendInputTypes"
+      "group" : "chartLegendSpecTypes"
     }, {
       "entryIds" : [ "REFERENCE", "STRING_LITERAL", "NUMERIC_LITERAL" ],
-      "group" : "chartDataSourceInputTypes"
+      "group" : "chartDataSourceSpecTypes"
     }, {
       "entryIds" : [ "RANGE", "NAMED_RANGE", "TABLE" ],
       "group" : "pivotSourceSpecTypes"
     }, {
       "entryIds" : [ "POINTS", "TWIPS" ],
-      "group" : "fontHeightInputTypes"
+      "group" : "fontHeightSpecTypes"
     }, {
       "entryIds" : [ "RGB", "THEME", "INDEXED" ],
-      "group" : "colorInputTypes"
+      "group" : "colorSpecTypes"
     }, {
       "entryIds" : [ "LINEAR", "PATH" ],
-      "group" : "cellGradientFillInputTypes"
+      "group" : "cellGradientFillSpecTypes"
     }, {
       "entryIds" : [ "PATTERN_ONLY", "PATTERN_FOREGROUND", "PATTERN_BACKGROUND", "PATTERN_FOREGROUND_BACKGROUND", "GRADIENT" ],
-      "group" : "cellFillInputTypes"
+      "group" : "cellFillSpecTypes"
     }, {
       "entryIds" : [ "RGB", "THEME", "INDEXED" ],
       "group" : "cellColorReportTypes"
@@ -220,34 +220,34 @@
       "group" : "cellFillReportTypes"
     }, {
       "entryIds" : [ "EXPLICIT_LIST", "FORMULA_LIST", "WHOLE_NUMBER", "DECIMAL_NUMBER", "DATE", "TIME", "TEXT_LENGTH", "CUSTOM_FORMULA" ],
-      "group" : "dataValidationRuleInputTypes"
+      "group" : "dataValidationRuleSpecTypes"
     }, {
       "entryIds" : [ "VALUES", "CUSTOM", "DYNAMIC", "TOP10", "COLOR", "ICON" ],
-      "group" : "autofilterFilterCriterionInputTypes"
+      "group" : "autofilterFilterCriterionSpecTypes"
     }, {
       "entryIds" : [ "FORMULA_RULE", "CELL_VALUE_RULE", "COLOR_SCALE_RULE", "DATA_BAR_RULE", "ICON_SET_RULE", "TOP10_RULE" ],
-      "group" : "conditionalFormattingRuleInputTypes"
+      "group" : "conditionalFormattingRuleSpecTypes"
     }, {
       "entryIds" : [ "MIN", "MAX", "NUMBER", "PERCENT", "PERCENTILE", "FORMULA" ],
-      "group" : "conditionalFormattingThresholdInputTypes"
+      "group" : "conditionalFormattingThresholdSpecTypes"
     }, {
       "entryIds" : [ "NONE", "RANGE" ],
-      "group" : "printAreaInputTypes"
+      "group" : "printAreaSpecTypes"
     }, {
       "entryIds" : [ "AUTOMATIC", "FIT" ],
-      "group" : "printScalingInputTypes"
+      "group" : "printScalingSpecTypes"
     }, {
       "entryIds" : [ "NONE", "BAND" ],
-      "group" : "printTitleRowsInputTypes"
+      "group" : "printTitleRowsSpecTypes"
     }, {
       "entryIds" : [ "NONE", "BAND" ],
-      "group" : "printTitleColumnsInputTypes"
+      "group" : "printTitleColumnsSpecTypes"
     }, {
       "entryIds" : [ "NONE", "NAMED" ],
-      "group" : "tableStyleInputTypes"
+      "group" : "tableStyleSpecTypes"
     }, {
       "entryIds" : [ "DO_NOT_CALCULATE", "DEFERRED_CALCULATION", "EVALUATE_ALL", "EVALUATE_TARGETS", "REQUIRE_EVALUATION", "CLEAR_CACHES_ONLY" ],
-      "group" : "calculationStrategyInputTypes"
+      "group" : "calculationStrategySpecTypes"
     } ],
     "plainTypeGroups" : [ {
       "entryIds" : [ "ExecutionJournal" ],
@@ -277,14 +277,14 @@
       "entryIds" : [ "RequestWarning" ],
       "group" : "requestWarningType"
     }, {
-      "entryIds" : [ "ExecutionPolicyInput" ],
-      "group" : "executionPolicyInputType"
+      "entryIds" : [ "ExecutionPolicySpec" ],
+      "group" : "executionPolicySpecType"
     }, {
-      "entryIds" : [ "CalculationPolicyInput" ],
-      "group" : "calculationPolicyInputType"
+      "entryIds" : [ "CalculationPolicySpec" ],
+      "group" : "calculationPolicySpecType"
     }, {
-      "entryIds" : [ "ExecutionJournalInput" ],
-      "group" : "executionJournalInputType"
+      "entryIds" : [ "ExecutionJournalSpec" ],
+      "group" : "executionJournalSpecType"
     }, {
       "entryIds" : [ "CalculationReport" ],
       "group" : "calculationReportType"
@@ -304,20 +304,20 @@
       "entryIds" : [ "CalculationExecutionReport" ],
       "group" : "calculationExecutionReportType"
     }, {
-      "entryIds" : [ "FormulaEnvironmentInput" ],
-      "group" : "formulaEnvironmentInputType"
+      "entryIds" : [ "FormulaEnvironmentSpec" ],
+      "group" : "formulaEnvironmentSpecType"
     }, {
-      "entryIds" : [ "OoxmlOpenSecurityInput" ],
-      "group" : "ooxmlOpenSecurityInputType"
+      "entryIds" : [ "OoxmlOpenSecuritySpec" ],
+      "group" : "ooxmlOpenSecuritySpecType"
     }, {
-      "entryIds" : [ "OoxmlPersistenceSecurityInput" ],
-      "group" : "ooxmlPersistenceSecurityInputType"
+      "entryIds" : [ "OoxmlPersistenceSecuritySpec" ],
+      "group" : "ooxmlPersistenceSecuritySpecType"
     }, {
-      "entryIds" : [ "OoxmlEncryptionInput" ],
-      "group" : "ooxmlEncryptionInputType"
+      "entryIds" : [ "OoxmlEncryptionSpec" ],
+      "group" : "ooxmlEncryptionSpecType"
     }, {
-      "entryIds" : [ "OoxmlSignatureInput" ],
-      "group" : "ooxmlSignatureInputType"
+      "entryIds" : [ "OoxmlSignatureSpec" ],
+      "group" : "ooxmlSignatureSpecType"
     }, {
       "entryIds" : [ "OoxmlPackageSecurityReport" ],
       "group" : "ooxmlPackageSecurityReportType"
@@ -328,140 +328,140 @@
       "entryIds" : [ "OoxmlSignatureSignerIdentity" ],
       "group" : "ooxmlSignatureSignerIdentityType"
     }, {
-      "entryIds" : [ "FormulaExternalWorkbookInput" ],
-      "group" : "formulaExternalWorkbookInputType"
+      "entryIds" : [ "FormulaExternalWorkbookSpec" ],
+      "group" : "formulaExternalWorkbookSpecType"
     }, {
-      "entryIds" : [ "FormulaUdfToolpackInput" ],
-      "group" : "formulaUdfToolpackInputType"
+      "entryIds" : [ "FormulaUdfToolpackSpec" ],
+      "group" : "formulaUdfToolpackSpecType"
     }, {
-      "entryIds" : [ "FormulaUdfFunctionInput" ],
-      "group" : "formulaUdfFunctionInputType"
+      "entryIds" : [ "FormulaUdfFunctionSpec" ],
+      "group" : "formulaUdfFunctionSpecType"
     }, {
-      "entryIds" : [ "DrawingMarkerInput" ],
-      "group" : "drawingMarkerInputType"
+      "entryIds" : [ "DrawingMarkerSpec" ],
+      "group" : "drawingMarkerSpecType"
     }, {
-      "entryIds" : [ "ArrayFormulaInput" ],
-      "group" : "arrayFormulaInputType"
+      "entryIds" : [ "ArrayFormulaSpec" ],
+      "group" : "arrayFormulaSpecType"
     }, {
       "entryIds" : [ "CustomXmlMappingLocator" ],
       "group" : "customXmlMappingLocatorType"
     }, {
-      "entryIds" : [ "CustomXmlImportInput" ],
-      "group" : "customXmlImportInputType"
+      "entryIds" : [ "CustomXmlImportSpec" ],
+      "group" : "customXmlImportSpecType"
     }, {
-      "entryIds" : [ "ChartInput" ],
-      "group" : "chartInputType"
+      "entryIds" : [ "ChartSpec" ],
+      "group" : "chartSpecType"
     }, {
-      "entryIds" : [ "ChartAxisInput" ],
-      "group" : "chartAxisInputType"
+      "entryIds" : [ "ChartAxisSpec" ],
+      "group" : "chartAxisSpecType"
     }, {
-      "entryIds" : [ "ChartSeriesInput" ],
-      "group" : "chartSeriesInputType"
+      "entryIds" : [ "ChartSeriesSpec" ],
+      "group" : "chartSeriesSpecType"
     }, {
-      "entryIds" : [ "PictureDataInput" ],
-      "group" : "pictureDataInputType"
+      "entryIds" : [ "PictureDataSpec" ],
+      "group" : "pictureDataSpecType"
     }, {
-      "entryIds" : [ "PictureInput" ],
-      "group" : "pictureInputType"
+      "entryIds" : [ "PictureSpec" ],
+      "group" : "pictureSpecType"
     }, {
-      "entryIds" : [ "SignatureLineInput" ],
-      "group" : "signatureLineInputType"
+      "entryIds" : [ "SignatureLineSpec" ],
+      "group" : "signatureLineSpecType"
     }, {
-      "entryIds" : [ "EmbeddedObjectInput" ],
-      "group" : "embeddedObjectInputType"
+      "entryIds" : [ "EmbeddedObjectSpec" ],
+      "group" : "embeddedObjectSpecType"
     }, {
-      "entryIds" : [ "CommentInput" ],
-      "group" : "commentInputType"
+      "entryIds" : [ "CommentSpec" ],
+      "group" : "commentSpecType"
     }, {
-      "entryIds" : [ "CommentAnchorInput" ],
-      "group" : "commentAnchorInputType"
+      "entryIds" : [ "CommentAnchorSpec" ],
+      "group" : "commentAnchorSpecType"
     }, {
       "entryIds" : [ "SheetProtectionSettings" ],
       "group" : "sheetProtectionSettingsType"
     }, {
-      "entryIds" : [ "CellStylePatchInput" ],
-      "group" : "cellStylePatchInputType"
+      "entryIds" : [ "CellStylePatch" ],
+      "group" : "cellStylePatchType"
     }, {
-      "entryIds" : [ "CellAlignmentInput" ],
-      "group" : "cellAlignmentInputType"
+      "entryIds" : [ "CellAlignmentPatch" ],
+      "group" : "cellAlignmentPatchType"
     }, {
-      "entryIds" : [ "CellFontInput" ],
-      "group" : "cellFontInputType"
+      "entryIds" : [ "CellFontPatch" ],
+      "group" : "cellFontPatchType"
     }, {
-      "entryIds" : [ "RichTextRunInput" ],
-      "group" : "richTextRunInputType"
+      "entryIds" : [ "RichTextRunSpec" ],
+      "group" : "richTextRunSpecType"
     }, {
       "entryIds" : [ "CellReadProjection" ],
       "group" : "cellReadProjectionType"
     }, {
-      "entryIds" : [ "CellGradientStopInput" ],
-      "group" : "cellGradientStopInputType"
+      "entryIds" : [ "CellGradientStopSpec" ],
+      "group" : "cellGradientStopSpecType"
     }, {
-      "entryIds" : [ "CellBorderInput" ],
-      "group" : "cellBorderInputType"
+      "entryIds" : [ "CellBorderPatch" ],
+      "group" : "cellBorderPatchType"
     }, {
-      "entryIds" : [ "BorderSideInput" ],
-      "group" : "borderSideInputType"
+      "entryIds" : [ "BorderSidePatch" ],
+      "group" : "borderSidePatchType"
     }, {
-      "entryIds" : [ "CellProtectionInput" ],
-      "group" : "cellProtectionInputType"
+      "entryIds" : [ "CellProtectionPatch" ],
+      "group" : "cellProtectionPatchType"
     }, {
-      "entryIds" : [ "DataValidationInput" ],
-      "group" : "dataValidationInputType"
+      "entryIds" : [ "DataValidationSpec" ],
+      "group" : "dataValidationSpecType"
     }, {
-      "entryIds" : [ "DataValidationPromptInput" ],
-      "group" : "dataValidationPromptInputType"
+      "entryIds" : [ "DataValidationPromptSpec" ],
+      "group" : "dataValidationPromptSpecType"
     }, {
-      "entryIds" : [ "DataValidationErrorAlertInput" ],
-      "group" : "dataValidationErrorAlertInputType"
+      "entryIds" : [ "DataValidationErrorAlertSpec" ],
+      "group" : "dataValidationErrorAlertSpecType"
     }, {
       "entryIds" : [ "AutofilterCustomConditionInput" ],
       "group" : "autofilterCustomConditionInputType"
     }, {
-      "entryIds" : [ "AutofilterFilterColumnInput" ],
-      "group" : "autofilterFilterColumnInputType"
+      "entryIds" : [ "AutofilterFilterColumnSpec" ],
+      "group" : "autofilterFilterColumnSpecType"
     }, {
-      "entryIds" : [ "AutofilterSortStateInput" ],
-      "group" : "autofilterSortStateInputType"
+      "entryIds" : [ "AutofilterSortStateSpec" ],
+      "group" : "autofilterSortStateSpecType"
     }, {
-      "entryIds" : [ "ConditionalFormattingDefinitionInput" ],
-      "group" : "conditionalFormattingDefinitionInputType"
+      "entryIds" : [ "ConditionalFormattingSpec" ],
+      "group" : "conditionalFormattingSpecType"
     }, {
-      "entryIds" : [ "HeaderFooterTextInput" ],
-      "group" : "headerFooterTextInputType"
+      "entryIds" : [ "HeaderFooterTextSpec" ],
+      "group" : "headerFooterTextSpecType"
     }, {
-      "entryIds" : [ "DifferentialStyleInput" ],
-      "group" : "differentialStyleInputType"
+      "entryIds" : [ "DifferentialStylePatch" ],
+      "group" : "differentialStylePatchType"
     }, {
-      "entryIds" : [ "DifferentialBorderInput" ],
-      "group" : "differentialBorderInputType"
+      "entryIds" : [ "DifferentialBorderPatch" ],
+      "group" : "differentialBorderPatchType"
     }, {
-      "entryIds" : [ "IgnoredErrorInput" ],
-      "group" : "ignoredErrorInputType"
+      "entryIds" : [ "IgnoredErrorSpec" ],
+      "group" : "ignoredErrorSpecType"
     }, {
-      "entryIds" : [ "PrintLayoutInput" ],
-      "group" : "printLayoutInputType"
+      "entryIds" : [ "PrintLayoutSpec" ],
+      "group" : "printLayoutSpecType"
     }, {
-      "entryIds" : [ "PrintMarginsInput" ],
-      "group" : "printMarginsInputType"
+      "entryIds" : [ "PrintMarginsSpec" ],
+      "group" : "printMarginsSpecType"
     }, {
-      "entryIds" : [ "PrintSetupInput" ],
-      "group" : "printSetupInputType"
+      "entryIds" : [ "PrintSetupSpec" ],
+      "group" : "printSetupSpecType"
     }, {
-      "entryIds" : [ "SheetDefaultsInput" ],
-      "group" : "sheetDefaultsInputType"
+      "entryIds" : [ "SheetDefaultsSpec" ],
+      "group" : "sheetDefaultsSpecType"
     }, {
-      "entryIds" : [ "SheetDisplayInput" ],
-      "group" : "sheetDisplayInputType"
+      "entryIds" : [ "SheetDisplaySpec" ],
+      "group" : "sheetDisplaySpecType"
     }, {
-      "entryIds" : [ "SheetOutlineSummaryInput" ],
-      "group" : "sheetOutlineSummaryInputType"
+      "entryIds" : [ "SheetOutlineSummarySpec" ],
+      "group" : "sheetOutlineSummarySpecType"
     }, {
-      "entryIds" : [ "SheetPresentationInput" ],
-      "group" : "sheetPresentationInputType"
+      "entryIds" : [ "SheetPresentationSpec" ],
+      "group" : "sheetPresentationSpecType"
     }, {
-      "entryIds" : [ "PivotTableInput" ],
-      "group" : "pivotTableInputType"
+      "entryIds" : [ "PivotTableSpec" ],
+      "group" : "pivotTableSpecType"
     }, {
       "entryIds" : [ "PivotTableAnchorInput" ],
       "group" : "pivotTableAnchorInputType"
@@ -469,14 +469,14 @@
       "entryIds" : [ "PivotTableDataFieldInput" ],
       "group" : "pivotTableDataFieldInputType"
     }, {
-      "entryIds" : [ "TableColumnInput" ],
-      "group" : "tableColumnInputType"
+      "entryIds" : [ "TableColumnSpec" ],
+      "group" : "tableColumnSpecType"
     }, {
-      "entryIds" : [ "TableInput" ],
-      "group" : "tableInputType"
+      "entryIds" : [ "TableSpec" ],
+      "group" : "tableSpecType"
     }, {
-      "entryIds" : [ "WorkbookProtectionInput" ],
-      "group" : "workbookProtectionInputType"
+      "entryIds" : [ "WorkbookProtectionSpec" ],
+      "group" : "workbookProtectionSpecType"
     }, {
       "entryIds" : [ "WorkbookProtectionReport" ],
       "group" : "workbookProtectionReportType"

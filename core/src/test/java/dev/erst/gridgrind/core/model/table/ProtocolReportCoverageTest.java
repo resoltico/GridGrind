@@ -9,7 +9,7 @@ import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
@@ -24,9 +24,9 @@ import org.junit.jupiter.api.Test;
 class ProtocolReportCoverageTest {
   @Test
   void autofilterSortConditionVariantsValidateRangesAndColors() {
-    AutofilterSortConditionInput.FontColor authoredFontColor =
-        new AutofilterSortConditionInput.FontColor(
-            new RangeRef("A1:A3"), true, ColorInput.theme(4, Double.valueOf(0.15d)));
+    AutofilterSortConditionSpec.FontColor authoredFontColor =
+        new AutofilterSortConditionSpec.FontColor(
+            new RangeRef("A1:A3"), true, ColorSpec.theme(4, Double.valueOf(0.15d)));
     AutofilterSortConditionReport.FontColor reportedFontColor =
         new AutofilterSortConditionReport.FontColor(
             new RangeLabel("A1:A3"), false, CellColorReport.rgb(new RgbHex("#AABBCC")));

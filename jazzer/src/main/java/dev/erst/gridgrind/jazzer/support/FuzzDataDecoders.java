@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.value.CellGridInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import java.util.List;
@@ -39,7 +39,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a protocol-layer cell input value. */
-  public static CellInput nextCellInput(GridGrindFuzzData data) {
+  public static CellValueSpec nextCellInput(GridGrindFuzzData data) {
     return FuzzValueDecoders.nextCellInput(data);
   }
 
@@ -54,13 +54,13 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a non-empty rectangular protocol grid. */
-  public static CellGridInput nextProtocolGrid(
+  public static CellGridSpec nextProtocolGrid(
       GridGrindFuzzData data, int rowCount, int columnCount) {
     return FuzzValueDecoders.nextProtocolGrid(data, rowCount, columnCount);
   }
 
   /** Returns a non-empty protocol row for append operations. */
-  public static CellRowInput nextProtocolRow(GridGrindFuzzData data, int columnCount) {
+  public static CellRowSpec nextProtocolRow(GridGrindFuzzData data, int columnCount) {
     return FuzzValueDecoders.nextProtocolRow(data, columnCount);
   }
 

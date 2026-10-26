@@ -3,18 +3,18 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -34,8 +34,8 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("ensure-ops"),
@@ -45,12 +45,12 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
                     new StepId("author-formula"),
                     new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Formula(TextSourceInput.inline("1+1")))),
+                        new CellValueSpec.Formula(TextSourceSpec.inline("1+1")))),
                 new MutationStep(
                     new StepId("reject-formula"),
                     new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Formula(TextSourceInput.inline("SUM("))))));
+                        new CellValueSpec.Formula(TextSourceSpec.inline("SUM("))))));
 
     WorkbookResult result =
         new DefaultGridGrindRequestExecutor()

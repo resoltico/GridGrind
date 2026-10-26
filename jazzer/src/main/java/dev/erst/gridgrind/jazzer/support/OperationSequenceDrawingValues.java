@@ -3,14 +3,14 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport.*;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.PictureInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
@@ -48,45 +48,45 @@ final class OperationSequenceDrawingValues {
     };
   }
 
-  static CommentInput nextCommentInput(GridGrindFuzzData data) {
-    return CommentInput.plain(
-        TextSourceInput.inline("Note " + nextNamedRangeName(data, true)),
+  static CommentSpec nextCommentInput(GridGrindFuzzData data) {
+    return CommentSpec.plain(
+        TextSourceSpec.inline("Note " + nextNamedRangeName(data, true)),
         "GridGrind",
         data.consumeBoolean());
   }
 
-  static PictureInput nextPictureInput(GridGrindFuzzData data) {
-    return new PictureInput(
+  static PictureSpec nextPictureInput(GridGrindFuzzData data) {
+    return new PictureSpec(
         DRAWING_PICTURE_NAME,
         nextPictureDataInput(),
         nextDrawingAnchorInput(data),
         data.consumeBoolean()
-            ? Optional.of(TextSourceInput.inline("Queue preview"))
+            ? Optional.of(TextSourceSpec.inline("Queue preview"))
             : Optional.empty());
   }
 
-  static ChartInput nextChartInput(GridGrindFuzzData data) {
+  static ChartSpec nextChartInput(GridGrindFuzzData data) {
     return OperationSequenceChartFactory.nextChartInput(data);
   }
 
-  static ShapeInput nextShapeInput(GridGrindFuzzData data) {
+  static ShapeSpec nextShapeInput(GridGrindFuzzData data) {
     if (data.consumeBoolean()) {
-      return new ShapeInput.SimpleShape(
+      return new ShapeSpec.SimpleShape(
           DRAWING_SHAPE_NAME,
           nextDrawingAnchorInput(data),
           data.consumeBoolean() ? "roundRect" : "rect",
-          data.consumeBoolean() ? Optional.of(TextSourceInput.inline("Queue")) : Optional.empty());
+          data.consumeBoolean() ? Optional.of(TextSourceSpec.inline("Queue")) : Optional.empty());
     }
-    return new ShapeInput.Connector(DRAWING_CONNECTOR_NAME, nextDrawingAnchorInput(data));
+    return new ShapeSpec.Connector(DRAWING_CONNECTOR_NAME, nextDrawingAnchorInput(data));
   }
 
-  static EmbeddedObjectInput nextEmbeddedObjectInput(GridGrindFuzzData data) {
-    return new EmbeddedObjectInput(
+  static EmbeddedObjectSpec nextEmbeddedObjectInput(GridGrindFuzzData data) {
+    return new EmbeddedObjectSpec(
         DRAWING_EMBEDDED_OBJECT_NAME,
         "Ops payload",
         "ops-payload.txt",
         "open",
-        BinarySourceInput.inlineBase64(
+        BinarySourceSpec.inlineBase64(
             Base64.getEncoder()
                 .encodeToString(
                     ("GridGrind payload " + data.consumeInt(0, 9))
@@ -95,20 +95,20 @@ final class OperationSequenceDrawingValues {
         nextDrawingAnchorInput(data));
   }
 
-  static DrawingAnchorInput.TwoCell nextDrawingAnchorInput(GridGrindFuzzData data) {
+  static DrawingAnchorSpec.TwoCell nextDrawingAnchorInput(GridGrindFuzzData data) {
     int firstColumn = data.consumeInt(0, 4);
     int firstRow = data.consumeInt(0, 8);
     int lastColumn = data.consumeInt(firstColumn + 1, firstColumn + 3);
     int lastRow = data.consumeInt(firstRow + 1, firstRow + 4);
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(firstColumn, firstRow, 0, 0),
-        new DrawingMarkerInput(lastColumn, lastRow, 0, 0),
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(firstColumn, firstRow, 0, 0),
+        new DrawingMarkerSpec(lastColumn, lastRow, 0, 0),
         nextDrawingAnchorBehavior(data));
   }
 
-  static PictureDataInput nextPictureDataInput() {
-    return new PictureDataInput(
-        ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64(PNG_PIXEL_BASE64));
+  static PictureDataSpec nextPictureDataInput() {
+    return new PictureDataSpec(
+        ExcelPictureFormat.PNG, BinarySourceSpec.inlineBase64(PNG_PIXEL_BASE64));
   }
 
   static ExcelPictureDefinition nextExcelPictureDefinition(GridGrindFuzzData data) {
@@ -149,7 +149,7 @@ final class OperationSequenceDrawingValues {
   }
 
   static ExcelDrawingAnchor.TwoCell nextExcelDrawingAnchor(GridGrindFuzzData data) {
-    DrawingAnchorInput.TwoCell anchor = nextDrawingAnchorInput(data);
+    DrawingAnchorSpec.TwoCell anchor = nextDrawingAnchorInput(data);
     return new ExcelDrawingAnchor.TwoCell(
         new ExcelDrawingMarker(
             anchor.from().columnIndex(),

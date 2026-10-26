@@ -4,14 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.metadata.WireDefault;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.core.plan.AssertionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import java.util.List;
 import java.util.Optional;
@@ -69,39 +69,39 @@ class RecordDefaultsTest {
   void journalUsesCanonicalConstructorWithMetadataDefault() {
     var mapper = GridGrindJsonMapperSupport.JSON_MAPPER;
     assertEquals(
-        new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY),
-        mapper.readValue("{}", ExecutionJournalInput.class));
-    assertEquals("{}", mapper.writeValueAsString(ExecutionJournalInput.defaults()));
+        new ExecutionJournalSpec(ExecutionJournalLevel.SUMMARY),
+        mapper.readValue("{}", ExecutionJournalSpec.class));
+    assertEquals("{}", mapper.writeValueAsString(ExecutionJournalSpec.defaults()));
     assertEquals(
-        new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-        mapper.readValue("{\"level\":\"VERBOSE\"}", ExecutionJournalInput.class));
+        new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE),
+        mapper.readValue("{\"level\":\"VERBOSE\"}", ExecutionJournalSpec.class));
   }
 
   @Test
   void nestedPolicyDefaultsPreserveExplicitOverrides() {
     var mapper = GridGrindJsonMapperSupport.JSON_MAPPER;
-    ExecutionPolicyInput defaults =
-        new ExecutionPolicyInput(
-            new ExecutionModeInput.FullXssf(),
-            new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY),
-            new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), false),
-            AssertionModeInput.FAIL_FAST);
-    assertEquals(defaults, mapper.readValue("{}", ExecutionPolicyInput.class));
+    ExecutionPolicySpec defaults =
+        new ExecutionPolicySpec(
+            new ExecutionModeSpec.FullXssf(),
+            new ExecutionJournalSpec(ExecutionJournalLevel.SUMMARY),
+            new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), false),
+            AssertionModeSpec.FAIL_FAST);
+    assertEquals(defaults, mapper.readValue("{}", ExecutionPolicySpec.class));
     assertEquals("{}", mapper.writeValueAsString(defaults));
     assertEquals(
-        new ExecutionPolicyInput(
+        new ExecutionPolicySpec(
             defaults.mode(),
-            new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
+            new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE),
             defaults.calculation(),
-            AssertionModeInput.COLLECT),
+            AssertionModeSpec.COLLECT),
         mapper.readValue(
             "{\"journal\":{\"level\":\"VERBOSE\"},\"assertionMode\":\"COLLECT\"}",
-            ExecutionPolicyInput.class));
+            ExecutionPolicySpec.class));
     assertEquals(
-        new FormulaEnvironmentInput(List.of(), FormulaMissingWorkbookPolicy.ERROR, List.of()),
-        mapper.readValue("{}", FormulaEnvironmentInput.class));
+        new FormulaEnvironmentSpec(List.of(), FormulaMissingWorkbookPolicy.ERROR, List.of()),
+        mapper.readValue("{}", FormulaEnvironmentSpec.class));
     assertThrows(
         JacksonException.class,
-        () -> mapper.readValue("{\"journal\":null}", ExecutionPolicyInput.class));
+        () -> mapper.readValue("{\"journal\":null}", ExecutionPolicySpec.class));
   }
 }

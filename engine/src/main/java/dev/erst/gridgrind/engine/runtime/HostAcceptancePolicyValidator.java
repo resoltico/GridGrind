@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
@@ -67,6 +67,6 @@ final class HostAcceptancePolicyValidator {
   }
 
   private static @Nullable String fullXssfViolation(WorkbookPlan request, String message) {
-    return request.execution().mode() instanceof ExecutionModeInput.FullXssf ? null : message;
+    return request.execution().mode() instanceof ExecutionModeSpec.FullXssf ? null : message;
   }
 }

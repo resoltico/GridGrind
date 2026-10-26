@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestWarning;
@@ -57,7 +57,7 @@ final class ExecutionWorkflowSupport {
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
-      ExecutionModeInput executionMode,
+      ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
@@ -77,7 +77,7 @@ final class ExecutionWorkflowSupport {
   WorkbookResult executeStreamingWorkflow(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
-      ExecutionModeInput executionMode,
+      ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {

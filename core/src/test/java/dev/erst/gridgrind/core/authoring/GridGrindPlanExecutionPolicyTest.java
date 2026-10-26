@@ -2,10 +2,10 @@ package dev.erst.gridgrind.core.authoring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
@@ -19,10 +19,10 @@ import org.junit.jupiter.api.Test;
 class GridGrindPlanExecutionPolicyTest {
   @Test
   void journalPreservesImportedExecutionModeAndCalculation() {
-    ExecutionModeInput mode = ExecutionModeInput.eventRead();
-    dev.erst.gridgrind.core.model.formula.CalculationPolicyInput calculation =
-        new dev.erst.gridgrind.core.model.formula.CalculationPolicyInput(
-            new dev.erst.gridgrind.core.model.formula.CalculationStrategyInput.DoNotCalculate(),
+    ExecutionModeSpec mode = ExecutionModeSpec.eventRead();
+    dev.erst.gridgrind.core.model.formula.CalculationPolicySpec calculation =
+        new dev.erst.gridgrind.core.model.formula.CalculationPolicySpec(
+            new dev.erst.gridgrind.core.model.formula.CalculationStrategySpec.DoNotCalculate(),
             true);
     WorkbookPlan canonical =
         new WorkbookPlan(
@@ -30,12 +30,12 @@ class GridGrindPlanExecutionPolicyTest {
             Optional.of(new PlanId("canonical-plan")),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionPolicyInput(
+            new ExecutionPolicySpec(
                 mode,
-                new ExecutionJournalInput(ExecutionJournalLevel.NORMAL),
+                new ExecutionJournalSpec(ExecutionJournalLevel.NORMAL),
                 calculation,
-                dev.erst.gridgrind.core.plan.AssertionModeInput.defaults()),
-            FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.AssertionModeSpec.defaults()),
+            FormulaEnvironmentSpec.empty(),
             List.of());
 
     WorkbookPlan journaled =

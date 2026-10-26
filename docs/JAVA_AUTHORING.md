@@ -42,7 +42,7 @@ plan JSON do not inherit the execution runtime. Architecture tests protect the p
 `Checks` plus the internal query-family helpers (`WorkbookQueries`, `SheetQueries`,
 `WorkbookAssetQueries`, `InspectionSurfaceQueries`, and `InspectionAnalysisQueries`) exist
 internally, but they are not part of the public authoring API. The public Java surface stays
-selector-first and hides raw request/response DTO plumbing such as `TableInput`,
+selector-first and hides raw request/response DTO plumbing such as `TableSpec`,
 `HyperlinkTarget`, and report DTOs such as `WorkbookSummary`, `SheetLayoutReport`,
 `SheetSchemaReport`, and `WorkbookFindingsReport`.
 
@@ -158,7 +158,7 @@ The compile-verified
 that cleanup explicitly.
 
 The grant must enumerate every external input, operation, target scope, and final destination used
-by the plan. Bind `STANDARD_INPUT` only when the grant includes `ReadAuthority.StandardInput`, and
+by the plan. Bind `STANDARD_INPUT` only when the grant includes `ReadAuthority.Stdin`, and
 pass a `GridGrindSecretResolver` only when granted `...Ref` values require resolution. In-process
 execution returns `WorkbookResult` only after workbook execution begins. Its `status` is
 `SUCCEEDED` or `FAILED`; both outcomes retain journal, persistence, warning, assertion,

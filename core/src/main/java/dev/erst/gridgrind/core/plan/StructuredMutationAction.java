@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.metadata.Variant;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Import one XML document into one existing workbook custom-XML mapping.",
       targetSelectors = {WorkbookSelector.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record ImportCustomXmlMapping(CustomXmlImportInput mapping) implements StructuredMutationAction {
+  record ImportCustomXmlMapping(CustomXmlImportSpec mapping) implements StructuredMutationAction {
     public ImportCustomXmlMapping {
       Objects.requireNonNull(mapping, "mapping must not be null");
     }
@@ -36,7 +36,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Create or replace one workbook-global pivot-table definition.",
       targetSelectors = {PivotTableSelector.ByNameOnSheet.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record SetPivotTable(PivotTableInput pivotTable) implements StructuredMutationAction {
+  record SetPivotTable(PivotTableSpec pivotTable) implements StructuredMutationAction {
     public SetPivotTable {
       Objects.requireNonNull(pivotTable, "pivotTable must not be null");
     }
@@ -48,7 +48,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Create or replace one data-validation rule over the requested sheet range.",
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record SetDataValidation(DataValidationInput validation) implements StructuredMutationAction {
+  record SetDataValidation(DataValidationSpec validation) implements StructuredMutationAction {
     public SetDataValidation {
       Objects.requireNonNull(validation, "validation must not be null");
     }
@@ -71,7 +71,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
           "Create or replace one logical conditional-formatting block over explicit sheet ranges.",
       targetSelectors = {RangeSelector.ByRange.class, RangeSelector.ByRanges.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record SetConditionalFormatting(ConditionalFormattingDefinitionInput conditionalFormatting)
+  record SetConditionalFormatting(ConditionalFormattingSpec conditionalFormatting)
       implements StructuredMutationAction {
     public SetConditionalFormatting {
       Objects.requireNonNull(conditionalFormatting, "conditionalFormatting must not be null");
@@ -95,7 +95,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       targetSelectors = {RangeSelector.ByRange.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetAutofilter(
-      List<AutofilterFilterColumnInput> criteria, Optional<AutofilterSortStateInput> sortState)
+      List<AutofilterFilterColumnSpec> criteria, Optional<AutofilterSortStateSpec> sortState)
       implements StructuredMutationAction {
     /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
     public SetAutofilter() {
@@ -104,15 +104,15 @@ public sealed interface StructuredMutationAction extends MutationAction {
 
     /** Creates one sheet-level autofilter with an optional explicit sort state. */
     public SetAutofilter(
-        List<AutofilterFilterColumnInput> criteria, AutofilterSortStateInput sortState) {
+        List<AutofilterFilterColumnSpec> criteria, AutofilterSortStateSpec sortState) {
       this(criteria, Optional.ofNullable(sortState));
     }
 
     public SetAutofilter {
       Objects.requireNonNull(criteria, "criteria must not be null");
       Objects.requireNonNull(sortState, "sortState must not be null");
-      List<AutofilterFilterColumnInput> copiedCriteria = new ArrayList<>(criteria.size());
-      for (AutofilterFilterColumnInput criterion : criteria) {
+      List<AutofilterFilterColumnSpec> copiedCriteria = new ArrayList<>(criteria.size());
+      for (AutofilterFilterColumnSpec criterion : criteria) {
         Objects.requireNonNull(criterion, "criteria must not contain null values");
         copiedCriteria.add(criterion);
       }
@@ -136,7 +136,7 @@ public sealed interface StructuredMutationAction extends MutationAction {
       summary = "Create or replace one workbook-global table definition.",
       targetSelectors = {TableSelector.ByNameOnSheet.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
-  record SetTable(TableInput table) implements StructuredMutationAction {
+  record SetTable(TableSpec table) implements StructuredMutationAction {
     public SetTable {
       Objects.requireNonNull(table, "table must not be null");
     }

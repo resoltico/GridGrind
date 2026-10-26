@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.plan.AssertionModeInput;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStep;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
@@ -63,7 +63,7 @@ final class ExecutionStreamingWorkflow {
   WorkbookResult execute(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
-      ExecutionModeInput executionMode,
+      ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
@@ -293,7 +293,7 @@ final class ExecutionStreamingWorkflow {
         yield java.util.Optional.empty();
       }
       case AssertionStep assertionStep -> {
-        if (workflowContext.request().assertionMode() == AssertionModeInput.FAIL_FAST) {
+        if (workflowContext.request().assertionMode() == AssertionModeSpec.FAIL_FAST) {
           workflowContext
               .planAssertions()
               .add(

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.problem;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
@@ -42,12 +42,12 @@ public final class RequestBoundFragments {
   }
 
   /** Returns the explicitly bound or omission-defaulted execution policy. */
-  public Optional<ExecutionPolicyInput> execution() {
+  public Optional<ExecutionPolicySpec> execution() {
     return root.execution();
   }
 
   /** Returns the explicitly bound or omission-defaulted formula environment. */
-  public Optional<FormulaEnvironmentInput> formulaEnvironment() {
+  public Optional<FormulaEnvironmentSpec> formulaEnvironment() {
     return root.formulaEnvironment();
   }
 

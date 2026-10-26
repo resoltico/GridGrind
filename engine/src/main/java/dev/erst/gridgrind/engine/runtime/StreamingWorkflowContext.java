@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
 record StreamingWorkflowContext(
     GridGrindProtocolVersion protocolVersion,
     WorkbookPlan request,
-    ExecutionModeInput executionMode,
+    ExecutionModeSpec executionMode,
     List<RequestWarning> warnings,
     ExecutionJournalRecorder journal,
     WorkbookLocation workbookLocation,
@@ -30,7 +30,7 @@ record StreamingWorkflowContext(
   static StreamingWorkflowContext create(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
-      ExecutionModeInput executionMode,
+      ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {

@@ -4,17 +4,17 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.mutate;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.mutations;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.request;
 
-import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -22,7 +22,7 @@ import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -35,16 +35,16 @@ import java.util.List;
 /** Shared helpers for source-backed plan resolver coverage slices. */
 class SourceBackedPlanResolverTestSupport {
 
-  final DrawingAnchorInput.TwoCell twoCellAnchor() {
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(0, 0, 0, 0),
-        new DrawingMarkerInput(2, 3, 0, 0),
+  final DrawingAnchorSpec.TwoCell twoCellAnchor() {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(0, 0, 0, 0),
+        new DrawingMarkerSpec(2, 3, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  final PrintLayoutInput printLayoutWithHeader(HeaderFooterTextInput header) {
-    PrintLayoutInput defaults = PrintLayoutInput.defaults();
-    return new PrintLayoutInput(
+  final PrintLayoutSpec printLayoutWithHeader(HeaderFooterTextSpec header) {
+    PrintLayoutSpec defaults = PrintLayoutSpec.defaults();
+    return new PrintLayoutSpec(
         defaults.printArea(),
         defaults.orientation(),
         defaults.scaling(),
@@ -55,9 +55,9 @@ class SourceBackedPlanResolverTestSupport {
         defaults.setup());
   }
 
-  final PrintLayoutInput printLayoutWithFooter(HeaderFooterTextInput footer) {
-    PrintLayoutInput defaults = PrintLayoutInput.defaults();
-    return new PrintLayoutInput(
+  final PrintLayoutSpec printLayoutWithFooter(HeaderFooterTextSpec footer) {
+    PrintLayoutSpec defaults = PrintLayoutSpec.defaults();
+    return new PrintLayoutSpec(
         defaults.printArea(),
         defaults.orientation(),
         defaults.scaling(),
@@ -68,10 +68,10 @@ class SourceBackedPlanResolverTestSupport {
         defaults.setup());
   }
 
-  final PrintLayoutInput printLayoutWithHeaderAndFooter(
-      HeaderFooterTextInput header, HeaderFooterTextInput footer) {
-    PrintLayoutInput defaults = PrintLayoutInput.defaults();
-    return new PrintLayoutInput(
+  final PrintLayoutSpec printLayoutWithHeaderAndFooter(
+      HeaderFooterTextSpec header, HeaderFooterTextSpec footer) {
+    PrintLayoutSpec defaults = PrintLayoutSpec.defaults();
+    return new PrintLayoutSpec(
         defaults.printArea(),
         defaults.orientation(),
         defaults.scaling(),
@@ -106,38 +106,38 @@ class SourceBackedPlanResolverTestSupport {
     return SourceBackedPlanResolver.requiresStandardInput(plan);
   }
 
-  final PictureDataInput inlinePictureData() {
-    return new PictureDataInput(
+  final PictureDataSpec inlinePictureData() {
+    return new PictureDataSpec(
         ExcelPictureFormat.PNG,
-        new BinarySourceInput.InlineBase64(
+        new BinarySourceSpec.InlineBase64(
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"));
   }
 
-  final ChartSeriesInput chartSeries() {
-    return new ChartSeriesInput(
-        new ChartTitleInput.None(),
-        new ChartDataSourceInput.Reference("Budget!$A$2:$A$3"),
-        new ChartDataSourceInput.Reference("Budget!$B$2:$B$3"),
+  final ChartSeriesSpec chartSeries() {
+    return new ChartSeriesSpec(
+        new ChartTitleSpec.None(),
+        new ChartDataSourceSpec.Reference("Budget!$A$2:$A$3"),
+        new ChartDataSourceSpec.Reference("Budget!$B$2:$B$3"),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.empty());
   }
 
-  final ChartInput chartInput(
+  final ChartSpec chartInput(
       String name,
-      DrawingAnchorInput.TwoCell anchor,
-      ChartTitleInput title,
-      ChartLegendInput legend,
+      DrawingAnchorSpec.TwoCell anchor,
+      ChartTitleSpec title,
+      ChartLegendSpec legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       Boolean plotOnlyVisibleCells,
-      ChartPlotInput plot) {
-    return new ChartInput(
+      ChartPlotSpec plot) {
+    return new ChartSpec(
         name,
         anchor,
-        title == null ? new ChartTitleInput.None() : title,
+        title == null ? new ChartTitleSpec.None() : title,
         legend == null
-            ? new ChartLegendInput.Visible(
+            ? new ChartLegendSpec.Visible(
                 dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition.RIGHT)
             : legend,
         displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs,

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -14,28 +14,28 @@ final class SemanticSelectorKeyMatchSupport {
   private SemanticSelectorKeyMatchSupport() {}
 
   static boolean matchesKeyCell(
-      ExcelCellSnapshot snapshot, CellInput expectedValue, boolean date1904) {
+      ExcelCellSnapshot snapshot, CellValueSpec expectedValue, boolean date1904) {
     dev.erst.gridgrind.core.model.value.CellReport report =
         InspectionResultCellReportSupport.toCellReport(snapshot, KEY_MATCH_PROJECTION, date1904);
     return switch (expectedValue) {
-      case CellInput.Blank _ ->
+      case CellValueSpec.Blank _ ->
           report instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport;
-      case CellInput.Text text ->
+      case CellValueSpec.Text text ->
           report instanceof dev.erst.gridgrind.core.model.value.CellReport.TextReport textReport
               && textReport
                   .textValue()
                   .orElseThrow()
                   .equals(inlineText(text.source(), "table row key TEXT"));
-      case CellInput.NumberValue numberValue ->
+      case CellValueSpec.NumberValue numberValue ->
           report instanceof dev.erst.gridgrind.core.model.value.CellReport.NumberReport numberReport
               && Double.compare(numberReport.numberValue().orElseThrow(), numberValue.number())
                   == 0;
-      case CellInput.BooleanValue booleanValue ->
+      case CellValueSpec.BooleanValue booleanValue ->
           report
                   instanceof
                   dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanReport
               && booleanReport.booleanValue().orElseThrow().equals(booleanValue.bool());
-      case CellInput.Formula formula ->
+      case CellValueSpec.Formula formula ->
           report
                   instanceof
                   dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaReport
@@ -48,8 +48,8 @@ final class SemanticSelectorKeyMatchSupport {
   }
 
   private static String inlineText(
-      dev.erst.gridgrind.core.source.TextSourceInput source, String context) {
-    if (source instanceof dev.erst.gridgrind.core.source.TextSourceInput.Inline inline) {
+      dev.erst.gridgrind.core.source.TextSourceSpec source, String context) {
+    if (source instanceof dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline) {
       return inline.text();
     }
     throw new IllegalStateException(context + " must be resolved to INLINE text before execution");

@@ -37,7 +37,7 @@ final class CliGrantFixtureSupport {
     Path grantPath = Files.createTempFile("gridgrind-cli-grant-", ".json");
     CliExecutionGrantDocument document =
         new CliExecutionGrantDocument(
-            List.of(new CliExecutionGrantDocument.ReadableResource.StandardInput()),
+            List.of(new CliExecutionGrantDocument.ReadableResource.Stdin()),
             operationIds,
             new CliGrantTargetAuthority.WorkbookWide(),
             new CliGrantPublicationAuthority.None(),

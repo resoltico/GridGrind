@@ -2,7 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.core.metadata.Union;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
@@ -103,11 +103,11 @@ public sealed interface MutationAction
       MutationActionNumericValidation.requireZoomPercent(zoomPercent);
     }
 
-    static List<List<CellInput>> copyRows(List<List<CellInput>> rows) {
+    static List<List<CellValueSpec>> copyRows(List<List<CellValueSpec>> rows) {
       return MutationActionCollectionValidation.copyRows(rows);
     }
 
-    static List<List<CellInput>> freezeRows(List<List<CellInput>> rows) {
+    static List<List<CellValueSpec>> freezeRows(List<List<CellValueSpec>> rows) {
       return MutationActionCollectionValidation.freezeRows(rows);
     }
 
@@ -119,7 +119,7 @@ public sealed interface MutationAction
       MutationActionCollectionValidation.requireDistinct(values, fieldName);
     }
 
-    static void requireRectangularRows(List<List<CellInput>> rows) {
+    static void requireRectangularRows(List<List<CellValueSpec>> rows) {
       MutationActionCollectionValidation.requireRectangularRows(rows);
     }
   }

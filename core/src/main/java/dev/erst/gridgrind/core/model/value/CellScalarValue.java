@@ -31,7 +31,7 @@ public sealed interface CellScalarValue
       summary = "Require the effective cell value to be one exact finite number.")
   record NumberValue(double number) implements CellScalarValue {
     public NumberValue {
-      CellInput.Validation.requireFinite(number, "number");
+      CellValueSpec.Validation.requireFinite(number, "number");
     }
   }
 
@@ -46,7 +46,7 @@ public sealed interface CellScalarValue
           "Require the effective cell value to be one exact GridGrind-owned error literal, including canonical Excel tokens and evaluation-only states such as #CIRCULAR_REF!.")
   record ErrorValue(String error) implements CellScalarValue {
     public ErrorValue {
-      error = CellInput.Validation.requireNonBlank(error, "error");
+      error = CellValueSpec.Validation.requireNonBlank(error, "error");
       error = CellErrorLiteralValidation.requireReportedErrorLiteral(error, "error");
     }
   }

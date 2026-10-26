@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
@@ -32,24 +32,25 @@ class MutationActionTest {
 
   @Test
   void copiesRectangularRowsAndValidatesAppendRows() {
-    List<List<CellInput>> rows = new ArrayList<>();
-    rows.add(new ArrayList<>(List.of(textCell("A"), new CellInput.NumberValue(1.0d))));
+    List<List<CellValueSpec>> rows = new ArrayList<>();
+    rows.add(new ArrayList<>(List.of(textCell("A"), new CellValueSpec.NumberValue(1.0d))));
     CellMutationAction.SetRange setRange =
         new CellMutationAction.SetRange(
-            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(rows));
+            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(rows));
 
     rows.clear();
 
     assertEquals(1, setRange.rows().toCellInputRows().size());
     assertEquals(
         "A",
-        ((TextSourceInput.Inline)
-                ((CellInput.Text) setRange.rows().toCellInputRows().getFirst().getFirst()).source())
+        ((TextSourceSpec.Inline)
+                ((CellValueSpec.Text) setRange.rows().toCellInputRows().getFirst().getFirst())
+                    .source())
             .text());
     assertEquals(
         2,
         new CellMutationAction.AppendRow(
-                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                     List.of(textCell("A"), textCell("B"))))
             .values()
             .toCellInputs()
@@ -58,7 +59,7 @@ class MutationActionTest {
         IllegalArgumentException.class,
         () ->
             new CellMutationAction.AppendRow(
-                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(List.of())));
+                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(List.of())));
   }
 
   @Test
@@ -212,7 +213,7 @@ class MutationActionTest {
                 NullPointerException.class,
                 () ->
                     MutationAction.Validation.copyRows(
-                        java.util.Arrays.asList((List<CellInput>) null)))
+                        java.util.Arrays.asList((List<CellValueSpec>) null)))
             .getMessage());
     MutationAction.Validation.requireDistinct(List.of("a", "b"), "sheetNames");
     assertEquals(
@@ -241,7 +242,7 @@ class MutationActionTest {
                 NullPointerException.class,
                 () ->
                     MutationAction.Validation.requireRectangularRows(
-                        java.util.Arrays.asList((List<CellInput>) null)))
+                        java.util.Arrays.asList((List<CellValueSpec>) null)))
             .getMessage());
     assertEquals(
         "rows must not contain empty rows",
@@ -292,7 +293,7 @@ class MutationActionTest {
                 () ->
                     new StructuredMutationAction.SetAutofilter(
                         java.util.Arrays.asList(
-                            (dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput) null),
+                            (dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec) null),
                         Optional.empty()))
             .getMessage());
     assertEquals(
@@ -301,11 +302,11 @@ class MutationActionTest {
                 NullPointerException.class,
                 () ->
                     new CellMutationAction.AppendRow(
-                        new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(null)))
+                        new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(null)))
             .getMessage());
   }
 
-  private static CellInput.Text textCell(String value) {
-    return new CellInput.Text(TextSourceInput.inline(value));
+  private static CellValueSpec.Text textCell(String value) {
+    return new CellValueSpec.Text(TextSourceSpec.inline(value));
   }
 }

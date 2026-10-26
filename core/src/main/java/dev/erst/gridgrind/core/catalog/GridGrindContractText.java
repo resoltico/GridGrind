@@ -46,7 +46,7 @@ public final class GridGrindContractText {
     return GridGrindExecutionModeMetadata.eventRead().allowedQueryPhrase();
   }
 
-  /** One stable catalog summary for `ExecutionModeInput`. */
+  /** One stable catalog summary for `ExecutionModeSpec`. */
   public static String executionModeInputSummary() {
     GridGrindExecutionModeMetadata.FullXssfMode fullXssf =
         GridGrindExecutionModeMetadata.fullXssf();
@@ -81,7 +81,7 @@ public final class GridGrindContractText {
         + " (LIM-020).";
   }
 
-  /** One stable catalog summary for `ExecutionPolicyInput`. */
+  /** One stable catalog summary for `ExecutionPolicySpec`. */
   public static String executionPolicyInputSummary() {
     return "Optional request execution policy covering execution.mode, execution.journal,"
         + " execution.calculation, and execution.assertionMode."
@@ -89,26 +89,26 @@ public final class GridGrindContractText {
         + " is intended, and omit any nested execution field that should keep its own default.";
   }
 
-  /** One stable catalog summary for `FormulaEnvironmentInput`. */
+  /** One stable catalog summary for `FormulaEnvironmentSpec`. */
   public static String formulaEnvironmentInputSummary() {
     return "Optional request-scoped formula-evaluation environment covering external workbook"
         + " bindings, missing-workbook policy, and template-backed UDF toolpacks."
         + " Omit formulaEnvironment when the default evaluator is intended.";
   }
 
-  /** One stable catalog summary for `ExecutionJournalInput`. */
+  /** One stable catalog summary for `ExecutionJournalSpec`. */
   public static String executionJournalInputSummary() {
     return "Explicit execution-journal settings."
-        + " Use ExecutionJournalInput.defaults() for SUMMARY detail."
+        + " Use ExecutionJournalSpec.defaults() for SUMMARY detail."
         + " SUMMARY returns compact, stable target summaries without timing telemetry,"
         + " NORMAL returns expanded target summaries with timing telemetry,"
         + " and VERBOSE also enables fine-grained event emission for CLI stderr rendering.";
   }
 
-  /** One stable catalog summary for `CalculationPolicyInput`. */
+  /** One stable catalog summary for `CalculationPolicySpec`. */
   public static String calculationPolicyInputSummary() {
     return "Explicit formula-calculation policy."
-        + " Use CalculationPolicyInput.defaults() for DO_NOT_CALCULATE with"
+        + " Use CalculationPolicySpec.defaults() for DO_NOT_CALCULATE with"
         + " markRecalculateOnOpen=false."
         + " Use DEFERRED_CALCULATION to inspect capabilities without immediate evaluation,"
         + " Use EVALUATE_ALL or EVALUATE_TARGETS for immediate server-side evaluation,"
@@ -116,7 +116,7 @@ public final class GridGrindContractText {
         + " or markRecalculateOnOpen=true when Excel-compatible clients should recalculate later.";
   }
 
-  /** One stable catalog summary for `CalculationStrategyInput`. */
+  /** One stable catalog summary for `CalculationStrategySpec`. */
   public static String calculationStrategyInputSummary() {
     return "One explicit formula-calculation strategy."
         + " DO_NOT_CALCULATE leaves formulas untouched,"

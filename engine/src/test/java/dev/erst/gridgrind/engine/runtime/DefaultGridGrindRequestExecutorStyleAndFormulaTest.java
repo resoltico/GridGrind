@@ -5,22 +5,22 @@ import static dev.erst.gridgrind.engine.runtime.ProtocolStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.layout.WindowReport;
-import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
-import dev.erst.gridgrind.core.model.style.CellBorderInput;
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
-import dev.erst.gridgrind.core.model.style.CellGradientFillInput;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
-import dev.erst.gridgrind.core.model.style.CellGradientStopInput;
+import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
+import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.FontHeightInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -76,19 +76,19 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new RangeSelector.ByRange(
                                 new SheetName("Budget"), new RangeRef("A1:B2")),
                             new CellMutationAction.SetRange(
-                                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                     List.of(
                                         List.of(textCell("Item"), textCell("Amount")),
                                         List.of(
                                             textCell("Hosting"),
-                                            new CellInput.NumberValue(49.0)))))),
+                                            new CellValueSpec.NumberValue(49.0)))))),
                         mutate(
                             new RangeSelector.ByRange(
                                 new SheetName("Budget"), new RangeRef("A1:B1")),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     "#,##0.00",
-                                    new CellAlignmentInput(
+                                    new CellAlignmentPatch(
                                         Optional.of(true),
                                         Optional.of(ExcelHorizontalAlignment.CENTER),
                                         Optional.of(ExcelVerticalAlignment.CENTER),
@@ -103,7 +103,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
-                                    new CellAlignmentInput(
+                                    new CellAlignmentPatch(
                                         Optional.empty(),
                                         Optional.of(ExcelHorizontalAlignment.RIGHT),
                                         Optional.of(ExcelVerticalAlignment.BOTTOM),
@@ -179,7 +179,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
-                                    new CellAlignmentInput(
+                                    new CellAlignmentPatch(
                                         Optional.of(true),
                                         Optional.of(ExcelHorizontalAlignment.CENTER),
                                         Optional.of(ExcelVerticalAlignment.TOP),
@@ -189,28 +189,28 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         true,
                                         false,
                                         "Aptos",
-                                        new FontHeightInput.Points(new BigDecimal("11.5")),
-                                        ColorInput.rgb(new RgbHex("#1F4E78")),
+                                        new FontHeightSpec.Points(new BigDecimal("11.5")),
+                                        ColorSpec.rgb(new RgbHex("#1F4E78")),
                                         true,
                                         true),
-                                    CellFillInput.patternColors(
+                                    CellFillSpec.patternColors(
                                         dev.erst.gridgrind.core.vocabulary.ExcelFillPattern
                                             .THIN_HORIZONTAL_BANDS,
-                                        ColorInput.rgb(new RgbHex("#FFF2CC")),
-                                        ColorInput.rgb(new RgbHex("#DDEBF7"))),
-                                    new CellBorderInput(
+                                        ColorSpec.rgb(new RgbHex("#FFF2CC")),
+                                        ColorSpec.rgb(new RgbHex("#DDEBF7"))),
+                                    new CellBorderPatch(
                                         Optional.ofNullable(
-                                            new BorderSideInput(
+                                            new BorderSidePatch(
                                                 ExcelBorderStyle.THIN,
-                                                ColorInput.rgb(new RgbHex("#102030")))),
+                                                ColorSpec.rgb(new RgbHex("#102030")))),
                                         Optional.empty(),
                                         Optional.ofNullable(
-                                            new BorderSideInput(
+                                            new BorderSidePatch(
                                                 ExcelBorderStyle.DOUBLE,
-                                                ColorInput.rgb(new RgbHex("#203040")))),
+                                                ColorSpec.rgb(new RgbHex("#203040")))),
                                         Optional.empty(),
                                         Optional.empty()),
-                                    new CellProtectionInput(
+                                    new CellProtectionPatch(
                                         Optional.of(false), Optional.of(true)))))),
                     inspect(
                         "cells",
@@ -281,7 +281,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new RangeSelector.ByRange(
                                 new SheetName("Budget"), new RangeRef("A1:A2")),
                             new CellMutationAction.SetRange(
-                                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                     List.of(
                                         List.of(textCell("ThemeTintStyle")),
                                         List.of(textCell("GradientFillStyle")))))),
@@ -296,20 +296,20 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         true,
                                         null,
                                         null,
-                                        ColorInput.theme(6, -0.35d),
+                                        ColorSpec.theme(6, -0.35d),
                                         null,
                                         null),
-                                    CellFillInput.patternForeground(
+                                    CellFillSpec.patternForeground(
                                         dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.SOLID,
-                                        ColorInput.theme(3, 0.30d)),
-                                    new CellBorderInput(
+                                        ColorSpec.theme(3, 0.30d)),
+                                    new CellBorderPatch(
                                         Optional.empty(),
                                         Optional.empty(),
                                         Optional.empty(),
                                         Optional.ofNullable(
-                                            new BorderSideInput(
+                                            new BorderSidePatch(
                                                 ExcelBorderStyle.THIN,
-                                                ColorInput.indexed(
+                                                ColorSpec.indexed(
                                                     Short.toUnsignedInt(
                                                         IndexedColors.DARK_RED.getIndex())))),
                                         Optional.empty()),
@@ -321,16 +321,16 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                     null,
                                     null,
                                     null,
-                                    CellFillInput.gradient(
-                                        CellGradientFillInput.linear(
+                                    CellFillSpec.gradient(
+                                        CellGradientFillSpec.linear(
                                             Optional.of(45.0d),
                                             List.of(
-                                                new CellGradientStopInput(
-                                                    0.0d, ColorInput.rgb(new RgbHex("#1F497D"))),
-                                                new CellGradientStopInput(
-                                                    1.0d, ColorInput.theme(4, 0.45d))))),
+                                                new CellGradientStopSpec(
+                                                    0.0d, ColorSpec.rgb(new RgbHex("#1F497D"))),
+                                                new CellGradientStopSpec(
+                                                    1.0d, ColorSpec.theme(4, 0.45d))))),
                                     null,
-                                    new CellProtectionInput(
+                                    new CellProtectionPatch(
                                         Optional.of(true), Optional.of(true)))))),
                     inspect(
                         "cells",
@@ -387,16 +387,16 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                     null,
                                     null,
                                     null,
-                                    CellFillInput.gradient(
-                                        CellGradientFillInput.linear(
+                                    CellFillSpec.gradient(
+                                        CellGradientFillSpec.linear(
                                             Optional.of(45.0d),
                                             List.of(
-                                                new CellGradientStopInput(
-                                                    0.0d, ColorInput.rgb(new RgbHex("#1F497D"))),
-                                                new CellGradientStopInput(
-                                                    1.0d, ColorInput.theme(4, 0.45d))))),
+                                                new CellGradientStopSpec(
+                                                    0.0d, ColorSpec.rgb(new RgbHex("#1F497D"))),
+                                                new CellGradientStopSpec(
+                                                    1.0d, ColorSpec.theme(4, 0.45d))))),
                                     null,
-                                    new CellProtectionInput(
+                                    new CellProtectionPatch(
                                         Optional.of(true), Optional.of(true))))),
                         mutate(
                             new CellSelector.ByAddress(
@@ -409,22 +409,22 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                     null,
                                     null,
                                     null,
-                                    CellFillInput.gradient(
-                                        CellGradientFillInput.path(
+                                    CellFillSpec.gradient(
+                                        CellGradientFillSpec.path(
                                             Optional.of(0.1d),
                                             Optional.of(0.2d),
                                             Optional.of(0.3d),
                                             Optional.of(0.4d),
                                             List.of(
-                                                new CellGradientStopInput(
-                                                    0.0d, ColorInput.rgb(new RgbHex("#112233"))),
-                                                new CellGradientStopInput(
+                                                new CellGradientStopSpec(
+                                                    0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
+                                                new CellGradientStopSpec(
                                                     1.0d,
-                                                    ColorInput.indexed(
+                                                    ColorSpec.indexed(
                                                         Short.toUnsignedInt(
                                                             IndexedColors.DARK_RED.getIndex())))))),
                                     null,
-                                    new CellProtectionInput(
+                                    new CellProtectionPatch(
                                         Optional.of(false), Optional.of(true)))))),
                     inspect(
                         "cells",
@@ -512,7 +512,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookPlan.WorkbookPersistence none = new WorkbookPlan.WorkbookPersistence.None();
     WorkbookPlan.WorkbookPersistence overwrite =
         new WorkbookPlan.WorkbookPersistence.Overwrite(
-            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none());
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none());
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             "out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
@@ -542,7 +542,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                       workbook,
                       new WorkbookPlan.WorkbookSource.New(),
                       new WorkbookPlan.WorkbookPersistence.Overwrite(
-                          dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
+                          dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec
                               .none()),
                       new ExecutionInputBindings(
                           workingDirectory,
@@ -660,7 +660,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:")),
                     new CellMutationAction.SetRange(
-                        new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                        new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                             List.of(List.of(textCell("x")))))));
 
     assertEquals("range must not be blank", failure.getMessage());
@@ -702,7 +702,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         mutate(
                             new SheetSelector.ByName(new SheetName("Budget")),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                     List.of(formulaCell("SUM(")))))))));
 
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -729,8 +729,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
         mutate(
             new SheetSelector.ByName(new SheetName("Budget")),
             new CellMutationAction.AppendRow(
-                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
-                    List.of(textCell("x")))));
+                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(List.of(textCell("x")))));
     ExecutorTestPlanSupport.PendingMutation ensureSheet =
         mutate(
             new SheetSelector.ByName(new SheetName("Budget")),
@@ -770,7 +769,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
         formulaFor(
             mutate(
                 new CellSelector.ByAddress(new SheetName("S"), new CellAddress("A1")),
-                new CellMutationAction.SetCell(new CellInput.Blank())),
+                new CellMutationAction.SetCell(new CellValueSpec.Blank())),
             exception));
     assertNull(
         formulaFor(
@@ -783,10 +782,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             mutate(
                 new CellSelector.ByAddress(new SheetName("S"), new CellAddress("A1")),
                 new CellMutationAction.SetCell(
-                    new CellInput.RichText(
+                    new CellValueSpec.RichText(
                         List.of(
                             richTextRun("Budget"),
-                            new RichTextRunInput(
+                            new RichTextRunSpec(
                                 text(" FY26"),
                                 maybe(
                                     fontInput(
@@ -794,7 +793,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         false,
                                         null,
                                         null,
-                                        ColorInput.rgb(new RgbHex("#AABBCC")),
+                                        ColorSpec.rgb(new RgbHex("#AABBCC")),
                                         false,
                                         false))))))),
             exception));
@@ -802,26 +801,26 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
         formulaFor(
             mutate(
                 new CellSelector.ByAddress(new SheetName("S"), new CellAddress("A1")),
-                new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0))),
             exception));
     assertNull(
         formulaFor(
             mutate(
                 new CellSelector.ByAddress(new SheetName("S"), new CellAddress("A1")),
-                new CellMutationAction.SetCell(new CellInput.BooleanValue(true))),
+                new CellMutationAction.SetCell(new CellValueSpec.BooleanValue(true))),
             exception));
     assertNull(
         formulaFor(
             mutate(
                 new CellSelector.ByAddress(new SheetName("S"), new CellAddress("A1")),
-                new CellMutationAction.SetCell(new CellInput.Date(LocalDate.of(2024, 1, 1)))),
+                new CellMutationAction.SetCell(new CellValueSpec.Date(LocalDate.of(2024, 1, 1)))),
             exception));
     assertNull(
         formulaFor(
             mutate(
                 new CellSelector.ByAddress(new SheetName("S"), new CellAddress("A1")),
                 new CellMutationAction.SetCell(
-                    new CellInput.DateTime(LocalDateTime.of(2024, 1, 1, 0, 0)))),
+                    new CellValueSpec.DateTime(LocalDateTime.of(2024, 1, 1, 0, 0)))),
             exception));
   }
 }

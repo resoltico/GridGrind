@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
-import dev.erst.gridgrind.core.model.style.CellBorderInput;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
-import dev.erst.gridgrind.core.model.style.CellFontInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -24,12 +24,12 @@ public final class WorkbookStyleInputs {
   private WorkbookStyleInputs() {}
 
   /** Returns a bounded protocol style patch. */
-  public static CellStylePatchInput nextStyleInput(GridGrindFuzzData data) {
+  public static CellStylePatch nextStyleInput(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     return switch (data.consumeInt(0, 7)) {
       case 0 ->
-          new CellStylePatchInput(
+          new CellStylePatch(
               Optional.of(data.consumeBoolean() ? "0.00" : "yyyy-mm-dd"),
               Optional.empty(),
               Optional.empty(),
@@ -37,7 +37,7 @@ public final class WorkbookStyleInputs {
               Optional.empty(),
               Optional.empty());
       case 1 ->
-          new CellStylePatchInput(
+          new CellStylePatch(
               Optional.empty(),
               Optional.of(nextAlignmentInput(data, true)),
               Optional.empty(),
@@ -45,7 +45,7 @@ public final class WorkbookStyleInputs {
               Optional.empty(),
               Optional.empty());
       case 2 ->
-          new CellStylePatchInput(
+          new CellStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFontInput(data, true)),
@@ -53,7 +53,7 @@ public final class WorkbookStyleInputs {
               Optional.empty(),
               Optional.empty());
       case 3 ->
-          new CellStylePatchInput(
+          new CellStylePatch(
               Optional.empty(),
               Optional.of(nextAlignmentInput(data, true)),
               Optional.of(nextFontInput(data, true)),
@@ -61,7 +61,7 @@ public final class WorkbookStyleInputs {
               Optional.of(nextProtocolBorder(data)),
               Optional.ofNullable(nextProtectionInput(data)));
       case 4 ->
-          new CellStylePatchInput(
+          new CellStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFontInput(data, false)),
@@ -69,7 +69,7 @@ public final class WorkbookStyleInputs {
               Optional.of(nextProtocolBorder(data)),
               Optional.empty());
       case 5 ->
-          new CellStylePatchInput(
+          new CellStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
@@ -77,7 +77,7 @@ public final class WorkbookStyleInputs {
               Optional.empty(),
               Optional.ofNullable(nextProtectionInput(data)));
       case 6 ->
-          new CellStylePatchInput(
+          new CellStylePatch(
               Optional.empty(),
               Optional.of(nextAlignmentInput(data, true)),
               Optional.empty(),
@@ -85,7 +85,7 @@ public final class WorkbookStyleInputs {
               Optional.of(nextProtocolBorder(data)),
               Optional.empty());
       default ->
-          new CellStylePatchInput(
+          new CellStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFontInput(data, false)),
@@ -95,9 +95,9 @@ public final class WorkbookStyleInputs {
     };
   }
 
-  private static CellAlignmentInput nextAlignmentInput(
+  private static CellAlignmentPatch nextAlignmentInput(
       GridGrindFuzzData data, boolean includeDepth) {
-    return new CellAlignmentInput(
+    return new CellAlignmentPatch(
         data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
         Optional.ofNullable(nextHorizontalAlignment(data)),
         Optional.ofNullable(nextVerticalAlignment(data)),
@@ -109,8 +109,8 @@ public final class WorkbookStyleInputs {
             : Optional.empty());
   }
 
-  private static CellFontInput nextFontInput(GridGrindFuzzData data, boolean includeName) {
-    return new CellFontInput(
+  private static CellFontPatch nextFontInput(GridGrindFuzzData data, boolean includeName) {
+    return new CellFontPatch(
         data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty(),
         includeName
@@ -122,17 +122,17 @@ public final class WorkbookStyleInputs {
         data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty());
   }
 
-  private static CellFillInput nextFillInput(GridGrindFuzzData data) {
+  private static CellFillSpec nextFillInput(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 3)) {
-      case 0 -> CellFillInput.patternForeground(ExcelFillPattern.SOLID, nextColorInput(data));
+      case 0 -> CellFillSpec.patternForeground(ExcelFillPattern.SOLID, nextColorInput(data));
       case 1 ->
           data.consumeBoolean()
-              ? CellFillInput.patternColors(
+              ? CellFillSpec.patternColors(
                   nextPatternFill(data), nextColorInput(data), nextColorInput(data))
-              : CellFillInput.patternForeground(nextPatternFill(data), nextColorInput(data));
-      case 2 -> CellFillInput.patternBackground(nextPatternFill(data), nextColorInput(data));
+              : CellFillSpec.patternForeground(nextPatternFill(data), nextColorInput(data));
+      case 2 -> CellFillSpec.patternBackground(nextPatternFill(data), nextColorInput(data));
       default ->
-          CellFillInput.pattern(
+          CellFillSpec.pattern(
               data.consumeBoolean() ? ExcelFillPattern.NONE : nextPatternFill(data));
     };
   }
@@ -149,11 +149,11 @@ public final class WorkbookStyleInputs {
     return patterns[data.consumeInt(0, patterns.length - 1)];
   }
 
-  private static FontHeightInput nextFontHeightInput(GridGrindFuzzData data) {
+  private static FontHeightSpec nextFontHeightInput(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
-      case 0 -> new FontHeightInput.Twips(data.consumeInt(20, 640));
-      case 1 -> new FontHeightInput.Points(nextPointHeight(data));
-      default -> new FontHeightInput.Twips(220);
+      case 0 -> new FontHeightSpec.Twips(data.consumeInt(20, 640));
+      case 1 -> new FontHeightSpec.Points(nextPointHeight(data));
+      default -> new FontHeightSpec.Twips(220);
     };
   }
 
@@ -166,55 +166,55 @@ public final class WorkbookStyleInputs {
         .formatted(data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
   }
 
-  private static ColorInput nextColorInput(GridGrindFuzzData data) {
+  private static ColorSpec nextColorInput(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
       case 0 ->
           data.consumeBoolean()
-              ? ColorInput.rgb(new RgbHex(nextRgbHex(data)), nextTint(data))
-              : ColorInput.rgb(new RgbHex(nextRgbHex(data)));
+              ? ColorSpec.rgb(new RgbHex(nextRgbHex(data)), nextTint(data))
+              : ColorSpec.rgb(new RgbHex(nextRgbHex(data)));
       case 1 ->
           data.consumeBoolean()
-              ? ColorInput.theme(data.consumeInt(0, 9), nextTint(data))
-              : ColorInput.theme(data.consumeInt(0, 9));
+              ? ColorSpec.theme(data.consumeInt(0, 9), nextTint(data))
+              : ColorSpec.theme(data.consumeInt(0, 9));
       default ->
           data.consumeBoolean()
-              ? ColorInput.indexed(data.consumeInt(0, 64), nextTint(data))
-              : ColorInput.indexed(data.consumeInt(0, 64));
+              ? ColorSpec.indexed(data.consumeInt(0, 64), nextTint(data))
+              : ColorSpec.indexed(data.consumeInt(0, 64));
     };
   }
 
-  private static CellBorderInput nextProtocolBorder(GridGrindFuzzData data) {
+  private static CellBorderPatch nextProtocolBorder(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 4)) {
       case 0 ->
-          new CellBorderInput(
+          new CellBorderPatch(
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               Optional.empty());
       case 1 ->
-          new CellBorderInput(
+          new CellBorderPatch(
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
               Optional.empty());
       case 2 ->
-          new CellBorderInput(
+          new CellBorderPatch(
               Optional.empty(),
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextBorderSide(data)));
       case 3 ->
-          new CellBorderInput(
+          new CellBorderPatch(
               Optional.of(nextBorderSide(data)),
               Optional.of(nextBorderSide(data)),
               Optional.of(nextBorderSide(data)),
               Optional.of(nextBorderSide(data)),
               Optional.of(nextBorderSide(data)));
       default ->
-          new CellBorderInput(
+          new CellBorderPatch(
               Optional.empty(),
               Optional.of(nextBorderSide(data)),
               Optional.empty(),
@@ -223,18 +223,18 @@ public final class WorkbookStyleInputs {
     };
   }
 
-  private static BorderSideInput nextBorderSide(GridGrindFuzzData data) {
+  private static BorderSidePatch nextBorderSide(GridGrindFuzzData data) {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     ExcelBorderStyle style = values[data.consumeInt(0, values.length - 1)];
-    return new BorderSideInput(
+    return new BorderSidePatch(
         Optional.of(style),
         style == ExcelBorderStyle.NONE || !data.consumeBoolean()
             ? Optional.empty()
             : Optional.of(nextColorInput(data)));
   }
 
-  private static CellProtectionInput nextProtectionInput(GridGrindFuzzData data) {
-    return new CellProtectionInput(
+  private static CellProtectionPatch nextProtectionInput(GridGrindFuzzData data) {
+    return new CellProtectionPatch(
         data.consumeBoolean() ? Optional.of(data.consumeBoolean()) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(data.consumeBoolean()) : Optional.empty());
   }

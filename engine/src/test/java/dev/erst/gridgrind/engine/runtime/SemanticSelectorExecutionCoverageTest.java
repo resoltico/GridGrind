@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
@@ -132,23 +132,25 @@ class SemanticSelectorExecutionCoverageTest {
             new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
                 new SheetName("Budget"), new RangeRef("A1:B3")),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                     List.of(
                         List.of(
-                            new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
+                            new CellValueSpec.Text(text("Item")),
+                            new CellValueSpec.Text(text("Amount"))),
                         List.of(
-                            new CellInput.Text(text("Hosting")), new CellInput.NumberValue(100.0)),
+                            new CellValueSpec.Text(text("Hosting")),
+                            new CellValueSpec.NumberValue(100.0)),
                         List.of(
-                            new CellInput.Text(text("Travel")),
-                            new CellInput.NumberValue(50.0)))))),
+                            new CellValueSpec.Text(text("Travel")),
+                            new CellValueSpec.NumberValue(50.0)))))),
         mutate(
             new StructuredMutationAction.SetTable(
-                TableInput.withDefaultMetadata(
+                TableSpec.withDefaultMetadata(
                     new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B3"),
                     false,
-                    new TableStyleInput.None()))));
+                    new TableStyleSpec.None()))));
   }
 
   private static List<ExecutorTestPlanSupport.PendingMutation> duplicateBudgetTableMutations() {
@@ -160,25 +162,28 @@ class SemanticSelectorExecutionCoverageTest {
             new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
                 new SheetName("Budget"), new RangeRef("A1:B4")),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                     List.of(
                         List.of(
-                            new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
+                            new CellValueSpec.Text(text("Item")),
+                            new CellValueSpec.Text(text("Amount"))),
                         List.of(
-                            new CellInput.Text(text("Hosting")), new CellInput.NumberValue(100.0)),
+                            new CellValueSpec.Text(text("Hosting")),
+                            new CellValueSpec.NumberValue(100.0)),
                         List.of(
-                            new CellInput.Text(text("Hosting")), new CellInput.NumberValue(125.0)),
+                            new CellValueSpec.Text(text("Hosting")),
+                            new CellValueSpec.NumberValue(125.0)),
                         List.of(
-                            new CellInput.Text(text("Travel")),
-                            new CellInput.NumberValue(50.0)))))),
+                            new CellValueSpec.Text(text("Travel")),
+                            new CellValueSpec.NumberValue(50.0)))))),
         mutate(
             new StructuredMutationAction.SetTable(
-                TableInput.withDefaultMetadata(
+                TableSpec.withDefaultMetadata(
                     new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B4"),
                     false,
-                    new TableStyleInput.None()))));
+                    new TableStyleSpec.None()))));
   }
 
   private static WorkbookResult.Success success(WorkbookResult response) {

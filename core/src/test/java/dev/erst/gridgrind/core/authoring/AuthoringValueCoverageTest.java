@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
@@ -119,7 +119,7 @@ class AuthoringValueCoverageTest {
                         null))
             .getMessage());
 
-    TableInput noStyleTable =
+    TableSpec noStyleTable =
         Tables.toTableInput(
             Tables.define(
                 new TableName("BudgetTable"),
@@ -128,7 +128,7 @@ class AuthoringValueCoverageTest {
                 false,
                 Tables.noStyle()));
     Tables.Style namedStyle = Tables.namedStyle("TableStyleMedium2", true, false, true, false);
-    TableInput styledTable =
+    TableSpec styledTable =
         Tables.toTableInput(
             Tables.define(
                 new TableName("BudgetTable"),
@@ -136,9 +136,8 @@ class AuthoringValueCoverageTest {
                 new RangeRef("A1:B2"),
                 true,
                 namedStyle));
-    assertInstanceOf(TableStyleInput.None.class, noStyleTable.style());
-    TableStyleInput.Named named =
-        assertInstanceOf(TableStyleInput.Named.class, styledTable.style());
+    assertInstanceOf(TableStyleSpec.None.class, noStyleTable.style());
+    TableStyleSpec.Named named = assertInstanceOf(TableStyleSpec.Named.class, styledTable.style());
     assertEquals("TableStyleMedium2", named.name());
     assertTrue(named.showFirstColumn());
     assertFalse(named.showLastColumn());
@@ -196,47 +195,51 @@ class AuthoringValueCoverageTest {
     LocalDate date = LocalDate.of(2026, 4, 23);
     LocalDateTime dateTime = LocalDateTime.of(2026, 4, 23, 10, 15);
 
-    assertInstanceOf(CellInput.Blank.class, Values.toCellInput(Values.blank()));
-    CellInput.Text text =
-        assertInstanceOf(CellInput.Text.class, Values.toCellInput(Values.text("Owner")));
-    CellInput.Text sourcedText =
+    assertInstanceOf(CellValueSpec.Blank.class, Values.toCellInput(Values.blank()));
+    CellValueSpec.Text text =
+        assertInstanceOf(CellValueSpec.Text.class, Values.toCellInput(Values.text("Owner")));
+    CellValueSpec.Text sourcedText =
         assertInstanceOf(
-            CellInput.Text.class, Values.toCellInput(Values.text(Values.inlineText("Owner 2"))));
-    CellInput.Text fileText =
-        assertInstanceOf(CellInput.Text.class, Values.toCellInput(Values.textFile(textPath)));
-    CellInput.Text stdinText =
-        assertInstanceOf(CellInput.Text.class, Values.toCellInput(Values.textFromStandardInput()));
-    CellInput.NumberValue number =
-        assertInstanceOf(CellInput.NumberValue.class, Values.toCellInput(Values.number(42.5)));
-    CellInput.BooleanValue bool =
-        assertInstanceOf(CellInput.BooleanValue.class, Values.toCellInput(Values.bool(true)));
-    CellInput.Date dateInput =
-        assertInstanceOf(CellInput.Date.class, Values.toCellInput(Values.date(date)));
-    CellInput.DateTime dateTimeInput =
-        assertInstanceOf(CellInput.DateTime.class, Values.toCellInput(Values.dateTime(dateTime)));
-    CellInput.Formula inlineFormula =
-        assertInstanceOf(CellInput.Formula.class, Values.toCellInput(Values.formula("SUM(A1:A2)")));
-    CellInput.Formula fileFormula =
-        assertInstanceOf(CellInput.Formula.class, Values.toCellInput(Values.formulaFile(textPath)));
-    CellInput.Formula stdinFormula =
+            CellValueSpec.Text.class,
+            Values.toCellInput(Values.text(Values.inlineText("Owner 2"))));
+    CellValueSpec.Text fileText =
+        assertInstanceOf(CellValueSpec.Text.class, Values.toCellInput(Values.textFile(textPath)));
+    CellValueSpec.Text stdinText =
         assertInstanceOf(
-            CellInput.Formula.class, Values.toCellInput(Values.formulaFromStandardInput()));
-    CellInput.ErrorValue errorValue =
-        assertInstanceOf(CellInput.ErrorValue.class, Values.toCellInput(Values.error("#N/A")));
-    assertEquals("Owner", assertInstanceOf(TextSourceInput.Inline.class, text.source()).text());
+            CellValueSpec.Text.class, Values.toCellInput(Values.textFromStandardInput()));
+    CellValueSpec.NumberValue number =
+        assertInstanceOf(CellValueSpec.NumberValue.class, Values.toCellInput(Values.number(42.5)));
+    CellValueSpec.BooleanValue bool =
+        assertInstanceOf(CellValueSpec.BooleanValue.class, Values.toCellInput(Values.bool(true)));
+    CellValueSpec.Date dateInput =
+        assertInstanceOf(CellValueSpec.Date.class, Values.toCellInput(Values.date(date)));
+    CellValueSpec.DateTime dateTimeInput =
+        assertInstanceOf(
+            CellValueSpec.DateTime.class, Values.toCellInput(Values.dateTime(dateTime)));
+    CellValueSpec.Formula inlineFormula =
+        assertInstanceOf(
+            CellValueSpec.Formula.class, Values.toCellInput(Values.formula("SUM(A1:A2)")));
+    CellValueSpec.Formula fileFormula =
+        assertInstanceOf(
+            CellValueSpec.Formula.class, Values.toCellInput(Values.formulaFile(textPath)));
+    CellValueSpec.Formula stdinFormula =
+        assertInstanceOf(
+            CellValueSpec.Formula.class, Values.toCellInput(Values.formulaFromStandardInput()));
+    CellValueSpec.ErrorValue errorValue =
+        assertInstanceOf(CellValueSpec.ErrorValue.class, Values.toCellInput(Values.error("#N/A")));
+    assertEquals("Owner", assertInstanceOf(TextSourceSpec.Inline.class, text.source()).text());
     assertEquals(
-        "Owner 2", assertInstanceOf(TextSourceInput.Inline.class, sourcedText.source()).text());
-    assertInstanceOf(TextSourceInput.Utf8File.class, fileText.source());
-    assertInstanceOf(TextSourceInput.StandardInput.class, stdinText.source());
+        "Owner 2", assertInstanceOf(TextSourceSpec.Inline.class, sourcedText.source()).text());
+    assertInstanceOf(TextSourceSpec.Utf8File.class, fileText.source());
+    assertInstanceOf(TextSourceSpec.Stdin.class, stdinText.source());
     assertEquals(42.5, number.number());
     assertTrue(bool.bool());
     assertEquals(date, dateInput.date());
     assertEquals(dateTime, dateTimeInput.dateTime());
     assertEquals(
-        "SUM(A1:A2)",
-        assertInstanceOf(TextSourceInput.Inline.class, inlineFormula.source()).text());
-    assertInstanceOf(TextSourceInput.Utf8File.class, fileFormula.source());
-    assertInstanceOf(TextSourceInput.StandardInput.class, stdinFormula.source());
+        "SUM(A1:A2)", assertInstanceOf(TextSourceSpec.Inline.class, inlineFormula.source()).text());
+    assertInstanceOf(TextSourceSpec.Utf8File.class, fileFormula.source());
+    assertInstanceOf(TextSourceSpec.Stdin.class, stdinFormula.source());
     assertEquals("#N/A", errorValue.error());
     assertEquals(
         "value must not be null",
@@ -246,13 +249,13 @@ class AuthoringValueCoverageTest {
   @Test
   void valuesConvertCommentsExpectedValuesAndTextSources() {
     Path textPath = Path.of("authored-inputs", "item.txt");
-    CommentInput inlineComment = Values.toCommentInput(Values.comment("note", "Ada"));
-    CommentInput sourcedComment =
+    CommentSpec inlineComment = Values.toCommentInput(Values.comment("note", "Ada"));
+    CommentSpec sourcedComment =
         Values.toCommentInput(Values.comment(Values.textSourceFile(textPath), "Ada", true));
     assertFalse(inlineComment.visible());
     assertTrue(sourcedComment.visible());
-    assertInstanceOf(TextSourceInput.Inline.class, inlineComment.text());
-    assertInstanceOf(TextSourceInput.Utf8File.class, sourcedComment.text());
+    assertInstanceOf(TextSourceSpec.Inline.class, inlineComment.text());
+    assertInstanceOf(TextSourceSpec.Utf8File.class, sourcedComment.text());
     assertEquals(
         "comment must not be null",
         assertThrows(NullPointerException.class, () -> Values.toCommentInput(null)).getMessage());
@@ -286,20 +289,20 @@ class AuthoringValueCoverageTest {
         assertThrows(NullPointerException.class, () -> ExpectedValues.toCellScalarValue(null))
             .getMessage());
 
-    TextSourceInput.Inline inlineSource =
+    TextSourceSpec.Inline inlineSource =
         assertInstanceOf(
-            TextSourceInput.Inline.class, Values.toTextSourceInput(Values.inlineText("Owner")));
-    TextSourceInput.Utf8File fileSource =
+            TextSourceSpec.Inline.class, Values.toTextSourceInput(Values.inlineText("Owner")));
+    TextSourceSpec.Utf8File fileSource =
         assertInstanceOf(
-            TextSourceInput.Utf8File.class,
+            TextSourceSpec.Utf8File.class,
             Values.toTextSourceInput(Values.textSourceFile(textPath)));
-    TextSourceInput.StandardInput stdinSource =
+    TextSourceSpec.Stdin stdinSource =
         assertInstanceOf(
-            TextSourceInput.StandardInput.class,
+            TextSourceSpec.Stdin.class,
             Values.toTextSourceInput(Values.textSourceFromStandardInput()));
     assertEquals("Owner", inlineSource.text());
     assertEquals(textPath.toString(), fileSource.path());
-    assertInstanceOf(TextSourceInput.StandardInput.class, stdinSource);
+    assertInstanceOf(TextSourceSpec.Stdin.class, stdinSource);
     assertEquals(
         "source must not be null",
         assertThrows(NullPointerException.class, () -> Values.toTextSourceInput(null))

@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -94,34 +94,34 @@ class ExecutionDiagnosticFieldsTest {
             NamedRangeTarget.formula("SUM(Budget!B2:B4)"));
     StructuredMutationAction.SetPivotTable pivot =
         new StructuredMutationAction.SetPivotTable(
-            new PivotTableInput(
+            new PivotTableSpec(
                 "SalesPivot",
                 new SheetName("Budget"),
-                new PivotTableInput.PivotSourceSpec.Range(
+                new PivotTableSpec.PivotSourceSpec.Range(
                     new SheetName("Budget"), new RangeRef("A1:B5")),
-                new PivotTableInput.Anchor(new CellAddress("C5")),
+                new PivotTableSpec.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
                 List.of(),
                 List.of(
-                    new PivotTableInput.DataField(
+                    new PivotTableSpec.DataField(
                         "Amount",
                         dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction.SUM,
                         "Amount",
                         Optional.empty()))));
     StructuredMutationAction.SetTable table =
         new StructuredMutationAction.SetTable(
-            TableInput.withDefaultMetadata(
+            TableSpec.withDefaultMetadata(
                 new TableName("BudgetTable"),
                 new SheetName("Budget"),
                 new RangeRef("A1:B4"),
                 false,
-                new TableStyleInput.None()));
+                new TableStyleSpec.None()));
     StructuredMutationAction.SetConditionalFormatting conditionalFormatting =
         new StructuredMutationAction.SetConditionalFormatting(
-            new ConditionalFormattingDefinitionInput(
+            new ConditionalFormattingSpec(
                 List.of(
-                    new ConditionalFormattingRuleInput.FormulaRule(
+                    new ConditionalFormattingRuleSpec.FormulaRule(
                         "B2>0", true, Optional.empty()))));
 
     assertEquals(
@@ -185,17 +185,17 @@ class ExecutionDiagnosticFieldsTest {
             new StepId("set-pivot"),
             new PivotTableSelector.ByNameOnSheet("SalesPivot", new SheetName("Budget")),
             new StructuredMutationAction.SetPivotTable(
-                new PivotTableInput(
+                new PivotTableSpec(
                     "SalesPivot",
                     new SheetName("Budget"),
-                    new PivotTableInput.PivotSourceSpec.Range(
+                    new PivotTableSpec.PivotSourceSpec.Range(
                         new SheetName("Budget"), new RangeRef("A1:B5")),
-                    new PivotTableInput.Anchor(new CellAddress("C5")),
+                    new PivotTableSpec.Anchor(new CellAddress("C5")),
                     List.of(),
                     List.of(),
                     List.of(),
                     List.of(
-                        new PivotTableInput.DataField(
+                        new PivotTableSpec.DataField(
                             "Amount",
                             dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction
                                 .SUM,
@@ -206,16 +206,16 @@ class ExecutionDiagnosticFieldsTest {
             new StepId("set-pivot-named-range"),
             new PivotTableSelector.ByNameOnSheet("SalesPivot", new SheetName("Budget")),
             new StructuredMutationAction.SetPivotTable(
-                new PivotTableInput(
+                new PivotTableSpec(
                     "SalesPivot",
                     new SheetName("Budget"),
-                    new PivotTableInput.PivotSourceSpec.NamedRange(new DefinedName("BudgetSource")),
-                    new PivotTableInput.Anchor(new CellAddress("C5")),
+                    new PivotTableSpec.PivotSourceSpec.NamedRange(new DefinedName("BudgetSource")),
+                    new PivotTableSpec.Anchor(new CellAddress("C5")),
                     List.of(),
                     List.of(),
                     List.of(),
                     List.of(
-                        new PivotTableInput.DataField(
+                        new PivotTableSpec.DataField(
                             "Amount",
                             dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction
                                 .SUM,
@@ -226,12 +226,12 @@ class ExecutionDiagnosticFieldsTest {
             new StepId("set-table"),
             new TableSelector.ByNameOnSheet(new TableName("BudgetTable"), new SheetName("Budget")),
             new StructuredMutationAction.SetTable(
-                TableInput.withDefaultMetadata(
+                TableSpec.withDefaultMetadata(
                     new TableName("BudgetTable"),
                     new SheetName("Budget"),
                     new RangeRef("A1:B4"),
                     false,
-                    new TableStyleInput.None())));
+                    new TableStyleSpec.None())));
     MutationStep formulaNamedRangeStep =
         new MutationStep(
             new StepId("set-name"),

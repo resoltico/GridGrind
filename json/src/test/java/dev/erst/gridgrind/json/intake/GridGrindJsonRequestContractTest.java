@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
-import dev.erst.gridgrind.core.plan.AssertionModeInput;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
@@ -104,7 +104,7 @@ class GridGrindJsonRequestContractTest {
 
     assertTrue(request.execution().isDefault());
     assertEquals(ExecutionJournalLevel.SUMMARY, request.journalLevel());
-    assertEquals(AssertionModeInput.FAIL_FAST, request.assertionMode());
+    assertEquals(AssertionModeSpec.FAIL_FAST, request.assertionMode());
     assertTrue(request.formulaEnvironment().isEmpty());
   }
 
@@ -123,7 +123,7 @@ class GridGrindJsonRequestContractTest {
             """
                 .getBytes(StandardCharsets.UTF_8));
 
-    assertEquals(AssertionModeInput.COLLECT, request.assertionMode());
+    assertEquals(AssertionModeSpec.COLLECT, request.assertionMode());
   }
 
   @Test
@@ -166,15 +166,15 @@ class GridGrindJsonRequestContractTest {
     assertTrue(request.execution().isDefault());
     assertEquals(ExecutionJournalLevel.SUMMARY, request.journalLevel());
     assertTrue(request.formulaEnvironment().isEmpty());
-    OoxmlPersistenceSecurityInput security =
+    OoxmlPersistenceSecuritySpec security =
         ((WorkbookPlan.WorkbookPersistence.SaveAs) request.persistence()).security().orElseThrow();
-    OoxmlEncryptionInput encryption =
-        assertInstanceOf(OoxmlPersistenceEncryptionInput.Encrypt.class, security.encryption())
+    OoxmlEncryptionSpec encryption =
+        assertInstanceOf(OoxmlPersistenceEncryptionSpec.Encrypt.class, security.encryption())
             .encryption();
     assertEquals(ExcelOoxmlWriteCipher.AES_256, encryption.cipher());
     assertEquals(ExcelOoxmlWriteHash.SHA_512, encryption.hash());
-    OoxmlSignatureInput signature =
-        assertInstanceOf(OoxmlPersistenceSignatureInput.Sign.class, security.signature())
+    OoxmlSignatureSpec signature =
+        assertInstanceOf(OoxmlPersistenceSignatureSpec.Sign.class, security.signature())
             .signature();
     assertEquals(Optional.empty(), signature.keyPasswordRef());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());

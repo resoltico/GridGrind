@@ -7,19 +7,19 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.style.RichTextRunInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -31,25 +31,25 @@ import org.junit.jupiter.api.Test;
 class SourceBackedContractCoverageTest {
   @Test
   void sourceFactoriesDefaultsAndResolveInputContextCoverFileAndStandardInputBranches() {
-    assertEquals("inline", TextSourceInput.inline("inline").text());
-    assertEquals("note.txt", TextSourceInput.utf8File("note.txt").path());
-    assertInstanceOf(TextSourceInput.StandardInput.class, TextSourceInput.standardInput());
+    assertEquals("inline", TextSourceSpec.inline("inline").text());
+    assertEquals("note.txt", TextSourceSpec.utf8File("note.txt").path());
+    assertInstanceOf(TextSourceSpec.Stdin.class, TextSourceSpec.standardInput());
     assertEquals(
         "path must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> TextSourceInput.utf8File(" "))
+        assertThrows(IllegalArgumentException.class, () -> TextSourceSpec.utf8File(" "))
             .getMessage());
 
-    assertEquals("cGF5bG9hZA==", BinarySourceInput.inlineBase64("cGF5bG9hZA==").base64Data());
-    assertEquals("payload.bin", BinarySourceInput.file("payload.bin").path());
-    assertInstanceOf(BinarySourceInput.StandardInput.class, BinarySourceInput.standardInput());
+    assertEquals("cGF5bG9hZA==", BinarySourceSpec.inlineBase64("cGF5bG9hZA==").base64Data());
+    assertEquals("payload.bin", BinarySourceSpec.file("payload.bin").path());
+    assertInstanceOf(BinarySourceSpec.Stdin.class, BinarySourceSpec.standardInput());
     assertEquals(
         "path must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> BinarySourceInput.file(" "))
+        assertThrows(IllegalArgumentException.class, () -> BinarySourceSpec.file(" "))
             .getMessage());
     assertEquals(
         "base64Data must be valid base64",
         assertThrows(
-                IllegalArgumentException.class, () -> BinarySourceInput.inlineBase64("not-base64"))
+                IllegalArgumentException.class, () -> BinarySourceSpec.inlineBase64("not-base64"))
             .getMessage());
 
     ProblemContext.ResolveInputs context =
@@ -66,7 +66,7 @@ class SourceBackedContractCoverageTest {
     IllegalArgumentException failure =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new CellInput.Text(TextSourceInput.inline("A\u0007B")));
+            () -> new CellValueSpec.Text(TextSourceSpec.inline("A\u0007B")));
 
     assertEquals(
         "source.text contains XML 1.0-forbidden code point U+0007 at code-point index 1",
@@ -75,105 +75,105 @@ class SourceBackedContractCoverageTest {
 
   @Test
   void sourceBackedDtosPreserveDeferredValuesAndDefaultOptionalFlags() {
-    CommentInput defaultVisibleComment =
-        CommentInput.plain(TextSourceInput.inline("Owner note"), "Ada", false);
+    CommentSpec defaultVisibleComment =
+        CommentSpec.plain(TextSourceSpec.inline("Owner note"), "Ada", false);
     assertFalse(defaultVisibleComment.visible());
 
-    CommentInput fileBackedComment =
-        new CommentInput(
-            TextSourceInput.utf8File("comment.txt"),
+    CommentSpec fileBackedComment =
+        new CommentSpec(
+            TextSourceSpec.utf8File("comment.txt"),
             "Ada",
             false,
             java.util.Optional.of(
                 java.util.List.of(
-                    new RichTextRunInput(
-                        TextSourceInput.utf8File("run.txt"), java.util.Optional.empty()))),
+                    new RichTextRunSpec(
+                        TextSourceSpec.utf8File("run.txt"), java.util.Optional.empty()))),
             java.util.Optional.empty());
     assertNotNull(fileBackedComment.runs());
 
-    CommentInput mixedSourceComment =
-        new CommentInput(
-            TextSourceInput.inline("Ada Lovelace"),
+    CommentSpec mixedSourceComment =
+        new CommentSpec(
+            TextSourceSpec.inline("Ada Lovelace"),
             "Ada",
             false,
             java.util.Optional.of(
                 java.util.List.of(
-                    new RichTextRunInput(TextSourceInput.inline("Ada"), java.util.Optional.empty()),
-                    new RichTextRunInput(
-                        TextSourceInput.utf8File("run-2.txt"), java.util.Optional.empty()))),
+                    new RichTextRunSpec(TextSourceSpec.inline("Ada"), java.util.Optional.empty()),
+                    new RichTextRunSpec(
+                        TextSourceSpec.utf8File("run-2.txt"), java.util.Optional.empty()))),
             java.util.Optional.empty());
     assertEquals(2, mixedSourceComment.runs().orElseThrow().size());
 
-    HeaderFooterTextInput defaults = HeaderFooterTextInput.blank();
-    assertEquals("", ((TextSourceInput.Inline) defaults.left()).text());
-    assertEquals("", ((TextSourceInput.Inline) defaults.center()).text());
-    assertEquals("", ((TextSourceInput.Inline) defaults.right()).text());
+    HeaderFooterTextSpec defaults = HeaderFooterTextSpec.blank();
+    assertEquals("", ((TextSourceSpec.Inline) defaults.left()).text());
+    assertEquals("", ((TextSourceSpec.Inline) defaults.center()).text());
+    assertEquals("", ((TextSourceSpec.Inline) defaults.right()).text());
 
-    DataValidationPromptInput prompt =
-        new DataValidationPromptInput(
-            TextSourceInput.utf8File("prompt-title.txt"), TextSourceInput.standardInput(), true);
+    DataValidationPromptSpec prompt =
+        new DataValidationPromptSpec(
+            TextSourceSpec.utf8File("prompt-title.txt"), TextSourceSpec.standardInput(), true);
     assertTrue(prompt.showPromptBox());
 
-    DataValidationErrorAlertInput alert =
-        new DataValidationErrorAlertInput(
+    DataValidationErrorAlertSpec alert =
+        new DataValidationErrorAlertSpec(
             ExcelDataValidationErrorStyle.STOP,
-            TextSourceInput.standardInput(),
-            TextSourceInput.utf8File("alert-text.txt"),
+            TextSourceSpec.standardInput(),
+            TextSourceSpec.utf8File("alert-text.txt"),
             true);
     assertTrue(alert.showErrorBox());
 
-    ChartTitleInput.Text chartTitle = new ChartTitleInput.Text(TextSourceInput.utf8File("title"));
-    assertEquals("title", ((TextSourceInput.Utf8File) chartTitle.source()).path());
+    ChartTitleSpec.Text chartTitle = new ChartTitleSpec.Text(TextSourceSpec.utf8File("title"));
+    assertEquals("title", ((TextSourceSpec.Utf8File) chartTitle.source()).path());
   }
 
   @Test
   void sourceBackedMutationPayloadsRemainValidWithoutInlineCoercion() {
-    DrawingAnchorInput.TwoCell anchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(0, 0, 0, 0),
-            new DrawingMarkerInput(2, 2, 0, 0),
+    DrawingAnchorSpec.TwoCell anchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(0, 0, 0, 0),
+            new DrawingMarkerSpec(2, 2, 0, 0),
             ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
 
-    PictureInput picture =
-        new PictureInput(
+    PictureSpec picture =
+        new PictureSpec(
             "Logo",
-            new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.file("logo.png")),
+            new PictureDataSpec(ExcelPictureFormat.PNG, BinarySourceSpec.file("logo.png")),
             anchor,
-            Optional.of(TextSourceInput.utf8File("logo.txt")));
-    assertEquals("logo.png", ((BinarySourceInput.File) picture.image().source()).path());
+            Optional.of(TextSourceSpec.utf8File("logo.txt")));
+    assertEquals("logo.png", ((BinarySourceSpec.File) picture.image().source()).path());
 
-    ShapeInput.SimpleShape shape =
-        new ShapeInput.SimpleShape(
-            "Banner", anchor, "rect", Optional.of(TextSourceInput.standardInput()));
-    assertInstanceOf(TextSourceInput.StandardInput.class, shape.text().orElseThrow());
+    ShapeSpec.SimpleShape shape =
+        new ShapeSpec.SimpleShape(
+            "Banner", anchor, "rect", Optional.of(TextSourceSpec.standardInput()));
+    assertInstanceOf(TextSourceSpec.Stdin.class, shape.text().orElseThrow());
 
-    EmbeddedObjectInput embeddedObject =
-        new EmbeddedObjectInput(
+    EmbeddedObjectSpec embeddedObject =
+        new EmbeddedObjectSpec(
             "Payload",
             "Payload",
             "payload.bin",
             "open",
-            BinarySourceInput.standardInput(),
-            new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.file("preview.png")),
+            BinarySourceSpec.standardInput(),
+            new PictureDataSpec(ExcelPictureFormat.PNG, BinarySourceSpec.file("preview.png")),
             anchor);
-    assertInstanceOf(BinarySourceInput.StandardInput.class, embeddedObject.payload());
+    assertInstanceOf(BinarySourceSpec.Stdin.class, embeddedObject.payload());
 
-    DataValidationInput validation =
-        new DataValidationInput(
-            new DataValidationRuleInput.WholeNumber(
+    DataValidationSpec validation =
+        new DataValidationSpec(
+            new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.BETWEEN, "1", Optional.of("10")),
             false,
             false,
             Optional.of(
-                new DataValidationPromptInput(
-                    TextSourceInput.utf8File("prompt-title.txt"),
-                    TextSourceInput.utf8File("prompt.txt"),
+                new DataValidationPromptSpec(
+                    TextSourceSpec.utf8File("prompt-title.txt"),
+                    TextSourceSpec.utf8File("prompt.txt"),
                     true)),
             Optional.of(
-                new DataValidationErrorAlertInput(
+                new DataValidationErrorAlertSpec(
                     ExcelDataValidationErrorStyle.STOP,
-                    TextSourceInput.utf8File("alert-title.txt"),
-                    TextSourceInput.utf8File("alert.txt"),
+                    TextSourceSpec.utf8File("alert-title.txt"),
+                    TextSourceSpec.utf8File("alert.txt"),
                     true)));
     assertTrue(validation.prompt().orElseThrow().showPromptBox());
     assertTrue(validation.errorAlert().orElseThrow().showErrorBox());

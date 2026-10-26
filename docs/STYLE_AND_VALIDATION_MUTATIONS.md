@@ -161,7 +161,7 @@ Font patch:
 | `font.italic` | boolean | `true` / `false` |
 | `font.fontName` | string | Excel font family name, e.g. `"Aptos"` |
 | `font.fontHeight` | object | Typed font height. See below. |
-| `font.fontColor` | object | Structured `ColorInput` object. See below. |
+| `font.fontColor` | object | Structured `ColorSpec` object. See below. |
 | `font.underline` | boolean | `true` adds a single underline, `false` removes it |
 | `font.strikeout` | boolean | `true` / `false` |
 
@@ -183,7 +183,7 @@ Structured color input:
 | `*.indexed` | integer | Required when `type="INDEXED"`. Indexed color slot. |
 | `*.tint` | number | Optional tint applied to the chosen base color. |
 
-Color-bearing write fields all reuse the same `ColorInput` object shape:
+Color-bearing write fields all reuse the same `ColorSpec` object shape:
 
 - `font.fontColor`
 - `fill.foregroundColor`
@@ -198,9 +198,9 @@ Fill patch:
 |:------|:-----|:-------|
 | `fill.type` | string | `"PATTERN_ONLY"`, `"PATTERN_FOREGROUND"`, `"PATTERN_BACKGROUND"`, `"PATTERN_FOREGROUND_BACKGROUND"`, or `"GRADIENT"` |
 | `fill.pattern` | string | Required for patterned variants. `ExcelFillPattern` value such as `"SOLID"`, `"THIN_HORIZONTAL_BANDS"`, `"SQUARES"` |
-| `fill.foregroundColor` | object | `ColorInput` object required by foreground-bearing variants |
-| `fill.backgroundColor` | object | `ColorInput` object required by background-bearing variants |
-| `fill.gradient` | object | `CellGradientFillInput` payload required when `fill.type="GRADIENT"` |
+| `fill.foregroundColor` | object | `ColorSpec` object required by foreground-bearing variants |
+| `fill.backgroundColor` | object | `ColorSpec` object required by background-bearing variants |
+| `fill.gradient` | object | `CellGradientFillSpec` payload required when `fill.type="GRADIENT"` |
 
 Fill notes:
 
@@ -245,7 +245,7 @@ Each border-side object can set a visible style, a structured color object, or b
 | Field | Type | Values |
 |:------|:-----|:-------|
 | `style` | string | `"NONE"`, `"THIN"`, `"MEDIUM"`, `"DASHED"`, `"DOTTED"`, `"THICK"`, `"DOUBLE"`, `"HAIR"`, `"MEDIUM_DASHED"`, `"DASH_DOT"`, `"MEDIUM_DASH_DOT"`, `"DASH_DOT_DOT"`, `"MEDIUM_DASH_DOT_DOT"`, `"SLANTED_DASH_DOT"` |
-| `color` | object | Optional `ColorInput` object describing the side color |
+| `color` | object | Optional `ColorSpec` object describing the side color |
 
 Border notes:
 
@@ -255,7 +255,7 @@ Border notes:
 - A border color requires an effective visible style on that side, either set on the side itself
   or inherited from `border.all`.
 - `style="NONE"` does not allow a `color`.
-- `color` uses the same structured `ColorInput` object shape as font and fill colors.
+- `color` uses the same structured `ColorSpec` object shape as font and fill colors.
 
 Protection patch:
 
@@ -270,7 +270,7 @@ Protection note:
 - Cell snapshot reads (GET_CELLS, GET_WINDOW, GET_SHEET_SCHEMA) report `style.font.fontHeight`
   as a plain object with both `twips` and `points` fields:
   `{"twips": 260, "points": 13}`. This differs from the write-side
-  `FontHeightInput` discriminated format.
+  `FontHeightSpec` discriminated format.
 
 ---
 
@@ -446,7 +446,7 @@ differential, not a whole-cell style patch. Supported differential-style attribu
 `fillColor`, and per-side differential borders.
 
 The differential payload is intentionally a partial conditional-formatting patch, not a resolved
-cell style. It shares the same structured `ColorInput` and `BorderSideInput` vocabulary as
+cell style. It shares the same structured `ColorSpec` and `BorderSidePatch` vocabulary as
 `APPLY_STYLE`, while factual cell readback remains the separate complete `CellStyleReport` shape.
 Within that report, every border side is a tagged fact: `NONE` carries no color,
 `DEFAULT_COLOR` carries a visible style using Excel's implicit color, and `COLORED` carries both

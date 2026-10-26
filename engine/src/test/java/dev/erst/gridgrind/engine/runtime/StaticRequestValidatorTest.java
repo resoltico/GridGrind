@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -38,8 +38,8 @@ class StaticRequestValidatorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(new ExecutionModeInput.StreamingWrite()),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.mode(new ExecutionModeSpec.StreamingWrite()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("ensure-sheet"),
@@ -62,13 +62,13 @@ class StaticRequestValidatorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-cell"),
                     new WorkbookSelector.Current(),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0))),
                 new MutationStep(
                     new StepId("ensure-sheet"),
                     new WorkbookSelector.Current(),
@@ -311,13 +311,13 @@ class StaticRequestValidatorTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-cell"),
                     new WorkbookSelector.Current(),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)))));
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0)))));
 
     List<GridGrindProblemDetail.Problem> rootProblems =
         validator.validate(
@@ -355,6 +355,6 @@ class StaticRequestValidatorTest {
     return new MutationStep(
         new StepId(stepId),
         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress(address)),
-        new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)));
+        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0)));
   }
 }

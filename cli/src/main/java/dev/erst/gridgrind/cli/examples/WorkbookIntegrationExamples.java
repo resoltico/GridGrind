@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
@@ -15,8 +15,8 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -46,29 +46,28 @@ final class WorkbookIntegrationExamples {
             new StepId("set-title-from-file"),
             ExampleSelectors.cell("Inputs", "A1"),
             new CellMutationAction.SetCell(
-                new CellInput.Text(
-                    TextSourceInput.utf8File(
-                        paths.asset("source-backed-input-assets/title.txt"))))),
+                new CellValueSpec.Text(
+                    TextSourceSpec.utf8File(paths.asset("source-backed-input-assets/title.txt"))))),
         ExampleSteps.step(
             new StepId("set-total-formula-from-file"),
             ExampleSelectors.cell("Inputs", "B4"),
             new CellMutationAction.SetCell(
-                new CellInput.Formula(
-                    TextSourceInput.utf8File(
+                new CellValueSpec.Formula(
+                    TextSourceSpec.utf8File(
                         paths.asset("source-backed-input-assets/total-formula.txt"))))),
         ExampleSteps.step(
             new StepId("attach-payload-from-file"),
             ExampleSelectors.sheet("Inputs"),
             new DrawingMutationAction.SetEmbeddedObject(
-                new EmbeddedObjectInput(
+                new EmbeddedObjectSpec(
                     "InputsPayload",
                     "Inputs payload",
                     "inputs-payload.txt",
                     "open",
-                    BinarySourceInput.file(paths.asset("source-backed-input-assets/payload.bin")),
-                    new PictureDataInput(
+                    BinarySourceSpec.file(paths.asset("source-backed-input-assets/payload.bin")),
+                    new PictureDataSpec(
                         ExcelPictureFormat.PNG,
-                        BinarySourceInput.inlineBase64(
+                        BinarySourceSpec.inlineBase64(
                             TaskStarterRecipeSupport.onePixelPngBase64())),
                     ExampleDrawingAnchors.anchor(3, 0, 5, 4)))),
         ExampleSteps.read(
@@ -100,9 +99,9 @@ final class WorkbookIntegrationExamples {
             new StepId("import-custom-xml"),
             ExampleSelectors.workbook(),
             new StructuredMutationAction.ImportCustomXmlMapping(
-                new CustomXmlImportInput(
+                new CustomXmlImportSpec(
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"),
-                    TextSourceInput.utf8File(
+                    TextSourceSpec.utf8File(
                         paths.asset("custom-xml-assets/custom-xml-update.xml"))))),
         ExampleSteps.read(
             new StepId("read-imported-cells"),
@@ -120,7 +119,7 @@ final class WorkbookIntegrationExamples {
         new PlanId("package-security-inspection-workflow"),
         new WorkbookPlan.WorkbookSource.ExistingFile(
             paths.asset("package-security-assets/gridgrind-package-security.xlsx"),
-            new OoxmlOpenSecurityInput(
+            new OoxmlOpenSecuritySpec(
                 java.util.Optional.of(
                     new dev.erst.gridgrind.core.source.SecretReference("source-open-password")))),
         new WorkbookPlan.WorkbookPersistence.None(),

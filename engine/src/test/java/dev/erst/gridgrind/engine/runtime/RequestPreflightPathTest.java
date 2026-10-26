@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -36,13 +36,13 @@ class RequestPreflightPathTest {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("missing-source.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            new FormulaEnvironmentInput(
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecuritySpec.none()),
+            ExecutionPolicySpec.defaults(),
+            new FormulaEnvironmentSpec(
                 List.of(
-                    new FormulaExternalWorkbookInput(
+                    new FormulaExternalWorkbookSpec(
                         "ExternalOne.xlsx", "missing-external-one.xlsx"),
-                    new FormulaExternalWorkbookInput(
+                    new FormulaExternalWorkbookSpec(
                         "ExternalTwo.xlsx", "missing-external-two.xlsx")),
                 FormulaMissingWorkbookPolicy.ERROR,
                 List.of()),
@@ -100,8 +100,8 @@ class RequestPreflightPathTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.getFileName().toString()),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("insert-column"),
@@ -136,9 +136,9 @@ class RequestPreflightPathTest {
     return WorkbookPlan.standard(
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
-        ExecutionPolicyInput.defaults(),
-        new FormulaEnvironmentInput(
-            List.of(new FormulaExternalWorkbookInput("Escaped.xlsx", "../escaped.xlsx")),
+        ExecutionPolicySpec.defaults(),
+        new FormulaEnvironmentSpec(
+            List.of(new FormulaExternalWorkbookSpec("Escaped.xlsx", "../escaped.xlsx")),
             FormulaMissingWorkbookPolicy.ERROR,
             List.of()),
         List.of());

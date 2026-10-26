@@ -29,8 +29,8 @@ class ExecutionPathCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of());
     Path workingDirectory = Path.of("/tmp/gridgrind-explicit-root");
 
@@ -72,17 +72,17 @@ class ExecutionPathCoverageTest {
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "out.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan overwriteRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of());
     Path workingDirectory = Path.of("/tmp/gridgrind");
 
@@ -93,8 +93,8 @@ class ExecutionPathCoverageTest {
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
                 List.of()),
             workingDirectory));
     assertEquals(
@@ -118,8 +118,8 @@ class ExecutionPathCoverageTest {
                         WorkbookPlan.standard(
                             new WorkbookPlan.WorkbookSource.New(),
                             new WorkbookPlan.WorkbookPersistence.None(),
-                            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-                            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+                            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
                             List.of()),
                         workingDirectory))
             .getMessage());
@@ -247,8 +247,8 @@ class ExecutionPathCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of());
     ExecutionJournalRecorder journal =
         ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP);

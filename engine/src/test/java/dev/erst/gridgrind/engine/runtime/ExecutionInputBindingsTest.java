@@ -147,7 +147,7 @@ class ExecutionInputBindingsTest {
   private static GridGrindExecutionGrant.Bounded permittedGrantWithStandardInput(
       SecretReference reference) {
     return new GridGrindExecutionGrant.Bounded(
-        List.of(new GridGrindExecutionGrant.ReadAuthority.StandardInput()),
+        List.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()),
         List.of(),
         new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
         new GridGrindExecutionGrant.PublicationAuthority.None(),

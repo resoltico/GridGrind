@@ -3,16 +3,16 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -53,7 +53,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         encryptedWorkbook.workbookPath().toString(),
-                        new OoxmlOpenSecurityInput(
+                        new OoxmlOpenSecuritySpec(
                             java.util.Optional.of(
                                 new dev.erst.gridgrind.core.source.SecretReference(
                                     "source-password")))),
@@ -113,7 +113,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         encryptedWorkbook.workbookPath().toString(),
-                        new OoxmlOpenSecurityInput(
+                        new OoxmlOpenSecuritySpec(
                             java.util.Optional.of(
                                 new dev.erst.gridgrind.core.source.SecretReference(
                                     "wrong-password")))),
@@ -213,7 +213,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         output.toString(),
                         WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                        OoxmlPersistenceSecurityInput.none()),
+                        OoxmlPersistenceSecuritySpec.none()),
                     mutations(
                         mutate(
                             new CellSelector.ByAddress(
@@ -301,9 +301,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         directory.resolve("output.xlsx").toString(),
                         WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                        new OoxmlPersistenceSecurityInput(
-                            new OoxmlPersistenceEncryptionInput.PreserveSource(),
-                            new OoxmlPersistenceSignatureInput.None())),
+                        new OoxmlPersistenceSecuritySpec(
+                            new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+                            new OoxmlPersistenceSignatureSpec.None())),
                     mutations(
                         mutate(
                             new SheetSelector.ByName(new SheetName("Source")),
@@ -333,10 +333,10 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 output.toString(),
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                new OoxmlPersistenceSecurityInput(
-                    new OoxmlPersistenceEncryptionInput.PreserveSource(),
-                    new OoxmlPersistenceSignatureInput.Sign(
-                        new OoxmlSignatureInput(
+                new OoxmlPersistenceSecuritySpec(
+                    new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+                    new OoxmlPersistenceSignatureSpec.Sign(
+                        new OoxmlSignatureSpec(
                             "missing-signing-material.p12",
                             new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
                             java.util.Optional.of(
@@ -376,16 +376,16 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
         request(
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 encryptedWorkbook.workbookPath().toString(),
-                new OoxmlOpenSecurityInput(
+                new OoxmlOpenSecuritySpec(
                     java.util.Optional.of(
                         new dev.erst.gridgrind.core.source.SecretReference("wrong-password")))),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 output.toString(),
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                new OoxmlPersistenceSecurityInput(
-                    new OoxmlPersistenceEncryptionInput.None(),
-                    new OoxmlPersistenceSignatureInput.Sign(
-                        new OoxmlSignatureInput(
+                new OoxmlPersistenceSecuritySpec(
+                    new OoxmlPersistenceEncryptionSpec.None(),
+                    new OoxmlPersistenceSignatureSpec.Sign(
+                        new OoxmlSignatureSpec(
                             "missing-signing-material.p12",
                             new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
                             java.util.Optional.of(
@@ -433,16 +433,16 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         standardEncryptedWorkbook.workbookPath().toString(),
-                        new OoxmlOpenSecurityInput(
+                        new OoxmlOpenSecuritySpec(
                             java.util.Optional.of(
                                 new dev.erst.gridgrind.core.source.SecretReference(
                                     "source-password")))),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         output.toString(),
                         WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                        new OoxmlPersistenceSecurityInput(
-                            new OoxmlPersistenceEncryptionInput.PreserveSource(),
-                            new OoxmlPersistenceSignatureInput.None())),
+                        new OoxmlPersistenceSecuritySpec(
+                            new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+                            new OoxmlPersistenceSignatureSpec.None())),
                     mutations(
                         mutate(
                             new CellSelector.ByAddress(
@@ -501,17 +501,17 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         securedWorkbook.toString(),
                         WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                        new OoxmlPersistenceSecurityInput(
+                        new OoxmlPersistenceSecuritySpec(
                             new dev.erst.gridgrind.core.model.security
-                                .OoxmlPersistenceEncryptionInput.Encrypt(
-                                new OoxmlEncryptionInput(
+                                .OoxmlPersistenceEncryptionSpec.Encrypt(
+                                new OoxmlEncryptionSpec(
                                     new dev.erst.gridgrind.core.source.SecretReference(
                                         "output-password"),
                                     ExcelOoxmlWriteCipher.AES_192,
                                     ExcelOoxmlWriteHash.SHA_384)),
-                            new dev.erst.gridgrind.core.model.security
-                                .OoxmlPersistenceSignatureInput.Sign(
-                                new OoxmlSignatureInput(
+                            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec
+                                .Sign(
+                                new OoxmlSignatureSpec(
                                     signingMaterial.pkcs12Path().toString(),
                                     new dev.erst.gridgrind.core.source.SecretReference(
                                         "keystore-password"),
@@ -541,7 +541,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         securedWorkbook.toString(),
-                        new OoxmlOpenSecurityInput(
+                        new OoxmlOpenSecuritySpec(
                             java.util.Optional.of(
                                 new dev.erst.gridgrind.core.source.SecretReference(
                                     "output-password")))),
@@ -604,12 +604,12 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         outputPath.toString(),
                         WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                        new OoxmlPersistenceSecurityInput(
+                        new OoxmlPersistenceSecuritySpec(
                             new dev.erst.gridgrind.core.model.security
-                                .OoxmlPersistenceEncryptionInput.None(),
-                            new dev.erst.gridgrind.core.model.security
-                                .OoxmlPersistenceSignatureInput.Sign(
-                                new OoxmlSignatureInput(
+                                .OoxmlPersistenceEncryptionSpec.None(),
+                            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec
+                                .Sign(
+                                new OoxmlSignatureSpec(
                                     outputPath.resolveSibling("missing.p12").toString(),
                                     new dev.erst.gridgrind.core.source.SecretReference(
                                         "keystore-password"),
@@ -648,7 +648,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.eventRead(),
+                    ExecutionModeSpec.eventRead(),
                     null,
                     List.of(),
                     List.of(

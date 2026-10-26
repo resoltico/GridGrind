@@ -6,70 +6,70 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.chart.ChartAxisInput;
-import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
-import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionInput;
-import dev.erst.gridgrind.core.model.layout.SheetDefaultsInput;
-import dev.erst.gridgrind.core.model.layout.SheetDisplayInput;
-import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryInput;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
-import dev.erst.gridgrind.core.model.print.PrintAreaInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
-import dev.erst.gridgrind.core.model.print.PrintMarginsInput;
-import dev.erst.gridgrind.core.model.print.PrintScalingInput;
-import dev.erst.gridgrind.core.model.print.PrintSetupInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.DifferentialBorderInput;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput;
-import dev.erst.gridgrind.core.model.table.AutofilterSortConditionInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
-import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
-import dev.erst.gridgrind.core.model.table.TableColumnInput;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
-import dev.erst.gridgrind.core.model.validation.IgnoredErrorInput;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
@@ -111,31 +111,31 @@ class ProtocolDefaultingCoverageTest {
   @Test
   void explicitRequestConstructorsPreserveAuthoredValues() {
     JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
-    CalculationPolicyInput calculation =
-        new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), false);
-    ExecutionModeInput mode = ExecutionModeInput.fullXssf();
-    ExecutionJournalInput journalInput = new ExecutionJournalInput(ExecutionJournalLevel.NORMAL);
-    FormulaEnvironmentInput environment = FormulaEnvironmentInput.empty();
-    SheetOutlineSummaryInput outlineSummary = SheetOutlineSummaryInput.defaults();
-    SheetDisplayInput display = SheetDisplayInput.defaults();
-    SheetDefaultsInput sheetDefaults = SheetDefaultsInput.defaults();
-    HeaderFooterTextInput headerFooter = HeaderFooterTextInput.blank();
-    SheetPresentationInput presentation = SheetPresentationInput.defaults();
-    WorkbookProtectionInput protection =
-        new WorkbookProtectionInput(
+    CalculationPolicySpec calculation =
+        new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), false);
+    ExecutionModeSpec mode = ExecutionModeSpec.fullXssf();
+    ExecutionJournalSpec journalInput = new ExecutionJournalSpec(ExecutionJournalLevel.NORMAL);
+    FormulaEnvironmentSpec environment = FormulaEnvironmentSpec.empty();
+    SheetOutlineSummarySpec outlineSummary = SheetOutlineSummarySpec.defaults();
+    SheetDisplaySpec display = SheetDisplaySpec.defaults();
+    SheetDefaultsSpec sheetDefaults = SheetDefaultsSpec.defaults();
+    HeaderFooterTextSpec headerFooter = HeaderFooterTextSpec.blank();
+    SheetPresentationSpec presentation = SheetPresentationSpec.defaults();
+    WorkbookProtectionSpec protection =
+        new WorkbookProtectionSpec(
             false, false, false, java.util.Optional.empty(), java.util.Optional.empty());
-    AutofilterSortConditionInput sortCondition =
-        new AutofilterSortConditionInput.Value(new RangeRef("A1:A2"), true);
-    AutofilterFilterColumnInput filterColumn =
-        new AutofilterFilterColumnInput(
-            1L, true, new AutofilterFilterCriterionInput.Values(List.of("Ready"), false));
-    AutofilterSortStateInput sortState =
-        AutofilterSortStateInput.withoutSortMethod(
+    AutofilterSortConditionSpec sortCondition =
+        new AutofilterSortConditionSpec.Value(new RangeRef("A1:A2"), true);
+    AutofilterFilterColumnSpec filterColumn =
+        new AutofilterFilterColumnSpec(
+            1L, true, new AutofilterFilterCriterionSpec.Values(List.of("Ready"), false));
+    AutofilterSortStateSpec sortState =
+        AutofilterSortStateSpec.withoutSortMethod(
             new RangeRef("A1:B2"), false, false, List.of(sortCondition));
-    FormulaUdfFunctionInput udfFunction = new FormulaUdfFunctionInput("DOUBLE", 1, "ARG1*2");
-    FormulaUdfFunctionInput explicitUdfFunction =
-        new FormulaUdfFunctionInput("TRIPLE", 1, Integer.valueOf(3), "ARG1*3");
-    DataValidationPromptInput validationPrompt =
+    FormulaUdfFunctionSpec udfFunction = new FormulaUdfFunctionSpec("DOUBLE", 1, "ARG1*2");
+    FormulaUdfFunctionSpec explicitUdfFunction =
+        new FormulaUdfFunctionSpec("TRIPLE", 1, Integer.valueOf(3), "ARG1*3");
+    DataValidationPromptSpec validationPrompt =
         readJson(
             mapper,
             """
@@ -145,8 +145,8 @@ class ProtocolDefaultingCoverageTest {
               "showPromptBox": true
             }
             """,
-            DataValidationPromptInput.class);
-    DataValidationErrorAlertInput validationAlert =
+            DataValidationPromptSpec.class);
+    DataValidationErrorAlertSpec validationAlert =
         readJson(
             mapper,
             """
@@ -157,17 +157,17 @@ class ProtocolDefaultingCoverageTest {
               "showErrorBox": true
             }
             """,
-            DataValidationErrorAlertInput.class);
-    OoxmlSignatureInput signature =
-        OoxmlSignatureInput.sameKeyPassword(
+            DataValidationErrorAlertSpec.class);
+    OoxmlSignatureSpec signature =
+        OoxmlSignatureSpec.sameKeyPassword(
             "keys/signing.p12",
             new SecretReference("store-pass"),
             Optional.empty(),
             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
             Optional.empty());
-    OoxmlSignatureInput explicitSignature =
+    OoxmlSignatureSpec explicitSignature =
         readOmitted(
-            OoxmlSignatureInput.class,
+            OoxmlSignatureSpec.class,
             "keys/signing.p12",
             new SecretReference("store-pass"),
             Optional.of(new SecretReference("key-pass")),
@@ -185,20 +185,20 @@ class ProtocolDefaultingCoverageTest {
             List.of(),
             List.of());
 
-    assertEquals(new CalculationStrategyInput.DoNotCalculate(), calculation.strategy());
+    assertEquals(new CalculationStrategySpec.DoNotCalculate(), calculation.strategy());
     assertFalse(calculation.markRecalculateOnOpen());
     assertTrue(mode.isDefault());
     assertEquals(ExecutionJournalLevel.NORMAL, journalInput.level());
     assertTrue(environment.isEmpty());
-    assertEquals(SheetOutlineSummaryInput.defaults(), outlineSummary);
-    assertEquals(SheetDisplayInput.defaults(), display);
-    assertEquals(SheetDefaultsInput.defaults(), sheetDefaults);
-    assertEquals(HeaderFooterTextInput.blank(), headerFooter);
-    assertEquals(SheetPresentationInput.defaults(), presentation);
+    assertEquals(SheetOutlineSummarySpec.defaults(), outlineSummary);
+    assertEquals(SheetDisplaySpec.defaults(), display);
+    assertEquals(SheetDefaultsSpec.defaults(), sheetDefaults);
+    assertEquals(HeaderFooterTextSpec.blank(), headerFooter);
+    assertEquals(SheetPresentationSpec.defaults(), presentation);
     assertFalse(protection.structureLocked());
     assertFalse(protection.windowsLocked());
     assertFalse(protection.revisionsLocked());
-    assertInstanceOf(AutofilterSortConditionInput.Value.class, sortCondition);
+    assertInstanceOf(AutofilterSortConditionSpec.Value.class, sortCondition);
     assertTrue(filterColumn.showButton());
     assertFalse(sortState.caseSensitive());
     assertFalse(sortState.columnSort());
@@ -221,25 +221,25 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void requestConstructorsDefaultWireBooleansWhileRejectingMissingRequiredState() {
-    assertThrows(NullPointerException.class, () -> new CalculationPolicyInput(null, false));
-    assertThrows(NullPointerException.class, () -> ExecutionPolicyInput.mode(null));
-    assertThrows(NullPointerException.class, () -> new ExecutionJournalInput(null));
-    assertThrows(NullPointerException.class, () -> new FormulaEnvironmentInput(null, null, null));
+    assertThrows(NullPointerException.class, () -> new CalculationPolicySpec(null, false));
+    assertThrows(NullPointerException.class, () -> ExecutionPolicySpec.mode(null));
+    assertThrows(NullPointerException.class, () -> new ExecutionJournalSpec(null));
+    assertThrows(NullPointerException.class, () -> new FormulaEnvironmentSpec(null, null, null));
     assertThrows(
         tools.jackson.core.JacksonException.class,
-        () -> readOmitted(SheetDisplayInput.class, null, null, null, null, null));
+        () -> readOmitted(SheetDisplaySpec.class, null, null, null, null, null));
     assertThrows(
         tools.jackson.core.JacksonException.class,
-        () -> readOmitted(SheetOutlineSummaryInput.class, null, null));
+        () -> readOmitted(SheetOutlineSummarySpec.class, null, null));
     assertThrows(
         tools.jackson.core.JacksonException.class,
-        () -> readOmitted(SheetDefaultsInput.class, null, null));
+        () -> readOmitted(SheetDefaultsSpec.class, null, null));
     assertTrue(
-        readOmitted(DataValidationPromptInput.class, text("Status"), text("Choose one."), null)
+        readOmitted(DataValidationPromptSpec.class, text("Status"), text("Choose one."), null)
             .showPromptBox());
     assertTrue(
         readOmitted(
-                DataValidationErrorAlertInput.class,
+                DataValidationErrorAlertSpec.class,
                 ExcelDataValidationErrorStyle.STOP,
                 text("Invalid status"),
                 text("Use one of the allowed values."),
@@ -251,12 +251,12 @@ class ProtocolDefaultingCoverageTest {
   void recordMetadataAppliesCatalogOwnedOmissionDefaults() {
     JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
 
-    ExecutionPolicyInput execution = readJson(mapper, "{}", ExecutionPolicyInput.class);
-    ExecutionJournalInput journal = readJson(mapper, "{}", ExecutionJournalInput.class);
-    CalculationPolicyInput calculation = readJson(mapper, "{}", CalculationPolicyInput.class);
-    FormulaEnvironmentInput formulaEnvironment =
-        readJson(mapper, "{}", FormulaEnvironmentInput.class);
-    OoxmlEncryptionInput encryption =
+    ExecutionPolicySpec execution = readJson(mapper, "{}", ExecutionPolicySpec.class);
+    ExecutionJournalSpec journal = readJson(mapper, "{}", ExecutionJournalSpec.class);
+    CalculationPolicySpec calculation = readJson(mapper, "{}", CalculationPolicySpec.class);
+    FormulaEnvironmentSpec formulaEnvironment =
+        readJson(mapper, "{}", FormulaEnvironmentSpec.class);
+    OoxmlEncryptionSpec encryption =
         readJson(
             mapper,
             """
@@ -264,8 +264,8 @@ class ProtocolDefaultingCoverageTest {
               "passwordRef": { "id": "persist-pass" }
             }
             """,
-            OoxmlEncryptionInput.class);
-    OoxmlSignatureInput signature =
+            OoxmlEncryptionSpec.class);
+    OoxmlSignatureSpec signature =
         readJson(
             mapper,
             """
@@ -274,16 +274,16 @@ class ProtocolDefaultingCoverageTest {
               "keystorePasswordRef": { "id": "store-pass" }
             }
             """,
-            OoxmlSignatureInput.class);
-    OoxmlEncryptionInput explicitEncryption =
+            OoxmlSignatureSpec.class);
+    OoxmlEncryptionSpec explicitEncryption =
         readOmitted(
-            OoxmlEncryptionInput.class,
+            OoxmlEncryptionSpec.class,
             new SecretReference("persist-pass"),
             ExcelOoxmlWriteCipher.AES_192,
             ExcelOoxmlWriteHash.SHA_384);
-    OoxmlSignatureInput createdSignatureWithNullOptionals =
+    OoxmlSignatureSpec createdSignatureWithNullOptionals =
         readOmitted(
-            OoxmlSignatureInput.class,
+            OoxmlSignatureSpec.class,
             "keys/signing.p12",
             new SecretReference("store-pass"),
             Optional.of(new SecretReference("key-pass")),
@@ -315,36 +315,36 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void autofilterAndExecutionInputsCoverExplicitAndStrictBranches() {
-    AutofilterFilterCriterionInput.Values criterion =
-        new AutofilterFilterCriterionInput.Values(List.of("Ready"), false);
-    AutofilterSortConditionInput valueCondition =
-        new AutofilterSortConditionInput.Value(new RangeRef("A1:A4"), true);
-    AutofilterFilterColumnInput visibleButtonColumn =
-        new AutofilterFilterColumnInput(2L, true, criterion);
-    AutofilterFilterColumnInput hiddenButtonColumn =
-        new AutofilterFilterColumnInput(2L, false, criterion);
-    AutofilterSortStateInput defaultedSortState =
-        AutofilterSortStateInput.withoutSortMethod(
+    AutofilterFilterCriterionSpec.Values criterion =
+        new AutofilterFilterCriterionSpec.Values(List.of("Ready"), false);
+    AutofilterSortConditionSpec valueCondition =
+        new AutofilterSortConditionSpec.Value(new RangeRef("A1:A4"), true);
+    AutofilterFilterColumnSpec visibleButtonColumn =
+        new AutofilterFilterColumnSpec(2L, true, criterion);
+    AutofilterFilterColumnSpec hiddenButtonColumn =
+        new AutofilterFilterColumnSpec(2L, false, criterion);
+    AutofilterSortStateSpec defaultedSortState =
+        AutofilterSortStateSpec.withoutSortMethod(
             new RangeRef("A1:B4"), false, false, List.of(valueCondition));
-    AutofilterSortStateInput explicitSortState =
-        new AutofilterSortStateInput(
+    AutofilterSortStateSpec explicitSortState =
+        new AutofilterSortStateSpec(
             new RangeRef("A1:B4"),
             true,
             true,
             Optional.of(ExcelAutofilterSortMethod.PINYIN),
             List.of(valueCondition));
-    ExecutionModeInput customMode = ExecutionModeInput.eventRead();
-    ExecutionModeInput writeOnlyCustomMode = ExecutionModeInput.streamingWrite();
-    ExecutionPolicyInput customPolicy = ExecutionPolicyInput.mode(customMode);
-    ExecutionPolicyInput customJournalPolicy =
-        ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE));
-    SheetDisplayInput explicitDisplay = new SheetDisplayInput(false, true, false, true, false);
-    SheetOutlineSummaryInput explicitOutline = new SheetOutlineSummaryInput(false, true);
-    SheetDefaultsInput explicitSheetDefaults =
-        new SheetDefaultsInput(Integer.valueOf(12), Double.valueOf(18.5d));
+    ExecutionModeSpec customMode = ExecutionModeSpec.eventRead();
+    ExecutionModeSpec writeOnlyCustomMode = ExecutionModeSpec.streamingWrite();
+    ExecutionPolicySpec customPolicy = ExecutionPolicySpec.mode(customMode);
+    ExecutionPolicySpec customJournalPolicy =
+        ExecutionPolicySpec.journal(new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE));
+    SheetDisplaySpec explicitDisplay = new SheetDisplaySpec(false, true, false, true, false);
+    SheetOutlineSummarySpec explicitOutline = new SheetOutlineSummarySpec(false, true);
+    SheetDefaultsSpec explicitSheetDefaults =
+        new SheetDefaultsSpec(Integer.valueOf(12), Double.valueOf(18.5d));
     assertTrue(visibleButtonColumn.showButton());
     assertFalse(hiddenButtonColumn.showButton());
-    assertInstanceOf(AutofilterSortConditionInput.Value.class, valueCondition);
+    assertInstanceOf(AutofilterSortConditionSpec.Value.class, valueCondition);
     assertFalse(defaultedSortState.caseSensitive());
     assertFalse(defaultedSortState.columnSort());
     assertEquals(Optional.empty(), defaultedSortState.sortMethod());
@@ -364,10 +364,10 @@ class ProtocolDefaultingCoverageTest {
     assertTrue(explicitOutline.rowSumsRight());
     assertEquals(12, explicitSheetDefaults.defaultColumnWidth());
     assertEquals(18.5d, explicitSheetDefaults.defaultRowHeightPoints());
-    assertTrue(readOmitted(AutofilterFilterColumnInput.class, 2L, null, criterion).showButton());
-    AutofilterSortStateInput defaultedWireSortState =
+    assertTrue(readOmitted(AutofilterFilterColumnSpec.class, 2L, null, criterion).showButton());
+    AutofilterSortStateSpec defaultedWireSortState =
         readOmitted(
-            AutofilterSortStateInput.class,
+            AutofilterSortStateSpec.class,
             new RangeRef("A1:B4"),
             null,
             null,
@@ -380,34 +380,34 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void residualWireDefaultsHandleOmittedFields() {
-    CommentInput comment =
-        readOmitted(CommentInput.class, text("Owner note"), "Ada", null, null, null);
-    AutofilterSortConditionInput valueCondition =
-        new AutofilterSortConditionInput.Value(new RangeRef("A1:A4"), true);
-    AutofilterSortStateInput defaultedSortState =
+    CommentSpec comment =
+        readOmitted(CommentSpec.class, text("Owner note"), "Ada", null, null, null);
+    AutofilterSortConditionSpec valueCondition =
+        new AutofilterSortConditionSpec.Value(new RangeRef("A1:A4"), true);
+    AutofilterSortStateSpec defaultedSortState =
         readOmitted(
-            AutofilterSortStateInput.class,
+            AutofilterSortStateSpec.class,
             new RangeRef("A1:B4"),
             false,
             true,
             null,
             List.of(valueCondition));
-    WorkbookProtectionInput protection =
-        readOmitted(WorkbookProtectionInput.class, null, null, null, null, null);
-    PivotTableInput.DataField dataField =
+    WorkbookProtectionSpec protection =
+        readOmitted(WorkbookProtectionSpec.class, null, null, null, null, null);
+    PivotTableSpec.DataField dataField =
         readOmitted(
-            PivotTableInput.DataField.class,
+            PivotTableSpec.DataField.class,
             "Amount",
             ExcelPivotDataConsolidateFunction.SUM,
             null,
             null);
-    TableColumnInput tableColumn = readOmitted(TableColumnInput.class, 0, null, null, null, null);
-    TableColumnInput explicitFactoryColumn =
-        readOmitted(TableColumnInput.class, 1, "owner", "Total", " SUM ", "=[@Amount]");
-    DataValidationInput validation =
+    TableColumnSpec tableColumn = readOmitted(TableColumnSpec.class, 0, null, null, null, null);
+    TableColumnSpec explicitFactoryColumn =
+        readOmitted(TableColumnSpec.class, 1, "owner", "Total", " SUM ", "=[@Amount]");
+    DataValidationSpec validation =
         readOmitted(
-            DataValidationInput.class,
-            new DataValidationRuleInput.ExplicitList(List.of("Ready")),
+            DataValidationSpec.class,
+            new DataValidationRuleSpec.ExplicitList(List.of("Ready")),
             null,
             null,
             null,
@@ -438,21 +438,21 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void tableWireConstructorsCoverExplicitAndDefaultedBranches() {
-    TableInput defaultedTable =
-        TableInput.withDefaultMetadata(
+    TableSpec defaultedTable =
+        TableSpec.withDefaultMetadata(
             new TableName("Budget"),
             new SheetName("Budget"),
             new RangeRef("A1:B3"),
             false,
-            new TableStyleInput.None());
-    TableInput explicitTable =
-        new TableInput(
+            new TableStyleSpec.None());
+    TableSpec explicitTable =
+        new TableSpec(
             new TableName("StyledBudget"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C3"),
             true,
             false,
-            new TableStyleInput.Named("TableStyleMedium2", true, false, true, false),
+            new TableStyleSpec.Named("TableStyleMedium2", true, false, true, false),
             text("Quarterly budget"),
             true,
             true,
@@ -460,15 +460,15 @@ class ProtocolDefaultingCoverageTest {
             "HeaderStyle",
             "DataStyle",
             "TotalsStyle",
-            List.of(new TableColumnInput(0, "owner", "total", "sum", "=[@Amount]")));
-    TableInput explicitAutofilterTable =
-        new TableInput(
+            List.of(new TableColumnSpec(0, "owner", "total", "sum", "=[@Amount]")));
+    TableSpec explicitAutofilterTable =
+        new TableSpec(
             new TableName("VisibleAutofilterBudget"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C3"),
             false,
             true,
-            new TableStyleInput.None(),
+            new TableStyleSpec.None(),
             text(""),
             false,
             false,
@@ -477,14 +477,14 @@ class ProtocolDefaultingCoverageTest {
             "",
             "",
             List.of());
-    TableInput explicitTotalsAndNoAutofilterTable =
-        new TableInput(
+    TableSpec explicitTotalsAndNoAutofilterTable =
+        new TableSpec(
             new TableName("TotalsWithoutAutofilterBudget"),
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             new RangeRef("A1:C3"),
             true,
             false,
-            new TableStyleInput.None(),
+            new TableStyleSpec.None(),
             text(""),
             false,
             false,
@@ -527,15 +527,15 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(Optional.empty(), defaultedTableReport.presentation().headerRowCellStyle());
     assertEquals(Optional.empty(), defaultedTableReport.presentation().dataCellStyle());
     assertEquals(Optional.empty(), defaultedTableReport.presentation().totalsRowCellStyle());
-    TableInput defaultedWireTable =
+    TableSpec defaultedWireTable =
         readOmitted(
-            TableInput.class,
+            TableSpec.class,
             new TableName("Budget"),
             new SheetName("Budget"),
             new RangeRef("A1:B3"),
             null,
             null,
-            new TableStyleInput.None(),
+            new TableStyleSpec.None(),
             null,
             null,
             null,
@@ -559,56 +559,56 @@ class ProtocolDefaultingCoverageTest {
   @Test
   void validationChartPrintAndSignatureWireConstructorsCoverExplicitAndDefaultedBranches() {
     JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
-    DataValidationErrorAlertInput explicitAlert =
-        new DataValidationErrorAlertInput(
+    DataValidationErrorAlertSpec explicitAlert =
+        new DataValidationErrorAlertSpec(
             ExcelDataValidationErrorStyle.STOP,
             text("Invalid"),
             text("Choose an allowed value."),
             true);
-    DataValidationErrorAlertInput hiddenAlert =
-        new DataValidationErrorAlertInput(
+    DataValidationErrorAlertSpec hiddenAlert =
+        new DataValidationErrorAlertSpec(
             ExcelDataValidationErrorStyle.WARNING,
             text("Caution"),
             text("Review the warning."),
             false);
-    ChartSeriesInput series =
-        new ChartSeriesInput(
-            new ChartTitleInput.None(),
-            new ChartDataSourceInput.StringLiteral(List.of("Jan")),
-            new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
+    ChartSeriesSpec series =
+        new ChartSeriesSpec(
+            new ChartTitleSpec.None(),
+            new ChartDataSourceSpec.StringLiteral(List.of("Jan")),
+            new ChartDataSourceSpec.NumericLiteral(List.of(10.0d)),
             Optional.of(true),
             Optional.of(ExcelChartMarkerStyle.CIRCLE),
             Optional.of((short) 6),
             Optional.empty());
-    ChartInput defaultedChart =
-        ChartInput.withStandardDisplay(
+    ChartSpec defaultedChart =
+        ChartSpec.withStandardDisplay(
             "BudgetChart",
             twoCellAnchor(),
-            List.of(new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(series))));
-    ChartInput explicitChart =
-        new ChartInput(
+            List.of(new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(series))));
+    ChartSpec explicitChart =
+        new ChartSpec(
             "BudgetChartExplicit",
             twoCellAnchor(),
-            new ChartTitleInput.Text(text("Budget")),
-            new ChartLegendInput.Hidden(),
+            new ChartTitleSpec.Text(text("Budget")),
+            new ChartLegendSpec.Hidden(),
             ExcelChartDisplayBlanksAs.SPAN,
             false,
-            List.of(new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(series))));
-    ChartAxisInput defaultedAxis =
-        ChartAxisInput.visible(
+            List.of(new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(series))));
+    ChartAxisSpec defaultedAxis =
+        ChartAxisSpec.visible(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO);
-    ChartAxisInput hiddenAxis =
-        new ChartAxisInput(
+    ChartAxisSpec hiddenAxis =
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             false);
-    PrintSetupInput defaultedPrintSetup = PrintSetupInput.defaults();
-    PrintSetupInput explicitPrintSetup =
-        new PrintSetupInput(
-            new PrintMarginsInput(0.6d, 0.6d, 0.7d, 0.7d, 0.2d, 0.2d),
+    PrintSetupSpec defaultedPrintSetup = PrintSetupSpec.defaults();
+    PrintSetupSpec explicitPrintSetup =
+        new PrintSetupSpec(
+            new PrintMarginsSpec(0.6d, 0.6d, 0.7d, 0.7d, 0.2d, 0.2d),
             true,
             true,
             true,
@@ -620,7 +620,7 @@ class ProtocolDefaultingCoverageTest {
             Integer.valueOf(7),
             List.of(3),
             List.of(4));
-    SignatureLineInput defaultedSignatureLine =
+    SignatureLineSpec defaultedSignatureLine =
         readJson(
             mapper,
             """
@@ -637,21 +637,21 @@ class ProtocolDefaultingCoverageTest {
               "caption": "Budget approval"
             }
             """,
-            SignatureLineInput.class);
+            SignatureLineSpec.class);
 
     assertTrue(explicitAlert.showErrorBox());
     assertFalse(hiddenAlert.showErrorBox());
-    assertTrue(defaultedChart.title() instanceof ChartTitleInput.None);
+    assertTrue(defaultedChart.title() instanceof ChartTitleSpec.None);
     assertEquals(
-        new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT), defaultedChart.legend());
+        new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), defaultedChart.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultedChart.displayBlanksAs());
     assertTrue(defaultedChart.plotOnlyVisibleCells());
-    assertTrue(explicitChart.legend() instanceof ChartLegendInput.Hidden);
+    assertTrue(explicitChart.legend() instanceof ChartLegendSpec.Hidden);
     assertEquals(ExcelChartDisplayBlanksAs.SPAN, explicitChart.displayBlanksAs());
     assertFalse(explicitChart.plotOnlyVisibleCells());
     assertTrue(defaultedAxis.visible());
     assertFalse(hiddenAxis.visible());
-    assertEquals(PrintSetupInput.defaults(), defaultedPrintSetup);
+    assertEquals(PrintSetupSpec.defaults(), defaultedPrintSetup);
     assertTrue(explicitPrintSetup.printGridlines());
     assertTrue(explicitPrintSetup.horizontallyCentered());
     assertTrue(explicitPrintSetup.verticallyCentered());
@@ -668,7 +668,7 @@ class ProtocolDefaultingCoverageTest {
         tools.jackson.core.JacksonException.class,
         () ->
             readOmitted(
-                ChartInput.class,
+                ChartSpec.class,
                 "BudgetChart",
                 twoCellAnchor(),
                 null,
@@ -676,12 +676,12 @@ class ProtocolDefaultingCoverageTest {
                 null,
                 null,
                 List.of(
-                    new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(series)))));
+                    new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(series)))));
     assertThrows(
         tools.jackson.core.JacksonException.class,
         () ->
             readOmitted(
-                ChartAxisInput.class,
+                ChartAxisSpec.class,
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
                 ExcelChartAxisCrosses.AUTO_ZERO,
@@ -690,7 +690,7 @@ class ProtocolDefaultingCoverageTest {
         tools.jackson.core.JacksonException.class,
         () ->
             readOmitted(
-                PrintSetupInput.class,
+                PrintSetupSpec.class,
                 null,
                 null,
                 null,
@@ -713,8 +713,8 @@ class ProtocolDefaultingCoverageTest {
             new PlanId("budget-defaults"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan explicitExecutionPlan =
         WorkbookPlan.identified(
@@ -722,8 +722,8 @@ class ProtocolDefaultingCoverageTest {
             new PlanId("budget-execution"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.journal(new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE)),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan wireDefaultedPlan =
         readOmitted(
@@ -747,10 +747,10 @@ class ProtocolDefaultingCoverageTest {
     AutofilterSortStateReport createdStateReport =
         AutofilterSortStateReport.withoutSortMethod(
             new RangeLabel("A1:F9"), true, false, List.of(createdConditionReport));
-    BorderSideInput borderSide =
-        new BorderSideInput(Optional.of(ExcelBorderStyle.THIN), Optional.empty());
-    DifferentialBorderInput borderInput =
-        new DifferentialBorderInput(
+    BorderSidePatch borderSide =
+        new BorderSidePatch(Optional.of(ExcelBorderStyle.THIN), Optional.empty());
+    DifferentialBorderPatch borderInput =
+        new DifferentialBorderPatch(
             Optional.of(borderSide),
             Optional.empty(),
             Optional.empty(),
@@ -765,13 +765,13 @@ class ProtocolDefaultingCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
-    AutofilterSortConditionInput explicitSortCondition =
-        new AutofilterSortConditionInput.Icon(new RangeRef("D2:D9"), false, 1);
-    AutofilterFilterColumnInput explicitFilterColumn =
-        new AutofilterFilterColumnInput(
-            2L, false, new AutofilterFilterCriterionInput.Values(List.of("Queued"), true));
-    AutofilterSortStateInput explicitSortState =
-        new AutofilterSortStateInput(
+    AutofilterSortConditionSpec explicitSortCondition =
+        new AutofilterSortConditionSpec.Icon(new RangeRef("D2:D9"), false, 1);
+    AutofilterFilterColumnSpec explicitFilterColumn =
+        new AutofilterFilterColumnSpec(
+            2L, false, new AutofilterFilterCriterionSpec.Values(List.of("Queued"), true));
+    AutofilterSortStateSpec explicitSortState =
+        new AutofilterSortStateSpec(
             new RangeRef("A1:D9"),
             true,
             true,
@@ -786,21 +786,21 @@ class ProtocolDefaultingCoverageTest {
             true,
             Optional.of(ExcelAutofilterSortMethod.PINYIN),
             List.of(explicitConditionReport));
-    SheetDisplayInput explicitDisplay = new SheetDisplayInput(false, true, false, true, true);
-    SheetOutlineSummaryInput explicitOutline = new SheetOutlineSummaryInput(false, true);
-    SheetDefaultsInput explicitSheetDefaults = new SheetDefaultsInput(18, 24.5d);
-    SheetPresentationInput explicitPresentation =
-        new SheetPresentationInput(
+    SheetDisplaySpec explicitDisplay = new SheetDisplaySpec(false, true, false, true, true);
+    SheetOutlineSummarySpec explicitOutline = new SheetOutlineSummarySpec(false, true);
+    SheetDefaultsSpec explicitSheetDefaults = new SheetDefaultsSpec(18, 24.5d);
+    SheetPresentationSpec explicitPresentation =
+        new SheetPresentationSpec(
             explicitDisplay,
-            Optional.of(ColorInput.rgb(new RgbHex("#aabbcc"))),
+            Optional.of(ColorSpec.rgb(new RgbHex("#aabbcc"))),
             explicitOutline,
             explicitSheetDefaults,
             List.of(
-                new IgnoredErrorInput(
+                new IgnoredErrorSpec(
                     new RangeRef("A1:A3"), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))));
-    FormulaEnvironmentInput explicitEnvironment =
-        new FormulaEnvironmentInput(
-            List.of(new FormulaExternalWorkbookInput("Rates.xlsx", "tmp/rates.xlsx")),
+    FormulaEnvironmentSpec explicitEnvironment =
+        new FormulaEnvironmentSpec(
+            List.of(new FormulaExternalWorkbookSpec("Rates.xlsx", "tmp/rates.xlsx")),
             FormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
             List.of());
 
@@ -837,7 +837,7 @@ class ProtocolDefaultingCoverageTest {
             new DifferentialBorderSideReport(
                 Optional.of(ExcelBorderStyle.NONE),
                 Optional.of(CellColorReport.rgb(new RgbHex("#aabbcc")))));
-    assertInstanceOf(AutofilterSortConditionInput.Icon.class, explicitSortCondition);
+    assertInstanceOf(AutofilterSortConditionSpec.Icon.class, explicitSortCondition);
     assertFalse(explicitFilterColumn.showButton());
     assertEquals(Optional.of(ExcelAutofilterSortMethod.PINYIN), explicitSortState.sortMethod());
     assertInstanceOf(AutofilterSortConditionReport.Icon.class, explicitConditionReport);
@@ -852,53 +852,53 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void chartConstructorsAndConvenienceConstructorsSupplyExplicitDefaults() {
-    ChartSeriesInput explicitSeries =
-        new ChartSeriesInput(
-            new ChartTitleInput.None(),
-            new ChartDataSourceInput.StringLiteral(List.of("Jan", "Feb")),
-            new ChartDataSourceInput.NumericLiteral(List.of(10.0d, 18.0d)),
+    ChartSeriesSpec explicitSeries =
+        new ChartSeriesSpec(
+            new ChartTitleSpec.None(),
+            new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+            new ChartDataSourceSpec.NumericLiteral(List.of(10.0d, 18.0d)),
             Optional.of(true),
             Optional.of(ExcelChartMarkerStyle.DIAMOND),
             Optional.of((short) 8),
             Optional.of(12L));
-    ChartSeriesInput convenienceSeries =
-        ChartSeriesInput.untitled(
-            new ChartDataSourceInput.Reference("Categories"),
-            new ChartDataSourceInput.Reference("Values"),
+    ChartSeriesSpec convenienceSeries =
+        ChartSeriesSpec.untitled(
+            new ChartDataSourceSpec.Reference("Categories"),
+            new ChartDataSourceSpec.Reference("Values"),
             Optional.of(false),
             Optional.of(ExcelChartMarkerStyle.CIRCLE),
             Optional.of((short) 6),
             Optional.empty());
-    ChartAxisInput defaultAxis =
-        ChartAxisInput.visible(
+    ChartAxisSpec defaultAxis =
+        ChartAxisSpec.visible(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO);
-    List<ChartAxisInput> explicitAxes =
+    List<ChartAxisSpec> explicitAxes =
         List.of(
             defaultAxis,
-            new ChartAxisInput(
+            new ChartAxisSpec(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
                 ExcelChartAxisCrosses.AUTO_ZERO,
                 false));
-    ChartPlotInput.Area explicitArea =
-        new ChartPlotInput.Area(
+    ChartPlotSpec.Area explicitArea =
+        new ChartPlotSpec.Area(
             true, ExcelChartGrouping.PERCENT_STACKED, explicitAxes, List.of(explicitSeries));
-    ChartPlotInput.Area convenienceArea =
-        new ChartPlotInput.Area(false, ExcelChartGrouping.STANDARD, List.of(explicitSeries));
-    ChartPlotInput.Area3D explicitArea3D =
-        new ChartPlotInput.Area3D(
+    ChartPlotSpec.Area convenienceArea =
+        new ChartPlotSpec.Area(false, ExcelChartGrouping.STANDARD, List.of(explicitSeries));
+    ChartPlotSpec.Area3D explicitArea3D =
+        new ChartPlotSpec.Area3D(
             false,
             ExcelChartGrouping.STACKED,
             Optional.of(24),
             explicitAxes,
             List.of(explicitSeries));
-    ChartPlotInput.Area3D convenienceArea3D =
-        new ChartPlotInput.Area3D(
+    ChartPlotSpec.Area3D convenienceArea3D =
+        new ChartPlotSpec.Area3D(
             false, ExcelChartGrouping.STANDARD, Optional.of(16), List.of(explicitSeries));
-    ChartPlotInput.Bar3D explicitBar3D =
-        new ChartPlotInput.Bar3D(
+    ChartPlotSpec.Bar3D explicitBar3D =
+        new ChartPlotSpec.Bar3D(
             false,
             ExcelChartBarDirection.BAR,
             ExcelChartBarGrouping.PERCENT_STACKED,
@@ -907,8 +907,8 @@ class ProtocolDefaultingCoverageTest {
             Optional.of(ExcelChartBarShape.CONE),
             explicitAxes,
             List.of(explicitSeries));
-    ChartPlotInput.Bar3D convenienceBar3D =
-        new ChartPlotInput.Bar3D(
+    ChartPlotSpec.Bar3D convenienceBar3D =
+        new ChartPlotSpec.Bar3D(
             false,
             ExcelChartBarDirection.COLUMN,
             ExcelChartBarGrouping.CLUSTERED,
@@ -916,53 +916,53 @@ class ProtocolDefaultingCoverageTest {
             Optional.of(90),
             Optional.of(ExcelChartBarShape.BOX),
             List.of(explicitSeries));
-    ChartPlotInput.Line explicitLine =
-        new ChartPlotInput.Line(
+    ChartPlotSpec.Line explicitLine =
+        new ChartPlotSpec.Line(
             true, ExcelChartGrouping.STACKED, explicitAxes, List.of(explicitSeries));
-    ChartPlotInput.Line convenienceLine =
-        new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(explicitSeries));
-    ChartPlotInput.Line3D explicitLine3D =
-        new ChartPlotInput.Line3D(
+    ChartPlotSpec.Line convenienceLine =
+        new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(explicitSeries));
+    ChartPlotSpec.Line3D explicitLine3D =
+        new ChartPlotSpec.Line3D(
             true,
             ExcelChartGrouping.PERCENT_STACKED,
             Optional.of(32),
             explicitAxes,
             List.of(explicitSeries));
-    ChartPlotInput.Line3D convenienceLine3D =
-        new ChartPlotInput.Line3D(
+    ChartPlotSpec.Line3D convenienceLine3D =
+        new ChartPlotSpec.Line3D(
             false, ExcelChartGrouping.STANDARD, Optional.of(8), List.of(explicitSeries));
-    ChartPlotInput.Radar explicitRadar =
-        new ChartPlotInput.Radar(
+    ChartPlotSpec.Radar explicitRadar =
+        new ChartPlotSpec.Radar(
             true, ExcelChartRadarStyle.MARKER, explicitAxes, List.of(explicitSeries));
-    ChartPlotInput.Radar convenienceRadar =
-        new ChartPlotInput.Radar(false, ExcelChartRadarStyle.STANDARD, List.of(explicitSeries));
-    ChartPlotInput.Scatter explicitScatter =
-        new ChartPlotInput.Scatter(
+    ChartPlotSpec.Radar convenienceRadar =
+        new ChartPlotSpec.Radar(false, ExcelChartRadarStyle.STANDARD, List.of(explicitSeries));
+    ChartPlotSpec.Scatter explicitScatter =
+        new ChartPlotSpec.Scatter(
             true, ExcelChartScatterStyle.SMOOTH, explicitAxes, List.of(explicitSeries));
-    ChartPlotInput.Scatter convenienceScatter =
-        new ChartPlotInput.Scatter(false, ExcelChartScatterStyle.LINE, List.of(explicitSeries));
-    ChartPlotInput.Surface explicitSurface =
-        new ChartPlotInput.Surface(true, true, explicitAxes, List.of(explicitSeries));
-    ChartPlotInput.Surface convenienceSurface =
-        new ChartPlotInput.Surface(false, false, List.of(explicitSeries));
-    ChartPlotInput.Surface3D explicitSurface3D =
-        new ChartPlotInput.Surface3D(true, true, explicitAxes, List.of(explicitSeries));
-    ChartPlotInput.Surface3D convenienceSurface3D =
-        new ChartPlotInput.Surface3D(false, false, List.of(explicitSeries));
-    ChartInput createdChart =
-        new ChartInput(
+    ChartPlotSpec.Scatter convenienceScatter =
+        new ChartPlotSpec.Scatter(false, ExcelChartScatterStyle.LINE, List.of(explicitSeries));
+    ChartPlotSpec.Surface explicitSurface =
+        new ChartPlotSpec.Surface(true, true, explicitAxes, List.of(explicitSeries));
+    ChartPlotSpec.Surface convenienceSurface =
+        new ChartPlotSpec.Surface(false, false, List.of(explicitSeries));
+    ChartPlotSpec.Surface3D explicitSurface3D =
+        new ChartPlotSpec.Surface3D(true, true, explicitAxes, List.of(explicitSeries));
+    ChartPlotSpec.Surface3D convenienceSurface3D =
+        new ChartPlotSpec.Surface3D(false, false, List.of(explicitSeries));
+    ChartSpec createdChart =
+        new ChartSpec(
             "CreatedChart",
             twoCellAnchor(),
-            new ChartTitleInput.None(),
-            new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT),
+            new ChartTitleSpec.None(),
+            new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
             ExcelChartDisplayBlanksAs.GAP,
             true,
             List.of(explicitArea));
-    ChartInput convenienceChart =
-        ChartInput.withStandardDisplay("ConvenienceChart", twoCellAnchor(), List.of(explicitLine));
+    ChartSpec convenienceChart =
+        ChartSpec.withStandardDisplay("ConvenienceChart", twoCellAnchor(), List.of(explicitLine));
 
     assertTrue(defaultAxis.visible());
-    assertTrue(convenienceSeries.title() instanceof ChartTitleInput.None);
+    assertTrue(convenienceSeries.title() instanceof ChartTitleSpec.None);
     assertEquals(2, explicitArea.axes().size());
     assertEquals(2, convenienceArea.axes().size());
     assertEquals(2, explicitArea3D.axes().size());
@@ -981,29 +981,29 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(3, convenienceSurface.axes().size());
     assertEquals(2, explicitSurface3D.axes().size());
     assertEquals(3, convenienceSurface3D.axes().size());
-    assertTrue(createdChart.title() instanceof ChartTitleInput.None);
+    assertTrue(createdChart.title() instanceof ChartTitleSpec.None);
     assertEquals(
-        new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT), createdChart.legend());
+        new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), createdChart.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, createdChart.displayBlanksAs());
     assertTrue(createdChart.plotOnlyVisibleCells());
-    assertTrue(convenienceChart.title() instanceof ChartTitleInput.None);
+    assertTrue(convenienceChart.title() instanceof ChartTitleSpec.None);
   }
 
   @Test
   void chartPlotWireDefaultsHandleOmittedBooleansAndOptionals() {
-    ChartSeriesInput series = sampleSeries();
-    List<ChartAxisInput> axes = sampleAxes();
-    ChartPlotInput.Area3D area3D =
+    ChartSeriesSpec series = sampleSeries();
+    List<ChartAxisSpec> axes = sampleAxes();
+    ChartPlotSpec.Area3D area3D =
         readOmitted(
-            ChartPlotInput.Area3D.class,
+            ChartPlotSpec.Area3D.class,
             null,
             ExcelChartGrouping.STANDARD,
             null,
             axes,
             List.of(series));
-    ChartPlotInput.Bar3D bar3D =
+    ChartPlotSpec.Bar3D bar3D =
         readOmitted(
-            ChartPlotInput.Bar3D.class,
+            ChartPlotSpec.Bar3D.class,
             null,
             ExcelChartBarDirection.COLUMN,
             ExcelChartBarGrouping.CLUSTERED,
@@ -1012,31 +1012,31 @@ class ProtocolDefaultingCoverageTest {
             null,
             axes,
             List.of(series));
-    ChartPlotInput.Doughnut doughnut =
-        readOmitted(ChartPlotInput.Doughnut.class, null, null, null, List.of(series));
-    ChartPlotInput.Line line =
+    ChartPlotSpec.Doughnut doughnut =
+        readOmitted(ChartPlotSpec.Doughnut.class, null, null, null, List.of(series));
+    ChartPlotSpec.Line line =
         readOmitted(
-            ChartPlotInput.Line.class, null, ExcelChartGrouping.STANDARD, axes, List.of(series));
-    ChartPlotInput.Line3D line3D =
+            ChartPlotSpec.Line.class, null, ExcelChartGrouping.STANDARD, axes, List.of(series));
+    ChartPlotSpec.Line3D line3D =
         readOmitted(
-            ChartPlotInput.Line3D.class,
+            ChartPlotSpec.Line3D.class,
             null,
             ExcelChartGrouping.STANDARD,
             null,
             axes,
             List.of(series));
-    ChartPlotInput.Pie pie = readOmitted(ChartPlotInput.Pie.class, null, null, List.of(series));
-    ChartPlotInput.Pie3D pie3D = readOmitted(ChartPlotInput.Pie3D.class, null, List.of(series));
-    ChartPlotInput.Radar radar =
+    ChartPlotSpec.Pie pie = readOmitted(ChartPlotSpec.Pie.class, null, null, List.of(series));
+    ChartPlotSpec.Pie3D pie3D = readOmitted(ChartPlotSpec.Pie3D.class, null, List.of(series));
+    ChartPlotSpec.Radar radar =
         readOmitted(
-            ChartPlotInput.Radar.class, null, ExcelChartRadarStyle.STANDARD, axes, List.of(series));
-    ChartPlotInput.Scatter scatter =
+            ChartPlotSpec.Radar.class, null, ExcelChartRadarStyle.STANDARD, axes, List.of(series));
+    ChartPlotSpec.Scatter scatter =
         readOmitted(
-            ChartPlotInput.Scatter.class, null, ExcelChartScatterStyle.LINE, axes, List.of(series));
-    ChartPlotInput.Surface surface =
-        readOmitted(ChartPlotInput.Surface.class, null, null, axes, List.of(series));
-    ChartPlotInput.Surface3D surface3D =
-        readOmitted(ChartPlotInput.Surface3D.class, null, null, axes, List.of(series));
+            ChartPlotSpec.Scatter.class, null, ExcelChartScatterStyle.LINE, axes, List.of(series));
+    ChartPlotSpec.Surface surface =
+        readOmitted(ChartPlotSpec.Surface.class, null, null, axes, List.of(series));
+    ChartPlotSpec.Surface3D surface3D =
+        readOmitted(ChartPlotSpec.Surface3D.class, null, null, axes, List.of(series));
 
     assertFalse(area3D.varyColors());
     assertEquals(Optional.empty(), area3D.gapDepth());
@@ -1064,7 +1064,7 @@ class ProtocolDefaultingCoverageTest {
   @Test
   void creatorsRequireExplicitWireValues() {
     JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
-    PrintSetupInput printSetup =
+    PrintSetupSpec printSetup =
         mapper.readValue(
             """
             {
@@ -1089,8 +1089,8 @@ class ProtocolDefaultingCoverageTest {
               "columnBreaks": []
             }
             """,
-            PrintSetupInput.class);
-    PrintLayoutInput printLayout =
+            PrintSetupSpec.class);
+    PrintLayoutSpec printLayout =
         mapper.readValue(
             """
             {
@@ -1132,26 +1132,26 @@ class ProtocolDefaultingCoverageTest {
               }
             }
             """,
-            PrintLayoutInput.class);
-    PrintLayoutInput conveniencePrintLayout =
-        PrintLayoutInput.withDefaultSetup(
-            new PrintAreaInput.None(),
+            PrintLayoutSpec.class);
+    PrintLayoutSpec conveniencePrintLayout =
+        PrintLayoutSpec.withDefaultSetup(
+            new PrintAreaSpec.None(),
             ExcelPrintOrientation.LANDSCAPE,
-            new PrintScalingInput.Automatic(),
-            new PrintTitleRowsInput.None(),
-            new PrintTitleColumnsInput.None(),
-            HeaderFooterTextInput.blank(),
-            HeaderFooterTextInput.blank());
-    PrintLayoutInput createdPrintLayout =
-        PrintLayoutInput.withDefaultSetup(
-            new PrintAreaInput.None(),
+            new PrintScalingSpec.Automatic(),
+            new PrintTitleRowsSpec.None(),
+            new PrintTitleColumnsSpec.None(),
+            HeaderFooterTextSpec.blank(),
+            HeaderFooterTextSpec.blank());
+    PrintLayoutSpec createdPrintLayout =
+        PrintLayoutSpec.withDefaultSetup(
+            new PrintAreaSpec.None(),
             ExcelPrintOrientation.LANDSCAPE,
-            new PrintScalingInput.Automatic(),
-            new PrintTitleRowsInput.None(),
-            new PrintTitleColumnsInput.None(),
-            HeaderFooterTextInput.blank(),
-            HeaderFooterTextInput.blank());
-    SignatureLineInput signatureLine =
+            new PrintScalingSpec.Automatic(),
+            new PrintTitleRowsSpec.None(),
+            new PrintTitleColumnsSpec.None(),
+            HeaderFooterTextSpec.blank(),
+            HeaderFooterTextSpec.blank());
+    SignatureLineSpec signatureLine =
         mapper.readValue(
             """
             {
@@ -1171,7 +1171,7 @@ class ProtocolDefaultingCoverageTest {
               "invalidStamp": "invalid"
             }
             """,
-            SignatureLineInput.class);
+            SignatureLineSpec.class);
     TableEntryReport tableReport =
         mapper.readValue(
             """
@@ -1244,11 +1244,11 @@ class ProtocolDefaultingCoverageTest {
             """,
             ExecutionJournal.class);
 
-    assertEquals(new PrintMarginsInput(0.6d, 0.6d, 0.7d, 0.7d, 0.3d, 0.3d), printSetup.margins());
+    assertEquals(new PrintMarginsSpec(0.6d, 0.6d, 0.7d, 0.7d, 0.3d, 0.3d), printSetup.margins());
     assertEquals(ExcelPrintOrientation.PORTRAIT, printLayout.orientation());
     assertTrue(printLayout.setup().printGridlines());
-    assertEquals(PrintSetupInput.defaults(), conveniencePrintLayout.setup());
-    assertEquals(PrintSetupInput.defaults(), createdPrintLayout.setup());
+    assertEquals(PrintSetupSpec.defaults(), conveniencePrintLayout.setup());
+    assertEquals(PrintSetupSpec.defaults(), createdPrintLayout.setup());
     assertTrue(signatureLine.allowComments());
     assertEquals(Optional.empty(), tableReport.presentation().comment());
     assertEquals(Optional.empty(), tableReport.presentation().headerRowCellStyle());
@@ -1260,35 +1260,35 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(ExecutionJournalLevel.NORMAL, journal.level());
   }
 
-  private static DrawingAnchorInput.TwoCell twoCellAnchor() {
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(1, 0, 1, 0),
-        new DrawingMarkerInput(5, 0, 10, 0),
+  private static DrawingAnchorSpec.TwoCell twoCellAnchor() {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(1, 0, 1, 0),
+        new DrawingMarkerSpec(5, 0, 10, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+  private static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
   }
 
-  private static ChartSeriesInput sampleSeries() {
-    return ChartSeriesInput.untitled(
-        new ChartDataSourceInput.StringLiteral(List.of("Q1")),
-        new ChartDataSourceInput.NumericLiteral(List.of(1.0d)),
+  private static ChartSeriesSpec sampleSeries() {
+    return ChartSeriesSpec.untitled(
+        new ChartDataSourceSpec.StringLiteral(List.of("Q1")),
+        new ChartDataSourceSpec.NumericLiteral(List.of(1.0d)),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
   }
 
-  private static List<ChartAxisInput> sampleAxes() {
+  private static List<ChartAxisSpec> sampleAxes() {
     return List.of(
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartAxisInput(
+        new ChartAxisSpec(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,

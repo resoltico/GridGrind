@@ -8,15 +8,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.catalog.Catalog;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
@@ -36,7 +36,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -356,13 +356,13 @@ class GridGrindJsonTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(ExecutionModeInput.fullXssf()),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.mode(ExecutionModeSpec.fullXssf()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("set-owner"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-                    new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))),
+                    new CellMutationAction.SetCell(new CellValueSpec.Text(text("Owner")))),
                 new AssertionStep(
                     new StepId("assert-owner"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
@@ -460,8 +460,8 @@ class GridGrindJsonTest {
             GridGrindJsonOutput.writeWorkbookResultBytes(calculationFailure)));
   }
 
-  private static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+  private static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
   }
 
   @Test
@@ -496,7 +496,7 @@ class GridGrindJsonTest {
     String serializedJson = new String(serialized, StandardCharsets.UTF_8);
 
     assertFalse(serializedJson.contains("\"default\""));
-    assertEquals(ExecutionModeInput.fullXssf(), request.effectiveExecutionMode());
+    assertEquals(ExecutionModeSpec.fullXssf(), request.effectiveExecutionMode());
     assertFalse(request.calculationPolicy().markRecalculateOnOpen());
     assertEquals(request, GridGrindJson.readRequest(serialized));
   }

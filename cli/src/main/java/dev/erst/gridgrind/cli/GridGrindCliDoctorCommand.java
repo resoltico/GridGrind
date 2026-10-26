@@ -46,7 +46,7 @@ final class GridGrindCliDoctorCommand {
       boolean prettyJson)
       throws IOException {
     Optional<InputStream> requestInput =
-        CliStandardInputSupport.ifPresent(command.requestPath(), stdin, standardInputIsInteractive);
+        CliStdinSupport.ifPresent(command.requestPath(), stdin, standardInputIsInteractive);
     if (requestInput.isEmpty()) {
       return responseWriter.writeCommandError(
           command.responsePath(),
@@ -59,7 +59,7 @@ final class GridGrindCliDoctorCommand {
                   + " on standard input."),
           prettyJson);
     }
-    if (CliStandardInputSupport.requestArrivesOnStandardInput(command.requestPath())
+    if (CliStdinSupport.requestArrivesOnStandardInput(command.requestPath())
         && command.executionRootPath().isEmpty()) {
       return responseWriter.writeCommandError(
           command.responsePath(),

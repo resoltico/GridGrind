@@ -72,29 +72,31 @@ class GridGrindProtocolCatalogTest {
     assertTrue(GridGrindProtocolCatalog.entryFor("SET_CELL").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("EXPECT_CELL_VALUE").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("GET_CELLS").isPresent());
-    assertTrue(GridGrindProtocolCatalog.entryFor("cellInputTypes:FORMULA").isPresent());
+    assertTrue(GridGrindProtocolCatalog.entryFor("cellValueSpecTypes:FORMULA").isPresent());
     assertFalse(GridGrindProtocolCatalog.entryFor("FORMULA").isPresent());
     assertFalse(GridGrindProtocolCatalog.entryFor(":FORMULA").isPresent());
-    assertFalse(GridGrindProtocolCatalog.entryFor("cellInputTypes:").isPresent());
-    assertTrue(GridGrindProtocolCatalog.lookupValueFor("cellInputTypes").isPresent());
-    assertTrue(GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellInputTypes").isPresent());
-    assertTrue(GridGrindProtocolCatalog.lookupValueFor("chartInputType").isPresent());
-    assertTrue(GridGrindProtocolCatalog.lookupValueFor("plainTypes:chartInputType").isPresent());
-    assertTrue(GridGrindProtocolCatalog.lookupValueFor(":cellInputTypes").isEmpty());
+    assertFalse(GridGrindProtocolCatalog.entryFor("cellValueSpecTypes:").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor("cellValueSpecTypes").isPresent());
+    assertTrue(
+        GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellValueSpecTypes").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor("chartSpecType").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor("plainTypes:chartSpecType").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor(":cellValueSpecTypes").isEmpty());
     assertTrue(GridGrindProtocolCatalog.lookupValueFor("nestedTypes:").isEmpty());
     assertTrue(
-        GridGrindProtocolCatalog.matchingEntryIds("FORMULA").contains("cellInputTypes:FORMULA"));
+        GridGrindProtocolCatalog.matchingEntryIds("FORMULA")
+            .contains("cellValueSpecTypes:FORMULA"));
     assertTrue(
         GridGrindProtocolCatalog.matchingEntryIds("FORMULA")
             .contains("namedRangeReportTypes:FORMULA"));
     assertTrue(GridGrindProtocolCatalog.matchingEntryIds(":FORMULA").isEmpty());
-    assertTrue(GridGrindProtocolCatalog.matchingEntryIds("cellInputTypes:").isEmpty());
+    assertTrue(GridGrindProtocolCatalog.matchingEntryIds("cellValueSpecTypes:").isEmpty());
     assertEquals(
-        List.of("nestedTypes:cellInputTypes"),
-        GridGrindProtocolCatalog.matchingLookupIds("cellInputTypes"));
+        List.of("nestedTypes:cellValueSpecTypes"),
+        GridGrindProtocolCatalog.matchingLookupIds("cellValueSpecTypes"));
     assertEquals(
-        List.of("plainTypes:chartInputType"),
-        GridGrindProtocolCatalog.matchingLookupIds("chartInputType"));
+        List.of("plainTypes:chartSpecType"),
+        GridGrindProtocolCatalog.matchingLookupIds("chartSpecType"));
     CatalogSearchResult search = GridGrindProtocolCatalog.searchCatalog("sheet layout");
     assertEquals("sheet layout", search.query());
     assertTrue(
@@ -103,21 +105,21 @@ class GridGrindProtocolCatalogTest {
                 match -> "inspectionQueryTypes:GET_SHEET_LAYOUT".equals(match.qualifiedId())));
     assertEquals(
         "source",
-        GridGrindProtocolCatalog.entryFor("cellInputTypes:FORMULA")
+        GridGrindProtocolCatalog.entryFor("cellValueSpecTypes:FORMULA")
             .orElseThrow()
             .field("source")
             .orElseThrow()
             .name());
     NestedTypeGroup cellInputs =
         (NestedTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellInputTypes").orElseThrow();
-    assertEquals("cellInputTypes", cellInputs.group());
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellValueSpecTypes").orElseThrow();
+    assertEquals("cellValueSpecTypes", cellInputs.group());
     assertEquals("TEXT", cellInputs.types().get(1).id());
     PlainTypeGroup chartInput =
         (PlainTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("plainTypes:chartInputType").orElseThrow();
-    assertEquals("chartInputType", chartInput.group());
-    assertEquals("ChartInput", chartInput.type().id());
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:chartSpecType").orElseThrow();
+    assertEquals("chartSpecType", chartInput.group());
+    assertEquals("ChartSpec", chartInput.type().id());
     assertEquals(catalog, decoded);
     assertEquals(
         List.of(new TargetSelectorEntry("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
@@ -233,12 +235,12 @@ class GridGrindProtocolCatalogTest {
     FieldShape.Scalar rgb =
         assertInstanceOf(
             FieldShape.Scalar.class,
-            nestedType(catalog, "colorInputTypes", "RGB").field("rgb").orElseThrow().shape());
+            nestedType(catalog, "colorSpecTypes", "RGB").field("rgb").orElseThrow().shape());
     assertEquals(
         List.of(new FieldConstraint.StringPattern(ProtocolConstraintValues.RGB_HEX_PATTERN)),
         rgb.constraints());
 
-    TypeEntry dataBar = nestedType(catalog, "conditionalFormattingRuleInputTypes", "DATA_BAR_RULE");
+    TypeEntry dataBar = nestedType(catalog, "conditionalFormattingRuleSpecTypes", "DATA_BAR_RULE");
     assertEquals(
         List.of(new FieldConstraint.Integral(), new FieldConstraint.NumberRange(0.0d, 100.0d)),
         assertInstanceOf(FieldShape.Scalar.class, dataBar.field("widthMin").orElseThrow().shape())
@@ -315,7 +317,7 @@ class GridGrindProtocolCatalogTest {
         List.of(GridGrindProtocolCatalogNotes.REQUEST_OWNED_PATH_RULE_ID),
         ((PlainTypeGroup)
                 GridGrindProtocolCatalog.lookupValueFor(
-                        "plainTypes:formulaExternalWorkbookInputType")
+                        "plainTypes:formulaExternalWorkbookSpecType")
                     .orElseThrow())
             .type()
             .noteRefs());
@@ -331,15 +333,14 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         search.matches().stream()
             .anyMatch(
-                match ->
-                    "plainTypes:formulaExternalWorkbookInputType".equals(match.qualifiedId())));
+                match -> "plainTypes:formulaExternalWorkbookSpecType".equals(match.qualifiedId())));
   }
 
   @Test
   void executionPolicyCatalogEntryPublishesIndependentlyOptionalAxes() {
     PlainTypeGroup executionPolicy =
         (PlainTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("plainTypes:executionPolicyInputType")
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:executionPolicySpecType")
                 .orElseThrow();
     TypeEntry entry = executionPolicy.type();
 
@@ -383,7 +384,7 @@ class GridGrindProtocolCatalogTest {
   void ooxmlWriteEncryptionCatalogEntryPublishesModeLessStrongOnlyDefaults() {
     PlainTypeGroup encryption =
         (PlainTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("plainTypes:ooxmlEncryptionInputType")
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:ooxmlEncryptionSpecType")
                 .orElseThrow();
     TypeEntry entry = encryption.type();
 
@@ -401,7 +402,7 @@ class GridGrindProtocolCatalogTest {
   void catalogPublishesRecordDeclaredSecretMarkers() {
     PlainTypeGroup signature =
         (PlainTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("plainTypes:ooxmlSignatureInputType")
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:ooxmlSignatureSpecType")
                 .orElseThrow();
 
     assertFalse(signature.type().field("keystorePasswordRef").orElseThrow().secret());
@@ -442,13 +443,13 @@ class GridGrindProtocolCatalogTest {
                 .orElseThrow();
     NestedTypeGroup inputGroup =
         (NestedTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellInputTypes").orElseThrow();
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellValueSpecTypes").orElseThrow();
     NestedTypeGroup rowInputGroup =
         (NestedTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellRowInputTypes").orElseThrow();
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellRowSpecTypes").orElseThrow();
     NestedTypeGroup gridInputGroup =
         (NestedTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellGridInputTypes").orElseThrow();
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellGridSpecTypes").orElseThrow();
     TypeEntry number =
         group.types().stream().filter(type -> "NUMBER".equals(type.id())).findFirst().orElseThrow();
     TypeEntry formula =

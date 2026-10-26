@@ -15,7 +15,7 @@ class FieldShapeTest {
         new FieldShape.ListShape(new FieldShape.Scalar(ScalarType.STRING)).elementShape());
     assertEquals(
         "sheetSelectorTypes", new FieldShape.NestedTypeGroupRef("sheetSelectorTypes").group());
-    assertEquals("commentInputType", new FieldShape.PlainTypeGroupRef("commentInputType").group());
+    assertEquals("commentSpecType", new FieldShape.PlainTypeGroupRef("commentSpecType").group());
 
     assertThrows(NullPointerException.class, () -> new FieldShape.Scalar(null));
     assertThrows(NullPointerException.class, () -> new FieldShape.ListShape(null));

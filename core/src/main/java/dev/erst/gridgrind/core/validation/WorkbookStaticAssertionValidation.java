@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.validation;
 
-import dev.erst.gridgrind.core.plan.AssertionModeInput;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
@@ -14,7 +14,7 @@ final class WorkbookStaticAssertionValidation {
   static List<WorkbookStaticViolation> validate(WorkbookStaticRequest request) {
     if (request.execution().isEmpty()
         || request.execution().orElseThrow().effectiveAssertionMode()
-            != AssertionModeInput.COLLECT) {
+            != AssertionModeSpec.COLLECT) {
       return List.of();
     }
     List<WorkbookStaticViolation> violations = new ArrayList<>();

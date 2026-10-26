@@ -9,9 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -20,7 +20,7 @@ import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -179,7 +179,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName(new TableName("TextTable")),
                           "Item",
-                          new CellInput.Blank()),
+                          new CellValueSpec.Blank()),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -192,7 +192,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName(new TableName("NumberTable")),
                           "Item",
-                          new CellInput.NumberValue(99.0d)),
+                          new CellValueSpec.NumberValue(99.0d)),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -205,7 +205,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName(new TableName("BooleanTable")),
                           "Item",
-                          new CellInput.BooleanValue(false)),
+                          new CellValueSpec.BooleanValue(false)),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -244,7 +244,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName(new TableName("TextTable")),
                           "Item",
-                          new CellInput.NumberValue(42.0d)),
+                          new CellValueSpec.NumberValue(42.0d)),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -257,7 +257,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName(new TableName("TextTable")),
                           "Item",
-                          new CellInput.BooleanValue(true)),
+                          new CellValueSpec.BooleanValue(true)),
                       "Amount"),
                   DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
@@ -374,7 +374,7 @@ class SemanticSelectorResolverTest {
                           new TableRowSelector.ByKeyCell(
                               new TableSelector.ByName(new TableName("TextTable")),
                               "Item",
-                              new CellInput.Text(TextSourceInput.utf8File("item.txt"))),
+                              new CellValueSpec.Text(TextSourceSpec.utf8File("item.txt"))),
                           "Amount"),
                       new CellMutationAction.SetCell(textCell("Updated"))));
       assertTrue(unresolvedTextSource.getMessage().contains("must be resolved to INLINE text"));
@@ -449,8 +449,8 @@ class SemanticSelectorResolverTest {
                     workbook,
                     target,
                     new CellMutationAction.SetComment(
-                        new CommentInput(
-                            TextSourceInput.inline("Note"),
+                        new CommentSpec(
+                            TextSourceSpec.inline("Note"),
                             "Ada",
                             false,
                             java.util.Optional.empty(),
@@ -554,7 +554,9 @@ class SemanticSelectorResolverTest {
   private static TableCellSelector.ByColumnName blankAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName(new TableName("BlankTable")), "Item", new CellInput.Blank()),
+            new TableSelector.ByName(new TableName("BlankTable")),
+            "Item",
+            new CellValueSpec.Blank()),
         "Amount");
   }
 
@@ -563,7 +565,7 @@ class SemanticSelectorResolverTest {
         new TableRowSelector.ByKeyCell(
             new TableSelector.ByName(new TableName("NumberTable")),
             "Item",
-            new CellInput.NumberValue(42.0d)),
+            new CellValueSpec.NumberValue(42.0d)),
         "Amount");
   }
 
@@ -572,7 +574,7 @@ class SemanticSelectorResolverTest {
         new TableRowSelector.ByKeyCell(
             new TableSelector.ByName(new TableName("BooleanTable")),
             "Item",
-            new CellInput.BooleanValue(true)),
+            new CellValueSpec.BooleanValue(true)),
         "Amount");
   }
 

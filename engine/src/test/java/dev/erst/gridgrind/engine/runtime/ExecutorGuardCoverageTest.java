@@ -9,9 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.PictureInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
@@ -24,8 +24,8 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -49,8 +49,8 @@ class ExecutorGuardCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             java.util.List.of());
     WorkbookResult.Success expected =
         WorkbookResults.success(java.util.List.of(), java.util.List.of(), java.util.List.of());
@@ -123,19 +123,19 @@ class ExecutorGuardCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    WorkbookCommandCellInputConverter.toExcelCellValue(
-                        new CellInput.Text(TextSourceInput.utf8File("title.txt"))))
+                    WorkbookCommandCellValueSpecConverter.toExcelCellValue(
+                        new CellValueSpec.Text(TextSourceSpec.utf8File("title.txt"))))
             .getMessage());
 
-    PictureInput unresolvedPicture =
+    PictureSpec unresolvedPicture =
         picture(
             "Logo",
-            new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.file("logo.png")),
-            new dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput.TwoCell(
-                new dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput(0, 0, 0, 0),
-                new dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput(1, 1, 0, 0),
+            new PictureDataSpec(ExcelPictureFormat.PNG, BinarySourceSpec.file("logo.png")),
+            new dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec.TwoCell(
+                new dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec(0, 0, 0, 0),
+                new dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec(1, 1, 0, 0),
                 dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-            TextSourceInput.inline("Logo"));
+            TextSourceSpec.inline("Logo"));
     assertEquals(
         "picture payload must be resolved to INLINE_BASE64 before conversion",
         assertThrows(
@@ -167,7 +167,7 @@ class ExecutorGuardCoverageTest {
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(TextSourceInput.standardInput())))));
+                        new CellValueSpec.Text(TextSourceSpec.standardInput())))));
 
     WorkbookResult.Failure unavailableFailure =
         assertInstanceOf(
@@ -192,7 +192,7 @@ class ExecutorGuardCoverageTest {
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(TextSourceInput.utf8File("blank.txt"))))));
+                        new CellValueSpec.Text(TextSourceSpec.utf8File("blank.txt"))))));
     WorkbookResult.Failure blankFailure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
@@ -213,9 +213,10 @@ class ExecutorGuardCoverageTest {
   void formulaDiagnosticsExposeInlineFormulasOnly() {
     CellMutationAction.SetCell fileBackedFormula =
         new CellMutationAction.SetCell(
-            new CellInput.Formula(TextSourceInput.utf8File("formula.txt")));
+            new CellValueSpec.Formula(TextSourceSpec.utf8File("formula.txt")));
     CellMutationAction.SetCell inlineFormula =
-        new CellMutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)")));
+        new CellMutationAction.SetCell(
+            new CellValueSpec.Formula(TextSourceSpec.inline("SUM(A1:A2)")));
 
     assertEquals(
         java.util.Optional.empty(), ExecutionActionDiagnosticFields.formulaFor(fileBackedFormula));
@@ -226,36 +227,36 @@ class ExecutorGuardCoverageTest {
 
   @Test
   void mutationAndRangeSelectorDiagnosticHelpersCoverNullAndSingleSheetForwarders() {
-    dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput.TwoCell drawingAnchor =
-        new dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput.TwoCell(
-            new dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput(0, 0),
-            new dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput(1, 1),
+    dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec.TwoCell drawingAnchor =
+        new dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec.TwoCell(
+            new dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec(0, 0),
+            new dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec(1, 1),
             dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-    dev.erst.gridgrind.core.model.drawing.PictureDataInput imageData =
-        new dev.erst.gridgrind.core.model.drawing.PictureDataInput(
-            ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64("AQ=="));
-    dev.erst.gridgrind.core.model.chart.ChartInput simpleChart =
-        new dev.erst.gridgrind.core.model.chart.ChartInput(
+    dev.erst.gridgrind.core.model.drawing.PictureDataSpec imageData =
+        new dev.erst.gridgrind.core.model.drawing.PictureDataSpec(
+            ExcelPictureFormat.PNG, BinarySourceSpec.inlineBase64("AQ=="));
+    dev.erst.gridgrind.core.model.chart.ChartSpec simpleChart =
+        new dev.erst.gridgrind.core.model.chart.ChartSpec(
             "Revenue",
             drawingAnchor,
-            new dev.erst.gridgrind.core.model.chart.ChartTitleInput.None(),
-            new dev.erst.gridgrind.core.model.chart.ChartLegendInput.Visible(
+            new dev.erst.gridgrind.core.model.chart.ChartTitleSpec.None(),
+            new dev.erst.gridgrind.core.model.chart.ChartLegendSpec.Visible(
                 dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition.RIGHT),
             dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs.GAP,
             true,
             java.util.List.of(
-                new dev.erst.gridgrind.core.model.chart.ChartPlotInput.Bar(
+                new dev.erst.gridgrind.core.model.chart.ChartPlotSpec.Bar(
                     false,
                     dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection.COLUMN,
                     dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
                     java.util.Optional.empty(),
                     java.util.Optional.empty(),
                     java.util.List.of(
-                        new dev.erst.gridgrind.core.model.chart.ChartSeriesInput(
-                            new dev.erst.gridgrind.core.model.chart.ChartTitleInput.None(),
-                            new dev.erst.gridgrind.core.model.chart.ChartDataSourceInput.Reference(
+                        new dev.erst.gridgrind.core.model.chart.ChartSeriesSpec(
+                            new dev.erst.gridgrind.core.model.chart.ChartTitleSpec.None(),
+                            new dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec.Reference(
                                 "Budget!$A$1:$A$2"),
-                            new dev.erst.gridgrind.core.model.chart.ChartDataSourceInput.Reference(
+                            new dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec.Reference(
                                 "Budget!$B$1:$B$2"),
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),
@@ -300,36 +301,37 @@ class ExecutorGuardCoverageTest {
             new WorkbookMutationAction.GroupColumns(true),
             new WorkbookMutationAction.UngroupColumns(),
             new WorkbookMutationAction.SetSheetPane(
-                new dev.erst.gridgrind.core.model.layout.PaneInput.Frozen(1, 1, 1, 1)),
+                new dev.erst.gridgrind.core.model.layout.PaneSpec.Frozen(1, 1, 1, 1)),
             new WorkbookMutationAction.SetSheetZoom(125),
             new WorkbookMutationAction.SetSheetPresentation(
-                dev.erst.gridgrind.core.model.layout.SheetPresentationInput.defaults()),
+                dev.erst.gridgrind.core.model.layout.SheetPresentationSpec.defaults()),
             new WorkbookMutationAction.SetPrintLayout(
-                dev.erst.gridgrind.core.model.print.PrintLayoutInput.defaults()),
+                dev.erst.gridgrind.core.model.print.PrintLayoutSpec.defaults()),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                     java.util.List.of(
-                        java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget")))))),
+                        java.util.List.of(
+                            new CellValueSpec.Text(TextSourceSpec.inline("budget")))))),
             new CellMutationAction.ClearRange(),
             new CellMutationAction.SetHyperlink(
                 new dev.erst.gridgrind.core.model.value.HyperlinkTarget.Url("https://example.com")),
             new CellMutationAction.ClearHyperlink(),
             new CellMutationAction.SetComment(
-                dev.erst.gridgrind.core.model.drawing.CommentInput.plain(
-                    TextSourceInput.inline("Reviewed"), "GridGrind", true)),
+                dev.erst.gridgrind.core.model.drawing.CommentSpec.plain(
+                    TextSourceSpec.inline("Reviewed"), "GridGrind", true)),
             new CellMutationAction.ClearComment(),
             new DrawingMutationAction.SetPicture(
-                picture("Logo", imageData, drawingAnchor, TextSourceInput.inline("Budget logo"))),
+                picture("Logo", imageData, drawingAnchor, TextSourceSpec.inline("Budget logo"))),
             new DrawingMutationAction.SetChart(simpleChart),
             new DrawingMutationAction.SetShape(
-                simpleShape("BudgetBox", drawingAnchor, "rect", TextSourceInput.inline("Budget"))),
+                simpleShape("BudgetBox", drawingAnchor, "rect", TextSourceSpec.inline("Budget"))),
             new DrawingMutationAction.SetEmbeddedObject(
-                new dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput(
+                new dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec(
                     "Attachment",
                     "Attachment",
                     "attachment.bin",
                     "open",
-                    BinarySourceInput.inlineBase64("AQ=="),
+                    BinarySourceSpec.inlineBase64("AQ=="),
                     imageData,
                     drawingAnchor)),
             new DrawingMutationAction.SetDrawingObjectAnchor(drawingAnchor),
@@ -337,16 +339,16 @@ class ExecutorGuardCoverageTest {
             new CellMutationAction.ApplyStyle(styleInput("0.00", null, null, null, null, null)),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
-                    new dev.erst.gridgrind.core.model.validation.DataValidationRuleInput
+                    new dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec
                         .ExplicitList(java.util.List.of("Open", "Closed")),
                     true,
                     false,
                     null,
                     null)),
             new StructuredMutationAction.SetConditionalFormatting(
-                new dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput(
+                new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                     java.util.List.of(
-                        new dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput
+                        new dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec
                             .FormulaRule("A1>0", true, Optional.empty())))),
             new StructuredMutationAction.SetAutofilter(),
             new WorkbookMutationAction.ClearPrintLayout(),
@@ -357,8 +359,8 @@ class ExecutorGuardCoverageTest {
             new StructuredMutationAction.DeletePivotTable(),
             new StructuredMutationAction.DeleteNamedRange(),
             new CellMutationAction.AppendRow(
-                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
-                    java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget"))))),
+                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
+                    java.util.List.of(new CellValueSpec.Text(TextSourceSpec.inline("budget"))))),
             new WorkbookMutationAction.AutoSizeColumns())) {
       assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.sheetNameFor(action));
       assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.rangeFor(action));
@@ -385,12 +387,12 @@ class ExecutorGuardCoverageTest {
 
     StructuredMutationAction.SetTable setTable =
         new StructuredMutationAction.SetTable(
-            dev.erst.gridgrind.core.model.table.TableInput.withDefaultMetadata(
+            dev.erst.gridgrind.core.model.table.TableSpec.withDefaultMetadata(
                 new TableName("BudgetTable"),
                 new SheetName("Budget"),
                 new RangeRef("A1:B5"),
                 false,
-                new dev.erst.gridgrind.core.model.table.TableStyleInput.None()));
+                new dev.erst.gridgrind.core.model.table.TableStyleSpec.None()));
     assertEquals(Optional.of("Budget"), ExecutionActionDiagnosticFields.sheetNameFor(setTable));
     assertEquals(Optional.of("A1:B5"), ExecutionActionDiagnosticFields.rangeFor(setTable));
     assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.formulaFor(setTable));
@@ -439,7 +441,7 @@ class ExecutorGuardCoverageTest {
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
                 new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.Blank()));
+                new CellValueSpec.Blank()));
     assertEquals("Row where Item=Blank[] in Table BudgetTable", blankTarget.label());
 
     ExecutionJournal.Target fileTextTarget =
@@ -447,7 +449,7 @@ class ExecutorGuardCoverageTest {
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
                 new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.Text(TextSourceInput.utf8File("title.txt"))));
+                new CellValueSpec.Text(TextSourceSpec.utf8File("title.txt"))));
     assertTrue(fileTextTarget.label().contains("Text[path=title.txt]"));
 
     ExecutionJournal.Target stdinTextTarget =
@@ -455,7 +457,7 @@ class ExecutorGuardCoverageTest {
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
                 new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.Formula(TextSourceInput.standardInput())));
+                new CellValueSpec.Formula(TextSourceSpec.standardInput())));
     assertTrue(stdinTextTarget.label().contains("Formula[source=STANDARD_INPUT]"));
 
     assertTrue(
@@ -464,7 +466,7 @@ class ExecutorGuardCoverageTest {
                     new dev.erst.gridgrind.core.plan.TableSelector.ByName(
                         new TableName("BudgetTable")),
                     "Item",
-                    new CellInput.NumberValue(42.0d)))
+                    new CellValueSpec.NumberValue(42.0d)))
             .label()
             .contains("Number[number=42.0]"));
     assertTrue(
@@ -473,7 +475,7 @@ class ExecutorGuardCoverageTest {
                     new dev.erst.gridgrind.core.plan.TableSelector.ByName(
                         new TableName("BudgetTable")),
                     "Item",
-                    new CellInput.BooleanValue(true)))
+                    new CellValueSpec.BooleanValue(true)))
             .label()
             .contains("Boolean[value=true]"));
     assertThrows(
@@ -482,23 +484,23 @@ class ExecutorGuardCoverageTest {
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
                 new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.RichText(
+                new CellValueSpec.RichText(
                     java.util.List.of(
-                        new dev.erst.gridgrind.core.model.style.RichTextRunInput(
-                            TextSourceInput.inline("Ada"), Optional.empty())))));
+                        new dev.erst.gridgrind.core.model.style.RichTextRunSpec(
+                            TextSourceSpec.inline("Ada"), Optional.empty())))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
                 new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.Date(LocalDate.of(2026, 4, 18))));
+                new CellValueSpec.Date(LocalDate.of(2026, 4, 18))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(
                 new dev.erst.gridgrind.core.plan.TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
+                new CellValueSpec.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
   }
 }

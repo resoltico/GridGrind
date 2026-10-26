@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
-import dev.erst.gridgrind.core.model.style.CellBorderInput;
-import dev.erst.gridgrind.core.model.style.CellFillInput;
-import dev.erst.gridgrind.core.model.style.CellFontInput;
-import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
-import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelBorder;
@@ -28,7 +28,7 @@ public final class StyleKindIntrospection {
   private StyleKindIntrospection() {}
 
   /** Returns attribute labels present on a protocol style patch. */
-  public static Map<String, Long> styleKinds(CellStylePatchInput style) {
+  public static Map<String, Long> styleKinds(CellStylePatch style) {
     Objects.requireNonNull(style, "style must not be null");
     LinkedHashMap<String, Long> kinds = new LinkedHashMap<>();
     increment(kinds, "number_format", style.numberFormat().isPresent());
@@ -54,12 +54,12 @@ public final class StyleKindIntrospection {
   }
 
   private static void appendProtocolAlignmentKinds(
-      Map<String, Long> kinds, Optional<CellAlignmentInput> alignment) {
+      Map<String, Long> kinds, Optional<CellAlignmentPatch> alignment) {
     increment(kinds, "alignment", alignment.isPresent());
     if (alignment.isEmpty()) {
       return;
     }
-    CellAlignmentInput required = alignment.orElseThrow();
+    CellAlignmentPatch required = alignment.orElseThrow();
     increment(kinds, "wrap_text", required.wrapText().isPresent());
     increment(kinds, "horizontal_alignment", required.horizontalAlignment().isPresent());
     increment(kinds, "vertical_alignment", required.verticalAlignment().isPresent());
@@ -68,12 +68,12 @@ public final class StyleKindIntrospection {
   }
 
   private static void appendProtocolFontKinds(
-      Map<String, Long> kinds, Optional<CellFontInput> font) {
+      Map<String, Long> kinds, Optional<CellFontPatch> font) {
     increment(kinds, "font", font.isPresent());
     if (font.isEmpty()) {
       return;
     }
-    CellFontInput required = font.orElseThrow();
+    CellFontPatch required = font.orElseThrow();
     increment(kinds, "bold", required.bold().isPresent());
     increment(kinds, "italic", required.italic().isPresent());
     increment(kinds, "font_name", required.fontName().isPresent());
@@ -81,23 +81,23 @@ public final class StyleKindIntrospection {
     increment(
         kinds,
         "font_height_points",
-        required.fontHeight().filter(FontHeightInput.Points.class::isInstance).isPresent());
+        required.fontHeight().filter(FontHeightSpec.Points.class::isInstance).isPresent());
     increment(
         kinds,
         "font_height_twips",
-        required.fontHeight().filter(FontHeightInput.Twips.class::isInstance).isPresent());
+        required.fontHeight().filter(FontHeightSpec.Twips.class::isInstance).isPresent());
     increment(kinds, "font_color", required.fontColor().isPresent());
     increment(kinds, "underline", required.underline().isPresent());
     increment(kinds, "strikeout", required.strikeout().isPresent());
   }
 
   private static void appendProtocolFillKinds(
-      Map<String, Long> kinds, Optional<CellFillInput> fill) {
+      Map<String, Long> kinds, Optional<CellFillSpec> fill) {
     increment(kinds, "fill", fill.isPresent());
     if (fill.isEmpty()) {
       return;
     }
-    CellFillInput required = fill.orElseThrow();
+    CellFillSpec required = fill.orElseThrow();
     ExcelFillPattern pattern = protocolFillPattern(required);
     increment(kinds, "fill_pattern", pattern != null);
     increment(kinds, "fill_pattern_solid", pattern == ExcelFillPattern.SOLID);
@@ -108,12 +108,12 @@ public final class StyleKindIntrospection {
   }
 
   private static void appendProtocolBorderKinds(
-      Map<String, Long> kinds, Optional<CellBorderInput> border) {
+      Map<String, Long> kinds, Optional<CellBorderPatch> border) {
     increment(kinds, "border", border.isPresent());
     if (border.isEmpty()) {
       return;
     }
-    CellBorderInput required = border.orElseThrow();
+    CellBorderPatch required = border.orElseThrow();
     increment(kinds, "border_all", required.all().isPresent());
     increment(kinds, "border_top", required.top().isPresent());
     increment(kinds, "border_right", required.right().isPresent());
@@ -156,12 +156,12 @@ public final class StyleKindIntrospection {
   }
 
   private static void appendProtocolProtectionKinds(
-      Map<String, Long> kinds, Optional<CellProtectionInput> protection) {
+      Map<String, Long> kinds, Optional<CellProtectionPatch> protection) {
     increment(kinds, "protection", protection.isPresent());
     if (protection.isEmpty()) {
       return;
     }
-    CellProtectionInput required = protection.orElseThrow();
+    CellProtectionPatch required = protection.orElseThrow();
     increment(kinds, "locked", required.locked().isPresent());
     increment(kinds, "hidden_formula", required.hiddenFormula().isPresent());
   }
@@ -219,7 +219,7 @@ public final class StyleKindIntrospection {
     increment(kinds, "hidden_formula", protection.hiddenFormula().isPresent());
   }
 
-  private static boolean isProtocolNone(Optional<BorderSideInput> side) {
+  private static boolean isProtocolNone(Optional<BorderSidePatch> side) {
     return side.isPresent() && side.orElseThrow().style().orElseThrow() == ExcelBorderStyle.NONE;
   }
 
@@ -229,7 +229,7 @@ public final class StyleKindIntrospection {
             == dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle.NONE;
   }
 
-  private static boolean hasProtocolColor(Optional<BorderSideInput> side) {
+  private static boolean hasProtocolColor(Optional<BorderSidePatch> side) {
     return side.isPresent() && side.orElseThrow().color().isPresent();
   }
 
@@ -237,28 +237,28 @@ public final class StyleKindIntrospection {
     return side.isPresent() && side.orElseThrow().color().isPresent();
   }
 
-  private static @Nullable ExcelFillPattern protocolFillPattern(CellFillInput fill) {
+  private static @Nullable ExcelFillPattern protocolFillPattern(CellFillSpec fill) {
     return switch (fill) {
-      case CellFillInput.PatternOnly pattern -> pattern.pattern();
-      case CellFillInput.PatternForeground pattern -> pattern.pattern();
-      case CellFillInput.PatternBackground pattern -> pattern.pattern();
-      case CellFillInput.PatternForegroundBackground pattern -> pattern.pattern();
-      case CellFillInput.Gradient ignored -> null;
+      case CellFillSpec.PatternOnly pattern -> pattern.pattern();
+      case CellFillSpec.PatternForeground pattern -> pattern.pattern();
+      case CellFillSpec.PatternBackground pattern -> pattern.pattern();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.pattern();
+      case CellFillSpec.Gradient ignored -> null;
     };
   }
 
-  private static @Nullable Object protocolForegroundColor(CellFillInput fill) {
+  private static @Nullable Object protocolForegroundColor(CellFillSpec fill) {
     return switch (fill) {
-      case CellFillInput.PatternForeground pattern -> pattern.foregroundColor();
-      case CellFillInput.PatternForegroundBackground pattern -> pattern.foregroundColor();
+      case CellFillSpec.PatternForeground pattern -> pattern.foregroundColor();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.foregroundColor();
       default -> null;
     };
   }
 
-  private static @Nullable Object protocolBackgroundColor(CellFillInput fill) {
+  private static @Nullable Object protocolBackgroundColor(CellFillSpec fill) {
     return switch (fill) {
-      case CellFillInput.PatternBackground pattern -> pattern.backgroundColor();
-      case CellFillInput.PatternForegroundBackground pattern -> pattern.backgroundColor();
+      case CellFillSpec.PatternBackground pattern -> pattern.backgroundColor();
+      case CellFillSpec.PatternForegroundBackground pattern -> pattern.backgroundColor();
       default -> null;
     };
   }

@@ -9,19 +9,19 @@ import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -142,34 +142,34 @@ final class DataEntryWorkflowTaskRecipe {
             new StepId("comment-status-header"),
             ExampleSelectors.cell("Intake", "B1"),
             new CellMutationAction.SetComment(
-                CommentInput.plain(
-                    TextSourceInput.inline("Allowed values are Open, Review, or Closed."),
+                CommentSpec.plain(
+                    TextSourceSpec.inline("Allowed values are Open, Review, or Closed."),
                     "GridGrind",
                     true))),
         ExampleSteps.step(
             new StepId("validate-status"),
             ExampleSelectors.range("Intake", "B2:B25"),
             new StructuredMutationAction.SetDataValidation(
-                new DataValidationInput(
-                    new DataValidationRuleInput.ExplicitList(List.of("Open", "Review", "Closed")),
+                new DataValidationSpec(
+                    new DataValidationRuleSpec.ExplicitList(List.of("Open", "Review", "Closed")),
                     false,
                     false,
                     Optional.of(
-                        new DataValidationPromptInput(
-                            TextSourceInput.inline("Status"),
-                            TextSourceInput.inline("Choose one approved workflow state."),
+                        new DataValidationPromptSpec(
+                            TextSourceSpec.inline("Status"),
+                            TextSourceSpec.inline("Choose one approved workflow state."),
                             true)),
                     Optional.of(
-                        new DataValidationErrorAlertInput(
+                        new DataValidationErrorAlertSpec(
                             ExcelDataValidationErrorStyle.STOP,
-                            TextSourceInput.inline("Invalid status"),
-                            TextSourceInput.inline("Use Open, Review, or Closed."),
+                            TextSourceSpec.inline("Invalid status"),
+                            TextSourceSpec.inline("Use Open, Review, or Closed."),
                             true))))),
         ExampleSteps.step(
             new StepId("protect-workbook-structure"),
             ExampleSelectors.workbook(),
             new WorkbookMutationAction.SetWorkbookProtection(
-                new WorkbookProtectionInput(
+                new WorkbookProtectionSpec(
                     true, false, false, Optional.empty(), Optional.empty()))),
         ExampleSteps.read(
             new StepId("read-intake-validations"),

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.validation;
 
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 import java.util.Objects;
@@ -10,7 +10,7 @@ import java.util.Optional;
 public record WorkbookStaticRequest(
     Optional<WorkbookPlan.WorkbookSource> source,
     Optional<WorkbookPlan.WorkbookPersistence> persistence,
-    Optional<ExecutionPolicyInput> execution,
+    Optional<ExecutionPolicySpec> execution,
     List<WorkbookStaticStep> steps) {
   public WorkbookStaticRequest {
     source = copy(source, "source");

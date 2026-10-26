@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -90,7 +90,7 @@ class WorkbookStaticMaterializationValidationTest {
     return new WorkbookStaticRequest(
         Optional.of(new WorkbookPlan.WorkbookSource.New()),
         Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
-        Optional.of(ExecutionPolicyInput.defaults()),
+        Optional.of(ExecutionPolicySpec.defaults()),
         List.of(new WorkbookStaticStep(0, Optional.of(step))));
   }
 }

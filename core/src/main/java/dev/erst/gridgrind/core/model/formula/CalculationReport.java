@@ -17,7 +17,7 @@ import java.util.Optional;
         "Structured calculation policy, preflight classification, and execution outcome returned on every success and failure response.",
     displayOrder = 12)
 public record CalculationReport(
-    CalculationPolicyInput policy, Optional<Preflight> preflight, Execution execution) {
+    CalculationPolicySpec policy, Optional<Preflight> preflight, Execution execution) {
   public CalculationReport {
     Objects.requireNonNull(policy, "policy must not be null");
     preflight = Objects.requireNonNullElseGet(preflight, Optional::empty);
@@ -25,20 +25,19 @@ public record CalculationReport(
   }
 
   /** Creates one calculation report without a preflight section. */
-  public CalculationReport(CalculationPolicyInput policy, Execution execution) {
+  public CalculationReport(CalculationPolicySpec policy, Execution execution) {
     this(policy, Optional.empty(), execution);
   }
 
   /** Creates one calculation report with a concrete preflight section. */
-  public CalculationReport(
-      CalculationPolicyInput policy, Preflight preflight, Execution execution) {
+  public CalculationReport(CalculationPolicySpec policy, Preflight preflight, Execution execution) {
     this(policy, Optional.of(preflight), execution);
   }
 
   /** Returns the default report emitted when calculation was not requested. */
   public static CalculationReport notRequested() {
     return new CalculationReport(
-        CalculationPolicyInput.defaults(),
+        CalculationPolicySpec.defaults(),
         new Execution(CalculationExecutionStatus.NOT_REQUESTED, 0, false, false, Optional.empty()));
   }
 

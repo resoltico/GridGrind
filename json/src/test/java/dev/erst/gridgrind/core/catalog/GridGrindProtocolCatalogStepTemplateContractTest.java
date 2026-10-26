@@ -3,8 +3,8 @@ package dev.erst.gridgrind.core.catalog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
@@ -107,8 +107,8 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                ExecutionPolicyInput.defaults(),
-                FormulaEnvironmentInput.empty(),
+                ExecutionPolicySpec.defaults(),
+                FormulaEnvironmentSpec.empty(),
                 List.of()));
     ArrayNode steps = request.putArray("steps");
     steps.add(tree(template.template()));

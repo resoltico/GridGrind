@@ -3,9 +3,9 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,9 +36,9 @@ class ExecutionWorkbookSupportTest {
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             "output.xlsx",
             WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-            new OoxmlPersistenceSecurityInput(
-                new OoxmlPersistenceEncryptionInput.PreserveSource(),
-                new OoxmlPersistenceSignatureInput.None()));
+            new OoxmlPersistenceSecuritySpec(
+                new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+                new OoxmlPersistenceSignatureSpec.None()));
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             root, root.resolve("scratch"), ExecutionGrantTestSupport.noPublication());

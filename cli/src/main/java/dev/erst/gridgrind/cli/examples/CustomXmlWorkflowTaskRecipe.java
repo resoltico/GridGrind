@@ -20,13 +20,13 @@ import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
@@ -135,9 +135,9 @@ final class CustomXmlWorkflowTaskRecipe {
             new StepId("import-custom-xml"),
             ExampleSelectors.workbook(),
             new StructuredMutationAction.ImportCustomXmlMapping(
-                new CustomXmlImportInput(
+                new CustomXmlImportSpec(
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"),
-                    TextSourceInput.utf8File(updateXml)))),
+                    TextSourceSpec.utf8File(updateXml)))),
         ExampleSteps.read(
             new StepId("read-imported-cells"),
             ExampleSelectors.cells("Foglio1", "A1", "B1", "C1", "D1"),

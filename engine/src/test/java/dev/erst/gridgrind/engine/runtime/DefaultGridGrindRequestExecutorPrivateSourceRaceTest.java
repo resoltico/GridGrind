@@ -4,11 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
@@ -48,12 +48,12 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionPolicyInput(
-                ExecutionModeInput.defaults(),
-                new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-                CalculationPolicyInput.defaults(),
-                dev.erst.gridgrind.core.plan.AssertionModeInput.defaults()),
-            FormulaEnvironmentInput.empty(),
+            new ExecutionPolicySpec(
+                ExecutionModeSpec.defaults(),
+                new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE),
+                CalculationPolicySpec.defaults(),
+                dev.erst.gridgrind.core.plan.AssertionModeSpec.defaults()),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     AtomicBoolean removedPrivateSource = new AtomicBoolean();
 
@@ -83,8 +83,8 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            verbosePolicy(ExecutionModeInput.eventRead()),
-            FormulaEnvironmentInput.empty(),
+            verbosePolicy(ExecutionModeSpec.eventRead()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new InspectionStep(
                     new StepId("summary"),
@@ -119,8 +119,8 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "output/result.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            verbosePolicy(ExecutionModeInput.streamingWrite()),
-            FormulaEnvironmentInput.empty(),
+            verbosePolicy(ExecutionModeSpec.streamingWrite()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("ensure-sheet"),
@@ -158,8 +158,8 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "output/result.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            verbosePolicy(ExecutionModeInput.defaults()),
-            FormulaEnvironmentInput.empty(),
+            verbosePolicy(ExecutionModeSpec.defaults()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
                     new StepId("ensure-sheet"),
@@ -188,12 +188,12 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
     assertInstanceOf(ProblemContext.PersistWorkbook.class, failure.problem().context());
   }
 
-  private static ExecutionPolicyInput verbosePolicy(ExecutionModeInput mode) {
-    return new ExecutionPolicyInput(
+  private static ExecutionPolicySpec verbosePolicy(ExecutionModeSpec mode) {
+    return new ExecutionPolicySpec(
         mode,
-        new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-        CalculationPolicyInput.defaults(),
-        dev.erst.gridgrind.core.plan.AssertionModeInput.defaults());
+        new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE),
+        CalculationPolicySpec.defaults(),
+        dev.erst.gridgrind.core.plan.AssertionModeSpec.defaults());
   }
 
   private static void createWorkbook(Path source) throws java.io.IOException {

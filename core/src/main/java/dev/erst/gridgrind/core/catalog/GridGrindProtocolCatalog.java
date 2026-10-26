@@ -19,8 +19,8 @@ public final class GridGrindProtocolCatalog {
           Optional.empty(),
           new WorkbookPlan.WorkbookSource.New(),
           new WorkbookPlan.WorkbookPersistence.None(),
-          dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-          dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+          dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+          dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
           List.of());
   private static final TypeEntry REQUEST_TYPE =
       CatalogTypeEntryFactory.typeEntry(
@@ -71,8 +71,8 @@ public final class GridGrindProtocolCatalog {
    * Returns the single catalog item matching the given lookup token.
    *
    * <p>Lookups may resolve either one concrete type entry such as {@code SET_CELL} or one nested /
-   * plain type-group descriptor such as {@code cellInputTypes} or {@code plainTypes:
-   * chartInputType}. Ambiguous or unknown lookups return empty.
+   * plain type-group descriptor such as {@code cellValueSpecTypes} or {@code plainTypes:
+   * chartSpecType}. Ambiguous or unknown lookups return empty.
    */
   public static Optional<Object> lookupValueFor(String idOrQualifiedId) {
     return GridGrindProtocolCatalogLookupSupport.lookupValueFor(CATALOG, idOrQualifiedId);

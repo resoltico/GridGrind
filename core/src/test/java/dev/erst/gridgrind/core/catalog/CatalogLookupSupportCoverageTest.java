@@ -371,8 +371,8 @@ class CatalogLookupSupportCoverageTest {
     CatalogSearchMatch copied =
         new CatalogSearchMatch(
             "nestedTypes",
-            "cellInputTypes",
-            "nestedTypes:cellInputTypes",
+            "cellValueSpecTypes",
+            "nestedTypes:cellValueSpecTypes",
             "NESTED_GROUP",
             "summary",
             mutable);

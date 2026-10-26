@@ -7,8 +7,8 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.executi
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.inspect;
 import static dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -89,7 +89,7 @@ final class XlsxParityFormulaProbeGroup {
             external.workbookPath(),
             null,
             executionPolicy(
-                CalculationPolicyInput.strategy(new CalculationStrategyInput.RequireEvaluation())),
+                CalculationPolicySpec.strategy(new CalculationStrategySpec.RequireEvaluation())),
             null,
             List.of());
     WorkbookResult.Success cachedSuccess =

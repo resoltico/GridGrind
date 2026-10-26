@@ -1,21 +1,21 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.drawing.CommentInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.PictureInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
-import dev.erst.gridgrind.core.model.layout.PaneInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
-import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.core.model.validation.DataValidationInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -46,7 +46,7 @@ final class OperationSequenceValueFactory {
 
   private OperationSequenceValueFactory() {}
 
-  static PaneInput nextPaneInput(GridGrindFuzzData data) {
+  static PaneSpec nextPaneInput(GridGrindFuzzData data) {
     return OperationSequenceLayoutValues.nextPaneInput(data);
   }
 
@@ -54,7 +54,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceLayoutValues.nextExcelSheetPane(data);
   }
 
-  static PrintLayoutInput nextPrintLayoutInput(GridGrindFuzzData data) {
+  static PrintLayoutSpec nextPrintLayoutInput(GridGrindFuzzData data) {
     return OperationSequenceLayoutValues.nextPrintLayoutInput(data);
   }
 
@@ -119,31 +119,31 @@ final class OperationSequenceValueFactory {
     return OperationSequenceDrawingValues.nextExcelHyperlink(data);
   }
 
-  static CommentInput nextCommentInput(GridGrindFuzzData data) {
+  static CommentSpec nextCommentInput(GridGrindFuzzData data) {
     return OperationSequenceDrawingValues.nextCommentInput(data);
   }
 
-  static PictureInput nextPictureInput(GridGrindFuzzData data) {
+  static PictureSpec nextPictureInput(GridGrindFuzzData data) {
     return OperationSequenceDrawingValues.nextPictureInput(data);
   }
 
-  static ChartInput nextChartInput(GridGrindFuzzData data) {
+  static ChartSpec nextChartInput(GridGrindFuzzData data) {
     return OperationSequenceDrawingValues.nextChartInput(data);
   }
 
-  static ShapeInput nextShapeInput(GridGrindFuzzData data) {
+  static ShapeSpec nextShapeInput(GridGrindFuzzData data) {
     return OperationSequenceDrawingValues.nextShapeInput(data);
   }
 
-  static EmbeddedObjectInput nextEmbeddedObjectInput(GridGrindFuzzData data) {
+  static EmbeddedObjectSpec nextEmbeddedObjectInput(GridGrindFuzzData data) {
     return OperationSequenceDrawingValues.nextEmbeddedObjectInput(data);
   }
 
-  static DrawingAnchorInput.TwoCell nextDrawingAnchorInput(GridGrindFuzzData data) {
+  static DrawingAnchorSpec.TwoCell nextDrawingAnchorInput(GridGrindFuzzData data) {
     return OperationSequenceDrawingValues.nextDrawingAnchorInput(data);
   }
 
-  static PictureDataInput nextPictureDataInput() {
+  static PictureDataSpec nextPictureDataInput() {
     return OperationSequenceDrawingValues.nextPictureDataInput();
   }
 
@@ -179,7 +179,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceDrawingValues.nextDrawingBinaryObjectName(data);
   }
 
-  static DataValidationInput nextDataValidationInput(GridGrindFuzzData data) {
+  static DataValidationSpec nextDataValidationInput(GridGrindFuzzData data) {
     return OperationSequenceRuleValues.nextDataValidationInput(data);
   }
 
@@ -187,7 +187,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceRuleValues.nextExcelDataValidationDefinition(data);
   }
 
-  static ConditionalFormattingDefinitionInput nextConditionalFormattingInput(
+  static ConditionalFormattingSpec nextConditionalFormattingInput(
       GridGrindFuzzData data) {
     return OperationSequenceRuleValues.nextConditionalFormattingInput(data);
   }
@@ -198,7 +198,7 @@ final class OperationSequenceValueFactory {
         data, validRange);
   }
 
-  static DifferentialStyleInput nextDifferentialStyleInput(GridGrindFuzzData data) {
+  static DifferentialStylePatch nextDifferentialStyleInput(GridGrindFuzzData data) {
     return OperationSequenceRuleValues.nextDifferentialStyleInput(data);
   }
 
@@ -223,7 +223,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceRuleValues.nextCopySheetName(sourceSheetName);
   }
 
-  static TableInput nextTableInput(
+  static TableSpec nextTableInput(
       GridGrindFuzzData data, String sheetName, String tableName, boolean validRange) {
     return OperationSequenceTabularValues.nextTableInput(data, sheetName, tableName, validRange);
   }
@@ -234,7 +234,7 @@ final class OperationSequenceValueFactory {
         data, sheetName, tableName, validRange);
   }
 
-  static TableStyleInput nextTableStyleInput(GridGrindFuzzData data) {
+  static TableStyleSpec nextTableStyleInput(GridGrindFuzzData data) {
     return OperationSequenceTabularValues.nextTableStyleInput(data);
   }
 
@@ -257,7 +257,7 @@ final class OperationSequenceValueFactory {
         data, primarySheet, secondarySheet, pivotTableName, validName);
   }
 
-  static PivotTableInput nextPivotTableInput(
+  static PivotTableSpec nextPivotTableInput(
       GridGrindFuzzData data,
       String targetSheet,
       String pivotTableName,
@@ -269,7 +269,7 @@ final class OperationSequenceValueFactory {
         data, targetSheet, pivotTableName, namedRangeName, tableName, validName, validRange);
   }
 
-  static PivotTableInput.PivotSourceSpec nextPivotTableSource(
+  static PivotTableSpec.PivotSourceSpec nextPivotTableSource(
       GridGrindFuzzData data,
       String targetSheet,
       String namedRangeName,

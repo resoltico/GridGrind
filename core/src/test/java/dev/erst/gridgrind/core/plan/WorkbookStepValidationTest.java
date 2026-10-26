@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -18,7 +18,7 @@ class WorkbookStepValidationTest {
   @Test
   void keepsKnownButIncompatibleOperationTargetPairsBound() {
     CellMutationAction.SetCell action =
-        new CellMutationAction.SetCell(new CellInput.Text(TextSourceInput.inline("Owner")));
+        new CellMutationAction.SetCell(new CellValueSpec.Text(TextSourceSpec.inline("Owner")));
 
     assertDoesNotThrow(
         () ->
@@ -36,7 +36,7 @@ class WorkbookStepValidationTest {
   @Test
   void acceptsCompatibleOperationTargetPairsThroughTheSameContract() {
     CellMutationAction.SetCell action =
-        new CellMutationAction.SetCell(new CellInput.Text(TextSourceInput.inline("Owner")));
+        new CellMutationAction.SetCell(new CellValueSpec.Text(TextSourceSpec.inline("Owner")));
 
     assertTrue(
         WorkbookOperationContracts.targetViolation(

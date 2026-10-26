@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -132,8 +132,8 @@ class GridGrindRequestWarningsTest {
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Formula(
-                            dev.erst.gridgrind.core.source.TextSourceInput.inline(
+                        new CellValueSpec.Formula(
+                            dev.erst.gridgrind.core.source.TextSourceSpec.inline(
                                 "SUM(Budget Review!A1,Annual Budget Review!$A$1)"))))));
 
     assertEquals(
@@ -193,12 +193,12 @@ class GridGrindRequestWarningsTest {
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Summary"), new RangeRef("A1:B1")),
                     new CellMutationAction.SetRange(
-                        new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                        new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                             List.of(List.of(formulaCell("Budget Review!A1"), textCell("ok")))))),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Summary")),
                     new CellMutationAction.AppendRow(
-                        new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                        new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                             List.of(textCell("Total"), formulaCell("SUM(Budget Review!A1)")))))));
 
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
@@ -236,8 +236,8 @@ class GridGrindRequestWarningsTest {
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Formula(
-                            dev.erst.gridgrind.core.source.TextSourceInput.utf8File(
+                        new CellValueSpec.Formula(
+                            dev.erst.gridgrind.core.source.TextSourceSpec.utf8File(
                                 "formula.txt"))))));
 
     assertEquals(List.of(), GridGrindRequestWarnings.collect(request));

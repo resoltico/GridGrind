@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
@@ -40,14 +40,14 @@ class ExampleDslSupportTest {
     assertEquals("budget-plan", plan.planId().orElseThrow().value());
     assertInstanceOf(WorkbookPlan.WorkbookPersistence.SaveAs.class, plan.persistence());
     assertEquals(
-        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none(),
+        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none(),
         ExampleWorkbookPlans.saveAsExisting("existing-budget.xlsx").security().orElseThrow());
   }
 
   @Test
   void clusteredColumnComparisonChartBuildsTwoSeriesChartInputs() {
-    ChartInput chart =
-        ExampleChartInputs.clusteredColumnComparisonChart(
+    ChartSpec chart =
+        ExampleChartSpecs.clusteredColumnComparisonChart(
             "OpsChart",
             ExampleDrawingAnchors.anchor(1, 2, 3, 4),
             "Roadmap",
@@ -61,19 +61,19 @@ class ExampleDslSupportTest {
     assertEquals(1, chart.plots().size());
     assertEquals(
         2,
-        ((dev.erst.gridgrind.core.model.chart.ChartPlotInput.Bar) chart.plots().getFirst())
+        ((dev.erst.gridgrind.core.model.chart.ChartPlotSpec.Bar) chart.plots().getFirst())
             .series()
             .size());
   }
 
   @Test
   void regionalTotalsPivotFromTableBuildsExpectedPivotAxes() {
-    PivotTableInput pivot =
+    PivotTableSpec pivot =
         ExamplePivotInputs.regionalTotalsPivotFromTable(
             REGIONAL_TOTALS, RANGE_REPORT, PIVOT_SOURCE);
 
     assertEquals(REGIONAL_TOTALS, pivot.name());
-    assertInstanceOf(PivotTableInput.PivotSourceSpec.Table.class, pivot.source());
+    assertInstanceOf(PivotTableSpec.PivotSourceSpec.Table.class, pivot.source());
     assertEquals(java.util.List.of(REGION), pivot.rowLabels());
     assertTrue(
         pivot.dataFields().stream().anyMatch(field -> AMOUNT.equals(field.sourceColumnName())));

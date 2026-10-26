@@ -9,8 +9,8 @@ import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
@@ -161,12 +161,12 @@ final class PivotReportTaskRecipe {
             new StepId("set-source-table"),
             ExampleSelectors.table("PivotSource", "Data"),
             new StructuredMutationAction.SetTable(
-                TableInput.withDefaultMetadata(
+                TableSpec.withDefaultMetadata(
                     new TableName("PivotSource"),
                     new SheetName("Data"),
                     new RangeRef("A1:D5"),
                     false,
-                    new TableStyleInput.Named("TableStyleMedium9", false, false, true, false)))),
+                    new TableStyleSpec.Named("TableStyleMedium9", false, false, true, false)))),
         ExampleSteps.step(
             new StepId("author-pivot"),
             new PivotTableSelector.ByNameOnSheet("RegionalTotals", new SheetName("RangeReport")),

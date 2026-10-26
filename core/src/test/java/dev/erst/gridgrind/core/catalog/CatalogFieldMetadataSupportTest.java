@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
 import dev.erst.gridgrind.core.vocabulary.ExcelStoredCellErrorLiteral;
@@ -74,14 +74,14 @@ class CatalogFieldMetadataSupportTest {
                 "pivotTableSelectorTypes")),
         CatalogFieldMetadataSupport.fieldShape(dev.erst.gridgrind.core.plan.Selector.class));
     assertEquals(
-        new FieldShape.NestedTypeGroupRef("executionModeInputTypes"),
-        CatalogFieldMetadataSupport.fieldShape(ExecutionModeInput.class));
+        new FieldShape.NestedTypeGroupRef("executionModeSpecTypes"),
+        CatalogFieldMetadataSupport.fieldShape(ExecutionModeSpec.class));
     assertEquals(
-        new FieldShape.NestedTypeGroupRef("textSourceInputTypes"),
-        CatalogFieldMetadataSupport.fieldShape(TextSourceInput.class));
+        new FieldShape.NestedTypeGroupRef("textSourceSpecTypes"),
+        CatalogFieldMetadataSupport.fieldShape(TextSourceSpec.class));
     assertEquals(
-        new FieldShape.NestedTypeGroupRef("binarySourceInputTypes"),
-        CatalogFieldMetadataSupport.fieldShape(BinarySourceInput.class));
+        new FieldShape.NestedTypeGroupRef("binarySourceSpecTypes"),
+        CatalogFieldMetadataSupport.fieldShape(BinarySourceSpec.class));
   }
 
   @Test
@@ -100,7 +100,7 @@ class CatalogFieldMetadataSupportTest {
                     (ParameterizedType)
                         recordComponent(MetadataFixture.class, "cells").getGenericType()));
     assertEquals(
-        "Unsupported parameterized catalog field type: java.util.Map<java.lang.String, dev.erst.gridgrind.core.model.value.CellInput>",
+        "Unsupported parameterized catalog field type: java.util.Map<java.lang.String, dev.erst.gridgrind.core.model.value.CellValueSpec>",
         unsupportedParameterized.getMessage());
 
     assertEquals(
@@ -148,11 +148,11 @@ class CatalogFieldMetadataSupportTest {
             recordComponent(CellReadProjection.class, "facets"), Set.of());
     FieldEntry errorValue =
         CatalogFieldMetadataSupport.fieldEntry(
-            recordComponent(CellInput.ErrorValue.class, "error"), Set.of());
+            recordComponent(CellValueSpec.ErrorValue.class, "error"), Set.of());
     FieldEntry errorRowValues =
         CatalogFieldMetadataSupport.fieldEntry(
             recordComponent(
-                dev.erst.gridgrind.core.model.value.CellRowInput.ErrorValues.class, "cells"),
+                dev.erst.gridgrind.core.model.value.CellRowSpec.ErrorValues.class, "cells"),
             Set.of());
     FieldEntry reportedErrorValue =
         CatalogFieldMetadataSupport.fieldEntry(
@@ -207,7 +207,7 @@ class CatalogFieldMetadataSupportTest {
       List<String> notes,
       Optional<ExcelChartGrouping> grouping,
       List<ExcelChartGrouping> groupings,
-      Map<String, CellInput> cells,
+      Map<String, CellValueSpec> cells,
       WorkbookStep step) {}
 
   /** Type implementation not supported by the catalog field-shape resolver. */

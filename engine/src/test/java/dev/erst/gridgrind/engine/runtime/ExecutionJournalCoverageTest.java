@@ -9,15 +9,15 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
@@ -60,8 +60,8 @@ class ExecutionJournalCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookResult.Success expected = WorkbookResults.success(List.of(), List.of(), List.of());
     AtomicBoolean called = new AtomicBoolean(false);
@@ -225,14 +225,14 @@ class ExecutionJournalCoverageTest {
             new TableRowSelector.ByKeyCell(
                 new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.Text(text("Hosting")))));
+                new CellValueSpec.Text(text("Hosting")))));
     assertEquals(
         new ExecutionJournal.Target("TABLE_ROW", "Row where Item=Blank[] in Table BudgetTable"),
         summaryTarget(
             new TableRowSelector.ByKeyCell(
                 new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.Blank())));
+                new CellValueSpec.Blank())));
     assertEquals(
         new ExecutionJournal.Target(
             "TABLE_ROW", "Row where Item=Number[number=42.0] in Table BudgetTable"),
@@ -240,7 +240,7 @@ class ExecutionJournalCoverageTest {
             new TableRowSelector.ByKeyCell(
                 new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.NumberValue(42.0d))));
+                new CellValueSpec.NumberValue(42.0d))));
     assertEquals(
         new ExecutionJournal.Target(
             "TABLE_ROW", "Row where Item=Boolean[value=true] in Table BudgetTable"),
@@ -248,7 +248,7 @@ class ExecutionJournalCoverageTest {
             new TableRowSelector.ByKeyCell(
                 new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.BooleanValue(true))));
+                new CellValueSpec.BooleanValue(true))));
     assertEquals(
         new ExecutionJournal.Target(
             "TABLE_ROW", "Row where Item=Formula[text=A1*2] in Table BudgetTable"),
@@ -256,7 +256,7 @@ class ExecutionJournalCoverageTest {
             new TableRowSelector.ByKeyCell(
                 new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.Formula(text("A1*2")))));
+                new CellValueSpec.Formula(text("A1*2")))));
     assertEquals(
         new ExecutionJournal.Target("TABLE_CELL", "Column Amount in Row 3 in Table BudgetTable"),
         summaryTarget(
@@ -513,9 +513,9 @@ class ExecutionJournalCoverageTest {
         new PlanId(planId),
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
-        ExecutionPolicyInput.modeAndJournal(
-            ExecutionModeInput.defaults(), new ExecutionJournalInput(level)),
-        dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.modeAndJournal(
+            ExecutionModeSpec.defaults(), new ExecutionJournalSpec(level)),
+        dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
         List.copyOf(steps));
   }
 
@@ -527,7 +527,7 @@ class ExecutionJournalCoverageTest {
     return ExecutionJournalTargetResolver.summaryTarget(selector);
   }
 
-  private static dev.erst.gridgrind.core.source.TextSourceInput text(String value) {
-    return dev.erst.gridgrind.core.source.TextSourceInput.inline(value);
+  private static dev.erst.gridgrind.core.source.TextSourceSpec text(String value) {
+    return dev.erst.gridgrind.core.source.TextSourceSpec.inline(value);
   }
 }

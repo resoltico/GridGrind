@@ -57,7 +57,7 @@ final class RequestPreflightPaths {
 
   private static void addFormulaPathProblem(
       WorkbookPlan request,
-      dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput externalWorkbook,
+      dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec externalWorkbook,
       Exception exception,
       List<GridGrindProblemDetail.Problem> problems) {
     problems.add(

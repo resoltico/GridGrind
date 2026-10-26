@@ -7,12 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -213,12 +213,12 @@ final class XlsxParityTest {
               new WorkbookPlan.WorkbookPersistence.SaveAs(
                   outputPath.toString(),
                   WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                  dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
-              ExecutionPolicyInput.calculation(
-                  CalculationPolicyInput.strategy(new CalculationStrategyInput.EvaluateAll())),
-              new FormulaEnvironmentInput(
+                  dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+              ExecutionPolicySpec.calculation(
+                  CalculationPolicySpec.strategy(new CalculationStrategySpec.EvaluateAll())),
+              new FormulaEnvironmentSpec(
                   List.of(
-                      new FormulaExternalWorkbookInput(
+                      new FormulaExternalWorkbookSpec(
                           "referenced.xlsx", scenario.attachment("referencedWorkbook").toString())),
                   dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy.ERROR,
                   List.of()),

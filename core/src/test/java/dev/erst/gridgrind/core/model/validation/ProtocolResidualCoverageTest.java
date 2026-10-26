@@ -4,18 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
-import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
-import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -39,7 +39,7 @@ class ProtocolResidualCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new DifferentialStyleInput(
+                    new DifferentialStylePatch(
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
@@ -54,11 +54,11 @@ class ProtocolResidualCoverageTest {
 
   @Test
   void conditionalFormattingAndValidationOptionalsNormalizeAtTheTypeBoundary() {
-    ConditionalFormattingRuleInput.CellValueRule betweenRule =
-        new ConditionalFormattingRuleInput.CellValueRule(
+    ConditionalFormattingRuleSpec.CellValueRule betweenRule =
+        new ConditionalFormattingRuleSpec.CellValueRule(
             ExcelComparisonOperator.BETWEEN, "1", Optional.of(" 9 "), true, Optional.empty());
-    ConditionalFormattingRuleInput.CellValueRule notBetweenRule =
-        new ConditionalFormattingRuleInput.CellValueRule(
+    ConditionalFormattingRuleSpec.CellValueRule notBetweenRule =
+        new ConditionalFormattingRuleSpec.CellValueRule(
             ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of(" 11 "), true, Optional.empty());
 
     assertEquals(Optional.of("9"), betweenRule.formula2());
@@ -68,7 +68,7 @@ class ProtocolResidualCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new ConditionalFormattingRuleInput.Top10Rule(
+                    new ConditionalFormattingRuleSpec.Top10Rule(
                         false, 0, false, false, Optional.empty()))
             .getMessage());
     assertEquals(
@@ -76,38 +76,38 @@ class ProtocolResidualCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new DataValidationRuleInput.WholeNumber(
+                    new DataValidationRuleSpec.WholeNumber(
                         ExcelComparisonOperator.GREATER_THAN, "7", Optional.of("9")))
             .getMessage());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationRuleInput.CustomFormula("DDE(\"cmd\",\"/C calc\",\"\")"));
+        () -> new DataValidationRuleSpec.CustomFormula("DDE(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationRuleInput.FormulaList("=dde(\"cmd\",\"/C calc\",\"\")"));
+        () -> new DataValidationRuleSpec.FormulaList("=dde(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.WholeNumber(
+            new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.BETWEEN,
                 "1",
                 Optional.of("DDE(\"cmd\",\"/C calc\",\"\")")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.WholeNumber(
+            new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.NOT_BETWEEN,
                 "1",
                 Optional.of("DDE(\"cmd\",\"/C calc\",\"\")")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.FormulaRule(
+            new ConditionalFormattingRuleSpec.FormulaRule(
                 "DDE(\"cmd\",\"/C calc\",\"\")", false, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ConditionalFormattingRuleInput.CellValueRule(
+            new ConditionalFormattingRuleSpec.CellValueRule(
                 ExcelComparisonOperator.BETWEEN,
                 "1",
                 Optional.of("DDE(\"cmd\",\"/C calc\",\"\")"),
@@ -119,79 +119,79 @@ class ProtocolResidualCoverageTest {
   void everyComparisonValidationSubtypeEnforcesItsCompleteFormulaContract() {
     assertEquals(
         Optional.of("9"),
-        new DataValidationRuleInput.WholeNumber(
+        new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
             .formula2());
     assertEquals(
         Optional.of("9"),
-        new DataValidationRuleInput.DecimalNumber(
+        new DataValidationRuleSpec.DecimalNumber(
                 ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
             .formula2());
     assertEquals(
         Optional.of("9"),
-        new DataValidationRuleInput.DateRule(ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
+        new DataValidationRuleSpec.DateRule(ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
             .formula2());
     assertEquals(
         Optional.of("9"),
-        new DataValidationRuleInput.TimeRule(ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
+        new DataValidationRuleSpec.TimeRule(ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
             .formula2());
     assertEquals(
         Optional.of("9"),
-        new DataValidationRuleInput.TextLength(
+        new DataValidationRuleSpec.TextLength(
                 ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
             .formula2());
     assertEquals(
         Optional.empty(),
-        new DataValidationRuleInput.WholeNumber(
+        new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty())
             .formula2());
     assertEquals(
         Optional.of("9"),
-        new DataValidationRuleInput.WholeNumber(
+        new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of("9"))
             .formula2());
-    assertEquals("safe", new DataValidationRuleInput.FormulaList("safe").formula());
-    assertEquals("safe", new DataValidationRuleInput.CustomFormula("safe").formula());
+    assertEquals("safe", new DataValidationRuleSpec.FormulaList("safe").formula());
+    assertEquals("safe", new DataValidationRuleSpec.CustomFormula("safe").formula());
     assertEquals(
         "formula2 must not be blank for between",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new DataValidationRuleInput.WholeNumber(
+                    new DataValidationRuleSpec.WholeNumber(
                         ExcelComparisonOperator.BETWEEN, "1", Optional.empty()))
             .getMessage());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.WholeNumber(
+            new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.BETWEEN,
                 "DDE(\"cmd\",\"/C calc\",\"\")",
                 Optional.of("9")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.DecimalNumber(
+            new DataValidationRuleSpec.DecimalNumber(
                 ExcelComparisonOperator.BETWEEN,
                 "DDE(\"cmd\",\"/C calc\",\"\")",
                 Optional.of("9")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.DateRule(
+            new DataValidationRuleSpec.DateRule(
                 ExcelComparisonOperator.BETWEEN,
                 "DDE(\"cmd\",\"/C calc\",\"\")",
                 Optional.of("9")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.TimeRule(
+            new DataValidationRuleSpec.TimeRule(
                 ExcelComparisonOperator.BETWEEN,
                 "DDE(\"cmd\",\"/C calc\",\"\")",
                 Optional.of("9")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.TextLength(
+            new DataValidationRuleSpec.TextLength(
                 ExcelComparisonOperator.BETWEEN,
                 "DDE(\"cmd\",\"/C calc\",\"\")",
                 Optional.of("9")));
@@ -203,39 +203,39 @@ class ProtocolResidualCoverageTest {
         "values must serialize to at most 255 characters for Excel data validation; got 260",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DataValidationRuleInput.ExplicitList(List.of("x".repeat(256), "y")))
+                () -> new DataValidationRuleSpec.ExplicitList(List.of("x".repeat(256), "y")))
             .getMessage());
-    assertDoesNotThrow(() -> new DataValidationRuleInput.ExplicitList(List.of("x".repeat(253))));
+    assertDoesNotThrow(() -> new DataValidationRuleSpec.ExplicitList(List.of("x".repeat(253))));
     assertEquals(
         "values must serialize to at most 255 characters for Excel data validation; got 256",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DataValidationRuleInput.ExplicitList(List.of("x".repeat(254))))
+                () -> new DataValidationRuleSpec.ExplicitList(List.of("x".repeat(254))))
             .getMessage());
     assertEquals(
         "values must not contain ',' or '\"' in an explicit list; use FORMULA_LIST for values that require delimiters",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DataValidationRuleInput.ExplicitList(List.of("North, East")))
+                () -> new DataValidationRuleSpec.ExplicitList(List.of("North, East")))
             .getMessage());
     assertEquals(
         "values must not contain ',' or '\"' in an explicit list; use FORMULA_LIST for values that require delimiters",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DataValidationRuleInput.ExplicitList(List.of("North\" East")))
+                () -> new DataValidationRuleSpec.ExplicitList(List.of("North\" East")))
             .getMessage());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationRuleInput.ExplicitList(List.of(",North")));
+        () -> new DataValidationRuleSpec.ExplicitList(List.of(",North")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationRuleInput.ExplicitList(List.of("\"North")));
+        () -> new DataValidationRuleSpec.ExplicitList(List.of("\"North")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationRuleInput.ExplicitList(List.of(" ")));
+        () -> new DataValidationRuleSpec.ExplicitList(List.of(" ")));
     assertEquals(
         List.of("North", "West"),
-        new DataValidationRuleInput.ExplicitList(List.of("North", "West")).values());
+        new DataValidationRuleSpec.ExplicitList(List.of("North", "West")).values());
   }
 
   @Test
@@ -243,26 +243,25 @@ class ProtocolResidualCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CellInput.Formula(
-                TextSourceInput.inline("WEBSERVICE(\"https://evil.example.com\")")));
+            new CellValueSpec.Formula(
+                TextSourceSpec.inline("WEBSERVICE(\"https://evil.example.com\")")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CellInput.Formula(
-                TextSourceInput.inline("=webservice(\"https://evil.example.com\")")));
+            new CellValueSpec.Formula(
+                TextSourceSpec.inline("=webservice(\"https://evil.example.com\")")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ArrayFormulaInput(
-                TextSourceInput.inline("{=WEBSERVICE(\"https://evil.example.com\")}")));
+            new ArrayFormulaSpec(
+                TextSourceSpec.inline("{=WEBSERVICE(\"https://evil.example.com\")}")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationRuleSpec.CustomFormula("WEBSERVICE(\"https://evil.example.com\")"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.CustomFormula("WEBSERVICE(\"https://evil.example.com\")"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ConditionalFormattingRuleInput.FormulaRule(
+            new ConditionalFormattingRuleSpec.FormulaRule(
                 "WEBSERVICE(\"https://evil.example.com\")", false, Optional.empty()));
   }
 
@@ -285,33 +284,33 @@ class ProtocolResidualCoverageTest {
     // LIM-033 — chart title formula
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartTitleInput.Formula("DDE(\"cmd\",\"/C calc\",\"\")"));
+        () -> new ChartTitleSpec.Formula("DDE(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartTitleInput.Formula("WEBSERVICE(\"https://evil.example.com\")"));
+        () -> new ChartTitleSpec.Formula("WEBSERVICE(\"https://evil.example.com\")"));
 
     // LIM-034 — UDF formula template (defense-in-depth; POI evaluator won't execute these
     //           server-side, but they must not silently end up in future execution paths)
     assertThrows(
         IllegalArgumentException.class,
-        () -> new FormulaUdfFunctionInput("MY_FUNC", 0, 0, "DDE(\"cmd\",\"/C calc\",\"\")"));
+        () -> new FormulaUdfFunctionSpec("MY_FUNC", 0, 0, "DDE(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new FormulaUdfFunctionInput(
+            new FormulaUdfFunctionSpec(
                 "MY_FUNC", 0, 0, "WEBSERVICE(\"https://evil.example.com\")"));
   }
 
   @Test
   void simpleShapeKindRemainsExplicit() {
-    DrawingAnchorInput.TwoCell anchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(0, 0),
-            new DrawingMarkerInput(2, 2),
+    DrawingAnchorSpec.TwoCell anchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(0, 0),
+            new DrawingMarkerSpec(2, 2),
             ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-    ShapeInput.SimpleShape shape =
-        new ShapeInput.SimpleShape(
-            "Queue Banner", anchor, "rect", Optional.of(TextSourceInput.inline("Ready")));
+    ShapeSpec.SimpleShape shape =
+        new ShapeSpec.SimpleShape(
+            "Queue Banner", anchor, "rect", Optional.of(TextSourceSpec.inline("Ready")));
 
     assertEquals(ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, shape.kind());
   }

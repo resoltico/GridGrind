@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.validation;
 
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.MutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
@@ -100,8 +100,8 @@ final class WorkbookStaticFormulaColumnValidation {
         || action instanceof CellMutationAction.ClearArrayFormula;
   }
 
-  private static boolean isFormula(CellInput cell) {
-    return cell instanceof CellInput.Formula || cell instanceof CellInput.RawFormula;
+  private static boolean isFormula(CellValueSpec cell) {
+    return cell instanceof CellValueSpec.Formula || cell instanceof CellValueSpec.RawFormula;
   }
 
   /** The knownness of formula-bearing workbook state during ordered static validation. */

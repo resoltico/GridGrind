@@ -92,8 +92,7 @@ final class ExecutionInputBindingsFixtureSupport {
     List<GridGrindExecutionGrant.ReadAuthority> resources =
         java.util.stream.Stream.concat(
                 planGrant.readableResources().stream(),
-                java.util.stream.Stream.of(
-                    new GridGrindExecutionGrant.ReadAuthority.StandardInput()))
+                java.util.stream.Stream.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()))
             .toList();
     GridGrindExecutionGrant grant =
         new GridGrindExecutionGrant.Bounded(
@@ -209,10 +208,10 @@ final class ExecutionInputBindingsFixtureSupport {
     if (plan.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile) {
       existingFile
           .security()
-          .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
+          .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec::passwordRef)
           .ifPresent(references::add);
     }
-    java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput>
+    java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
         security =
             switch (plan.persistence()) {
               case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
@@ -223,13 +222,13 @@ final class ExecutionInputBindingsFixtureSupport {
         value -> {
           if (value.encryption()
               instanceof
-              dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.Encrypt
+              dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.Encrypt
                   encrypt) {
             references.add(encrypt.encryption().passwordRef());
           }
           if (value.signature()
               instanceof
-              dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.Sign sign) {
+              dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.Sign sign) {
             references.add(sign.signature().keystorePasswordRef());
             sign.signature().keyPasswordRef().ifPresent(references::add);
           }
@@ -259,7 +258,7 @@ final class ExecutionInputBindingsFixtureSupport {
 
   private static GridGrindExecutionGrant.Bounded standardInputGrant() {
     return new GridGrindExecutionGrant.Bounded(
-        List.of(new GridGrindExecutionGrant.ReadAuthority.StandardInput()),
+        List.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()),
         List.of(),
         new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
         new GridGrindExecutionGrant.PublicationAuthority.None(),

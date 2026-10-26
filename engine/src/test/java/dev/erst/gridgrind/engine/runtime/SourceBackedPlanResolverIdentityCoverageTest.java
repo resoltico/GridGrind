@@ -7,16 +7,16 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.chart.ChartInput;
-import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
-import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
-import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
-import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
-import dev.erst.gridgrind.core.model.drawing.ShapeInput;
-import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -32,8 +32,8 @@ import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
-import dev.erst.gridgrind.core.source.BinarySourceInput;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -81,11 +81,11 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(new TextSourceInput.Utf8File("title.txt")))),
+                        new CellValueSpec.Text(new TextSourceSpec.Utf8File("title.txt")))),
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A2")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Formula(new TextSourceInput.Utf8File("formula.txt")))),
+                        new CellValueSpec.Formula(new TextSourceSpec.Utf8File("formula.txt")))),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetShape(
@@ -93,22 +93,22 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                             "QueueShape",
                             twoCellAnchor(),
                             "roundRect",
-                            new TextSourceInput.StandardInput()))),
+                            new TextSourceSpec.Stdin()))),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetEmbeddedObject(
-                        new EmbeddedObjectInput(
+                        new EmbeddedObjectSpec(
                             "OpsPayload",
                             "Ops payload",
                             "ops-payload.txt",
                             "open",
-                            new BinarySourceInput.File("payload.bin"),
+                            new BinarySourceSpec.File("payload.bin"),
                             inlinePictureData(),
                             twoCellAnchor()))),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetSignatureLine(
-                        new SignatureLineInput(
+                        new SignatureLineSpec(
                             "OpsSignature",
                             twoCellAnchor(),
                             false,
@@ -119,9 +119,9 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                             java.util.Optional.empty(),
                             java.util.Optional.of("invalid"),
                             java.util.Optional.of(
-                                new PictureDataInput(
+                                new PictureDataSpec(
                                     ExcelPictureFormat.PNG,
-                                    new BinarySourceInput.File("payload.bin"))))))));
+                                    new BinarySourceSpec.File("payload.bin"))))))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -132,18 +132,18 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     CellMutationAction.SetCell titleAction =
         assertInstanceOf(
             CellMutationAction.SetCell.class, ((MutationStep) resolved.steps().get(0)).action());
-    CellInput.Text titleValue = assertInstanceOf(CellInput.Text.class, titleAction.value());
+    CellValueSpec.Text titleValue = assertInstanceOf(CellValueSpec.Text.class, titleAction.value());
     assertEquals(
         "Quarterly Budget",
-        assertInstanceOf(TextSourceInput.Inline.class, titleValue.source()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, titleValue.source()).text());
 
     CellMutationAction.SetCell formulaAction =
         assertInstanceOf(
             CellMutationAction.SetCell.class, ((MutationStep) resolved.steps().get(1)).action());
-    CellInput.Formula formulaValue =
-        assertInstanceOf(CellInput.Formula.class, formulaAction.value());
+    CellValueSpec.Formula formulaValue =
+        assertInstanceOf(CellValueSpec.Formula.class, formulaAction.value());
     assertEquals(
-        "SUM(B2:B3)", assertInstanceOf(TextSourceInput.Inline.class, formulaValue.source()).text());
+        "SUM(B2:B3)", assertInstanceOf(TextSourceSpec.Inline.class, formulaValue.source()).text());
 
     DrawingMutationAction.SetShape shapeAction =
         assertInstanceOf(
@@ -151,8 +151,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             ((MutationStep) resolved.steps().get(2)).action());
     assertEquals(
         "Queue",
-        ((TextSourceInput.Inline)
-                assertInstanceOf(ShapeInput.SimpleShape.class, shapeAction.shape())
+        ((TextSourceSpec.Inline)
+                assertInstanceOf(ShapeSpec.SimpleShape.class, shapeAction.shape())
                     .text()
                     .orElseThrow())
             .text());
@@ -163,7 +163,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             ((MutationStep) resolved.steps().get(3)).action());
     assertEquals(
         Base64.getEncoder().encodeToString(payloadBytes),
-        ((BinarySourceInput.InlineBase64) embeddedObjectAction.embeddedObject().payload())
+        ((BinarySourceSpec.InlineBase64) embeddedObjectAction.embeddedObject().payload())
             .base64Data());
 
     DrawingMutationAction.SetSignatureLine signatureLineAction =
@@ -172,7 +172,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             ((MutationStep) resolved.steps().get(4)).action());
     assertEquals(
         Base64.getEncoder().encodeToString(payloadBytes),
-        ((BinarySourceInput.InlineBase64)
+        ((BinarySourceSpec.InlineBase64)
                 signatureLineAction.signatureLine().plainSignature().orElseThrow().source())
             .base64Data());
   }
@@ -187,11 +187,11 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(new TextSourceInput.StandardInput()))),
+                        new CellValueSpec.Text(new TextSourceSpec.Stdin()))),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetSignatureLine(
-                        new SignatureLineInput(
+                        new SignatureLineSpec(
                             "OpsSignature",
                             twoCellAnchor(),
                             false,
@@ -202,9 +202,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                             java.util.Optional.empty(),
                             java.util.Optional.of("invalid"),
                             java.util.Optional.of(
-                                new PictureDataInput(
-                                    ExcelPictureFormat.PNG,
-                                    new BinarySourceInput.StandardInput())))))));
+                                new PictureDataSpec(
+                                    ExcelPictureFormat.PNG, new BinarySourceSpec.Stdin())))))));
     WorkbookPlan fileBackedPlan =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -213,7 +212,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 mutate(
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Text(new TextSourceInput.Utf8File("title.txt"))))));
+                        new CellValueSpec.Text(new TextSourceSpec.Utf8File("title.txt"))))));
 
     assertTrue(SourceBackedPlanResolver.requiresStandardInput(standardInputPlan));
     assertFalse(SourceBackedPlanResolver.requiresStandardInput(fileBackedPlan));
@@ -235,9 +234,9 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 mutate(
                     new WorkbookSelector.Current(),
                     new StructuredMutationAction.ImportCustomXmlMapping(
-                        new CustomXmlImportInput(
+                        new CustomXmlImportSpec(
                             new CustomXmlMappingLocator(1L, "CORSO_mapping"),
-                            new TextSourceInput.Utf8File("mapping.xml"))))));
+                            new TextSourceSpec.Utf8File("mapping.xml"))))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -250,7 +249,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     assertEquals(new CustomXmlMappingLocator(1L, "CORSO_mapping"), action.mapping().locator());
     assertEquals(
         "<CORSO><NOME>Grid</NOME><DOCENTE>Grind</DOCENTE></CORSO>",
-        assertInstanceOf(TextSourceInput.Inline.class, action.mapping().xml()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, action.mapping().xml()).text());
   }
 
   @Test
@@ -263,14 +262,14 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             new TableRowSelector.ByKeyCell(
                 new TableSelector.ByName(new TableName("BudgetTable")),
                 "Item",
-                new CellInput.Text(new TextSourceInput.Utf8File("item.txt"))),
+                new CellValueSpec.Text(new TextSourceSpec.Utf8File("item.txt"))),
             "Amount");
     WorkbookPlan plan =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             List.of(
                 new InspectionStep(
                     new StepId("inspect-amount"), selector, new SheetIntrospectionQuery.GetCells()),
@@ -293,10 +292,10 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
         assertInstanceOf(TableCellSelector.ByColumnName.class, resolvedInspection.target());
     TableRowSelector.ByKeyCell resolvedRow =
         assertInstanceOf(TableRowSelector.ByKeyCell.class, resolvedSelector.row());
-    CellInput.Text resolvedValue =
-        assertInstanceOf(CellInput.Text.class, resolvedRow.expectedValue());
+    CellValueSpec.Text resolvedValue =
+        assertInstanceOf(CellValueSpec.Text.class, resolvedRow.expectedValue());
     assertEquals(
-        "Hosting", assertInstanceOf(TextSourceInput.Inline.class, resolvedValue.source()).text());
+        "Hosting", assertInstanceOf(TextSourceSpec.Inline.class, resolvedValue.source()).text());
 
     AssertionStep resolvedAssertion =
         assertInstanceOf(AssertionStep.class, resolved.steps().get(1));
@@ -304,10 +303,10 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
         assertInstanceOf(TableCellSelector.ByColumnName.class, resolvedAssertion.target());
     TableRowSelector.ByKeyCell assertedRow =
         assertInstanceOf(TableRowSelector.ByKeyCell.class, assertedSelector.row());
-    CellInput.Text assertedValue =
-        assertInstanceOf(CellInput.Text.class, assertedRow.expectedValue());
+    CellValueSpec.Text assertedValue =
+        assertInstanceOf(CellValueSpec.Text.class, assertedRow.expectedValue());
     assertEquals(
-        "Hosting", assertInstanceOf(TextSourceInput.Inline.class, assertedValue.source()).text());
+        "Hosting", assertInstanceOf(TextSourceSpec.Inline.class, assertedValue.source()).text());
   }
 
   @Test
@@ -325,11 +324,11 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             new StepId("set-range-file-backed"),
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                     List.of(
                         List.of(
-                            new CellInput.Text(TextSourceInput.utf8File("range-cell.txt")),
-                            new CellInput.NumberValue(42.0d))))));
+                            new CellValueSpec.Text(TextSourceSpec.utf8File("range-cell.txt")),
+                            new CellValueSpec.NumberValue(42.0d))))));
     MutationStep lineChartStep =
         new MutationStep(
             new StepId("set-line-chart-file-backed"),
@@ -338,11 +337,11 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 chartInput(
                     "Line",
                     twoCellAnchor(),
-                    new ChartTitleInput.Text(TextSourceInput.utf8File("line-title.txt")),
+                    new ChartTitleSpec.Text(TextSourceSpec.utf8File("line-title.txt")),
                     null,
                     ExcelChartDisplayBlanksAs.ZERO,
                     true,
-                    new ChartPlotInput.Line(
+                    new ChartPlotSpec.Line(
                         false,
                         dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping.STANDARD,
                         List.of(chartSeries())))));
@@ -354,19 +353,19 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 chartInput(
                     "Pie",
                     twoCellAnchor(),
-                    new ChartTitleInput.Text(TextSourceInput.utf8File("pie-title.txt")),
+                    new ChartTitleSpec.Text(TextSourceSpec.utf8File("pie-title.txt")),
                     null,
                     ExcelChartDisplayBlanksAs.GAP,
                     true,
-                    new ChartPlotInput.Pie(false, Optional.of(15), List.of(chartSeries())))));
+                    new ChartPlotSpec.Pie(false, Optional.of(15), List.of(chartSeries())))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
                 List.of(rangeStep, lineChartStep, pieChartStep)),
             ExecutionInputBindingsFixtureSupport.bindings(
                 workingDirectory,
@@ -379,29 +378,29 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     assertNotSame(rangeStep, resolvedRangeStep);
     CellMutationAction.SetRange resolvedRange =
         assertInstanceOf(CellMutationAction.SetRange.class, resolvedRangeStep.action());
-    CellInput.Text resolvedRangeCell =
+    CellValueSpec.Text resolvedRangeCell =
         assertInstanceOf(
-            CellInput.Text.class, resolvedRange.rows().toCellInputRows().getFirst().getFirst());
+            CellValueSpec.Text.class, resolvedRange.rows().toCellInputRows().getFirst().getFirst());
     assertEquals(
         "Quarterly Budget",
-        assertInstanceOf(TextSourceInput.Inline.class, resolvedRangeCell.source()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, resolvedRangeCell.source()).text());
 
     MutationStep resolvedLineStep = assertInstanceOf(MutationStep.class, resolved.steps().get(1));
     assertNotSame(lineChartStep, resolvedLineStep);
-    ChartInput resolvedLineChart =
+    ChartSpec resolvedLineChart =
         assertInstanceOf(DrawingMutationAction.SetChart.class, resolvedLineStep.action()).chart();
-    assertInstanceOf(ChartPlotInput.Line.class, resolvedLineChart.plots().getFirst());
-    ChartTitleInput.Text lineTitle =
-        assertInstanceOf(ChartTitleInput.Text.class, resolvedLineChart.title());
-    assertEquals("Quarterly Trend", ((TextSourceInput.Inline) lineTitle.source()).text());
+    assertInstanceOf(ChartPlotSpec.Line.class, resolvedLineChart.plots().getFirst());
+    ChartTitleSpec.Text lineTitle =
+        assertInstanceOf(ChartTitleSpec.Text.class, resolvedLineChart.title());
+    assertEquals("Quarterly Trend", ((TextSourceSpec.Inline) lineTitle.source()).text());
 
     MutationStep resolvedPieStep = assertInstanceOf(MutationStep.class, resolved.steps().get(2));
     assertNotSame(pieChartStep, resolvedPieStep);
-    ChartInput resolvedPieChart =
+    ChartSpec resolvedPieChart =
         assertInstanceOf(DrawingMutationAction.SetChart.class, resolvedPieStep.action()).chart();
-    assertInstanceOf(ChartPlotInput.Pie.class, resolvedPieChart.plots().getFirst());
-    ChartTitleInput.Text pieTitle =
-        assertInstanceOf(ChartTitleInput.Text.class, resolvedPieChart.title());
-    assertEquals("Category Mix", ((TextSourceInput.Inline) pieTitle.source()).text());
+    assertInstanceOf(ChartPlotSpec.Pie.class, resolvedPieChart.plots().getFirst());
+    ChartTitleSpec.Text pieTitle =
+        assertInstanceOf(ChartTitleSpec.Text.class, resolvedPieChart.title());
+    assertEquals("Category Mix", ((TextSourceSpec.Inline) pieTitle.source()).text());
   }
 }

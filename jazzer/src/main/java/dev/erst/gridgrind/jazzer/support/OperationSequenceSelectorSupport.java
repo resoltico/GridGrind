@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -17,10 +17,10 @@ final class OperationSequenceSelectorSupport {
     return data.consumeBoolean();
   }
 
-  static ExecutionPolicyInput nextExecutionPolicy(
+  static ExecutionPolicySpec nextExecutionPolicy(
       GridGrindFuzzData data, String primarySheet, String secondarySheet, boolean validAddress) {
     return switch (selectorSlot(nextSelectorByte(data)) % 6) {
-      case 0 -> ExecutionPolicyInput.defaults();
+      case 0 -> ExecutionPolicySpec.defaults();
       case 1 -> ProtocolStepSupport.executionPolicy(ProtocolStepSupport.calculateAll());
       case 2 ->
           ProtocolStepSupport.executionPolicy(

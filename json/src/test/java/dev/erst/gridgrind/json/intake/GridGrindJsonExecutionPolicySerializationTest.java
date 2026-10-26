@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
-import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
-import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
@@ -37,9 +37,9 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                     }
                     """));
 
-    assertEquals(ExecutionModeInput.defaults(), request.execution().mode());
-    assertEquals(ExecutionJournalInput.defaults(), request.execution().journal());
-    assertEquals(CalculationPolicyInput.defaults(), request.execution().calculation());
+    assertEquals(ExecutionModeSpec.defaults(), request.execution().mode());
+    assertEquals(ExecutionJournalSpec.defaults(), request.execution().journal());
+    assertEquals(CalculationPolicySpec.defaults(), request.execution().calculation());
   }
 
   @Test
@@ -60,9 +60,9 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                     }
                     """));
 
-    assertEquals(ExecutionModeInput.eventRead(), request.execution().mode());
-    assertEquals(ExecutionJournalInput.defaults(), request.execution().journal());
-    assertEquals(CalculationPolicyInput.defaults(), request.execution().calculation());
+    assertEquals(ExecutionModeSpec.eventRead(), request.execution().mode());
+    assertEquals(ExecutionJournalSpec.defaults(), request.execution().journal());
+    assertEquals(CalculationPolicySpec.defaults(), request.execution().calculation());
   }
 
   @Test
@@ -83,9 +83,9 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                     }
                     """));
 
-    assertEquals(ExecutionModeInput.defaults(), request.execution().mode());
+    assertEquals(ExecutionModeSpec.defaults(), request.execution().mode());
     assertEquals(ExecutionJournalLevel.VERBOSE, request.execution().journal().level());
-    assertEquals(CalculationPolicyInput.defaults(), request.execution().calculation());
+    assertEquals(CalculationPolicySpec.defaults(), request.execution().calculation());
   }
 
   @Test
@@ -108,10 +108,10 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                     }
                     """));
 
-    assertEquals(ExecutionModeInput.defaults(), request.execution().mode());
-    assertEquals(ExecutionJournalInput.defaults(), request.execution().journal());
+    assertEquals(ExecutionModeSpec.defaults(), request.execution().mode());
+    assertEquals(ExecutionJournalSpec.defaults(), request.execution().journal());
     assertEquals(
-        new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true),
+        new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), true),
         request.execution().calculation());
   }
 
@@ -133,9 +133,9 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                     }
                     """));
 
-    assertEquals(ExecutionModeInput.defaults(), request.execution().mode());
-    assertEquals(ExecutionJournalInput.defaults(), request.execution().journal());
-    assertEquals(CalculationPolicyInput.defaults(), request.execution().calculation());
+    assertEquals(ExecutionModeSpec.defaults(), request.execution().mode());
+    assertEquals(ExecutionJournalSpec.defaults(), request.execution().journal());
+    assertEquals(CalculationPolicySpec.defaults(), request.execution().calculation());
   }
 
   @Test
@@ -144,23 +144,23 @@ final class GridGrindJsonExecutionPolicySerializationTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(ExecutionModeInput.eventRead()),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.mode(ExecutionModeSpec.eventRead()),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan journalOnlyRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.journal(new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE)),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     WorkbookPlan calculationOnlyRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.calculation(
-                new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true)),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.calculation(
+                new CalculationPolicySpec(new CalculationStrategySpec.DoNotCalculate(), true)),
+            FormulaEnvironmentSpec.empty(),
             List.of());
 
     JsonNode modeExecution = GridGrindJsonOutput.requestTree(modeOnlyRequest).path("execution");

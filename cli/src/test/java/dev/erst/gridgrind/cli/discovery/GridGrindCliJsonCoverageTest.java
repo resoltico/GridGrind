@@ -440,7 +440,7 @@ class GridGrindCliJsonCoverageTest {
                 "ENTRY",
                 "Create or mutate one supported simple chart on one sheet.",
                 List.of("SET_CHART"),
-                List.of("chartInputType:ChartInput"))));
+                List.of("chartSpecType:ChartSpec"))));
   }
 
   private static Set<String> fieldNames(JsonNode node) {

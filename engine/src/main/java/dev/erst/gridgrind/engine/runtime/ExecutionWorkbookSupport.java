@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
@@ -28,7 +28,7 @@ final class ExecutionWorkbookSupport {
 
   ExcelWorkbook openWorkbook(
       WorkbookPlan.WorkbookSource source,
-      @Nullable FormulaEnvironmentInput formulaEnvironment,
+      @Nullable FormulaEnvironmentSpec formulaEnvironment,
       ExecutionInputBindings bindings)
       throws IOException {
     return switch (source) {

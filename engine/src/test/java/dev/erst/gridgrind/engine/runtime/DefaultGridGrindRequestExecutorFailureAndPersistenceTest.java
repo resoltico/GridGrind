@@ -3,22 +3,22 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
 import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
-import dev.erst.gridgrind.core.model.table.TableInput;
-import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
@@ -88,19 +88,20 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     mutate(
                         new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
                                 List.of(
                                     List.of(textCell("Item"), textCell("Amount")),
                                     List.of(
-                                        textCell("Hosting"), new CellInput.NumberValue(49.0)))))),
+                                        textCell("Hosting"),
+                                        new CellValueSpec.NumberValue(49.0)))))),
                     mutate(
                         new StructuredMutationAction.SetTable(
-                            TableInput.withDefaultMetadata(
+                            TableSpec.withDefaultMetadata(
                                 new TableName("BudgetTable"),
                                 new SheetName("Budget"),
                                 new RangeRef("A1:B2"),
                                 false,
-                                new TableStyleInput.None())))),
+                                new TableStyleSpec.None())))),
                 inspect(
                     "tables",
                     new TableSelector.ByNames(List.of(new TableName("BudgetTable"))),
@@ -236,18 +237,19 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                 List.of(textCell("Item"), textCell("Amount"))))),
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
-                                List.of(textCell("Hosting"), new CellInput.NumberValue(49.0))))),
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
+                                List.of(
+                                    textCell("Hosting"), new CellValueSpec.NumberValue(49.0))))),
                     mutate(
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
-                                List.of(textCell("Domain"), new CellInput.NumberValue(12.0))))),
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
+                                List.of(textCell("Domain"), new CellValueSpec.NumberValue(12.0))))),
                     mutate(
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
                         new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
@@ -454,7 +456,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         mutate(
                             new SheetSelector.ByName(new SheetName("Missing")),
                             new WorkbookMutationAction.SetSheetPane(
-                                new PaneInput.Frozen(1, 1, 1, 1)))))));
+                                new PaneSpec.Frozen(1, 1, 1, 1)))))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("SET_SHEET_PANE", executeStepContext(failure).stepType());
@@ -521,8 +523,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
-                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
-                            .none()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
                     mutations(
                         mutate(
                             new CellSelector.ByAddress(
@@ -909,8 +910,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
-                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
-                            .none()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
                     List.of())));
     WorkbookResultPersistence.PersistenceOutcome.Overwritten persistence =
         assertInstanceOf(
@@ -932,9 +932,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
-                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
-                            .none()),
-                    executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+                    executionPolicy(ExecutionModeSpec.eventRead(), calculateAll()),
                     null,
                     mutations(),
                     inspections())));
@@ -1087,11 +1086,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         mutate(
                             new CellSelector.ByAddress(
                                 new SheetName("Data"), new CellAddress("A1")),
-                            new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))),
+                            new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0))),
                         mutate(
                             new CellSelector.ByAddress(
                                 new SheetName("Data"), new CellAddress("B1")),
-                            new CellMutationAction.SetCell(new CellInput.NumberValue(2.0))),
+                            new CellMutationAction.SetCell(new CellValueSpec.NumberValue(2.0))),
                         mutate(
                             new CellSelector.ByAddress(
                                 new SheetName("Data"), new CellAddress("C1")),
@@ -1124,7 +1123,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 executionPolicy(calculateAll()),
-                FormulaEnvironmentInput.empty(),
+                FormulaEnvironmentSpec.empty(),
                 List.<WorkbookStep>of(
                     new MutationStep(
                         new StepId("step-0"),
@@ -1137,7 +1136,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new MutationStep(
                         new StepId("step-2"),
                         new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A1")),
-                        new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))))));
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0))))));
 
     assertTrue(
         failures.stream()
@@ -1151,7 +1150,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/book.xlsx"),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
+                executionPolicy(ExecutionModeSpec.eventRead(), calculateAll()),
                 null,
                 List.of(),
                 List.of(
@@ -1164,7 +1163,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                executionPolicy(ExecutionModeInput.streamingWrite(), calculateAll()),
+                executionPolicy(ExecutionModeSpec.streamingWrite(), calculateAll()),
                 null,
                 List.of(
                     mutate(

@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.core.model.style.BorderSideInput;
-import dev.erst.gridgrind.core.model.style.ColorInput;
-import dev.erst.gridgrind.core.model.style.DifferentialBorderInput;
-import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
@@ -30,7 +30,7 @@ import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
-import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
@@ -58,7 +58,7 @@ class ExecutorCoverageGapsTest {
         new TableRowSelector.ByKeyCell(
             new TableSelector.ByName(new TableName("BudgetTable")),
             "Owner",
-            new CellInput.Text(TextSourceInput.inline("Ada")));
+            new CellValueSpec.Text(TextSourceSpec.inline("Ada")));
     TableCellSelector.ByColumnName tableCell =
         new TableCellSelector.ByColumnName(
             new TableRowSelector.ByIndex(new TableSelector.ByName(new TableName("BudgetTable")), 0),
@@ -113,7 +113,7 @@ class ExecutorCoverageGapsTest {
     assertInstanceOf(
         ExcelOoxmlOpenOptions.Unencrypted.class,
         OoxmlPackageSecurityConverter.toExcelOpenOptions(
-            new OoxmlOpenSecurityInput(Optional.empty())));
+            new OoxmlOpenSecuritySpec(Optional.empty())));
     assertTrue(WorkbookCommandStructuredInputConverter.toExcelDifferentialBorder(null).isEmpty());
 
     GridGrindRequestDoctor defaultDoctor = new GridGrindRequestDoctor();
@@ -142,7 +142,7 @@ class ExecutorCoverageGapsTest {
         new TableRowSelector.ByKeyCell(
             new TableSelector.ByName(new TableName("BudgetTable")),
             "Owner",
-            new CellInput.Text(TextSourceInput.inline("Ada")));
+            new CellValueSpec.Text(TextSourceSpec.inline("Ada")));
     List<Selector> summarySelectors =
         List.of(
             new WorkbookSelector.Current(),
@@ -207,10 +207,10 @@ class ExecutorCoverageGapsTest {
             new ProblemContext.ReadRequest(
                 ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
                 ProblemContextRequestSurfaces.JsonLocation.unavailable()));
-    DifferentialBorderInput border =
-        new DifferentialBorderInput(
+    DifferentialBorderPatch border =
+        new DifferentialBorderPatch(
             Optional.of(
-                new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb(new RgbHex("#aabbcc")))),
+                new BorderSidePatch(ExcelBorderStyle.THIN, ColorSpec.rgb(new RgbHex("#aabbcc")))),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

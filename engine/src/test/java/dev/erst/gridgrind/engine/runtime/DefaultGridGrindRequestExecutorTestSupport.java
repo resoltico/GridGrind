@@ -3,11 +3,11 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -32,8 +32,8 @@ class DefaultGridGrindRequestExecutorTestSupport
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<ExecutorTestPlanSupport.PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return ExecutorTestPlanSupport.request(
@@ -43,8 +43,8 @@ class DefaultGridGrindRequestExecutorTestSupport
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<ExecutorTestPlanSupport.PendingMutation> mutations,
       List<ExecutorTestPlanSupport.PendingAssertion> assertions,
       List<InspectionStep> inspections) {
@@ -55,8 +55,8 @@ class DefaultGridGrindRequestExecutorTestSupport
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<ExecutorTestPlanSupport.PendingMutation> mutations,
       InspectionStep... inspections) {
     return ExecutorTestPlanSupport.request(
@@ -91,7 +91,7 @@ class DefaultGridGrindRequestExecutorTestSupport
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      FormulaEnvironmentInput formulaEnvironment,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<ExecutorTestPlanSupport.PendingMutation> mutations,
       List<ExecutorTestPlanSupport.PendingAssertion> assertions,
       List<InspectionStep> inspections) {
@@ -102,7 +102,7 @@ class DefaultGridGrindRequestExecutorTestSupport
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      FormulaEnvironmentInput formulaEnvironment,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<ExecutorTestPlanSupport.PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return ExecutorTestPlanSupport.request(
@@ -112,8 +112,8 @@ class DefaultGridGrindRequestExecutorTestSupport
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionModeInput executionMode,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionModeSpec executionMode,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<ExecutorTestPlanSupport.PendingMutation> mutations,
       List<ExecutorTestPlanSupport.PendingAssertion> assertions,
       List<InspectionStep> inspections) {
@@ -124,8 +124,8 @@ class DefaultGridGrindRequestExecutorTestSupport
   static WorkbookPlan request(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      ExecutionModeInput executionMode,
-      FormulaEnvironmentInput formulaEnvironment,
+      ExecutionModeSpec executionMode,
+      FormulaEnvironmentSpec formulaEnvironment,
       List<ExecutorTestPlanSupport.PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return ExecutorTestPlanSupport.request(

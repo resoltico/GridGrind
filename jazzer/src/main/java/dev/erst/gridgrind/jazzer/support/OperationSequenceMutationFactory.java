@@ -5,8 +5,8 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.mutate;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
@@ -403,7 +403,7 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new WorkbookSelector.Current(),
                     new WorkbookMutationAction.SetWorkbookProtection(
-                        new WorkbookProtectionInput(
+                        new WorkbookProtectionSpec(
                             true, false, false, Optional.empty(), Optional.empty())));
             case 0x2 ->
                 mutate(
@@ -413,7 +413,7 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new SheetSelector.ByName(new SheetName(targetSheet)),
                     new WorkbookMutationAction.SetSheetPresentation(
-                        SheetPresentationInput.defaults()));
+                        SheetPresentationSpec.defaults()));
             default ->
                 mutate(
                     new SheetSelector.ByName(new SheetName(targetSheet)),

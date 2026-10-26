@@ -43,8 +43,7 @@ public record CliExecutionGrantDocument(
 
   /** One resource the CLI host explicitly permits the plan to read. */
   @Union(discriminator = "type")
-  public sealed interface ReadableResource
-      permits ReadableResource.File, ReadableResource.StandardInput {
+  public sealed interface ReadableResource permits ReadableResource.File, ReadableResource.Stdin {
     /** Translates one CLI resource into the engine-owned authority value. */
     GridGrindExecutionGrant.ReadAuthority toEngineAuthority(Path cliWorkingDirectory);
 
@@ -71,11 +70,11 @@ public record CliExecutionGrantDocument(
     @Variant(
         id = "STANDARD_INPUT",
         summary = "Grants the standard-input payload already bound by the CLI host.")
-    record StandardInput() implements ReadableResource {
+    record Stdin() implements ReadableResource {
       @Override
       public GridGrindExecutionGrant.ReadAuthority toEngineAuthority(Path cliWorkingDirectory) {
         Objects.requireNonNull(cliWorkingDirectory, "cliWorkingDirectory must not be null");
-        return new GridGrindExecutionGrant.ReadAuthority.StandardInput();
+        return new GridGrindExecutionGrant.ReadAuthority.Stdin();
       }
     }
   }
