@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
@@ -14,6 +18,7 @@ import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -781,10 +786,15 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       WorkbookSheetResult.SheetLayout emptyLayout = sheet.layout().snapshot();
       assertEquals(new ExcelSheetPane.None(), emptyLayout.pane());
       assertEquals(100, emptyLayout.zoomPercent());
-      assertEquals(ExcelSheetDisplay.defaults(), emptyLayout.presentation().display());
       assertEquals(
-          ExcelSheetOutlineSummary.defaults(), emptyLayout.presentation().outlineSummary());
-      assertEquals(ExcelSheetDefaults.defaults(), emptyLayout.presentation().sheetDefaults());
+          dev.erst.gridgrind.core.model.layout.SheetDisplayReport.defaults(),
+          emptyLayout.presentation().display());
+      assertEquals(
+          dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport.defaults(),
+          emptyLayout.presentation().outlineSummary());
+      assertEquals(
+          dev.erst.gridgrind.core.model.layout.SheetDefaultsReport.defaults(),
+          emptyLayout.presentation().sheetDefaults());
       assertEquals(List.of(), emptyLayout.columns());
       assertEquals(List.of(), emptyLayout.rows());
 
@@ -796,14 +806,15 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       sheet
           .layout()
           .setPresentation(
-              new ExcelSheetPresentation(
-                  new ExcelSheetDisplay(false, false, false, true, true),
+              new SheetPresentationSpec(
+                  new SheetDisplaySpec(false, false, false, true, true),
                   Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
-                  new ExcelSheetOutlineSummary(false, false),
-                  new ExcelSheetDefaults(11, 18.5d),
+                  new SheetOutlineSummarySpec(false, false),
+                  new SheetDefaultsSpec(11, 18.5d),
                   List.of(
-                      new ExcelIgnoredError(
-                          "A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
+                      new IgnoredErrorSpec(
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
+                          List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
 
       WorkbookSheetResult.Window window = sheet.cells().window("A1", 3, 3);
       assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
@@ -838,19 +849,23 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(new ExcelSheetPane.None(), unfrozenLayout.pane());
       assertEquals(100, unfrozenLayout.zoomPercent());
       assertEquals(
-          new ExcelSheetDisplay(false, false, false, true, true),
+          new dev.erst.gridgrind.core.model.layout.SheetDisplayReport(
+              false, false, false, true, true),
           unfrozenLayout.presentation().display());
       assertEquals(
           Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
           unfrozenLayout.presentation().tabColor());
       assertEquals(
-          new ExcelSheetOutlineSummary(false, false),
+          new dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport(false, false),
           unfrozenLayout.presentation().outlineSummary());
       assertEquals(
-          new ExcelSheetDefaults(11, 18.5d), unfrozenLayout.presentation().sheetDefaults());
+          new dev.erst.gridgrind.core.model.layout.SheetDefaultsReport(11, 18.5d),
+          unfrozenLayout.presentation().sheetDefaults());
       assertEquals(
           List.of(
-              new ExcelIgnoredError("A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+              new dev.erst.gridgrind.core.model.validation.IgnoredErrorReport(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
+                  List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
           unfrozenLayout.presentation().ignoredErrors());
       assertEquals(3, unfrozenLayout.columns().size());
       assertEquals(3, unfrozenLayout.rows().size());

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
@@ -604,18 +605,17 @@ class WorkbookCommandTest {
         assertDoesNotThrow(
             () ->
                 new WorkbookLayoutCommand.SetSheetPresentation(
-                    "Budget", ExcelSheetPresentation.defaults()));
+                    "Budget", SheetPresentationSpec.defaults()));
     assertEquals("Budget", setSheetPresentation.sheetName());
-    assertEquals(ExcelSheetPresentation.defaults(), setSheetPresentation.presentation());
+    assertEquals(SheetPresentationSpec.defaults(), setSheetPresentation.presentation());
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookLayoutCommand.SetSheetPresentation(
-                null, ExcelSheetPresentation.defaults()));
+            new WorkbookLayoutCommand.SetSheetPresentation(null, SheetPresentationSpec.defaults()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookLayoutCommand.SetSheetPresentation(" ", ExcelSheetPresentation.defaults()));
+            new WorkbookLayoutCommand.SetSheetPresentation(" ", SheetPresentationSpec.defaults()));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookLayoutCommand.SetSheetPresentation("Budget", null));

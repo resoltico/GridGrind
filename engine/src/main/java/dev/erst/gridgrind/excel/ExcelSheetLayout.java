@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.List;
@@ -40,7 +41,7 @@ public final class ExcelSheetLayout {
   }
 
   /** Applies authoritative sheet-presentation state such as display flags and defaults. */
-  public ExcelSheetLayout setPresentation(ExcelSheetPresentation presentation) {
+  public ExcelSheetLayout setPresentation(SheetPresentationSpec presentation) {
     layoutSupport.setPresentation(presentation);
     return this;
   }

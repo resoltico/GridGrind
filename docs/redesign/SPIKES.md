@@ -2279,3 +2279,22 @@ retained core/engine/14 parity/static checks pass, deterministic check/all retai
 Final ./gradlew check passes (3m27s), all 143 golden cases unchanged; no active mutation/fuzz campaign.
 Inventories: snapshots 15→9, converter lines 3067→2976, Support 205→204, blank checks 389→383,
 main Java 118271→117984; definition 1 remains. Baseline diff empty. WP-40 remains open.
+
+## WP-40 direct sheet-presentation specs and reports
+
+Deleted engine presentation/display/outline/default/ignored-error mirrors and the presentation
+snapshot. Writes accept existing SheetPresentationSpec and leaf specs; reads construct factual
+presentation/leaf/ignored-error reports. Removed the request presentation converter and report
+identity conversion. Deleted the snapshot's unused authoring-projection API and tests for that API;
+pure model validation moved into core, while POI enum mapping and workbook behavior remain engine tests.
+
+Preserved ignored-error range normalization at the POI boundary using the existing parsed-range
+formatter. A new real POI regression verifies authored B2:A1 remains unchanged and reads back A1:B2.
+Compilation caught report imports, one mechanical prefix artifact, old projection calls and mixed
+spec/report fixture lists. Behavior/static/parity tests found four spec-versus-report comparisons;
+corrected independent factual expectations. One expected defaults pair was initially copied from the
+wrong fixture, corrected to its actual authored values. Final core/engine/14 parity/static checks
+pass (26s), deterministic check/all retained seeds pass (17s). ./gradlew check passes (2m56s), all 143
+golden cases unchanged, no active mutation/fuzz campaign. Inventories: snapshots 9→8, converter
+lines 2976→2909, main Java 117984→117784; definition 1, Support 204 and blank checks 383 remain.
+Baseline diff empty. WP-40 remains open.

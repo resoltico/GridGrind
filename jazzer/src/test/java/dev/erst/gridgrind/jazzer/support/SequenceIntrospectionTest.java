@@ -85,7 +85,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
-import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -529,7 +528,7 @@ class SequenceIntrospectionTest {
         "SET_SHEET_PRESENTATION",
         SequenceIntrospection.commandKind(
             new WorkbookLayoutCommand.SetSheetPresentation(
-                "Budget", ExcelSheetPresentation.defaults())));
+                "Budget", SheetPresentationSpec.defaults())));
 
     assertEquals(
         1L,

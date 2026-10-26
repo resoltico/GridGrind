@@ -176,8 +176,7 @@ final class WorkbookCommandWorkbookMutationConverter {
       case WorkbookMutationAction.SetSheetPresentation setSheetPresentation ->
           new WorkbookLayoutCommand.SetSheetPresentation(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
-              WorkbookCommandPresentationInputConverter.toExcelSheetPresentation(
-                  setSheetPresentation.presentation()));
+              setSheetPresentation.presentation());
       case WorkbookMutationAction.SetPrintLayout setPrintLayout ->
           new WorkbookLayoutCommand.SetPrintLayout(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),

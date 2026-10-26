@@ -6,6 +6,10 @@ import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -712,12 +716,12 @@ class WorkbookReadResultTest {
             List.of()));
   }
 
-  private static ExcelSheetPresentationSnapshot defaultSheetPresentationSnapshot() {
-    return new ExcelSheetPresentationSnapshot(
-        ExcelSheetDisplay.defaults(),
+  private static SheetPresentationReport defaultSheetPresentationSnapshot() {
+    return new SheetPresentationReport(
+        SheetDisplayReport.defaults(),
         Optional.empty(),
-        ExcelSheetOutlineSummary.defaults(),
-        ExcelSheetDefaults.defaults(),
+        SheetOutlineSummaryReport.defaults(),
+        SheetDefaultsReport.defaults(),
         List.of());
   }
 }

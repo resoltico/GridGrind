@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.Objects;
 
@@ -35,7 +36,7 @@ public sealed interface WorkbookLayoutCommand extends WorkbookCommand
   }
 
   /** Applies authoritative sheet-presentation state such as display flags and defaults. */
-  record SetSheetPresentation(String sheetName, ExcelSheetPresentation presentation)
+  record SetSheetPresentation(String sheetName, SheetPresentationSpec presentation)
       implements WorkbookLayoutCommand {
     public SetSheetPresentation {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

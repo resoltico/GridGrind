@@ -12,6 +12,10 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -33,6 +37,7 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
@@ -438,15 +443,16 @@ class WorkbookCommandExecutorTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
       workbook.getOrCreateSheet("Budget");
-      ExcelSheetPresentation presentation =
-          new ExcelSheetPresentation(
-              new ExcelSheetDisplay(false, false, false, true, true),
+      SheetPresentationSpec presentation =
+          new SheetPresentationSpec(
+              new SheetDisplaySpec(false, false, false, true, true),
               Optional.of(ColorSpec.rgb(new RgbHex("#225577"))),
-              new ExcelSheetOutlineSummary(false, false),
-              new ExcelSheetDefaults(12, 19.5d),
+              new SheetOutlineSummarySpec(false, false),
+              new SheetDefaultsSpec(12, 19.5d),
               List.of(
-                  new ExcelIgnoredError(
-                      "B2:A1", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))));
+                  new IgnoredErrorSpec(
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:A1"),
+                      List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))));
 
       assertSame(
           workbook,
@@ -454,15 +460,24 @@ class WorkbookCommandExecutorTest {
               workbook, new WorkbookLayoutCommand.SetSheetPresentation("Budget", presentation)));
 
       WorkbookSheetResult.SheetLayout layout = workbook.sheet("Budget").layout().snapshot();
-      assertEquals(presentation.display(), layout.presentation().display());
+      assertEquals(
+          new dev.erst.gridgrind.core.model.layout.SheetDisplayReport(
+              false, false, false, true, true),
+          layout.presentation().display());
       assertEquals(
           Optional.of(CellColorReport.rgb(new RgbHex("#225577"))),
           layout.presentation().tabColor());
-      assertEquals(presentation.outlineSummary(), layout.presentation().outlineSummary());
-      assertEquals(presentation.sheetDefaults(), layout.presentation().sheetDefaults());
+      assertEquals(
+          new dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport(false, false),
+          layout.presentation().outlineSummary());
+      assertEquals(
+          new dev.erst.gridgrind.core.model.layout.SheetDefaultsReport(12, 19.5d),
+          layout.presentation().sheetDefaults());
       assertEquals(
           List.of(
-              new ExcelIgnoredError("A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+              new dev.erst.gridgrind.core.model.validation.IgnoredErrorReport(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
+                  List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
           layout.presentation().ignoredErrors());
     }
   }

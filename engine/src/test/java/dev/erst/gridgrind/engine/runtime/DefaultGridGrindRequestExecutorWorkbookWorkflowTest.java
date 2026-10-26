@@ -88,10 +88,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelIgnoredError;
-import dev.erst.gridgrind.excel.ExcelSheetDefaults;
-import dev.erst.gridgrind.excel.ExcelSheetDisplay;
-import dev.erst.gridgrind.excel.ExcelSheetOutlineSummary;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -775,17 +771,23 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout reopenedLayout =
         XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
     assertEquals(
-        new ExcelSheetDisplay(false, false, false, true, true),
+        new dev.erst.gridgrind.core.model.layout.SheetDisplayReport(
+            false, false, false, true, true),
         reopenedLayout.presentation().display());
     assertEquals(
         Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
         reopenedLayout.presentation().tabColor());
     assertEquals(
-        new ExcelSheetOutlineSummary(false, false), reopenedLayout.presentation().outlineSummary());
-    assertEquals(new ExcelSheetDefaults(11, 18.5d), reopenedLayout.presentation().sheetDefaults());
+        new dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport(false, false),
+        reopenedLayout.presentation().outlineSummary());
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.SheetDefaultsReport(11, 18.5d),
+        reopenedLayout.presentation().sheetDefaults());
     assertEquals(
         List.of(
-            new ExcelIgnoredError("A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+            new dev.erst.gridgrind.core.model.validation.IgnoredErrorReport(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
+                List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
         reopenedLayout.presentation().ignoredErrors());
     assertTrue(XlsxRoundTrip.printLayout(workbookPath, "Budget").setup().printGridlines());
   }

@@ -5,12 +5,12 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import java.util.List;
 import java.util.Optional;
 
@@ -271,7 +271,7 @@ final class OperationSequenceCommandFactory {
             case 0x2 -> new WorkbookSheetCommand.ClearWorkbookProtection();
             case 0x3 ->
                 new WorkbookLayoutCommand.SetSheetPresentation(
-                    targetSheet, ExcelSheetPresentation.defaults());
+                    targetSheet, SheetPresentationSpec.defaults());
             default -> new WorkbookLayoutCommand.AutoSizeColumns(targetSheet);
           };
     };

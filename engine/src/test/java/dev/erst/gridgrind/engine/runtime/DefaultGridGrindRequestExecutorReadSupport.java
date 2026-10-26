@@ -2,6 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.core.model.layout.WindowReport;
 import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
@@ -261,13 +264,13 @@ class DefaultGridGrindRequestExecutorReadSupport {
         List.of());
   }
 
-  static dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot
+  static dev.erst.gridgrind.core.model.layout.SheetPresentationReport
       defaultSheetPresentationSnapshot() {
-    return new dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot(
-        ExcelSheetDisplay.defaults(),
+    return new dev.erst.gridgrind.core.model.layout.SheetPresentationReport(
+        SheetDisplayReport.defaults(),
         Optional.empty(),
-        ExcelSheetOutlineSummary.defaults(),
-        ExcelSheetDefaults.defaults(),
+        SheetOutlineSummaryReport.defaults(),
+        SheetDefaultsReport.defaults(),
         List.of());
   }
 

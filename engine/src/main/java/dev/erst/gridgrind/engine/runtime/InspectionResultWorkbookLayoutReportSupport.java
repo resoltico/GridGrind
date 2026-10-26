@@ -4,20 +4,13 @@ import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.model.layout.PaneReport;
 import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
-import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
-import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
-import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
-import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
-import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
-import dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,7 +87,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
         new SheetLabel(layout.sheetName()),
         toPaneReport(layout.pane()),
         layout.zoomPercent(),
-        toSheetPresentationReport(layout.presentation()),
+        layout.presentation(),
         layout.columns().stream()
             .map(
                 column ->
@@ -114,30 +107,6 @@ final class InspectionResultWorkbookLayoutReportSupport {
                         row.hidden(),
                         row.outlineLevel(),
                         row.collapsed()))
-            .toList());
-  }
-
-  static SheetPresentationReport toSheetPresentationReport(
-      ExcelSheetPresentationSnapshot presentation) {
-    return new SheetPresentationReport(
-        new SheetDisplayReport(
-            presentation.display().displayGridlines(),
-            presentation.display().displayZeros(),
-            presentation.display().displayRowColHeadings(),
-            presentation.display().displayFormulas(),
-            presentation.display().rightToLeft()),
-        presentation.tabColor(),
-        new SheetOutlineSummaryReport(
-            presentation.outlineSummary().rowSumsBelow(),
-            presentation.outlineSummary().rowSumsRight()),
-        new SheetDefaultsReport(
-            presentation.sheetDefaults().defaultColumnWidth(),
-            presentation.sheetDefaults().defaultRowHeightPoints()),
-        presentation.ignoredErrors().stream()
-            .map(
-                ignoredError ->
-                    new IgnoredErrorReport(
-                        new RangeLabel(ignoredError.range()), ignoredError.errorTypes()))
             .toList());
   }
 

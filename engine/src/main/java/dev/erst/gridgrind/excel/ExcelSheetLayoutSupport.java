@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ final class ExcelSheetLayoutSupport {
     ExcelSheetViewSupport.setZoomPercent(xssfSheet(), zoomPercent);
   }
 
-  void setPresentation(ExcelSheetPresentation presentation) {
+  void setPresentation(SheetPresentationSpec presentation) {
     Objects.requireNonNull(presentation, "presentation must not be null");
     sheetPresentationController.setPresentation(xssfSheet(), presentation);
   }

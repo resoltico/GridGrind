@@ -18,6 +18,10 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -52,6 +56,7 @@ import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
@@ -1084,14 +1089,14 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         "Budget",
         new ExcelSheetPane.Frozen(1, 1, 1, 1),
         125,
-        new ExcelSheetPresentationSnapshot(
-            new ExcelSheetDisplay(false, false, true, true, true),
+        new SheetPresentationReport(
+            new SheetDisplayReport(false, false, true, true, true),
             Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
-            new ExcelSheetOutlineSummary(false, false),
-            new ExcelSheetDefaults(12, 18.5d),
+            new SheetOutlineSummaryReport(false, false),
+            new SheetDefaultsReport(12, 18.5d),
             List.of(
-                new ExcelIgnoredError(
-                    "B2:B12",
+                new IgnoredErrorReport(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("B2:B12"),
                     List.of(
                         ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
                         ExcelIgnoredErrorType.FORMULA)))),

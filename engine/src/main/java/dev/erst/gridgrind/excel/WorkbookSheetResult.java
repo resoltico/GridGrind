@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -234,7 +235,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
       String sheetName,
       ExcelSheetPane pane,
       int zoomPercent,
-      ExcelSheetPresentationSnapshot presentation,
+      SheetPresentationReport presentation,
       List<ColumnLayout> columns,
       List<RowLayout> rows) {
     public SheetLayout {

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
@@ -125,7 +126,7 @@ class ExcelStreamingWorkbookWriterTest {
             .commandType());
     assertEquals(
         "SET_SHEET_PRESENTATION",
-        new WorkbookLayoutCommand.SetSheetPresentation("Ops", ExcelSheetPresentation.defaults())
+        new WorkbookLayoutCommand.SetSheetPresentation("Ops", SheetPresentationSpec.defaults())
             .commandType());
     assertEquals(
         "SET_WORKBOOK_PROTECTION",

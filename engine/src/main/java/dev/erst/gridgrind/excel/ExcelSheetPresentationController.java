@@ -1,7 +1,17 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import java.util.Comparator;
@@ -19,7 +29,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 /** Applies and reads cohesive sheet-presentation state such as display flags and defaults. */
 final class ExcelSheetPresentationController {
   /** Applies the provided presentation payload authoritatively to the target sheet. */
-  void setPresentation(XSSFSheet sheet, ExcelSheetPresentation presentation) {
+  void setPresentation(XSSFSheet sheet, SheetPresentationSpec presentation) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(presentation, "presentation must not be null");
 
@@ -33,13 +43,13 @@ final class ExcelSheetPresentationController {
   /** Clears sheet presentation back to the effective workbook defaults. */
   void clearPresentation(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    setPresentation(sheet, ExcelSheetPresentation.defaults());
+    setPresentation(sheet, SheetPresentationSpec.defaults());
   }
 
   /** Returns the factual sheet-presentation state currently stored on the provided sheet. */
-  ExcelSheetPresentationSnapshot presentation(XSSFSheet sheet) {
+  SheetPresentationReport presentation(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    return new ExcelSheetPresentationSnapshot(
+    return new SheetPresentationReport(
         display(sheet),
         tabColor(sheet),
         outlineSummary(sheet),
@@ -47,7 +57,7 @@ final class ExcelSheetPresentationController {
         ignoredErrors(sheet));
   }
 
-  private static void applyDisplay(XSSFSheet sheet, ExcelSheetDisplay display) {
+  private static void applyDisplay(XSSFSheet sheet, SheetDisplaySpec display) {
     sheet.setDisplayGridlines(display.displayGridlines());
     sheet.setDisplayZeros(display.displayZeros());
     sheet.setDisplayRowColHeadings(display.displayRowColHeadings());
@@ -55,8 +65,8 @@ final class ExcelSheetPresentationController {
     sheet.setRightToLeft(display.rightToLeft());
   }
 
-  private static ExcelSheetDisplay display(XSSFSheet sheet) {
-    return new ExcelSheetDisplay(
+  private static SheetDisplayReport display(XSSFSheet sheet) {
+    return new SheetDisplayReport(
         sheet.isDisplayGridlines(),
         sheet.isDisplayZeros(),
         sheet.isDisplayRowColHeadings(),
@@ -88,17 +98,16 @@ final class ExcelSheetPresentationController {
     }
   }
 
-  private static void applyOutlineSummary(
-      XSSFSheet sheet, ExcelSheetOutlineSummary outlineSummary) {
+  private static void applyOutlineSummary(XSSFSheet sheet, SheetOutlineSummarySpec outlineSummary) {
     sheet.setRowSumsBelow(outlineSummary.rowSumsBelow());
     sheet.setRowSumsRight(outlineSummary.rowSumsRight());
   }
 
-  private static ExcelSheetOutlineSummary outlineSummary(XSSFSheet sheet) {
-    return new ExcelSheetOutlineSummary(sheet.getRowSumsBelow(), sheet.getRowSumsRight());
+  private static SheetOutlineSummaryReport outlineSummary(XSSFSheet sheet) {
+    return new SheetOutlineSummaryReport(sheet.getRowSumsBelow(), sheet.getRowSumsRight());
   }
 
-  private static void applyDefaults(XSSFSheet sheet, ExcelSheetDefaults defaults) {
+  private static void applyDefaults(XSSFSheet sheet, SheetDefaultsSpec defaults) {
     ExcelSheetLayoutLimits.requireDefaultColumnWidth(
         defaults.defaultColumnWidth(), "defaultColumnWidth");
     ExcelSheetLayoutLimits.requireRowHeightPoints(
@@ -107,20 +116,21 @@ final class ExcelSheetPresentationController {
     sheet.setDefaultRowHeightInPoints((float) defaults.defaultRowHeightPoints());
   }
 
-  private static ExcelSheetDefaults defaults(XSSFSheet sheet) {
+  private static SheetDefaultsReport defaults(XSSFSheet sheet) {
     double defaultRowHeightPoints = sheet.getDefaultRowHeightInPoints();
-    return new ExcelSheetDefaults(
+    return new SheetDefaultsReport(
         sheet.getDefaultColumnWidth(),
         defaultRowHeightPoints <= 0.0d
-            ? ExcelSheetDefaults.defaults().defaultRowHeightPoints()
+            ? SheetDefaultsReport.defaults().defaultRowHeightPoints()
             : defaultRowHeightPoints);
   }
 
-  private static void applyIgnoredErrors(XSSFSheet sheet, List<ExcelIgnoredError> ignoredErrors) {
+  private static void applyIgnoredErrors(XSSFSheet sheet, List<IgnoredErrorSpec> ignoredErrors) {
     clearIgnoredErrors(sheet);
-    for (ExcelIgnoredError ignoredError : ignoredErrors) {
+    for (IgnoredErrorSpec ignoredError : ignoredErrors) {
       sheet.addIgnoredErrors(
-          CellRangeAddress.valueOf(ignoredError.range()),
+          ExcelSheetStructureSupport.toCellRangeAddress(
+              ExcelRange.parse(ignoredError.range().value())),
           ignoredError.errorTypes().stream()
               .map(ExcelIgnoredErrorPoiBridge::toPoi)
               .toArray(IgnoredErrorType[]::new));
@@ -134,7 +144,7 @@ final class ExcelSheetPresentationController {
   }
 
   @SuppressWarnings({"PMD.LooseCoupling", "PMD.UseConcurrentHashMap"})
-  private static List<ExcelIgnoredError> ignoredErrors(XSSFSheet sheet) {
+  private static List<IgnoredErrorReport> ignoredErrors(XSSFSheet sheet) {
     Map<String, EnumSet<ExcelIgnoredErrorType>> ignoredErrorsByRange = new TreeMap<>();
     for (Map.Entry<IgnoredErrorType, java.util.Set<CellRangeAddress>> entry :
         sheet.getIgnoredErrors().entrySet()) {
@@ -150,7 +160,11 @@ final class ExcelSheetPresentationController {
                       .add(errorType));
     }
     return ignoredErrorsByRange.entrySet().stream()
-        .map(entry -> new ExcelIgnoredError(entry.getKey(), List.copyOf(entry.getValue())))
+        .map(
+            entry ->
+                new IgnoredErrorReport(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel(entry.getKey()),
+                    List.copyOf(entry.getValue())))
         .toList();
   }
 }

@@ -44,7 +44,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
-import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.util.List;
 import java.util.Optional;
@@ -399,7 +398,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     assertEquals(
         new ExcelSheetPane.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
         setSheetPaneSplit.pane());
-    assertEquals(ExcelSheetPresentation.defaults(), defaultSheetPresentation.presentation());
+    assertEquals(SheetPresentationSpec.defaults(), defaultSheetPresentation.presentation());
     assertEquals(
         new dev.erst.gridgrind.core.model.print.ResolvedPrintLayout(
             new dev.erst.gridgrind.core.model.print.PrintAreaSpec.None(),
