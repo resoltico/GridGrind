@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.plan.InspectionIntrospectionResult;
 import dev.erst.gridgrind.core.plan.InspectionSurfaceResult;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.result.TypeCountReport;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import java.util.ArrayList;
@@ -118,7 +119,8 @@ final class ExcelWorkbookIntrospector {
       case WorkbookReadCommand.GetCharts getCharts ->
           new dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult(
               getCharts.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(getCharts.selection().sheetName()),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+                  getCharts.selection().sheetName().value()),
               documentIntrospector.charts(workbook, getCharts.selection()));
       case WorkbookReadCommand.GetPivotTables getPivotTables ->
           new dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult(
@@ -289,7 +291,7 @@ final class ExcelWorkbookIntrospector {
 
   /** Groups formulas by exact expression across the selected sheets. */
   @SuppressWarnings({"PMD.AvoidInstantiatingObjectsInLoops", "PMD.UseConcurrentHashMap"})
-  FormulaSurfaceReport formulaSurface(ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  FormulaSurfaceReport formulaSurface(ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -326,8 +328,7 @@ final class ExcelWorkbookIntrospector {
     return new FormulaSurfaceReport(totalFormulaCellCount, List.copyOf(sheets));
   }
 
-  private List<ArrayFormulaReport> arrayFormulas(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  private List<ArrayFormulaReport> arrayFormulas(ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -467,10 +468,14 @@ final class ExcelWorkbookIntrospector {
         List.copyOf(entries));
   }
 
-  private List<String> selectSheets(ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  private List<String> selectSheets(ExcelWorkbook workbook, SheetSelector selection) {
     return switch (selection) {
-      case ExcelSheetSelection.All _ -> workbook.sheets().sheetNames();
-      case ExcelSheetSelection.Selected selected -> List.copyOf(selected.sheetNames());
+      case SheetSelector.All _ -> workbook.sheets().sheetNames();
+      case SheetSelector.ByNames selected ->
+          selected.names().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.SheetName::value)
+              .toList();
+      case SheetSelector.ByName selected -> List.of(selected.name().value());
     };
   }
 

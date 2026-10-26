@@ -12,7 +12,6 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelChartSelection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -56,13 +55,13 @@ class InspectionCommandConverterTest {
             InspectionCommandConverter.toReadCommand(namedChartStep));
 
     assertEquals("charts", allChartsCommand.stepId().value());
-    ExcelChartSelection.AllOnSheet allSelection =
-        assertInstanceOf(ExcelChartSelection.AllOnSheet.class, allChartsCommand.selection());
-    assertEquals("Budget", allSelection.sheetName());
+    ChartSelector.AllOnSheet allSelection =
+        assertInstanceOf(ChartSelector.AllOnSheet.class, allChartsCommand.selection());
+    assertEquals("Budget", allSelection.sheetName().value());
     assertEquals("named-chart", namedChartCommand.stepId().value());
-    ExcelChartSelection.ByName selection =
-        assertInstanceOf(ExcelChartSelection.ByName.class, namedChartCommand.selection());
-    assertEquals("Budget", selection.sheetName());
+    ChartSelector.ByName selection =
+        assertInstanceOf(ChartSelector.ByName.class, namedChartCommand.selection());
+    assertEquals("Budget", selection.sheetName().value());
     assertEquals("Revenue", selection.chartName());
   }
 
@@ -108,9 +107,7 @@ class InspectionCommandConverterTest {
             InspectionCommandConverter.toReadCommand(step));
 
     assertEquals("array-formulas", command.stepId().value());
-    assertEquals(
-        List.of("Calc"),
-        ((dev.erst.gridgrind.excel.ExcelSheetSelection.Selected) command.selection()).sheetNames());
+    assertEquals(new SheetSelector.ByName(new SheetName("Calc")), command.selection());
   }
 
   @Test

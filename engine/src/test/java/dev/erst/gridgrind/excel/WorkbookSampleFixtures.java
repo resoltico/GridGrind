@@ -46,6 +46,7 @@ import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
@@ -118,7 +119,9 @@ final class WorkbookSampleFixtures {
             new StepId("comments"), "Budget", new ExcelCellSelection.Selected(List.of("A1"))),
         new WorkbookReadCommand.GetDrawingObjects(new StepId("drawings"), "Budget"),
         new WorkbookReadCommand.GetCharts(
-            new StepId("charts"), new ExcelChartSelection.AllOnSheet("Budget")),
+            new StepId("charts"),
+            new ChartSelector.AllOnSheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"))),
         new WorkbookReadCommand.GetPivotTables(new StepId("pivots"), new PivotTableSelector.All()),
         new WorkbookReadCommand.GetDrawingObjectPayload(
             new StepId("payload"), "Budget", "Object 1"),
@@ -133,7 +136,11 @@ final class WorkbookSampleFixtures {
         new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget"),
         new WorkbookReadCommand.GetTables(new StepId("tables"), new TableSelector.All()),
         new WorkbookReadCommand.GetArrayFormulas(
-            new StepId("arrayFormulas"), new ExcelSheetSelection.Selected(List.of("Budget"))));
+            new StepId("arrayFormulas"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                List.of("Budget").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                    .toList())));
   }
 
   static List<ResolvedStep> workbookCommands() {

@@ -52,8 +52,7 @@ final class InspectionCommandConverter {
           new WorkbookReadCommand.GetSheetSummary(
               stepId, SelectorConverter.toSheetName((SheetSelector.ByName) target));
       case SheetIntrospectionQuery.GetArrayFormulas _ ->
-          new WorkbookReadCommand.GetArrayFormulas(
-              stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
+          new WorkbookReadCommand.GetArrayFormulas(stepId, (SheetSelector) target);
       case SheetIntrospectionQuery.GetCells _ -> {
         SheetIntrospectionQuery.GetCells getCells = (SheetIntrospectionQuery.GetCells) query;
         SelectorConverter.SheetLocalCellAddresses selection =
@@ -94,8 +93,7 @@ final class InspectionCommandConverter {
         if (!(target instanceof ChartSelector selection)) {
           throw new IllegalArgumentException("Unsupported chart inspection target");
         }
-        yield new WorkbookReadCommand.GetCharts(
-            stepId, SelectorConverter.toExcelChartSelection(selection));
+        yield new WorkbookReadCommand.GetCharts(stepId, selection);
       }
       case WorkbookAssetIntrospectionQuery.GetPivotTables _ ->
           new WorkbookReadCommand.GetPivotTables(stepId, (PivotTableSelector) target);
@@ -128,8 +126,7 @@ final class InspectionCommandConverter {
       case WorkbookAssetIntrospectionQuery.GetTables _ ->
           new WorkbookReadCommand.GetTables(stepId, (TableSelector) target);
       case InspectionSurfaceQuery.GetFormulaSurface _ ->
-          new WorkbookReadCommand.GetFormulaSurface(
-              stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
+          new WorkbookReadCommand.GetFormulaSurface(stepId, (SheetSelector) target);
       case InspectionSurfaceQuery.GetSheetSchema _ -> {
         InspectionSurfaceQuery.GetSheetSchema getSheetSchema =
             (InspectionSurfaceQuery.GetSheetSchema) query;
@@ -145,24 +142,20 @@ final class InspectionCommandConverter {
           new WorkbookReadCommand.GetNamedRangeSurface(
               stepId, SelectorConverter.toExcelNamedRangeSelection((NamedRangeSelector) target));
       case InspectionAnalysisQuery.AnalyzeFormulaHealth _ ->
-          new WorkbookReadCommand.AnalyzeFormulaHealth(
-              stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
+          new WorkbookReadCommand.AnalyzeFormulaHealth(stepId, (SheetSelector) target);
       case InspectionAnalysisQuery.AnalyzeDataValidationHealth _ ->
-          new WorkbookReadCommand.AnalyzeDataValidationHealth(
-              stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
+          new WorkbookReadCommand.AnalyzeDataValidationHealth(stepId, (SheetSelector) target);
       case InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth _ ->
           new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
-              stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
+              stepId, (SheetSelector) target);
       case InspectionAnalysisQuery.AnalyzeAutofilterHealth _ ->
-          new WorkbookReadCommand.AnalyzeAutofilterHealth(
-              stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
+          new WorkbookReadCommand.AnalyzeAutofilterHealth(stepId, (SheetSelector) target);
       case InspectionAnalysisQuery.AnalyzeTableHealth _ ->
           new WorkbookReadCommand.AnalyzeTableHealth(stepId, (TableSelector) target);
       case InspectionAnalysisQuery.AnalyzePivotTableHealth _ ->
           new WorkbookReadCommand.AnalyzePivotTableHealth(stepId, (PivotTableSelector) target);
       case InspectionAnalysisQuery.AnalyzeHyperlinkHealth _ ->
-          new WorkbookReadCommand.AnalyzeHyperlinkHealth(
-              stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
+          new WorkbookReadCommand.AnalyzeHyperlinkHealth(stepId, (SheetSelector) target);
       case InspectionAnalysisQuery.AnalyzeNamedRangeHealth _ ->
           new WorkbookReadCommand.AnalyzeNamedRangeHealth(
               stepId, SelectorConverter.toExcelNamedRangeSelection((NamedRangeSelector) target));

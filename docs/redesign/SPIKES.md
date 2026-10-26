@@ -2689,3 +2689,21 @@ engine1394 plus14 parity, CLI588, zero failures/errors/skips; all143 golden case
 campaigns. Inventories: converters625→586, main113122→113018, tests150937→151099; Support194,
 blank286, definitions0, snapshots2(runtime) unchanged. Baseline diff empty. WP-40 remains open for
 ResolvedPlan and remaining query/sheet/chart/name/cell/range selection consolidation.
+
+## WP-40 canonical sheet/chart selectors
+
+Deleted ExcelSheetSelection and ExcelChartSelection plus their converter methods and retired
+constructor/translation assertions. Native aggregate reads and health analyses consume core
+SheetSelector directly, supporting single names, ordered name lists and physical workbook order for
+ALL. Chart adapters consume ChartSelector; its common owning-sheet accessor exposes the existing
+record component. Unwrap names only at native workbook lookups. No algorithm, requested spelling,
+ordering, target contract or wire representation changed.
+
+Main compilation passes13s. Test compilation identified four stale Selected-type assertions; matched
+them to their actual ByName/ByNames inputs. The focused behavior suite found one remaining chart
+SheetName-vs-String assertion; corrected its scalar comparison and verified the focused class. Failure
+JSON retained externally. Nested check/all94 retained seeds passes16s. Final ./gradlew check passes
+3m17s: core385, JSON353, engine1391 plus14 parity, CLI588, zero failures/errors/skips; all143 golden
+cases unchanged. No active campaigns. Inventories: converters586→554, blank286→285,
+main113018→112925, tests151099→151100; Support194, definitions0, snapshots2(runtime) unchanged.
+Baseline diff empty. WP-40 remains open for ResolvedPlan and name/cell/range/query consolidation.

@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -129,7 +130,7 @@ class ExcelDataValidationWorkflowTest {
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
       DataValidationHealthReport health =
-          analyzer.dataValidationHealth(workbook, new ExcelSheetSelection.All());
+          analyzer.dataValidationHealth(workbook, new SheetSelector.All());
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult executed =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult.class,
@@ -137,7 +138,7 @@ class ExcelDataValidationWorkflowTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeDataValidationHealth(
-                      new StepId("validationHealth"), new ExcelSheetSelection.All())));
+                      new StepId("validationHealth"), new SheetSelector.All())));
       WorkbookFindingsReport workbookFindings = analyzer.workbookFindings(workbook);
 
       assertEquals(2, health.checkedValidationCount());

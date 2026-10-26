@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -97,18 +98,24 @@ class ExcelChartValueObjectTest {
 
     WorkbookReadCommand.GetCharts getCharts =
         new WorkbookReadCommand.GetCharts(
-            new StepId("charts"), new ExcelChartSelection.AllOnSheet("Charts"));
+            new StepId("charts"),
+            new ChartSelector.AllOnSheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Charts")));
     assertEquals("charts", getCharts.stepId().value());
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookReadCommand.GetCharts(
-                new StepId(" "), new ExcelChartSelection.AllOnSheet("Charts")));
+                new StepId(" "),
+                new ChartSelector.AllOnSheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookReadCommand.GetCharts(
-                new StepId("charts"), new ExcelChartSelection.AllOnSheet(" ")));
+                new StepId("charts"),
+                new ChartSelector.AllOnSheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName(" "))));
   }
 
   @Test

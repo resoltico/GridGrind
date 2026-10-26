@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Arrays;
@@ -174,7 +175,7 @@ class WorkbookReadExecutorTest {
           executor.apply(
               workbook,
               new WorkbookReadCommand.AnalyzeFormulaHealth(
-                  new StepId("formulaHealth"), new ExcelSheetSelection.All()),
+                  new StepId("formulaHealth"), new SheetSelector.All()),
               new WorkbookReadCommand.AnalyzeWorkbookFindings(new StepId("workbookFindings")));
       assertInstanceOf(
           dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult.class,

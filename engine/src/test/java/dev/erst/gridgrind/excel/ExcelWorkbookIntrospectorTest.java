@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.source.BinaryContent;
@@ -69,7 +70,10 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetFormulaSurface(
                           new StepId("formula-surface"),
-                          new ExcelSheetSelection.Selected(List.of("Raw")))));
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                              List.of("Raw").stream()
+                                  .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                                  .toList()))));
       dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult cells =
           assertInstanceOf(
               dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult.class,
@@ -447,7 +451,10 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetFormulaSurface(
                           new StepId("formula"),
-                          new ExcelSheetSelection.Selected(List.of("Forecast")))));
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                              List.of("Forecast").stream()
+                                  .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                                  .toList()))));
       assertEquals(1, formulaSurface.surface().totalFormulaCellCount());
       assertEquals(
           List.of("Forecast"),
@@ -745,7 +752,7 @@ class ExcelWorkbookIntrospectorTest {
             introspector.execute(
                 workbook,
                 new WorkbookReadCommand.GetFormulaSurface(
-                    new StepId("formula"), new ExcelSheetSelection.All()))),
+                    new StepId("formula"), new SheetSelector.All()))),
         cast(
             dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult.class,
             introspector.execute(

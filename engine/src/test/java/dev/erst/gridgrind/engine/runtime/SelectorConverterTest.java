@@ -19,16 +19,6 @@ import org.junit.jupiter.api.Test;
 class SelectorConverterTest {
   @Test
   void convertsWorkbookSheetNamedRangeTableAndPivotSelectors() {
-    assertEquals(
-        new ExcelSheetSelection.All(),
-        SelectorConverter.toExcelSheetSelection(new SheetSelector.All()));
-    assertEquals(
-        new ExcelSheetSelection.Selected(List.of("Budget")),
-        SelectorConverter.toExcelSheetSelection(new SheetSelector.ByName(new SheetName("Budget"))));
-    assertEquals(
-        new ExcelSheetSelection.Selected(List.of("Budget", "Ops")),
-        SelectorConverter.toExcelSheetSelection(
-            new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops")))));
 
     assertEquals(
         new ExcelNamedRangeSelection.All(),
@@ -155,12 +145,7 @@ class SelectorConverterTest {
         "Budget",
         SelectorConverter.toSheetName(
             new DrawingObjectSelector.ByName(new SheetName("Budget"), "OpsPicture")));
-    assertEquals(
-        "Budget",
-        ((dev.erst.gridgrind.excel.ExcelChartSelection.AllOnSheet)
-                SelectorConverter.toExcelChartSelection(
-                    new ChartSelector.AllOnSheet(new SheetName("Budget"))))
-            .sheetName());
+
     assertEquals(
         "Budget",
         SelectorConverter.toSheetName(new RangeSelector.AllOnSheet(new SheetName("Budget"))));

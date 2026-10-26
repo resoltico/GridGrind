@@ -10,6 +10,9 @@ public sealed interface ChartSelector extends Selector
     permits dev.erst.gridgrind.core.plan.ChartSelector.AllOnSheet,
         dev.erst.gridgrind.core.plan.ChartSelector.ByName {
 
+  /** Returns the sheet that owns the selected charts. */
+  SheetName sheetName();
+
   /** Selects every chart on one sheet. */
   @Variant(id = "CHART_ALL_ON_SHEET", summary = "Select every chart on one sheet.")
   record AllOnSheet(SheetName sheetName) implements ChartSelector, ResolvedTarget {

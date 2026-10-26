@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.table.TableHealthReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
@@ -56,8 +57,7 @@ final class ExcelDocumentAnalyzer {
   }
 
   /** Returns data-validation-health findings for the selected sheets. */
-  DataValidationHealthReport dataValidationHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  DataValidationHealthReport dataValidationHealth(ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -75,7 +75,7 @@ final class ExcelDocumentAnalyzer {
 
   /** Returns conditional-formatting-health findings for the selected sheets. */
   ConditionalFormattingHealthReport conditionalFormattingHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+      ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -94,7 +94,7 @@ final class ExcelDocumentAnalyzer {
   }
 
   /** Returns autofilter-health findings for the selected sheets. */
-  AutofilterHealthReport autofilterHealth(ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  AutofilterHealthReport autofilterHealth(ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -139,10 +139,14 @@ final class ExcelDocumentAnalyzer {
         selectedPivots.size(), summarizeFindings(findings), List.copyOf(findings));
   }
 
-  private List<String> selectSheets(ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  private List<String> selectSheets(ExcelWorkbook workbook, SheetSelector selection) {
     return switch (selection) {
-      case ExcelSheetSelection.All _ -> workbook.sheets().sheetNames();
-      case ExcelSheetSelection.Selected selected -> List.copyOf(selected.sheetNames());
+      case SheetSelector.All _ -> workbook.sheets().sheetNames();
+      case SheetSelector.ByNames selected ->
+          selected.names().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.SheetName::value)
+              .toList();
+      case SheetSelector.ByName selected -> List.of(selected.name().value());
     };
   }
 

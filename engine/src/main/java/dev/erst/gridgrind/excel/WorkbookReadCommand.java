@@ -2,7 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelAddressLists;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
@@ -125,7 +127,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Returns array-formula groups across the selected sheets. */
-  record GetArrayFormulas(StepId stepId, ExcelSheetSelection selection) implements Introspection {
+  record GetArrayFormulas(StepId stepId, SheetSelector selection) implements Introspection {
     public GetArrayFormulas {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -212,7 +214,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Returns factual chart metadata selected by sheet-wide or exact chart selection. */
-  record GetCharts(StepId stepId, ExcelChartSelection selection) implements Introspection {
+  record GetCharts(StepId stepId, ChartSelector selection) implements Introspection {
     public GetCharts {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -299,7 +301,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Groups formula usage patterns across one or more sheets. */
-  record GetFormulaSurface(StepId stepId, ExcelSheetSelection selection) implements Surface {
+  record GetFormulaSurface(StepId stepId, SheetSelector selection) implements Surface {
     public GetFormulaSurface {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -331,7 +333,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Reports formula findings such as error results and volatile usage. */
-  record AnalyzeFormulaHealth(StepId stepId, ExcelSheetSelection selection) implements Analysis {
+  record AnalyzeFormulaHealth(StepId stepId, SheetSelector selection) implements Analysis {
     public AnalyzeFormulaHealth {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -340,8 +342,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Reports data-validation findings such as malformed or overlapping rules. */
-  record AnalyzeDataValidationHealth(StepId stepId, ExcelSheetSelection selection)
-      implements Analysis {
+  record AnalyzeDataValidationHealth(StepId stepId, SheetSelector selection) implements Analysis {
     public AnalyzeDataValidationHealth {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -350,7 +351,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Reports conditional-formatting findings such as broken formulas or priority collisions. */
-  record AnalyzeConditionalFormattingHealth(StepId stepId, ExcelSheetSelection selection)
+  record AnalyzeConditionalFormattingHealth(StepId stepId, SheetSelector selection)
       implements Analysis {
     public AnalyzeConditionalFormattingHealth {
 
@@ -360,7 +361,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Reports autofilter findings such as invalid ranges or table-ownership mismatches. */
-  record AnalyzeAutofilterHealth(StepId stepId, ExcelSheetSelection selection) implements Analysis {
+  record AnalyzeAutofilterHealth(StepId stepId, SheetSelector selection) implements Analysis {
     public AnalyzeAutofilterHealth {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -387,7 +388,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Reports hyperlink findings such as malformed targets and missing document destinations. */
-  record AnalyzeHyperlinkHealth(StepId stepId, ExcelSheetSelection selection) implements Analysis {
+  record AnalyzeHyperlinkHealth(StepId stepId, SheetSelector selection) implements Analysis {
     public AnalyzeHyperlinkHealth {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");

@@ -58,7 +58,11 @@ class ExcelDocumentAnalyzerTest {
       ExcelDocumentAnalyzer analyzer = new ExcelDocumentAnalyzer();
       DataValidationHealthReport selected =
           analyzer.dataValidationHealth(
-              workbook, new ExcelSheetSelection.Selected(List.of("Budget")));
+              workbook,
+              new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                  List.of("Budget").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                      .toList()));
 
       assertEquals(1, selected.checkedValidationCount());
       assertEquals(1, selected.summary().totalCount());
@@ -103,7 +107,12 @@ class ExcelDocumentAnalyzerTest {
 
       ExcelDocumentAnalyzer analyzer = new ExcelDocumentAnalyzer();
       AutofilterHealthReport autofilterHealth =
-          analyzer.autofilterHealth(workbook, new ExcelSheetSelection.Selected(List.of("Archive")));
+          analyzer.autofilterHealth(
+              workbook,
+              new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                  List.of("Archive").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                      .toList()));
       TableHealthReport tableHealth =
           analyzer.tableHealth(
               workbook,
@@ -122,7 +131,12 @@ class ExcelDocumentAnalyzerTest {
       assertEquals(0, tableHealth.summary().totalCount());
 
       AutofilterHealthReport budgetAutofilterHealth =
-          analyzer.autofilterHealth(workbook, new ExcelSheetSelection.Selected(List.of("Budget")));
+          analyzer.autofilterHealth(
+              workbook,
+              new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                  List.of("Budget").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                      .toList()));
       assertEquals(1, budgetAutofilterHealth.summary().warningCount());
       assertEquals(
           AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,

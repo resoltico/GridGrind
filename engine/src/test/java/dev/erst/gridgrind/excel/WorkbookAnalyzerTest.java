@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
@@ -127,7 +128,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeFormulaHealth(
-                      new StepId("formulaHealth"), new ExcelSheetSelection.All())));
+                      new StepId("formulaHealth"), new SheetSelector.All())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult.class,
@@ -135,7 +136,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeHyperlinkHealth(
-                      new StepId("hyperlinkHealth"), new ExcelSheetSelection.All())));
+                      new StepId("hyperlinkHealth"), new SheetSelector.All())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult namedRangeHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult.class,
@@ -151,7 +152,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeAutofilterHealth(
-                      new StepId("autofilterHealth"), new ExcelSheetSelection.All())));
+                      new StepId("autofilterHealth"), new SheetSelector.All())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
           conditionalFormattingHealth =
               cast(
@@ -161,8 +162,7 @@ class WorkbookAnalyzerTest {
                       workbook,
                       new WorkbookLocation.StoredWorkbook(workbookPath),
                       new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
-                          new StepId("conditionalFormattingHealth"),
-                          new ExcelSheetSelection.All())));
+                          new StepId("conditionalFormattingHealth"), new SheetSelector.All())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult tableHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult.class,
@@ -280,12 +280,22 @@ class WorkbookAnalyzerTest {
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
       FormulaHealthReport formulaHealth =
-          analyzer.formulaHealth(workbook, new ExcelSheetSelection.Selected(List.of("Forecast")));
+          analyzer.formulaHealth(
+              workbook,
+              new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                  List.of("Forecast").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                      .toList()));
       assertEquals(1, formulaHealth.checkedFormulaCellCount());
       assertEquals(0, formulaHealth.summary().infoCount());
 
       HyperlinkHealthReport hyperlinkHealth =
-          analyzer.hyperlinkHealth(workbook, new ExcelSheetSelection.Selected(List.of("Budget")));
+          analyzer.hyperlinkHealth(
+              workbook,
+              new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                  List.of("Budget").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                      .toList()));
       assertEquals(1, hyperlinkHealth.checkedHyperlinkCount());
       assertEquals(1, hyperlinkHealth.summary().errorCount());
 
@@ -293,7 +303,10 @@ class WorkbookAnalyzerTest {
           analyzer.hyperlinkHealth(
               workbook,
               new WorkbookLocation.UnsavedWorkbook(),
-              new ExcelSheetSelection.Selected(List.of("Forecast")));
+              new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                  List.of("Forecast").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                      .toList()));
       assertEquals(1, unresolvedFileHealth.checkedHyperlinkCount());
       assertEquals(1, unresolvedFileHealth.summary().warningCount());
       assertEquals(
@@ -324,7 +337,7 @@ class WorkbookAnalyzerTest {
                 null,
                 new WorkbookLocation.UnsavedWorkbook(),
                 new WorkbookReadCommand.AnalyzeFormulaHealth(
-                    new StepId("formulaHealth"), new ExcelSheetSelection.All())));
+                    new StepId("formulaHealth"), new SheetSelector.All())));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -337,15 +350,13 @@ class WorkbookAnalyzerTest {
                 ExcelWorkbooks.create(),
                 null,
                 new WorkbookReadCommand.AnalyzeFormulaHealth(
-                    new StepId("formulaHealth"), new ExcelSheetSelection.All())));
+                    new StepId("formulaHealth"), new SheetSelector.All())));
     assertThrows(
-        NullPointerException.class,
-        () -> analyzer.formulaHealth(null, new ExcelSheetSelection.All()));
+        NullPointerException.class, () -> analyzer.formulaHealth(null, new SheetSelector.All()));
     assertThrows(
         NullPointerException.class, () -> analyzer.formulaHealth(ExcelWorkbooks.create(), null));
     assertThrows(
-        NullPointerException.class,
-        () -> analyzer.hyperlinkHealth(null, new ExcelSheetSelection.All()));
+        NullPointerException.class, () -> analyzer.hyperlinkHealth(null, new SheetSelector.All()));
     assertThrows(
         NullPointerException.class, () -> analyzer.hyperlinkHealth(ExcelWorkbooks.create(), null));
     assertThrows(
@@ -366,7 +377,7 @@ class WorkbookAnalyzerTest {
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
       HyperlinkHealthReport hyperlinkHealth =
-          analyzer.hyperlinkHealth(workbook, new ExcelSheetSelection.All());
+          analyzer.hyperlinkHealth(workbook, new SheetSelector.All());
       WorkbookFindingsReport workbookFindings = analyzer.workbookFindings(workbook);
 
       assertEquals(1, hyperlinkHealth.findings().size());

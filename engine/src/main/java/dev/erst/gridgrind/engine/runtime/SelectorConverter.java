@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
@@ -13,11 +12,9 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelCellSelection;
-import dev.erst.gridgrind.excel.ExcelChartSelection;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelection;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelector;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
-import dev.erst.gridgrind.excel.ExcelSheetSelection;
 import java.util.List;
 
 /** Central conversion seam between contract selectors and workbook-core selector primitives. */
@@ -34,28 +31,6 @@ final class SelectorConverter {
 
   static String toSheetName(DrawingObjectSelector.ByName selector) {
     return selector.sheetName().value();
-  }
-
-  static ExcelChartSelection toExcelChartSelection(ChartSelector selector) {
-    return switch (selector) {
-      case ChartSelector.AllOnSheet allOnSheet ->
-          new ExcelChartSelection.AllOnSheet(allOnSheet.sheetName().value());
-      case ChartSelector.ByName byName ->
-          new ExcelChartSelection.ByName(byName.sheetName().value(), byName.chartName());
-    };
-  }
-
-  static ExcelSheetSelection toExcelSheetSelection(SheetSelector selector) {
-    return switch (selector) {
-      case SheetSelector.All _ -> new ExcelSheetSelection.All();
-      case SheetSelector.ByName byName ->
-          new ExcelSheetSelection.Selected(List.of(byName.name().value()));
-      case SheetSelector.ByNames byNames ->
-          new ExcelSheetSelection.Selected(
-              byNames.names().stream()
-                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
-                  .toList());
-    };
   }
 
   static ExcelNamedRangeSelection toExcelNamedRangeSelection(NamedRangeSelector selector) {

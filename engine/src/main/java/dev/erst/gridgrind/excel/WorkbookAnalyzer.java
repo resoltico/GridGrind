@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.plan.InspectionAnalysisResult;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
@@ -100,7 +101,7 @@ final class WorkbookAnalyzer {
     };
   }
 
-  FormulaHealthReport formulaHealth(ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  FormulaHealthReport formulaHealth(ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -115,21 +116,20 @@ final class WorkbookAnalyzer {
         checkedFormulaCellCount, summary(findings), List.copyOf(findings));
   }
 
-  DataValidationHealthReport dataValidationHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  DataValidationHealthReport dataValidationHealth(ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.dataValidationHealth(workbook, selection);
   }
 
   ConditionalFormattingHealthReport conditionalFormattingHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+      ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.conditionalFormattingHealth(workbook, selection);
   }
 
-  AutofilterHealthReport autofilterHealth(ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  AutofilterHealthReport autofilterHealth(ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.autofilterHealth(workbook, selection);
@@ -148,7 +148,7 @@ final class WorkbookAnalyzer {
   }
 
   HyperlinkHealthReport hyperlinkHealth(
-      ExcelWorkbook workbook, WorkbookLocation workbookLocation, ExcelSheetSelection selection) {
+      ExcelWorkbook workbook, WorkbookLocation workbookLocation, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
@@ -165,7 +165,7 @@ final class WorkbookAnalyzer {
   }
 
   /** Runs hyperlink-health analysis assuming the workbook has not yet been saved to disk. */
-  HyperlinkHealthReport hyperlinkHealth(ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  HyperlinkHealthReport hyperlinkHealth(ExcelWorkbook workbook, SheetSelector selection) {
     return hyperlinkHealth(workbook, new WorkbookLocation.UnsavedWorkbook(), selection);
   }
 
@@ -192,15 +192,14 @@ final class WorkbookAnalyzer {
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
 
     List<AnalysisFindingReport> combined = new ArrayList<>();
-    combined.addAll(formulaHealth(workbook, new ExcelSheetSelection.All()).findings());
-    combined.addAll(dataValidationHealth(workbook, new ExcelSheetSelection.All()).findings());
-    combined.addAll(
-        conditionalFormattingHealth(workbook, new ExcelSheetSelection.All()).findings());
-    combined.addAll(autofilterHealth(workbook, new ExcelSheetSelection.All()).findings());
+    combined.addAll(formulaHealth(workbook, new SheetSelector.All()).findings());
+    combined.addAll(dataValidationHealth(workbook, new SheetSelector.All()).findings());
+    combined.addAll(conditionalFormattingHealth(workbook, new SheetSelector.All()).findings());
+    combined.addAll(autofilterHealth(workbook, new SheetSelector.All()).findings());
     combined.addAll(tableHealth(workbook, new TableSelector.All()).findings());
     combined.addAll(pivotTableHealth(workbook, new PivotTableSelector.All()).findings());
     combined.addAll(
-        hyperlinkHealth(workbook, workbookLocation, new ExcelSheetSelection.All()).findings());
+        hyperlinkHealth(workbook, workbookLocation, new SheetSelector.All()).findings());
     combined.addAll(namedRangeHealth(workbook, new ExcelNamedRangeSelection.All()).findings());
 
     List<AnalysisFindingReport> findings =
@@ -292,10 +291,14 @@ final class WorkbookAnalyzer {
     return List.copyOf(new ArrayList<>(new LinkedHashSet<>(findings)));
   }
 
-  private List<String> selectSheets(ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  private List<String> selectSheets(ExcelWorkbook workbook, SheetSelector selection) {
     return switch (selection) {
-      case ExcelSheetSelection.All _ -> workbook.sheets().sheetNames();
-      case ExcelSheetSelection.Selected selected -> List.copyOf(selected.sheetNames());
+      case SheetSelector.All _ -> workbook.sheets().sheetNames();
+      case SheetSelector.ByNames selected ->
+          selected.names().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.SheetName::value)
+              .toList();
+      case SheetSelector.ByName selected -> List.of(selected.name().value());
     };
   }
 

@@ -54,8 +54,8 @@ final class WorkbookInvariantWorkbookChecks {
                               workbook,
                               new WorkbookReadCommand.GetCharts(
                                   new StepId("chart-shape-" + sheetName),
-                                  new dev.erst.gridgrind.excel.ExcelChartSelection.AllOnSheet(
-                                      sheetName)))
+                                  new dev.erst.gridgrind.core.plan.ChartSelector.AllOnSheet(
+                                      new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName))))
                           .getFirst())
                   .charts()
                   .forEach(WorkbookInvariantWorkbookChecks::requireEngineChartShape);

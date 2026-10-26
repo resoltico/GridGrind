@@ -94,7 +94,10 @@ class ExcelArrayFormulaTest {
                   workbook,
                   new WorkbookReadCommand.GetArrayFormulas(
                       new StepId("array-formulas"),
-                      new ExcelSheetSelection.Selected(List.of("Calc")))));
+                      new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                          List.of("Calc").stream()
+                              .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                              .toList()))));
       assertEquals("array-formulas", result.stepId().value());
       assertEquals(1, result.arrayFormulas().size());
       assertEquals("Calc", result.arrayFormulas().getFirst().sheetName().value());

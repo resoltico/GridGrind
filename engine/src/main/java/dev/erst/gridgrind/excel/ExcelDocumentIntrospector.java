@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
@@ -101,13 +102,13 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns factual chart metadata selected by sheet-wide or exact chart selection. */
-  List<ChartReport> charts(ExcelWorkbook workbook, ExcelChartSelection selection) {
+  List<ChartReport> charts(ExcelWorkbook workbook, ChartSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
-    List<ChartReport> charts = workbook.sheet(selection.sheetName()).drawings().charts();
+    List<ChartReport> charts = workbook.sheet(selection.sheetName().value()).drawings().charts();
     return switch (selection) {
-      case ExcelChartSelection.AllOnSheet _ -> charts;
-      case ExcelChartSelection.ByName byName ->
+      case ChartSelector.AllOnSheet _ -> charts;
+      case ChartSelector.ByName byName ->
           charts.stream().filter(chart -> chart.name().equals(byName.chartName())).toList();
     };
   }

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -46,7 +47,11 @@ class WorkbookReadCommandTest {
         new WorkbookReadCommand.GetPivotTables(new StepId("pivots"), new PivotTableSelector.All());
     WorkbookReadCommand.GetFormulaSurface formulaSurface =
         new WorkbookReadCommand.GetFormulaSurface(
-            new StepId("formula"), new ExcelSheetSelection.Selected(List.of("Budget")));
+            new StepId("formula"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
+                List.of("Budget").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
+                    .toList()));
     WorkbookReadCommand.GetSheetSchema schema =
         WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 3, 2);
     WorkbookReadCommand.GetNamedRangeSurface namedRangeSurface =
@@ -54,16 +59,16 @@ class WorkbookReadCommandTest {
             new StepId("surface"), new ExcelNamedRangeSelection.All());
     WorkbookReadCommand.AnalyzeFormulaHealth formulaHealth =
         new WorkbookReadCommand.AnalyzeFormulaHealth(
-            new StepId("formulaHealth"), new ExcelSheetSelection.All());
+            new StepId("formulaHealth"), new SheetSelector.All());
     WorkbookReadCommand.AnalyzeDataValidationHealth dataValidationHealth =
         new WorkbookReadCommand.AnalyzeDataValidationHealth(
-            new StepId("dataValidationHealth"), new ExcelSheetSelection.All());
+            new StepId("dataValidationHealth"), new SheetSelector.All());
     WorkbookReadCommand.AnalyzeConditionalFormattingHealth conditionalFormattingHealth =
         new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
-            new StepId("conditionalFormattingHealth"), new ExcelSheetSelection.All());
+            new StepId("conditionalFormattingHealth"), new SheetSelector.All());
     WorkbookReadCommand.AnalyzeAutofilterHealth autofilterHealth =
         new WorkbookReadCommand.AnalyzeAutofilterHealth(
-            new StepId("autofilterHealth"), new ExcelSheetSelection.All());
+            new StepId("autofilterHealth"), new SheetSelector.All());
     WorkbookReadCommand.AnalyzeTableHealth tableHealth =
         new WorkbookReadCommand.AnalyzeTableHealth(
             new StepId("tableHealth"),
@@ -77,7 +82,7 @@ class WorkbookReadCommandTest {
             new PivotTableSelector.ByNames(List.of("Budget Pivot")));
     WorkbookReadCommand.AnalyzeHyperlinkHealth hyperlinkHealth =
         new WorkbookReadCommand.AnalyzeHyperlinkHealth(
-            new StepId("hyperlinkHealth"), new ExcelSheetSelection.All());
+            new StepId("hyperlinkHealth"), new SheetSelector.All());
     WorkbookReadCommand.AnalyzeNamedRangeHealth namedRangeHealth =
         new WorkbookReadCommand.AnalyzeNamedRangeHealth(
             new StepId("namedRangeHealth"), new ExcelNamedRangeSelection.All());
@@ -97,16 +102,16 @@ class WorkbookReadCommandTest {
     assertEquals("Budget", autofilters.sheetName());
     assertInstanceOf(TableSelector.All.class, tables.selection());
     assertInstanceOf(PivotTableSelector.All.class, pivotTables.selection());
-    assertInstanceOf(ExcelSheetSelection.Selected.class, formulaSurface.selection());
+    assertInstanceOf(SheetSelector.ByNames.class, formulaSurface.selection());
     assertEquals(3, schema.window().rowCount());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeSurface.selection());
-    assertInstanceOf(ExcelSheetSelection.All.class, formulaHealth.selection());
-    assertInstanceOf(ExcelSheetSelection.All.class, dataValidationHealth.selection());
-    assertInstanceOf(ExcelSheetSelection.All.class, conditionalFormattingHealth.selection());
-    assertInstanceOf(ExcelSheetSelection.All.class, autofilterHealth.selection());
+    assertInstanceOf(SheetSelector.All.class, formulaHealth.selection());
+    assertInstanceOf(SheetSelector.All.class, dataValidationHealth.selection());
+    assertInstanceOf(SheetSelector.All.class, conditionalFormattingHealth.selection());
+    assertInstanceOf(SheetSelector.All.class, autofilterHealth.selection());
     assertInstanceOf(TableSelector.ByNames.class, tableHealth.selection());
     assertInstanceOf(PivotTableSelector.ByNames.class, pivotTableHealth.selection());
-    assertInstanceOf(ExcelSheetSelection.All.class, hyperlinkHealth.selection());
+    assertInstanceOf(SheetSelector.All.class, hyperlinkHealth.selection());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeHealth.selection());
     assertEquals("workbookFindings", workbookFindings.stepId().value());
   }

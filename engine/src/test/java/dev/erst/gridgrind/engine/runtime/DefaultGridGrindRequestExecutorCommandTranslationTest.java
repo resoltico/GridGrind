@@ -176,7 +176,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         dev.erst.gridgrind.core.plan.TableSelector.ByNames.class,
         cast(WorkbookReadCommand.GetTables.class, tables).selection());
     assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,
+        dev.erst.gridgrind.core.plan.SheetSelector.ByNames.class,
         cast(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface).selection());
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelNamedRangeSelection.All.class,
@@ -244,7 +244,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     assertInstanceOf(WorkbookReadCommand.AnalyzeNamedRangeHealth.class, namedRangeHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeWorkbookFindings.class, workbookFindings);
     assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,
+        dev.erst.gridgrind.core.plan.SheetSelector.ByNames.class,
         cast(
                 WorkbookReadCommand.AnalyzeConditionalFormattingHealth.class,
                 conditionalFormattingHealth)

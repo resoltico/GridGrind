@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
 import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
@@ -52,7 +53,9 @@ class ExcelChartMutationFlowTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetCharts(
-                      new StepId("charts"), new ExcelChartSelection.AllOnSheet("Charts"))));
+                      new StepId("charts"),
+                      new ChartSelector.AllOnSheet(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Charts")))));
       ChartReport initialLine = ExcelChartTestSupport.chart(lineRead.charts(), "OpsLine");
       assertEquals(new ChartReport.Title.Text("Line roadmap"), initialLine.title());
 
@@ -106,7 +109,8 @@ class ExcelChartMutationFlowTest {
                   workbook,
                   new WorkbookReadCommand.GetCharts(
                       new StepId("chart-by-name"),
-                      new ExcelChartSelection.ByName("Charts", "OpsPie"))));
+                      new ChartSelector.ByName(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"), "OpsPie"))));
       assertEquals(1, exactChartRead.charts().size());
       assertEquals("OpsPie", exactChartRead.charts().getFirst().name());
 
