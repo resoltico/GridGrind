@@ -1218,3 +1218,32 @@ build-directory policy, not wire compatibility handlers. No baseline change; sup
 The shell example materializer and Docker workflow's 20 authored payload fields were migrated too.
 Bash syntax passes. Full ./check.sh checkpoint follows this commit; WP-21's aggregate blank target
 and schema default publication remain explicitly incomplete, along with the planned engine work.
+
+### WP-23 shell-consumer verification checkpoint
+
+The first full ./check.sh checkpoint passed isolated quality/coverage, nested deterministic replay
+and packaging, then failed its shell verifier on stale derived catalog lookup ids. Corrected the
+three top-level workbook group ids and executionModeSpecTypes in the verifier and its test doubles.
+The adjacent audit found old recipe view tags and V3 string expectations in shell/Python consumers;
+updated these to type and integer 1, including discovery-execution fixtures and documentation checks.
+Kept independent integer type checks so Python's True == 1 does not accept a boolean header.
+No compatibility aliases were added. The artifact verifier and its negative controls pass.
+
+The documentation check also required AFAD front matter on the new ARCHITECTURE.md. D17 explicitly
+requires removing AFAD front matter, so removed that obsolete format assertion. Retained request
+snippet validation, forbidden inline-secret checks and the deterministic seed inventory assertion.
+Its focused test passes. The remaining old group-name audit found no nonhistorical source consumers.
+No baseline or supplement changes; no golden changes in this checkpoint.
+
+Full ./check.sh retry passed all six stages in 14m39s, including isolated check/coverage, all 94
+promoted replays, packaging, shell regressions, artifact/discovery execution and Docker smoke.
+Docker verified legal visibility, signature-line authoring under container fonts, and streaming
+write readback. This also supplies passing ./gradlew check evidence for this shell-only commit.
+The first failure and focused diagnostic command outputs are retained in wp-23/cell-phase-check*,
+cell-shell* and cell-documentation* logs. No mutation or active fuzz campaign ran.
+
+WP-23's discriminator, retired-wire handling and reviewed golden criteria are satisfied. The
+aggregate WP-21 blank-check target remains open for the scheduled engine/Jazzer drains, and WP-24
+schema publication remains coupled to WP-30. Do not label these incomplete criteria as delivered.
+WP-30 starts with the retained unusual-key defect and independent schema generation; grant schema
+publication must follow the actual canonical core grant in WP-43 instead of introducing a mirror.

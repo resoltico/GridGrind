@@ -82,13 +82,13 @@ case "${1:-}" in
     --print-protocol-catalog)
         if [[ "${2:-}" == '--lookup' ]]; then
             case "${3:-}" in
-                sourceTypes)
+                workbookSourceTypes)
                     emit_fixture_file "${FAKE_GRIDGRIND_SOURCE_TYPES_FILE:?}"
                     ;;
-                persistenceTypes)
+                workbookPersistenceTypes)
                     emit_fixture_file "${FAKE_GRIDGRIND_PERSISTENCE_TYPES_FILE:?}"
                     ;;
-                stepTypes)
+                workbookStepTypes)
                     emit_fixture_file "${FAKE_GRIDGRIND_STEP_TYPES_FILE:?}"
                     ;;
                 mutationActionTypes)
@@ -100,7 +100,7 @@ case "${1:-}" in
                 inspectionQueryTypes)
                     emit_fixture_file "${FAKE_GRIDGRIND_INSPECTION_QUERY_TYPES_FILE:?}"
                     ;;
-                nestedTypes:executionModeTypes)
+                nestedTypes:executionModeSpecTypes)
                     emit_fixture_file "${FAKE_GRIDGRIND_EXECUTION_MODE_TYPES_FILE:?}"
                     ;;
                 plainTypes:executionPolicySpecType)

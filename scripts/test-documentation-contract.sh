@@ -33,13 +33,13 @@ import os
 import re
 
 root = Path(os.environ["GRIDGRIND_REPO_ROOT"])
-frontmatter_files = sorted([*root.glob("docs/*.md"), root / "jazzer/README.md"])
+documentation_files = sorted([*root.glob("docs/*.md"), root / "jazzer/README.md"])
 live_contract_files = [
     root / "README.md",
-    *(doc for doc in frontmatter_files if doc.name != "CHANGELOG_ARCHIVE.md"),
+    *(doc for doc in documentation_files if doc.name != "CHANGELOG_ARCHIVE.md"),
 ]
 request_required = {"protocolVersion", "source", "persistence", "steps"}
-current_protocol_version = "V3"
+current_protocol_version = 1
 forbidden_secret_fields = {
     "password",
     "workbookPassword",
@@ -69,13 +69,6 @@ for doc in live_contract_files:
                 f"{doc.relative_to(root)}"
             )
 
-for doc in frontmatter_files:
-    text = doc.read_text(encoding="utf-8")
-    if not text.startswith("---\n"):
-        raise SystemExit(f"{doc.relative_to(root)} must start with AFAD frontmatter")
-    if text.find("\n---\n", 4) == -1:
-        raise SystemExit(f"{doc.relative_to(root)} has unterminated AFAD frontmatter")
-
 for doc in live_contract_files:
     text = doc.read_text(encoding="utf-8")
     index = 0
@@ -102,7 +95,7 @@ for doc in live_contract_files:
                 raise SystemExit(
                     f"{doc.relative_to(root)} publishes a request-shaped json block missing {missing}"
                 )
-            if payload["protocolVersion"] != current_protocol_version:
+            if type(payload["protocolVersion"]) is not int or payload["protocolVersion"] != current_protocol_version:
                 raise SystemExit(
                     f"{doc.relative_to(root)} publishes protocolVersion="
                     f"{payload['protocolVersion']!r}; expected {current_protocol_version!r}"

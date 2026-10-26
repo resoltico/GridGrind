@@ -143,7 +143,7 @@ grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog' "$
     "verifier did not inspect the latest tag catalog surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup mutationActionTypes' "${fake_log}" || die \
     "verifier did not inspect the latest tag scoped catalog group surface"
-grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup nestedTypes:executionModeTypes' "${fake_log}" || die \
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup nestedTypes:executionModeSpecTypes' "${fake_log}" || die \
     "verifier did not inspect the latest tag nested catalog group surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup plainTypes:executionPolicySpecType' "${fake_log}" || die \
     "verifier did not inspect the latest tag plain catalog group surface"

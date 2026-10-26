@@ -30,10 +30,10 @@ inspection_query_types_group = load_json(10)
 
 normalized_guidance_help_output = normalized_text(guidance_help_output)
 recipes = recipe_catalog["recipes"]
-shipped_examples = [recipe for recipe in recipes if recipe.get("view") == "EXAMPLE"]
-task_starters = [recipe for recipe in recipes if recipe.get("view") == "TASK_STARTER"]
+shipped_examples = [recipe for recipe in recipes if recipe.get("type") == "EXAMPLE"]
+task_starters = [recipe for recipe in recipes if recipe.get("type") == "TASK_STARTER"]
 expected_list_fields = {
-    "view",
+    "type",
     "id",
     "requestFileName",
     "summary",
@@ -53,31 +53,31 @@ catalog_groups = {
     },
 }
 
-if recipe_catalog.get("protocolVersion") != "V3":
-    die("recipe catalog no longer emits protocolVersion=V3")
+if type(recipe_catalog.get("protocolVersion")) is not int or recipe_catalog.get("protocolVersion") != 1:
+    die("recipe catalog no longer emits protocolVersion=1")
 if not recipes:
     die("recipe catalog recipes is empty")
 if not shipped_examples:
-    die("recipe catalog example view is empty")
+    die("recipe catalog example type is empty")
 if not task_starters:
-    die("recipe catalog task-starter view is empty")
+    die("recipe catalog task-starter type is empty")
 
 for recipe in shipped_examples + task_starters:
     recipe_id = recipe.get("id")
     if not recipe_id:
         die("recipe catalog contains a recipe with no id")
-    view = recipe.get("view")
+    recipe_type = recipe.get("type")
     request_file_name = recipe.get("requestFileName")
     summary = recipe.get("summary")
     guidance_snippet = normalized_text(
-        f"- {recipe_id} ({view}) requestFileName: {request_file_name} "
+        f"- {recipe_id} ({recipe_type}) requestFileName: {request_file_name} "
         + f"advisory: {recipe.get('advisory')} summary: {summary}"
     )
     if guidance_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists the recipe line for {recipe_id}")
     if set(recipe.keys()) != expected_list_fields:
         die(
-            f"recipe catalog {view.lower()} entry {recipe_id} exposes unexpected public fields: "
+            f"recipe catalog {recipe_type.lower()} entry {recipe_id} exposes unexpected public fields: "
             + f"{sorted(recipe.keys())}"
         )
     if recipe.get("advisory") == "SELF_CONTAINED" and recipe.get(
@@ -116,26 +116,26 @@ for example_id, required_paths in expected_required_paths.items():
     if required_paths_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists requiredWorkspacePaths for {example_id}")
 
-if example_recipe_catalog_detail.get("protocolVersion") != "V3":
-    die("recipe catalog example lookup no longer emits protocolVersion=V3")
+if type(example_recipe_catalog_detail.get("protocolVersion")) is not int or example_recipe_catalog_detail.get("protocolVersion") != 1:
+    die("recipe catalog example lookup no longer emits protocolVersion=1")
 if example_recipe_catalog_detail.get("id") != "BUDGET":
     die("recipe catalog example lookup no longer returns the requested BUDGET detail")
-if example_recipe_catalog_detail.get("view") != "EXAMPLE":
-    die("recipe catalog example lookup drifted away from view=EXAMPLE")
+if example_recipe_catalog_detail.get("type") != "EXAMPLE":
+    die("recipe catalog example lookup drifted away from type=EXAMPLE")
 if not example_recipe_catalog_detail.get("intentTags"):
     die("recipe catalog example lookup no longer publishes top-level intentTags")
 if "requestProfile" not in example_recipe_catalog_detail:
     die("recipe catalog example lookup no longer publishes requestProfile")
 
-if task_recipe_catalog_detail.get("protocolVersion") != "V3":
-    die("recipe catalog task-starter lookup no longer emits protocolVersion=V3")
+if type(task_recipe_catalog_detail.get("protocolVersion")) is not int or task_recipe_catalog_detail.get("protocolVersion") != 1:
+    die("recipe catalog task-starter lookup no longer emits protocolVersion=1")
 if task_recipe_catalog_detail.get("id") != "TABULAR_REPORT":
     die(
         "recipe catalog task-starter lookup no longer returns the requested "
         + "TABULAR_REPORT detail"
     )
-if task_recipe_catalog_detail.get("view") != "TASK_STARTER":
-    die("recipe catalog task-starter lookup drifted away from view=TASK_STARTER")
+if task_recipe_catalog_detail.get("type") != "TASK_STARTER":
+    die("recipe catalog task-starter lookup drifted away from type=TASK_STARTER")
 if not task_recipe_catalog_detail.get("intentTags"):
     die("recipe catalog task-starter lookup no longer publishes top-level intentTags")
 if "discovery" in task_recipe_catalog_detail:

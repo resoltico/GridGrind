@@ -271,13 +271,13 @@ set -e
 verify_interactive_noarg_failure "${noargs_stdout_path}" "${interactive_launcher[@]}"
 "${launcher[@]}" --print-request-template | tr -d '\r' > "${request_template_path}"
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_index_path}"
-"${launcher[@]}" --print-protocol-catalog --lookup sourceTypes | tr -d '\r' > "${source_types_path}"
-"${launcher[@]}" --print-protocol-catalog --lookup persistenceTypes | tr -d '\r' > "${persistence_types_path}"
-"${launcher[@]}" --print-protocol-catalog --lookup stepTypes | tr -d '\r' > "${step_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup workbookSourceTypes | tr -d '\r' > "${source_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup workbookPersistenceTypes | tr -d '\r' > "${persistence_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup workbookStepTypes | tr -d '\r' > "${step_types_path}"
 "${launcher[@]}" --print-protocol-catalog --lookup mutationActionTypes | tr -d '\r' > "${mutation_action_types_path}"
 "${launcher[@]}" --print-protocol-catalog --lookup assertionTypes | tr -d '\r' > "${assertion_types_path}"
 "${launcher[@]}" --print-protocol-catalog --lookup inspectionQueryTypes | tr -d '\r' > "${inspection_query_types_path}"
-"${launcher[@]}" --print-protocol-catalog --lookup nestedTypes:executionModeTypes | tr -d '\r' > "${execution_mode_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup nestedTypes:executionModeSpecTypes | tr -d '\r' > "${execution_mode_types_path}"
 "${launcher[@]}" --print-protocol-catalog --lookup plainTypes:executionPolicySpecType | tr -d '\r' > "${execution_policy_input_type_path}"
 "${launcher[@]}" --print-recipe-catalog | tr -d '\r' > "${recipe_catalog_path}"
 "${launcher[@]}" --print-recipe-catalog --lookup BUDGET | tr -d '\r' > "${example_recipe_catalog_detail_path}"
@@ -415,8 +415,8 @@ if "-w /workdir" in guidance_help_output:
 if '-v "$(pwd)":/work' not in guidance_help_output:
     die("guidance help no longer teaches the mounted /work Docker pattern")
 
-if catalog_index.get("protocolVersion") != "V3":
-    die("protocol catalog index no longer emits protocolVersion=V3")
+if type(catalog_index.get("protocolVersion")) is not int or catalog_index.get("protocolVersion") != 1:
+    die("protocol catalog index no longer emits protocolVersion=1")
 if catalog_index.get("discriminatorField") != "type":
     die("protocol catalog index no longer emits discriminatorField=type")
 if catalog_index.get("requestTypeId") != "WorkbookPlan":
@@ -424,8 +424,8 @@ if catalog_index.get("requestTypeId") != "WorkbookPlan":
 for required_group in ("mutationActionTypes", "assertionTypes", "inspectionQueryTypes"):
     if required_group not in top_level_groups:
         die(f"protocol catalog index no longer advertises top-level group {required_group}")
-if "executionModeTypes" not in nested_type_groups:
-    die("protocol catalog index no longer advertises nestedTypes:executionModeTypes")
+if "executionModeSpecTypes" not in nested_type_groups:
+    die("protocol catalog index no longer advertises nestedTypes:executionModeSpecTypes")
 if "executionPolicySpecType" not in plain_type_groups:
     die("protocol catalog index no longer advertises plainTypes:executionPolicySpecType")
 if "<topLevelGroup>:<id>" not in lookup_namespaces:
@@ -443,15 +443,15 @@ if "execution.calculation" not in execution_policy_summary:
 
 for required_mode in ("FULL_XSSF", "EVENT_READ", "STREAMING_WRITE"):
     if required_mode not in execution_mode_types:
-        die(f"catalog executionModeTypes no longer publishes {required_mode}")
+        die(f"catalog executionModeSpecTypes no longer publishes {required_mode}")
 execution_summary = execution_mode_types["STREAMING_WRITE"]["summary"]
 for needle in ("DO_NOT_CALCULATE", "markRecalculateOnOpen=true", "ENSURE_SHEET", "APPEND_ROW"):
     if needle not in execution_summary:
-        die(f"catalog executionModeTypes STREAMING_WRITE summary is missing '{needle}'")
+        die(f"catalog executionModeSpecTypes STREAMING_WRITE summary is missing '{needle}'")
 if "FORCE_FORMULA_RECALCULATION_ON_OPEN" in execution_summary:
-    die("catalog executionModeTypes STREAMING_WRITE summary exposes the deleted recalc mutation action")
+    die("catalog executionModeSpecTypes STREAMING_WRITE summary exposes the deleted recalc mutation action")
 if "FORCE_FORMULA_RECALC_ON_OPEN" in execution_summary:
-    die("catalog executionModeTypes STREAMING_WRITE summary exposes the rejected removed recalc shorthand")
+    die("catalog executionModeSpecTypes STREAMING_WRITE summary exposes the rejected removed recalc shorthand")
 for streaming_term in ("ENSURE_SHEET", "APPEND_ROW"):
     if streaming_term not in protocol_help_output:
         die(f"protocol help no longer communicates STREAMING_WRITE constraint '{streaming_term}'")
@@ -468,8 +468,8 @@ if append_row_template.get("type") != "TYPED":
 if "cells" not in append_row_template:
     die("catalog APPEND_ROW step template no longer uses cells for the typed row payload")
 
-if request_template.get("protocolVersion") != "V3":
-    die("request template no longer emits protocolVersion=V3")
+if type(request_template.get("protocolVersion")) is not int or request_template.get("protocolVersion") != 1:
+    die("request template no longer emits protocolVersion=1")
 if request_template.get("source", {}).get("type") != "NEW":
     die("request template no longer emits source.type=NEW")
 if request_template.get("persistence", {}).get("type") != "NONE":

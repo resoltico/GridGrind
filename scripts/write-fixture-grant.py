@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write the explicit test-host grant required by one generated V3 request fixture."""
+"""Write the explicit test-host grant required by one generated protocol-1 request fixture."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def main() -> int:
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="write the narrow explicit host grant for one V3 fixture request"
+        description="write the narrow explicit host grant for one protocol-1 fixture request"
     )
     parser.add_argument("--request", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)

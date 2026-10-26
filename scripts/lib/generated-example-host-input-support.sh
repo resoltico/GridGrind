@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Explicit host inputs for generated V3 fixture execution.
+# Explicit host inputs for generated protocol-1 fixture execution.
 
 prepare_generated_example_host_inputs() {
     local fixture_grant_writer=$1

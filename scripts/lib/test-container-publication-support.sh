@@ -109,13 +109,13 @@ case "${command}" in
             --print-protocol-catalog)
                 if [[ "${args[$((run_index + 2))]:-}" == "--lookup" ]]; then
                     case "${args[$((run_index + 3))]:-}" in
-                        sourceTypes)
+                        workbookSourceTypes)
                             emit_fixture_file "${FAKE_DOCKER_SOURCE_TYPES_OUTPUT_FILE:?}"
                             ;;
-                        persistenceTypes)
+                        workbookPersistenceTypes)
                             emit_fixture_file "${FAKE_DOCKER_PERSISTENCE_TYPES_OUTPUT_FILE:?}"
                             ;;
-                        stepTypes)
+                        workbookStepTypes)
                             emit_fixture_file "${FAKE_DOCKER_STEP_TYPES_OUTPUT_FILE:?}"
                             ;;
                         mutationActionTypes)
@@ -127,7 +127,7 @@ case "${command}" in
                         inspectionQueryTypes)
                             emit_fixture_file "${FAKE_DOCKER_INSPECTION_QUERY_TYPES_OUTPUT_FILE:?}"
                             ;;
-                        nestedTypes:executionModeTypes)
+                        nestedTypes:executionModeSpecTypes)
                             emit_fixture_file "${FAKE_DOCKER_EXECUTION_MODE_TYPES_OUTPUT_FILE:?}"
                             ;;
                         plainTypes:executionPolicySpecType)

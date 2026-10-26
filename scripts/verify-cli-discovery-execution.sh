@@ -272,10 +272,10 @@ except RuntimeError as exception:
     die(str(exception))
 recipe_entries = recipe_catalog["recipes"]
 example_entries = [
-    recipe for recipe in recipe_entries if recipe.get("view") == "EXAMPLE"
+    recipe for recipe in recipe_entries if recipe.get("type") == "EXAMPLE"
 ]
 task_starter_entries = [
-    recipe for recipe in recipe_entries if recipe.get("view") == "TASK_STARTER"
+    recipe for recipe in recipe_entries if recipe.get("type") == "TASK_STARTER"
 ]
 
 for index, example in enumerate(example_entries, start=1):
