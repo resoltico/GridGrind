@@ -16,7 +16,7 @@ class CommentSpecTest {
     assertFalse(comment.visible());
     assertEquals(
         new ResolvedComment("Review", "GridGrind", false),
-        WorkbookCommandCellValueSpecConverter.toResolvedComment(comment));
+        MutationResolution.toResolvedComment(comment));
   }
 
   @Test

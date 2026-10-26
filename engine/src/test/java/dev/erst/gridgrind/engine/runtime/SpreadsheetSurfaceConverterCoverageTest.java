@@ -75,9 +75,9 @@ class SpreadsheetSurfaceConverterCoverageTest {
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             inputPlots(inlineSeries(TextSourceSpec.inline("Series"))));
-    ResolvedChart definition = WorkbookCommandDrawingInputConverter.toResolvedChart(chart);
+    ResolvedChart definition = MutationResolution.toResolvedChart(chart);
     ResolvedSignatureLine signatureLine =
-        WorkbookCommandDrawingInputConverter.toResolvedSignatureLine(
+        MutationResolution.toResolvedSignatureLine(
             new SignatureLineSpec(
                 "OpsSignature",
                 inputAnchor(),

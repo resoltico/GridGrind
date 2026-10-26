@@ -2500,3 +2500,22 @@ its4,958MiB aggregate retained worker RSS; ownership/process evidence is externa
 WP-40 remains open for ResolvedPlan, the read-side query/result/selection cutover and folding remaining
 source-only operand materialization into source resolution. WP-21's under50 blank-check criterion
 also remains open. No Phase4 completion or final verification claim is made here.
+
+## WP-40 one source-bearing operand owner
+
+Folded the six remaining WorkbookCommand-prefixed operand/source builders into MutationResolution,
+then deleted those files. They materialize distinct source-bearing core contracts rather than engine
+models; source-free actions still retain identity. Named the private chart title/series/plot methods
+for their actual core operands. Existing source, binary, rich-text, chart, comment, table, print,
+validation and secret materialization tests exercise the same owner. No replacement aliases or
+compatibility classes were introduced. The preflight source-inlining stage still exists and must be
+replaced by the real ResolvedPlan cutover; this commit does not claim that work is complete.
+
+Focused engine/parity/static checks pass37s. Standard PMD initially flagged54 imports at the closed
+source-bearing action boundary; documented a local suppression for this deliberately unified owner.
+No global quality rule changed. Nested check/all94 retained seeds pass15s. Final ./gradlew check
+passes3m; all143 CLI golden cases unchanged (142.354s), no failures/errors/skips and no active campaigns.
+Inventories: converter-named lines1677→1218, Support200→199, main Java114886→114790, tests153526→153518;
+blank288, definitions0 and snapshots2(runtime) unchanged. The467-line materialization owner remains
+real necessary code; the inventory's converter-name reduction is not a claim that all those lines
+were deleted. No WorkbookCommand reference remains in engine main code. Baseline diff empty.

@@ -18,11 +18,10 @@ class ExecutorConverterDelegationCoverageTest {
 
     assertEquals(
         "Bold",
-        WorkbookCommandCellValueSpecConverter.toResolvedRichText(
-                new CellValueSpec.RichText(List.of(run)))
+        MutationResolution.toResolvedRichText(new CellValueSpec.RichText(List.of(run)))
             .runs()
             .getFirst()
             .text());
-    assertEquals("Bold", WorkbookCommandCellValueSpecConverter.toResolvedRichTextRun(run).text());
+    assertEquals("Bold", MutationResolution.toResolvedRichTextRun(run).text());
   }
 }

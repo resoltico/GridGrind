@@ -31,7 +31,7 @@ class TableSpecTest {
             new RangeRef("A1:C4"),
             true,
             new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false)),
-        WorkbookCommandTabularInputConverter.toResolvedTable(input));
+        MutationResolution.toResolvedTable(input));
 
     assertThrows(
         IllegalArgumentException.class,
@@ -89,7 +89,7 @@ class TableSpecTest {
             new RangeRef("A1:C4"),
             false,
             new TableStyleSpec.None()),
-        WorkbookCommandTabularInputConverter.toResolvedTable(input));
+        MutationResolution.toResolvedTable(input));
   }
 
   @Test
@@ -127,6 +127,6 @@ class TableSpecTest {
             "",
             "",
             List.of(new TableColumnSpec(1, "", "Total", "sum", ""))),
-        WorkbookCommandTabularInputConverter.toResolvedTable(input));
+        MutationResolution.toResolvedTable(input));
   }
 }

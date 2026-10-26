@@ -91,16 +91,15 @@ class RuntimeResidualCoverageTest {
 
   @Test
   void converterNullBranchesAndResolvedPromptFieldsStayTyped() {
-    assertTrue(WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(null).isEmpty());
-    assertTrue(
-        WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(null).isEmpty());
+    assertTrue(MutationResolution.toResolvedValidationPrompt(null).isEmpty());
+    assertTrue(MutationResolution.toResolvedValidationErrorAlert(null).isEmpty());
 
     Optional<ResolvedValidationPrompt> prompt =
-        WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(
+        MutationResolution.toResolvedValidationPrompt(
             new DataValidationPromptSpec(
                 TextSourceSpec.inline("Prompt title"), TextSourceSpec.inline("Prompt text"), true));
     Optional<ResolvedValidationErrorAlert> alert =
-        WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(
+        MutationResolution.toResolvedValidationErrorAlert(
             new DataValidationErrorAlertSpec(
                 ExcelDataValidationErrorStyle.WARNING,
                 TextSourceSpec.inline("Alert title"),

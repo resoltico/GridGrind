@@ -22,19 +22,17 @@ class CellValueSpecTest {
   @Test
   void convertsAllSupportedInputTypesToExcelValues() {
     assertInstanceOf(
-        CellValue.Blank.class,
-        WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(new CellValueSpec.Blank()));
+        CellValue.Blank.class, MutationResolution.toResolvedCellWrite(new CellValueSpec.Blank()));
 
     CellValue.Text textValue =
         assertInstanceOf(
-            CellValue.Text.class,
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(textCell("Budget")));
+            CellValue.Text.class, MutationResolution.toResolvedCellWrite(textCell("Budget")));
     assertEquals("Budget", textValue.value());
 
     ResolvedRichText richTextValue =
         assertInstanceOf(
             ResolvedRichText.class,
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
+            MutationResolution.toResolvedCellWrite(
                 new CellValueSpec.RichText(
                     List.of(
                         richTextRun("Budget"),
@@ -68,32 +66,29 @@ class CellValueSpecTest {
     CellValue.NumberValue numberValue =
         assertInstanceOf(
             CellValue.NumberValue.class,
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
-                new CellValueSpec.NumberValue(42.5)));
+            MutationResolution.toResolvedCellWrite(new CellValueSpec.NumberValue(42.5)));
     assertEquals(42.5, numberValue.value());
 
     CellValue.BooleanValue booleanValue =
         assertInstanceOf(
             CellValue.BooleanValue.class,
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
-                new CellValueSpec.BooleanValue(true)));
+            MutationResolution.toResolvedCellWrite(new CellValueSpec.BooleanValue(true)));
     assertTrue(booleanValue.value());
 
     ResolvedFormula formulaValue =
         assertInstanceOf(
             ResolvedFormula.class,
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(formulaCell("SUM(B2:B4)")));
+            MutationResolution.toResolvedCellWrite(formulaCell("SUM(B2:B4)")));
     assertEquals("SUM(B2:B4)", formulaValue.value());
 
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(formulaCell("=SUM(B2:B4)")));
+        () -> MutationResolution.toResolvedCellWrite(formulaCell("=SUM(B2:B4)")));
 
     ResolvedRawFormula rawFormulaValue =
         assertInstanceOf(
             ResolvedRawFormula.class,
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
+            MutationResolution.toResolvedCellWrite(
                 new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"))));
     assertEquals("LAMBDA(x,x+1)(A1)", rawFormulaValue.value());
     assertEquals(
@@ -104,14 +99,14 @@ class CellValueSpecTest {
     CellValueSpec.Date dateValue =
         assertInstanceOf(
             CellValueSpec.Date.class,
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
+            MutationResolution.toResolvedCellWrite(
                 new CellValueSpec.Date(LocalDate.of(2026, 3, 23))));
     assertEquals(LocalDate.of(2026, 3, 23), dateValue.value());
 
     CellValueSpec.DateTime dateTimeValue =
         assertInstanceOf(
             CellValueSpec.DateTime.class,
-            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
+            MutationResolution.toResolvedCellWrite(
                 new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 23, 10, 15, 30))));
     assertEquals(LocalDateTime.of(2026, 3, 23, 10, 15, 30), dateTimeValue.value());
   }

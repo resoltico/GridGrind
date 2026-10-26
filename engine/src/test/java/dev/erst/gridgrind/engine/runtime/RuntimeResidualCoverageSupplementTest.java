@@ -144,8 +144,7 @@ class RuntimeResidualCoverageSupplementTest {
     assertEquals(
         "#REF!",
         assertInstanceOf(
-                CellValue.ErrorValue.class,
-                WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(errorValue))
+                CellValue.ErrorValue.class, MutationResolution.toResolvedCellWrite(errorValue))
             .value());
   }
 

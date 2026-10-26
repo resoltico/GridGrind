@@ -49,7 +49,7 @@ class DataValidationSpecTest {
                     "Invalid date",
                     "Date must be today or later.",
                     true))),
-        WorkbookCommandStructuredInputConverter.toResolvedDataValidation(input));
+        MutationResolution.toResolvedDataValidation(input));
   }
 
   @Test
@@ -74,18 +74,18 @@ class DataValidationSpecTest {
   void nestedPromptAndErrorInputsDefaultAndPreserveVisibilityFlags() {
     assertEquals(
         new ResolvedValidationPrompt("Ship date", "Use today or later.", true),
-        WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(
+        MutationResolution.toResolvedValidationPrompt(
                 prompt("Ship date", "Use today or later.", null))
             .orElseThrow());
     assertEquals(
         new ResolvedValidationPrompt("Ship date", "Use today or later.", false),
-        WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(
+        MutationResolution.toResolvedValidationPrompt(
                 prompt("Ship date", "Use today or later.", false))
             .orElseThrow());
     assertEquals(
         new ResolvedValidationErrorAlert(
             ExcelDataValidationErrorStyle.INFORMATION, "Invalid date", "Pick a real date.", true),
-        WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(
+        MutationResolution.toResolvedValidationErrorAlert(
                 errorAlert(
                     ExcelDataValidationErrorStyle.INFORMATION,
                     "Invalid date",
@@ -95,7 +95,7 @@ class DataValidationSpecTest {
     assertEquals(
         new ResolvedValidationErrorAlert(
             ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false),
-        WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(
+        MutationResolution.toResolvedValidationErrorAlert(
                 errorAlert(
                     ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false))
             .orElseThrow());

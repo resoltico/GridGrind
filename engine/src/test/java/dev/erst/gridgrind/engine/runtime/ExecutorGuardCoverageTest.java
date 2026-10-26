@@ -123,7 +123,7 @@ class ExecutorGuardCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
+                    MutationResolution.toResolvedCellWrite(
                         new CellValueSpec.Text(TextSourceSpec.utf8File("title.txt"))))
             .getMessage());
 
@@ -140,7 +140,7 @@ class ExecutorGuardCoverageTest {
         "picture payload must be resolved to INLINE_BASE64 before conversion",
         assertThrows(
                 IllegalStateException.class,
-                () -> WorkbookCommandDrawingInputConverter.toResolvedPicture(unresolvedPicture))
+                () -> MutationResolution.toResolvedPicture(unresolvedPicture))
             .getMessage());
   }
 
