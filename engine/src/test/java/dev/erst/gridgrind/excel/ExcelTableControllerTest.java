@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -53,7 +54,7 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      List<TableEntryReport> tables = controller.tables(workbook, new ExcelTableSelection.All());
+      List<TableEntryReport> tables = controller.tables(workbook, new TableSelector.All());
       List<AutofilterEntryReport> autofilters = controller.tableOwnedAutofilters(workbook, "Ops");
 
       assertEquals(1, tables.size());
@@ -93,7 +94,7 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      List<TableEntryReport> tables = controller.tables(workbook, new ExcelTableSelection.All());
+      List<TableEntryReport> tables = controller.tables(workbook, new TableSelector.All());
 
       assertEquals(1, tables.size());
       assertEquals("A1:B3", tables.getFirst().range().value());
@@ -133,8 +134,7 @@ class ExcelTableControllerTest {
               "",
               List.of(new TableColumnSpec(1, "", "", "SUM", ""))));
 
-      TableEntryReport table =
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      TableEntryReport table = controller.tables(workbook, new TableSelector.All()).getFirst();
 
       assertEquals("sum", table.structure().columns().get(1).totalsRowFunction().orElseThrow());
     }
@@ -168,8 +168,7 @@ class ExcelTableControllerTest {
                   new TableColumnSpec(0, "OwnerKey", "Total", "", ""),
                   new TableColumnSpec(1, "", "", "SUM", "UPPER([@Task])"))));
 
-      TableEntryReport authored =
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      TableEntryReport authored = controller.tables(workbook, new TableSelector.All()).getFirst();
       assertEquals("Office queue", authored.presentation().comment().orElseThrow());
       assertTrue(authored.behavior().published());
       assertTrue(authored.behavior().insertRow());
@@ -205,8 +204,7 @@ class ExcelTableControllerTest {
                   new TableColumnSpec(0, "OwnerKey2", "Overall", "", ""),
                   new TableColumnSpec(1, "", "", "AVERAGE", "LOWER([@Task])"))));
 
-      TableEntryReport updated =
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      TableEntryReport updated = controller.tables(workbook, new TableSelector.All()).getFirst();
       assertEquals("Updated queue", updated.presentation().comment().orElseThrow());
       assertEquals("Hdr2", updated.presentation().headerRowCellStyle().orElseThrow());
       assertEquals("Data2", updated.presentation().dataCellStyle().orElseThrow());
@@ -239,8 +237,7 @@ class ExcelTableControllerTest {
               List.of(
                   new TableColumnSpec(0, "", "", "", ""), new TableColumnSpec(1, "", "", "", ""))));
 
-      TableEntryReport cleared =
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      TableEntryReport cleared = controller.tables(workbook, new TableSelector.All()).getFirst();
       assertTrue(cleared.presentation().comment().isEmpty());
       assertFalse(cleared.behavior().published());
       assertFalse(cleared.behavior().insertRow());
@@ -282,7 +279,7 @@ class ExcelTableControllerTest {
               List.of()));
       assertTrue(
           controller
-              .tables(workbook, new ExcelTableSelection.All())
+              .tables(workbook, new TableSelector.All())
               .getFirst()
               .behavior()
               .hasAutofilter());
@@ -309,7 +306,7 @@ class ExcelTableControllerTest {
           workbook.sheet("Ops").xssfSheet().getTables().getFirst().getCTTable().isSetAutoFilter());
       assertFalse(
           controller
-              .tables(workbook, new ExcelTableSelection.All())
+              .tables(workbook, new TableSelector.All())
               .getFirst()
               .behavior()
               .hasAutofilter());
@@ -392,12 +389,10 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      TableEntryReport table =
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      TableEntryReport table = controller.tables(workbook, new TableSelector.All()).getFirst();
       assertEquals(2, table.structure().columnNames().size());
       assertTrue(table.structure().columnNames().stream().allMatch(name -> !name.isBlank()));
-      assertEquals(
-          List.of(), controller.tableHealthFindings(workbook, new ExcelTableSelection.All()));
+      assertEquals(List.of(), controller.tableHealthFindings(workbook, new TableSelector.All()));
     }
   }
 
@@ -429,7 +424,10 @@ class ExcelTableControllerTest {
       List<TableEntryReport> selected =
           controller.tables(
               workbook,
-              new ExcelTableSelection.ByNames(List.of("archivequeue", "missing", "QUEUE")));
+              new TableSelector.ByNames(
+                  List.of("archivequeue", "missing", "QUEUE").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.TableName::new)
+                      .toList()));
 
       assertEquals(
           List.of("ArchiveQueue", "Queue"),
@@ -667,7 +665,7 @@ class ExcelTableControllerTest {
 
       controller.deleteTable(workbook, "Queue", "Ops");
 
-      assertEquals(List.of(), controller.tables(workbook, new ExcelTableSelection.All()));
+      assertEquals(List.of(), controller.tables(workbook, new TableSelector.All()));
       assertEquals(List.of(), controller.tableOwnedAutofilters(workbook, "Ops"));
     }
   }
@@ -707,7 +705,7 @@ class ExcelTableControllerTest {
       second.getCTTable().addNewTableStyleInfo().setName("MissingStyle");
 
       List<AnalysisFindingCode> codes =
-          controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
+          controller.tableHealthFindings(workbook, new TableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
 
@@ -735,13 +733,11 @@ class ExcelTableControllerTest {
               true,
               new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false)));
 
-      TableEntryReport table =
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      TableEntryReport table = controller.tables(workbook, new TableSelector.All()).getFirst();
       assertEquals(
           "A1:B3", controller.tableOwnedAutofilters(workbook, "Ops").getFirst().range().value());
       assertEquals("A1:B3", ExcelTableStructureSupport.expectedAutofilterRangeText(table));
-      assertEquals(
-          List.of(), controller.tableHealthFindings(workbook, new ExcelTableSelection.All()));
+      assertEquals(List.of(), controller.tableHealthFindings(workbook, new TableSelector.All()));
       assertEquals(List.of(), controller.tableAutofilterHealthFindings(workbook, "Ops"));
     }
   }
@@ -812,7 +808,7 @@ class ExcelTableControllerTest {
       table.getCTTable().addNewTableStyleInfo().setName("");
 
       List<AnalysisFindingCode> codes =
-          controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
+          controller.tableHealthFindings(workbook, new TableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
 
@@ -839,7 +835,7 @@ class ExcelTableControllerTest {
       table.getCTTable().setRef("A0:B3");
 
       List<AnalysisFindingReport> findings =
-          controller.tableHealthFindings(workbook, new ExcelTableSelection.All());
+          controller.tableHealthFindings(workbook, new TableSelector.All());
 
       assertEquals(1, findings.size());
       assertEquals(AnalysisFindingCode.TABLE_BROKEN_REFERENCE, findings.getFirst().code());
@@ -1077,7 +1073,7 @@ class ExcelTableControllerTest {
 
       assertEquals(
           List.of("Legacy", "Queue"),
-          controller.tables(workbook, new ExcelTableSelection.All()).stream()
+          controller.tables(workbook, new TableSelector.All()).stream()
               .map(table -> table.name().value())
               .toList());
     }
@@ -1132,7 +1128,7 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      List<TableEntryReport> tables = controller.tables(workbook, new ExcelTableSelection.All());
+      List<TableEntryReport> tables = controller.tables(workbook, new TableSelector.All());
       assertEquals(2, tables.size());
       assertTrue(
           tables.stream()
@@ -1174,7 +1170,7 @@ class ExcelTableControllerTest {
       assertEquals(
           List.of("QQQQq", "Task"),
           controller
-              .tables(workbook, new ExcelTableSelection.All())
+              .tables(workbook, new TableSelector.All())
               .getFirst()
               .structure()
               .columnNames());
@@ -1192,7 +1188,7 @@ class ExcelTableControllerTest {
       assertEquals(
           List.of("QQQQq", "Task"),
           controller
-              .tables(reopened, new ExcelTableSelection.All())
+              .tables(reopened, new TableSelector.All())
               .getFirst()
               .structure()
               .columnNames());
@@ -1232,7 +1228,7 @@ class ExcelTableControllerTest {
 
       assertEquals("", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertTrue(
-          controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
+          controller.tableHealthFindings(workbook, new TableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList()
               .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
@@ -1247,11 +1243,10 @@ class ExcelTableControllerTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      TableEntryReport table =
-          controller.tables(reopened, new ExcelTableSelection.All()).getFirst();
+      TableEntryReport table = controller.tables(reopened, new TableSelector.All()).getFirst();
       assertEquals(List.of("", "Lane"), table.structure().columnNames());
       assertTrue(
-          controller.tableHealthFindings(reopened, new ExcelTableSelection.All()).stream()
+          controller.tableHealthFindings(reopened, new TableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList()
               .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
@@ -1305,7 +1300,7 @@ class ExcelTableControllerTest {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
           controller
-              .tables(workbook, new ExcelTableSelection.All())
+              .tables(workbook, new TableSelector.All())
               .getFirst()
               .structure()
               .columnNames());
@@ -1323,7 +1318,7 @@ class ExcelTableControllerTest {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
           controller
-              .tables(reopened, new ExcelTableSelection.All())
+              .tables(reopened, new TableSelector.All())
               .getFirst()
               .structure()
               .columnNames());
@@ -1379,7 +1374,7 @@ class ExcelTableControllerTest {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
           controller
-              .tables(reopened, new ExcelTableSelection.All())
+              .tables(reopened, new TableSelector.All())
               .getFirst()
               .structure()
               .columnNames());

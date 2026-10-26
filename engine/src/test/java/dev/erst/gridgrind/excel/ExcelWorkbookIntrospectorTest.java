@@ -30,6 +30,7 @@ import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -765,8 +766,7 @@ class ExcelWorkbookIntrospectorTest {
             dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetTables(
-                    new StepId("tables"), new ExcelTableSelection.All()))));
+                new WorkbookReadCommand.GetTables(new StepId("tables"), new TableSelector.All()))));
   }
 
   private static <T> T cast(Class<T> type, Object value) {

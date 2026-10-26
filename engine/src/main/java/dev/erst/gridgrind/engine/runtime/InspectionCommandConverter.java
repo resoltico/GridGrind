@@ -98,8 +98,7 @@ final class InspectionCommandConverter {
             stepId, SelectorConverter.toExcelChartSelection(selection));
       }
       case WorkbookAssetIntrospectionQuery.GetPivotTables _ ->
-          new WorkbookReadCommand.GetPivotTables(
-              stepId, SelectorConverter.toExcelPivotTableSelection((PivotTableSelector) target));
+          new WorkbookReadCommand.GetPivotTables(stepId, (PivotTableSelector) target);
       case WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload _ -> {
         DrawingObjectSelector.ByName selector = (DrawingObjectSelector.ByName) target;
         yield new WorkbookReadCommand.GetDrawingObjectPayload(
@@ -127,8 +126,7 @@ final class InspectionCommandConverter {
           new WorkbookReadCommand.GetAutofilters(
               stepId, SelectorConverter.toSheetName((SheetSelector.ByName) target));
       case WorkbookAssetIntrospectionQuery.GetTables _ ->
-          new WorkbookReadCommand.GetTables(
-              stepId, SelectorConverter.toExcelTableSelection((TableSelector) target));
+          new WorkbookReadCommand.GetTables(stepId, (TableSelector) target);
       case InspectionSurfaceQuery.GetFormulaSurface _ ->
           new WorkbookReadCommand.GetFormulaSurface(
               stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
@@ -159,11 +157,9 @@ final class InspectionCommandConverter {
           new WorkbookReadCommand.AnalyzeAutofilterHealth(
               stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
       case InspectionAnalysisQuery.AnalyzeTableHealth _ ->
-          new WorkbookReadCommand.AnalyzeTableHealth(
-              stepId, SelectorConverter.toExcelTableSelection((TableSelector) target));
+          new WorkbookReadCommand.AnalyzeTableHealth(stepId, (TableSelector) target);
       case InspectionAnalysisQuery.AnalyzePivotTableHealth _ ->
-          new WorkbookReadCommand.AnalyzePivotTableHealth(
-              stepId, SelectorConverter.toExcelPivotTableSelection((PivotTableSelector) target));
+          new WorkbookReadCommand.AnalyzePivotTableHealth(stepId, (PivotTableSelector) target);
       case InspectionAnalysisQuery.AnalyzeHyperlinkHealth _ ->
           new WorkbookReadCommand.AnalyzeHyperlinkHealth(
               stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));

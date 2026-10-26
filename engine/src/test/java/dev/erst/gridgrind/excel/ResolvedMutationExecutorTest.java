@@ -86,7 +86,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -306,7 +305,7 @@ class ResolvedMutationExecutorTest {
                   .execute(
                       workbook,
                       new WorkbookReadCommand.GetTables(
-                          new StepId("tables"), new ExcelTableSelection.All())));
+                          new StepId("tables"), new TableSelector.All())));
       assertEquals(
           List.of(
               new AutofilterEntryReport.SheetOwned(
@@ -369,7 +368,7 @@ class ResolvedMutationExecutorTest {
                   .execute(
                       reopened,
                       new WorkbookReadCommand.GetTables(
-                          new StepId("tables"), new ExcelTableSelection.All())));
+                          new StepId("tables"), new TableSelector.All())));
       assertEquals(
           List.of(
               new AutofilterEntryReport.SheetOwned(
@@ -661,7 +660,7 @@ class ResolvedMutationExecutorTest {
                   .execute(
                       workbook,
                       new WorkbookReadCommand.GetPivotTables(
-                          new StepId("pivots"), new ExcelPivotTableSelection.All())));
+                          new StepId("pivots"), new PivotTableSelector.All())));
       PivotTableReport.Supported pivot =
           assertInstanceOf(PivotTableReport.Supported.class, pivotTables.pivotTables().getFirst());
 
@@ -681,7 +680,7 @@ class ResolvedMutationExecutorTest {
                   .execute(
                       workbook,
                       new WorkbookReadCommand.GetPivotTables(
-                          new StepId("pivots"), new ExcelPivotTableSelection.All())));
+                          new StepId("pivots"), new PivotTableSelector.All())));
       assertEquals(List.of(), afterDelete.pivotTables());
     }
   }

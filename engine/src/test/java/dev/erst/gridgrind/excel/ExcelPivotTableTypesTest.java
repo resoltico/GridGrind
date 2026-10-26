@@ -3,10 +3,10 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotDataPoiBridge;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,13 +21,12 @@ class ExcelPivotTableTypesTest {
     assertThrows(IllegalArgumentException.class, () -> ExcelPivotTableNaming.validateName("   "));
 
     List<String> mutableNames = new ArrayList<>(List.of("Sales Pivot 2026", "Ops Pivot"));
-    ExcelPivotTableSelection.ByNames selection = new ExcelPivotTableSelection.ByNames(mutableNames);
+    PivotTableSelector.ByNames selection = new PivotTableSelector.ByNames(mutableNames);
     mutableNames.clear();
     assertEquals(List.of("Sales Pivot 2026", "Ops Pivot"), selection.names());
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelPivotTableSelection.ByNames(List.of("Sales Pivot 2026", "sales pivot 2026")));
+        () -> new PivotTableSelector.ByNames(List.of("Sales Pivot 2026", "sales pivot 2026")));
 
     PivotTableReport.Supported supported =
         new PivotTableReport.Supported(
@@ -84,13 +83,12 @@ class ExcelPivotTableTypesTest {
 
   @Test
   void pivotTypesRejectAdditionalInvalidInputs() {
-    assertThrows(NullPointerException.class, () -> new ExcelPivotTableSelection.ByNames(null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelPivotTableSelection.ByNames(List.of()));
+    assertThrows(NullPointerException.class, () -> new PivotTableSelector.ByNames(null));
+    assertThrows(IllegalArgumentException.class, () -> new PivotTableSelector.ByNames(List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPivotTableSelection.ByNames(
+            new PivotTableSelector.ByNames(
                 new ArrayList<>(java.util.Arrays.asList("Sales Pivot 2026", null))));
 
     PivotTableReport.Anchor anchor =

@@ -14,7 +14,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelChartSelection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -92,8 +91,8 @@ class InspectionCommandConverterTest {
     assertEquals("pivots", pivotCommand.stepId().value());
     assertEquals(
         List.of("Sales Pivot 2026"),
-        ((ExcelPivotTableSelection.ByNames) pivotCommand.selection()).names());
-    assertInstanceOf(ExcelPivotTableSelection.All.class, pivotHealthCommand.selection());
+        ((PivotTableSelector.ByNames) pivotCommand.selection()).names());
+    assertInstanceOf(PivotTableSelector.All.class, pivotHealthCommand.selection());
   }
 
   @Test

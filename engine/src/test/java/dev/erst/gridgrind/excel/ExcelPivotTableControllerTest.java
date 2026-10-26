@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -16,7 +17,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -56,7 +56,7 @@ class ExcelPivotTableControllerTest {
               PivotTableReport.Supported.class,
               controller
                   .pivotTables(
-                      workbook, new ExcelPivotTableSelection.ByNames(List.of("Sales Pivot 2026")))
+                      workbook, new PivotTableSelector.ByNames(List.of("Sales Pivot 2026")))
                   .getFirst());
 
       assertEquals("Sales Pivot 2026", snapshot.name());
@@ -75,9 +75,7 @@ class ExcelPivotTableControllerTest {
       assertEquals("Total Amount", snapshot.dataFields().getFirst().displayName());
       assertEquals(Optional.of("#,##0.00"), snapshot.dataFields().getFirst().valueFormat());
       assertTrue(
-          controller
-              .pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All())
-              .isEmpty());
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).isEmpty());
 
       workbook
           .persistence()
@@ -92,14 +90,12 @@ class ExcelPivotTableControllerTest {
       PivotTableReport.Supported snapshot =
           assertInstanceOf(
               PivotTableReport.Supported.class,
-              controller.pivotTables(reopened, new ExcelPivotTableSelection.All()).getFirst());
+              controller.pivotTables(reopened, new PivotTableSelector.All()).getFirst());
 
       assertEquals("Sales Pivot 2026", snapshot.name());
       assertEquals("C5", snapshot.anchor().topLeftAddress().value());
       assertTrue(
-          controller
-              .pivotTableHealthFindings(reopened, new ExcelPivotTableSelection.All())
-              .isEmpty());
+          controller.pivotTableHealthFindings(reopened, new PivotTableSelector.All()).isEmpty());
     }
   }
 
@@ -153,8 +149,7 @@ class ExcelPivotTableControllerTest {
 
       List<PivotTableReport> snapshots =
           controller.pivotTables(
-              workbook,
-              new ExcelPivotTableSelection.ByNames(List.of("Named Pivot", "Table Pivot")));
+              workbook, new PivotTableSelector.ByNames(List.of("Named Pivot", "Table Pivot")));
 
       PivotTableReport.Supported namedPivot =
           assertInstanceOf(PivotTableReport.Supported.class, snapshots.getFirst());
@@ -167,9 +162,7 @@ class ExcelPivotTableControllerTest {
       assertInstanceOf(PivotTableReport.PivotSourceReport.Table.class, tablePivot.source());
       assertEquals(List.of("Stage"), fieldNames(tablePivot.rowLabels()));
       assertTrue(
-          controller
-              .pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All())
-              .isEmpty());
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).isEmpty());
     }
   }
 
@@ -234,7 +227,7 @@ class ExcelPivotTableControllerTest {
       assertEquals(cacheIds.size(), unique.size());
       assertEquals(
           List.of("Beta Pivot", "Gamma Pivot"),
-          controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).stream()
+          controller.pivotTables(workbook, new PivotTableSelector.All()).stream()
               .map(PivotTableReport::name)
               .toList());
     }
@@ -263,11 +256,11 @@ class ExcelPivotTableControllerTest {
       pivotTable.getCTPivotTableDefinition().setName(null);
 
       List<AnalysisFindingCode> missingNameCodes =
-          controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
       PivotTableReport snapshot =
-          controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst();
+          controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst();
 
       assertTrue(missingNameCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
       assertTrue(snapshot.name().startsWith("_GG_PIVOT_"));
@@ -279,7 +272,7 @@ class ExcelPivotTableControllerTest {
       worksheetSource.setName("MissingSource");
 
       List<AnalysisFindingCode> brokenSourceCodes =
-          controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
 

@@ -16,7 +16,9 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
@@ -28,7 +30,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -169,7 +170,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeTableHealth(
-                      new StepId("tableHealth"), new ExcelTableSelection.All())));
+                      new StepId("tableHealth"), new TableSelector.All())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult.class,
@@ -177,7 +178,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzePivotTableHealth(
-                      new StepId("pivotTableHealth"), new ExcelPivotTableSelection.All())));
+                      new StepId("pivotTableHealth"), new PivotTableSelector.All())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult workbookFindings =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult.class,

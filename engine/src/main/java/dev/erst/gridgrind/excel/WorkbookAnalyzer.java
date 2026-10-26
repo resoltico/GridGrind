@@ -11,13 +11,14 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthRepor
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.plan.InspectionAnalysisResult;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -134,14 +135,13 @@ final class WorkbookAnalyzer {
     return documentAnalyzer.autofilterHealth(workbook, selection);
   }
 
-  TableHealthReport tableHealth(ExcelWorkbook workbook, ExcelTableSelection selection) {
+  TableHealthReport tableHealth(ExcelWorkbook workbook, TableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.tableHealth(workbook, selection);
   }
 
-  PivotTableHealthReport pivotTableHealth(
-      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+  PivotTableHealthReport pivotTableHealth(ExcelWorkbook workbook, PivotTableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.pivotTableHealth(workbook, selection);
@@ -197,8 +197,8 @@ final class WorkbookAnalyzer {
     combined.addAll(
         conditionalFormattingHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(autofilterHealth(workbook, new ExcelSheetSelection.All()).findings());
-    combined.addAll(tableHealth(workbook, new ExcelTableSelection.All()).findings());
-    combined.addAll(pivotTableHealth(workbook, new ExcelPivotTableSelection.All()).findings());
+    combined.addAll(tableHealth(workbook, new TableSelector.All()).findings());
+    combined.addAll(pivotTableHealth(workbook, new PivotTableSelector.All()).findings());
     combined.addAll(
         hyperlinkHealth(workbook, workbookLocation, new ExcelSheetSelection.All()).findings());
     combined.addAll(namedRangeHealth(workbook, new ExcelNamedRangeSelection.All()).findings());

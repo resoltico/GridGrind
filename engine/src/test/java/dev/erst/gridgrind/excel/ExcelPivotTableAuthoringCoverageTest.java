@@ -6,8 +6,8 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -48,8 +48,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
       PivotTableReport.Supported replaced =
           assertInstanceOf(
               PivotTableReport.Supported.class,
-              controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst());
-      assertEquals(1, controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).size());
+              controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst());
+      assertEquals(1, controller.pivotTables(workbook, new PivotTableSelector.All()).size());
       assertEquals("E5", replaced.anchor().topLeftAddress().value());
       assertEquals(List.of("Stage"), fieldNames(replaced.rowLabels()));
       assertEquals(List.of("Owner"), fieldNames(replaced.reportFilters()));

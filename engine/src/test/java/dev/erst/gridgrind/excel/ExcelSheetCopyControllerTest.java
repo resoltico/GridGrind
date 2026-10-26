@@ -55,6 +55,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -655,7 +656,7 @@ class ExcelSheetCopyControllerTest {
               .formula2()
               .orElseThrow());
       TableEntryReport copiedTable =
-          tableController.tables(workbook, new ExcelTableSelection.All()).stream()
+          tableController.tables(workbook, new TableSelector.All()).stream()
               .filter(table -> "Replica".equals(table.sheetName().value()))
               .findFirst()
               .orElseThrow();
@@ -851,7 +852,7 @@ class ExcelSheetCopyControllerTest {
           ConditionalFormattingRuleReport.Top10Rule.class, copiedFormatting.rules().get(5));
 
       TableEntryReport copiedTable =
-          tableController.tables(workbook, new ExcelTableSelection.All()).stream()
+          tableController.tables(workbook, new TableSelector.All()).stream()
               .filter(table -> "Replica".equals(table.sheetName().value()))
               .findFirst()
               .orElseThrow();

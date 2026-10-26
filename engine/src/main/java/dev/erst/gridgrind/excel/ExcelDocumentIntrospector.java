@@ -8,8 +8,9 @@ import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
 import java.util.List;
 import java.util.Objects;
@@ -79,14 +80,14 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  List<TableEntryReport> tables(ExcelWorkbook workbook, ExcelTableSelection selection) {
+  List<TableEntryReport> tables(ExcelWorkbook workbook, TableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return tableController.tables(workbook, selection);
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
-  List<PivotTableReport> pivotTables(ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+  List<PivotTableReport> pivotTables(ExcelWorkbook workbook, PivotTableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return pivotTableController.pivotTables(workbook, selection);

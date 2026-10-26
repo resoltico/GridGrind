@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.ArrayList;
@@ -105,7 +106,7 @@ final class ExcelTableController {
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  List<TableEntryReport> tables(ExcelWorkbook workbook, ExcelTableSelection selection) {
+  List<TableEntryReport> tables(ExcelWorkbook workbook, TableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -117,9 +118,21 @@ final class ExcelTableController {
                         tableHandle.sheetName(), tableHandle.table()))
             .toList();
     return switch (selection) {
-      case ExcelTableSelection.All _ -> allTables;
-      case ExcelTableSelection.ByNames byNames ->
-          ExcelTableCatalogSupport.selectTablesByName(allTables, byNames.names());
+      case TableSelector.All _ -> allTables;
+      case TableSelector.ByNames byNames ->
+          ExcelTableCatalogSupport.selectTablesByName(
+              allTables,
+              byNames.names().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.TableName::value)
+                  .toList());
+      case TableSelector.ByName byName ->
+          ExcelTableCatalogSupport.selectTablesByName(allTables, List.of(byName.name().value()));
+      case TableSelector.ByNameOnSheet scoped ->
+          ExcelTableCatalogSupport.selectTablesByName(allTables, List.of(scoped.name().value()))
+              .stream()
+              .filter(
+                  table -> table.sheetName().value().equalsIgnoreCase(scoped.sheetName().value()))
+              .toList();
     };
   }
 
@@ -154,13 +167,12 @@ final class ExcelTableController {
   }
 
   /** Returns derived table-health findings for the selected tables. */
-  List<AnalysisFindingReport> tableHealthFindings(
-      ExcelWorkbook workbook, ExcelTableSelection selection) {
+  List<AnalysisFindingReport> tableHealthFindings(ExcelWorkbook workbook, TableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<TableEntryReport> selectedTables = tables(workbook, selection);
-    List<TableEntryReport> allTables = tables(workbook, new ExcelTableSelection.All());
+    List<TableEntryReport> allTables = tables(workbook, new TableSelector.All());
     List<AnalysisFindingReport> findings = new ArrayList<>();
     for (TableEntryReport table : selectedTables) {
       findings.addAll(ExcelTableAnalysisSupport.tableFindings(workbook, table));
@@ -177,7 +189,7 @@ final class ExcelTableController {
 
     XSSFSheet sheet = requiredSheet(workbook, sheetName);
     List<AnalysisFindingReport> findings = new ArrayList<>();
-    for (TableEntryReport table : tables(workbook, new ExcelTableSelection.All())) {
+    for (TableEntryReport table : tables(workbook, new TableSelector.All())) {
       if (!table.sheetName().value().equals(sheetName) || !table.behavior().hasAutofilter()) {
         continue;
       }

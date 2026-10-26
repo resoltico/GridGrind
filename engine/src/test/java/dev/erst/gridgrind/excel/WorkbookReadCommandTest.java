@@ -2,9 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -40,10 +41,9 @@ class WorkbookReadCommandTest {
     WorkbookReadCommand.GetAutofilters autofilters =
         new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget");
     WorkbookReadCommand.GetTables tables =
-        new WorkbookReadCommand.GetTables(new StepId("tables"), new ExcelTableSelection.All());
+        new WorkbookReadCommand.GetTables(new StepId("tables"), new TableSelector.All());
     WorkbookReadCommand.GetPivotTables pivotTables =
-        new WorkbookReadCommand.GetPivotTables(
-            new StepId("pivots"), new ExcelPivotTableSelection.All());
+        new WorkbookReadCommand.GetPivotTables(new StepId("pivots"), new PivotTableSelector.All());
     WorkbookReadCommand.GetFormulaSurface formulaSurface =
         new WorkbookReadCommand.GetFormulaSurface(
             new StepId("formula"), new ExcelSheetSelection.Selected(List.of("Budget")));
@@ -66,11 +66,15 @@ class WorkbookReadCommandTest {
             new StepId("autofilterHealth"), new ExcelSheetSelection.All());
     WorkbookReadCommand.AnalyzeTableHealth tableHealth =
         new WorkbookReadCommand.AnalyzeTableHealth(
-            new StepId("tableHealth"), new ExcelTableSelection.ByNames(List.of("BudgetTable")));
+            new StepId("tableHealth"),
+            new TableSelector.ByNames(
+                List.of("BudgetTable").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.TableName::new)
+                    .toList()));
     WorkbookReadCommand.AnalyzePivotTableHealth pivotTableHealth =
         new WorkbookReadCommand.AnalyzePivotTableHealth(
             new StepId("pivotTableHealth"),
-            new ExcelPivotTableSelection.ByNames(List.of("Budget Pivot")));
+            new PivotTableSelector.ByNames(List.of("Budget Pivot")));
     WorkbookReadCommand.AnalyzeHyperlinkHealth hyperlinkHealth =
         new WorkbookReadCommand.AnalyzeHyperlinkHealth(
             new StepId("hyperlinkHealth"), new ExcelSheetSelection.All());
@@ -91,8 +95,8 @@ class WorkbookReadCommandTest {
     assertEquals("Budget", layout.sheetName());
     assertEquals("Budget", dataValidations.sheetName());
     assertEquals("Budget", autofilters.sheetName());
-    assertInstanceOf(ExcelTableSelection.All.class, tables.selection());
-    assertInstanceOf(ExcelPivotTableSelection.All.class, pivotTables.selection());
+    assertInstanceOf(TableSelector.All.class, tables.selection());
+    assertInstanceOf(PivotTableSelector.All.class, pivotTables.selection());
     assertInstanceOf(ExcelSheetSelection.Selected.class, formulaSurface.selection());
     assertEquals(3, schema.window().rowCount());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeSurface.selection());
@@ -100,8 +104,8 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelSheetSelection.All.class, dataValidationHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, conditionalFormattingHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, autofilterHealth.selection());
-    assertInstanceOf(ExcelTableSelection.ByNames.class, tableHealth.selection());
-    assertInstanceOf(ExcelPivotTableSelection.ByNames.class, pivotTableHealth.selection());
+    assertInstanceOf(TableSelector.ByNames.class, tableHealth.selection());
+    assertInstanceOf(PivotTableSelector.ByNames.class, pivotTableHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, hyperlinkHealth.selection());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeHealth.selection());
     assertEquals("workbookFindings", workbookFindings.stepId().value());

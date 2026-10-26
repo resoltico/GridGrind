@@ -7,11 +7,12 @@ import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableHealthReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,8 +98,7 @@ final class ExcelDocumentAnalyzer {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<TableEntryReport> allTables =
-        tableController.tables(workbook, new ExcelTableSelection.All());
+    List<TableEntryReport> allTables = tableController.tables(workbook, new TableSelector.All());
     int checkedAutofilterCount = 0;
     List<AnalysisFindingReport> findings = new ArrayList<>();
     for (String sheetName : selectSheets(workbook, selection)) {
@@ -117,7 +117,7 @@ final class ExcelDocumentAnalyzer {
   }
 
   /** Returns table-health findings for the selected workbook-global tables. */
-  TableHealthReport tableHealth(ExcelWorkbook workbook, ExcelTableSelection selection) {
+  TableHealthReport tableHealth(ExcelWorkbook workbook, TableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -128,8 +128,7 @@ final class ExcelDocumentAnalyzer {
   }
 
   /** Returns pivot-table-health findings for the selected workbook-global pivot tables. */
-  PivotTableHealthReport pivotTableHealth(
-      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+  PivotTableHealthReport pivotTableHealth(ExcelWorkbook workbook, PivotTableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 

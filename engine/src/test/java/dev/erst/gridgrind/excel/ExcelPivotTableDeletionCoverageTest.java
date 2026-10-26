@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
@@ -89,7 +89,7 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
       PivotTableReport.Supported snapshot =
           assertInstanceOf(
               PivotTableReport.Supported.class,
-              controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst());
+              controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst());
       assertEquals(List.of(), fieldNames(snapshot.rowLabels()));
     }
 

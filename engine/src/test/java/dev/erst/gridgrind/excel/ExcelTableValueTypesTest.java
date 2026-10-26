@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
@@ -148,10 +149,18 @@ class ExcelTableValueTypesTest {
   void tableStyleAndSelectionValidateNamesAndDuplicates() {
     TableStyleSpec.Named style =
         new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false);
-    ExcelTableSelection.ByNames selection = new ExcelTableSelection.ByNames(List.of("Queue"));
+    TableSelector.ByNames selection =
+        new TableSelector.ByNames(
+            List.of("Queue").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.TableName::new)
+                .toList());
 
     assertEquals("TableStyleMedium2", style.name());
-    assertEquals(List.of("Queue"), selection.names());
+    assertEquals(
+        List.of("Queue"),
+        selection.names().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.TableName::value)
+            .toList());
 
     assertThrows(
         IllegalArgumentException.class,
@@ -159,11 +168,20 @@ class ExcelTableValueTypesTest {
     assertThrows(
         NullPointerException.class,
         () -> new TableStyleSpec.Named(null, false, false, true, false));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelTableSelection.ByNames(List.of()));
+    assertThrows(IllegalArgumentException.class, () -> new TableSelector.ByNames(List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelTableSelection.ByNames(List.of("Queue", "queue")));
+        () ->
+            new TableSelector.ByNames(
+                List.of("Queue", "queue").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.TableName::new)
+                    .toList()));
     assertThrows(
-        NullPointerException.class, () -> new ExcelTableSelection.ByNames(List.of("Queue", null)));
+        NullPointerException.class,
+        () ->
+            new TableSelector.ByNames(
+                List.of("Queue", null).stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.TableName::new)
+                    .toList()));
   }
 }

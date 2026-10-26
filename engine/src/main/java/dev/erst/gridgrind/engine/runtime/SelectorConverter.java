@@ -18,8 +18,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeSelection;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelector;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSheetSelection;
-import dev.erst.gridgrind.excel.ExcelTableSelection;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 
 /** Central conversion seam between contract selectors and workbook-core selector primitives. */
@@ -100,39 +98,6 @@ final class SelectorConverter {
       case NamedRangeSelector.SheetScope sheetScope ->
           new ExcelNamedRangeSelector.SheetScope(
               sheetScope.name().value(), sheetScope.sheetName().value());
-    };
-  }
-
-  static ExcelTableSelection toExcelTableSelection(TableSelector selector) {
-    return switch (selector) {
-      case TableSelector.All _ -> new ExcelTableSelection.All();
-      case TableSelector.ByName byName ->
-          new ExcelTableSelection.ByNames(
-              List.of(byName.name()).stream()
-                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
-                  .toList());
-      case TableSelector.ByNames byNames ->
-          new ExcelTableSelection.ByNames(
-              byNames.names().stream()
-                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
-                  .toList());
-      case TableSelector.ByNameOnSheet byNameOnSheet ->
-          new ExcelTableSelection.ByNames(
-              List.of(byNameOnSheet.name()).stream()
-                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
-                  .toList());
-    };
-  }
-
-  static ExcelPivotTableSelection toExcelPivotTableSelection(PivotTableSelector selector) {
-    return switch (selector) {
-      case PivotTableSelector.All _ -> new ExcelPivotTableSelection.All();
-      case PivotTableSelector.ByName byName ->
-          new ExcelPivotTableSelection.ByNames(List.of(byName.name()));
-      case PivotTableSelector.ByNames byNames ->
-          new ExcelPivotTableSelection.ByNames(byNames.names());
-      case PivotTableSelector.ByNameOnSheet byNameOnSheet ->
-          new ExcelPivotTableSelection.ByNames(List.of(byNameOnSheet.name()));
     };
   }
 

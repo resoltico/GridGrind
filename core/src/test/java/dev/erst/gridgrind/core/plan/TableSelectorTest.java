@@ -1,25 +1,13 @@
-package dev.erst.gridgrind.engine.runtime;
+package dev.erst.gridgrind.core.plan;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelTableSelection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Tests for selector-facing table invariants and conversion. */
-class TableSelectionTest {
-  @Test
-  void convertsAllAndByNamesSelectors() {
-    assertEquals(
-        new ExcelTableSelection.All(),
-        SelectorConverter.toExcelTableSelection(new TableSelector.All()));
-    assertEquals(
-        new ExcelTableSelection.ByNames(List.of("BudgetTable")),
-        SelectorConverter.toExcelTableSelection(
-            new TableSelector.ByNames(List.of(new TableName("BudgetTable")))));
-  }
+/** Canonical table-name selection invariants. */
+class TableSelectorTest {
 
   @Test
   void validatesByNamesSelection() {

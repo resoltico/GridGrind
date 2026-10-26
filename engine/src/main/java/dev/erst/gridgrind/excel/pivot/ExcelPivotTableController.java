@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel.pivot;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -117,8 +118,7 @@ public final class ExcelPivotTableController {
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global name or all pivots. */
-  public List<PivotTableReport> pivotTables(
-      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+  public List<PivotTableReport> pivotTables(ExcelWorkbook workbook, PivotTableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -132,7 +132,7 @@ public final class ExcelPivotTableController {
 
   /** Returns integrity findings for the selected pivot-table set. */
   public List<AnalysisFindingReport> pivotTableHealthFindings(
-      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+      ExcelWorkbook workbook, PivotTableSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
@@ -197,12 +197,16 @@ public final class ExcelPivotTableController {
     pivotTable.getCTPivotTableDefinition().setCacheId(normalizedId);
   }
 
-  public List<PivotHandle> selectHandles(
-      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+  public List<PivotHandle> selectHandles(ExcelWorkbook workbook, PivotTableSelector selection) {
     List<PivotHandle> all = allPivotTables(workbook);
     return switch (selection) {
-      case ExcelPivotTableSelection.All ignored -> all;
-      case ExcelPivotTableSelection.ByNames byNames -> selectHandlesByName(all, byNames.names());
+      case PivotTableSelector.All ignored -> all;
+      case PivotTableSelector.ByNames byNames -> selectHandlesByName(all, byNames.names());
+      case PivotTableSelector.ByName byName -> selectHandlesByName(all, List.of(byName.name()));
+      case PivotTableSelector.ByNameOnSheet scoped ->
+          selectHandlesByName(all, List.of(scoped.name())).stream()
+              .filter(handle -> handle.sheetName().equalsIgnoreCase(scoped.sheetName().value()))
+              .toList();
     };
   }
 

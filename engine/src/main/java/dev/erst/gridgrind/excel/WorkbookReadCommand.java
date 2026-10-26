@@ -2,10 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelAddressLists;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import java.util.Objects;
 
@@ -280,7 +281,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  record GetTables(StepId stepId, ExcelTableSelection selection) implements Introspection {
+  record GetTables(StepId stepId, TableSelector selection) implements Introspection {
     public GetTables {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -289,8 +290,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
-  record GetPivotTables(StepId stepId, ExcelPivotTableSelection selection)
-      implements Introspection {
+  record GetPivotTables(StepId stepId, PivotTableSelector selection) implements Introspection {
     public GetPivotTables {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -369,7 +369,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Reports table findings such as overlaps, broken ranges, or invalid headers. */
-  record AnalyzeTableHealth(StepId stepId, ExcelTableSelection selection) implements Analysis {
+  record AnalyzeTableHealth(StepId stepId, TableSelector selection) implements Analysis {
     public AnalyzeTableHealth {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -378,8 +378,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Reports pivot-table findings such as broken caches, names, and sources. */
-  record AnalyzePivotTableHealth(StepId stepId, ExcelPivotTableSelection selection)
-      implements Analysis {
+  record AnalyzePivotTableHealth(StepId stepId, PivotTableSelector selection) implements Analysis {
     public AnalyzePivotTableHealth {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");

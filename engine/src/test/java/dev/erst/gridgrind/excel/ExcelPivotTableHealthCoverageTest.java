@@ -4,11 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
@@ -55,14 +55,14 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       secondPivot.getCTPivotTableDefinition().setName("Alpha Pivot");
 
       List<AnalysisFindingCode> duplicateCodes =
-          controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(duplicateCodes.contains(AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME));
 
       firstPivot.getCTPivotTableDefinition().setName(null);
       PivotTableReport syntheticNameSnapshot =
-          controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst();
+          controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst();
       assertTrue(syntheticNameSnapshot.name().startsWith("_GG_PIVOT_"));
 
       Object firstHandle = allPivotHandles(workbook).getFirst();
@@ -100,7 +100,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
 
       assertTrue(PoiRelationRemoval.defaultRemover().test(cacheDefinition, cacheRecords));
       List<AnalysisFindingCode> codes =
-          controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_RECORDS));
@@ -117,7 +117,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
           workbook.xssfWorkbook().getRelationId(cacheDefinition));
 
       List<AnalysisFindingCode> codes =
-          controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_WORKBOOK_CACHE));
@@ -170,7 +170,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       PivotTableReport.Unsupported snapshot =
           assertInstanceOf(
               PivotTableReport.Unsupported.class,
-              controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst());
+              controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst());
       assertTrue(snapshot.detail().contains("does not contain any data fields"));
     }
 
@@ -181,10 +181,10 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       PivotTableReport.Unsupported snapshot =
           assertInstanceOf(
               PivotTableReport.Unsupported.class,
-              controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst());
+              controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst());
       assertTrue(snapshot.detail().contains("location range"));
       List<AnalysisFindingCode> codes =
-          controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL));
@@ -211,7 +211,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       assertTrue(failure.getMessage().contains("worksheetSource"));
 
       List<AnalysisFindingCode> codes =
-          controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
               .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE));

@@ -80,7 +80,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -120,8 +119,7 @@ final class WorkbookSampleFixtures {
         new WorkbookReadCommand.GetDrawingObjects(new StepId("drawings"), "Budget"),
         new WorkbookReadCommand.GetCharts(
             new StepId("charts"), new ExcelChartSelection.AllOnSheet("Budget")),
-        new WorkbookReadCommand.GetPivotTables(
-            new StepId("pivots"), new ExcelPivotTableSelection.All()),
+        new WorkbookReadCommand.GetPivotTables(new StepId("pivots"), new PivotTableSelector.All()),
         new WorkbookReadCommand.GetDrawingObjectPayload(
             new StepId("payload"), "Budget", "Object 1"),
         new WorkbookReadCommand.GetSheetLayout(new StepId("layout"), "Budget"),
@@ -133,7 +131,7 @@ final class WorkbookSampleFixtures {
             "Budget",
             new ExcelRangeSelection.Selected(List.of("A1:B2"))),
         new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget"),
-        new WorkbookReadCommand.GetTables(new StepId("tables"), new ExcelTableSelection.All()),
+        new WorkbookReadCommand.GetTables(new StepId("tables"), new TableSelector.All()),
         new WorkbookReadCommand.GetArrayFormulas(
             new StepId("arrayFormulas"), new ExcelSheetSelection.Selected(List.of("Budget"))));
   }

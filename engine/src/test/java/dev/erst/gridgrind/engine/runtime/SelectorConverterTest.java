@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -68,40 +68,6 @@ class SelectorConverterTest {
                     new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                     new NamedRangeSelector.SheetScope(
                         new DefinedName("LocalItem"), new SheetName("Budget"))))));
-
-    assertEquals(
-        new ExcelTableSelection.All(),
-        SelectorConverter.toExcelTableSelection(new TableSelector.All()));
-    assertEquals(
-        new ExcelTableSelection.ByNames(List.of("BudgetTable")),
-        SelectorConverter.toExcelTableSelection(
-            new TableSelector.ByName(new TableName("BudgetTable"))));
-    assertEquals(
-        new ExcelTableSelection.ByNames(List.of("BudgetTable", "OpsTable")),
-        SelectorConverter.toExcelTableSelection(
-            new TableSelector.ByNames(
-                List.of(new TableName("BudgetTable"), new TableName("OpsTable")))));
-    assertEquals(
-        new ExcelTableSelection.ByNames(List.of("BudgetTable")),
-        SelectorConverter.toExcelTableSelection(
-            new TableSelector.ByNameOnSheet(
-                new TableName("BudgetTable"), new SheetName("Budget"))));
-
-    assertEquals(
-        new ExcelPivotTableSelection.All(),
-        SelectorConverter.toExcelPivotTableSelection(new PivotTableSelector.All()));
-    assertEquals(
-        new ExcelPivotTableSelection.ByNames(List.of("Sales Pivot 2026")),
-        SelectorConverter.toExcelPivotTableSelection(
-            new PivotTableSelector.ByName("Sales Pivot 2026")));
-    assertEquals(
-        new ExcelPivotTableSelection.ByNames(List.of("Sales Pivot 2026", "Ops Pivot")),
-        SelectorConverter.toExcelPivotTableSelection(
-            new PivotTableSelector.ByNames(List.of("Sales Pivot 2026", "Ops Pivot"))));
-    assertEquals(
-        new ExcelPivotTableSelection.ByNames(List.of("Sales Pivot 2026")),
-        SelectorConverter.toExcelPivotTableSelection(
-            new PivotTableSelector.ByNameOnSheet("Sales Pivot 2026", new SheetName("Report"))));
   }
 
   @Test

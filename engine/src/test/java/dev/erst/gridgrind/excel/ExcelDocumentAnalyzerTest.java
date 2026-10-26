@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
@@ -104,7 +105,12 @@ class ExcelDocumentAnalyzerTest {
       AutofilterHealthReport autofilterHealth =
           analyzer.autofilterHealth(workbook, new ExcelSheetSelection.Selected(List.of("Archive")));
       TableHealthReport tableHealth =
-          analyzer.tableHealth(workbook, new ExcelTableSelection.ByNames(List.of("BudgetQueue")));
+          analyzer.tableHealth(
+              workbook,
+              new TableSelector.ByNames(
+                  List.of("BudgetQueue").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.TableName::new)
+                      .toList()));
 
       assertEquals(1, autofilterHealth.checkedAutofilterCount());
       assertEquals(1, autofilterHealth.summary().warningCount());

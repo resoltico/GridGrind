@@ -221,9 +221,7 @@ final class SemanticSelectorResolver {
             workbookEngine
                 .read(
                     workbook,
-                    new WorkbookReadCommand.GetTables(
-                        new StepId(RESOLUTION_STEP_ID),
-                        SelectorConverter.toExcelTableSelection(selector)))
+                    new WorkbookReadCommand.GetTables(new StepId(RESOLUTION_STEP_ID), selector))
                 .getFirst();
     List<TableEntryReport> tables = result.tables();
     if (tables.isEmpty()) {
@@ -238,14 +236,6 @@ final class SemanticSelectorResolver {
               + byNameOnSheet.sheetName());
     }
     TableEntryReport table = tables.getFirst();
-    if (selector instanceof TableSelector.ByNameOnSheet byNameOnSheet
-        && !table.sheetName().value().equals(byNameOnSheet.sheetName().value())) {
-      throw new IllegalArgumentException(
-          "table not found on expected sheet: "
-              + byNameOnSheet.name()
-              + "@"
-              + byNameOnSheet.sheetName());
-    }
     RangeBounds bounds = RangeBounds.parse(table.range().value());
     return new ResolvedTable(
         table,

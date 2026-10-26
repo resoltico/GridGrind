@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -144,7 +145,7 @@ class ExcelTableAnalysisSupportTest {
       XSSFSheet poiSheet = workbook.sheet("Ops").xssfSheet();
       XSSFTable healthyTable = poiSheet.getTables().getFirst();
       TableEntryReport healthySnapshot =
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+          controller.tables(workbook, new TableSelector.All()).getFirst();
       List<AnalysisFindingReport> healthyFindings =
           ExcelTableAnalysisSupport.tableAutofilterFindings(poiSheet, healthySnapshot);
       assertEquals(List.of(), healthyFindings, healthyFindings.toString());

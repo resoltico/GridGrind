@@ -12,13 +12,13 @@ import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
-import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,7 +236,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
                 .read(
                     workbook,
                     new WorkbookReadCommand.GetPivotTables(
-                        new StepId("pivots"), new ExcelPivotTableSelection.All()))
+                        new StepId("pivots"), new PivotTableSelector.All()))
                 .getFirst();
     return List.copyOf(result.pivotTables());
   }
@@ -249,7 +249,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
                 .read(
                     workbook,
                     new WorkbookReadCommand.GetTables(
-                        new StepId("tables"), new ExcelTableSelection.All()))
+                        new StepId("tables"), new TableSelector.All()))
                 .getFirst();
     return List.copyOf(result.tables());
   }

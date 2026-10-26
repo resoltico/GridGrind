@@ -2664,3 +2664,28 @@ definitions0, snapshots2(runtime) unchanged. Only the historical changelog archi
 read converter; current Markdown guidance has no such reference. Baseline diff empty. WP-40 remains
 open for ResolvedPlan and elimination of the query/selection translation seam (the last625 converter
 lines), before feature-package/backend work.
+
+## WP-40 canonical table/pivot selectors and preserved sheet constraints
+
+Deleted ExcelTableSelection/ExcelPivotTableSelection and their converter methods. Native table/pivot
+inspection and health APIs now consume core TableSelector/PivotTableSelector directly; single-name,
+ordered-name-list, ALL and expected-sheet forms retain their full contract. Removed retired conversion
+assertions and moved the remaining table-name selector invariant test to core.
+
+Challenge pass found a real pre-existing contradiction: core ByNameOnSheet documentation explicitly
+asserts the owning sheet, but the old converter discarded it into a name-only selection. Independent
+real-workbook negative controls failed for both table and pivot queries: a wrong-sheet request returned
+the globally named object on another sheet. Logs and pivot XML retained externally. Native selectors
+now enforce the expected sheet. Regressions cover wrong/matching scopes, table/pivot health checked
+counts, case-insensitive lookup and semantic table-cell coordinates. Removed the now-redundant
+case-sensitive post-check from semantic table resolution; the native selector is the single owner of
+that constraint. This corrects implementation against the existing contract, without changing a
+requirement or adding a compatibility path.
+
+Main compilation passes9s. Focused core/engine/parity/PMD checks found only a String-vs-TableName
+constructor-fixture assertion; corrected its scalar comparison and verified the focused classes12s.
+Nested check/all94 retained seeds pass20s. Final ./gradlew check passes3m28s: core385, JSON353,
+engine1394 plus14 parity, CLI588, zero failures/errors/skips; all143 golden cases unchanged. No active
+campaigns. Inventories: converters625→586, main113122→113018, tests150937→151099; Support194,
+blank286, definitions0, snapshots2(runtime) unchanged. Baseline diff empty. WP-40 remains open for
+ResolvedPlan and remaining query/sheet/chart/name/cell/range selection consolidation.

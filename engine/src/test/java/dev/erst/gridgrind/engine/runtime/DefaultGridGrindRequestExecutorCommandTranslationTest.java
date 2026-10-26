@@ -173,7 +173,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         cast(WorkbookReadCommand.GetConditionalFormatting.class, conditionalFormatting)
             .selection());
     assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelTableSelection.ByNames.class,
+        dev.erst.gridgrind.core.plan.TableSelector.ByNames.class,
         cast(WorkbookReadCommand.GetTables.class, tables).selection());
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,

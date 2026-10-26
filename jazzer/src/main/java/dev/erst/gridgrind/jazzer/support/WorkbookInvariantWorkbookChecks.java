@@ -66,7 +66,7 @@ final class WorkbookInvariantWorkbookChecks {
                     workbook,
                     new WorkbookReadCommand.GetPivotTables(
                         new StepId("pivot-shape"),
-                        new dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection.All()))
+                        new dev.erst.gridgrind.core.plan.PivotTableSelector.All()))
                 .getFirst())
         .pivotTables()
         .forEach(WorkbookInvariantWorkbookChecks::requireEnginePivotTableShape);
