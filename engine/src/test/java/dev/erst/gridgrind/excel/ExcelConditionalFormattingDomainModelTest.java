@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -118,13 +120,21 @@ class ExcelConditionalFormattingDomainModelTest {
     BorderSidePatch side =
         new BorderSidePatch(
             Optional.of(ExcelBorderStyle.THIN), Optional.of(ColorSpec.rgb(new RgbHex("#102030"))));
-    ExcelDifferentialBorder border = new ExcelDifferentialBorder(side, null, null, null, null);
-    ExcelDifferentialStyle style =
-        new ExcelDifferentialStyle(
+    DifferentialBorderPatch border =
+        new DifferentialBorderPatch(
+            Optional.of(side),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    DifferentialStylePatch style =
+        new DifferentialStylePatch(
             Optional.of("0.00"),
             Optional.of(true),
             Optional.of(false),
-            Optional.ofNullable(FontHeightReport.fromPoints(BigDecimal.valueOf(11))),
+            Optional.ofNullable(
+                new dev.erst.gridgrind.core.model.style.FontHeightSpec.Points(
+                    BigDecimal.valueOf(11))),
             Optional.of(new ColorSpec.Theme(3, Optional.of(0.25d))),
             Optional.of(true),
             Optional.of(false),
@@ -154,11 +164,24 @@ class ExcelConditionalFormattingDomainModelTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelDifferentialBorder(null, null, null, null, null));
-    assertDoesNotThrow(() -> new ExcelDifferentialBorder(null, null, null, null, side));
+        () ->
+            new DifferentialBorderPatch(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertDoesNotThrow(
         () ->
-            new ExcelDifferentialStyle(
+            new DifferentialBorderPatch(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(side)));
+    assertDoesNotThrow(
+        () ->
+            new DifferentialStylePatch(
                 Optional.empty(),
                 Optional.of(true),
                 Optional.empty(),
@@ -170,7 +193,7 @@ class ExcelConditionalFormattingDomainModelTest {
                 Optional.empty()));
     assertDoesNotThrow(
         () ->
-            new ExcelDifferentialStyle(
+            new DifferentialStylePatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -183,7 +206,7 @@ class ExcelConditionalFormattingDomainModelTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDifferentialStyle(
+            new DifferentialStylePatch(
                 Optional.of(" "),
                 Optional.empty(),
                 Optional.empty(),
@@ -196,7 +219,7 @@ class ExcelConditionalFormattingDomainModelTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDifferentialStyle(
+            new DifferentialStylePatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -257,7 +280,7 @@ class ExcelConditionalFormattingDomainModelTest {
             "=A1>0",
             true,
             Optional.of(
-                new ExcelDifferentialStyle(
+                new DifferentialStylePatch(
                     Optional.of("0.00"),
                     Optional.empty(),
                     Optional.empty(),
@@ -322,8 +345,8 @@ class ExcelConditionalFormattingDomainModelTest {
 
   @Test
   void enforcesAuthoredAndLoadedRuleInvariants() {
-    ExcelDifferentialStyle style =
-        new ExcelDifferentialStyle(
+    DifferentialStylePatch style =
+        new DifferentialStylePatch(
             Optional.of("0.00"),
             Optional.empty(),
             Optional.empty(),

@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
@@ -15,8 +14,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
-import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -77,32 +74,34 @@ class ConditionalFormattingInputTest {
                     "A1>0",
                     true,
                     Optional.of(
-                        new ExcelDifferentialStyle(
+                        new DifferentialStylePatch(
                             Optional.of("0.00"),
                             Optional.of(true),
                             Optional.of(false),
                             Optional.ofNullable(
-                                FontHeightReport.fromPoints(BigDecimal.valueOf(11))),
+                                new dev.erst.gridgrind.core.model.style.FontHeightSpec.Points(
+                                    BigDecimal.valueOf(11))),
                             Optional.of(ColorSpec.rgb(new RgbHex("#102030"))),
                             Optional.of(true),
                             Optional.of(true),
                             Optional.of(ColorSpec.rgb(new RgbHex("#E0F0AA"))),
                             Optional.ofNullable(
-                                new ExcelDifferentialBorder(
-                                    new BorderSidePatch(
-                                        Optional.of(ExcelBorderStyle.THIN),
-                                        Optional.of(ColorSpec.rgb(new RgbHex("#405060")))),
-                                    null,
-                                    null,
-                                    null,
-                                    null))))),
+                                new DifferentialBorderPatch(
+                                    Optional.of(
+                                        new BorderSidePatch(
+                                            Optional.of(ExcelBorderStyle.THIN),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#405060"))))),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty()))))),
                 new ExcelConditionalFormattingRule.CellValueRule(
                     ExcelComparisonOperator.BETWEEN,
                     "1",
                     Optional.of("9"),
                     false,
                     Optional.of(
-                        new ExcelDifferentialStyle(
+                        new DifferentialStylePatch(
                             Optional.empty(),
                             Optional.empty(),
                             Optional.of(true),
@@ -235,42 +234,6 @@ class ConditionalFormattingInputTest {
 
     assertTrue(missingUpperBoundFailure.getMessage().contains("formula2"));
     assertTrue(unexpectedUpperBoundFailure.getMessage().contains("formula2"));
-  }
-
-  @Test
-  void convertsDifferentialBordersWithExplicitSides() {
-    DifferentialBorderPatch border =
-        new DifferentialBorderPatch(
-            Optional.of(
-                new BorderSidePatch(ExcelBorderStyle.THIN, ColorSpec.rgb(new RgbHex("#102030")))),
-            Optional.of(
-                new BorderSidePatch(ExcelBorderStyle.DASHED, ColorSpec.rgb(new RgbHex("#203040")))),
-            Optional.of(
-                new BorderSidePatch(ExcelBorderStyle.DOUBLE, ColorSpec.rgb(new RgbHex("#304050")))),
-            Optional.of(
-                new BorderSidePatch(ExcelBorderStyle.HAIR, ColorSpec.rgb(new RgbHex("#405060")))),
-            Optional.of(
-                new BorderSidePatch(
-                    ExcelBorderStyle.DOTTED, ColorSpec.rgb(new RgbHex("#506070")))));
-
-    assertEquals(
-        new ExcelDifferentialBorder(
-            new BorderSidePatch(
-                Optional.of(ExcelBorderStyle.THIN),
-                Optional.of(ColorSpec.rgb(new RgbHex("#102030")))),
-            new BorderSidePatch(
-                Optional.of(ExcelBorderStyle.DASHED),
-                Optional.of(ColorSpec.rgb(new RgbHex("#203040")))),
-            new BorderSidePatch(
-                Optional.of(ExcelBorderStyle.DOUBLE),
-                Optional.of(ColorSpec.rgb(new RgbHex("#304050")))),
-            new BorderSidePatch(
-                Optional.of(ExcelBorderStyle.HAIR),
-                Optional.of(ColorSpec.rgb(new RgbHex("#405060")))),
-            new BorderSidePatch(
-                Optional.of(ExcelBorderStyle.DOTTED),
-                Optional.of(ColorSpec.rgb(new RgbHex("#506070"))))),
-        WorkbookCommandStructuredInputConverter.toExcelDifferentialBorder(border).orElseThrow());
   }
 
   @Test

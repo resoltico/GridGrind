@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import java.util.List;
@@ -17,7 +18,7 @@ public record ExcelDifferentialStyleSnapshot(
     @Nullable Boolean underline,
     @Nullable Boolean strikeout,
     @Nullable ColorSpec fillColor,
-    @Nullable ExcelDifferentialBorder border,
+    @Nullable DifferentialBorderPatch border,
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
   public ExcelDifferentialStyleSnapshot {
     if (numberFormat != null && numberFormat.isBlank()) {

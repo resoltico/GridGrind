@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -197,7 +198,7 @@ final class ExcelSheetCopyController {
   }
 
   /** Converts one supported differential style into its copyable authoring form. */
-  static Optional<ExcelDifferentialStyle> copyableStyle(
+  static Optional<DifferentialStylePatch> copyableStyle(
       ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
     return ExcelSheetCopySupport.copyableStyle(style, sourceSheetName);
   }

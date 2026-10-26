@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -58,7 +59,7 @@ class WorkbookAnalyzerTest {
                           "B2>0",
                           false,
                           Optional.of(
-                              new ExcelDifferentialStyle(
+                              new DifferentialStylePatch(
                                   Optional.of("0.00"),
                                   Optional.empty(),
                                   Optional.empty(),

@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
@@ -403,7 +404,7 @@ class ExcelWorkbookTest {
                           "B2>0",
                           true,
                           Optional.of(
-                              new ExcelDifferentialStyle(
+                              new DifferentialStylePatch(
                                   Optional.of("0.00"),
                                   Optional.of(true),
                                   Optional.empty(),

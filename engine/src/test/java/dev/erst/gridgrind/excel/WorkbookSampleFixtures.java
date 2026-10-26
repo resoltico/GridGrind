@@ -26,6 +26,7 @@ import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
@@ -249,7 +250,7 @@ final class WorkbookSampleFixtures {
                         "A2>0",
                         true,
                         Optional.of(
-                            new ExcelDifferentialStyle(
+                            new DifferentialStylePatch(
                                 Optional.of("0.00"),
                                 Optional.empty(),
                                 Optional.empty(),

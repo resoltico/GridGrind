@@ -2,7 +2,6 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
@@ -35,7 +34,6 @@ class ExecutorConverterDelegationCoverageTest {
             .getFirst()
             .text());
     assertEquals("Bold", WorkbookCommandCellValueSpecConverter.toResolvedRichTextRun(run).text());
-    assertTrue(WorkbookCommandStructuredInputConverter.toExcelDifferentialStyle(null).isEmpty());
   }
 
   @Test

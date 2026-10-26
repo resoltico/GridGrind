@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
@@ -131,7 +132,7 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
         .anyMatch(Boolean.TRUE::equals);
   }
 
-  static @Nullable ExcelDifferentialBorder borderValue(
+  static @Nullable DifferentialBorderPatch borderValue(
       @Nullable BorderSidePatch top,
       @Nullable BorderSidePatch right,
       @Nullable BorderSidePatch bottom,
@@ -306,7 +307,7 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
     return ExcelConditionalFormattingColorSupport.optionalColor(patternFill.getFgColor());
   }
 
-  private static Optional<ExcelDifferentialBorder> optionalBorderValue(
+  private static Optional<DifferentialBorderPatch> optionalBorderValue(
       @Nullable BorderSidePatch top,
       @Nullable BorderSidePatch right,
       @Nullable BorderSidePatch bottom,
@@ -314,7 +315,13 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
     if (top == null && right == null && bottom == null && left == null) {
       return Optional.empty();
     }
-    return Optional.of(new ExcelDifferentialBorder(null, top, right, bottom, left));
+    return Optional.of(
+        new DifferentialBorderPatch(
+            Optional.empty(),
+            Optional.ofNullable(top),
+            Optional.ofNullable(right),
+            Optional.ofNullable(bottom),
+            Optional.ofNullable(left)));
   }
 
   private static Optional<BorderSidePatch> optionalSnapshotBorderSide(@Nullable CTBorderPr side) {

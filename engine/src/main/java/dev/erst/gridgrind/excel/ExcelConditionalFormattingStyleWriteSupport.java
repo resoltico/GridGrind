@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import java.util.Objects;
 import org.apache.poi.xssf.model.StylesTable;
 import org.jspecify.annotations.Nullable;
@@ -22,7 +24,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STUnderlineValues;
 final class ExcelConditionalFormattingStyleWriteSupport {
   private ExcelConditionalFormattingStyleWriteSupport() {}
 
-  static void applyStyle(StylesTable stylesTable, CTDxf dxf, ExcelDifferentialStyle style) {
+  static void applyStyle(StylesTable stylesTable, CTDxf dxf, DifferentialStylePatch style) {
     applyNumberFormat(stylesTable, dxf, style.numberFormat().orElse(null));
     applyFont(dxf, style);
     applyFill(dxf, style.fillColor().orElse(null));
@@ -40,7 +42,7 @@ final class ExcelConditionalFormattingStyleWriteSupport {
     numFmt.setFormatCode(numberFormat);
   }
 
-  private static void applyFont(CTDxf dxf, ExcelDifferentialStyle style) {
+  private static void applyFont(CTDxf dxf, DifferentialStylePatch style) {
     if (java.util.stream.Stream.of(
             style.bold().orElse(null),
             style.italic().orElse(null),
@@ -81,15 +83,21 @@ final class ExcelConditionalFormattingStyleWriteSupport {
     ExcelConditionalFormattingColorSupport.setColor(patternFill.addNewFgColor(), fillColor);
   }
 
-  private static void applyBorder(CTDxf dxf, @Nullable ExcelDifferentialBorder border) {
+  private static void applyBorder(CTDxf dxf, @Nullable DifferentialBorderPatch border) {
     if (border == null) {
       return;
     }
     CTBorder ctBorder = dxf.addNewBorder();
-    applyBorderSide(ctBorder::addNewTop, resolvedSide(border.all(), border.top()));
-    applyBorderSide(ctBorder::addNewRight, resolvedSide(border.all(), border.right()));
-    applyBorderSide(ctBorder::addNewBottom, resolvedSide(border.all(), border.bottom()));
-    applyBorderSide(ctBorder::addNewLeft, resolvedSide(border.all(), border.left()));
+    applyBorderSide(
+        ctBorder::addNewTop, resolvedSide(border.all().orElse(null), border.top().orElse(null)));
+    applyBorderSide(
+        ctBorder::addNewRight,
+        resolvedSide(border.all().orElse(null), border.right().orElse(null)));
+    applyBorderSide(
+        ctBorder::addNewBottom,
+        resolvedSide(border.all().orElse(null), border.bottom().orElse(null)));
+    applyBorderSide(
+        ctBorder::addNewLeft, resolvedSide(border.all().orElse(null), border.left().orElse(null)));
   }
 
   private static void applyBorderSide(

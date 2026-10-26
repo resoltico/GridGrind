@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
@@ -18,7 +19,7 @@ public sealed interface ExcelConditionalFormattingRule
         ExcelConditionalFormattingRule.Top10Rule {
 
   /** Formula-driven conditional-formatting rule with one differential-style payload. */
-  record FormulaRule(String formula, boolean stopIfTrue, Optional<ExcelDifferentialStyle> style)
+  record FormulaRule(String formula, boolean stopIfTrue, Optional<DifferentialStylePatch> style)
       implements ExcelConditionalFormattingRule {
     public FormulaRule {
       formula = ExcelComparisonFormulaSupport.normalizeFormula(formula, "formula");
@@ -32,7 +33,7 @@ public sealed interface ExcelConditionalFormattingRule
       String formula1,
       Optional<String> formula2,
       boolean stopIfTrue,
-      Optional<ExcelDifferentialStyle> style)
+      Optional<DifferentialStylePatch> style)
       implements ExcelConditionalFormattingRule {
     public CellValueRule {
       Objects.requireNonNull(style, "style must not be null");
@@ -116,7 +117,7 @@ public sealed interface ExcelConditionalFormattingRule
       boolean percent,
       boolean bottom,
       boolean stopIfTrue,
-      Optional<ExcelDifferentialStyle> style)
+      Optional<DifferentialStylePatch> style)
       implements ExcelConditionalFormattingRule {
     public Top10Rule {
       Objects.requireNonNull(style, "style must not be null");

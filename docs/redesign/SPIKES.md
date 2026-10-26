@@ -2013,3 +2013,18 @@ projection method reference (2s); corrected and deterministic check/all retained
 Root ./gradlew check passes (2m57s), all 143 golden cases unchanged. No active mutation/fuzz campaign.
 Inventories: snapshots 35→34, converter lines 3931→3919, blank checks 420→418, main Java
 120840→120751. Definitions 2 and Support 206 remain open. Baseline diff empty; WP-40 remains open.
+
+## WP-40 shared differential style and border patches
+
+Deleted ExcelDifferentialStyle/ExcelDifferentialBorder and their converters. POI style writing
+accepts DifferentialStylePatch/DifferentialBorderPatch directly; optional sides are unwrapped only
+at the OOXML boundary. Font heights remain authored specs for writes and factual reports for reads;
+sheet-copy materialization uses exact twips. Rule styles pass directly without identity maps.
+Retained POI font/color/border and copy regressions; removed converter-only assertions.
+
+Compilation exposed seven production boundary mismatches, then 23 and four stale fixture/converter
+uses; repaired actual optional/scalar boundaries and fixtures. Focused core/engine/14 parity/static
+checks pass (41s). Nested compile found one stale qualified fixture name (8s); corrected. Deterministic
+check/all retained seeds pass (21s). ./gradlew check passes (2m59s), all 143 golden cases unchanged.
+No active mutation/fuzz campaign ran. Inventories: converter lines 3919→3874, blank checks 418→417,
+main Java 120751→120662; snapshots 34, definitions 2 and Support 206 remain open. Baseline diff empty.

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +104,7 @@ final class ExcelSheetCopyConditionalFormattingSupport {
     };
   }
 
-  static Optional<ExcelDifferentialStyle> copyableStyle(
+  static Optional<DifferentialStylePatch> copyableStyle(
       @Nullable ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
     ExcelWorkbookSheetSupport.requireSheetName(sourceSheetName, "sourceSheetName");
     if (style == null) {
@@ -117,11 +118,15 @@ final class ExcelSheetCopyConditionalFormattingSupport {
               + " not copyable");
     }
     return Optional.of(
-        new ExcelDifferentialStyle(
+        new DifferentialStylePatch(
             Optional.ofNullable(style.numberFormat()),
             Optional.ofNullable(style.bold()),
             Optional.ofNullable(style.italic()),
-            Optional.ofNullable(style.fontHeight()),
+            Optional.ofNullable(style.fontHeight())
+                .map(
+                    height ->
+                        new dev.erst.gridgrind.core.model.style.FontHeightSpec.Twips(
+                            height.twips())),
             Optional.ofNullable(style.fontColor()),
             Optional.ofNullable(style.underline()),
             Optional.ofNullable(style.strikeout()),

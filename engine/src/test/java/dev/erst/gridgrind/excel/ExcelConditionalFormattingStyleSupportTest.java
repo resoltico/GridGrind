@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
@@ -34,25 +36,28 @@ class ExcelConditionalFormattingStyleSupportTest {
               rule);
       CTCfRule ctRule = sheet.getCTWorksheet().getConditionalFormattingArray(0).getCfRuleArray(0);
 
-      ExcelDifferentialStyle authoredStyle =
-          new ExcelDifferentialStyle(
+      DifferentialStylePatch authoredStyle =
+          new DifferentialStylePatch(
               Optional.of("0.00"),
               Optional.of(true),
               Optional.of(false),
-              Optional.ofNullable(FontHeightReport.fromPoints(BigDecimal.valueOf(11))),
+              Optional.ofNullable(
+                  new dev.erst.gridgrind.core.model.style.FontHeightSpec.Points(
+                      BigDecimal.valueOf(11))),
               Optional.of(new ColorSpec.Theme(3, Optional.of(0.25d))),
               Optional.of(true),
               Optional.of(true),
               Optional.of(new ColorSpec.Indexed(12, Optional.empty())),
               Optional.ofNullable(
-                  new ExcelDifferentialBorder(
-                      new BorderSidePatch(
-                          Optional.of(ExcelBorderStyle.THIN),
-                          Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d)))),
-                      null,
-                      null,
-                      null,
-                      null)));
+                  new DifferentialBorderPatch(
+                      Optional.of(
+                          new BorderSidePatch(
+                              Optional.of(ExcelBorderStyle.THIN),
+                              Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d))))),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())));
 
       ExcelConditionalFormattingStyleSupport.applyStyle(workbook, ctRule, authoredStyle);
 
@@ -69,20 +74,24 @@ class ExcelConditionalFormattingStyleSupportTest {
               true,
               true,
               new ColorSpec.Indexed(12, Optional.empty()),
-              new ExcelDifferentialBorder(
-                  null,
-                  new BorderSidePatch(
-                      Optional.of(ExcelBorderStyle.THIN),
-                      Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d)))),
-                  new BorderSidePatch(
-                      Optional.of(ExcelBorderStyle.THIN),
-                      Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d)))),
-                  new BorderSidePatch(
-                      Optional.of(ExcelBorderStyle.THIN),
-                      Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d)))),
-                  new BorderSidePatch(
-                      Optional.of(ExcelBorderStyle.THIN),
-                      Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d))))),
+              new DifferentialBorderPatch(
+                  Optional.empty(),
+                  Optional.of(
+                      new BorderSidePatch(
+                          Optional.of(ExcelBorderStyle.THIN),
+                          Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d))))),
+                  Optional.of(
+                      new BorderSidePatch(
+                          Optional.of(ExcelBorderStyle.THIN),
+                          Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d))))),
+                  Optional.of(
+                      new BorderSidePatch(
+                          Optional.of(ExcelBorderStyle.THIN),
+                          Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d))))),
+                  Optional.of(
+                      new BorderSidePatch(
+                          Optional.of(ExcelBorderStyle.THIN),
+                          Optional.of(new ColorSpec.Theme(5, Optional.of(-0.2d)))))),
               List.of()),
           snapshot);
     }
@@ -352,16 +361,36 @@ class ExcelConditionalFormattingStyleSupportTest {
 
     assertNull(ExcelConditionalFormattingStyleSupport.borderValue(null, null, null, null));
     assertEquals(
-        new ExcelDifferentialBorder(null, thinSide, null, null, null),
+        new DifferentialBorderPatch(
+            Optional.empty(),
+            Optional.of(thinSide),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()),
         ExcelConditionalFormattingStyleSupport.borderValue(thinSide, null, null, null));
     assertEquals(
-        new ExcelDifferentialBorder(null, null, thinSide, null, null),
+        new DifferentialBorderPatch(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(thinSide),
+            Optional.empty(),
+            Optional.empty()),
         ExcelConditionalFormattingStyleSupport.borderValue(null, thinSide, null, null));
     assertEquals(
-        new ExcelDifferentialBorder(null, null, null, thinSide, null),
+        new DifferentialBorderPatch(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(thinSide),
+            Optional.empty()),
         ExcelConditionalFormattingStyleSupport.borderValue(null, null, thinSide, null));
     assertEquals(
-        new ExcelDifferentialBorder(null, null, null, null, thinSide),
+        new DifferentialBorderPatch(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(thinSide)),
         ExcelConditionalFormattingStyleSupport.borderValue(null, null, null, thinSide));
 
     assertTrue(ExcelConditionalFormattingStyleSupport.underline(null));
@@ -501,13 +530,14 @@ class ExcelConditionalFormattingStyleSupportTest {
       assertEquals(ColorSpec.theme(1), snapshot.fontColor());
       assertEquals(ColorSpec.theme(2), snapshot.fillColor());
       assertEquals(
-          new ExcelDifferentialBorder(
-              null,
-              new BorderSidePatch(
-                  Optional.of(ExcelBorderStyle.THIN), Optional.of(ColorSpec.theme(3))),
-              null,
-              null,
-              null),
+          new DifferentialBorderPatch(
+              Optional.empty(),
+              Optional.of(
+                  new BorderSidePatch(
+                      Optional.of(ExcelBorderStyle.THIN), Optional.of(ColorSpec.theme(3)))),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty()),
           snapshot.border());
       assertEquals(List.of(), snapshot.unsupportedFeatures());
 
@@ -561,7 +591,7 @@ class ExcelConditionalFormattingStyleSupportTest {
       ExcelConditionalFormattingStyleSupport.applyStyle(
           workbook,
           ctRule,
-          new ExcelDifferentialStyle(
+          new DifferentialStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
@@ -571,12 +601,13 @@ class ExcelConditionalFormattingStyleSupportTest {
               Optional.empty(),
               Optional.empty(),
               Optional.ofNullable(
-                  new ExcelDifferentialBorder(
-                      null,
-                      new BorderSidePatch(ExcelBorderStyle.THIN),
-                      new BorderSidePatch(Optional.empty(), Optional.of(ColorSpec.indexed(9))),
-                      null,
-                      null))));
+                  new DifferentialBorderPatch(
+                      Optional.empty(),
+                      Optional.of(new BorderSidePatch(ExcelBorderStyle.THIN)),
+                      Optional.of(
+                          new BorderSidePatch(Optional.empty(), Optional.of(ColorSpec.indexed(9)))),
+                      Optional.empty(),
+                      Optional.empty()))));
 
       ExcelDifferentialStyleSnapshot snapshot =
           ExcelConditionalFormattingStyleSupport.snapshotStyle(workbook.getStylesSource(), ctRule);
@@ -591,12 +622,13 @@ class ExcelConditionalFormattingStyleSupportTest {
               false,
               null,
               null,
-              new ExcelDifferentialBorder(
-                  null,
-                  new BorderSidePatch(ExcelBorderStyle.THIN),
-                  new BorderSidePatch(Optional.empty(), Optional.of(ColorSpec.indexed(9))),
-                  null,
-                  null),
+              new DifferentialBorderPatch(
+                  Optional.empty(),
+                  Optional.of(new BorderSidePatch(ExcelBorderStyle.THIN)),
+                  Optional.of(
+                      new BorderSidePatch(Optional.empty(), Optional.of(ColorSpec.indexed(9)))),
+                  Optional.empty(),
+                  Optional.empty()),
               List.of()),
           snapshot);
     }

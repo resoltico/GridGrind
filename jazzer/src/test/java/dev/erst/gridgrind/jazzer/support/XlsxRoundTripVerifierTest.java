@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
@@ -39,7 +40,6 @@ import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
-import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -190,7 +190,7 @@ class XlsxRoundTripVerifierTest {
                                     "B2>0",
                                     true,
                                     Optional.of(
-                                        new ExcelDifferentialStyle(
+                                        new DifferentialStylePatch(
                                             Optional.of("0.00"),
                                             Optional.empty(),
                                             Optional.empty(),

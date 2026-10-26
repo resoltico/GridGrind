@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
@@ -29,7 +31,7 @@ final class ExcelConditionalFormattingStyleSupport {
   private ExcelConditionalFormattingStyleSupport() {}
 
   /** Writes one authored differential style onto the supplied conditional-formatting rule XML. */
-  static void applyStyle(XSSFWorkbook workbook, CTCfRule rule, ExcelDifferentialStyle style) {
+  static void applyStyle(XSSFWorkbook workbook, CTCfRule rule, DifferentialStylePatch style) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(rule, "rule must not be null");
     Objects.requireNonNull(style, "style must not be null");
@@ -94,7 +96,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   /** Collapses the four explicit sides of one differential border into the public border record. */
-  static @Nullable ExcelDifferentialBorder borderValue(
+  static @Nullable DifferentialBorderPatch borderValue(
       @Nullable BorderSidePatch top,
       @Nullable BorderSidePatch right,
       @Nullable BorderSidePatch bottom,
@@ -163,7 +165,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   record BorderSnapshot(
-      @Nullable ExcelDifferentialBorder border,
+      @Nullable DifferentialBorderPatch border,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     BorderSnapshot {
       unsupportedFeatures = List.copyOf(unsupportedFeatures);

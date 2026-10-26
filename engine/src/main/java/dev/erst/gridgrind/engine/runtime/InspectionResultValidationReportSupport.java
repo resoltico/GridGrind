@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.Optional;
@@ -153,17 +153,17 @@ final class InspectionResultValidationReportSupport {
   }
 
   static Optional<DifferentialBorderReport> toDifferentialBorderReport(
-      @org.jspecify.annotations.Nullable ExcelDifferentialBorder border) {
+      @org.jspecify.annotations.Nullable DifferentialBorderPatch border) {
     if (border == null) {
       return Optional.empty();
     }
     return Optional.of(
         new DifferentialBorderReport(
-            toDifferentialBorderSideReport(border.all()),
-            toDifferentialBorderSideReport(border.top()),
-            toDifferentialBorderSideReport(border.right()),
-            toDifferentialBorderSideReport(border.bottom()),
-            toDifferentialBorderSideReport(border.left())));
+            toDifferentialBorderSideReport(border.all().orElse(null)),
+            toDifferentialBorderSideReport(border.top().orElse(null)),
+            toDifferentialBorderSideReport(border.right().orElse(null)),
+            toDifferentialBorderSideReport(border.bottom().orElse(null)),
+            toDifferentialBorderSideReport(border.left().orElse(null))));
   }
 
   static Optional<DifferentialBorderSideReport> toDifferentialBorderSideReport(

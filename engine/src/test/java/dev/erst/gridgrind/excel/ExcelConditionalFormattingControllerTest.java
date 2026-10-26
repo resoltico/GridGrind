@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -322,7 +324,7 @@ class ExcelConditionalFormattingControllerTest {
                       true,
                       true,
                       Optional.of(
-                          new ExcelDifferentialStyle(
+                          new DifferentialStylePatch(
                               Optional.empty(),
                               Optional.of(true),
                               Optional.empty(),
@@ -377,7 +379,7 @@ class ExcelConditionalFormattingControllerTest {
                           Optional.empty(),
                           false,
                           Optional.of(
-                              new ExcelDifferentialStyle(
+                              new DifferentialStylePatch(
                                   Optional.of("0.00"),
                                   Optional.empty(),
                                   Optional.empty(),
@@ -825,7 +827,7 @@ class ExcelConditionalFormattingControllerTest {
                       Optional.empty(),
                       false,
                       Optional.of(
-                          new ExcelDifferentialStyle(
+                          new DifferentialStylePatch(
                               Optional.of("0.00"),
                               Optional.empty(),
                               Optional.empty(),
@@ -863,7 +865,7 @@ class ExcelConditionalFormattingControllerTest {
                       Optional.of("#REF!"),
                       false,
                       Optional.of(
-                          new ExcelDifferentialStyle(
+                          new DifferentialStylePatch(
                               Optional.of("0.00"),
                               Optional.empty(),
                               Optional.empty(),
@@ -900,7 +902,7 @@ class ExcelConditionalFormattingControllerTest {
                       "A1>0",
                       false,
                       Optional.of(
-                          new ExcelDifferentialStyle(
+                          new DifferentialStylePatch(
                               Optional.of("0.00"),
                               Optional.empty(),
                               Optional.empty(),
@@ -934,7 +936,7 @@ class ExcelConditionalFormattingControllerTest {
                       Optional.of("10"),
                       false,
                       Optional.of(
-                          new ExcelDifferentialStyle(
+                          new DifferentialStylePatch(
                               Optional.of("0.00"),
                               Optional.empty(),
                               Optional.empty(),
@@ -1011,7 +1013,7 @@ class ExcelConditionalFormattingControllerTest {
                       false,
                       false,
                       Optional.of(
-                          new ExcelDifferentialStyle(
+                          new DifferentialStylePatch(
                               Optional.of("0.00"),
                               Optional.empty(),
                               Optional.empty(),
@@ -1161,7 +1163,7 @@ class ExcelConditionalFormattingControllerTest {
                           "#REF!",
                           false,
                           Optional.of(
-                              new ExcelDifferentialStyle(
+                              new DifferentialStylePatch(
                                   Optional.of("0.00"),
                                   Optional.empty(),
                                   Optional.empty(),
@@ -1189,29 +1191,31 @@ class ExcelConditionalFormattingControllerTest {
                 "A1>10",
                 true,
                 Optional.of(
-                    new ExcelDifferentialStyle(
+                    new DifferentialStylePatch(
                         Optional.of("0.00"),
                         Optional.of(true),
                         Optional.of(false),
-                        Optional.ofNullable(FontHeightReport.fromPoints(BigDecimal.valueOf(12))),
+                        Optional.ofNullable(
+                            new dev.erst.gridgrind.core.model.style.FontHeightSpec.Points(
+                                BigDecimal.valueOf(12))),
                         Optional.of(color("#102030")),
                         Optional.of(true),
                         Optional.of(true),
                         Optional.of(color("#E0F0AA")),
                         Optional.ofNullable(
-                            new ExcelDifferentialBorder(
-                                borderSide(ExcelBorderStyle.THIN, "#405060"),
-                                null,
-                                null,
-                                null,
-                                null))))),
+                            new DifferentialBorderPatch(
+                                Optional.of(borderSide(ExcelBorderStyle.THIN, "#405060")),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty()))))),
             new ExcelConditionalFormattingRule.CellValueRule(
                 ExcelComparisonOperator.BETWEEN,
                 "1",
                 Optional.of("9"),
                 false,
                 Optional.of(
-                    new ExcelDifferentialStyle(
+                    new DifferentialStylePatch(
                         Optional.empty(),
                         Optional.empty(),
                         Optional.of(true),
@@ -1231,7 +1235,7 @@ class ExcelConditionalFormattingControllerTest {
                 range.startsWith("B") ? "B1>5" : "C1=\"Ready\"",
                 false,
                 Optional.of(
-                    new ExcelDifferentialStyle(
+                    new DifferentialStylePatch(
                         Optional.empty(),
                         Optional.of(false),
                         Optional.empty(),
@@ -1243,8 +1247,13 @@ class ExcelConditionalFormattingControllerTest {
                         Optional.empty())))));
   }
 
-  private static ExcelDifferentialBorder expandedBorder(BorderSidePatch side) {
-    return new ExcelDifferentialBorder(null, side, side, side, side);
+  private static DifferentialBorderPatch expandedBorder(BorderSidePatch side) {
+    return new DifferentialBorderPatch(
+        Optional.empty(),
+        Optional.of(side),
+        Optional.of(side),
+        Optional.of(side),
+        Optional.of(side));
   }
 
   private static BorderSidePatch borderSide(ExcelBorderStyle style, String rgb) {

@@ -3,12 +3,8 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
-import dev.erst.gridgrind.core.model.style.BorderSidePatch;
-import dev.erst.gridgrind.core.model.style.ColorSpec;
-import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
@@ -33,12 +29,9 @@ import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
-import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
-import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -114,7 +107,6 @@ class ExecutorCoverageGapsTest {
         ExcelOoxmlOpenOptions.Unencrypted.class,
         OoxmlPackageSecurityConverter.toExcelOpenOptions(
             new OoxmlOpenSecuritySpec(Optional.empty())));
-    assertTrue(WorkbookCommandStructuredInputConverter.toExcelDifferentialBorder(null).isEmpty());
 
     GridGrindRequestDoctor defaultDoctor = new GridGrindRequestDoctor();
     GridGrindRequestDoctor validationOnlyDoctor =
@@ -207,17 +199,6 @@ class ExecutorCoverageGapsTest {
             new ProblemContext.ReadRequest(
                 ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
                 ProblemContextRequestSurfaces.JsonLocation.unavailable()));
-    DifferentialBorderPatch border =
-        new DifferentialBorderPatch(
-            Optional.of(
-                new BorderSidePatch(ExcelBorderStyle.THIN, ColorSpec.rgb(new RgbHex("#aabbcc")))),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
-    ExcelDifferentialBorder excelBorder =
-        WorkbookCommandStructuredInputConverter.toExcelDifferentialBorder(border).orElseThrow();
-
     for (Selector selector : summarySelectors) {
       assertEquals(
           List.of(ExecutionJournalTargetResolver.summaryTarget(selector)),
@@ -259,7 +240,6 @@ class ExecutorCoverageGapsTest {
         Optional.empty(),
         DefaultGridGrindRequestExecutorTestSupport.readRequestContext(unavailableProblem)
             .jsonColumn());
-    assertEquals(ExcelBorderStyle.THIN, excelBorder.all().style().orElseThrow());
   }
 
   private static InvalidRequestException badRequest(

@@ -23,6 +23,7 @@ import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
@@ -356,7 +357,7 @@ class WorkbookCommandExecutorTest {
                                   "A1>0",
                                   false,
                                   Optional.of(
-                                      new ExcelDifferentialStyle(
+                                      new DifferentialStylePatch(
                                           Optional.empty(),
                                           Optional.of(true),
                                           Optional.empty(),
@@ -667,7 +668,7 @@ class WorkbookCommandExecutorTest {
                           "A1>0",
                           true,
                           Optional.of(
-                              new ExcelDifferentialStyle(
+                              new DifferentialStylePatch(
                                   Optional.empty(),
                                   Optional.of(true),
                                   Optional.empty(),

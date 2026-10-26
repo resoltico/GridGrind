@@ -476,7 +476,7 @@ class SequenceIntrospectionTest {
                             "A2>0",
                             true,
                             Optional.of(
-                                new dev.erst.gridgrind.excel.ExcelDifferentialStyle(
+                                new dev.erst.gridgrind.core.model.style.DifferentialStylePatch(
                                     Optional.of("0.00"),
                                     Optional.of(true),
                                     Optional.empty(),

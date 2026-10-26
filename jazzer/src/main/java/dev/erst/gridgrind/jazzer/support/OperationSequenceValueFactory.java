@@ -199,7 +199,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceRuleValues.nextDifferentialStyleInput(data);
   }
 
-  static ExcelDifferentialStyle nextExcelDifferentialStyle(GridGrindFuzzData data) {
+  static DifferentialStylePatch nextExcelDifferentialStyle(GridGrindFuzzData data) {
     return OperationSequenceRuleValues.nextExcelDifferentialStyle(data);
   }
 

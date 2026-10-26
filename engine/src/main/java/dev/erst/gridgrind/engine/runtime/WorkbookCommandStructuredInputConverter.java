@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
-import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionSpec;
@@ -21,8 +19,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
-import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import java.util.List;
 import java.util.Optional;
 
@@ -81,20 +77,14 @@ final class WorkbookCommandStructuredInputConverter {
     return switch (rule) {
       case ConditionalFormattingRuleSpec.FormulaRule formulaRule ->
           new ExcelConditionalFormattingRule.FormulaRule(
-              formulaRule.formula(),
-              formulaRule.stopIfTrue(),
-              formulaRule
-                  .style()
-                  .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialStyle));
+              formulaRule.formula(), formulaRule.stopIfTrue(), formulaRule.style());
       case ConditionalFormattingRuleSpec.CellValueRule cellValueRule ->
           new ExcelConditionalFormattingRule.CellValueRule(
               cellValueRule.operator(),
               cellValueRule.formula1(),
               cellValueRule.formula2(),
               cellValueRule.stopIfTrue(),
-              cellValueRule
-                  .style()
-                  .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialStyle));
+              cellValueRule.style());
       case ConditionalFormattingRuleSpec.ColorScaleRule colorScaleRule ->
           new ExcelConditionalFormattingRule.ColorScaleRule(
               colorScaleRule.thresholds().stream()
@@ -130,43 +120,8 @@ final class WorkbookCommandStructuredInputConverter {
               top10Rule.percent(),
               top10Rule.bottom(),
               top10Rule.stopIfTrue(),
-              top10Rule
-                  .style()
-                  .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialStyle));
+              top10Rule.style());
     };
-  }
-
-  static Optional<ExcelDifferentialStyle> toExcelDifferentialStyle(DifferentialStylePatch style) {
-    if (style == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new ExcelDifferentialStyle(
-            style.numberFormat(),
-            style.bold(),
-            style.italic(),
-            style.fontHeight().flatMap(WorkbookCommandCellValueSpecConverter::toFontHeightReport),
-            style.fontColor(),
-            style.underline(),
-            style.strikeout(),
-            style.fillColor(),
-            style
-                .border()
-                .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorder)));
-  }
-
-  static Optional<ExcelDifferentialBorder> toExcelDifferentialBorder(
-      DifferentialBorderPatch border) {
-    if (border == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new ExcelDifferentialBorder(
-            border.all().orElse(null),
-            border.top().orElse(null),
-            border.right().orElse(null),
-            border.bottom().orElse(null),
-            border.left().orElse(null)));
   }
 
   static ExcelAutofilterFilterColumn toExcelAutofilterFilterColumn(

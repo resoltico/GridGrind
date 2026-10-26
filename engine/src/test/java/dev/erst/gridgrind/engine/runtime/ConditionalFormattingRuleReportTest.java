@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
@@ -18,7 +19,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedF
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
 import java.util.List;
 import java.util.Optional;
@@ -130,13 +130,13 @@ class ConditionalFormattingRuleReportTest {
 
   @Test
   void convertsAndValidatesDifferentialStyleAndBorderReports() {
-    ExcelDifferentialBorder border =
-        new ExcelDifferentialBorder(
-            borderSide(ExcelBorderStyle.THIN, "#102030"),
-            borderSide(ExcelBorderStyle.DASHED, "#203040"),
-            borderSide(ExcelBorderStyle.DOUBLE, "#304050"),
-            borderSide(ExcelBorderStyle.HAIR, "#405060"),
-            borderSide(ExcelBorderStyle.DOTTED, "#506070"));
+    DifferentialBorderPatch border =
+        new DifferentialBorderPatch(
+            Optional.of(borderSide(ExcelBorderStyle.THIN, "#102030")),
+            Optional.of(borderSide(ExcelBorderStyle.DASHED, "#203040")),
+            Optional.of(borderSide(ExcelBorderStyle.DOUBLE, "#304050")),
+            Optional.of(borderSide(ExcelBorderStyle.HAIR, "#405060")),
+            Optional.of(borderSide(ExcelBorderStyle.DOTTED, "#506070")));
     ExcelDifferentialStyleSnapshot style =
         new ExcelDifferentialStyleSnapshot(
             null,
@@ -156,8 +156,12 @@ class ConditionalFormattingRuleReportTest {
         InspectionResultValidationReportSupport.toDifferentialBorderReport(border).orElseThrow();
     DifferentialBorderReport sparseBorderReport =
         InspectionResultValidationReportSupport.toDifferentialBorderReport(
-                new ExcelDifferentialBorder(
-                    borderSide(ExcelBorderStyle.THIN, "#102030"), null, null, null, null))
+                new DifferentialBorderPatch(
+                    Optional.of(borderSide(ExcelBorderStyle.THIN, "#102030")),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty()))
             .orElseThrow();
     DifferentialBorderSideReport borderSideReport =
         InspectionResultValidationReportSupport.toDifferentialBorderSideReport(

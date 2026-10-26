@@ -143,7 +143,7 @@ final class OperationSequenceRuleValues {
         java.util.Optional.empty());
   }
 
-  static ExcelDifferentialStyle nextExcelDifferentialStyle(GridGrindFuzzData data) {
+  static DifferentialStylePatch nextExcelDifferentialStyle(GridGrindFuzzData data) {
     boolean includeNumberFormat = data.consumeBoolean();
     Boolean bold = data.consumeBoolean() ? Boolean.TRUE : null;
     Boolean italic = data.consumeBoolean() ? Boolean.TRUE : null;
@@ -157,7 +157,7 @@ final class OperationSequenceRuleValues {
                     .allMatch(Objects::isNull)
             ? "0.00"
             : null;
-    return new ExcelDifferentialStyle(
+    return new DifferentialStylePatch(
         Optional.ofNullable(numberFormat),
         Optional.ofNullable(bold),
         Optional.ofNullable(italic),
