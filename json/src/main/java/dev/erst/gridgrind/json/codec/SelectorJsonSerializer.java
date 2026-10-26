@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.json.codec;
 
 import dev.erst.gridgrind.core.plan.Selector;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import java.lang.reflect.RecordComponent;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;
@@ -13,7 +13,7 @@ final class SelectorJsonSerializer extends ValueSerializer<Selector> {
   public void serialize(Selector selector, JsonGenerator generator, SerializationContext context) {
     Class<?> selectorType = selector.getClass();
     generator.writeStartObject(selector);
-    generator.writeStringProperty("type", SelectorJsonSupport.typeIdFor(selectorType));
+    generator.writeStringProperty("type", SelectorTypes.typeIdFor(selectorType));
     for (RecordComponent component : selectorType.getRecordComponents()) {
       generator.writePOJOProperty(component.getName(), readComponent(selector, component));
     }

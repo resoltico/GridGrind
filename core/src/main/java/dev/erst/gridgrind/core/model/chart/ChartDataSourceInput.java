@@ -1,22 +1,18 @@
 package dev.erst.gridgrind.core.model.chart;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
 import java.util.List;
 
 /** Authored chart data source. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ChartDataSourceInput.Reference.class, name = "REFERENCE"),
-  @JsonSubTypes.Type(value = ChartDataSourceInput.StringLiteral.class, name = "STRING_LITERAL"),
-  @JsonSubTypes.Type(value = ChartDataSourceInput.NumericLiteral.class, name = "NUMERIC_LITERAL")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 52)
 public sealed interface ChartDataSourceInput
-    permits ChartDataSourceInput.Reference,
-        ChartDataSourceInput.StringLiteral,
-        ChartDataSourceInput.NumericLiteral {
+    permits dev.erst.gridgrind.core.model.chart.ChartDataSourceInput.Reference,
+        dev.erst.gridgrind.core.model.chart.ChartDataSourceInput.StringLiteral,
+        dev.erst.gridgrind.core.model.chart.ChartDataSourceInput.NumericLiteral {
   /** Workbook-backed chart source formula or defined name. */
+  @Variant(id = "REFERENCE", summary = "Workbook-backed chart source formula or defined name.")
   record Reference(String formula) implements ChartDataSourceInput {
     public Reference {
       formula = ChartInput.requireNonBlank(formula, "formula");
@@ -25,6 +21,9 @@ public sealed interface ChartDataSourceInput
   }
 
   /** Literal string values stored directly in the chart part. */
+  @Variant(
+      id = "STRING_LITERAL",
+      summary = "Literal string chart source stored directly in the chart part.")
   record StringLiteral(List<String> values) implements ChartDataSourceInput {
     public StringLiteral {
       values = ChartInput.copyValues(values, "values");
@@ -32,6 +31,9 @@ public sealed interface ChartDataSourceInput
   }
 
   /** Literal numeric values stored directly in the chart part. */
+  @Variant(
+      id = "NUMERIC_LITERAL",
+      summary = "Literal numeric chart source stored directly in the chart part.")
   record NumericLiteral(List<Double> values) implements ChartDataSourceInput {
     public NumericLiteral {
       values = ChartInput.copyValues(values, "values");

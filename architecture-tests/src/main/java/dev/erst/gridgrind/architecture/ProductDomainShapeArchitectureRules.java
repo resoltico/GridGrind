@@ -90,7 +90,7 @@ enum ProductDomainShapeArchitectureRules {
               public boolean test(JavaClass input) {
                 return input.isInterface()
                     && input.isSealed()
-                    && input.isAnnotatedWith("com.fasterxml.jackson.annotation.JsonTypeInfo");
+                    && input.isAnnotatedWith("dev.erst.gridgrind.core.metadata.Union");
               }
             })
         .should(USE_RECORD_WIRE_VARIANTS)

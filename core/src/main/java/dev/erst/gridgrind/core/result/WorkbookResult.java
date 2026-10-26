@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.result;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
@@ -17,11 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Structured protocol result emitted only after workbook execution begins. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = WorkbookResult.Success.class, name = "SUCCEEDED"),
-  @JsonSubTypes.Type(value = WorkbookResult.Failure.class, name = "FAILED")
-})
+@Union(discriminator = "status")
 public sealed interface WorkbookResult {
   /** Protocol version negotiated for this response. */
   GridGrindProtocolVersion protocolVersion();
@@ -43,6 +39,7 @@ public sealed interface WorkbookResult {
   PersistenceOutcome persistence();
 
   /** Successful workbook execution result. */
+  @Variant(id = "SUCCEEDED", summary = "Successful workbook execution result.")
   record Success(
       GridGrindProtocolVersion protocolVersion,
       @com.fasterxml.jackson.annotation.JsonInclude(
@@ -75,6 +72,7 @@ public sealed interface WorkbookResult {
   }
 
   /** Failed workbook execution with a structured problem. */
+  @Variant(id = "FAILED", summary = "Failed workbook execution with a structured problem.")
   record Failure(
       GridGrindProtocolVersion protocolVersion,
       @com.fasterxml.jackson.annotation.JsonInclude(

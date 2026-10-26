@@ -126,13 +126,13 @@ class FieldConstraintTest {
   }
 
   @Test
-  void catalogDefinedNameConstraintsApplyOnlyToTheThreeDefinedNameOwners() {
+  void catalogConstraintsBelongToRealRecordComponents() {
     assertEquals(
         2,
         CatalogFieldConstraints.forComponent(StructuredMutationAction.SetNamedRange.class, "name")
             .size());
     assertEquals(2, CatalogFieldConstraints.forComponent(TableInput.class, "name").size());
-    assertEquals(2, CatalogFieldConstraints.forComponent(NamedRangeTarget.class, "name").size());
+    assertEquals(List.of(), CatalogFieldConstraints.forComponent(NamedRangeTarget.class, "name"));
     assertEquals(
         List.of(),
         CatalogFieldConstraints.forComponent(

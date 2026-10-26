@@ -1,22 +1,23 @@
 package dev.erst.gridgrind.core.model.print;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 
 /** One requested repeating print-title row band in protocol form. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = PrintTitleRowsInput.None.class, name = "NONE"),
-  @JsonSubTypes.Type(value = PrintTitleRowsInput.Band.class, name = "BAND")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 68)
 public sealed interface PrintTitleRowsInput
-    permits PrintTitleRowsInput.None, PrintTitleRowsInput.Band {
+    permits dev.erst.gridgrind.core.model.print.PrintTitleRowsInput.None,
+        dev.erst.gridgrind.core.model.print.PrintTitleRowsInput.Band {
   int MAX_ROW_INDEX = 1_048_575;
 
   /** Sheet has no repeating print-title rows. */
+  @Variant(id = "NONE", summary = "Sheet has no repeating print-title rows.")
   record None() implements PrintTitleRowsInput {}
 
   /** Sheet repeats the provided inclusive zero-based row band on every printed page. */
+  @Variant(
+      id = "BAND",
+      summary = "Sheet repeats the provided inclusive zero-based row band on every printed page.")
   record Band(int firstRowIndex, int lastRowIndex) implements PrintTitleRowsInput {
     public Band {
       requireBand(firstRowIndex, lastRowIndex, "firstRowIndex", "lastRowIndex");

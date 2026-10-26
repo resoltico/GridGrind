@@ -1,16 +1,20 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import java.util.Objects;
 
 /** Authored drawing anchor input. Phase 5 currently supports two-cell anchors for mutation. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({@JsonSubTypes.Type(value = DrawingAnchorInput.TwoCell.class, name = "TWO_CELL")})
-public sealed interface DrawingAnchorInput permits DrawingAnchorInput.TwoCell {
+@Union(discriminator = "type", catalog = true, displayOrder = 48)
+public sealed interface DrawingAnchorInput
+    permits dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput.TwoCell {
 
   /** Two-cell authored anchor with explicit from and to markers. */
+  @Variant(
+      id = "TWO_CELL",
+      summary =
+          "Authored two-cell drawing anchor with explicit start and end markers. behavior is explicit on the wire; the Java authoring surface exposes DrawingAnchorInput.TwoCell.moveAndResize(...).")
   record TwoCell(
       DrawingMarkerInput from, DrawingMarkerInput to, ExcelDrawingAnchorBehavior behavior)
       implements DrawingAnchorInput {

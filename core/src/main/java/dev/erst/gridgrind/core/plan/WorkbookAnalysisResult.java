@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
@@ -26,7 +26,7 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
         WorkbookAnalysisResult.WorkbookFindingsResult {
 
   /** Returns formula-health findings. */
-  @JsonTypeName("ANALYZE_FORMULA_HEALTH")
+  @Variant(id = "ANALYZE_FORMULA_HEALTH", summary = "Returns formula-health findings.")
   record FormulaHealthResult(StepId stepId, FormulaHealthReport analysis)
       implements WorkbookAnalysisResult {
     public FormulaHealthResult {
@@ -37,7 +37,9 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   }
 
   /** Returns data-validation-health findings. */
-  @JsonTypeName("ANALYZE_DATA_VALIDATION_HEALTH")
+  @Variant(
+      id = "ANALYZE_DATA_VALIDATION_HEALTH",
+      summary = "Returns data-validation-health findings.")
   record DataValidationHealthResult(StepId stepId, DataValidationHealthReport analysis)
       implements WorkbookAnalysisResult {
     public DataValidationHealthResult {
@@ -48,7 +50,9 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   }
 
   /** Returns conditional-formatting-health findings. */
-  @JsonTypeName("ANALYZE_CONDITIONAL_FORMATTING_HEALTH")
+  @Variant(
+      id = "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
+      summary = "Returns conditional-formatting-health findings.")
   record ConditionalFormattingHealthResult(
       StepId stepId, ConditionalFormattingHealthReport analysis) implements WorkbookAnalysisResult {
     public ConditionalFormattingHealthResult {
@@ -59,7 +63,7 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   }
 
   /** Returns autofilter-health findings. */
-  @JsonTypeName("ANALYZE_AUTOFILTER_HEALTH")
+  @Variant(id = "ANALYZE_AUTOFILTER_HEALTH", summary = "Returns autofilter-health findings.")
   record AutofilterHealthResult(StepId stepId, AutofilterHealthReport analysis)
       implements WorkbookAnalysisResult {
     public AutofilterHealthResult {
@@ -70,7 +74,7 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   }
 
   /** Returns table-health findings. */
-  @JsonTypeName("ANALYZE_TABLE_HEALTH")
+  @Variant(id = "ANALYZE_TABLE_HEALTH", summary = "Returns table-health findings.")
   record TableHealthResult(StepId stepId, TableHealthReport analysis)
       implements WorkbookAnalysisResult {
     public TableHealthResult {
@@ -81,7 +85,7 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   }
 
   /** Returns pivot-table-health findings. */
-  @JsonTypeName("ANALYZE_PIVOT_TABLE_HEALTH")
+  @Variant(id = "ANALYZE_PIVOT_TABLE_HEALTH", summary = "Returns pivot-table-health findings.")
   record PivotTableHealthResult(StepId stepId, PivotTableHealthReport analysis)
       implements WorkbookAnalysisResult {
     public PivotTableHealthResult {
@@ -92,7 +96,7 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   }
 
   /** Returns hyperlink-health findings. */
-  @JsonTypeName("ANALYZE_HYPERLINK_HEALTH")
+  @Variant(id = "ANALYZE_HYPERLINK_HEALTH", summary = "Returns hyperlink-health findings.")
   record HyperlinkHealthResult(StepId stepId, HyperlinkHealthReport analysis)
       implements WorkbookAnalysisResult {
     public HyperlinkHealthResult {
@@ -103,7 +107,7 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   }
 
   /** Returns named-range-health findings. */
-  @JsonTypeName("ANALYZE_NAMED_RANGE_HEALTH")
+  @Variant(id = "ANALYZE_NAMED_RANGE_HEALTH", summary = "Returns named-range-health findings.")
   record NamedRangeHealthResult(StepId stepId, NamedRangeHealthReport analysis)
       implements WorkbookAnalysisResult {
     public NamedRangeHealthResult {
@@ -114,7 +118,7 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   }
 
   /** Returns aggregated workbook findings. */
-  @JsonTypeName("ANALYZE_WORKBOOK_FINDINGS")
+  @Variant(id = "ANALYZE_WORKBOOK_FINDINGS", summary = "Returns aggregated workbook findings.")
   record WorkbookFindingsResult(StepId stepId, WorkbookFindingsReport analysis)
       implements WorkbookAnalysisResult {
     public WorkbookFindingsResult {

@@ -88,7 +88,7 @@ final class CustomXmlWorkflowTaskRecipe {
                         "Discover Existing Mappings",
                         "Read the workbook mapping metadata before attempting export or import.",
                         List.of(
-                            ref("sourceTypes", "EXISTING"),
+                            ref("workbookSourceTypes", "EXISTING"),
                             ref("inspectionQueryTypes", "GET_CUSTOM_XML_MAPPINGS"),
                             ref("inspectionQueryTypes", "EXPORT_CUSTOM_XML_MAPPING")),
                         List.of("Map discovery tells you which locator to target.")),
@@ -98,7 +98,7 @@ final class CustomXmlWorkflowTaskRecipe {
                         "Push one XML payload through the chosen existing mapping.",
                         List.of(
                             ref("mutationActionTypes", "IMPORT_CUSTOM_XML_MAPPING"),
-                            ref("persistenceTypes", "SAVE_AS")),
+                            ref("workbookPersistenceTypes", "SAVE_AS")),
                         List.of("Use SAVE_AS when you want to preserve the original workbook.")),
                     phase(
                         TaskPhasePurpose.VERIFY,

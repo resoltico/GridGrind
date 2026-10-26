@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
@@ -12,17 +12,16 @@ import java.util.Objects;
 /**
  * CLI-owned host acceptance policy translated without becoming part of an authored workbook plan.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CliGrantAcceptancePolicy.MinimumOnly.class, name = "MINIMUM_ONLY"),
-  @JsonSubTypes.Type(value = CliGrantAcceptancePolicy.RequireAll.class, name = "REQUIRE_ALL")
-})
+@Union(discriminator = "type")
 public sealed interface CliGrantAcceptancePolicy
     permits CliGrantAcceptancePolicy.MinimumOnly, CliGrantAcceptancePolicy.RequireAll {
   /** Converts this CLI-owned policy document into the engine API policy. */
   GridGrindHostAcceptancePolicy toEnginePolicy();
 
   /** Requires only the product's non-disableable staged-artifact minimum. */
+  @Variant(
+      id = "MINIMUM_ONLY",
+      summary = "Requires only the product's non-disableable staged-artifact minimum.")
   record MinimumOnly() implements CliGrantAcceptancePolicy {
     @Override
     public GridGrindHostAcceptancePolicy toEnginePolicy() {
@@ -31,6 +30,9 @@ public sealed interface CliGrantAcceptancePolicy
   }
 
   /** Combines independently typed host requirements without nullable policy fields. */
+  @Variant(
+      id = "REQUIRE_ALL",
+      summary = "Combines independently typed host requirements without nullable policy fields.")
   record RequireAll(List<Requirement> requirements) implements CliGrantAcceptancePolicy {
     public RequireAll {
       requirements = copyValues(requirements, "requirements");
@@ -44,17 +46,7 @@ public sealed interface CliGrantAcceptancePolicy
   }
 
   /** One independently enforced host acceptance requirement. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Requirement.TerminalAssertions.class, name = "TERMINAL_ASSERTIONS"),
-    @JsonSubTypes.Type(
-        value = Requirement.PreserveInspectionFacts.class,
-        name = "PRESERVE_INSPECTION_FACTS"),
-    @JsonSubTypes.Type(
-        value = CliGrantOpaqueOoxmlPartsRequirement.class,
-        name = "PRESERVE_OPAQUE_OOXML_PARTS"),
-    @JsonSubTypes.Type(value = CliGrantRequiredCalculation.class, name = "REQUIRE_CALCULATION")
-  })
+  @Union(discriminator = "type")
   sealed interface Requirement
       permits Requirement.TerminalAssertions,
           Requirement.PreserveInspectionFacts,
@@ -64,6 +56,9 @@ public sealed interface CliGrantAcceptancePolicy
     GridGrindHostAcceptancePolicy.Requirement toEngineRequirement();
 
     /** Requires host-owned assertions after plan execution and before publication. */
+    @Variant(
+        id = "TERMINAL_ASSERTIONS",
+        summary = "Requires host-owned assertions after plan execution and before publication.")
     record TerminalAssertions(List<AssertionStep> assertions) implements Requirement {
       public TerminalAssertions {
         assertions = copyValues(assertions, "assertions");
@@ -76,6 +71,9 @@ public sealed interface CliGrantAcceptancePolicy
     }
 
     /** Requires selected inspection facts to remain semantically unchanged. */
+    @Variant(
+        id = "PRESERVE_INSPECTION_FACTS",
+        summary = "Requires selected inspection facts to remain semantically unchanged.")
     record PreserveInspectionFacts(List<InspectionStep> inspections) implements Requirement {
       public PreserveInspectionFacts {
         inspections = copyValues(inspections, "inspections");

@@ -1,100 +1,32 @@
 package dev.erst.gridgrind.core.semantics;
 
-import dev.erst.gridgrind.core.plan.Assertion;
-import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.DrawingMutationAction;
-import dev.erst.gridgrind.core.plan.InspectionQuery;
-import dev.erst.gridgrind.core.plan.StructuredMutationAction;
-import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
-import java.util.List;
+import dev.erst.gridgrind.core.metadata.Variant;
+import java.util.Arrays;
 
-/** Derives the canonical static effects and preconditions for one concrete operation record. */
+/** Derives canonical effects and preconditions from colocated operation metadata. */
 final class WorkbookOperationSemanticsFactory {
   private WorkbookOperationSemanticsFactory() {}
 
   static OperationSemantics semanticsFor(Class<? extends Record> operationType) {
-    if (CellMutationAction.class.isAssignableFrom(operationType)) {
-      return mutation(
-          operationType,
-          List.of(
-              OperationEffect.CELLS,
-              OperationEffect.FORMULAS,
-              OperationEffect.STYLES,
-              OperationEffect.HYPERLINKS,
-              OperationEffect.COMMENTS,
-              OperationEffect.DRAWINGS));
+    Variant metadata = operationType.getAnnotation(Variant.class);
+    if (metadata == null || metadata.profile() == OperationProfile.NONE) {
+      throw new IllegalArgumentException(
+          "operation type has no static semantics: " + operationType);
     }
-    if (DrawingMutationAction.class.isAssignableFrom(operationType)) {
-      return mutation(
-          operationType,
-          List.of(OperationEffect.DRAWINGS, OperationEffect.CELLS, OperationEffect.FORMULAS));
-    }
-    if (StructuredMutationAction.class.isAssignableFrom(operationType)) {
-      return mutation(
-          operationType,
-          List.of(
-              OperationEffect.TABLES,
-              OperationEffect.NAMED_RANGES,
-              OperationEffect.DATA_VALIDATIONS,
-              OperationEffect.CONDITIONAL_FORMATTING,
-              OperationEffect.AUTOFILTERS,
-              OperationEffect.PIVOT_TABLES,
-              OperationEffect.CUSTOM_XML,
-              OperationEffect.FORMULAS,
-              OperationEffect.CELLS));
-    }
-    if (WorkbookMutationAction.class.isAssignableFrom(operationType)) {
-      return mutation(
-          operationType,
-          List.of(
-              OperationEffect.WORKBOOK_STRUCTURE,
-              OperationEffect.SHEET_STRUCTURE,
-              OperationEffect.ROWS,
-              OperationEffect.COLUMNS,
-              OperationEffect.CELLS,
-              OperationEffect.FORMULAS,
-              OperationEffect.STYLES,
-              OperationEffect.HYPERLINKS,
-              OperationEffect.COMMENTS,
-              OperationEffect.DRAWINGS,
-              OperationEffect.TABLES,
-              OperationEffect.NAMED_RANGES,
-              OperationEffect.DATA_VALIDATIONS,
-              OperationEffect.CONDITIONAL_FORMATTING,
-              OperationEffect.AUTOFILTERS,
-              OperationEffect.PIVOT_TABLES,
-              OperationEffect.WORKBOOK_METADATA,
-              OperationEffect.WORKBOOK_SECURITY));
-    }
-    if (Assertion.class.isAssignableFrom(operationType)
-        || InspectionQuery.class.isAssignableFrom(operationType)) {
-      return new OperationSemantics(
-          List.of(OperationEffect.READ_WORKBOOK),
-          OperationEffectFootprint.TARGET_BOUNDED,
-          List.of());
-    }
-    throw new IllegalArgumentException("operation type has no static semantics: " + operationType);
-  }
-
-  private static OperationSemantics mutation(
-      Class<? extends Record> operationType, List<OperationEffect> effects) {
-    List<OperationEffect> combined = new java.util.ArrayList<>(effects.size() + 2);
-    combined.add(OperationEffect.READ_WORKBOOK);
-    combined.add(OperationEffect.MUTATE_WORKBOOK);
-    combined.addAll(effects);
     return new OperationSemantics(
-        combined,
-        OperationEffectFootprint.CONSERVATIVE_WORKBOOK_WIDE,
-        staticPreconditions(operationType));
+        metadata.profile().effects(),
+        metadata.profile().footprint(),
+        Arrays.stream(metadata.preconditions())
+            .map(WorkbookOperationSemanticsFactory::precondition)
+            .toList());
   }
 
-  private static List<OperationPrecondition> staticPreconditions(
-      Class<? extends Record> operationType) {
-    if (operationType == WorkbookMutationAction.InsertColumns.class
-        || operationType == WorkbookMutationAction.DeleteColumns.class
-        || operationType == WorkbookMutationAction.ShiftColumns.class) {
-      return List.of(new OperationPrecondition.ColumnEditsBeforeFormulaAuthoring());
+  private static OperationPrecondition precondition(Class<? extends OperationPrecondition> type) {
+    try {
+      return type.getConstructor().newInstance();
+    } catch (ReflectiveOperationException failure) {
+      throw new IllegalStateException(
+          "Operation preconditions need a public no-argument constructor: " + type, failure);
     }
-    return List.of();
   }
 }

@@ -743,7 +743,7 @@ Example messages:
 | **Message** | `execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
 | **Applies to** | top-level `execution.mode.type`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelEventWorkbookReader.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeTypes` catalog summary |
+| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputTypes` catalog summary |
 
 `EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not
 materialize the full workbook object graph, so GridGrind restricts it to workbook and sheet
@@ -762,7 +762,7 @@ time instead of silently falling back to the normal in-memory executor.
 | **Message** | `execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
 | **Applies to** | top-level `execution.mode.type`, `source`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelStreamingWorkbookWriter.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeTypes` catalog summary |
+| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputTypes` catalog summary |
 
 `STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only
 new workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced

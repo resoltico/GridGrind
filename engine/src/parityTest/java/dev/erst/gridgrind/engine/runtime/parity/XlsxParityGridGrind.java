@@ -42,7 +42,7 @@ final class XlsxParityGridGrind {
 
   static boolean hasCalculationStrategyType(String id) {
     return catalog().nestedTypes().stream()
-        .filter(group -> "calculationStrategyTypes".equals(group.group()))
+        .filter(group -> "calculationStrategyInputTypes".equals(group.group()))
         .flatMap(group -> group.types().stream())
         .map(TypeEntry::id)
         .anyMatch(id::equals);

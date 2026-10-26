@@ -553,7 +553,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     PivotTableReport.Unsupported unsupported =
         assertInstanceOf(PivotTableReport.Unsupported.class, pivotTables.pivotTables().get(1));
 
-    assertEquals("SalesTable", ((PivotTableReport.Source.Table) supported.source()).name().value());
+    assertEquals(
+        "SalesTable",
+        ((PivotTableReport.PivotSourceReport.Table) supported.source()).name().value());
     assertEquals("Amount", supported.dataFields().getFirst().sourceColumnName());
     assertTrue(supported.valuesAxisOnColumns());
     assertEquals("Pivot cache source no longer resolves cleanly.", unsupported.detail());
@@ -629,10 +631,12 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     PivotTableReport.Supported namedRangePivot =
         assertInstanceOf(PivotTableReport.Supported.class, pivotTables.pivotTables().get(1));
 
-    assertEquals("Data", ((PivotTableReport.Source.Range) rangePivot.source()).sheetName().value());
+    assertEquals(
+        "Data",
+        ((PivotTableReport.PivotSourceReport.Range) rangePivot.source()).sheetName().value());
     assertEquals(
         "PivotSource",
-        ((PivotTableReport.Source.NamedRange) namedRangePivot.source()).name().value());
+        ((PivotTableReport.PivotSourceReport.NamedRange) namedRangePivot.source()).name().value());
   }
 
   @Test

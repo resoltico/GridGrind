@@ -1,18 +1,18 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 
 /** Selects one logical cell within one selected table row. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes(
-    @JsonSubTypes.Type(
-        value = TableCellSelector.ByColumnName.class,
-        name = "TABLE_CELL_BY_COLUMN_NAME"))
-public sealed interface TableCellSelector extends Selector permits TableCellSelector.ByColumnName {
+@Union(discriminator = "type", catalog = true, displayOrder = 33)
+public sealed interface TableCellSelector extends Selector
+    permits dev.erst.gridgrind.core.plan.TableCellSelector.ByColumnName {
 
   /** Selects one logical cell by table-row selector plus logical column name. */
+  @Variant(
+      id = "TABLE_CELL_BY_COLUMN_NAME",
+      summary = "Select one logical cell within one selected table row by column name.")
   record ByColumnName(TableRowSelector row, String columnName) implements TableCellSelector {
     public ByColumnName {
       Objects.requireNonNull(row, "row must not be null");

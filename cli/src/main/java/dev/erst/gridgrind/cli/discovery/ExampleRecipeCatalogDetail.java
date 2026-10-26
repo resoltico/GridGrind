@@ -1,9 +1,11 @@
 package dev.erst.gridgrind.cli.discovery;
 
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.List;
 import java.util.Objects;
 
 /** Detailed lookup payload for one built-in example recipe. */
+@Variant(id = "EXAMPLE", summary = "Detailed lookup payload for one built-in example recipe.")
 public record ExampleRecipeCatalogDetail(
     String id,
     String requestFileName,

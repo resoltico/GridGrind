@@ -1,18 +1,16 @@
 package dev.erst.gridgrind.core.model.formula;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Objects;
 
 /** Protocol-facing explicit sheet range or formula target for named-range authoring. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = NamedRangeTarget.Range.class, name = "RANGE"),
-  @JsonSubTypes.Type(value = NamedRangeTarget.Formula.class, name = "FORMULA")
-})
-public sealed interface NamedRangeTarget permits NamedRangeTarget.Range, NamedRangeTarget.Formula {
+@Union(discriminator = "type", catalog = true, displayOrder = 23)
+public sealed interface NamedRangeTarget
+    permits dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Range,
+        dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Formula {
   /** Creates a sheet-local cell or rectangular range target. */
   static Range range(SheetName sheetName, RangeRef range) {
     return new Range(sheetName, range);
@@ -24,6 +22,10 @@ public sealed interface NamedRangeTarget permits NamedRangeTarget.Range, NamedRa
   }
 
   /** Sheet-qualified explicit cell or rectangular range target. */
+  @Variant(
+      id = "RANGE",
+      summary =
+          "Write one named-range target backed by an explicit sheet-qualified cell or rectangular range.")
   record Range(SheetName sheetName, RangeRef range) implements NamedRangeTarget {
     public Range {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -32,6 +34,9 @@ public sealed interface NamedRangeTarget permits NamedRangeTarget.Range, NamedRa
   }
 
   /** Formula-defined named-range target stored exactly as authored. */
+  @Variant(
+      id = "FORMULA",
+      summary = "Write one named-range target backed by an exact stored formula.")
   record Formula(String formula) implements NamedRangeTarget {
     public Formula {
       Objects.requireNonNull(formula, "formula must not be null");

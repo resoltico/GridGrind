@@ -1,21 +1,18 @@
 package dev.erst.gridgrind.core.model.style;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Factual workbook color preserving RGB, theme, indexed, and tint semantics. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellColorReport.Rgb.class, name = "RGB"),
-  @JsonSubTypes.Type(value = CellColorReport.Theme.class, name = "THEME"),
-  @JsonSubTypes.Type(value = CellColorReport.Indexed.class, name = "INDEXED")
-})
+@Union(discriminator = "kind", catalog = true, displayOrder = 58)
 public sealed interface CellColorReport
-    permits CellColorReport.Rgb, CellColorReport.Theme, CellColorReport.Indexed {
+    permits dev.erst.gridgrind.core.model.style.CellColorReport.Rgb,
+        dev.erst.gridgrind.core.model.style.CellColorReport.Theme,
+        dev.erst.gridgrind.core.model.style.CellColorReport.Indexed {
   /** Optional tint adjustment applied to the base color reference. */
   Optional<Double> tint();
 
@@ -50,6 +47,9 @@ public sealed interface CellColorReport
   }
 
   /** RGB-backed workbook color report. */
+  @Variant(
+      id = "RGB",
+      summary = "Read one explicit RGB workbook color plus optional tint metadata.")
   record Rgb(RgbHex rgb, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
       implements CellColorReport {
     public Rgb {
@@ -59,6 +59,9 @@ public sealed interface CellColorReport
   }
 
   /** Theme-backed workbook color report. */
+  @Variant(
+      id = "THEME",
+      summary = "Read one workbook theme-slot color plus optional tint metadata.")
   record Theme(int theme, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
       implements CellColorReport {
     public Theme {
@@ -68,6 +71,9 @@ public sealed interface CellColorReport
   }
 
   /** Indexed-palette workbook color report. */
+  @Variant(
+      id = "INDEXED",
+      summary = "Read one indexed-palette workbook color plus optional tint metadata.")
   record Indexed(int indexed, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
       implements CellColorReport {
     public Indexed {

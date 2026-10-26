@@ -1,9 +1,14 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** One non-fatal request warning with a truthful step or request-path location. */
+@CatalogType(
+    id = "RequestWarning",
+    summary = "Non-fatal authored-plan warning surfaced at the response root.",
+    displayOrder = 8)
 public record RequestWarning(
     GridGrindWarningCode code, RequestWarningLocation location, String message) {
   public RequestWarning {

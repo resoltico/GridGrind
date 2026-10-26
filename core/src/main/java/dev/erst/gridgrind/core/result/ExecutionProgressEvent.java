@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.result;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -10,16 +10,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** One compact, secret-safe JSONL progress event emitted while a verbose request executes. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ExecutionProgressEvent.Started.class, name = "STARTED"),
-  @JsonSubTypes.Type(value = ExecutionProgressEvent.Succeeded.class, name = "SUCCEEDED"),
-  @JsonSubTypes.Type(value = ExecutionProgressEvent.Failed.class, name = "FAILED")
-})
+@Union(discriminator = "status", catalog = true, displayOrder = 43)
 public sealed interface ExecutionProgressEvent
-    permits ExecutionProgressEvent.Started,
-        ExecutionProgressEvent.Succeeded,
-        ExecutionProgressEvent.Failed {
+    permits dev.erst.gridgrind.core.result.ExecutionProgressEvent.Started,
+        dev.erst.gridgrind.core.result.ExecutionProgressEvent.Succeeded,
+        dev.erst.gridgrind.core.result.ExecutionProgressEvent.Failed {
   /** ISO-8601 instant at which the lifecycle transition occurred. */
   String timestamp();
 
@@ -58,6 +53,9 @@ public sealed interface ExecutionProgressEvent
   }
 
   /** A lifecycle transition that just began. */
+  @Variant(
+      id = "STARTED",
+      summary = "Compact JSONL lifecycle event emitted when one execution phase starts.")
   record Started(
       String timestamp,
       Category category,
@@ -77,6 +75,9 @@ public sealed interface ExecutionProgressEvent
   }
 
   /** A lifecycle transition that completed successfully. */
+  @Variant(
+      id = "SUCCEEDED",
+      summary = "Compact JSONL lifecycle event emitted when one execution phase succeeds.")
   record Succeeded(
       String timestamp,
       Category category,
@@ -96,6 +97,10 @@ public sealed interface ExecutionProgressEvent
   }
 
   /** A lifecycle transition that failed with one classified problem code. */
+  @Variant(
+      id = "FAILED",
+      summary =
+          "Compact JSONL lifecycle event emitted when one execution phase fails with one classified problem code.")
   record Failed(
       String timestamp,
       Category category,

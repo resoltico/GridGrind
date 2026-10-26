@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.problem;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
@@ -9,12 +9,7 @@ import java.util.Optional;
 /** Workbook and step location facts reused across problem-context stages. */
 public interface ProblemContextWorkbookSurfaces {
   /** Source-backed authored input reference without nullable kind/path slots. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = InputReference.Unknown.class, name = "UNKNOWN"),
-    @JsonSubTypes.Type(value = InputReference.KindOnly.class, name = "KIND"),
-    @JsonSubTypes.Type(value = InputReference.PathReference.class, name = "PATH")
-  })
+  @Union(discriminator = "type")
   sealed interface InputReference
       permits InputReference.Unknown, InputReference.KindOnly, InputReference.PathReference {
     /** Returns the explicit unknown input-reference variant. */
@@ -52,9 +47,15 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** No input-binding path could be derived for the resolution failure. */
+    @Variant(
+        id = "UNKNOWN",
+        summary = "No input-binding path could be derived for the resolution failure.")
     record Unknown() implements InputReference {}
 
     /** The failing authored input kind was known, but no concrete path applied. */
+    @Variant(
+        id = "KIND",
+        summary = "The failing authored input kind was known, but no concrete path applied.")
     record KindOnly(String inputKind) implements InputReference {
       public KindOnly {
         inputKind = requireNonBlank(inputKind, "inputKind");
@@ -62,6 +63,7 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** One concrete authored input binding resolved to one path. */
+    @Variant(id = "PATH", summary = "One concrete authored input binding resolved to one path.")
     record PathReference(String inputKind, String inputPath) implements InputReference {
       public PathReference {
         inputKind = requireNonBlank(inputKind, "inputKind");
@@ -71,11 +73,7 @@ public interface ProblemContextWorkbookSurfaces {
   }
 
   /** Workbook open target without nullable source-path fields. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = WorkbookReference.NewWorkbook.class, name = "NEW"),
-    @JsonSubTypes.Type(value = WorkbookReference.ExistingFile.class, name = "EXISTING")
-  })
+  @Union(discriminator = "type")
   sealed interface WorkbookReference
       permits WorkbookReference.NewWorkbook, WorkbookReference.ExistingFile {
     /** Returns the workbook-reference variant for a brand-new in-memory workbook. */
@@ -97,9 +95,11 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** Workbook creation started from a brand-new in-memory workbook. */
+    @Variant(id = "NEW", summary = "Workbook creation started from a brand-new in-memory workbook.")
     record NewWorkbook() implements WorkbookReference {}
 
     /** Workbook opening targeted one existing `.xlsx` file. */
+    @Variant(id = "EXISTING", summary = "Workbook opening targeted one existing `.xlsx` file.")
     record ExistingFile(String path) implements WorkbookReference {
       public ExistingFile {
         path = requireNonBlank(path, "path");
@@ -108,11 +108,7 @@ public interface ProblemContextWorkbookSurfaces {
   }
 
   /** Persistence attempt reference without nullable source/output path padding. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = PersistenceReference.Overwrite.class, name = "OVERWRITE"),
-    @JsonSubTypes.Type(value = PersistenceReference.SaveAs.class, name = "SAVE_AS")
-  })
+  @Union(discriminator = "type")
   sealed interface PersistenceReference
       permits PersistenceReference.Overwrite, PersistenceReference.SaveAs {
     /** Returns the persistence-reference variant that targets the opened source workbook. */
@@ -142,6 +138,9 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** Workbook persistence attempted to overwrite the opened source file. */
+    @Variant(
+        id = "OVERWRITE",
+        summary = "Workbook persistence attempted to overwrite the opened source file.")
     record Overwrite(String sourceWorkbookPath) implements PersistenceReference {
       public Overwrite {
         sourceWorkbookPath = requireNonBlank(sourceWorkbookPath, "sourceWorkbookPath");
@@ -149,6 +148,9 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** Workbook persistence attempted to write one explicit SAVE_AS path. */
+    @Variant(
+        id = "SAVE_AS",
+        summary = "Workbook persistence attempted to write one explicit SAVE_AS path.")
     record SaveAs(String persistencePath) implements PersistenceReference {
       public SaveAs {
         persistencePath = requireNonBlank(persistencePath, "persistencePath");
@@ -157,18 +159,7 @@ public interface ProblemContextWorkbookSurfaces {
   }
 
   /** Workbook location reference used by calculation and step failures without null padding. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = ProblemLocation.Unknown.class, name = "UNKNOWN"),
-    @JsonSubTypes.Type(value = ProblemLocation.Sheet.class, name = "SHEET"),
-    @JsonSubTypes.Type(value = ProblemLocation.Address.class, name = "ADDRESS"),
-    @JsonSubTypes.Type(value = ProblemLocation.Cell.class, name = "CELL"),
-    @JsonSubTypes.Type(value = ProblemLocation.RangeOnly.class, name = "RANGE_ONLY"),
-    @JsonSubTypes.Type(value = ProblemLocation.Range.class, name = "RANGE"),
-    @JsonSubTypes.Type(value = ProblemLocation.NamedRange.class, name = "NAMED_RANGE"),
-    @JsonSubTypes.Type(value = ProblemLocation.SheetNamedRange.class, name = "SHEET_NAMED_RANGE"),
-    @JsonSubTypes.Type(value = ProblemLocation.FormulaCell.class, name = "FORMULA_CELL")
-  })
+  @Union(discriminator = "type")
   sealed interface ProblemLocation
       permits ProblemLocation.Unknown,
           ProblemLocation.Sheet,
@@ -285,9 +276,11 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure could not be localized to one workbook target. */
+    @Variant(id = "UNKNOWN", summary = "The failure could not be localized to one workbook target.")
     record Unknown() implements ProblemLocation {}
 
     /** The failure was localized to one whole sheet. */
+    @Variant(id = "SHEET", summary = "The failure was localized to one whole sheet.")
     record Sheet(SheetLabel sheetName) implements ProblemLocation {
       public Sheet {
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -295,6 +288,9 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one concrete address without a resolved sheet. */
+    @Variant(
+        id = "ADDRESS",
+        summary = "The failure was localized to one concrete address without a resolved sheet.")
     record Address(String address) implements ProblemLocation {
       public Address {
         address = requireNonBlank(address, "address");
@@ -302,6 +298,7 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one concrete cell. */
+    @Variant(id = "CELL", summary = "The failure was localized to one concrete cell.")
     record Cell(SheetLabel sheetName, String address) implements ProblemLocation {
       public Cell {
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -310,6 +307,9 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one concrete range without a resolved sheet. */
+    @Variant(
+        id = "RANGE_ONLY",
+        summary = "The failure was localized to one concrete range without a resolved sheet.")
     record RangeOnly(String range) implements ProblemLocation {
       public RangeOnly {
         range = requireNonBlank(range, "range");
@@ -317,6 +317,7 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one concrete rectangular range. */
+    @Variant(id = "RANGE", summary = "The failure was localized to one concrete rectangular range.")
     record Range(SheetLabel sheetName, String range) implements ProblemLocation {
       public Range {
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -325,6 +326,7 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one named range. */
+    @Variant(id = "NAMED_RANGE", summary = "The failure was localized to one named range.")
     record NamedRange(String name) implements ProblemLocation {
       public NamedRange {
         name = requireNonBlank(name, "name");
@@ -332,6 +334,9 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one named range scoped to one sheet. */
+    @Variant(
+        id = "SHEET_NAMED_RANGE",
+        summary = "The failure was localized to one named range scoped to one sheet.")
     record SheetNamedRange(SheetLabel sheetName, String name) implements ProblemLocation {
       public SheetNamedRange {
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -340,6 +345,9 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one formula-bearing cell. */
+    @Variant(
+        id = "FORMULA_CELL",
+        summary = "The failure was localized to one formula-bearing cell.")
     record FormulaCell(SheetLabel sheetName, String address, String formula)
         implements ProblemLocation {
       public FormulaCell {

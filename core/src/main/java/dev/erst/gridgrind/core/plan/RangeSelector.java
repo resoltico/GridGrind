@@ -1,29 +1,24 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more A1-style rectangular ranges on one sheet. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = RangeSelector.AllOnSheet.class, name = "RANGE_ALL_ON_SHEET"),
-  @JsonSubTypes.Type(value = RangeSelector.ByRange.class, name = "RANGE_BY_RANGE"),
-  @JsonSubTypes.Type(value = RangeSelector.ByRanges.class, name = "RANGE_BY_RANGES"),
-  @JsonSubTypes.Type(
-      value = RangeSelector.RectangularWindow.class,
-      name = "RANGE_RECTANGULAR_WINDOW")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 28)
 public sealed interface RangeSelector extends Selector
-    permits RangeSelector.AllOnSheet,
-        RangeSelector.ByRange,
-        RangeSelector.ByRanges,
-        RangeSelector.RectangularWindow {
+    permits dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet,
+        dev.erst.gridgrind.core.plan.RangeSelector.ByRange,
+        dev.erst.gridgrind.core.plan.RangeSelector.ByRanges,
+        dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow {
 
   /** Selects all matching ranged structures on one sheet. */
+  @Variant(
+      id = "RANGE_ALL_ON_SHEET",
+      summary = "Select every matching range-backed structure on one sheet.")
   record AllOnSheet(SheetName sheetName) implements RangeSelector {
     public AllOnSheet {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -36,6 +31,7 @@ public sealed interface RangeSelector extends Selector
   }
 
   /** Selects one exact rectangular range on one sheet. */
+  @Variant(id = "RANGE_BY_RANGE", summary = "Select one exact rectangular range on one sheet.")
   record ByRange(SheetName sheetName, RangeRef range) implements RangeSelector {
     public ByRange {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -65,6 +61,9 @@ public sealed interface RangeSelector extends Selector
   }
 
   /** Selects one or more exact rectangular ranges on one sheet. */
+  @Variant(
+      id = "RANGE_BY_RANGES",
+      summary = "Select one or more exact rectangular ranges on one sheet.")
   record ByRanges(SheetName sheetName, List<RangeRef> ranges) implements RangeSelector {
     public ByRanges {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -78,6 +77,9 @@ public sealed interface RangeSelector extends Selector
   }
 
   /** Selects one rectangular window anchored at a top-left cell. */
+  @Variant(
+      id = "RANGE_RECTANGULAR_WINDOW",
+      summary = "Select one rectangular window anchored at one top-left cell.")
   record RectangularWindow(
       SheetName sheetName, CellAddress topLeftAddress, int rowCount, int columnCount)
       implements RangeSelector {

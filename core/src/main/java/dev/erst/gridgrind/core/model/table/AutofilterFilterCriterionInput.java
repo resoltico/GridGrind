@@ -1,32 +1,28 @@
 package dev.erst.gridgrind.core.model.table;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.ColorInput;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Authored autofilter criterion for one filter column. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionInput.Values.class, name = "VALUES"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionInput.Custom.class, name = "CUSTOM"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionInput.Dynamic.class, name = "DYNAMIC"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionInput.Top10.class, name = "TOP10"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionInput.Color.class, name = "COLOR"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionInput.Icon.class, name = "ICON")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 63)
 public sealed interface AutofilterFilterCriterionInput
-    permits AutofilterFilterCriterionInput.Values,
-        AutofilterFilterCriterionInput.Custom,
-        AutofilterFilterCriterionInput.Dynamic,
-        AutofilterFilterCriterionInput.Top10,
-        AutofilterFilterCriterionInput.Color,
-        AutofilterFilterCriterionInput.Icon {
+    permits dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput.Values,
+        dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput.Custom,
+        dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput.Dynamic,
+        dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput.Top10,
+        dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput.Color,
+        dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput.Icon {
 
   /** Explicit retained filter values plus whether blanks are included. */
+  @Variant(
+      id = "VALUES",
+      summary = "Retain rows whose cell values match one or more explicit values.")
   record Values(List<String> values, boolean includeBlank)
       implements AutofilterFilterCriterionInput {
     public Values {
@@ -35,6 +31,9 @@ public sealed interface AutofilterFilterCriterionInput
   }
 
   /** Custom comparator-based autofilter criterion. */
+  @Variant(
+      id = "CUSTOM",
+      summary = "Retain rows that satisfy one or two comparator-based custom conditions.")
   record Custom(boolean and, List<CustomConditionInput> conditions)
       implements AutofilterFilterCriterionInput {
     public Custom {
@@ -49,6 +48,9 @@ public sealed interface AutofilterFilterCriterionInput
   }
 
   /** Dynamic-date or moving-window autofilter criterion. */
+  @Variant(
+      id = "DYNAMIC",
+      summary = "Retain rows using one dynamic-date or moving-window autofilter rule.")
   record Dynamic(
       String type,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> value,
@@ -67,6 +69,7 @@ public sealed interface AutofilterFilterCriterionInput
   }
 
   /** Top or bottom N or percent autofilter criterion. */
+  @Variant(id = "TOP10", summary = "Retain top or bottom N or percent values.")
   record Top10(int value, boolean top, boolean percent) implements AutofilterFilterCriterionInput {
     public Top10 {
       if (value <= 0) {
@@ -76,6 +79,7 @@ public sealed interface AutofilterFilterCriterionInput
   }
 
   /** Color-based autofilter criterion. */
+  @Variant(id = "COLOR", summary = "Retain rows matching one cell color or font color criterion.")
   record Color(boolean cellColor, ColorInput color) implements AutofilterFilterCriterionInput {
     public Color {
       Objects.requireNonNull(color, "color must not be null");
@@ -83,6 +87,7 @@ public sealed interface AutofilterFilterCriterionInput
   }
 
   /** Icon-based autofilter criterion. */
+  @Variant(id = "ICON", summary = "Retain rows matching one icon-set member.")
   record Icon(String iconSet, int iconId) implements AutofilterFilterCriterionInput {
     public Icon {
       Objects.requireNonNull(iconSet, "iconSet must not be null");
@@ -96,6 +101,10 @@ public sealed interface AutofilterFilterCriterionInput
   }
 
   /** One custom comparator inside a custom autofilter criterion. */
+  @CatalogType(
+      id = "AutofilterCustomConditionInput",
+      summary = "One comparator-value pair nested inside a custom autofilter criterion.",
+      displayOrder = 55)
   record CustomConditionInput(String operator, String value) {
     public CustomConditionInput {
       Objects.requireNonNull(operator, "operator must not be null");

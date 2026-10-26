@@ -1,11 +1,16 @@
 package dev.erst.gridgrind.core.model.customxml;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Factual workbook custom-XML mapping metadata returned by inspection. */
+@CatalogType(
+    id = "CustomXmlMappingReport",
+    summary = "One factual workbook custom-XML mapping report.",
+    displayOrder = 101)
 public record CustomXmlMappingReport(
     long mapId,
     String name,
@@ -30,6 +35,10 @@ public record CustomXmlMappingReport(
   }
 
   /** Persisted custom-XML map behavior flags. */
+  @CatalogType(
+      id = "CustomXmlMappingSettingsReport",
+      summary = "Persisted custom-XML map behavior flags.",
+      displayOrder = 102)
   public record Settings(
       boolean showImportExportValidationErrors,
       boolean autoFit,
@@ -38,6 +47,10 @@ public record CustomXmlMappingReport(
       boolean preserveFormat) {}
 
   /** Optional schema metadata attached to one custom-XML mapping. */
+  @CatalogType(
+      id = "CustomXmlMappingSchemaReport",
+      summary = "Optional schema metadata attached to one custom-XML mapping.",
+      displayOrder = 103)
   public record Schema(
       @Nullable String namespace,
       @Nullable String language,

@@ -1,19 +1,17 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selects a row band or one row-band insertion point on one sheet. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = RowBandSelector.Span.class, name = "ROW_BAND_SPAN"),
-  @JsonSubTypes.Type(value = RowBandSelector.Insertion.class, name = "ROW_BAND_INSERTION")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 29)
 public sealed interface RowBandSelector extends Selector
-    permits RowBandSelector.Span, RowBandSelector.Insertion {
+    permits dev.erst.gridgrind.core.plan.RowBandSelector.Span,
+        dev.erst.gridgrind.core.plan.RowBandSelector.Insertion {
 
   /** Selects one inclusive zero-based row span on one sheet. */
+  @Variant(id = "ROW_BAND_SPAN", summary = "Select one inclusive zero-based row span on one sheet.")
   record Span(SheetName sheetName, int firstRowIndex, int lastRowIndex) implements RowBandSelector {
     public Span {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -33,6 +31,9 @@ public sealed interface RowBandSelector extends Selector
   }
 
   /** Selects one row insertion point and band count on one sheet. */
+  @Variant(
+      id = "ROW_BAND_INSERTION",
+      summary = "Select one row insertion point plus row count on one sheet.")
   record Insertion(SheetName sheetName, int beforeRowIndex, int rowCount)
       implements RowBandSelector {
     public Insertion {

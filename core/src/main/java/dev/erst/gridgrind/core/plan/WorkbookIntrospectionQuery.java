@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
-import dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -18,34 +18,39 @@ public sealed interface WorkbookIntrospectionQuery extends InspectionQuery.Intro
         WorkbookIntrospectionQuery.ExportCustomXmlMapping,
         WorkbookIntrospectionQuery.GetNamedRanges {
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_WORKBOOK_SUMMARY",
       summary = "Return workbook-level summary facts.",
-      targetSelectors = {WorkbookSelector.class})
+      targetSelectors = {WorkbookSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetWorkbookSummary() implements WorkbookIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_PACKAGE_SECURITY",
       summary = "Return OOXML package-encryption and package-signature facts.",
-      targetSelectors = {WorkbookSelector.class})
+      targetSelectors = {WorkbookSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetPackageSecurity() implements WorkbookIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_WORKBOOK_PROTECTION",
       summary = "Return workbook-level protection facts.",
-      targetSelectors = {WorkbookSelector.class})
+      targetSelectors = {WorkbookSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetWorkbookProtection() implements WorkbookIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_CUSTOM_XML_MAPPINGS",
       summary = "Return workbook custom-XML mapping metadata.",
-      targetSelectors = {WorkbookSelector.class})
+      targetSelectors = {WorkbookSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetCustomXmlMappings() implements WorkbookIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "EXPORT_CUSTOM_XML_MAPPING",
       summary = "Export one existing workbook custom-XML mapping as serialized XML.",
-      targetSelectors = {WorkbookSelector.class})
+      targetSelectors = {WorkbookSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record ExportCustomXmlMapping(
       CustomXmlMappingLocator mapping,
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
@@ -78,9 +83,10 @@ public sealed interface WorkbookIntrospectionQuery extends InspectionQuery.Intro
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_NAMED_RANGES",
       summary = "Return named ranges matched by the supplied selection.",
-      targetSelectors = {NamedRangeSelector.class})
+      targetSelectors = {NamedRangeSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetNamedRanges() implements WorkbookIntrospectionQuery {}
 }

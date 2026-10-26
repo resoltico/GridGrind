@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.formula;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import java.util.List;
@@ -13,6 +14,11 @@ import java.util.Optional;
  * Structured response-side report for explicit formula calculation policy, preflight, and
  * execution.
  */
+@CatalogType(
+    id = "CalculationReport",
+    summary =
+        "Structured calculation policy, preflight classification, and execution outcome returned on every success and failure response.",
+    displayOrder = 12)
 public record CalculationReport(
     CalculationPolicyInput policy,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Preflight> preflight,
@@ -50,6 +56,10 @@ public record CalculationReport(
   }
 
   /** Structured preflight report emitted before any server-side calculation attempt. */
+  @CatalogType(
+      id = "CalculationPreflightReport",
+      summary = "Formula capability classification captured before server-side evaluation begins.",
+      displayOrder = 13)
   public record Preflight(
       Scope scope, int checkedFormulaCount, Summary summary, List<FormulaCapability> formulas) {
     public Preflight {
@@ -78,6 +88,10 @@ public record CalculationReport(
   }
 
   /** Aggregate capability counts for one calculation preflight run. */
+  @CatalogType(
+      id = "CalculationPreflightSummary",
+      summary = "Aggregate counts for evaluable, unevaluable, and unparseable formulas.",
+      displayOrder = 14)
   public record Summary(int evaluableNowCount, int unevaluableNowCount, int unparseableByPoiCount) {
     public Summary {
       if (evaluableNowCount < 0 || unevaluableNowCount < 0 || unparseableByPoiCount < 0) {
@@ -87,6 +101,10 @@ public record CalculationReport(
   }
 
   /** One classified formula capability entry returned by calculation preflight. */
+  @CatalogType(
+      id = "FormulaCapabilityReport",
+      summary = "One classified formula-cell capability entry from calculation preflight.",
+      displayOrder = 16)
   public record FormulaCapability(
       FormulaCellTarget cell,
       String formula,
@@ -114,6 +132,10 @@ public record CalculationReport(
   }
 
   /** Concrete execution outcome for the authored calculation policy. */
+  @CatalogType(
+      id = "CalculationExecutionReport",
+      summary = "Post-execution outcome for the authored calculation policy.",
+      displayOrder = 17)
   public record Execution(
       CalculationExecutionStatus status,
       int evaluatedFormulaCount,

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
+import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,26 +10,12 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /** Shared selector wire-type metadata for root-level selector serialization. */
-public final class SelectorJsonSupport {
-  private static final List<Class<?>> SELECTOR_ROOTS =
-      List.of(
-          WorkbookSelector.class,
-          SheetSelector.class,
-          CellSelector.class,
-          RangeSelector.class,
-          RowBandSelector.class,
-          ColumnBandSelector.class,
-          TableSelector.class,
-          TableRowSelector.class,
-          TableCellSelector.class,
-          NamedRangeSelector.class,
-          DrawingObjectSelector.class,
-          ChartSelector.class,
-          PivotTableSelector.class);
+public final class SelectorTypes {
+  private static final List<Class<?>> SELECTOR_ROOTS = List.of(Selector.class);
   private static final Map<Class<?>, String> TYPE_IDS = buildTypeIds(SELECTOR_ROOTS);
   private static final java.util.Set<String> KNOWN_TYPE_IDS = buildKnownTypeIds(TYPE_IDS);
 
-  private SelectorJsonSupport() {}
+  private SelectorTypes() {}
 
   /** Returns the canonical wire `type` discriminator for one concrete selector subtype. */
   public static String typeIdFor(Class<?> selectorType) {
@@ -65,13 +51,10 @@ public final class SelectorJsonSupport {
 
   /** Returns the allowed wire `type` ids represented by one selector root or concrete subtype. */
   public static List<String> typeIdsFor(Class<?> selectorType) {
-    JsonSubTypes jsonSubTypes = selectorType.getAnnotation(JsonSubTypes.class);
-    if (jsonSubTypes != null) {
-      java.util.Set<String> typeIds = new LinkedHashSet<>();
-      for (JsonSubTypes.Type subtype : jsonSubTypes.value()) {
-        typeIds.add(subtype.name());
-      }
-      return List.copyOf(typeIds);
+    if (selectorType.isSealed()) {
+      return ProtocolTypeMetadataSupport.declaredVariants(selectorType).stream()
+          .map(ProtocolTypeMetadataSupport::requiredTypeId)
+          .toList();
     }
     return List.of(typeIdFor(selectorType));
   }
@@ -86,7 +69,7 @@ public final class SelectorJsonSupport {
     return StreamSupport.stream(selectorTypes.spliterator(), false)
         .collect(
             Collectors.groupingBy(
-                SelectorJsonSupport::familyName,
+                SelectorTypes::familyName,
                 java.util.LinkedHashMap::new,
                 Collectors.flatMapping(
                     selectorType -> typeIdsFor(selectorType).stream(),
@@ -130,18 +113,15 @@ public final class SelectorJsonSupport {
     Map<Class<?>, String> typeIds = new ConcurrentHashMap<>();
     Map<String, Class<?>> typeIdOwners = new ConcurrentHashMap<>();
     for (Class<?> root : selectorRoots) {
-      JsonSubTypes jsonSubTypes = root.getAnnotation(JsonSubTypes.class);
-      if (jsonSubTypes == null) {
-        throw new IllegalStateException("Selector root is missing @JsonSubTypes: " + root);
-      }
-      for (JsonSubTypes.Type subtype : jsonSubTypes.value()) {
-        Class<?> previousOwner = typeIdOwners.putIfAbsent(subtype.name(), subtype.value());
-        if (previousOwner != null && !previousOwner.equals(subtype.value())) {
+      for (Class<?> subtype : ProtocolTypeMetadataSupport.subtypesForType(root)) {
+        String id = ProtocolTypeMetadataSupport.requiredTypeId(subtype);
+        Class<?> previousOwner = typeIdOwners.putIfAbsent(id, subtype);
+        if (previousOwner != null && !previousOwner.equals(subtype)) {
           throw new IllegalStateException(
               "Duplicate selector type id '%s' for %s and %s"
-                  .formatted(subtype.name(), previousOwner.getName(), subtype.value().getName()));
+                  .formatted(id, previousOwner.getName(), subtype.getName()));
         }
-        typeIds.put(subtype.value(), subtype.name());
+        typeIds.put(subtype, id);
       }
     }
     return Map.copyOf(typeIds);

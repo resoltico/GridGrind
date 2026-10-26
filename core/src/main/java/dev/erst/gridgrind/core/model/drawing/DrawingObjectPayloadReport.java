@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.Base64;
@@ -9,13 +9,7 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Extracted binary drawing-object payload returned by payload reads. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = DrawingObjectPayloadReport.Picture.class, name = "PICTURE"),
-  @JsonSubTypes.Type(
-      value = DrawingObjectPayloadReport.EmbeddedObject.class,
-      name = "EMBEDDED_OBJECT")
-})
+@Union(discriminator = "type")
 public sealed interface DrawingObjectPayloadReport
     permits DrawingObjectPayloadReport.Picture, DrawingObjectPayloadReport.EmbeddedObject {
 
@@ -32,6 +26,7 @@ public sealed interface DrawingObjectPayloadReport
   String sha256();
 
   /** Extracted picture payload. */
+  @Variant(id = "PICTURE", summary = "Extracted picture payload.")
   record Picture(
       String name,
       ExcelPictureFormat format,
@@ -52,6 +47,7 @@ public sealed interface DrawingObjectPayloadReport
   }
 
   /** Extracted embedded-object payload. */
+  @Variant(id = "EMBEDDED_OBJECT", summary = "Extracted embedded-object payload.")
   record EmbeddedObject(
       String name,
       ExcelEmbeddedObjectPackagingKind packagingKind,

@@ -1,11 +1,17 @@
 package dev.erst.gridgrind.core.model.style;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing definition for one border side shared by authored style patches. */
+@CatalogType(
+    id = "BorderSideInput",
+    summary =
+        "One border side shared by cell and differential style patches, defined by its border style and optional color semantics.",
+    displayOrder = 50)
 public record BorderSideInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ExcelBorderStyle> style,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ColorInput> color) {

@@ -1,11 +1,17 @@
 package dev.erst.gridgrind.core.model.style;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Protocol-facing differential border patch used by conditional-formatting rule styles. */
+@CatalogType(
+    id = "DifferentialBorderInput",
+    summary =
+        "Conditional-formatting differential border patch; at least one side must be set. Use 'all' as shorthand for all four sides.",
+    displayOrder = 61)
 public record DifferentialBorderInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> all,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> top,

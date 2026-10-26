@@ -1,9 +1,14 @@
 package dev.erst.gridgrind.core.model.customxml;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Factual workbook custom-XML data-binding metadata returned by inspection. */
+@CatalogType(
+    id = "CustomXmlDataBindingReport",
+    summary = "Optional custom-XML data-binding metadata attached to one workbook mapping.",
+    displayOrder = 104)
 public record CustomXmlDataBindingReport(
     @Nullable String dataBindingName,
     @Nullable Boolean fileBinding,

@@ -2,7 +2,6 @@ package dev.erst.gridgrind.core.catalog;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import java.util.Optional;
@@ -37,11 +36,11 @@ final class GridGrindProtocolContractSupportFixtures {
   interface Unannotated {}
 
   /** Type with an unusable blank discriminator annotation. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = " ")
+  @dev.erst.gridgrind.core.metadata.Union(discriminator = " ")
   interface BlankDiscriminator {}
 
   /** Type with an explicitly named discriminator. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+  @dev.erst.gridgrind.core.metadata.Union(discriminator = "kind")
   interface NamedDiscriminator {}
 
   record PlainRecord(String plain) {}

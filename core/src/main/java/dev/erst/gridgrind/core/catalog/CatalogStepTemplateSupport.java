@@ -317,13 +317,13 @@ final class CatalogStepTemplateSupport {
   }
 
   private static List<TypeEntry> topLevelEntries(Catalog catalog, String typeSet) {
-    if ("sourceTypes".equals(typeSet)) {
+    if ("workbookSourceTypes".equals(typeSet)) {
       return catalog.sourceTypes();
     }
-    if ("persistenceTypes".equals(typeSet)) {
+    if ("workbookPersistenceTypes".equals(typeSet)) {
       return catalog.persistenceTypes();
     }
-    if ("stepTypes".equals(typeSet)) {
+    if ("workbookStepTypes".equals(typeSet)) {
       return catalog.stepTypes();
     }
     if ("mutationActionTypes".equals(typeSet)) {

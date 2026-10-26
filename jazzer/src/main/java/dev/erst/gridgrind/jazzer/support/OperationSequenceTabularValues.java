@@ -127,7 +127,7 @@ final class OperationSequenceTabularValues {
                 Optional.empty())));
   }
 
-  static PivotTableInput.Source nextPivotTableSource(
+  static PivotTableInput.PivotSourceSpec nextPivotTableSource(
       GridGrindFuzzData data,
       String targetSheet,
       String namedRangeName,
@@ -136,16 +136,16 @@ final class OperationSequenceTabularValues {
       boolean validRange) {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
       case 0 ->
-          new PivotTableInput.Source.Range(
+          new PivotTableInput.PivotSourceSpec.Range(
               new SheetName(targetSheet),
               new dev.erst.gridgrind.core.vocabulary.RangeRef(
                   validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false)));
       case 1 ->
-          new PivotTableInput.Source.NamedRange(
+          new PivotTableInput.PivotSourceSpec.NamedRange(
               new dev.erst.gridgrind.core.vocabulary.DefinedName(
                   validName ? namedRangeName : nextNamedRangeName(data, false)));
       default ->
-          new PivotTableInput.Source.Table(
+          new PivotTableInput.PivotSourceSpec.Table(
               new dev.erst.gridgrind.core.vocabulary.TableName(
                   validName ? tableName : nextTableName(data, false, targetSheet)));
     };

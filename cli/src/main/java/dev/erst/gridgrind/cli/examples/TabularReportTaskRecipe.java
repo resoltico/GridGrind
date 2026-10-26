@@ -89,7 +89,7 @@ final class TabularReportTaskRecipe {
                         "Lay Out The Workbook",
                         "Create sheets, headers, and fixed structure before data rows arrive.",
                         List.of(
-                            ref("sourceTypes", "NEW"),
+                            ref("workbookSourceTypes", "NEW"),
                             ref("mutationActionTypes", "ENSURE_SHEET"),
                             ref("mutationActionTypes", "SET_RANGE")),
                         List.of(
@@ -101,7 +101,7 @@ final class TabularReportTaskRecipe {
                         List.of(
                             ref("mutationActionTypes", "SET_TABLE"),
                             ref("mutationActionTypes", "AUTO_SIZE_COLUMNS"),
-                            ref("persistenceTypes", "SAVE_AS")),
+                            ref("workbookPersistenceTypes", "SAVE_AS")),
                         List.of("Prefer one table per logical data region.")),
                     phase(
                         TaskPhasePurpose.VERIFY,

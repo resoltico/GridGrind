@@ -323,7 +323,7 @@ class CliDiscoveryValidationCoverageTest {
                                     TaskPhasePurpose.AUTHOR,
                                     "Phase",
                                     "Objective",
-                                    List.of(new TaskCapabilityRef("sourceTypes", "NEW")),
+                                    List.of(new TaskCapabilityRef("workbookSourceTypes", "NEW")),
                                     List.of("note"))))))
             .getMessage());
 

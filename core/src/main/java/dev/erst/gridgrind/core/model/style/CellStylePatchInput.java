@@ -1,11 +1,17 @@
 package dev.erst.gridgrind.core.model.style;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing cell-style patch used for range and cell presentation changes. */
+@CatalogType(
+    id = "CellStylePatchInput",
+    summary =
+        "Style patch applied to a cell or range; at least one field must be set. Colors preserve RGB, theme, indexed, and tint semantics; style subgroups are nested explicitly.",
+    displayOrder = 43)
 public record CellStylePatchInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> numberFormat,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellAlignmentInput> alignment,

@@ -1,10 +1,15 @@
 package dev.erst.gridgrind.core.model.security;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /** Factual OOXML package-security report covering encryption and package signatures. */
+@CatalogType(
+    id = "OoxmlPackageSecurityReport",
+    summary = "Factual OOXML package-security report covering encryption and package signatures.",
+    displayOrder = 23)
 public record OoxmlPackageSecurityReport(
     OoxmlEncryptionReport encryption, List<OoxmlSignatureReport> signatures) {
   public OoxmlPackageSecurityReport {

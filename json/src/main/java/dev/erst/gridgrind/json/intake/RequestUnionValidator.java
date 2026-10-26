@@ -2,7 +2,7 @@ package dev.erst.gridgrind.json.intake;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
 import dev.erst.gridgrind.core.problem.RequestMissingTypeDiscriminator;
@@ -52,8 +52,8 @@ final class RequestUnionValidator {
         diagnosticByteOffset,
         "type",
         Optional.empty(),
-        typeId -> SelectorJsonSupport.typeFor(typeId).map(type -> type.asSubclass(Record.class)),
-        SelectorJsonSupport.selectorTypes(),
+        typeId -> SelectorTypes.typeFor(typeId).map(type -> type.asSubclass(Record.class)),
+        SelectorTypes.selectorTypes(),
         problems);
   }
 

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.table;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.TableLabel;
@@ -11,6 +12,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing factual report for one table loaded from a workbook. */
+@CatalogType(
+    id = "TableEntryReport",
+    summary = "Exact workbook table report used by table-facts assertions.",
+    displayOrder = 91)
 public record TableEntryReport(
     TableLabel name,
     SheetLabel sheetName,
@@ -69,6 +74,10 @@ public record TableEntryReport(
   }
 
   /** Structural table facts that must move together to describe one persisted table shape. */
+  @CatalogType(
+      id = "TableEntryStructureReport",
+      summary = "Structural table facts including header/totals counts and per-column metadata.",
+      displayOrder = 92)
   public record Structure(
       int headerRowCount,
       int totalsRowCount,
@@ -99,6 +108,10 @@ public record TableEntryReport(
   }
 
   /** Persisted workbook-table behavior toggles. */
+  @CatalogType(
+      id = "TableEntryBehaviorReport",
+      summary = "Persisted workbook-table behavior toggles.",
+      displayOrder = 93)
   public record Behavior(
       boolean hasAutofilter, boolean published, boolean insertRow, boolean insertRowShift) {
     static Behavior defaults() {
@@ -107,6 +120,10 @@ public record TableEntryReport(
   }
 
   /** Optional authored notes and style labels attached to one persisted workbook table. */
+  @CatalogType(
+      id = "TableEntryPresentationReport",
+      summary = "Optional table comment and style labels attached to one persisted workbook table.",
+      displayOrder = 94)
   public record Presentation(
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> comment,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> headerRowCellStyle,

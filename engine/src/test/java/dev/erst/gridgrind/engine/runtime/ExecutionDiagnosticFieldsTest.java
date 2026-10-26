@@ -97,7 +97,8 @@ class ExecutionDiagnosticFieldsTest {
             new PivotTableInput(
                 "SalesPivot",
                 new SheetName("Budget"),
-                new PivotTableInput.Source.Range(new SheetName("Budget"), new RangeRef("A1:B5")),
+                new PivotTableInput.PivotSourceSpec.Range(
+                    new SheetName("Budget"), new RangeRef("A1:B5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
@@ -187,7 +188,7 @@ class ExecutionDiagnosticFieldsTest {
                 new PivotTableInput(
                     "SalesPivot",
                     new SheetName("Budget"),
-                    new PivotTableInput.Source.Range(
+                    new PivotTableInput.PivotSourceSpec.Range(
                         new SheetName("Budget"), new RangeRef("A1:B5")),
                     new PivotTableInput.Anchor(new CellAddress("C5")),
                     List.of(),
@@ -208,7 +209,7 @@ class ExecutionDiagnosticFieldsTest {
                 new PivotTableInput(
                     "SalesPivot",
                     new SheetName("Budget"),
-                    new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")),
+                    new PivotTableInput.PivotSourceSpec.NamedRange(new DefinedName("BudgetSource")),
                     new PivotTableInput.Anchor(new CellAddress("C5")),
                     List.of(),
                     List.of(),

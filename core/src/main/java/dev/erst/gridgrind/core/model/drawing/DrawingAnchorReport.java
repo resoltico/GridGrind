@@ -1,21 +1,19 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import java.util.Objects;
 
 /** Factual drawing anchor report returned by drawing-object reads. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = DrawingAnchorReport.TwoCell.class, name = "TWO_CELL"),
-  @JsonSubTypes.Type(value = DrawingAnchorReport.OneCell.class, name = "ONE_CELL"),
-  @JsonSubTypes.Type(value = DrawingAnchorReport.Absolute.class, name = "ABSOLUTE")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 15)
 public sealed interface DrawingAnchorReport
-    permits DrawingAnchorReport.TwoCell, DrawingAnchorReport.OneCell, DrawingAnchorReport.Absolute {
+    permits dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.TwoCell,
+        dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.OneCell,
+        dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.Absolute {
 
   /** Factual two-cell anchor. */
+  @Variant(id = "TWO_CELL", summary = "Drawing anchor spanning one start and end marker.")
   record TwoCell(
       DrawingMarkerReport from, DrawingMarkerReport to, ExcelDrawingAnchorBehavior behavior)
       implements DrawingAnchorReport {
@@ -27,6 +25,7 @@ public sealed interface DrawingAnchorReport
   }
 
   /** Factual one-cell anchor. */
+  @Variant(id = "ONE_CELL", summary = "Drawing anchor with one start marker plus explicit size.")
   record OneCell(
       DrawingMarkerReport from, long widthEmu, long heightEmu, ExcelDrawingAnchorBehavior behavior)
       implements DrawingAnchorReport {
@@ -43,6 +42,7 @@ public sealed interface DrawingAnchorReport
   }
 
   /** Factual absolute anchor. */
+  @Variant(id = "ABSOLUTE", summary = "Drawing anchor with absolute EMU coordinates and size.")
   record Absolute(
       long xEmu, long yEmu, long widthEmu, long heightEmu, ExcelDrawingAnchorBehavior behavior)
       implements DrawingAnchorReport {

@@ -16,9 +16,9 @@ import java.util.Objects;
 /**
  * Canonical subtype-id resolver for the public GridGrind wire contract.
  *
- * <p>The owning truth for sealed wire ids is the {@code @JsonSubTypes} annotation on the root
- * contract family. Downstream catalog, help, diagnostics, and validation surfaces derive ids from
- * that annotation map instead of duplicating string literals.
+ * <p>The owning truth for sealed wire ids is the {@code @Variant} annotation on each record
+ * alternative. Downstream catalog, help, diagnostics, and validation surfaces derive ids from that
+ * annotation map instead of duplicating string literals.
  */
 public final class GridGrindProtocolTypeNames {
   private static final Map<Class<?>, String> WORKBOOK_SOURCE_TYPE_NAMES =

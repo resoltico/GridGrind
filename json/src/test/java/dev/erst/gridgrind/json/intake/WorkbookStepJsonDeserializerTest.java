@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.plan.Selector;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
@@ -349,12 +349,12 @@ class WorkbookStepJsonDeserializerTest {
         WorkbookStepJsonTargetSupport.castSelectorType(TableSelector.ByName.class));
     assertEquals(
         "TableSelector(TABLE_BY_NAME, TABLE_BY_NAME_ON_SHEET)",
-        SelectorJsonSupport.familySummary(
+        SelectorTypes.familySummary(
             List.of(
                 (Class<? extends Selector>) TableSelector.ByName.class,
                 TableSelector.ByNameOnSheet.class)));
-    assertEquals("Selector", SelectorJsonSupport.familyName(Selector.class));
-    assertEquals("TableSelector", SelectorJsonSupport.familyName(TableSelector.ByName.class));
+    assertEquals("Selector", SelectorTypes.familyName(Selector.class));
+    assertEquals("TableSelector", SelectorTypes.familyName(TableSelector.ByName.class));
   }
 
   @Test

@@ -599,7 +599,8 @@ final class XlsxParityOracle {
             "Expected parity pivot table to persist a nonblank name on sheet "
                 + ownerSheet.getSheetName());
     PivotTableReport.Anchor anchor = pivotAnchor(definition);
-    PivotTableReport.Source source = pivotSource(workbook, pivotTable.getPivotCacheDefinition());
+    PivotTableReport.PivotSourceReport source =
+        pivotSource(workbook, pivotTable.getPivotCacheDefinition());
     List<String> sourceColumnNames = pivotCacheFieldNames(pivotTable.getPivotCacheDefinition());
     PivotAxisFields columnLabels = pivotColumnLabels(definition, sourceColumnNames);
     List<PivotTableReport.Field> rowLabels = pivotRowLabels(definition, sourceColumnNames);
@@ -736,7 +737,7 @@ final class XlsxParityOracle {
         new RangeLabel(normalizeArea(area)));
   }
 
-  private static PivotTableReport.Source pivotSource(
+  private static PivotTableReport.PivotSourceReport pivotSource(
       XSSFWorkbook workbook, XSSFPivotCacheDefinition cacheDefinition) {
     if (cacheDefinition == null
         || cacheDefinition.getCTPivotCacheDefinition().getCacheSource() == null
@@ -748,7 +749,7 @@ final class XlsxParityOracle {
     String sheetName =
         requireNonBlank(worksheetSource.getSheet(), "Expected parity pivot source sheet name.");
     if (worksheetSource.getRef() != null && !worksheetSource.getRef().isBlank()) {
-      return new PivotTableReport.Source.Range(
+      return new PivotTableReport.PivotSourceReport.Range(
           new SheetName(sheetName),
           new RangeLabel(
               normalizeArea(
@@ -760,7 +761,7 @@ final class XlsxParityOracle {
     List<Name> namedRanges = matchingNamedRanges(workbook, sourceName, sheetName);
     if (namedRanges.size() == 1) {
       AreaReference area = namedRangeArea(namedRanges.getFirst());
-      return new PivotTableReport.Source.NamedRange(
+      return new PivotTableReport.PivotSourceReport.NamedRange(
           new DefinedName(sourceName),
           new SheetName(sourceSheetName(workbook, area, namedRanges.getFirst(), sheetName)),
           new RangeLabel(normalizeArea(area)));
@@ -777,7 +778,7 @@ final class XlsxParityOracle {
               + sourceName
               + "' to resolve to a named range or table.");
     }
-    return new PivotTableReport.Source.Table(
+    return new PivotTableReport.PivotSourceReport.Table(
         new TableName(sourceName),
         new SheetName(table.getSheetName()),
         new RangeLabel(

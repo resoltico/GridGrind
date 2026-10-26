@@ -40,10 +40,10 @@
       "group" : "windowReportTypes"
     }, {
       "entryIds" : [ "INLINE", "UTF8_FILE", "STANDARD_INPUT" ],
-      "group" : "textSourceTypes"
+      "group" : "textSourceInputTypes"
     }, {
       "entryIds" : [ "INLINE_BASE64", "FILE", "STANDARD_INPUT" ],
-      "group" : "binarySourceTypes"
+      "group" : "binarySourceInputTypes"
     }, {
       "entryIds" : [ "RANGE", "FORMULA" ],
       "group" : "namedRangeReportTypes"
@@ -58,19 +58,19 @@
       "group" : "pivotTableReportTypes"
     }, {
       "entryIds" : [ "RANGE", "NAMED_RANGE", "TABLE" ],
-      "group" : "pivotTableReportSourceTypes"
+      "group" : "pivotSourceReportTypes"
     }, {
       "entryIds" : [ "AREA", "AREA_3D", "BAR", "BAR_3D", "DOUGHNUT", "LINE", "LINE_3D", "PIE", "PIE_3D", "RADAR", "SCATTER", "SURFACE", "SURFACE_3D", "UNSUPPORTED" ],
-      "group" : "chartPlotReportTypes"
+      "group" : "plotTypes"
     }, {
       "entryIds" : [ "NONE", "TEXT", "FORMULA" ],
-      "group" : "chartTitleReportTypes"
+      "group" : "titleTypes"
     }, {
       "entryIds" : [ "HIDDEN", "VISIBLE" ],
-      "group" : "chartLegendReportTypes"
+      "group" : "legendTypes"
     }, {
       "entryIds" : [ "STRING_REFERENCE", "NUMERIC_REFERENCE", "STRING_LITERAL", "NUMERIC_LITERAL" ],
-      "group" : "chartDataSourceReportTypes"
+      "group" : "dataSourceTypes"
     }, {
       "entryIds" : [ "TWO_CELL", "ONE_CELL", "ABSOLUTE" ],
       "group" : "drawingAnchorReportTypes"
@@ -88,7 +88,7 @@
       "group" : "hyperlinkTargetTypes"
     }, {
       "entryIds" : [ "NONE", "FROZEN", "SPLIT" ],
-      "group" : "paneTypes"
+      "group" : "paneInputTypes"
     }, {
       "entryIds" : [ "APPEND_AT_END", "AT_INDEX" ],
       "group" : "sheetCopyPositionTypes"
@@ -130,7 +130,7 @@
       "group" : "tableCellSelectorTypes"
     }, {
       "entryIds" : [ "NAMED_RANGE_BY_NAME", "NAMED_RANGE_WORKBOOK_SCOPE", "NAMED_RANGE_SHEET_SCOPE" ],
-      "group" : "namedRangeRefSelectorTypes"
+      "group" : "refTypes"
     }, {
       "entryIds" : [ "WORKBOOK", "SHEET" ],
       "group" : "namedRangeScopeTypes"
@@ -148,13 +148,13 @@
       "group" : "pivotTableSelectorTypes"
     }, {
       "entryIds" : [ "FULL_XSSF", "EVENT_READ", "STREAMING_WRITE" ],
-      "group" : "executionModeTypes"
+      "group" : "executionModeInputTypes"
     }, {
       "entryIds" : [ "NOT_STARTED", "NOT_REQUESTED", "SUCCEEDED", "FAILED" ],
-      "group" : "executionJournalPhaseTypes"
+      "group" : "phaseTypes"
     }, {
       "entryIds" : [ "SUCCEEDED", "FAILED" ],
-      "group" : "executionJournalOutcomeTypes"
+      "group" : "outcomeTypes"
     }, {
       "entryIds" : [ "STARTED", "SUCCEEDED", "FAILED" ],
       "group" : "executionProgressEventTypes"
@@ -163,10 +163,10 @@
       "group" : "ooxmlEncryptionReportTypes"
     }, {
       "entryIds" : [ "NONE", "ENCRYPT", "PRESERVE_SOURCE" ],
-      "group" : "ooxmlPersistenceEncryptionTypes"
+      "group" : "ooxmlPersistenceEncryptionInputTypes"
     }, {
       "entryIds" : [ "NONE", "SIGN" ],
-      "group" : "ooxmlPersistenceSignatureTypes"
+      "group" : "ooxmlPersistenceSignatureInputTypes"
     }, {
       "entryIds" : [ "STEP", "REQUEST_PATH", "REQUEST_BYTE_OFFSET", "FORMULA_CELL" ],
       "group" : "requestWarningLocationTypes"
@@ -187,10 +187,10 @@
       "group" : "chartDataSourceInputTypes"
     }, {
       "entryIds" : [ "RANGE", "NAMED_RANGE", "TABLE" ],
-      "group" : "pivotTableSourceTypes"
+      "group" : "pivotSourceSpecTypes"
     }, {
       "entryIds" : [ "POINTS", "TWIPS" ],
-      "group" : "fontHeightTypes"
+      "group" : "fontHeightInputTypes"
     }, {
       "entryIds" : [ "RGB", "THEME", "INDEXED" ],
       "group" : "colorInputTypes"
@@ -214,34 +214,34 @@
       "group" : "cellFillReportTypes"
     }, {
       "entryIds" : [ "EXPLICIT_LIST", "FORMULA_LIST", "WHOLE_NUMBER", "DECIMAL_NUMBER", "DATE", "TIME", "TEXT_LENGTH", "CUSTOM_FORMULA" ],
-      "group" : "dataValidationRuleTypes"
+      "group" : "dataValidationRuleInputTypes"
     }, {
       "entryIds" : [ "VALUES", "CUSTOM", "DYNAMIC", "TOP10", "COLOR", "ICON" ],
-      "group" : "autofilterFilterCriterionTypes"
+      "group" : "autofilterFilterCriterionInputTypes"
     }, {
       "entryIds" : [ "FORMULA_RULE", "CELL_VALUE_RULE", "COLOR_SCALE_RULE", "DATA_BAR_RULE", "ICON_SET_RULE", "TOP10_RULE" ],
-      "group" : "conditionalFormattingRuleTypes"
+      "group" : "conditionalFormattingRuleInputTypes"
     }, {
       "entryIds" : [ "MIN", "MAX", "NUMBER", "PERCENT", "PERCENTILE", "FORMULA" ],
-      "group" : "conditionalFormattingThresholdTypes"
+      "group" : "conditionalFormattingThresholdInputTypes"
     }, {
       "entryIds" : [ "NONE", "RANGE" ],
-      "group" : "printAreaTypes"
+      "group" : "printAreaInputTypes"
     }, {
       "entryIds" : [ "AUTOMATIC", "FIT" ],
-      "group" : "printScalingTypes"
+      "group" : "printScalingInputTypes"
     }, {
       "entryIds" : [ "NONE", "BAND" ],
-      "group" : "printTitleRowsTypes"
+      "group" : "printTitleRowsInputTypes"
     }, {
       "entryIds" : [ "NONE", "BAND" ],
-      "group" : "printTitleColumnsTypes"
+      "group" : "printTitleColumnsInputTypes"
     }, {
       "entryIds" : [ "NONE", "NAMED" ],
-      "group" : "tableStyleTypes"
+      "group" : "tableStyleInputTypes"
     }, {
       "entryIds" : [ "DO_NOT_CALCULATE", "DEFERRED_CALCULATION", "EVALUATE_ALL", "EVALUATE_TARGETS", "REQUIRE_EVALUATION", "CLEAR_CACHES_ONLY" ],
-      "group" : "calculationStrategyTypes"
+      "group" : "calculationStrategyInputTypes"
     } ],
     "plainTypeGroups" : [ {
       "entryIds" : [ "ExecutionJournal" ],
@@ -284,19 +284,19 @@
       "group" : "calculationReportType"
     }, {
       "entryIds" : [ "CalculationPreflightReport" ],
-      "group" : "calculationPreflightType"
+      "group" : "calculationPreflightReportType"
     }, {
       "entryIds" : [ "CalculationPreflightSummary" ],
-      "group" : "calculationSummaryType"
+      "group" : "calculationPreflightSummaryType"
     }, {
       "entryIds" : [ "FormulaCellTarget" ],
       "group" : "formulaCellTargetType"
     }, {
       "entryIds" : [ "FormulaCapabilityReport" ],
-      "group" : "formulaCapabilityType"
+      "group" : "formulaCapabilityReportType"
     }, {
       "entryIds" : [ "CalculationExecutionReport" ],
-      "group" : "calculationExecutionType"
+      "group" : "calculationExecutionReportType"
     }, {
       "entryIds" : [ "FormulaEnvironmentInput" ],
       "group" : "formulaEnvironmentInputType"
@@ -581,13 +581,13 @@
     "requestTypeId" : "WorkbookPlan",
     "topLevelGroups" : [ {
       "entryIds" : [ "NEW", "EXISTING" ],
-      "group" : "sourceTypes"
+      "group" : "workbookSourceTypes"
     }, {
       "entryIds" : [ "NONE", "OVERWRITE", "SAVE_AS" ],
-      "group" : "persistenceTypes"
+      "group" : "workbookPersistenceTypes"
     }, {
       "entryIds" : [ "MUTATION", "ASSERTION", "INSPECTION" ],
-      "group" : "stepTypes"
+      "group" : "workbookStepTypes"
     }, {
       "entryIds" : [ "ENSURE_SHEET", "RENAME_SHEET", "DELETE_SHEET", "MOVE_SHEET", "COPY_SHEET", "SET_ACTIVE_SHEET", "SET_SELECTED_SHEETS", "SET_SHEET_VISIBILITY", "SET_SHEET_PROTECTION", "CLEAR_SHEET_PROTECTION", "SET_WORKBOOK_PROTECTION", "CLEAR_WORKBOOK_PROTECTION", "MERGE_CELLS", "UNMERGE_CELLS", "SET_COLUMN_WIDTH", "SET_ROW_HEIGHT", "INSERT_ROWS", "DELETE_ROWS", "SHIFT_ROWS", "INSERT_COLUMNS", "DELETE_COLUMNS", "SHIFT_COLUMNS", "SET_ROW_VISIBILITY", "SET_COLUMN_VISIBILITY", "GROUP_ROWS", "UNGROUP_ROWS", "GROUP_COLUMNS", "UNGROUP_COLUMNS", "SET_SHEET_PANE", "SET_SHEET_ZOOM", "SET_SHEET_PRESENTATION", "SET_PRINT_LAYOUT", "CLEAR_PRINT_LAYOUT", "AUTO_SIZE_COLUMNS", "SET_CELL", "SET_RANGE", "CLEAR_RANGE", "SET_ARRAY_FORMULA", "CLEAR_ARRAY_FORMULA", "SET_HYPERLINK", "CLEAR_HYPERLINK", "SET_COMMENT", "CLEAR_COMMENT", "APPLY_STYLE", "APPEND_ROW", "SET_PICTURE", "SET_SIGNATURE_LINE", "SET_CHART", "SET_SHAPE", "SET_EMBEDDED_OBJECT", "SET_DRAWING_OBJECT_ANCHOR", "DELETE_DRAWING_OBJECT", "IMPORT_CUSTOM_XML_MAPPING", "SET_PIVOT_TABLE", "SET_DATA_VALIDATION", "CLEAR_DATA_VALIDATIONS", "SET_CONDITIONAL_FORMATTING", "CLEAR_CONDITIONAL_FORMATTING", "SET_AUTOFILTER", "CLEAR_AUTOFILTER", "SET_TABLE", "DELETE_TABLE", "DELETE_PIVOT_TABLE", "SET_NAMED_RANGE", "DELETE_NAMED_RANGE" ],
       "group" : "mutationActionTypes"

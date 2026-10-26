@@ -1,19 +1,13 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.Objects;
 
 /** One factual autofilter sort condition reported from a workbook. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = AutofilterSortConditionReport.Value.class, name = "VALUE"),
-  @JsonSubTypes.Type(value = AutofilterSortConditionReport.CellColor.class, name = "CELL_COLOR"),
-  @JsonSubTypes.Type(value = AutofilterSortConditionReport.FontColor.class, name = "FONT_COLOR"),
-  @JsonSubTypes.Type(value = AutofilterSortConditionReport.Icon.class, name = "ICON")
-})
+@Union(discriminator = "type")
 public sealed interface AutofilterSortConditionReport
     permits AutofilterSortConditionReport.Value,
         AutofilterSortConditionReport.CellColor,
@@ -26,6 +20,7 @@ public sealed interface AutofilterSortConditionReport
   boolean descending();
 
   /** Reports one ordinary value-based sort condition. */
+  @Variant(id = "VALUE", summary = "Reports one ordinary value-based sort condition.")
   record Value(RangeLabel range, boolean descending) implements AutofilterSortConditionReport {
     public Value {
       java.util.Objects.requireNonNull(range, "range must not be null");
@@ -33,6 +28,7 @@ public sealed interface AutofilterSortConditionReport
   }
 
   /** Reports one cell-fill-color sort condition. */
+  @Variant(id = "CELL_COLOR", summary = "Reports one cell-fill-color sort condition.")
   record CellColor(RangeLabel range, boolean descending, CellColorReport color)
       implements AutofilterSortConditionReport {
     public CellColor {
@@ -42,6 +38,7 @@ public sealed interface AutofilterSortConditionReport
   }
 
   /** Reports one font-color sort condition. */
+  @Variant(id = "FONT_COLOR", summary = "Reports one font-color sort condition.")
   record FontColor(RangeLabel range, boolean descending, CellColorReport color)
       implements AutofilterSortConditionReport {
     public FontColor {
@@ -51,6 +48,7 @@ public sealed interface AutofilterSortConditionReport
   }
 
   /** Reports one icon-based sort condition. */
+  @Variant(id = "ICON", summary = "Reports one icon-based sort condition.")
   record Icon(RangeLabel range, boolean descending, int iconId)
       implements AutofilterSortConditionReport {
     public Icon {

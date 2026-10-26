@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.core.model.drawing;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
+
 /** One factual cell-relative drawing marker returned by drawing reads. */
+@CatalogType(
+    id = "DrawingMarkerReport",
+    summary = "Exact cell-relative drawing marker report.",
+    displayOrder = 96)
 public record DrawingMarkerReport(int columnIndex, int rowIndex, int dx, int dy) {
   public DrawingMarkerReport {
     if (columnIndex < 0) {

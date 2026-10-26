@@ -1,7 +1,8 @@
 package dev.erst.gridgrind.core.model.pivot;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -15,13 +16,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing factual pivot-table report returned by pivot-table reads. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = PivotTableReport.Supported.class, name = "SUPPORTED"),
-  @JsonSubTypes.Type(value = PivotTableReport.Unsupported.class, name = "UNSUPPORTED")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 9)
 public sealed interface PivotTableReport
-    permits PivotTableReport.Supported, PivotTableReport.Unsupported {
+    permits dev.erst.gridgrind.core.model.pivot.PivotTableReport.Supported,
+        dev.erst.gridgrind.core.model.pivot.PivotTableReport.Unsupported {
 
   /** Workbook-global pivot-table name. */
   String name();
@@ -33,11 +31,12 @@ public sealed interface PivotTableReport
   Anchor anchor();
 
   /** Supported pivot-table report with first-class factual structure. */
+  @Variant(id = "SUPPORTED", summary = "Exact supported pivot-table report.")
   record Supported(
       String name,
       SheetName sheetName,
       Anchor anchor,
-      Source source,
+      PivotSourceReport source,
       List<Field> rowLabels,
       List<Field> columnLabels,
       List<Field> reportFilters,
@@ -55,6 +54,9 @@ public sealed interface PivotTableReport
   }
 
   /** Unsupported or malformed pivot-table report preserved for truthful readback. */
+  @Variant(
+      id = "UNSUPPORTED",
+      summary = "Exact unsupported pivot-table report preserved from the workbook.")
   record Unsupported(String name, SheetName sheetName, Anchor anchor, String detail)
       implements PivotTableReport {
     public Unsupported {
@@ -64,16 +66,15 @@ public sealed interface PivotTableReport
   }
 
   /** Factual persisted pivot source. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Source.Range.class, name = "RANGE"),
-    @JsonSubTypes.Type(value = Source.NamedRange.class, name = "NAMED_RANGE"),
-    @JsonSubTypes.Type(value = Source.Table.class, name = "TABLE")
-  })
-  sealed interface Source permits Source.Range, Source.NamedRange, Source.Table {
+  @Union(discriminator = "type", catalog = true, displayOrder = 10)
+  sealed interface PivotSourceReport
+      permits dev.erst.gridgrind.core.model.pivot.PivotTableReport.PivotSourceReport.Range,
+          dev.erst.gridgrind.core.model.pivot.PivotTableReport.PivotSourceReport.NamedRange,
+          dev.erst.gridgrind.core.model.pivot.PivotTableReport.PivotSourceReport.Table {
 
     /** Sheet range source stored directly in the pivot cache definition. */
-    record Range(SheetName sheetName, RangeLabel range) implements Source {
+    @Variant(id = "RANGE", summary = "Pivot source resolved from one sheet range.")
+    record Range(SheetName sheetName, RangeLabel range) implements PivotSourceReport {
       public Range {
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         java.util.Objects.requireNonNull(range, "range must not be null");
@@ -81,7 +82,9 @@ public sealed interface PivotTableReport
     }
 
     /** Named-range-backed source plus the currently resolved source range. */
-    record NamedRange(DefinedName name, SheetName sheetName, RangeLabel range) implements Source {
+    @Variant(id = "NAMED_RANGE", summary = "Pivot source resolved from one named range.")
+    record NamedRange(DefinedName name, SheetName sheetName, RangeLabel range)
+        implements PivotSourceReport {
       public NamedRange {
         java.util.Objects.requireNonNull(name, "name must not be null");
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -90,7 +93,9 @@ public sealed interface PivotTableReport
     }
 
     /** Table-backed source plus the currently resolved table range. */
-    record Table(TableName name, SheetName sheetName, RangeLabel range) implements Source {
+    @Variant(id = "TABLE", summary = "Pivot source resolved from one workbook table.")
+    record Table(TableName name, SheetName sheetName, RangeLabel range)
+        implements PivotSourceReport {
       public Table {
         java.util.Objects.requireNonNull(name, "name must not be null");
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -100,6 +105,10 @@ public sealed interface PivotTableReport
   }
 
   /** Factual stored destination anchor and persisted location range. */
+  @CatalogType(
+      id = "PivotTableAnchorReport",
+      summary = "Exact pivot-table anchor report.",
+      displayOrder = 97)
   record Anchor(CellAddress topLeftAddress, RangeLabel locationRange) {
     public Anchor {
       java.util.Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
@@ -108,6 +117,10 @@ public sealed interface PivotTableReport
   }
 
   /** Factual pivot field bound to one source column. */
+  @CatalogType(
+      id = "PivotTableFieldReport",
+      summary = "Exact pivot field report bound to one source column.",
+      displayOrder = 98)
   record Field(int sourceColumnIndex, String sourceColumnName) {
     public Field {
       if (sourceColumnIndex < 0) {
@@ -118,6 +131,10 @@ public sealed interface PivotTableReport
   }
 
   /** Factual pivot data field. */
+  @CatalogType(
+      id = "PivotTableDataFieldReport",
+      summary = "Exact pivot data-field report.",
+      displayOrder = 99)
   record DataField(
       int sourceColumnIndex,
       String sourceColumnName,

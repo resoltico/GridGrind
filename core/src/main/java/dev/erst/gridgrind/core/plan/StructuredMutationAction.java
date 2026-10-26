@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
@@ -20,10 +20,11 @@ import java.util.Optional;
 /** Mutation family for workbook-scoped structured Excel features. */
 public sealed interface StructuredMutationAction extends MutationAction {
   /** Imports one XML document into one existing workbook custom-XML mapping. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "IMPORT_CUSTOM_XML_MAPPING",
       summary = "Import one XML document into one existing workbook custom-XML mapping.",
-      targetSelectors = {WorkbookSelector.class})
+      targetSelectors = {WorkbookSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record ImportCustomXmlMapping(CustomXmlImportInput mapping) implements StructuredMutationAction {
     public ImportCustomXmlMapping {
       Objects.requireNonNull(mapping, "mapping must not be null");
@@ -31,10 +32,11 @@ public sealed interface StructuredMutationAction extends MutationAction {
   }
 
   /** Creates or replaces one workbook-global pivot-table definition. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "SET_PIVOT_TABLE",
       summary = "Create or replace one workbook-global pivot-table definition.",
-      targetSelectors = {PivotTableSelector.ByNameOnSheet.class})
+      targetSelectors = {PivotTableSelector.ByNameOnSheet.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetPivotTable(PivotTableInput pivotTable) implements StructuredMutationAction {
     public SetPivotTable {
       Objects.requireNonNull(pivotTable, "pivotTable must not be null");
@@ -42,10 +44,11 @@ public sealed interface StructuredMutationAction extends MutationAction {
   }
 
   /** Creates or replaces one data-validation rule over the requested sheet range. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "SET_DATA_VALIDATION",
       summary = "Create or replace one data-validation rule over the requested sheet range.",
-      targetSelectors = {RangeSelector.ByRange.class})
+      targetSelectors = {RangeSelector.ByRange.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetDataValidation(DataValidationInput validation) implements StructuredMutationAction {
     public SetDataValidation {
       Objects.requireNonNull(validation, "validation must not be null");
@@ -53,20 +56,22 @@ public sealed interface StructuredMutationAction extends MutationAction {
   }
 
   /** Removes data-validation structures on the sheet that match the provided range selection. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "CLEAR_DATA_VALIDATIONS",
       summary = "Remove data-validation structures on the sheet that match the range selection.",
-      targetSelectors = {RangeSelector.class})
+      targetSelectors = {RangeSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record ClearDataValidations() implements StructuredMutationAction {
     public ClearDataValidations {}
   }
 
   /** Creates or replaces one logical conditional-formatting block over explicit sheet ranges. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "SET_CONDITIONAL_FORMATTING",
       summary =
           "Create or replace one logical conditional-formatting block over explicit sheet ranges.",
-      targetSelectors = {RangeSelector.ByRange.class, RangeSelector.ByRanges.class})
+      targetSelectors = {RangeSelector.ByRange.class, RangeSelector.ByRanges.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetConditionalFormatting(ConditionalFormattingDefinitionInput conditionalFormatting)
       implements StructuredMutationAction {
     public SetConditionalFormatting {
@@ -75,19 +80,21 @@ public sealed interface StructuredMutationAction extends MutationAction {
   }
 
   /** Removes conditional-formatting blocks on the sheet that match the provided range selection. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "CLEAR_CONDITIONAL_FORMATTING",
       summary = "Remove conditional-formatting blocks on the sheet that match the range selection.",
-      targetSelectors = {RangeSelector.class})
+      targetSelectors = {RangeSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record ClearConditionalFormatting() implements StructuredMutationAction {
     public ClearConditionalFormatting {}
   }
 
   /** Creates or replaces one sheet-level autofilter range. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "SET_AUTOFILTER",
       summary = "Create or replace one sheet-level autofilter range.",
-      targetSelectors = {RangeSelector.ByRange.class})
+      targetSelectors = {RangeSelector.ByRange.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetAutofilter(
       List<AutofilterFilterColumnInput> criteria,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<AutofilterSortStateInput> sortState)
@@ -116,19 +123,21 @@ public sealed interface StructuredMutationAction extends MutationAction {
   }
 
   /** Clears the sheet-level autofilter range on one sheet. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "CLEAR_AUTOFILTER",
       summary = "Clear the sheet-level autofilter range on one sheet.",
-      targetSelectors = {SheetSelector.ByName.class})
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record ClearAutofilter() implements StructuredMutationAction {
     public ClearAutofilter {}
   }
 
   /** Creates or replaces one workbook-global table definition. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "SET_TABLE",
       summary = "Create or replace one workbook-global table definition.",
-      targetSelectors = {TableSelector.ByNameOnSheet.class})
+      targetSelectors = {TableSelector.ByNameOnSheet.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record SetTable(TableInput table) implements StructuredMutationAction {
     public SetTable {
       Objects.requireNonNull(table, "table must not be null");
@@ -136,32 +145,48 @@ public sealed interface StructuredMutationAction extends MutationAction {
   }
 
   /** Deletes one existing table by workbook-global name and expected sheet. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "DELETE_TABLE",
       summary = "Delete one existing table by workbook-global name and expected sheet.",
-      targetSelectors = {TableSelector.ByNameOnSheet.class})
+      targetSelectors = {TableSelector.ByNameOnSheet.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record DeleteTable() implements StructuredMutationAction {
     public DeleteTable {}
   }
 
   /** Deletes one existing pivot table by workbook-global name and expected sheet. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "DELETE_PIVOT_TABLE",
       summary = "Delete one existing pivot table by workbook-global name and expected sheet.",
-      targetSelectors = {PivotTableSelector.ByNameOnSheet.class})
+      targetSelectors = {PivotTableSelector.ByNameOnSheet.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record DeletePivotTable() implements StructuredMutationAction {
     public DeletePivotTable {}
   }
 
   /** Creates or replaces one typed named range in workbook or sheet scope. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "SET_NAMED_RANGE",
       summary = "Create or replace one typed named range in workbook or sheet scope.",
       targetSelectors = {
         NamedRangeSelector.WorkbookScope.class,
         NamedRangeSelector.SheetScope.class
-      })
-  record SetNamedRange(DefinedName name, NamedRangeScope scope, NamedRangeTarget target)
+      },
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
+  record SetNamedRange(
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.LENGTH_RANGE,
+              minimum = 1,
+              maximum =
+                  dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues
+                      .DEFINED_NAME_MAX_CODE_POINTS)
+          @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.STRING_PATTERN,
+              text =
+                  dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.DEFINED_NAME_PATTERN)
+          DefinedName name,
+      NamedRangeScope scope,
+      NamedRangeTarget target)
       implements StructuredMutationAction {
     public SetNamedRange {
       Objects.requireNonNull(scope, "scope must not be null");
@@ -171,13 +196,14 @@ public sealed interface StructuredMutationAction extends MutationAction {
   }
 
   /** Deletes one existing named range from workbook or sheet scope. */
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "DELETE_NAMED_RANGE",
       summary = "Delete one existing named range from workbook or sheet scope.",
       targetSelectors = {
         NamedRangeSelector.WorkbookScope.class,
         NamedRangeSelector.SheetScope.class
-      })
+      },
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.STRUCTURED_MUTATION)
   record DeleteNamedRange() implements StructuredMutationAction {
     public DeleteNamedRange {}
   }

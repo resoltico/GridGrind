@@ -28,22 +28,19 @@ public final class GridGrindProtocolCatalog {
           "WorkbookPlan",
           "Complete GridGrind plan for workbook source, execution policy, formula environment,"
               + " ordered mutation, assertion, and inspection steps, and persistence.");
-  private static final List<CatalogTypeDescriptor> STEP_TYPES =
-      GridGrindProtocolCatalogTypeDescriptors.STEP_TYPES;
-  private static final List<CatalogTypeDescriptor> SOURCE_TYPES =
-      GridGrindProtocolCatalogTypeDescriptors.SOURCE_TYPES;
+  private static final List<CatalogTypeDescriptor> STEP_TYPES = CatalogTypes.STEP_TYPES;
+  private static final List<CatalogTypeDescriptor> SOURCE_TYPES = CatalogTypes.SOURCE_TYPES;
   private static final List<CatalogTypeDescriptor> PERSISTENCE_TYPES =
-      GridGrindProtocolCatalogTypeDescriptors.PERSISTENCE_TYPES;
+      CatalogTypes.PERSISTENCE_TYPES;
   private static final List<CatalogTypeDescriptor> MUTATION_ACTION_TYPES =
-      GridGrindProtocolCatalogTypeDescriptors.MUTATION_ACTION_TYPES;
-  private static final List<CatalogTypeDescriptor> ASSERTION_TYPES =
-      GridGrindProtocolCatalogTypeDescriptors.ASSERTION_TYPES;
+      CatalogTypes.MUTATION_ACTION_TYPES;
+  private static final List<CatalogTypeDescriptor> ASSERTION_TYPES = CatalogTypes.ASSERTION_TYPES;
   private static final List<CatalogTypeDescriptor> INSPECTION_QUERY_TYPES =
-      GridGrindProtocolCatalogTypeDescriptors.INSPECTION_QUERY_TYPES;
+      CatalogTypes.INSPECTION_QUERY_TYPES;
   private static final List<CatalogNestedTypeDescriptor> NESTED_TYPE_GROUPS =
-      GridGrindProtocolCatalogFieldGroupSupport.NESTED_TYPE_GROUPS;
+      CatalogTypes.NESTED_TYPE_GROUPS;
   private static final List<CatalogPlainTypeDescriptor> PLAIN_TYPE_DESCRIPTORS =
-      GridGrindProtocolCatalogFieldGroupSupport.PLAIN_TYPE_DESCRIPTORS;
+      CatalogTypes.PLAIN_TYPE_DESCRIPTORS;
 
   private static final Catalog CATALOG = buildCatalog();
 
@@ -112,17 +109,6 @@ public final class GridGrindProtocolCatalog {
   }
 
   private static Catalog buildCatalog() {
-    GridGrindProtocolCatalogCoverageValidator.validateFieldShapeGroupMappings(
-        NESTED_TYPE_GROUPS, PLAIN_TYPE_DESCRIPTORS);
-    for (CatalogTopLevelTypeDescriptorGroup group :
-        GridGrindProtocolCatalogTypeDescriptors.TOP_LEVEL_GROUPS) {
-      GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-          group.sealedType(), group.typeDescriptors());
-    }
-    for (CatalogNestedTypeDescriptor nestedTypeGroup : NESTED_TYPE_GROUPS) {
-      GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-          nestedTypeGroup.sealedType(), nestedTypeGroup.typeDescriptors());
-    }
     return CatalogStepTemplateSupport.attach(
         new Catalog(
             GridGrindProtocolVersion.current(),

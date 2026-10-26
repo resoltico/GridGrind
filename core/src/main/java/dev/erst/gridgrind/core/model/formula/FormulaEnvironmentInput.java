@@ -3,12 +3,18 @@ package dev.erst.gridgrind.core.model.formula;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.vocabulary.FormulaEnvironmentSupport;
 import java.util.List;
 import java.util.Objects;
 
 /** Request-scoped formula-evaluation environment for external workbooks and UDFs. */
+@CatalogType(
+    id = "FormulaEnvironmentInput",
+    summary =
+        "Optional request-scoped formula-evaluation environment covering external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. Omit formulaEnvironment when the default evaluator is intended.",
+    displayOrder = 18)
 public record FormulaEnvironmentInput(
     @ProtocolField(optional = true) List<FormulaExternalWorkbookInput> externalWorkbooks,
     @ProtocolField(optional = true) FormulaMissingWorkbookPolicy missingWorkbookPolicy,

@@ -1,9 +1,16 @@
 package dev.erst.gridgrind.core.model.formula;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.Objects;
 
 /** One external workbook binding used by formula evaluation. */
+@CatalogType(
+    id = "FormulaExternalWorkbookInput",
+    summary =
+        "One external workbook binding keyed by the workbook name used inside formulas. Workbook paths resolve through the shared request-owned path rule.",
+    noteRefs = {"requestOwnedPathRule"},
+    displayOrder = 26)
 public record FormulaExternalWorkbookInput(String workbookName, String path) {
   public FormulaExternalWorkbookInput {
     workbookName = requireWorkbookName(workbookName);

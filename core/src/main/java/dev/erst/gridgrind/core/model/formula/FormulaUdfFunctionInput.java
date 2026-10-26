@@ -2,11 +2,17 @@ package dev.erst.gridgrind.core.model.formula;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** One template-backed user-defined function registered for formula evaluation. */
+@CatalogType(
+    id = "FormulaUdfFunctionInput",
+    summary =
+        "One template-backed user-defined function. formulaTemplate may reference ARG1, ARG2, and higher placeholders. maximumArgumentCount defaults to minimumArgumentCount when omitted.",
+    displayOrder = 28)
 public record FormulaUdfFunctionInput(
     String name, int minimumArgumentCount, int maximumArgumentCount, String formulaTemplate) {
   private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_.]*");

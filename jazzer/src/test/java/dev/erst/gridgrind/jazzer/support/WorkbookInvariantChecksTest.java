@@ -1461,7 +1461,7 @@ class WorkbookInvariantChecksTest {
         "OpsPivot",
         new SheetName("Budget"),
         new PivotTableReport.Anchor(new CellAddress("F4"), new RangeLabel("F4:H8")),
-        new PivotTableReport.Source.Range(new SheetName("Budget"), new RangeLabel("A1:C4")),
+        new PivotTableReport.PivotSourceReport.Range(new SheetName("Budget"), new RangeLabel("A1:C4")),
         List.of(new PivotTableReport.Field(0, "Month")),
         List.of(),
         List.of(),

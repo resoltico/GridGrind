@@ -1,19 +1,16 @@
 package dev.erst.gridgrind.core.model.formula;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import java.util.Objects;
 
 /** Structured workbook-level analysis report for one defined name. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = NamedRangeReport.RangeReport.class, name = "RANGE"),
-  @JsonSubTypes.Type(value = NamedRangeReport.FormulaReport.class, name = "FORMULA")
-})
+@Union(discriminator = "kind", catalog = true, displayOrder = 6)
 public sealed interface NamedRangeReport
-    permits NamedRangeReport.RangeReport, NamedRangeReport.FormulaReport {
+    permits dev.erst.gridgrind.core.model.formula.NamedRangeReport.RangeReport,
+        dev.erst.gridgrind.core.model.formula.NamedRangeReport.FormulaReport {
   /** Defined-name identifier. */
   DefinedNameLabel name();
 
@@ -24,6 +21,9 @@ public sealed interface NamedRangeReport
   String refersToFormula();
 
   /** Named range that resolves cleanly to a sheet-qualified cell or rectangular range target. */
+  @Variant(
+      id = "RANGE",
+      summary = "Exact named-range report that resolves to one typed workbook target.")
   record RangeReport(
       DefinedNameLabel name, NamedRangeScope scope, String refersToFormula, NamedRangeTarget target)
       implements NamedRangeReport {
@@ -39,6 +39,7 @@ public sealed interface NamedRangeReport
   }
 
   /** Defined name whose formula cannot be normalized to a typed range target. */
+  @Variant(id = "FORMULA", summary = "Exact named-range report that remains formula-backed.")
   record FormulaReport(DefinedNameLabel name, NamedRangeScope scope, String refersToFormula)
       implements NamedRangeReport {
     public FormulaReport {

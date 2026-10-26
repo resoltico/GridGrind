@@ -1,19 +1,15 @@
 package dev.erst.gridgrind.core.model.validation;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing factual report for one data-validation structure read from a sheet. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = DataValidationEntryReport.Supported.class, name = "SUPPORTED"),
-  @JsonSubTypes.Type(value = DataValidationEntryReport.Unsupported.class, name = "UNSUPPORTED")
-})
+@Union(discriminator = "type")
 public sealed interface DataValidationEntryReport
     permits DataValidationEntryReport.Supported, DataValidationEntryReport.Unsupported {
 
@@ -21,6 +17,7 @@ public sealed interface DataValidationEntryReport
   List<RangeLabel> ranges();
 
   /** Fully supported data-validation structure. */
+  @Variant(id = "SUPPORTED", summary = "Fully supported data-validation structure.")
   record Supported(List<RangeLabel> ranges, DataValidationDefinitionReport validation)
       implements DataValidationEntryReport {
     public Supported {
@@ -30,6 +27,9 @@ public sealed interface DataValidationEntryReport
   }
 
   /** Present workbook structure that GridGrind can detect but not yet model fully. */
+  @Variant(
+      id = "UNSUPPORTED",
+      summary = "Present workbook structure that GridGrind can detect but not yet model fully.")
   record Unsupported(List<RangeLabel> ranges, String kind, String detail)
       implements DataValidationEntryReport {
     public Unsupported {

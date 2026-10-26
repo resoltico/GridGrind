@@ -1,19 +1,19 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.math.BigDecimal;
 import java.util.Objects;
 
 /** JSON-friendly typed font height input used by style patches. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = FontHeightInput.Points.class, name = "POINTS"),
-  @JsonSubTypes.Type(value = FontHeightInput.Twips.class, name = "TWIPS")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 54)
 public sealed interface FontHeightInput {
 
   /** Font height expressed in point units, such as {@code 11} or {@code 11.5}. */
+  @Variant(
+      id = "POINTS",
+      summary =
+          "Specify font height in point units. Write format: {\"type\":\"POINTS\",\"points\":13}. Read-back (GET_CELLS, GET_WINDOW): style.fontHeight is {\"twips\":260,\"points\":13} with both fields present, not this discriminated type format.")
   record Points(BigDecimal points) implements FontHeightInput {
     public Points {
       validatePoints(points);
@@ -21,6 +21,10 @@ public sealed interface FontHeightInput {
   }
 
   /** Font height expressed in exact twips, where one point equals twenty twips. */
+  @Variant(
+      id = "TWIPS",
+      summary =
+          "Specify font height in exact twips (20 twips = 1 point). Write format: {\"type\":\"TWIPS\",\"twips\":260}. Read-back returns the same plain object shape as POINTS.")
   record Twips(int twips) implements FontHeightInput {
     public Twips {
       validateTwips(twips);

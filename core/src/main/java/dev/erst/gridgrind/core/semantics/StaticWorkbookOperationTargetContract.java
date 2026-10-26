@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.semantics;
 
 import dev.erst.gridgrind.core.plan.Selector;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,6 +26,6 @@ record StaticWorkbookOperationTargetContract(List<Class<? extends Selector>> sel
   @Override
   public WorkbookStepTargeting.TargetSurface targetSurface() {
     return new WorkbookStepTargeting.TargetSurface(
-        SelectorJsonSupport.familyInfosFor(selectorTypes), Optional.empty());
+        SelectorTypes.familyInfosFor(selectorTypes), Optional.empty());
   }
 }

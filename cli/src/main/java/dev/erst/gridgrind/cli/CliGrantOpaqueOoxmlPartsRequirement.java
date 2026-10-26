@@ -1,9 +1,14 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.util.List;
 
 /** CLI grant requirement for byte-identical preservation of explicitly named OOXML parts. */
+@Variant(
+    id = "PRESERVE_OPAQUE_OOXML_PARTS",
+    summary =
+        "CLI grant requirement for byte-identical preservation of explicitly named OOXML parts.")
 public record CliGrantOpaqueOoxmlPartsRequirement(List<String> partNames)
     implements CliGrantAcceptancePolicy.Requirement {
   public CliGrantOpaqueOoxmlPartsRequirement {

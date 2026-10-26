@@ -1,21 +1,19 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selects one or more sheet-local drawing objects. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(
-      value = DrawingObjectSelector.AllOnSheet.class,
-      name = "DRAWING_OBJECT_ALL_ON_SHEET"),
-  @JsonSubTypes.Type(value = DrawingObjectSelector.ByName.class, name = "DRAWING_OBJECT_BY_NAME")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 37)
 public sealed interface DrawingObjectSelector extends Selector
-    permits DrawingObjectSelector.AllOnSheet, DrawingObjectSelector.ByName {
+    permits dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet,
+        dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName {
 
   /** Selects every drawing object on one sheet. */
+  @Variant(
+      id = "DRAWING_OBJECT_ALL_ON_SHEET",
+      summary = "Select every drawing object on one sheet.")
   record AllOnSheet(SheetName sheetName) implements DrawingObjectSelector {
     public AllOnSheet {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -28,6 +26,9 @@ public sealed interface DrawingObjectSelector extends Selector
   }
 
   /** Selects one drawing object by sheet-local object name. */
+  @Variant(
+      id = "DRAWING_OBJECT_BY_NAME",
+      summary = "Select one drawing object by exact sheet-local object name.")
   record ByName(SheetName sheetName, String objectName) implements DrawingObjectSelector {
     public ByName {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");

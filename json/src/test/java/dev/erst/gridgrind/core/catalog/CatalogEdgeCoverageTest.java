@@ -1,22 +1,17 @@
 package dev.erst.gridgrind.core.catalog;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
 /** Additional catalog-validation coverage for private and package-private helper seams. */
@@ -110,68 +105,7 @@ class CatalogEdgeCoverageTest {
   }
 
   @Test
-  void protocolCatalogValidationCoversMissingAnnotationsMismatchesAndDuplicateMaps() {
-    assertTrue(
-        assertThrows(
-                IllegalStateException.class,
-                () ->
-                    GridGrindProtocolCatalogCoverageValidator.validateReverseGroupMappings(
-                        CatalogFieldShapeRegistry.registeredNestedTypes(), Set.of()))
-            .getMessage()
-            .startsWith("Field-shape plain group map contains type with no catalog descriptor: "));
-
-    assertTrue(
-        assertThrows(
-                IllegalStateException.class,
-                () ->
-                    GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-                        JsonTypeOnlySealedType.class, Map.of(JsonTypeOnlyRecord.class, "ONLY")))
-            .getMessage()
-            .contains("must declare a non-blank @JsonTypeName or @ProtocolTypeMetadata id"));
-    assertDoesNotThrow(
-        () ->
-            GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-                WrongDiscriminatorAnnotatedSealedType.class,
-                Map.of(WrongDiscriminatorRecord.class, "WRONG_FIELD")));
-    assertTrue(
-        assertThrows(
-                IllegalStateException.class,
-                () ->
-                    GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-                        AnnotatedSealedType.class, Map.of(AnnotatedRecord.class, "WRONG")))
-            .getMessage()
-            .contains("Catalog id mismatch"));
-    assertTrue(
-        assertThrows(
-                IllegalStateException.class,
-                () ->
-                    GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-                        AnnotatedSealedType.class, Map.of()))
-            .getMessage()
-            .contains("Catalog coverage mismatch"));
-    assertEquals(
-        "Catalog entry %s does not target a record type".formatted(NonRecordSubtype.class),
-        assertThrows(
-                IllegalStateException.class,
-                () ->
-                    GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-                        NonRecordAnnotatedSealedType.class,
-                        Map.of(NonRecordSubtype.class, "NON_RECORD")))
-            .getMessage());
-
-    IllegalStateException duplicateFailure =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                GridGrindProtocolCatalogCoverageValidator.toOrderedMap(
-                    List.of(new DuplicateFixture("A", "one"), new DuplicateFixture("A", "two")),
-                    (Function<DuplicateFixture, String>) DuplicateFixture::id,
-                    (Function<DuplicateFixture, String>) DuplicateFixture::value,
-                    "fixture"));
-    assertEquals(
-        "Duplicate fixture detected while building the protocol catalog: one / two",
-        duplicateFailure.getMessage());
-
+  void canonicalStepRecordsExposeTheirRequiredFields() {
     assertEquals(
         List.of("stepId", "target", "query"),
         CatalogTypeEntryFactory.requiredFields(InspectionStep.class));
@@ -187,8 +121,7 @@ class CatalogEdgeCoverageTest {
             IllegalArgumentException.class,
             () -> GridGrindContractText.typeNamesByClass(MissingJsonSubtypes.class));
     assertEquals(
-        MissingJsonSubtypes.class
-            + " must be sealed or declare @JsonSubTypes for discriminator discovery",
+        MissingJsonSubtypes.class + " must be sealed for discriminator discovery",
         failure.getMessage());
   }
 
@@ -214,7 +147,7 @@ class CatalogEdgeCoverageTest {
     assertEquals(
         "Catalog coverage requires "
             + MissingDiscriminatorSealedType.class.getName()
-            + " to declare a non-blank @JsonTypeInfo property",
+            + " to declare a non-blank @Union discriminator",
         missingDiscriminator.getMessage());
 
     TypeEntry ignoredFieldEntry =
@@ -277,7 +210,7 @@ class CatalogEdgeCoverageTest {
     assertEquals(
         List.of(new CatalogNote("sharedRule", "Shared rule text.")),
         CatalogNoteResolutionSupport.referencedNotes(
-            catalog, new TopLevelTypeGroup("sourceTypes", List.of(directNoted))));
+            catalog, new TopLevelTypeGroup("workbookSourceTypes", List.of(directNoted))));
     assertTrue(CatalogNoteResolutionSupport.referencedNotes(catalog, new Object()).isEmpty());
     assertEquals(
         "Shared rule text.",
@@ -351,14 +284,14 @@ class CatalogEdgeCoverageTest {
   private record NoteAwareRecord(String value) {}
 
   /** Sealed type missing `@JsonSubTypes` to cover annotation validation. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+  @dev.erst.gridgrind.core.metadata.Union(discriminator = "type")
   private sealed interface JsonTypeOnlySealedType permits JsonTypeOnlyRecord {}
 
   /** Minimal subtype for missing `@JsonSubTypes` coverage. */
   private record JsonTypeOnlyRecord() implements JsonTypeOnlySealedType {}
 
   /** Sealed type with a valid subtype id mapping. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+  @dev.erst.gridgrind.core.metadata.Union(discriminator = "type")
   @JsonSubTypes({@JsonSubTypes.Type(value = AnnotatedRecord.class, name = "RIGHT")})
   private sealed interface AnnotatedSealedType permits AnnotatedRecord {}
 
@@ -366,7 +299,7 @@ class CatalogEdgeCoverageTest {
   private record AnnotatedRecord() implements AnnotatedSealedType {}
 
   /** Sealed type using the wrong discriminator field. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+  @dev.erst.gridgrind.core.metadata.Union(discriminator = "kind")
   @JsonSubTypes({@JsonSubTypes.Type(value = WrongDiscriminatorRecord.class, name = "WRONG_FIELD")})
   private sealed interface WrongDiscriminatorAnnotatedSealedType permits WrongDiscriminatorRecord {}
 
@@ -374,14 +307,14 @@ class CatalogEdgeCoverageTest {
   private record WrongDiscriminatorRecord() implements WrongDiscriminatorAnnotatedSealedType {}
 
   /** Sealed type with a blank discriminator property. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "")
+  @dev.erst.gridgrind.core.metadata.Union(discriminator = "")
   private sealed interface MissingDiscriminatorSealedType permits MissingDiscriminatorRecord {}
 
   /** Minimal subtype for missing-discriminator coverage. */
   private record MissingDiscriminatorRecord() implements MissingDiscriminatorSealedType {}
 
   /** Sealed type whose subtype is not a record. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+  @dev.erst.gridgrind.core.metadata.Union(discriminator = "type")
   @JsonSubTypes({@JsonSubTypes.Type(value = NonRecordSubtype.class, name = "NON_RECORD")})
   private sealed interface NonRecordAnnotatedSealedType permits NonRecordSubtype {}
 

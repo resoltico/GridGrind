@@ -47,7 +47,7 @@
         "commonPitfalls" : [ "Protection settings can restrict later mutation flows unless you plan for them.", "Validation formulas and lists must fit the supported POI-backed contract shape.", "Large instructional text belongs in external text sources instead of huge inline literals." ],
         "phases" : [ {
           "capabilityRefs" : [ {
-            "group" : "sourceTypes",
+            "group" : "workbookSourceTypes",
             "id" : "NEW"
           }, {
             "group" : "mutationActionTypes",
@@ -74,7 +74,7 @@
             "group" : "mutationActionTypes",
             "id" : "SET_WORKBOOK_PROTECTION"
           }, {
-            "group" : "persistenceTypes",
+            "group" : "workbookPersistenceTypes",
             "id" : "SAVE_AS"
           } ],
           "label" : "Author Guardrails",

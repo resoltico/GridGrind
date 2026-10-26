@@ -2,8 +2,14 @@ package dev.erst.gridgrind.core.model.layout;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 
 /** Screen-facing sheet display flags authored as part of sheet-presentation state. */
+@CatalogType(
+    id = "SheetDisplayInput",
+    summary =
+        "Screen-facing sheet display flags authored as part of sheet-presentation state. Supply all display flags explicitly.",
+    displayOrder = 67)
 public record SheetDisplayInput(
     boolean displayGridlines,
     boolean displayZeros,

@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.model.validation;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
@@ -12,28 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing factual report for one conditional-formatting rule loaded from a workbook. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleReport.FormulaRule.class,
-      name = "FORMULA_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleReport.CellValueRule.class,
-      name = "CELL_VALUE_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleReport.ColorScaleRule.class,
-      name = "COLOR_SCALE_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleReport.DataBarRule.class,
-      name = "DATA_BAR_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleReport.IconSetRule.class,
-      name = "ICON_SET_RULE"),
-  @JsonSubTypes.Type(value = ConditionalFormattingRuleReport.Top10Rule.class, name = "TOP10_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleReport.UnsupportedRule.class,
-      name = "UNSUPPORTED_RULE")
-})
+@Union(discriminator = "type")
 public sealed interface ConditionalFormattingRuleReport
     permits ConditionalFormattingRuleReport.FormulaRule,
         ConditionalFormattingRuleReport.CellValueRule,
@@ -50,6 +29,9 @@ public sealed interface ConditionalFormattingRuleReport
   boolean stopIfTrue();
 
   /** Formula-driven conditional-formatting rule with one differential-style payload. */
+  @Variant(
+      id = "FORMULA_RULE",
+      summary = "Formula-driven conditional-formatting rule with one differential-style payload.")
   record FormulaRule(
       int priority,
       boolean stopIfTrue,
@@ -67,6 +49,10 @@ public sealed interface ConditionalFormattingRuleReport
   }
 
   /** Cell-value comparison rule with one or two operands and one differential-style payload. */
+  @Variant(
+      id = "CELL_VALUE_RULE",
+      summary =
+          "Cell-value comparison rule with one or two operands and one differential-style payload.")
   record CellValueRule(
       int priority,
       boolean stopIfTrue,
@@ -91,6 +77,9 @@ public sealed interface ConditionalFormattingRuleReport
   }
 
   /** Color-scale rule reported with thresholds and RGB color control points. */
+  @Variant(
+      id = "COLOR_SCALE_RULE",
+      summary = "Color-scale rule reported with thresholds and RGB color control points.")
   record ColorScaleRule(
       int priority,
       boolean stopIfTrue,
@@ -106,6 +95,9 @@ public sealed interface ConditionalFormattingRuleReport
   }
 
   /** Data-bar rule reported with thresholds, widths, and RGB fill color. */
+  @Variant(
+      id = "DATA_BAR_RULE",
+      summary = "Data-bar rule reported with thresholds, widths, and RGB fill color.")
   record DataBarRule(
       int priority,
       boolean stopIfTrue,
@@ -131,6 +123,9 @@ public sealed interface ConditionalFormattingRuleReport
   }
 
   /** Icon-set rule reported with persisted icon set, direction flags, and thresholds. */
+  @Variant(
+      id = "ICON_SET_RULE",
+      summary = "Icon-set rule reported with persisted icon set, direction flags, and thresholds.")
   record IconSetRule(
       int priority,
       boolean stopIfTrue,
@@ -147,6 +142,10 @@ public sealed interface ConditionalFormattingRuleReport
   }
 
   /** Top-10 rule reported with rank, percent, and bottom-state flags plus differential style. */
+  @Variant(
+      id = "TOP10_RULE",
+      summary =
+          "Top-10 rule reported with rank, percent, and bottom-state flags plus differential style.")
   record Top10Rule(
       int priority,
       boolean stopIfTrue,
@@ -165,6 +164,9 @@ public sealed interface ConditionalFormattingRuleReport
   }
 
   /** Loaded rule family that GridGrind can detect but not yet model directly. */
+  @Variant(
+      id = "UNSUPPORTED_RULE",
+      summary = "Loaded rule family that GridGrind can detect but not yet model directly.")
   record UnsupportedRule(int priority, boolean stopIfTrue, String kind, String detail)
       implements ConditionalFormattingRuleReport {
     public UnsupportedRule {

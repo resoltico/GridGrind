@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.model.drawing;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
 import java.util.List;
@@ -9,6 +10,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /** Factual comment metadata returned for analyzed cells that carry a comment. */
+@CatalogType(
+    id = "CommentReport",
+    summary = "Exact factual comment report including optional rich-text runs and anchor bounds.",
+    displayOrder = 88)
 public record CommentReport(
     String text,
     String author,

@@ -1672,7 +1672,7 @@ public final class XlsxParityScenarios {
                         new PivotTableInput(
                             "Sales Pivot",
                             new SheetName("RangeReport"),
-                            new PivotTableInput.Source.Range(
+                            new PivotTableInput.PivotSourceSpec.Range(
                                 new SheetName("Data"), new RangeRef("A1:D5")),
                             new PivotTableInput.Anchor(new CellAddress("C5")),
                             List.of("Region"),
@@ -1684,7 +1684,8 @@ public final class XlsxParityScenarios {
                         new PivotTableInput(
                             "Named Pivot",
                             new SheetName("NamedReport"),
-                            new PivotTableInput.Source.NamedRange(new DefinedName("PivotSource")),
+                            new PivotTableInput.PivotSourceSpec.NamedRange(
+                                new DefinedName("PivotSource")),
                             new PivotTableInput.Anchor(new CellAddress("A3")),
                             List.of("Region"),
                             List.of(),
@@ -1695,7 +1696,7 @@ public final class XlsxParityScenarios {
                         new PivotTableInput(
                             "Table Pivot",
                             new SheetName("TableReport"),
-                            new PivotTableInput.Source.Table(new TableName("SalesTable")),
+                            new PivotTableInput.PivotSourceSpec.Table(new TableName("SalesTable")),
                             new PivotTableInput.Anchor(new CellAddress("F4")),
                             List.of("Stage"),
                             List.of(),

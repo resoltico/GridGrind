@@ -537,15 +537,15 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     }
   }
 
-  static void requirePivotTableSourceShape(PivotTableReport.Source source) {
+  static void requirePivotTableSourceShape(PivotTableReport.PivotSourceReport source) {
     WorkbookInvariantChecks.require(source != null, "pivot table source must not be null");
     switch (source) {
-      case PivotTableReport.Source.Range range -> {
+      case PivotTableReport.PivotSourceReport.Range range -> {
         WorkbookInvariantChecks.requireNonBlank(
             range.sheetName().value(), "pivot range source sheetName");
         WorkbookInvariantChecks.requireNonBlank(range.range().value(), "pivot range source range");
       }
-      case PivotTableReport.Source.NamedRange namedRange -> {
+      case PivotTableReport.PivotSourceReport.NamedRange namedRange -> {
         WorkbookInvariantChecks.requireNonBlank(
             namedRange.name().value(), "pivot named-range source name");
         WorkbookInvariantChecks.requireNonBlank(
@@ -553,7 +553,7 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
         WorkbookInvariantChecks.requireNonBlank(
             namedRange.range().value(), "pivot named-range source range");
       }
-      case PivotTableReport.Source.Table table -> {
+      case PivotTableReport.PivotSourceReport.Table table -> {
         WorkbookInvariantChecks.requireNonBlank(table.name().value(), "pivot table source name");
         WorkbookInvariantChecks.requireNonBlank(
             table.sheetName().value(), "pivot table source sheetName");

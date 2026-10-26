@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.semantics;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.plan.MutationAction;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,7 +34,7 @@ public final class WorkbookStepTargeting {
 
   /** One target-selector surface with selector families plus any derived or disambiguation rule. */
   public record TargetSurface(
-      List<SelectorJsonSupport.FamilyInfo> selectorFamilies, Optional<String> rule) {
+      List<SelectorTypes.FamilyInfo> selectorFamilies, Optional<String> rule) {
     public TargetSurface {
       Objects.requireNonNull(selectorFamilies, "selectorFamilies must not be null");
       selectorFamilies = List.copyOf(selectorFamilies);

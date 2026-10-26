@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
-import dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,19 +24,21 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
         SheetIntrospectionQuery.GetConditionalFormatting,
         SheetIntrospectionQuery.GetAutofilters {
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_SHEET_SUMMARY",
       summary = "Return structural summary facts for one sheet.",
-      targetSelectors = {SheetSelector.ByName.class})
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetSheetSummary() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_ARRAY_FORMULAS",
       summary = "Return factual array-formula group metadata for the selected sheets.",
-      targetSelectors = {SheetSelector.class})
+      targetSelectors = {SheetSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetArrayFormulas() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_CELLS",
       summary =
           "Return exact cell snapshots for explicit addresses."
@@ -45,7 +47,8 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
         CellSelector.ByAddress.class,
         CellSelector.ByAddresses.class,
         TableCellSelector.ByColumnName.class
-      })
+      },
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetCells(
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection)
       implements SheetIntrospectionQuery {
@@ -64,13 +67,14 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_WINDOW",
       summary =
           "Return a rectangular window of cell snapshots."
               + " Omit projection for the default compact VALUE readback and omit"
               + " includeBlanks for the sparse default.",
-      targetSelectors = {RangeSelector.RectangularWindow.class})
+      targetSelectors = {RangeSelector.RectangularWindow.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetWindow(
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection,
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
@@ -102,13 +106,14 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_MERGED_REGIONS",
       summary = "Return the merged regions defined on one sheet.",
-      targetSelectors = {SheetSelector.ByName.class})
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetMergedRegions() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_HYPERLINKS",
       summary = "Return hyperlink metadata for selected cells.",
       targetSelectors = {
@@ -116,10 +121,11 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
         CellSelector.ByAddress.class,
         CellSelector.ByAddresses.class,
         TableCellSelector.ByColumnName.class
-      })
+      },
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetHyperlinks() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_COMMENTS",
       summary = "Return comment metadata for selected cells.",
       targetSelectors = {
@@ -127,38 +133,44 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
         CellSelector.ByAddress.class,
         CellSelector.ByAddresses.class,
         TableCellSelector.ByColumnName.class
-      })
+      },
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetComments() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_SHEET_LAYOUT",
       summary =
           "Return supported sheet-layout metadata for one sheet, including presentation, panes,"
               + " tab color, defaults, ignored errors, and row or column outlineLevel state.",
-      targetSelectors = {SheetSelector.ByName.class})
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetSheetLayout() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_PRINT_LAYOUT",
       summary = "Return supported print-layout metadata for one sheet.",
-      targetSelectors = {SheetSelector.ByName.class})
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetPrintLayout() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_DATA_VALIDATIONS",
       summary = "Return factual data-validation structures for the selected sheet ranges.",
-      targetSelectors = {RangeSelector.class})
+      targetSelectors = {RangeSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetDataValidations() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_CONDITIONAL_FORMATTING",
       summary = "Return factual conditional-formatting blocks for the selected sheet ranges.",
-      targetSelectors = {RangeSelector.class})
+      targetSelectors = {RangeSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetConditionalFormatting() implements SheetIntrospectionQuery {}
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "GET_AUTOFILTERS",
       summary = "Return sheet- and table-owned autofilter metadata for one sheet.",
-      targetSelectors = {SheetSelector.ByName.class})
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record GetAutofilters() implements SheetIntrospectionQuery {}
 }

@@ -1,9 +1,8 @@
 package dev.erst.gridgrind.core.model.value;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,34 +10,29 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Effective value carried by one formula-cell readback. */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellValueReport.BlankValue.class, name = "BLANK"),
-  @JsonSubTypes.Type(value = CellValueReport.TextValue.class, name = "TEXT"),
-  @JsonSubTypes.Type(value = CellValueReport.NumberValue.class, name = "NUMBER"),
-  @JsonSubTypes.Type(value = CellValueReport.BooleanValue.class, name = "BOOLEAN"),
-  @JsonSubTypes.Type(value = CellValueReport.ErrorValue.class, name = "ERROR")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 2)
 public sealed interface CellValueReport {
   /** Canonical published value type. */
   String type();
 
   /** Blank effective value. */
+  @Variant(id = "BLANK", summary = "Effective formula evaluation is blank.")
   record BlankValue() implements CellValueReport {
     @Override
-    @JsonProperty
     public String type() {
       return "BLANK";
     }
   }
 
   /** Text effective value. */
+  @Variant(
+      id = "TEXT",
+      summary = "Effective formula evaluation is text; RICH_TEXT_RUNS projects optional runs.")
   record TextValue(
       String textValue,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<List<RichTextRunReport>> runs)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"RICH_TEXT_RUNS"})
+          @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<List<RichTextRunReport>> runs)
       implements CellValueReport {
     public TextValue {
       Objects.requireNonNull(textValue, "textValue must not be null");
@@ -49,16 +43,21 @@ public sealed interface CellValueReport {
     }
 
     @Override
-    @JsonProperty
     public String type() {
       return "TEXT";
     }
   }
 
   /** Numeric effective value. */
+  @Variant(
+      id = "NUMBER",
+      summary =
+          "Effective formula evaluation is numeric; TEMPORAL projects derived date, time, or date-time semantics when formatting marks the numeric value as date-like.")
   record NumberValue(
       Double numberValue,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellTemporalReport> temporal)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"TEMPORAL"})
+          @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<CellTemporalReport> temporal)
       implements CellValueReport {
     public NumberValue {
       Objects.requireNonNull(numberValue, "numberValue must not be null");
@@ -66,33 +65,35 @@ public sealed interface CellValueReport {
     }
 
     @Override
-    @JsonProperty
     public String type() {
       return "NUMBER";
     }
   }
 
   /** Boolean effective value. */
+  @Variant(id = "BOOLEAN", summary = "Effective formula evaluation is boolean.")
   record BooleanValue(Boolean booleanValue) implements CellValueReport {
     public BooleanValue {
       Objects.requireNonNull(booleanValue, "booleanValue must not be null");
     }
 
     @Override
-    @JsonProperty
     public String type() {
       return "BOOLEAN";
     }
   }
 
   /** Effective reported error literal, including GridGrind-owned evaluation-only states. */
+  @Variant(
+      id = "ERROR",
+      summary =
+          "Effective formula evaluation is one GridGrind-owned error literal, including canonical Excel tokens plus evaluator-specific tokens such as #CIRCULAR_REF!.")
   record ErrorValue(String errorValue) implements CellValueReport {
     public ErrorValue {
       errorValue = CellErrorLiteralValidation.requireReportedErrorLiteral(errorValue, "errorValue");
     }
 
     @Override
-    @JsonProperty
     public String type() {
       return "ERROR";
     }

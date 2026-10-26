@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.problem;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
@@ -19,26 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Structured execution metadata that pinpoints where and why a failure happened. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "stage")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ProblemContext.ParseArguments.class, name = "PARSE_ARGUMENTS"),
-  @JsonSubTypes.Type(value = CliRuntimeContext.class, name = "CLI_RUNTIME"),
-  @JsonSubTypes.Type(value = ProblemContext.ReadRequest.class, name = "READ_REQUEST"),
-  @JsonSubTypes.Type(value = ProblemContext.BindRequest.class, name = "BIND_REQUEST"),
-  @JsonSubTypes.Type(value = ProblemContext.ValidateRequest.class, name = "VALIDATE_REQUEST"),
-  @JsonSubTypes.Type(value = ProblemContext.ResolveInputs.class, name = "RESOLVE_INPUTS"),
-  @JsonSubTypes.Type(value = ProblemContext.OpenWorkbook.class, name = "OPEN_WORKBOOK"),
-  @JsonSubTypes.Type(
-      value = ProblemContext.ExecuteCalculation.Preflight.class,
-      name = "CALCULATION_PREFLIGHT"),
-  @JsonSubTypes.Type(
-      value = ProblemContext.ExecuteCalculation.Execution.class,
-      name = "CALCULATION_EXECUTION"),
-  @JsonSubTypes.Type(value = ProblemContext.ExecuteStep.class, name = "EXECUTE_STEP"),
-  @JsonSubTypes.Type(value = ProblemContext.PersistWorkbook.class, name = "PERSIST_WORKBOOK"),
-  @JsonSubTypes.Type(value = ProblemContext.ExecuteRequest.class, name = "EXECUTE_REQUEST"),
-  @JsonSubTypes.Type(value = ProblemContext.WriteResponse.class, name = "WRITE_RESPONSE")
-})
+@Union(discriminator = "stage")
 public sealed interface ProblemContext
     permits ProblemContext.ParseArguments,
         CliRuntimeContext,
@@ -52,6 +33,9 @@ public sealed interface ProblemContext
   String stage();
 
   /** Context for failures that occur while parsing CLI arguments. */
+  @Variant(
+      id = "PARSE_ARGUMENTS",
+      summary = "Context for failures that occur while parsing CLI arguments.")
   record ParseArguments(CliArgument argument) implements ProblemContext {
     public ParseArguments {
       Objects.requireNonNull(argument, "argument must not be null");
@@ -69,6 +53,10 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while reading or structurally checking the JSON request. */
+  @Variant(
+      id = "READ_REQUEST",
+      summary =
+          "Context for failures that occur while reading or structurally checking the JSON request.")
   record ReadRequest(RequestInput request, JsonLocation json) implements RequestInputContext {
     public ReadRequest {
       Objects.requireNonNull(request, "request must not be null");
@@ -90,6 +78,10 @@ public sealed interface ProblemContext
   /**
    * Context for failures that occur while binding structurally valid JSON into the request model.
    */
+  @Variant(
+      id = "BIND_REQUEST",
+      summary =
+          "Context for failures that occur while binding structurally valid JSON into the request model.")
   record BindRequest(RequestInput request, JsonLocation json) implements RequestInputContext {
     public BindRequest {
       Objects.requireNonNull(request, "request must not be null");
@@ -126,6 +118,10 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while statically validating bound request fragments. */
+  @Variant(
+      id = "VALIDATE_REQUEST",
+      summary =
+          "Context for failures that occur while statically validating bound request fragments.")
   record ValidateRequest(
       RequestShape request,
       @com.fasterxml.jackson.annotation.JsonInclude(
@@ -155,6 +151,9 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while resolving source-backed authored inputs. */
+  @Variant(
+      id = "RESOLVE_INPUTS",
+      summary = "Context for failures that occur while resolving source-backed authored inputs.")
   record ResolveInputs(
       RequestShape request,
       InputReference input,
@@ -188,6 +187,9 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while opening the source workbook. */
+  @Variant(
+      id = "OPEN_WORKBOOK",
+      summary = "Context for failures that occur while opening the source workbook.")
   record OpenWorkbook(RequestShape request, WorkbookReference workbook)
       implements RequestShapeContext {
     public OpenWorkbook {
@@ -248,6 +250,9 @@ public sealed interface ProblemContext
     }
 
     /** Context for failures that occur during calculation preflight analysis. */
+    @Variant(
+        id = "CALCULATION_PREFLIGHT",
+        summary = "Context for failures that occur during calculation preflight analysis.")
     record Preflight(RequestShape request, ProblemLocation location) implements ExecuteCalculation {
       public Preflight {
         Objects.requireNonNull(request, "request must not be null");
@@ -261,6 +266,9 @@ public sealed interface ProblemContext
     }
 
     /** Context for failures that occur during immediate calculation execution. */
+    @Variant(
+        id = "CALCULATION_EXECUTION",
+        summary = "Context for failures that occur during immediate calculation execution.")
     record Execution(RequestShape request, ProblemLocation location) implements ExecuteCalculation {
       public Execution {
         Objects.requireNonNull(request, "request must not be null");
@@ -275,6 +283,9 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while executing one ordered workbook step. */
+  @Variant(
+      id = "EXECUTE_STEP",
+      summary = "Context for failures that occur while executing one ordered workbook step.")
   record ExecuteStep(
       RequestShape request,
       StepReference step,
@@ -356,6 +367,10 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while persisting the workbook to its destination path. */
+  @Variant(
+      id = "PERSIST_WORKBOOK",
+      summary =
+          "Context for failures that occur while persisting the workbook to its destination path.")
   record PersistWorkbook(
       RequestShape request,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sourceWorkbookPath,
@@ -410,6 +425,10 @@ public sealed interface ProblemContext
   }
 
   /** Context for top-level execution failures not attributed to a specific pipeline stage. */
+  @Variant(
+      id = "EXECUTE_REQUEST",
+      summary =
+          "Context for top-level execution failures not attributed to a specific pipeline stage.")
   record ExecuteRequest(RequestShape request) implements ProblemContext {
     public ExecuteRequest {
       Objects.requireNonNull(request, "request must not be null");
@@ -432,6 +451,10 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while writing the JSON response to its destination. */
+  @Variant(
+      id = "WRITE_RESPONSE",
+      summary =
+          "Context for failures that occur while writing the JSON response to its destination.")
   record WriteResponse(ResponseOutput output) implements ProblemContext {
     public WriteResponse {
       Objects.requireNonNull(output, "output must not be null");

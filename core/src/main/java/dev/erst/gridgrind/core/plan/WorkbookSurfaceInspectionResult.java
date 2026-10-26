@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
 import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
@@ -14,7 +14,9 @@ public sealed interface WorkbookSurfaceInspectionResult extends InspectionSurfac
         WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult {
 
   /** Returns grouped formula usage facts across one or more sheets. */
-  @JsonTypeName("GET_FORMULA_SURFACE")
+  @Variant(
+      id = "GET_FORMULA_SURFACE",
+      summary = "Returns grouped formula usage facts across one or more sheets.")
   record FormulaSurfaceResult(StepId stepId, FormulaSurfaceReport surface)
       implements WorkbookSurfaceInspectionResult {
     public FormulaSurfaceResult {
@@ -25,7 +27,7 @@ public sealed interface WorkbookSurfaceInspectionResult extends InspectionSurfac
   }
 
   /** Returns inferred schema facts for one sheet window. */
-  @JsonTypeName("GET_SHEET_SCHEMA")
+  @Variant(id = "GET_SHEET_SCHEMA", summary = "Returns inferred schema facts for one sheet window.")
   record SheetSchemaResult(StepId stepId, SheetSchemaReport surface)
       implements WorkbookSurfaceInspectionResult {
     public SheetSchemaResult {
@@ -36,7 +38,9 @@ public sealed interface WorkbookSurfaceInspectionResult extends InspectionSurfac
   }
 
   /** Returns high-level characterization of named ranges. */
-  @JsonTypeName("GET_NAMED_RANGE_SURFACE")
+  @Variant(
+      id = "GET_NAMED_RANGE_SURFACE",
+      summary = "Returns high-level characterization of named ranges.")
   record NamedRangeSurfaceResult(StepId stepId, NamedRangeSurfaceReport surface)
       implements WorkbookSurfaceInspectionResult {
     public NamedRangeSurfaceResult {

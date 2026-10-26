@@ -1,11 +1,17 @@
 package dev.erst.gridgrind.core.model.style;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing alignment patch used by {@link CellStylePatchInput}. */
+@CatalogType(
+    id = "CellAlignmentInput",
+    summary =
+        "Alignment patch for cell styling; at least one field must be set. textRotation uses XSSF's explicit 0-180 degree scale and indentation uses Excel's 0-250 cell-indent range.",
+    displayOrder = 44)
 public record CellAlignmentInput(
     Optional<Boolean> wrapText,
     Optional<ExcelHorizontalAlignment> horizontalAlignment,

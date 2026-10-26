@@ -170,7 +170,7 @@ public final class CatalogFieldMetadataSupport {
   }
 
   private static Optional<FieldShape> groupedFieldShape(Class<?> classType) {
-    return CatalogFieldShapeRegistry.groupedFieldShape(classType);
+    return CatalogGroups.fieldShape(classType);
   }
 
   private static FieldShape applyConstraints(FieldShape shape, List<FieldConstraint> constraints) {

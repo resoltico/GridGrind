@@ -1,21 +1,14 @@
 package dev.erst.gridgrind.cli;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
 import java.util.Objects;
 
 /** CLI-owned final-artifact authority translated into the engine grant boundary. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CliGrantPublicationAuthority.None.class, name = "NONE"),
-  @JsonSubTypes.Type(value = CliGrantPublicationAuthority.SaveAs.class, name = "SAVE_AS"),
-  @JsonSubTypes.Type(
-      value = CliGrantPublicationAuthority.OverwriteSource.class,
-      name = "OVERWRITE_SOURCE")
-})
+@Union(discriminator = "type")
 public sealed interface CliGrantPublicationAuthority
     permits CliGrantPublicationAuthority.None,
         CliGrantPublicationAuthority.SaveAs,
@@ -23,6 +16,7 @@ public sealed interface CliGrantPublicationAuthority
   /** Converts this document-owned authority using the CLI process working directory as its root. */
   GridGrindExecutionGrant.PublicationAuthority toEngineAuthority(Path cliWorkingDirectory);
 
+  @Variant(id = "NONE", summary = "Grant no workbook publication authority.")
   record None() implements CliGrantPublicationAuthority {
     @Override
     public GridGrindExecutionGrant.PublicationAuthority toEngineAuthority(
@@ -32,6 +26,7 @@ public sealed interface CliGrantPublicationAuthority
     }
   }
 
+  @Variant(id = "SAVE_AS", summary = "Grant publication to one explicit output path.")
   record SaveAs(String path, WorkbookPlan.WorkbookPersistence.IfExists ifExists)
       implements CliGrantPublicationAuthority {
     public SaveAs {
@@ -47,6 +42,7 @@ public sealed interface CliGrantPublicationAuthority
     }
   }
 
+  @Variant(id = "OVERWRITE_SOURCE", summary = "Grant replacement of the existing workbook source.")
   record OverwriteSource() implements CliGrantPublicationAuthority {
     @Override
     public GridGrindExecutionGrant.PublicationAuthority toEngineAuthority(

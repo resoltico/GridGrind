@@ -47,7 +47,7 @@
         "commonPitfalls" : [ "Pivot authoring depends on stable source headers and range shapes.", "Calculated fields and unsupported advanced pivot features may require later manual workbook refinement.", "If the workflow grows visual layers, keep the pivot and chart responsibilities separate." ],
         "phases" : [ {
           "capabilityRefs" : [ {
-            "group" : "sourceTypes",
+            "group" : "workbookSourceTypes",
             "id" : "NEW"
           }, {
             "group" : "mutationActionTypes",
@@ -71,7 +71,7 @@
             "group" : "mutationActionTypes",
             "id" : "ENSURE_SHEET"
           }, {
-            "group" : "persistenceTypes",
+            "group" : "workbookPersistenceTypes",
             "id" : "SAVE_AS"
           } ],
           "label" : "Author The Pivot",

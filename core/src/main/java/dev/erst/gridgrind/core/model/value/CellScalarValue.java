@@ -1,29 +1,24 @@
 package dev.erst.gridgrind.core.model.value;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 
 /** Canonical scalar effective cell-value model used by exact-value assertions. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellScalarValue.Blank.class, name = "BLANK"),
-  @JsonSubTypes.Type(value = CellScalarValue.Text.class, name = "TEXT"),
-  @JsonSubTypes.Type(value = CellScalarValue.NumberValue.class, name = "NUMBER"),
-  @JsonSubTypes.Type(value = CellScalarValue.BooleanValue.class, name = "BOOLEAN"),
-  @JsonSubTypes.Type(value = CellScalarValue.ErrorValue.class, name = "ERROR")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 0)
 public sealed interface CellScalarValue
-    permits CellScalarValue.Blank,
-        CellScalarValue.Text,
-        CellScalarValue.NumberValue,
-        CellScalarValue.BooleanValue,
-        CellScalarValue.ErrorValue {
+    permits dev.erst.gridgrind.core.model.value.CellScalarValue.Blank,
+        dev.erst.gridgrind.core.model.value.CellScalarValue.Text,
+        dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue,
+        dev.erst.gridgrind.core.model.value.CellScalarValue.BooleanValue,
+        dev.erst.gridgrind.core.model.value.CellScalarValue.ErrorValue {
 
   /** Expected blank effective cell value. */
+  @Variant(id = "BLANK", summary = "Require the effective cell value to be blank.")
   record Blank() implements CellScalarValue {}
 
   /** Expected exact text effective cell value. */
+  @Variant(id = "TEXT", summary = "Require the effective cell value to be one exact string.")
   record Text(String text) implements CellScalarValue {
     public Text {
       Objects.requireNonNull(text, "text must not be null");
@@ -31,6 +26,9 @@ public sealed interface CellScalarValue
   }
 
   /** Expected exact numeric effective cell value. */
+  @Variant(
+      id = "NUMBER",
+      summary = "Require the effective cell value to be one exact finite number.")
   record NumberValue(double number) implements CellScalarValue {
     public NumberValue {
       CellInput.Validation.requireFinite(number, "number");
@@ -38,9 +36,14 @@ public sealed interface CellScalarValue
   }
 
   /** Expected exact boolean effective cell value. */
+  @Variant(id = "BOOLEAN", summary = "Require the effective cell value to be true or false.")
   record BooleanValue(boolean bool) implements CellScalarValue {}
 
   /** Expected exact GridGrind-owned error literal as the effective cell value. */
+  @Variant(
+      id = "ERROR",
+      summary =
+          "Require the effective cell value to be one exact GridGrind-owned error literal, including canonical Excel tokens and evaluation-only states such as #CIRCULAR_REF!.")
   record ErrorValue(String error) implements CellScalarValue {
     public ErrorValue {
       error = CellInput.Validation.requireNonBlank(error, "error");

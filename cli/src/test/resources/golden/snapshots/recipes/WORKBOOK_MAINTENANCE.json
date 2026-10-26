@@ -47,7 +47,7 @@
         "commonPitfalls" : [ "Replace placeholder sheet names before execution; copy-sheet requires an existing source sheet.", "Maintenance flows are safest with SAVE_AS so the source workbook stays intact until verification passes.", "Use targeted rereads after COPY_SHEET instead of assuming copied comments or drawings stayed coherent." ],
         "phases" : [ {
           "capabilityRefs" : [ {
-            "group" : "sourceTypes",
+            "group" : "workbookSourceTypes",
             "id" : "EXISTING"
           }, {
             "group" : "inspectionQueryTypes",
@@ -65,7 +65,7 @@
             "group" : "mutationActionTypes",
             "id" : "COPY_SHEET"
           }, {
-            "group" : "persistenceTypes",
+            "group" : "workbookPersistenceTypes",
             "id" : "SAVE_AS"
           } ],
           "label" : "Apply Structural Maintenance",

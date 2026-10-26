@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.drawing;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.model.style.RichTextRunInput;
@@ -10,6 +11,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing plain-text comment payload used by cell comment operations. */
+@CatalogType(
+    id = "CommentInput",
+    summary =
+        "Comment payload attached to one cell. Comments can carry ordered rich-text runs and an explicit anchor box.",
+    displayOrder = 40)
 public record CommentInput(
     TextSourceInput text,
     String author,

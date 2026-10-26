@@ -1,17 +1,13 @@
 package dev.erst.gridgrind.core.result;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Objects;
 
 /** High-level workbook facts returned on success. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = WorkbookSummary.Empty.class, name = "EMPTY"),
-  @JsonSubTypes.Type(value = WorkbookSummary.WithSheets.class, name = "WITH_SHEETS")
-})
+@Union(discriminator = "kind")
 public sealed interface WorkbookSummary permits WorkbookSummary.Empty, WorkbookSummary.WithSheets {
   /** Total sheet count after all mutations complete. */
   int sheetCount();
@@ -26,6 +22,7 @@ public sealed interface WorkbookSummary permits WorkbookSummary.Empty, WorkbookS
   boolean forceFormulaRecalculationOnOpen();
 
   /** Workbook summary for a zero-sheet workbook. */
+  @Variant(id = "EMPTY", summary = "Workbook summary for a zero-sheet workbook.")
   record Empty(
       int sheetCount,
       List<SheetLabel> sheetNames,
@@ -43,6 +40,9 @@ public sealed interface WorkbookSummary permits WorkbookSummary.Empty, WorkbookS
   }
 
   /** Workbook summary for a workbook that contains one or more sheets. */
+  @Variant(
+      id = "WITH_SHEETS",
+      summary = "Workbook summary for a workbook that contains one or more sheets.")
   record WithSheets(
       int sheetCount,
       List<SheetLabel> sheetNames,

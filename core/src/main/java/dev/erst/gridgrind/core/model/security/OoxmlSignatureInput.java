@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.security;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
@@ -10,6 +11,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** OOXML package-signing settings applied during workbook persistence. */
+@CatalogType(
+    id = "OoxmlSignatureInput",
+    summary =
+        "OOXML package-signing settings for workbook persistence. keyPassword defaults to keystorePassword and digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.",
+    noteRefs = {"requestOwnedPathRule"},
+    displayOrder = 22)
 public record OoxmlSignatureInput(
     String pkcs12Path,
     SecretReference keystorePasswordRef,

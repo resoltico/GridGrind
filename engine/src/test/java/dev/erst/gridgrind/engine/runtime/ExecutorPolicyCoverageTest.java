@@ -142,7 +142,8 @@ class ExecutorPolicyCoverageTest {
                         new PivotTableInput(
                             "SalesPivot",
                             new SheetName("Budget"),
-                            new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")),
+                            new PivotTableInput.PivotSourceSpec.NamedRange(
+                                new DefinedName("BudgetSource")),
                             new PivotTableInput.Anchor(new CellAddress("B3")),
                             List.of(),
                             List.of(),
@@ -168,7 +169,8 @@ class ExecutorPolicyCoverageTest {
                         new PivotTableInput(
                             "SalesPivot",
                             new SheetName("Budget"),
-                            new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")),
+                            new PivotTableInput.PivotSourceSpec.NamedRange(
+                                new DefinedName("BudgetSource")),
                             new PivotTableInput.Anchor(new CellAddress("B3")),
                             List.of(),
                             List.of(),
@@ -628,11 +630,13 @@ class ExecutorPolicyCoverageTest {
         new CellMutationAction.SetCell(formulaCell("SUM(A1:A2)"));
     StructuredMutationAction.SetPivotTable pivotFromRange =
         pivotTableAction(
-            new PivotTableInput.Source.Range(new SheetName("Budget"), new RangeRef("A1:B5")));
+            new PivotTableInput.PivotSourceSpec.Range(
+                new SheetName("Budget"), new RangeRef("A1:B5")));
     StructuredMutationAction.SetPivotTable pivotFromNamedRange =
-        pivotTableAction(new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")));
+        pivotTableAction(
+            new PivotTableInput.PivotSourceSpec.NamedRange(new DefinedName("BudgetSource")));
     StructuredMutationAction.SetPivotTable pivotFromTable =
-        pivotTableAction(new PivotTableInput.Source.Table(new TableName("BudgetTable")));
+        pivotTableAction(new PivotTableInput.PivotSourceSpec.Table(new TableName("BudgetTable")));
     StructuredMutationAction.SetNamedRange sheetScopedNamedRange =
         new StructuredMutationAction.SetNamedRange(
             new DefinedName("LocalTotal"),
@@ -953,7 +957,8 @@ class ExecutorPolicyCoverageTest {
     CellMutationAction.SetCell setText = new CellMutationAction.SetCell(textCell("plain text"));
     StructuredMutationAction.SetPivotTable pivotFromRange =
         pivotTableAction(
-            new PivotTableInput.Source.Range(new SheetName("Budget"), new RangeRef("A1:B5")));
+            new PivotTableInput.PivotSourceSpec.Range(
+                new SheetName("Budget"), new RangeRef("A1:B5")));
     MutationStep pivotStep =
         new MutationStep(
             new StepId("pivot-step"),
@@ -997,7 +1002,7 @@ class ExecutorPolicyCoverageTest {
   }
 
   private static StructuredMutationAction.SetPivotTable pivotTableAction(
-      PivotTableInput.Source source) {
+      PivotTableInput.PivotSourceSpec source) {
     return new StructuredMutationAction.SetPivotTable(
         new PivotTableInput(
             "SalesPivot",

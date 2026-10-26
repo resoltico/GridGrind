@@ -1,21 +1,22 @@
 package dev.erst.gridgrind.core.vocabulary;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 
 /** Target placement for a copied sheet within workbook sheet order. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = SheetCopyPosition.AppendAtEnd.class, name = "APPEND_AT_END"),
-  @JsonSubTypes.Type(value = SheetCopyPosition.AtIndex.class, name = "AT_INDEX")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 21)
 public sealed interface SheetCopyPosition
-    permits SheetCopyPosition.AppendAtEnd, SheetCopyPosition.AtIndex {
+    permits dev.erst.gridgrind.core.vocabulary.SheetCopyPosition.AppendAtEnd,
+        dev.erst.gridgrind.core.vocabulary.SheetCopyPosition.AtIndex {
 
   /** Places the copied sheet after every existing sheet. */
+  @Variant(id = "APPEND_AT_END", summary = "Place the copied sheet after every existing sheet.")
   record AppendAtEnd() implements SheetCopyPosition {}
 
   /** Places the copied sheet at the requested zero-based workbook position. */
+  @Variant(
+      id = "AT_INDEX",
+      summary = "Place the copied sheet at the requested zero-based workbook position.")
   record AtIndex(int targetIndex) implements SheetCopyPosition {
     public AtIndex {
       if (targetIndex < 0) {

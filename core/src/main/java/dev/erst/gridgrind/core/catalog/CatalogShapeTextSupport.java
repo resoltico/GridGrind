@@ -60,9 +60,9 @@ final class CatalogShapeTextSupport {
 
   static List<TypeEntry> topLevelEntriesForTypeSet(Catalog catalog, String typeSet) {
     return switch (typeSet) {
-      case "sourceTypes" -> catalog.sourceTypes();
-      case "persistenceTypes" -> catalog.persistenceTypes();
-      case "stepTypes" -> catalog.stepTypes();
+      case "workbookSourceTypes" -> catalog.sourceTypes();
+      case "workbookPersistenceTypes" -> catalog.persistenceTypes();
+      case "workbookStepTypes" -> catalog.stepTypes();
       case "mutationActionTypes" -> catalog.mutationActionTypes();
       case "assertionTypes" -> catalog.assertionTypes();
       case "inspectionQueryTypes" -> catalog.inspectionQueryTypes();

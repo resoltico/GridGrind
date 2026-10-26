@@ -1,10 +1,16 @@
 package dev.erst.gridgrind.core.model.style;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing font patch used by {@link CellStylePatchInput}. */
+@CatalogType(
+    id = "CellFontInput",
+    summary =
+        "Font patch for cell styling; at least one field must be set. Colors can use RGB, theme, indexed, and tint semantics.",
+    displayOrder = 45)
 public record CellFontInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> bold,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> italic,

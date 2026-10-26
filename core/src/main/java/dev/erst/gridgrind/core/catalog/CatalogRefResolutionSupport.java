@@ -12,9 +12,9 @@ final class CatalogRefResolutionSupport {
   static List<CatalogEntryRef> allEntryRefs(Catalog catalog) {
     return Stream.of(
             Stream.of(new CatalogEntryRef("requestType", catalog.requestType())),
-            entryRefs("sourceTypes", catalog.sourceTypes()).stream(),
-            entryRefs("persistenceTypes", catalog.persistenceTypes()).stream(),
-            entryRefs("stepTypes", catalog.stepTypes()).stream(),
+            entryRefs("workbookSourceTypes", catalog.sourceTypes()).stream(),
+            entryRefs("workbookPersistenceTypes", catalog.persistenceTypes()).stream(),
+            entryRefs("workbookStepTypes", catalog.stepTypes()).stream(),
             entryRefs("mutationActionTypes", catalog.mutationActionTypes()).stream(),
             entryRefs("assertionTypes", catalog.assertionTypes()).stream(),
             entryRefs("inspectionQueryTypes", catalog.inspectionQueryTypes()).stream(),

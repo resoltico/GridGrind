@@ -1,9 +1,15 @@
 package dev.erst.gridgrind.core.model.customxml;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import java.util.Objects;
 
 /** Identifies one workbook custom-XML mapping by stable map id, authored name, or both. */
+@CatalogType(
+    id = "CustomXmlMappingLocator",
+    summary =
+        "One locator for an existing workbook custom-XML mapping. Supply mapId, name, or both; the locator must resolve to exactly one existing mapping.",
+    displayOrder = 31)
 public record CustomXmlMappingLocator(
     @ProtocolField(optional = true) Long mapId, @ProtocolField(optional = true) String name) {
   public CustomXmlMappingLocator {

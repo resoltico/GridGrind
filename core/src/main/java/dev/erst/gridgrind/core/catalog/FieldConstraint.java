@@ -1,18 +1,10 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 
 /** Tagged machine-readable validation constraint published for one scalar catalog field. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = FieldConstraint.NonBlank.class, name = "NON_BLANK"),
-  @JsonSubTypes.Type(value = FieldConstraint.StringPattern.class, name = "STRING_PATTERN"),
-  @JsonSubTypes.Type(value = FieldConstraint.LengthRange.class, name = "LENGTH_RANGE"),
-  @JsonSubTypes.Type(value = FieldConstraint.NumberRange.class, name = "NUMBER_RANGE"),
-  @JsonSubTypes.Type(value = FieldConstraint.Integral.class, name = "INTEGRAL"),
-  @JsonSubTypes.Type(value = FieldConstraint.PathSuffix.class, name = "PATH_SUFFIX")
-})
+@Union(discriminator = "type")
 public sealed interface FieldConstraint
     permits FieldConstraint.NonBlank,
         FieldConstraint.StringPattern,
@@ -21,9 +13,13 @@ public sealed interface FieldConstraint
         FieldConstraint.Integral,
         FieldConstraint.PathSuffix {
   /** Requires a nonblank string. */
+  @Variant(id = "NON_BLANK", summary = "Requires a nonblank string.")
   record NonBlank() implements FieldConstraint {}
 
   /** Requires a string to match one regular-expression pattern. */
+  @Variant(
+      id = "STRING_PATTERN",
+      summary = "Requires a string to match one regular-expression pattern.")
   record StringPattern(String pattern) implements FieldConstraint {
     public StringPattern {
       pattern = CatalogRecordValidation.requireNonBlank(pattern, "pattern");
@@ -31,6 +27,7 @@ public sealed interface FieldConstraint
   }
 
   /** Requires a string length inside one inclusive range. */
+  @Variant(id = "LENGTH_RANGE", summary = "Requires a string length inside one inclusive range.")
   record LengthRange(int minimum, int maximum) implements FieldConstraint {
     public LengthRange {
       if (minimum < 0 || maximum < minimum) {
@@ -40,6 +37,7 @@ public sealed interface FieldConstraint
   }
 
   /** Requires a number inside one inclusive finite range. */
+  @Variant(id = "NUMBER_RANGE", summary = "Requires a number inside one inclusive finite range.")
   record NumberRange(double minimum, double maximum) implements FieldConstraint {
     public NumberRange {
       if (!Double.isFinite(minimum) || !Double.isFinite(maximum) || maximum < minimum) {
@@ -49,9 +47,11 @@ public sealed interface FieldConstraint
   }
 
   /** Requires a JSON number to be integral. */
+  @Variant(id = "INTEGRAL", summary = "Requires a JSON number to be integral.")
   record Integral() implements FieldConstraint {}
 
   /** Requires one path to end in a literal suffix. */
+  @Variant(id = "PATH_SUFFIX", summary = "Requires one path to end in a literal suffix.")
   record PathSuffix(String suffix) implements FieldConstraint {
     public PathSuffix {
       suffix = CatalogRecordValidation.requireNonBlank(suffix, "suffix");

@@ -6,7 +6,7 @@ import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.Selector;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
@@ -114,7 +114,7 @@ final class AssertionObservationExecutor {
         default ->
             throw new IllegalArgumentException(
                 "Unsupported presence assertion target: "
-                    + SelectorJsonSupport.typeIdsFor(target.getClass()).getFirst());
+                    + SelectorTypes.typeIdsFor(target.getClass()).getFirst());
       };
     } catch (NamedRangeNotFoundException | SheetNotFoundException ignored) {
       return zeroMatchPresenceObservation(stepId, target);
@@ -137,7 +137,7 @@ final class AssertionObservationExecutor {
       default ->
           throw new IllegalArgumentException(
               "Unsupported presence assertion target: "
-                  + SelectorJsonSupport.displayName(target.getClass()));
+                  + SelectorTypes.displayName(target.getClass()));
     };
   }
 

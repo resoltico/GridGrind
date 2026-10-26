@@ -1,9 +1,13 @@
 package dev.erst.gridgrind.cli.discovery;
 
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.List;
 import java.util.Objects;
 
 /** Detailed lookup payload for one CLI-authored task-starter recipe. */
+@Variant(
+    id = "TASK_STARTER",
+    summary = "Detailed lookup payload for one CLI-authored task-starter recipe.")
 public record TaskStarterRecipeCatalogDetail(
     String id,
     String requestFileName,

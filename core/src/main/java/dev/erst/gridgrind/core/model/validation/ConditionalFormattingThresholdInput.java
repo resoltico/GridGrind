@@ -1,36 +1,29 @@
 package dev.erst.gridgrind.core.model.validation;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
 
 /** Tagged authoring threshold variants for advanced conditional-formatting rules. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ConditionalFormattingThresholdInput.Min.class, name = "MIN"),
-  @JsonSubTypes.Type(value = ConditionalFormattingThresholdInput.Max.class, name = "MAX"),
-  @JsonSubTypes.Type(value = ConditionalFormattingThresholdInput.Numeric.class, name = "NUMBER"),
-  @JsonSubTypes.Type(value = ConditionalFormattingThresholdInput.Percent.class, name = "PERCENT"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingThresholdInput.Percentile.class,
-      name = "PERCENTILE"),
-  @JsonSubTypes.Type(value = ConditionalFormattingThresholdInput.Formula.class, name = "FORMULA")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 65)
 public sealed interface ConditionalFormattingThresholdInput
-    permits ConditionalFormattingThresholdInput.Min,
-        ConditionalFormattingThresholdInput.Max,
-        ConditionalFormattingThresholdInput.Numeric,
-        ConditionalFormattingThresholdInput.Percent,
-        ConditionalFormattingThresholdInput.Percentile,
-        ConditionalFormattingThresholdInput.Formula {
+    permits dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput.Min,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput.Max,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput.Numeric,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput.Percent,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput.Percentile,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput.Formula {
 
   /** Uses the minimum value observed in the applied range. */
+  @Variant(id = "MIN", summary = "Use the minimum value observed in the applied range.")
   record Min() implements ConditionalFormattingThresholdInput {}
 
   /** Uses the maximum value observed in the applied range. */
+  @Variant(id = "MAX", summary = "Use the maximum value observed in the applied range.")
   record Max() implements ConditionalFormattingThresholdInput {}
 
   /** Uses one finite numeric threshold. */
+  @Variant(id = "NUMBER", summary = "Use one finite numeric threshold.")
   record Numeric(double value) implements ConditionalFormattingThresholdInput {
     public Numeric {
       requireFinite(value, "value");
@@ -38,6 +31,7 @@ public sealed interface ConditionalFormattingThresholdInput
   }
 
   /** Uses one finite percentage threshold in the inclusive range {@code [0, 100]}. */
+  @Variant(id = "PERCENT", summary = "Use one finite percentage threshold from 0 through 100.")
   record Percent(double value) implements ConditionalFormattingThresholdInput {
     public Percent {
       requirePercentage(value, "value");
@@ -45,6 +39,7 @@ public sealed interface ConditionalFormattingThresholdInput
   }
 
   /** Uses one finite percentile threshold in the inclusive range {@code [0, 100]}. */
+  @Variant(id = "PERCENTILE", summary = "Use one finite percentile threshold from 0 through 100.")
   record Percentile(double value) implements ConditionalFormattingThresholdInput {
     public Percentile {
       requirePercentage(value, "value");
@@ -52,7 +47,12 @@ public sealed interface ConditionalFormattingThresholdInput
   }
 
   /** Uses one nonblank, DDE-safe formula threshold. */
-  record Formula(String formula) implements ConditionalFormattingThresholdInput {
+  @Variant(id = "FORMULA", summary = "Use one nonblank, DDE-safe formula threshold.")
+  record Formula(
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula)
+      implements ConditionalFormattingThresholdInput {
     public Formula {
       if (formula == null || formula.isBlank()) {
         throw new IllegalArgumentException("formula must not be blank");

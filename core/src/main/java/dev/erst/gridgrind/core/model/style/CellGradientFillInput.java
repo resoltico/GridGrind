@@ -1,20 +1,17 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Gradient fill payload for cell-style authoring. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellGradientFillInput.Linear.class, name = "LINEAR"),
-  @JsonSubTypes.Type(value = CellGradientFillInput.Path.class, name = "PATH")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 56)
 public sealed interface CellGradientFillInput
-    permits CellGradientFillInput.Linear, CellGradientFillInput.Path {
+    permits dev.erst.gridgrind.core.model.style.CellGradientFillInput.Linear,
+        dev.erst.gridgrind.core.model.style.CellGradientFillInput.Path {
   /** Ordered gradient stops; at least two entries are required. */
   List<CellGradientStopInput> stops();
 
@@ -34,6 +31,10 @@ public sealed interface CellGradientFillInput
   }
 
   /** Linear gradient defined by one optional degree plus ordered stops. */
+  @Variant(
+      id = "LINEAR",
+      summary =
+          "Write one linear gradient fill with ordered stops. degree is optional when Excel's default angle is acceptable.")
   record Linear(Optional<Double> degree, List<CellGradientStopInput> stops)
       implements CellGradientFillInput {
     public Linear {
@@ -44,6 +45,10 @@ public sealed interface CellGradientFillInput
   }
 
   /** Path gradient defined by optional edge offsets plus ordered stops. */
+  @Variant(
+      id = "PATH",
+      summary =
+          "Write one path gradient fill with ordered stops. Each edge offset is optional and omitted offsets preserve Excel's default path geometry.")
   record Path(
       Optional<Double> left,
       Optional<Double> right,

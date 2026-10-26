@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
@@ -20,7 +20,9 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
         WorkbookAssetInspectionResult.TablesResult {
 
   /** Returns factual drawing-object metadata for one sheet. */
-  @JsonTypeName("GET_DRAWING_OBJECTS")
+  @Variant(
+      id = "GET_DRAWING_OBJECTS",
+      summary = "Returns factual drawing-object metadata for one sheet.")
   record DrawingObjectsResult(
       StepId stepId, SheetLabel sheetName, List<DrawingObjectReport> drawingObjects)
       implements WorkbookAssetInspectionResult {
@@ -34,7 +36,7 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
   }
 
   /** Returns factual chart metadata for one sheet. */
-  @JsonTypeName("GET_CHARTS")
+  @Variant(id = "GET_CHARTS", summary = "Returns factual chart metadata for one sheet.")
   record ChartsResult(StepId stepId, SheetLabel sheetName, List<ChartReport> charts)
       implements WorkbookAssetInspectionResult {
     public ChartsResult {
@@ -46,7 +48,10 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
-  @JsonTypeName("GET_PIVOT_TABLES")
+  @Variant(
+      id = "GET_PIVOT_TABLES",
+      summary =
+          "Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots.")
   record PivotTablesResult(StepId stepId, List<PivotTableReport> pivotTables)
       implements WorkbookAssetInspectionResult {
     public PivotTablesResult {
@@ -57,7 +62,9 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
   }
 
   /** Returns the extracted binary payload for one existing drawing object. */
-  @JsonTypeName("GET_DRAWING_OBJECT_PAYLOAD")
+  @Variant(
+      id = "GET_DRAWING_OBJECT_PAYLOAD",
+      summary = "Returns the extracted binary payload for one existing drawing object.")
   record DrawingObjectPayloadResult(
       StepId stepId, SheetLabel sheetName, DrawingObjectPayloadReport payload)
       implements WorkbookAssetInspectionResult {
@@ -70,7 +77,10 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  @JsonTypeName("GET_TABLES")
+  @Variant(
+      id = "GET_TABLES",
+      summary =
+          "Returns factual table metadata selected by workbook-global table name or all tables.")
   record TablesResult(StepId stepId, List<TableEntryReport> tables)
       implements WorkbookAssetInspectionResult {
     public TablesResult {

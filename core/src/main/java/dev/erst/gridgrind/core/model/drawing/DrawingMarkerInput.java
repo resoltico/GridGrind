@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.core.model.drawing;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
+
 /** One cell-relative drawing marker used by authored two-cell anchors. */
+@CatalogType(
+    id = "DrawingMarkerInput",
+    summary = "One zero-based drawing marker with explicit column, row, and in-cell offsets.",
+    displayOrder = 29)
 public record DrawingMarkerInput(int columnIndex, int rowIndex, int dx, int dy) {
   public DrawingMarkerInput {
     if (columnIndex < 0) {

@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.model.drawing;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -13,14 +13,7 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /** Factual drawing-object report returned by drawing reads. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = DrawingObjectReport.Picture.class, name = "PICTURE"),
-  @JsonSubTypes.Type(value = DrawingObjectReport.Chart.class, name = "CHART"),
-  @JsonSubTypes.Type(value = DrawingObjectReport.Shape.class, name = "SHAPE"),
-  @JsonSubTypes.Type(value = DrawingObjectReport.EmbeddedObject.class, name = "EMBEDDED_OBJECT"),
-  @JsonSubTypes.Type(value = DrawingObjectReport.SignatureLine.class, name = "SIGNATURE_LINE")
-})
+@Union(discriminator = "type")
 public sealed interface DrawingObjectReport
     permits DrawingObjectReport.Picture,
         DrawingObjectReport.Chart,
@@ -35,6 +28,7 @@ public sealed interface DrawingObjectReport
   DrawingAnchorReport anchor();
 
   /** Factual picture report. */
+  @Variant(id = "PICTURE", summary = "Factual picture report.")
   record Picture(
       String name,
       DrawingAnchorReport anchor,
@@ -67,6 +61,9 @@ public sealed interface DrawingObjectReport
   }
 
   /** Factual chart report surfaced through the drawing-object inventory. */
+  @Variant(
+      id = "CHART",
+      summary = "Factual chart report surfaced through the drawing-object inventory.")
   record Chart(
       String name,
       DrawingAnchorReport anchor,
@@ -82,6 +79,7 @@ public sealed interface DrawingObjectReport
   }
 
   /** Factual shape report. */
+  @Variant(id = "SHAPE", summary = "Factual shape report.")
   record Shape(
       String name,
       DrawingAnchorReport anchor,
@@ -106,6 +104,7 @@ public sealed interface DrawingObjectReport
   }
 
   /** Factual embedded-object report. */
+  @Variant(id = "EMBEDDED_OBJECT", summary = "Factual embedded-object report.")
   record EmbeddedObject(
       String name,
       DrawingAnchorReport anchor,
@@ -153,6 +152,7 @@ public sealed interface DrawingObjectReport
   }
 
   /** Factual signature-line report. */
+  @Variant(id = "SIGNATURE_LINE", summary = "Factual signature-line report.")
   record SignatureLine(
       String name,
       DrawingAnchorReport anchor,

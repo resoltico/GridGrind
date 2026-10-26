@@ -224,19 +224,19 @@ final class InspectionResultWorkbookStructureReportSupport {
     };
   }
 
-  private static PivotTableReport.Source toPivotTableSourceReport(
+  private static PivotTableReport.PivotSourceReport toPivotTableSourceReport(
       ExcelPivotTableSnapshot.Source source) {
     return switch (source) {
       case ExcelPivotTableSnapshot.Source.Range range ->
-          new PivotTableReport.Source.Range(
+          new PivotTableReport.PivotSourceReport.Range(
               new SheetName(range.sheetName()), new RangeLabel(range.range()));
       case ExcelPivotTableSnapshot.Source.NamedRange namedRange ->
-          new PivotTableReport.Source.NamedRange(
+          new PivotTableReport.PivotSourceReport.NamedRange(
               new DefinedName(namedRange.name()),
               new SheetName(namedRange.sheetName()),
               new RangeLabel(namedRange.range()));
       case ExcelPivotTableSnapshot.Source.Table table ->
-          new PivotTableReport.Source.Table(
+          new PivotTableReport.PivotSourceReport.Table(
               new TableName(table.name()),
               new SheetName(table.sheetName()),
               new RangeLabel(table.range()));

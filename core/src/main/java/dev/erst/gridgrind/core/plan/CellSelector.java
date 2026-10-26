@@ -1,22 +1,22 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more cells on one sheet. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellSelector.AllUsedInSheet.class, name = "CELL_ALL_USED_IN_SHEET"),
-  @JsonSubTypes.Type(value = CellSelector.ByAddress.class, name = "CELL_BY_ADDRESS"),
-  @JsonSubTypes.Type(value = CellSelector.ByAddresses.class, name = "CELL_BY_ADDRESSES")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 27)
 public sealed interface CellSelector extends Selector
-    permits CellSelector.AllUsedInSheet, CellSelector.ByAddress, CellSelector.ByAddresses {
+    permits dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet,
+        dev.erst.gridgrind.core.plan.CellSelector.ByAddress,
+        dev.erst.gridgrind.core.plan.CellSelector.ByAddresses {
 
   /** Selects every physically present cell on one sheet. */
+  @Variant(
+      id = "CELL_ALL_USED_IN_SHEET",
+      summary = "Select every physically present cell on one sheet.")
   record AllUsedInSheet(SheetName sheetName) implements CellSelector {
     public AllUsedInSheet {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -29,6 +29,7 @@ public sealed interface CellSelector extends Selector
   }
 
   /** Selects one exact cell on one sheet. */
+  @Variant(id = "CELL_BY_ADDRESS", summary = "Select one exact cell on one sheet.")
   record ByAddress(SheetName sheetName, CellAddress address) implements CellSelector {
     public ByAddress {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -42,6 +43,7 @@ public sealed interface CellSelector extends Selector
   }
 
   /** Selects one or more exact cells on one sheet. */
+  @Variant(id = "CELL_BY_ADDRESSES", summary = "Select one or more exact cells on one sheet.")
   record ByAddresses(SheetName sheetName, List<CellAddress> addresses) implements CellSelector {
     public ByAddresses {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");

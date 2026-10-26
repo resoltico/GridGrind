@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
@@ -23,7 +23,7 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
         WorkbookInspectionResult.SheetsResult {
 
   /** Returns workbook-level summary facts. */
-  @JsonTypeName("GET_WORKBOOK_SUMMARY")
+  @Variant(id = "GET_WORKBOOK_SUMMARY", summary = "Returns workbook-level summary facts.")
   record WorkbookSummaryResult(StepId stepId, WorkbookSummary workbook)
       implements WorkbookInspectionResult {
     public WorkbookSummaryResult {
@@ -34,7 +34,9 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
   }
 
   /** Returns OOXML package-encryption and package-signature facts. */
-  @JsonTypeName("GET_PACKAGE_SECURITY")
+  @Variant(
+      id = "GET_PACKAGE_SECURITY",
+      summary = "Returns OOXML package-encryption and package-signature facts.")
   record PackageSecurityResult(StepId stepId, OoxmlPackageSecurityReport security)
       implements WorkbookInspectionResult {
     public PackageSecurityResult {
@@ -45,7 +47,7 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
   }
 
   /** Returns workbook-level protection facts. */
-  @JsonTypeName("GET_WORKBOOK_PROTECTION")
+  @Variant(id = "GET_WORKBOOK_PROTECTION", summary = "Returns workbook-level protection facts.")
   record WorkbookProtectionResult(StepId stepId, WorkbookProtectionReport protection)
       implements WorkbookInspectionResult {
     public WorkbookProtectionResult {
@@ -56,7 +58,9 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
   }
 
   /** Returns factual workbook custom-XML mapping metadata. */
-  @JsonTypeName("GET_CUSTOM_XML_MAPPINGS")
+  @Variant(
+      id = "GET_CUSTOM_XML_MAPPINGS",
+      summary = "Returns factual workbook custom-XML mapping metadata.")
   record CustomXmlMappingsResult(StepId stepId, List<CustomXmlMappingReport> mappings)
       implements WorkbookInspectionResult {
     public CustomXmlMappingsResult {
@@ -67,7 +71,9 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
   }
 
   /** Returns XML exported from one selected workbook custom-XML mapping. */
-  @JsonTypeName("EXPORT_CUSTOM_XML_MAPPING")
+  @Variant(
+      id = "EXPORT_CUSTOM_XML_MAPPING",
+      summary = "Returns XML exported from one selected workbook custom-XML mapping.")
   record CustomXmlExportResult(StepId stepId, CustomXmlExportReport export)
       implements WorkbookInspectionResult {
     public CustomXmlExportResult {
@@ -78,7 +84,9 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
   }
 
   /** Returns named ranges selected by the originating read operation. */
-  @JsonTypeName("GET_NAMED_RANGES")
+  @Variant(
+      id = "GET_NAMED_RANGES",
+      summary = "Returns named ranges selected by the originating read operation.")
   record NamedRangesResult(StepId stepId, List<NamedRangeReport> namedRanges)
       implements WorkbookInspectionResult {
     public NamedRangesResult {
@@ -89,7 +97,9 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
   }
 
   /** Returns sheet names matched by the originating sheet-presence assertion. */
-  @JsonTypeName("GET_SHEETS")
+  @Variant(
+      id = "GET_SHEETS",
+      summary = "Returns sheet names matched by the originating sheet-presence assertion.")
   record SheetsResult(StepId stepId, List<SheetLabel> sheetNames)
       implements WorkbookInspectionResult {
     public SheetsResult {

@@ -2,9 +2,14 @@ package dev.erst.gridgrind.core.model.table;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Locale;
 
 /** Advanced authored table-column metadata applied by ordinal column index. */
+@CatalogType(
+    id = "TableColumnInput",
+    summary = "Advanced table-column metadata applied by zero-based ordinal column index.",
+    displayOrder = 73)
 public record TableColumnInput(
     int columnIndex,
     String uniqueName,

@@ -1,29 +1,30 @@
 package dev.erst.gridgrind.core.result;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Persistence outcome variants returned on every workbook result. */
 public interface WorkbookResultPersistence {
   /** Reports whether the workbook was persisted during execution. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = PersistenceOutcome.NotSaved.class, name = "NONE"),
-    @JsonSubTypes.Type(value = PersistenceOutcome.SavedAs.class, name = "SAVE_AS"),
-    @JsonSubTypes.Type(value = PersistenceOutcome.Overwritten.class, name = "OVERWRITE")
-  })
+  @Union(discriminator = "type")
   sealed interface PersistenceOutcome
       permits PersistenceOutcome.NotSaved,
           PersistenceOutcome.SavedAs,
           PersistenceOutcome.Overwritten {
 
     /** Workbook remained in memory only and was not published to a destination. */
+    @Variant(
+        id = "NONE",
+        summary = "Workbook remained in memory only and was not published to a destination.")
     record NotSaved() implements PersistenceOutcome {}
 
     /** Workbook targeted the path supplied in the SAVE_AS persistence field. */
+    @Variant(
+        id = "SAVE_AS",
+        summary = "Workbook targeted the path supplied in the SAVE_AS persistence field.")
     record SavedAs(String requestedPath, PublicationOutcome publication)
         implements PersistenceOutcome {
       public SavedAs {
@@ -33,6 +34,9 @@ public interface WorkbookResultPersistence {
     }
 
     /** Workbook targeted the opened source workbook path for overwrite persistence. */
+    @Variant(
+        id = "OVERWRITE",
+        summary = "Workbook targeted the opened source workbook path for overwrite persistence.")
     record Overwritten(
         @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sourcePath,
         PublicationOutcome publication)
@@ -58,13 +62,7 @@ public interface WorkbookResultPersistence {
   }
 
   /** Reports what GridGrind established about one requested final workbook destination. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = PublicationOutcome.NotAttempted.class, name = "NOT_ATTEMPTED"),
-    @JsonSubTypes.Type(value = PublicationOutcome.NotPublished.class, name = "NOT_PUBLISHED"),
-    @JsonSubTypes.Type(value = PublicationOutcome.Published.class, name = "PUBLISHED"),
-    @JsonSubTypes.Type(value = PublicationOutcome.Uncertain.class, name = "UNCERTAIN")
-  })
+  @Union(discriminator = "status")
   sealed interface PublicationOutcome
       permits PublicationOutcome.NotAttempted,
           PublicationOutcome.NotPublished,
@@ -72,11 +70,16 @@ public interface WorkbookResultPersistence {
           PublicationOutcome.Uncertain {
 
     /** Final destination mutation was never attempted. */
+    @Variant(id = "NOT_ATTEMPTED", summary = "Final destination mutation was never attempted.")
     record NotAttempted() implements PublicationOutcome {}
 
     /**
      * Final destination remains provably absent or unchanged after publication did not complete.
      */
+    @Variant(
+        id = "NOT_PUBLISHED",
+        summary =
+            "Final destination remains provably absent or unchanged after publication did not complete.")
     record NotPublished(DestinationState destinationState) implements PublicationOutcome {
       public NotPublished {
         Objects.requireNonNull(destinationState, "destinationState must not be null");
@@ -84,6 +87,9 @@ public interface WorkbookResultPersistence {
     }
 
     /** Final destination was observed with the complete verified staged artifact. */
+    @Variant(
+        id = "PUBLISHED",
+        summary = "Final destination was observed with the complete verified staged artifact.")
     record Published(
         String executionPath,
         String sha256,
@@ -104,6 +110,10 @@ public interface WorkbookResultPersistence {
     }
 
     /** Final destination may have changed, so automated retry is unsafe without inspection. */
+    @Variant(
+        id = "UNCERTAIN",
+        summary =
+            "Final destination may have changed, so automated retry is unsafe without inspection.")
     record Uncertain(String executionPath, Recovery recovery) implements PublicationOutcome {
       public Uncertain {
         executionPath = requireNonBlank(executionPath, "executionPath");
@@ -126,22 +136,20 @@ public interface WorkbookResultPersistence {
     record StagedArtifactVerification() {}
 
     /** Durability evidence established for one published artifact. */
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "level")
-    @JsonSubTypes({
-      @JsonSubTypes.Type(
-          value = DurabilityEvidence.FileAndDirectorySynced.class,
-          name = "FILE_AND_DIRECTORY_SYNCED"),
-      @JsonSubTypes.Type(
-          value = DurabilityEvidence.FileSyncedDirectoryUnestablished.class,
-          name = "FILE_SYNCED_DIRECTORY_UNESTABLISHED")
-    })
+    @Union(discriminator = "level")
     sealed interface DurabilityEvidence
         permits DurabilityEvidence.FileAndDirectorySynced,
             DurabilityEvidence.FileSyncedDirectoryUnestablished {
       /** File data and the containing directory entry were synchronized. */
+      @Variant(
+          id = "FILE_AND_DIRECTORY_SYNCED",
+          summary = "File data and the containing directory entry were synchronized.")
       record FileAndDirectorySynced() implements DurabilityEvidence {}
 
       /** File data was synchronized but directory synchronization was not established. */
+      @Variant(
+          id = "FILE_SYNCED_DIRECTORY_UNESTABLISHED",
+          summary = "File data was synchronized but directory synchronization was not established.")
       record FileSyncedDirectoryUnestablished() implements DurabilityEvidence {}
     }
 

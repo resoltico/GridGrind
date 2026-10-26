@@ -854,3 +854,65 @@ blank checks 439 -> 438; main Java 126,670 -> 126,665; test Java 155,391 -> 155,
 inventories, failure XML, migration logs and `name-observations/`. Baseline diff empty; no
 supplement. The named-range surface report and other remaining domain names still need review
 against the WP-21 inventory; this is not completion of WP-21 or the foundations redesign.
+
+### WP-22 metadata identity/catalog checkpoint (WP-24 still pending)
+
+Replaced colocated ProtocolTypeMetadata and every JsonSubTypes list with core Union/Variant
+identity. CatalogType owns standalone-record descriptions, ProjectedBy owns facet-gated fields,
+and FieldRule owns the six scalar constraint kinds. Runtime ModelGraph traverses request,
+result, catalog and progress roots; no classpath scan or handwritten type inventory remains.
+CatalogTypes derives descriptors and group ids, CatalogGroups resolves their field references.
+Deleted manual descriptor files, the duplicated coverage validator, and field-shape registry.
+Presentation order is explicit model metadata; source permits order preserves subtype order.
+Shared pattern/bound constants remain referenced, rather than copied into annotations. Selector
+identity also derives from the sealed graph, and SelectorTypes replaces SelectorJsonSupport.
+
+Operation Variant metadata selects one of the shared conservative effect profiles and declares
+preconditions. An independent comparison against the captured pre-change map shows effects,
+footprints and precondition classes unchanged for all 126 operation records. Catalog constraints
+previously included a name entry on the fieldless NamedRangeTarget interface: it could never
+publish a real component rule, so the derived model drops that invalid registry-only entry.
+Actual mutation/table record constraints remain. Retired registry/Jackson-fallback tests were
+removed; replacement metadata identity, real consumers, complete golden corpus and architecture
+negative controls exercise the current paths. Declaration-order diagnostics were restored after
+a focused engine assertion detected an accidental allowed-id sort change.
+
+Two brief premises required correction under the user's AFK QA delegation:
+1. Three named-range records had different summaries in two catalog groups. One record now owns
+   one canonical reference summary. The public structured catalog changes those three texts.
+2. The nested pivot Source unions collided under the prescribed simple-name group algorithm.
+   Their planned vocabulary roles were moved forward: PivotSourceSpec and PivotSourceReport.
+Closed sealed subinterfaces remain, rather than flattening them into independent facets:
+a Java 26 compile experiment demonstrated loss of exhaustive-switch coverage in that approach.
+The architecture rule now targets Union and enforces record leaves plus closed intermediates;
+its enum/open-family negative control remains. This explicitly deviates from direct-permits-only
+records while preserving the stronger existing subset contracts and compiler checks. Evidence:
+`facet-compile.log` and prototype. Do not claim direct-record-only permits in final reporting.
+
+Reviewed golden changes are exactly ten files. Discovery 10 changes 33 group ids without member,
+count or presentation-order loss. Discovery 11 changes those identifiers and consequent
+identifier-based tie/support order. Eight recipe detail snapshots change capability group refs
+only: TABULAR_REPORT, DASHBOARD, DATA_ENTRY_WORKFLOW, PIVOT_REPORT, AUDIT_EXISTING_WORKBOOK,
+CUSTOM_XML_WORKFLOW, DRAWING_AND_SIGNATURE_WORKFLOW, WORKBOOK_MAINTENANCE. Both launchers' failure
+observations equal the original snapshots after group-id mapping; behavioral facts remain fixed.
+No other snapshot changed. Review evidence `catalog-*-review.json`, `recipe-group-id-review.json`,
+full failure XML and `group-id-changes.json` is external. Registry/API documentation, fixture
+comments and stale group-reference assertions were corrected from full failure output; retained
+logs explain all intermediate failures.
+
+Final ./gradlew check passed (4m20s), including all 141 golden cases, new metadata consumers and
+nonempty Union architecture checks. Named modules passed 14 requests, catalog, malformed-range
+response and twelve scalars. Inventories: registrations 5 -> 0, handwritten descriptor lines
+2,849 -> 0, Support 219 -> 217, blank checks 438 unchanged, main Java 126,665 -> 125,348, test Java
+155,574 -> 154,930; engine mirrors/converters remain scheduled work. Remaining Jackson creator,
+property and inclusion annotations in core must still be removed with WP-24; the placeholder
+WireDefault annotation is not yet used. This checkpoint does not complete WP-22 or WP-21.
+No mutation/active fuzz campaigns were run after the user's updated instruction; defer them until
+all planned implementation is finished, and cap any justified interim run at 120 seconds.
+
+Defaults mechanism prototype passed outside the repository: absent Boolean default, explicit
+false, Optional absence, explicit-null rejection, and default omission through native Jackson 3
+value-instantiation/serialization extension points. See `default-binding-and-omission-prototype.log`.
+Next: apply metadata defaults, delete secondary wire creators/null normalizers, remove the
+annotation dependency from core, then complete vocabulary normalization and schema intake.
+Baseline diff remains empty; no supplement.

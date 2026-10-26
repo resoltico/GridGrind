@@ -2,9 +2,10 @@ package dev.erst.gridgrind.core.model.pivot;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -21,10 +22,15 @@ import java.util.Optional;
 import java.util.Set;
 
 /** Protocol-facing authored pivot-table definition. */
+@CatalogType(
+    id = "PivotTableInput",
+    summary =
+        "Workbook-global pivot-table definition for one SET_PIVOT_TABLE request. PivotSourceSpec-column assignments across rowLabels, columnLabels, reportFilters, and dataFields must be disjoint. reportFilters require anchor.topLeftAddress on row 3 or lower.",
+    displayOrder = 70)
 public record PivotTableInput(
     String name,
     SheetName sheetName,
-    Source source,
+    PivotSourceSpec source,
     Anchor anchor,
     @ProtocolField(optional = true) List<String> rowLabels,
     @ProtocolField(optional = true) List<String> columnLabels,
@@ -35,7 +41,7 @@ public record PivotTableInput(
   public static PivotTableInput create(
       @JsonProperty("name") String name,
       @JsonProperty("sheetName") SheetName sheetName,
-      @JsonProperty("source") Source source,
+      @JsonProperty("source") PivotSourceSpec source,
       @JsonProperty("anchor") Anchor anchor,
       @JsonProperty("rowLabels") List<String> rowLabels,
       @JsonProperty("columnLabels") List<String> columnLabels,
@@ -65,16 +71,17 @@ public record PivotTableInput(
   }
 
   /** Supported authored pivot-data source kinds. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Source.Range.class, name = "RANGE"),
-    @JsonSubTypes.Type(value = Source.NamedRange.class, name = "NAMED_RANGE"),
-    @JsonSubTypes.Type(value = Source.Table.class, name = "TABLE")
-  })
-  public sealed interface Source permits Source.Range, Source.NamedRange, Source.Table {
+  @Union(discriminator = "type", catalog = true, displayOrder = 53)
+  public sealed interface PivotSourceSpec
+      permits dev.erst.gridgrind.core.model.pivot.PivotTableInput.PivotSourceSpec.Range,
+          dev.erst.gridgrind.core.model.pivot.PivotTableInput.PivotSourceSpec.NamedRange,
+          dev.erst.gridgrind.core.model.pivot.PivotTableInput.PivotSourceSpec.Table {
 
     /** Explicit contiguous sheet range source with a header row in the first row. */
-    record Range(SheetName sheetName, RangeRef range) implements Source {
+    @Variant(
+        id = "RANGE",
+        summary = "Use one explicit contiguous sheet range with the header row in the first row.")
+    record Range(SheetName sheetName, RangeRef range) implements PivotSourceSpec {
       public Range {
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         Objects.requireNonNull(range, "range must not be null");
@@ -82,14 +89,18 @@ public record PivotTableInput(
     }
 
     /** Existing contiguous workbook or sheet-scoped named range source. */
-    record NamedRange(DefinedName name) implements Source {
+    @Variant(
+        id = "NAMED_RANGE",
+        summary = "Use one existing workbook- or sheet-scoped named range as the pivot source.")
+    record NamedRange(DefinedName name) implements PivotSourceSpec {
       public NamedRange {
         java.util.Objects.requireNonNull(name, "name must not be null");
       }
     }
 
     /** Existing workbook-global table source. */
-    record Table(TableName name) implements Source {
+    @Variant(id = "TABLE", summary = "Use one existing workbook-global table as the pivot source.")
+    record Table(TableName name) implements PivotSourceSpec {
       public Table {
         java.util.Objects.requireNonNull(name, "name must not be null");
       }
@@ -97,6 +108,11 @@ public record PivotTableInput(
   }
 
   /** Authored top-left destination anchor for one pivot table. */
+  @CatalogType(
+      id = "PivotTableAnchorInput",
+      summary =
+          "Top-left anchor for a pivot table rendered on its destination sheet. The address must be a single-cell A1 reference.",
+      displayOrder = 71)
   public record Anchor(CellAddress topLeftAddress) {
     public Anchor {
       java.util.Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
@@ -104,6 +120,11 @@ public record PivotTableInput(
   }
 
   /** One authored pivot data field. */
+  @CatalogType(
+      id = "PivotTableDataFieldInput",
+      summary =
+          "One authored pivot data field bound to a source column and aggregation function. displayName defaults to sourceColumnName when omitted.",
+      displayOrder = 72)
   public record DataField(
       String sourceColumnName,
       ExcelPivotDataConsolidateFunction function,

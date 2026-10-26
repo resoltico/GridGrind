@@ -379,18 +379,18 @@ class GridGrindProtocolContractSupportCoverageTest {
 
   private static Stream<RequestCatalogDescriptor> requestDescriptors() {
     return Stream.concat(
-        GridGrindProtocolCatalogTypeDescriptors.ALL_TYPES.stream()
+        CatalogTypes.ALL_TYPES.stream()
             .map(
                 descriptor ->
                     new RequestCatalogDescriptor(descriptor.recordType(), descriptor.typeEntry())),
         Stream.concat(
-            GridGrindProtocolCatalogFieldGroupSupport.NESTED_TYPE_GROUPS.stream()
+            CatalogTypes.NESTED_TYPE_GROUPS.stream()
                 .flatMap(group -> group.typeDescriptors().stream())
                 .map(
                     descriptor ->
                         new RequestCatalogDescriptor(
                             descriptor.recordType(), descriptor.typeEntry())),
-            GridGrindProtocolCatalogFieldGroupSupport.PLAIN_TYPE_DESCRIPTORS.stream()
+            CatalogTypes.PLAIN_TYPE_DESCRIPTORS.stream()
                 .map(
                     descriptor ->
                         new RequestCatalogDescriptor(

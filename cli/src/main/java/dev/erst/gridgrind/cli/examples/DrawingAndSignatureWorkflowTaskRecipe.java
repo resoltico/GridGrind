@@ -74,7 +74,7 @@ final class DrawingAndSignatureWorkflowTaskRecipe {
                         "Prepare The Drawing Surface",
                         "Create the target sheet before any named drawing object is authored.",
                         List.of(
-                            GridGrindTaskRecipeSupport.ref("sourceTypes", "NEW"),
+                            GridGrindTaskRecipeSupport.ref("workbookSourceTypes", "NEW"),
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "ENSURE_SHEET")),
                         List.of("A stable sheet name gives drawing objects a durable home.")),
                     GridGrindTaskRecipeSupport.phase(
@@ -86,7 +86,7 @@ final class DrawingAndSignatureWorkflowTaskRecipe {
                                 "mutationActionTypes", "SET_SIGNATURE_LINE"),
                             GridGrindTaskRecipeSupport.ref(
                                 "mutationActionTypes", "SET_DRAWING_OBJECT_ANCHOR"),
-                            GridGrindTaskRecipeSupport.ref("persistenceTypes", "SAVE_AS")),
+                            GridGrindTaskRecipeSupport.ref("workbookPersistenceTypes", "SAVE_AS")),
                         List.of("Named drawing objects are easier to inspect and move later.")),
                     GridGrindTaskRecipeSupport.phase(
                         TaskPhasePurpose.VERIFY,

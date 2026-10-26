@@ -2,11 +2,16 @@ package dev.erst.gridgrind.core.model.table;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import java.util.Objects;
 
 /** One authored autofilter filter-column payload. */
+@CatalogType(
+    id = "AutofilterFilterColumnInput",
+    summary = "One authored autofilter filter-column payload with an explicit column criterion.",
+    displayOrder = 56)
 public record AutofilterFilterColumnInput(
     long columnId,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.TRUE)

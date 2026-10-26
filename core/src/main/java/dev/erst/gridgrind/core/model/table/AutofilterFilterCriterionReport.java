@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,15 +9,7 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Factual criterion family loaded from one autofilter filter column. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionReport.Values.class, name = "VALUES"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionReport.Custom.class, name = "CUSTOM"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionReport.Dynamic.class, name = "DYNAMIC"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionReport.Top10.class, name = "TOP10"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionReport.Color.class, name = "COLOR"),
-  @JsonSubTypes.Type(value = AutofilterFilterCriterionReport.Icon.class, name = "ICON")
-})
+@Union(discriminator = "type")
 public sealed interface AutofilterFilterCriterionReport
     permits AutofilterFilterCriterionReport.Values,
         AutofilterFilterCriterionReport.Custom,
@@ -27,6 +19,7 @@ public sealed interface AutofilterFilterCriterionReport
         AutofilterFilterCriterionReport.Icon {
 
   /** One explicit filter-values list, optionally including blanks. */
+  @Variant(id = "VALUES", summary = "One explicit filter-values list, optionally including blanks.")
   record Values(List<String> values, boolean includeBlank)
       implements AutofilterFilterCriterionReport {
     public Values {
@@ -35,6 +28,7 @@ public sealed interface AutofilterFilterCriterionReport
   }
 
   /** One ordered custom-filter predicate set. */
+  @Variant(id = "CUSTOM", summary = "One ordered custom-filter predicate set.")
   record Custom(boolean and, List<CustomConditionReport> conditions)
       implements AutofilterFilterCriterionReport {
     public Custom {
@@ -46,6 +40,7 @@ public sealed interface AutofilterFilterCriterionReport
   }
 
   /** One dynamic-filter rule. */
+  @Variant(id = "DYNAMIC", summary = "One dynamic-filter rule.")
   record Dynamic(String type, @Nullable Double value, @Nullable Double maxValue)
       implements AutofilterFilterCriterionReport {
     public Dynamic {
@@ -59,6 +54,7 @@ public sealed interface AutofilterFilterCriterionReport
   }
 
   /** One top-10 filter rule. */
+  @Variant(id = "TOP10", summary = "One top-10 filter rule.")
   record Top10(boolean top, boolean percent, double value, @Nullable Double filterValue)
       implements AutofilterFilterCriterionReport {
     public Top10 {
@@ -70,12 +66,14 @@ public sealed interface AutofilterFilterCriterionReport
   }
 
   /** One color-based filter rule. */
+  @Variant(id = "COLOR", summary = "One color-based filter rule.")
   record Color(boolean cellColor, @Nullable CellColorReport color)
       implements AutofilterFilterCriterionReport {
     public Color {}
   }
 
   /** One icon-based filter rule. */
+  @Variant(id = "ICON", summary = "One icon-based filter rule.")
   record Icon(String iconSet, int iconId) implements AutofilterFilterCriterionReport {
     public Icon {
       Objects.requireNonNull(iconSet, "iconSet must not be null");

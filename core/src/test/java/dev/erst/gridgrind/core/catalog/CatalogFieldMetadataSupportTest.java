@@ -9,7 +9,6 @@ import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.plan.ExecutionModeInput;
-import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
@@ -18,7 +17,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
 import dev.erst.gridgrind.core.vocabulary.ExcelStoredCellErrorLiteral;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +40,7 @@ class CatalogFieldMetadataSupportTest {
     assertEquals(
         new FieldShape.ListShape(new FieldShape.Scalar(ScalarType.STRING)), optionalList.shape());
     assertEquals(
-        new FieldShape.TopLevelTypeSetRef("stepTypes"),
+        new FieldShape.TopLevelTypeSetRef("workbookStepTypes"),
         CatalogFieldMetadataSupport.fieldShape(WorkbookStep.class));
     assertEquals(
         List.of("STANDARD", "STACKED", "PERCENT_STACKED"),
@@ -76,13 +74,13 @@ class CatalogFieldMetadataSupportTest {
                 "pivotTableSelectorTypes")),
         CatalogFieldMetadataSupport.fieldShape(dev.erst.gridgrind.core.plan.Selector.class));
     assertEquals(
-        new FieldShape.NestedTypeGroupRef("executionModeTypes"),
+        new FieldShape.NestedTypeGroupRef("executionModeInputTypes"),
         CatalogFieldMetadataSupport.fieldShape(ExecutionModeInput.class));
     assertEquals(
-        new FieldShape.NestedTypeGroupRef("textSourceTypes"),
+        new FieldShape.NestedTypeGroupRef("textSourceInputTypes"),
         CatalogFieldMetadataSupport.fieldShape(TextSourceInput.class));
     assertEquals(
-        new FieldShape.NestedTypeGroupRef("binarySourceTypes"),
+        new FieldShape.NestedTypeGroupRef("binarySourceInputTypes"),
         CatalogFieldMetadataSupport.fieldShape(BinarySourceInput.class));
   }
 
@@ -105,48 +103,6 @@ class CatalogFieldMetadataSupportTest {
         "Unsupported parameterized catalog field type: java.util.Map<java.lang.String, dev.erst.gridgrind.core.model.value.CellInput>",
         unsupportedParameterized.getMessage());
 
-    IllegalStateException nestedMismatch =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                CatalogFieldShapeRegistry.validateNestedTypeGroupMapping(
-                    CellInput.class, "wrongGroup"));
-    assertEquals(
-        "Field-shape nested group mapping mismatch for dev.erst.gridgrind.core.model.value.CellInput: expected=wrongGroup, mapped=cellInputTypes",
-        nestedMismatch.getMessage());
-
-    IllegalStateException nestedExecutionModeMismatch =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                CatalogFieldShapeRegistry.validateNestedTypeGroupMapping(
-                    ExecutionModeInput.class, "wrongGroup"));
-    assertEquals(
-        "Field-shape nested group mapping mismatch for dev.erst.gridgrind.core.plan.ExecutionModeInput: expected=wrongGroup, mapped=executionModeTypes",
-        nestedExecutionModeMismatch.getMessage());
-    IllegalStateException plainMismatch =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                CatalogFieldShapeRegistry.validatePlainTypeGroupMapping(
-                    ExecutionPolicyInput.class, "wrongGroup"));
-    assertEquals(
-        "Field-shape plain group mapping mismatch for dev.erst.gridgrind.core.plan.ExecutionPolicyInput: expected=wrongGroup, mapped=executionPolicyInputType",
-        plainMismatch.getMessage());
-
-    IllegalStateException ambiguous =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                CatalogFieldShapeRegistry.lookupAssignableGroup(
-                    Map.of(Alpha.class, "alpha", Beta.class, "beta"), Gamma.class));
-    assertTrue(
-        ambiguous
-            .getMessage()
-            .startsWith(
-                "Ambiguous catalog field group mapping for " + Gamma.class.getName() + ": "));
-    assertTrue(ambiguous.getMessage().contains(Alpha.class.getName()));
-    assertTrue(ambiguous.getMessage().contains(Beta.class.getName()));
     assertEquals(
         "Unsupported catalog field type: java.lang.Object",
         assertThrows(
@@ -159,9 +115,6 @@ class CatalogFieldMetadataSupportTest {
                 IllegalStateException.class,
                 () -> CatalogFieldMetadataSupport.fieldShape(new InvalidListParameterizedType()))
             .getMessage());
-    assertEquals(
-        java.util.Optional.of("alpha"),
-        CatalogFieldShapeRegistry.lookupAssignableGroup(Map.of(Alpha.class, "alpha"), Gamma.class));
   }
 
   @Test
@@ -174,58 +127,6 @@ class CatalogFieldMetadataSupportTest {
         CatalogFieldMetadataSupport.fieldEntry(
                 recordComponent(SecretFixture.class, "label"), Set.of())
             .secret());
-  }
-
-  @Test
-  @SuppressWarnings("PMD.UseConcurrentHashMap")
-  void lookupAssignableGroupListPrefersMostSpecificAssignableGroup()
-      throws ReflectiveOperationException {
-    Map<Class<?>, List<String>> groups = new LinkedHashMap<>();
-    groups.put(dev.erst.gridgrind.core.plan.Selector.class, List.of("selector"));
-    groups.put(dev.erst.gridgrind.core.plan.SheetSelector.class, List.of("nested"));
-
-    assertEquals(
-        java.util.Optional.of(List.of("nested")),
-        CatalogFieldShapeRegistry.lookupAssignableGroupList(
-            groups, dev.erst.gridgrind.core.plan.SheetSelector.ByName.class));
-    assertEquals(
-        java.util.Optional.empty(),
-        CatalogFieldShapeRegistry.lookupAssignableGroupList(
-            groups, dev.erst.gridgrind.core.plan.Selector.class));
-    Map<Class<?>, List<String>> reversedGroups = new LinkedHashMap<>();
-    reversedGroups.put(dev.erst.gridgrind.core.plan.SheetSelector.class, List.of("nested"));
-    reversedGroups.put(dev.erst.gridgrind.core.plan.Selector.class, List.of("selector"));
-    assertEquals(
-        java.util.Optional.of(List.of("nested")),
-        CatalogFieldShapeRegistry.lookupAssignableGroupList(
-            reversedGroups, dev.erst.gridgrind.core.plan.SheetSelector.ByName.class));
-    assertEquals(
-        java.util.Optional.of("nested"),
-        CatalogFieldShapeRegistry.lookupAssignableGroup(
-            orderedGroupMap(
-                dev.erst.gridgrind.core.plan.Selector.class,
-                "selector",
-                dev.erst.gridgrind.core.plan.SheetSelector.class,
-                "nested"),
-            dev.erst.gridgrind.core.plan.SheetSelector.ByName.class));
-    assertEquals(
-        java.util.Optional.of("nested"),
-        CatalogFieldShapeRegistry.lookupAssignableGroup(
-            orderedGroupMap(
-                dev.erst.gridgrind.core.plan.SheetSelector.class,
-                "nested",
-                dev.erst.gridgrind.core.plan.Selector.class,
-                "selector"),
-            dev.erst.gridgrind.core.plan.SheetSelector.ByName.class));
-    assertEquals(
-        java.util.Optional.of("selector"),
-        CatalogFieldShapeRegistry.lookupAssignableGroup(
-            orderedGroupMap(
-                dev.erst.gridgrind.core.plan.SheetSelector.class,
-                "nested",
-                dev.erst.gridgrind.core.plan.Selector.class,
-                "selector"),
-            dev.erst.gridgrind.core.plan.SheetSelector.class));
   }
 
   @Test
@@ -309,15 +210,6 @@ class CatalogFieldMetadataSupportTest {
       Map<String, CellInput> cells,
       WorkbookStep step) {}
 
-  /** Broader fixture interface used for ambiguous assignable-group testing. */
-  private interface Alpha {}
-
-  /** Fixture type that matches both Alpha and Beta. */
-  private static final class Gamma implements Alpha, Beta {}
-
-  /** Second broader fixture interface used for ambiguous assignable-group testing. */
-  private interface Beta {}
-
   /** Type implementation not supported by the catalog field-shape resolver. */
   private static final class UnsupportedType implements Type {
     @Override
@@ -364,14 +256,5 @@ class CatalogFieldMetadataSupportTest {
         .filter(component -> component.getName().equals(fieldName))
         .findFirst()
         .orElseThrow();
-  }
-
-  @SuppressWarnings("PMD.UseConcurrentHashMap")
-  private static Map<Class<?>, String> orderedGroupMap(
-      Class<?> firstType, String firstGroup, Class<?> secondType, String secondGroup) {
-    Map<Class<?>, String> groups = new LinkedHashMap<>();
-    groups.put(firstType, firstGroup);
-    groups.put(secondType, secondGroup);
-    return groups;
   }
 }

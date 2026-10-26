@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.table;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
@@ -13,6 +14,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Authored sort-state payload nested under sheet autofilter authoring. */
+@CatalogType(
+    id = "AutofilterSortStateInput",
+    summary = "Authored autofilter sort-state payload with one or more ordered sort conditions.",
+    displayOrder = 57)
 public record AutofilterSortStateInput(
     RangeRef range,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)

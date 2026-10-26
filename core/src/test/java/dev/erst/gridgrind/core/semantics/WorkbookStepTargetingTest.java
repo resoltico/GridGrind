@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import java.util.List;
 import java.util.Optional;
@@ -19,8 +19,7 @@ class WorkbookStepTargetingTest {
         WorkbookStepTargeting.forMutationActionType(StructuredMutationAction.SetTable.class);
 
     assertEquals(
-        List.of(
-            new SelectorJsonSupport.FamilyInfo("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
+        List.of(new SelectorTypes.FamilyInfo("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
         targetSurface.selectorFamilies());
     assertEquals(Optional.empty(), targetSurface.rule());
   }
@@ -42,7 +41,7 @@ class WorkbookStepTargetingTest {
 
     assertEquals(
         List.of(
-            new SelectorJsonSupport.FamilyInfo(
+            new SelectorTypes.FamilyInfo(
                 "TableSelector",
                 List.of("TABLE_ALL", "TABLE_BY_NAME", "TABLE_BY_NAMES", "TABLE_BY_NAME_ON_SHEET"))),
         targetSurface.selectorFamilies());

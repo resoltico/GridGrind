@@ -3,12 +3,17 @@ package dev.erst.gridgrind.core.model.validation;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Complete protocol-facing definition of one supported data-validation rule. */
+@CatalogType(
+    id = "DataValidationInput",
+    summary = "Supported data-validation definition attached to one sheet range.",
+    displayOrder = 52)
 public record DataValidationInput(
     DataValidationRuleInput rule,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
-import dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
@@ -19,10 +19,11 @@ public sealed interface WorkbookFactAssertion extends Assertion
         WorkbookFactAssertion.PivotTableFacts,
         WorkbookFactAssertion.ChartFacts {
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "EXPECT_WORKBOOK_PROTECTION",
       summary = "Require the workbook protection report to match exactly.",
-      targetSelectors = {WorkbookSelector.class})
+      targetSelectors = {WorkbookSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record WorkbookProtectionFacts(WorkbookProtectionReport protection)
       implements WorkbookFactAssertion {
     public WorkbookProtectionFacts {
@@ -30,50 +31,55 @@ public sealed interface WorkbookFactAssertion extends Assertion
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "EXPECT_SHEET_STRUCTURE",
       summary = "Require the selected sheet summary report to match exactly.",
-      targetSelectors = {SheetSelector.ByName.class})
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record SheetStructureFacts(SheetSummaryReport sheet) implements WorkbookFactAssertion {
     public SheetStructureFacts {
       Objects.requireNonNull(sheet, "sheet must not be null");
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "EXPECT_NAMED_RANGE_FACTS",
       summary = "Require the selected named-range reports to match exactly and in order.",
-      targetSelectors = {NamedRangeSelector.class})
+      targetSelectors = {NamedRangeSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record NamedRangeFacts(List<NamedRangeReport> namedRanges) implements WorkbookFactAssertion {
     public NamedRangeFacts {
       namedRanges = AssertionSupport.copyNamedRanges(namedRanges, "namedRanges");
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "EXPECT_TABLE_FACTS",
       summary = "Require the selected table reports to match exactly and in order.",
-      targetSelectors = {TableSelector.class})
+      targetSelectors = {TableSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record TableFacts(List<TableEntryReport> tables) implements WorkbookFactAssertion {
     public TableFacts {
       tables = AssertionSupport.copyTables(tables, "tables");
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "EXPECT_PIVOT_TABLE_FACTS",
       summary = "Require the selected pivot-table reports to match exactly and in order.",
-      targetSelectors = {PivotTableSelector.class})
+      targetSelectors = {PivotTableSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record PivotTableFacts(List<PivotTableReport> pivotTables) implements WorkbookFactAssertion {
     public PivotTableFacts {
       pivotTables = AssertionSupport.copyPivotTables(pivotTables, "pivotTables");
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "EXPECT_CHART_FACTS",
       summary = "Require the selected chart reports to match exactly and in order.",
-      targetSelectors = {ChartSelector.class})
+      targetSelectors = {ChartSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record ChartFacts(List<ChartReport> charts) implements WorkbookFactAssertion {
     public ChartFacts {
       charts = AssertionSupport.copyCharts(charts, "charts");

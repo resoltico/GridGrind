@@ -45,7 +45,8 @@ class GridGrindTaskCatalogTest {
   @Test
   void taskCatalogValidationRejectsDuplicateIdsAndDanglingReferences() {
     TaskPhase newSourcePhase =
-        TaskTestFixtures.phase(java.util.List.of(new TaskCapabilityRef("sourceTypes", "NEW")));
+        TaskTestFixtures.phase(
+            java.util.List.of(new TaskCapabilityRef("workbookSourceTypes", "NEW")));
     TaskEntry left =
         new TaskEntry(
             "DUPLICATE",
@@ -71,7 +72,7 @@ class GridGrindTaskCatalogTest {
                         TaskPhasePurpose.AUTHOR,
                         "Phase Two",
                         "Objective",
-                        java.util.List.of(new TaskCapabilityRef("sourceTypes", "NEW")),
+                        java.util.List.of(new TaskCapabilityRef("workbookSourceTypes", "NEW")),
                         java.util.List.of("note")))));
     IllegalArgumentException duplicateTasks =
         assertThrows(
@@ -91,11 +92,11 @@ class GridGrindTaskCatalogTest {
                     "Phase",
                     "Objective",
                     java.util.List.of(
-                        new TaskCapabilityRef("sourceTypes", "NEW"),
-                        new TaskCapabilityRef("sourceTypes", "NEW")),
+                        new TaskCapabilityRef("workbookSourceTypes", "NEW"),
+                        new TaskCapabilityRef("workbookSourceTypes", "NEW")),
                     java.util.List.of("note")));
     assertEquals(
-        "capabilityRefs must not contain duplicate sourceTypes:NEW",
+        "capabilityRefs must not contain duplicate workbookSourceTypes:NEW",
         duplicateCapabilities.getMessage());
 
     IllegalArgumentException emptyCapabilities =

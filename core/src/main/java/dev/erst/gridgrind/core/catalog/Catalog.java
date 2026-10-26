@@ -54,9 +54,9 @@ public record Catalog(
    */
   public List<TopLevelTypeGroup> topLevelGroups() {
     return List.of(
-        new TopLevelTypeGroup("sourceTypes", sourceTypes),
-        new TopLevelTypeGroup("persistenceTypes", persistenceTypes),
-        new TopLevelTypeGroup("stepTypes", stepTypes),
+        new TopLevelTypeGroup("workbookSourceTypes", sourceTypes),
+        new TopLevelTypeGroup("workbookPersistenceTypes", persistenceTypes),
+        new TopLevelTypeGroup("workbookStepTypes", stepTypes),
         new TopLevelTypeGroup("mutationActionTypes", mutationActionTypes),
         new TopLevelTypeGroup("assertionTypes", assertionTypes),
         new TopLevelTypeGroup("inspectionQueryTypes", inspectionQueryTypes));

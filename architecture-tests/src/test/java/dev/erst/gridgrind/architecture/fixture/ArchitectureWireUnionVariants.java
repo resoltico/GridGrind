@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.architecture.fixture;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
 
 /** Valid wire union with record leaves behind a sealed branch. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@Union
 public sealed interface ArchitectureWireUnionVariants
     permits ArchitectureWireUnionVariants.RecordBranch {
 
@@ -14,7 +14,7 @@ public sealed interface ArchitectureWireUnionVariants
   record RecordVariant() implements RecordBranch {}
 
   /** Deliberately invalid wire union exposing an enum and an open subtype family. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+  @Union
   sealed interface WithEnum permits EnumVariant, OpenBranch {}
 
   /** An open family cannot enumerate its concrete wire alternatives. */

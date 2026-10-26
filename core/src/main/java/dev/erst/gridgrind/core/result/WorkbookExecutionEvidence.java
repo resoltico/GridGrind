@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.result;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.semantics.OperationEffect;
 import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
@@ -66,44 +66,41 @@ public record WorkbookExecutionEvidence(
   }
 
   /** Structural claim for an artifact that was or was not staged and reopened. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Structural.NotEstablished.class, name = "NOT_ESTABLISHED"),
-    @JsonSubTypes.Type(value = Structural.Established.class, name = "ESTABLISHED")
-  })
+  @Union(discriminator = "status")
   public sealed interface Structural permits Structural.NotEstablished, Structural.Established {
+    @Variant(id = "NOT_ESTABLISHED", summary = "Structural verification has not been established.")
     record NotEstablished() implements Structural {}
 
+    @Variant(
+        id = "ESTABLISHED",
+        summary = "The staged artifact was reopened and structural verification succeeded.")
     record Established() implements Structural {}
   }
 
   /** Calculation claim with an explicit unestablished state. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Computational.NotRequested.class, name = "NOT_REQUESTED"),
-    @JsonSubTypes.Type(value = Computational.Established.class, name = "ESTABLISHED"),
-    @JsonSubTypes.Type(value = Computational.Unestablished.class, name = "UNESTABLISHED")
-  })
+  @Union(discriminator = "status")
   public sealed interface Computational
       permits Computational.NotRequested, Computational.Established, Computational.Unestablished {
+    @Variant(id = "NOT_REQUESTED", summary = "No server-side calculation was requested.")
     record NotRequested() implements Computational {}
 
+    @Variant(id = "ESTABLISHED", summary = "The requested calculation capability was established.")
     record Established() implements Computational {}
 
+    @Variant(
+        id = "UNESTABLISHED",
+        summary = "The requested calculation capability was not established.")
     record Unestablished() implements Computational {}
   }
 
   /** Plan-authored and host-required assertion evidence with its authoritative origin. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = TaskSpecific.NotRequested.class, name = "NOT_REQUESTED"),
-    @JsonSubTypes.Type(value = TaskSpecific.Established.class, name = "ESTABLISHED"),
-    @JsonSubTypes.Type(value = TaskSpecific.Failed.class, name = "FAILED")
-  })
+  @Union(discriminator = "status")
   public sealed interface TaskSpecific
       permits TaskSpecific.NotRequested, TaskSpecific.Established, TaskSpecific.Failed {
+    @Variant(id = "NOT_REQUESTED", summary = "No task-specific assertion evidence was requested.")
     record NotRequested() implements TaskSpecific {}
 
+    @Variant(id = "ESTABLISHED", summary = "Every recorded task-specific assertion passed.")
     record Established(List<Assertion> assertions) implements TaskSpecific {
       public Established {
         assertions = copyAssertions(assertions, "assertions");
@@ -118,6 +115,7 @@ public record WorkbookExecutionEvidence(
       }
     }
 
+    @Variant(id = "FAILED", summary = "A recorded task-specific assertion failed.")
     record Failed(List<Assertion> assertions) implements TaskSpecific {
       public Failed {
         assertions = copyAssertions(assertions, "assertions");
@@ -145,26 +143,14 @@ public record WorkbookExecutionEvidence(
   }
 
   /** Presentation is never inferred from OOXML structure. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Presentational.NotAssessed.class, name = "NOT_ASSESSED")
-  })
+  @Union(discriminator = "status")
   public sealed interface Presentational permits Presentational.NotAssessed {
+    @Variant(id = "NOT_ASSESSED", summary = "Presentational correctness was not assessed.")
     record NotAssessed() implements Presentational {}
   }
 
   /** Preservation claim including semantic and byte-distinct states. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Preservation.NotRequested.class, name = "NOT_REQUESTED"),
-    @JsonSubTypes.Type(value = Preservation.NotApplicable.class, name = "NOT_APPLICABLE"),
-    @JsonSubTypes.Type(
-        value = Preservation.SemanticEstablished.class,
-        name = "SEMANTIC_ESTABLISHED"),
-    @JsonSubTypes.Type(value = Preservation.ByteEstablished.class, name = "BYTE_ESTABLISHED"),
-    @JsonSubTypes.Type(value = Preservation.Failed.class, name = "FAILED"),
-    @JsonSubTypes.Type(value = Preservation.Unestablished.class, name = "UNESTABLISHED")
-  })
+  @Union(discriminator = "status")
   public sealed interface Preservation
       permits Preservation.NotRequested,
           Preservation.NotApplicable,
@@ -172,10 +158,17 @@ public record WorkbookExecutionEvidence(
           Preservation.ByteEstablished,
           Preservation.Failed,
           Preservation.Unestablished {
+    @Variant(id = "NOT_REQUESTED", summary = "No preservation verification was requested.")
     record NotRequested() implements Preservation {}
 
+    @Variant(
+        id = "NOT_APPLICABLE",
+        summary = "Preservation verification is not applicable to this execution.")
     record NotApplicable() implements Preservation {}
 
+    @Variant(
+        id = "SEMANTIC_ESTABLISHED",
+        summary = "Semantic preservation was established by the reported inspections.")
     record SemanticEstablished(List<dev.erst.gridgrind.core.vocabulary.StepId> inspectionStepIds)
         implements Preservation {
       public SemanticEstablished {
@@ -183,12 +176,16 @@ public record WorkbookExecutionEvidence(
       }
     }
 
+    @Variant(
+        id = "BYTE_ESTABLISHED",
+        summary = "Byte preservation was established for the reported package parts.")
     record ByteEstablished(List<String> partNames) implements Preservation {
       public ByteEstablished {
         partNames = copyIdentifiers(partNames, "partNames");
       }
     }
 
+    @Variant(id = "FAILED", summary = "Requested preservation verification failed.")
     record Failed(Kind kind, List<String> identifiers) implements Preservation {
       public Failed {
         Objects.requireNonNull(kind, "kind must not be null");
@@ -196,6 +193,9 @@ public record WorkbookExecutionEvidence(
       }
     }
 
+    @Variant(
+        id = "UNESTABLISHED",
+        summary = "Requested preservation verification was not established.")
     record Unestablished() implements Preservation {}
 
     /** The preservation evidence family whose required comparison failed. */

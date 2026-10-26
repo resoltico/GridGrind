@@ -4,11 +4,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import java.util.Objects;
 
 /** Request-side configuration for execution-journal detail and rendering policy. */
+@CatalogType(
+    id = "ExecutionJournalInput",
+    summary =
+        "Explicit execution-journal settings. Use ExecutionJournalInput.defaults() for SUMMARY detail. SUMMARY returns compact, stable target summaries without timing telemetry, NORMAL returns expanded target summaries with timing telemetry, and VERBOSE also enables fine-grained event emission for CLI stderr rendering.",
+    displayOrder = 11)
 public record ExecutionJournalInput(
     @ProtocolField(optional = true)
         @JsonInclude(

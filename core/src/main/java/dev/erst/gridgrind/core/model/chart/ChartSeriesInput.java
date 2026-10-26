@@ -1,10 +1,16 @@
 package dev.erst.gridgrind.core.model.chart;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import java.util.Objects;
 import java.util.Optional;
 
 /** One authored chart series. */
+@CatalogType(
+    id = "ChartSeriesInput",
+    summary =
+        "One authored chart series with a title plus category and value data sources. smooth, marker, and explosion fields are optional by chart family.",
+    displayOrder = 35)
 public record ChartSeriesInput(
     ChartTitleInput title,
     ChartDataSourceInput categories,

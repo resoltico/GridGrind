@@ -1,21 +1,19 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more sheets. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = SheetSelector.All.class, name = "SHEET_ALL"),
-  @JsonSubTypes.Type(value = SheetSelector.ByName.class, name = "SHEET_BY_NAME"),
-  @JsonSubTypes.Type(value = SheetSelector.ByNames.class, name = "SHEET_BY_NAMES")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 26)
 public sealed interface SheetSelector extends Selector
-    permits SheetSelector.All, SheetSelector.ByName, SheetSelector.ByNames {
+    permits dev.erst.gridgrind.core.plan.SheetSelector.All,
+        dev.erst.gridgrind.core.plan.SheetSelector.ByName,
+        dev.erst.gridgrind.core.plan.SheetSelector.ByNames {
 
   /** Selects every sheet in workbook order. */
+  @Variant(id = "SHEET_ALL", summary = "Select every sheet in workbook order.")
   record All() implements SheetSelector {
     @Override
     public SelectorCardinality cardinality() {
@@ -24,6 +22,7 @@ public sealed interface SheetSelector extends Selector
   }
 
   /** Selects one sheet by exact sheet name. */
+  @Variant(id = "SHEET_BY_NAME", summary = "Select one exact sheet by name.")
   record ByName(SheetName name) implements SheetSelector {
     public ByName {
       java.util.Objects.requireNonNull(name, "name must not be null");
@@ -36,6 +35,7 @@ public sealed interface SheetSelector extends Selector
   }
 
   /** Selects one or more sheets by exact sheet names. */
+  @Variant(id = "SHEET_BY_NAMES", summary = "Select one or more exact sheets by ordered name list.")
   record ByNames(List<SheetName> names) implements SheetSelector {
     public ByNames {
       names = SelectorListValidation.copyDistinctSheetNames(names, "names");

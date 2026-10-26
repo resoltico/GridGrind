@@ -47,10 +47,10 @@
         "commonPitfalls" : [ "EVENT_READ is intentionally limited; many audit plans require FULL_XSSF.", "Loaded formulas that Apache POI cannot evaluate surface as UNSUPPORTED_FORMULA instead of silently recalculating.", "If the audit needs strict policy checks, promote the findings into ASSERTION steps in a follow-up plan." ],
         "phases" : [ {
           "capabilityRefs" : [ {
-            "group" : "sourceTypes",
+            "group" : "workbookSourceTypes",
             "id" : "EXISTING"
           }, {
-            "group" : "persistenceTypes",
+            "group" : "workbookPersistenceTypes",
             "id" : "NONE"
           }, {
             "group" : "inspectionQueryTypes",

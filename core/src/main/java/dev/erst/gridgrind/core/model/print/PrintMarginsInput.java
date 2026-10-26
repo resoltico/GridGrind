@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.core.model.print;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
+
 /** Print-margin payload used by advanced print-layout authoring. */
+@CatalogType(
+    id = "PrintMarginsInput",
+    summary = "Explicit print margins measured in the workbook's stored inch-based values.",
+    displayOrder = 64)
 public record PrintMarginsInput(
     double left, double right, double top, double bottom, double header, double footer) {
   public PrintMarginsInput {

@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.core.model.drawing;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
+
 /** Factual comment-anchor bounds loaded from one worksheet drawing. */
+@CatalogType(
+    id = "CommentAnchorReport",
+    summary = "Exact comment-anchor bounds reported from worksheet drawing metadata.",
+    displayOrder = 87)
 public record CommentAnchorReport(int firstColumn, int firstRow, int lastColumn, int lastRow) {
   public CommentAnchorReport {
     requireNonNegative(firstColumn, "firstColumn");

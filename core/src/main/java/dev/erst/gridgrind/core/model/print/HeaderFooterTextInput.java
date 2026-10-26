@@ -2,10 +2,16 @@ package dev.erst.gridgrind.core.model.print;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.Objects;
 
 /** Plain left, center, and right header or footer text segments in protocol form. */
+@CatalogType(
+    id = "HeaderFooterTextInput",
+    summary =
+        "Plain left, center, and right header or footer text segments. Supply all three fields explicitly.",
+    displayOrder = 59)
 public record HeaderFooterTextInput(
     TextSourceInput left, TextSourceInput center, TextSourceInput right) {
   /** Returns the default blank header or footer text payload. */

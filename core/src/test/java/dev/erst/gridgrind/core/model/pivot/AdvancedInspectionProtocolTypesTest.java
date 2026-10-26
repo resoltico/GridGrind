@@ -57,7 +57,7 @@ class AdvancedInspectionProtocolTypesTest {
                     "Sales Pivot 2026",
                     new SheetName("Report"),
                     new PivotTableReport.Anchor(new CellAddress("C5"), new RangeLabel("C5:G9")),
-                    new PivotTableReport.Source.Range(
+                    new PivotTableReport.PivotSourceReport.Range(
                         new SheetName("Data"), new RangeLabel("A1:D5")),
                     List.of(new PivotTableReport.Field(0, "Region")),
                     List.of(new PivotTableReport.Field(1, "Stage")),

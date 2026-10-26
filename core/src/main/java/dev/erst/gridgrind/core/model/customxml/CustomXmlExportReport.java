@@ -1,8 +1,14 @@
 package dev.erst.gridgrind.core.model.customxml;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 
 /** XML document exported from one workbook custom-XML mapping. */
+@CatalogType(
+    id = "CustomXmlExportReport",
+    summary =
+        "One exported custom-XML mapping payload plus the factual mapping metadata used to produce it.",
+    displayOrder = 107)
 public record CustomXmlExportReport(
     CustomXmlMappingReport mapping, String encoding, boolean schemaValidated, String xml) {
   public CustomXmlExportReport {

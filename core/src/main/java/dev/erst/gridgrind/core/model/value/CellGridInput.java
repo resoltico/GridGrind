@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.model.value;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,30 +10,21 @@ import java.util.List;
 import java.util.Objects;
 
 /** Grid-oriented authored cell input with compact homogeneous encodings for range writes. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellGridInput.Typed.class, name = "TYPED"),
-  @JsonSubTypes.Type(value = CellGridInput.TextRows.class, name = "TEXT"),
-  @JsonSubTypes.Type(value = CellGridInput.NumberRows.class, name = "NUMBER"),
-  @JsonSubTypes.Type(value = CellGridInput.BooleanRows.class, name = "BOOLEAN"),
-  @JsonSubTypes.Type(value = CellGridInput.ErrorRows.class, name = "ERROR"),
-  @JsonSubTypes.Type(value = CellGridInput.DateRows.class, name = "DATE"),
-  @JsonSubTypes.Type(value = CellGridInput.DateTimeRows.class, name = "DATE_TIME"),
-  @JsonSubTypes.Type(value = CellGridInput.FormulaRows.class, name = "FORMULA")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 18)
 public sealed interface CellGridInput
-    permits CellGridInput.Typed,
-        CellGridInput.TextRows,
-        CellGridInput.NumberRows,
-        CellGridInput.BooleanRows,
-        CellGridInput.ErrorRows,
-        CellGridInput.DateRows,
-        CellGridInput.DateTimeRows,
-        CellGridInput.FormulaRows {
+    permits dev.erst.gridgrind.core.model.value.CellGridInput.Typed,
+        dev.erst.gridgrind.core.model.value.CellGridInput.TextRows,
+        dev.erst.gridgrind.core.model.value.CellGridInput.NumberRows,
+        dev.erst.gridgrind.core.model.value.CellGridInput.BooleanRows,
+        dev.erst.gridgrind.core.model.value.CellGridInput.ErrorRows,
+        dev.erst.gridgrind.core.model.value.CellGridInput.DateRows,
+        dev.erst.gridgrind.core.model.value.CellGridInput.DateTimeRows,
+        dev.erst.gridgrind.core.model.value.CellGridInput.FormulaRows {
 
   /** Returns this authored grid in canonical per-cell form. */
   List<List<CellInput>> toCellInputRows();
 
+  @Variant(id = "TYPED", summary = "Write one rectangular grid expressed as per-cell typed rows.")
   record Typed(List<List<CellInput>> cells) implements CellGridInput {
     public Typed {
       cells = copyTypedRows(cells, "cells");
@@ -45,6 +36,7 @@ public sealed interface CellGridInput
     }
   }
 
+  @Variant(id = "TEXT", summary = "Write one rectangular grid using homogeneous string rows.")
   record TextRows(List<List<String>> cells) implements CellGridInput {
     public TextRows {
       cells = copyScalarRows(cells, "cells");
@@ -64,6 +56,7 @@ public sealed interface CellGridInput
     }
   }
 
+  @Variant(id = "NUMBER", summary = "Write one rectangular grid using homogeneous numeric rows.")
   record NumberRows(List<List<Double>> cells) implements CellGridInput {
     public NumberRows {
       cells = copyScalarRows(cells, "cells");
@@ -81,6 +74,7 @@ public sealed interface CellGridInput
     }
   }
 
+  @Variant(id = "BOOLEAN", summary = "Write one rectangular grid using homogeneous boolean rows.")
   record BooleanRows(List<List<Boolean>> cells) implements CellGridInput {
     public BooleanRows {
       cells = copyScalarRows(cells, "cells");
@@ -96,6 +90,9 @@ public sealed interface CellGridInput
     }
   }
 
+  @Variant(
+      id = "ERROR",
+      summary = "Write one rectangular grid using homogeneous stored Excel error literal rows.")
   record ErrorRows(List<List<String>> cells) implements CellGridInput {
     public ErrorRows {
       cells = copyScalarRows(cells, "cells");
@@ -117,6 +114,7 @@ public sealed interface CellGridInput
     }
   }
 
+  @Variant(id = "DATE", summary = "Write one rectangular grid using homogeneous date rows.")
   record DateRows(List<List<LocalDate>> cells) implements CellGridInput {
     public DateRows {
       cells = copyScalarRows(cells, "cells");
@@ -130,6 +128,9 @@ public sealed interface CellGridInput
     }
   }
 
+  @Variant(
+      id = "DATE_TIME",
+      summary = "Write one rectangular grid using homogeneous date-time rows.")
   record DateTimeRows(List<List<LocalDateTime>> cells) implements CellGridInput {
     public DateTimeRows {
       cells = copyScalarRows(cells, "cells");
@@ -143,6 +144,9 @@ public sealed interface CellGridInput
     }
   }
 
+  @Variant(
+      id = "FORMULA",
+      summary = "Write one rectangular grid using homogeneous formula text rows.")
   record FormulaRows(List<List<String>> cells) implements CellGridInput {
     public FormulaRows {
       cells =

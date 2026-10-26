@@ -2,10 +2,15 @@ package dev.erst.gridgrind.core.model.validation;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.Objects;
 
 /** Prompt-box configuration attached to one data-validation rule. */
+@CatalogType(
+    id = "DataValidationPromptInput",
+    summary = "Optional prompt-box configuration shown when a validated cell is selected.",
+    displayOrder = 53)
 public record DataValidationPromptInput(
     TextSourceInput title, TextSourceInput text, boolean showPromptBox) {
   public DataValidationPromptInput {

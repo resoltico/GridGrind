@@ -1,9 +1,15 @@
 package dev.erst.gridgrind.core.model.formula;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.Objects;
 
 /** Dedicated array-formula input used for single-cell or multi-cell array authoring. */
+@CatalogType(
+    id = "ArrayFormulaInput",
+    summary =
+        "One authored array formula bound to a contiguous single-cell or multi-cell range. Leading = or {=...} wrappers normalize away for inline sources.",
+    displayOrder = 30)
 public record ArrayFormulaInput(TextSourceInput source) {
   public ArrayFormulaInput {
     TextSourceInput normalized = Objects.requireNonNull(source, "source must not be null");

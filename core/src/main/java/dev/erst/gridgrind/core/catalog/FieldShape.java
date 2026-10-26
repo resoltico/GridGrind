@@ -1,24 +1,14 @@
 package dev.erst.gridgrind.core.catalog;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 /** JSON-serializable recursive field-shape contract used by protocol discovery output. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = FieldShape.Scalar.class, name = "SCALAR"),
-  @JsonSubTypes.Type(value = FieldShape.ListShape.class, name = "LIST"),
-  @JsonSubTypes.Type(value = FieldShape.TopLevelTypeSetRef.class, name = "TOP_LEVEL_TYPE_SET"),
-  @JsonSubTypes.Type(value = FieldShape.NestedTypeGroupRef.class, name = "NESTED_TYPE_GROUP"),
-  @JsonSubTypes.Type(
-      value = FieldShape.NestedTypeGroupUnionRef.class,
-      name = "NESTED_TYPE_GROUP_UNION"),
-  @JsonSubTypes.Type(value = FieldShape.PlainTypeGroupRef.class, name = "PLAIN_TYPE_GROUP")
-})
+@Union(discriminator = "kind")
 public sealed interface FieldShape
     permits FieldShape.Scalar,
         FieldShape.ListShape,
@@ -28,6 +18,7 @@ public sealed interface FieldShape
         FieldShape.PlainTypeGroupRef {
 
   /** Scalar JSON value type such as STRING, NUMBER, or BOOLEAN. */
+  @Variant(id = "SCALAR", summary = "Scalar JSON value type such as STRING, NUMBER, or BOOLEAN.")
   record Scalar(
       ScalarType scalarType,
       @JsonInclude(JsonInclude.Include.NON_EMPTY) List<FieldConstraint> constraints)
@@ -53,6 +44,7 @@ public sealed interface FieldShape
   }
 
   /** Recursive array shape whose elements all share the same shape. */
+  @Variant(id = "LIST", summary = "Recursive array shape whose elements all share the same shape.")
   record ListShape(FieldShape elementShape) implements FieldShape {
     public ListShape {
       Objects.requireNonNull(elementShape, "elementShape must not be null");
@@ -60,6 +52,10 @@ public sealed interface FieldShape
   }
 
   /** Reference to one top-level discriminated family published elsewhere in the catalog. */
+  @Variant(
+      id = "TOP_LEVEL_TYPE_SET",
+      summary =
+          "Reference to one top-level discriminated family published elsewhere in the catalog.")
   record TopLevelTypeSetRef(String typeSet) implements FieldShape {
     public TopLevelTypeSetRef {
       Objects.requireNonNull(typeSet, "typeSet must not be null");
@@ -70,6 +66,10 @@ public sealed interface FieldShape
   }
 
   /** Reference to one nested discriminated union group published elsewhere in the catalog. */
+  @Variant(
+      id = "NESTED_TYPE_GROUP",
+      summary =
+          "Reference to one nested discriminated union group published elsewhere in the catalog.")
   record NestedTypeGroupRef(String group) implements FieldShape {
     public NestedTypeGroupRef {
       Objects.requireNonNull(group, "group must not be null");
@@ -80,6 +80,10 @@ public sealed interface FieldShape
   }
 
   /** Reference to one union of nested discriminated groups published elsewhere in the catalog. */
+  @Variant(
+      id = "NESTED_TYPE_GROUP_UNION",
+      summary =
+          "Reference to one union of nested discriminated groups published elsewhere in the catalog.")
   record NestedTypeGroupUnionRef(java.util.List<String> groups) implements FieldShape {
     public NestedTypeGroupUnionRef {
       groups = java.util.List.copyOf(groups);
@@ -96,6 +100,9 @@ public sealed interface FieldShape
   }
 
   /** Reference to one plain record-type group published elsewhere in the catalog. */
+  @Variant(
+      id = "PLAIN_TYPE_GROUP",
+      summary = "Reference to one plain record-type group published elsewhere in the catalog.")
   record PlainTypeGroupRef(String group) implements FieldShape {
     public PlainTypeGroupRef {
       Objects.requireNonNull(group, "group must not be null");

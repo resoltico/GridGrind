@@ -392,7 +392,7 @@ class AdvancedMutationCommandConverterTest {
                     new PivotTableInput(
                         "Sales Pivot 2026",
                         new SheetName("Report"),
-                        new PivotTableInput.Source.Range(
+                        new PivotTableInput.PivotSourceSpec.Range(
                             new SheetName("Data"), new RangeRef("A1:D5")),
                         new PivotTableInput.Anchor(new CellAddress("C5")),
                         List.of("Region"),
@@ -413,7 +413,8 @@ class AdvancedMutationCommandConverterTest {
                     new PivotTableInput(
                         "Named Source Pivot",
                         new SheetName("Report"),
-                        new PivotTableInput.Source.NamedRange(new DefinedName("PivotSource")),
+                        new PivotTableInput.PivotSourceSpec.NamedRange(
+                            new DefinedName("PivotSource")),
                         new PivotTableInput.Anchor(new CellAddress("A3")),
                         List.of("Region"),
                         List.of(),
@@ -433,7 +434,7 @@ class AdvancedMutationCommandConverterTest {
                     new PivotTableInput(
                         "Table Source Pivot",
                         new SheetName("Report"),
-                        new PivotTableInput.Source.Table(new TableName("SalesTable2026")),
+                        new PivotTableInput.PivotSourceSpec.Table(new TableName("SalesTable2026")),
                         new PivotTableInput.Anchor(new CellAddress("G4")),
                         List.of("Region"),
                         List.of(),

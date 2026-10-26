@@ -1,17 +1,12 @@
 package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 
 /** Optional request-side execution-mode selector for the three published runtime families. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ExecutionModeInput.FullXssf.class, name = "FULL_XSSF"),
-  @JsonSubTypes.Type(value = ExecutionModeInput.EventRead.class, name = "EVENT_READ"),
-  @JsonSubTypes.Type(value = ExecutionModeInput.StreamingWrite.class, name = "STREAMING_WRITE")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 40)
 public sealed interface ExecutionModeInput {
   /** Returns the default execution mode that keeps reads and writes on the standard XSSF path. */
   static ExecutionModeInput defaults() {
@@ -56,6 +51,10 @@ public sealed interface ExecutionModeInput {
   }
 
   /** Standard full-memory read/write execution mode with no special restrictions. */
+  @Variant(
+      id = "FULL_XSSF",
+      summary =
+          "Standard full workbook read and write execution with no special low-memory restrictions.")
   record FullXssf() implements ExecutionModeInput {
     @Override
     public String modeType() {
@@ -64,6 +63,10 @@ public sealed interface ExecutionModeInput {
   }
 
   /** Low-memory summary-read execution mode with inspection-only constraints. */
+  @Variant(
+      id = "EVENT_READ",
+      summary =
+          "GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false.")
   record EventRead() implements ExecutionModeInput {
     @Override
     public String modeType() {
@@ -72,6 +75,10 @@ public sealed interface ExecutionModeInput {
   }
 
   /** Low-memory append-write execution mode with streaming mutation constraints. */
+  @Variant(
+      id = "STREAMING_WRITE",
+      summary =
+          "source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true.")
   record StreamingWrite() implements ExecutionModeInput {
     @Override
     public String modeType() {

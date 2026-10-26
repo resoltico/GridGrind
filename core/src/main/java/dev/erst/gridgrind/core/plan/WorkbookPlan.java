@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
 import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
@@ -26,6 +26,10 @@ import java.util.Set;
 /**
  * Complete GridGrind workbook plan for source, execution settings, ordered steps, and persistence.
  */
+@dev.erst.gridgrind.core.metadata.CatalogType(
+    id = "WorkbookPlan",
+    summary =
+        "Complete GridGrind plan for workbook source, execution policy, formula environment, ordered mutation, assertion, and inspection steps, and persistence.")
 public record WorkbookPlan(
     GridGrindProtocolVersion protocolVersion,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<PlanId> planId,
@@ -173,18 +177,28 @@ public record WorkbookPlan(
   }
 
   /** Describes where the input workbook comes from. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = WorkbookSource.New.class, name = "NEW"),
-    @JsonSubTypes.Type(value = WorkbookSource.ExistingFile.class, name = "EXISTING")
-  })
+  @Union(discriminator = "type")
   public sealed interface WorkbookSource {
     /** Creates a brand-new empty workbook in memory. */
+    @Variant(
+        id = "NEW",
+        summary =
+            "Create a brand-new empty workbook. A new workbook starts with zero sheets; use ENSURE_SHEET to create the first sheet.")
     record New() implements WorkbookSource {}
 
     /** Opens an existing workbook file from disk. */
+    @Variant(
+        id = "EXISTING",
+        summary =
+            "Open an existing .xlsx workbook from disk. source.security.password unlocks encrypted OOXML packages.",
+        noteRefs = {"requestOwnedPathRule"})
     record ExistingFile(
-        String path,
+        @dev.erst.gridgrind.core.metadata.FieldRule(
+                kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.PATH_SUFFIX,
+                text =
+                    dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues
+                        .WORKBOOK_PATH_SUFFIX)
+            String path,
         @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<OoxmlOpenSecurityInput> security)
         implements WorkbookSource {
       public ExistingFile {
@@ -207,14 +221,12 @@ public record WorkbookPlan(
   }
 
   /** Describes whether and where the resulting workbook should be saved. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = WorkbookPersistence.None.class, name = "NONE"),
-    @JsonSubTypes.Type(value = WorkbookPersistence.Overwrite.class, name = "OVERWRITE"),
-    @JsonSubTypes.Type(value = WorkbookPersistence.SaveAs.class, name = "SAVE_AS")
-  })
+  @Union(discriminator = "type")
   public sealed interface WorkbookPersistence {
     /** Leaves the workbook in memory only and does not persist it. */
+    @Variant(
+        id = "NONE",
+        summary = "Keep the workbook in memory only. The response persistence.type echoes NONE.")
     record None() implements WorkbookPersistence {}
 
     /** Explicit collision policy for SAVE_AS persistence. */
@@ -224,6 +236,11 @@ public record WorkbookPlan(
     }
 
     /** Saves the workbook back to the exact path it was opened from. */
+    @Variant(
+        id = "OVERWRITE",
+        summary =
+            "Overwrite the opened source workbook at source.path. No path field is accepted on OVERWRITE; the write target is the same path opened by the EXISTING source. persistence.security is required and declares both final OOXML encryption and signature dispositions. The response persistence.type echoes OVERWRITE, includes sourcePath (the original source path string) whenever an EXISTING source path was available, and otherwise omits sourcePath instead of inventing one. It carries write.status=WRITTEN with executionPath after a successful save or write.status=NOT_WRITTEN when the run fails before any file is updated.",
+        noteRefs = {"requestOwnedPathRule"})
     record Overwrite(
         @JsonInclude(JsonInclude.Include.NON_ABSENT)
             Optional<OoxmlPersistenceSecurityInput> security)
@@ -239,8 +256,18 @@ public record WorkbookPlan(
     }
 
     /** Saves the workbook to one `.xlsx` path with an explicit collision policy. */
+    @Variant(
+        id = "SAVE_AS",
+        summary =
+            "Save the workbook to one .xlsx path with an explicit ifExists collision policy. ifExists=REJECT requires the target path to be absent. ifExists=REPLACE enables create-or-replace. Existing-source writes require persistence.security to declare both final OOXML encryption and signature dispositions; NEW writes default to NONE on both axes when security is omitted. The response persistence.type echoes SAVE_AS, includes requestedPath (the literal path from the request), and carries write.status=WRITTEN with executionPath (the absolute normalized path where the file was written) or write.status=NOT_WRITTEN when the run fails before the target file is created. Missing parent directories are created automatically.",
+        noteRefs = {"requestOwnedPathRule"})
     record SaveAs(
-        String path,
+        @dev.erst.gridgrind.core.metadata.FieldRule(
+                kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.PATH_SUFFIX,
+                text =
+                    dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues
+                        .WORKBOOK_PATH_SUFFIX)
+            String path,
         IfExists ifExists,
         @JsonInclude(JsonInclude.Include.NON_ABSENT)
             Optional<OoxmlPersistenceSecurityInput> security)

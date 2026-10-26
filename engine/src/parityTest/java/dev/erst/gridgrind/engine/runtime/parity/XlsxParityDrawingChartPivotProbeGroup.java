@@ -664,7 +664,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             success, "health", WorkbookAnalysisResult.PivotTableHealthResult.class);
     if (directPivots.size() != 1
         || !(directPivots.getFirst() instanceof PivotTableReport.Supported supported)
-        || !(supported.source() instanceof PivotTableReport.Source.Range)
+        || !(supported.source() instanceof PivotTableReport.PivotSourceReport.Range)
         || !supported.rowLabels().equals(List.of(new PivotTableReport.Field(0, "Region")))) {
       return fail(
           "Direct POI pivot corpus workbook is not in the expected supported single-pivot shape.");
@@ -704,9 +704,9 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     if (directPivots.size() != 3
         || supportedPivotByName(directPivots, "Sales Pivot") == null
         || !(supportedPivotByName(directPivots, "Named Pivot").source()
-            instanceof PivotTableReport.Source.NamedRange)
+            instanceof PivotTableReport.PivotSourceReport.NamedRange)
         || !(supportedPivotByName(directPivots, "Table Pivot").source()
-            instanceof PivotTableReport.Source.Table)) {
+            instanceof PivotTableReport.PivotSourceReport.Table)) {
       return fail(
           "GridGrind-authored pivot corpus workbook did not retain the expected range, named-range, and table-backed pivot shapes.");
     }
@@ -732,7 +732,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                         new PivotTableInput(
                             "Sales Pivot",
                             new SheetName("RangeReport"),
-                            new PivotTableInput.Source.Range(
+                            new PivotTableInput.PivotSourceSpec.Range(
                                 new SheetName("Data"), new RangeRef("A1:D5")),
                             new PivotTableInput.Anchor(new CellAddress("D6")),
                             List.of("Stage"),

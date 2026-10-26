@@ -47,7 +47,7 @@
         "commonPitfalls" : [ "Signature lines are VML-backed drawing objects with workbook-side constraints.", "Invalid drawing payloads are rejected without leaving partial artifacts behind.", "Image-heavy workflows should prefer file-backed binary sources over huge inline base64 payloads." ],
         "phases" : [ {
           "capabilityRefs" : [ {
-            "group" : "sourceTypes",
+            "group" : "workbookSourceTypes",
             "id" : "NEW"
           }, {
             "group" : "mutationActionTypes",
@@ -65,7 +65,7 @@
             "group" : "mutationActionTypes",
             "id" : "SET_DRAWING_OBJECT_ANCHOR"
           }, {
-            "group" : "persistenceTypes",
+            "group" : "workbookPersistenceTypes",
             "id" : "SAVE_AS"
           } ],
           "label" : "Author Drawing Objects",

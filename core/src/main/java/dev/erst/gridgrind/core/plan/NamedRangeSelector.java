@@ -1,31 +1,22 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more named ranges by scope-aware identity. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = NamedRangeSelector.All.class, name = "NAMED_RANGE_ALL"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.AnyOf.class, name = "NAMED_RANGE_ANY_OF"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.ByName.class, name = "NAMED_RANGE_BY_NAME"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.ByNames.class, name = "NAMED_RANGE_BY_NAMES"),
-  @JsonSubTypes.Type(
-      value = NamedRangeSelector.WorkbookScope.class,
-      name = "NAMED_RANGE_WORKBOOK_SCOPE"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.SheetScope.class, name = "NAMED_RANGE_SHEET_SCOPE")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 36)
 public sealed interface NamedRangeSelector extends Selector
     permits NamedRangeSelector.All,
         NamedRangeSelector.AnyOf,
-        NamedRangeSelector.ByName,
         NamedRangeSelector.ByNames,
+        NamedRangeSelector.ByName,
         NamedRangeSelector.ScopedExact {
 
   /** Selects every user-facing named range. */
+  @Variant(id = "NAMED_RANGE_ALL", summary = "Select every user-facing named range.")
   record All() implements NamedRangeSelector {
     @Override
     public SelectorCardinality cardinality() {
@@ -34,6 +25,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects the union of one or more explicit named-range references. */
+  @Variant(
+      id = "NAMED_RANGE_ANY_OF",
+      summary = "Select the union of one or more explicit named-range references.")
   record AnyOf(List<Ref> selectors) implements NamedRangeSelector {
     public AnyOf {
       selectors = SelectorListValidation.copyDistinctNamedRangeRefs(selectors, "selectors");
@@ -46,6 +40,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects every named range whose name matches across all scopes. */
+  @Variant(
+      id = "NAMED_RANGE_BY_NAME",
+      summary = "Match a named range reference across all scopes by exact name.")
   record ByName(DefinedName name) implements NamedRangeSelector, Ref {
     public ByName {
       java.util.Objects.requireNonNull(name, "name must not be null");
@@ -58,6 +55,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects every named range whose name appears in the provided name set across all scopes. */
+  @Variant(
+      id = "NAMED_RANGE_BY_NAMES",
+      summary = "Match named ranges across all scopes by exact name set.")
   record ByNames(List<DefinedName> names) implements NamedRangeSelector {
     public ByNames {
       names = SelectorListValidation.copyDistinctNamedRangeNames(names, "names");
@@ -70,6 +70,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects one workbook-scoped named range by exact name. */
+  @Variant(
+      id = "NAMED_RANGE_WORKBOOK_SCOPE",
+      summary = "Match one workbook-scoped named range reference by exact name.")
   record WorkbookScope(DefinedName name) implements ScopedExact, Ref {
     public WorkbookScope {
       java.util.Objects.requireNonNull(name, "name must not be null");
@@ -82,6 +85,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects one sheet-scoped named range by exact name and exact sheet. */
+  @Variant(
+      id = "NAMED_RANGE_SHEET_SCOPE",
+      summary = "Match one sheet-scoped named range reference on one sheet.")
   record SheetScope(DefinedName name, SheetName sheetName) implements ScopedExact, Ref {
     public SheetScope {
       java.util.Objects.requireNonNull(name, "name must not be null");
@@ -95,19 +101,13 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Marker for one explicit named-range reference used inside {@link AnyOf}. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = ByName.class, name = "NAMED_RANGE_BY_NAME"),
-    @JsonSubTypes.Type(value = WorkbookScope.class, name = "NAMED_RANGE_WORKBOOK_SCOPE"),
-    @JsonSubTypes.Type(value = SheetScope.class, name = "NAMED_RANGE_SHEET_SCOPE")
-  })
-  sealed interface Ref permits ByName, WorkbookScope, SheetScope {}
+  @Union(discriminator = "type", catalog = true, displayOrder = 34)
+  sealed interface Ref
+      permits dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName,
+          dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope,
+          dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope {}
 
   /** Marker for one exact named-range identity that can be mutated or deleted authoritatively. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = WorkbookScope.class, name = "NAMED_RANGE_WORKBOOK_SCOPE"),
-    @JsonSubTypes.Type(value = SheetScope.class, name = "NAMED_RANGE_SHEET_SCOPE")
-  })
+  @Union(discriminator = "type")
   sealed interface ScopedExact extends NamedRangeSelector permits WorkbookScope, SheetScope {}
 }

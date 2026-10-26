@@ -1,11 +1,8 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.semantics.ProtocolTargetingMode;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,27 +17,21 @@ public final class ProtocolTypeMetadataSupport {
   /** Returns the stable wire id for one protocol leaf type. */
   public static String requiredTypeId(Class<?> type) {
     Objects.requireNonNull(type, "type must not be null");
-    JsonTypeName jsonTypeName = type.getAnnotation(JsonTypeName.class);
-    if (jsonTypeName != null && !jsonTypeName.value().isBlank()) {
-      return jsonTypeName.value();
-    }
-    ProtocolTypeMetadata metadata = type.getAnnotation(ProtocolTypeMetadata.class);
+    Variant metadata = type.getAnnotation(Variant.class);
     if (metadata != null && !metadata.id().isBlank()) {
       return metadata.id();
     }
     throw new IllegalStateException(
-        "Contract subtype "
-            + type.getName()
-            + " must declare a non-blank @JsonTypeName or @ProtocolTypeMetadata id");
+        "Contract subtype " + type.getName() + " must declare a non-blank @Variant id");
   }
 
   /** Returns the colocated metadata for one protocol leaf type. */
-  public static ProtocolTypeMetadata requiredMetadata(Class<?> type) {
+  public static Variant requiredMetadata(Class<?> type) {
     Objects.requireNonNull(type, "type must not be null");
-    ProtocolTypeMetadata metadata = type.getAnnotation(ProtocolTypeMetadata.class);
+    Variant metadata = type.getAnnotation(Variant.class);
     if (metadata == null) {
       throw new IllegalStateException(
-          "Contract subtype " + type.getName() + " must declare @ProtocolTypeMetadata");
+          "Contract subtype " + type.getName() + " must declare @Variant");
     }
     if (metadata.id().isBlank()) {
       throw new IllegalStateException(
@@ -85,6 +76,17 @@ public final class ProtocolTypeMetadataSupport {
         .toList();
   }
 
+  /** Returns concrete alternatives in their sealed declaration order. */
+  public static List<Class<? extends Record>> declaredVariants(Class<?> rootType) {
+    Objects.requireNonNull(rootType, "rootType must not be null");
+    if (!rootType.isSealed()) {
+      throw new IllegalArgumentException(rootType + " must be sealed for discriminator discovery");
+    }
+    return sealedLeafSubtypes(rootType).stream()
+        .<Class<? extends Record>>map(type -> type.asSubclass(Record.class))
+        .toList();
+  }
+
   /** Returns the targeting mode declared for one protocol leaf. */
   public static ProtocolTargetingMode targetingMode(Class<?> type) {
     return requiredMetadata(type).targetingMode();
@@ -98,7 +100,7 @@ public final class ProtocolTypeMetadataSupport {
 
   /** Returns the static selector-family set declared for one protocol leaf. */
   public static Class<? extends Selector>[] staticTargetSelectors(Class<?> type) {
-    ProtocolTypeMetadata metadata = requiredMetadata(type);
+    Variant metadata = requiredMetadata(type);
     if (metadata.targetingMode() != ProtocolTargetingMode.STATIC) {
       throw new IllegalArgumentException(
           "Protocol subtype "
@@ -111,16 +113,8 @@ public final class ProtocolTypeMetadataSupport {
 
   static Map<Class<?>, String> typeIdsByClass(Class<?> rootType) {
     Objects.requireNonNull(rootType, "rootType must not be null");
-    JsonSubTypes jsonSubTypes = rootType.getAnnotation(JsonSubTypes.class);
-    if (jsonSubTypes != null) {
-      return Arrays.stream(jsonSubTypes.value())
-          .collect(
-              java.util.stream.Collectors.toUnmodifiableMap(
-                  JsonSubTypes.Type::value, JsonSubTypes.Type::name));
-    }
     if (!rootType.isSealed()) {
-      throw new IllegalArgumentException(
-          rootType + " must be sealed or declare @JsonSubTypes for discriminator discovery");
+      throw new IllegalArgumentException(rootType + " must be sealed for discriminator discovery");
     }
     return CatalogDescriptorMaps.uniqueMap(
         sealedLeafSubtypes(rootType),
@@ -139,14 +133,7 @@ public final class ProtocolTypeMetadataSupport {
   }
 
   private static CatalogTypeDescriptor catalogDescriptorFor(Class<?> leafType) {
-    if (!leafType.isRecord()) {
-      throw new IllegalStateException(
-          "Catalog descriptor generation requires record leaf types, got " + leafType.getName());
-    }
-    ProtocolTypeMetadata metadata = requiredMetadata(leafType);
-    @SuppressWarnings("unchecked")
-    Class<? extends Record> recordType = (Class<? extends Record>) leafType;
-    return new CatalogTypeDescriptor(recordType, metadata.id(), metadata.summary());
+    return CatalogTypes.descriptor(leafType);
   }
 
   private static List<Class<?>> sealedLeafSubtypes(Class<?> rootType) {

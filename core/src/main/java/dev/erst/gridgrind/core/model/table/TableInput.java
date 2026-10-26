@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.table;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.source.TextSourceInput;
@@ -11,8 +12,21 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.Objects;
 
 /** Protocol-facing table definition attached to one table authoring request. */
+@CatalogType(
+    id = "TableInput",
+    summary = "Workbook-global table definition for one SET_TABLE request.",
+    displayOrder = 74)
 public record TableInput(
-    TableName name,
+    @dev.erst.gridgrind.core.metadata.FieldRule(
+            kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.LENGTH_RANGE,
+            minimum = 1,
+            maximum =
+                dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues
+                    .DEFINED_NAME_MAX_CODE_POINTS)
+        @dev.erst.gridgrind.core.metadata.FieldRule(
+            kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.STRING_PATTERN,
+            text = dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.DEFINED_NAME_PATTERN)
+        TableName name,
     SheetName sheetName,
     RangeRef range,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)

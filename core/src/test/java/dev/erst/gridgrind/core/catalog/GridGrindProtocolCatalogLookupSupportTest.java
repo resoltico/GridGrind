@@ -18,7 +18,7 @@ class GridGrindProtocolCatalogLookupSupportTest {
             lookupFixtureCatalog(), "  sourceTypes:SOURCE_ALPHA  ");
 
     assertEquals(result.matches().size(), result.totalCount());
-    assertEquals("sourceTypes:SOURCE_ALPHA", result.matches().getFirst().qualifiedId());
+    assertEquals("workbookSourceTypes:SOURCE_ALPHA", result.matches().getFirst().qualifiedId());
     assertEquals("ENTRY", result.matches().getFirst().kind());
   }
 
@@ -27,16 +27,17 @@ class GridGrindProtocolCatalogLookupSupportTest {
     CatalogSearchResult result =
         GridGrindProtocolCatalogLookupSupport.search(lookupFixtureCatalog(), "source_alpha");
 
-    assertEquals("sourceTypes:SOURCE_ALPHA", result.matches().getFirst().qualifiedId());
+    assertEquals("workbookSourceTypes:SOURCE_ALPHA", result.matches().getFirst().qualifiedId());
     assertEquals("ENTRY", result.matches().getFirst().kind());
   }
 
   @Test
   void searchMatchesQualifiedIdsWhenLookupIdsDoNotContainTheQuery() {
     CatalogSearchResult result =
-        GridGrindProtocolCatalogLookupSupport.search(lookupFixtureCatalog(), "sourcetypes");
+        GridGrindProtocolCatalogLookupSupport.search(lookupFixtureCatalog(), "workbooksourcetypes");
 
-    assertEquals(List.of("sourceTypes", "sourceTypes:SOURCE_ALPHA"), qualifiedIds(result));
+    assertEquals(
+        List.of("workbookSourceTypes", "workbookSourceTypes:SOURCE_ALPHA"), qualifiedIds(result));
   }
 
   @Test
@@ -44,7 +45,8 @@ class GridGrindProtocolCatalogLookupSupportTest {
     CatalogSearchResult result =
         GridGrindProtocolCatalogLookupSupport.search(lookupFixtureCatalog(), "source forecast");
 
-    assertEquals(List.of("sourceTypes:SOURCE_ALPHA", "sourceTypes"), qualifiedIds(result));
+    assertEquals(
+        List.of("workbookSourceTypes:SOURCE_ALPHA", "workbookSourceTypes"), qualifiedIds(result));
   }
 
   @Test
@@ -162,7 +164,8 @@ class GridGrindProtocolCatalogLookupSupportTest {
                 GridGrindProtocolCatalog.catalog(), "mutationActionTypes")
             .orElseThrow();
     Object sourceGroup =
-        GridGrindProtocolCatalogLookupSupport.lookupValueFor(lookupFixtureCatalog(), "sourceTypes")
+        GridGrindProtocolCatalogLookupSupport.lookupValueFor(
+                lookupFixtureCatalog(), "workbookSourceTypes")
             .orElseThrow();
 
     assertTrue(mutationGroup instanceof TopLevelTypeGroup);
@@ -183,7 +186,7 @@ class GridGrindProtocolCatalogLookupSupportTest {
             .orElseThrow();
     Object sourceEntry =
         GridGrindProtocolCatalogLookupSupport.lookupValueFor(
-                lookupFixtureCatalog(), "sourceTypes:SOURCE_ALPHA")
+                lookupFixtureCatalog(), "workbookSourceTypes:SOURCE_ALPHA")
             .orElseThrow();
 
     assertTrue(nestedGroup instanceof NestedTypeGroup);

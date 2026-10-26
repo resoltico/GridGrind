@@ -1,9 +1,15 @@
 package dev.erst.gridgrind.core.model.print;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import java.util.Objects;
 
 /** One authoritative supported print-layout payload in protocol form. */
+@CatalogType(
+    id = "PrintLayoutInput",
+    summary =
+        "Authoritative supported print-layout payload for one SET_PRINT_LAYOUT request. Supply explicit printArea, orientation, scaling, repeatingRows, repeatingColumns, header, footer, and setup fields.",
+    displayOrder = 63)
 public record PrintLayoutInput(
     PrintAreaInput printArea,
     ExcelPrintOrientation orientation,

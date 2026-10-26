@@ -1,18 +1,14 @@
 package dev.erst.gridgrind.core.problem;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Request and CLI surface facts reused across problem-context stages. */
 public interface ProblemContextRequestSurfaces {
   /** Null-free request-shape summary reused across request-execution failure contexts. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = RequestShape.Unknown.class, name = "UNKNOWN"),
-    @JsonSubTypes.Type(value = RequestShape.Known.class, name = "KNOWN")
-  })
+  @Union(discriminator = "type")
   sealed interface RequestShape permits RequestShape.Unknown, RequestShape.Known {
     /** Returns the explicit unknown request-shape variant. */
     static RequestShape unknown() {
@@ -43,9 +39,16 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** Request details were unavailable because request decoding or validation never completed. */
+    @Variant(
+        id = "UNKNOWN",
+        summary =
+            "Request details were unavailable because request decoding or validation never completed.")
     record Unknown() implements RequestShape {}
 
     /** Source and persistence families were known from the decoded request. */
+    @Variant(
+        id = "KNOWN",
+        summary = "Source and persistence families were known from the decoded request.")
     record Known(String sourceType, String persistenceType) implements RequestShape {
       public Known {
         sourceType = requireNonBlank(sourceType, "sourceType");
@@ -55,11 +58,7 @@ public interface ProblemContextRequestSurfaces {
   }
 
   /** Concrete request input source, never encoded with a nullable path. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = RequestInput.StandardInput.class, name = "STANDARD_INPUT"),
-    @JsonSubTypes.Type(value = RequestInput.RequestFile.class, name = "FILE")
-  })
+  @Union(discriminator = "type")
   sealed interface RequestInput permits RequestInput.StandardInput, RequestInput.RequestFile {
     /** Returns the request-input variant for standard input. */
     static RequestInput standardInput() {
@@ -80,9 +79,11 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** JSON request was read from standard input. */
+    @Variant(id = "STANDARD_INPUT", summary = "JSON request was read from standard input.")
     record StandardInput() implements RequestInput {}
 
     /** JSON request was read from one file path. */
+    @Variant(id = "FILE", summary = "JSON request was read from one file path.")
     record RequestFile(String requestPath) implements RequestInput {
       public RequestFile {
         requestPath = requireNonBlank(requestPath, "requestPath");
@@ -91,11 +92,7 @@ public interface ProblemContextRequestSurfaces {
   }
 
   /** CLI response destination, never encoded with a nullable path. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = ResponseOutput.StandardOutput.class, name = "STANDARD_OUTPUT"),
-    @JsonSubTypes.Type(value = ResponseOutput.ResponseFile.class, name = "FILE")
-  })
+  @Union(discriminator = "type")
   sealed interface ResponseOutput
       permits ResponseOutput.StandardOutput, ResponseOutput.ResponseFile {
     /** Returns the response-output variant for standard output. */
@@ -117,9 +114,11 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** JSON response was written to standard output. */
+    @Variant(id = "STANDARD_OUTPUT", summary = "JSON response was written to standard output.")
     record StandardOutput() implements ResponseOutput {}
 
     /** JSON response was written to one file path. */
+    @Variant(id = "FILE", summary = "JSON response was written to one file path.")
     record ResponseFile(String responsePath) implements ResponseOutput {
       public ResponseFile {
         responsePath = requireNonBlank(responsePath, "responsePath");
@@ -128,19 +127,7 @@ public interface ProblemContextRequestSurfaces {
   }
 
   /** Request JSON cursor for malformed payloads, replacing nullable path/line/column slots. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = JsonLocation.Unavailable.class, name = "UNAVAILABLE"),
-    @JsonSubTypes.Type(value = JsonLocation.PathOnly.class, name = "PATH_ONLY"),
-    @JsonSubTypes.Type(value = JsonLocation.ByteOffset.class, name = "BYTE_OFFSET"),
-    @JsonSubTypes.Type(value = JsonLocation.PathAtByteOffset.class, name = "PATH_BYTE_OFFSET"),
-    @JsonSubTypes.Type(
-        value = JsonLocation.ByteOffsetLineColumn.class,
-        name = "BYTE_OFFSET_LINE_COLUMN"),
-    @JsonSubTypes.Type(value = JsonLocation.DuplicateKey.class, name = "DUPLICATE_KEY"),
-    @JsonSubTypes.Type(value = JsonLocation.LineColumn.class, name = "LINE_COLUMN"),
-    @JsonSubTypes.Type(value = JsonLocation.Located.class, name = "LOCATED")
-  })
+  @Union(discriminator = "type")
   sealed interface JsonLocation
       permits JsonLocation.Unavailable,
           JsonLocation.PathOnly,
@@ -260,9 +247,15 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** No JSON cursor could be derived for the request failure. */
+    @Variant(
+        id = "UNAVAILABLE",
+        summary = "No JSON cursor could be derived for the request failure.")
     record Unavailable() implements JsonLocation {}
 
     /** Only the JSON path was available from request validation. */
+    @Variant(
+        id = "PATH_ONLY",
+        summary = "Only the JSON path was available from request validation.")
     record PathOnly(String jsonPath) implements JsonLocation {
       public PathOnly {
         jsonPath = requireNonBlank(jsonPath, "jsonPath");
@@ -270,6 +263,9 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** A structural parser located an offending token without a JSON path. */
+    @Variant(
+        id = "BYTE_OFFSET",
+        summary = "A structural parser located an offending token without a JSON path.")
     record ByteOffset(long byteOffset) implements JsonLocation {
       public ByteOffset {
         requireByteOffset(byteOffset);
@@ -277,6 +273,10 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** A structural parser located an offending object member or scalar token precisely. */
+    @Variant(
+        id = "PATH_BYTE_OFFSET",
+        summary =
+            "A structural parser located an offending object member or scalar token precisely.")
     record PathAtByteOffset(String jsonPath, long byteOffset) implements JsonLocation {
       public PathAtByteOffset {
         jsonPath = requireNonBlank(jsonPath, "jsonPath");
@@ -285,6 +285,10 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** A syntax location with both exact UTF-8 offset and one-based line/column coordinates. */
+    @Variant(
+        id = "BYTE_OFFSET_LINE_COLUMN",
+        summary =
+            "A syntax location with both exact UTF-8 offset and one-based line/column coordinates.")
     record ByteOffsetLineColumn(long byteOffset, int jsonLine, int jsonColumn)
         implements JsonLocation {
       public ByteOffsetLineColumn {
@@ -296,6 +300,9 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** One duplicate property occurrence, which has no unique JSON path of its own. */
+    @Variant(
+        id = "DUPLICATE_KEY",
+        summary = "One duplicate property occurrence, which has no unique JSON path of its own.")
     record DuplicateKey(
         String containingObjectPath, String key, int occurrenceOrdinal, long byteOffset)
         implements JsonLocation {
@@ -310,6 +317,9 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** Only the request line and column were available from the parser. */
+    @Variant(
+        id = "LINE_COLUMN",
+        summary = "Only the request line and column were available from the parser.")
     record LineColumn(int jsonLine, int jsonColumn) implements JsonLocation {
       public LineColumn {
         if (jsonLine < 1) {
@@ -322,6 +332,7 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** One precise JSON cursor extracted from a payload failure. */
+    @Variant(id = "LOCATED", summary = "One precise JSON cursor extracted from a payload failure.")
     record Located(String jsonPath, int jsonLine, int jsonColumn) implements JsonLocation {
       public Located {
         jsonPath = requireNonBlank(jsonPath, "jsonPath");
@@ -342,11 +353,7 @@ public interface ProblemContextRequestSurfaces {
   }
 
   /** Optional CLI argument reference without nullable string padding. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = CliArgument.Unknown.class, name = "UNKNOWN"),
-    @JsonSubTypes.Type(value = CliArgument.Named.class, name = "NAMED")
-  })
+  @Union(discriminator = "type")
   sealed interface CliArgument permits CliArgument.Unknown, CliArgument.Named {
     /** Returns the explicit unknown CLI-argument variant. */
     static CliArgument unknown() {
@@ -367,9 +374,15 @@ public interface ProblemContextRequestSurfaces {
     }
 
     /** The parse failure was not attributable to one specific argument. */
+    @Variant(
+        id = "UNKNOWN",
+        summary = "The parse failure was not attributable to one specific argument.")
     record Unknown() implements CliArgument {}
 
     /** The parse failure was attributable to one named option or operand. */
+    @Variant(
+        id = "NAMED",
+        summary = "The parse failure was attributable to one named option or operand.")
     record Named(String argument) implements CliArgument {
       public Named {
         argument = requireNonBlank(argument, "argument");

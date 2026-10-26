@@ -2,10 +2,16 @@ package dev.erst.gridgrind.core.model.print;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.List;
 import java.util.Objects;
 
 /** Advanced page-setup payload nested under print-layout authoring. */
+@CatalogType(
+    id = "PrintSetupInput",
+    summary =
+        "Advanced page-setup payload nested under print-layout authoring. Supply the full authored setup block explicitly.",
+    displayOrder = 65)
 public record PrintSetupInput(
     PrintMarginsInput margins,
     boolean printGridlines,

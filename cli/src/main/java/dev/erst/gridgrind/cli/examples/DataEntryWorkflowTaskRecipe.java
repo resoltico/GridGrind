@@ -79,7 +79,7 @@ final class DataEntryWorkflowTaskRecipe {
                         "Prepare The Intake Sheet",
                         "Create the sheet skeleton, labels, and writable cells first.",
                         List.of(
-                            GridGrindTaskRecipeSupport.ref("sourceTypes", "NEW"),
+                            GridGrindTaskRecipeSupport.ref("workbookSourceTypes", "NEW"),
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "ENSURE_SHEET"),
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "SET_RANGE"),
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "SET_CELL")),
@@ -95,7 +95,7 @@ final class DataEntryWorkflowTaskRecipe {
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "SET_COMMENT"),
                             GridGrindTaskRecipeSupport.ref(
                                 "mutationActionTypes", "SET_WORKBOOK_PROTECTION"),
-                            GridGrindTaskRecipeSupport.ref("persistenceTypes", "SAVE_AS")),
+                            GridGrindTaskRecipeSupport.ref("workbookPersistenceTypes", "SAVE_AS")),
                         List.of(
                             "Validation and protection belong to the authored model, not a memo.")),
                     GridGrindTaskRecipeSupport.phase(

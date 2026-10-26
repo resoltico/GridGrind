@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.protection;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.source.SecretReference;
@@ -10,6 +11,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Workbook-protection payload covering workbook and revisions lock state plus passwords. */
+@CatalogType(
+    id = "WorkbookProtectionInput",
+    summary =
+        "Workbook-protection payload covering workbook and revisions lock state plus optional passwords.",
+    displayOrder = 75)
 public record WorkbookProtectionInput(
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
         boolean structureLocked,

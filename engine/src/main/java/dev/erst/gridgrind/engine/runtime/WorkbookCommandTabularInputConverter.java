@@ -67,14 +67,14 @@ final class WorkbookCommandTabularInputConverter {
   }
 
   private static ExcelPivotTableDefinition.Source toExcelPivotTableSource(
-      PivotTableInput.Source source) {
+      PivotTableInput.PivotSourceSpec source) {
     return switch (source) {
-      case PivotTableInput.Source.Range range ->
+      case PivotTableInput.PivotSourceSpec.Range range ->
           new ExcelPivotTableDefinition.Source.Range(
               range.sheetName().value(), range.range().value());
-      case PivotTableInput.Source.NamedRange namedRange ->
+      case PivotTableInput.PivotSourceSpec.NamedRange namedRange ->
           new ExcelPivotTableDefinition.Source.NamedRange(namedRange.name().value());
-      case PivotTableInput.Source.Table table ->
+      case PivotTableInput.PivotSourceSpec.Table table ->
           new ExcelPivotTableDefinition.Source.Table(table.name().value());
     };
   }

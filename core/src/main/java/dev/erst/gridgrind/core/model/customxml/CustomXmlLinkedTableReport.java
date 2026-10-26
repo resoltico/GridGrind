@@ -1,10 +1,15 @@
 package dev.erst.gridgrind.core.model.customxml;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Factual table mapping entry linked to one custom-XML map. */
+@CatalogType(
+    id = "CustomXmlLinkedTableReport",
+    summary = "One XML-mapped table linked to a custom-XML mapping.",
+    displayOrder = 106)
 public record CustomXmlLinkedTableReport(
     SheetLabel sheetName,
     String tableName,

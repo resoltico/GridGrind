@@ -1,26 +1,21 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 
 /** Selects one or more tables by workbook-global identity. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = TableSelector.All.class, name = "TABLE_ALL"),
-  @JsonSubTypes.Type(value = TableSelector.ByName.class, name = "TABLE_BY_NAME"),
-  @JsonSubTypes.Type(value = TableSelector.ByNames.class, name = "TABLE_BY_NAMES"),
-  @JsonSubTypes.Type(value = TableSelector.ByNameOnSheet.class, name = "TABLE_BY_NAME_ON_SHEET")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 31)
 public sealed interface TableSelector extends Selector
-    permits TableSelector.All,
-        TableSelector.ByName,
-        TableSelector.ByNames,
-        TableSelector.ByNameOnSheet {
+    permits dev.erst.gridgrind.core.plan.TableSelector.All,
+        dev.erst.gridgrind.core.plan.TableSelector.ByName,
+        dev.erst.gridgrind.core.plan.TableSelector.ByNames,
+        dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet {
 
   /** Selects every table in workbook order. */
+  @Variant(id = "TABLE_ALL", summary = "Select every table in workbook order.")
   record All() implements TableSelector {
     @Override
     public SelectorCardinality cardinality() {
@@ -29,6 +24,7 @@ public sealed interface TableSelector extends Selector
   }
 
   /** Selects one table by workbook-global name. */
+  @Variant(id = "TABLE_BY_NAME", summary = "Select one workbook-global table by exact name.")
   record ByName(TableName name) implements TableSelector {
     public ByName {
       java.util.Objects.requireNonNull(name, "name must not be null");
@@ -41,6 +37,9 @@ public sealed interface TableSelector extends Selector
   }
 
   /** Selects one or more tables by workbook-global names. */
+  @Variant(
+      id = "TABLE_BY_NAMES",
+      summary = "Select one or more workbook-global tables by exact name.")
   record ByNames(List<TableName> names) implements TableSelector {
     public ByNames {
       names = SelectorListValidation.copyDistinctTableNames(names, "names");
@@ -53,6 +52,9 @@ public sealed interface TableSelector extends Selector
   }
 
   /** Selects one workbook-global table and asserts its expected owning sheet. */
+  @Variant(
+      id = "TABLE_BY_NAME_ON_SHEET",
+      summary = "Select one workbook-global table by exact name and expected owning sheet.")
   record ByNameOnSheet(TableName name, SheetName sheetName) implements TableSelector {
     public ByNameOnSheet {
       java.util.Objects.requireNonNull(name, "name must not be null");

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.chart;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -10,6 +11,11 @@ import java.util.List;
 import java.util.Objects;
 
 /** Authored chart input. One chart may contain one or more plots. */
+@CatalogType(
+    id = "ChartInput",
+    summary =
+        "One authored chart with an explicit drawing anchor, chart-level presentation state, and one or more plots. Use ChartInput.withStandardDisplay(...) from Java authoring when the standard legend and blank-cell display policy is intended.",
+    displayOrder = 33)
 public record ChartInput(
     String name,
     DrawingAnchorInput anchor,

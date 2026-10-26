@@ -9,7 +9,7 @@ import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
 import dev.erst.gridgrind.core.plan.Selector;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
@@ -107,8 +107,8 @@ final class WorkbookCommandSelectorSupport {
     throw new IllegalArgumentException(
         actionType
             + " requires target type "
-            + String.join(" or ", SelectorJsonSupport.typeIdsFor(expectedType))
+            + String.join(" or ", SelectorTypes.typeIdsFor(expectedType))
             + " but got "
-            + SelectorJsonSupport.typeIdsFor(target.getClass()).getFirst());
+            + SelectorTypes.typeIdsFor(target.getClass()).getFirst());
   }
 }

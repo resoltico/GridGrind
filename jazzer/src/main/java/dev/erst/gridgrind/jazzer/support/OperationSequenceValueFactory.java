@@ -269,7 +269,7 @@ final class OperationSequenceValueFactory {
         data, targetSheet, pivotTableName, namedRangeName, tableName, validName, validRange);
   }
 
-  static PivotTableInput.Source nextPivotTableSource(
+  static PivotTableInput.PivotSourceSpec nextPivotTableSource(
       GridGrindFuzzData data,
       String targetSheet,
       String namedRangeName,

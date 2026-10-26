@@ -1,21 +1,23 @@
 package dev.erst.gridgrind.core.model.table;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 
 /** Supported table-style definition for GridGrind-authored tables. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = TableStyleInput.None.class, name = "NONE"),
-  @JsonSubTypes.Type(value = TableStyleInput.Named.class, name = "NAMED")
-})
-public sealed interface TableStyleInput permits TableStyleInput.None, TableStyleInput.Named {
+@Union(discriminator = "type", catalog = true, displayOrder = 70)
+public sealed interface TableStyleInput
+    permits dev.erst.gridgrind.core.model.table.TableStyleInput.None,
+        dev.erst.gridgrind.core.model.table.TableStyleInput.Named {
 
   /** Clear style metadata and leave the table unstyled. */
+  @Variant(id = "NONE", summary = "Clear table style metadata.")
   record None() implements TableStyleInput {}
 
   /** Apply one named workbook table style with explicit stripe and emphasis flags. */
+  @Variant(
+      id = "NAMED",
+      summary = "Apply one named workbook table style with explicit stripe and emphasis flags.")
   record Named(
       String name,
       boolean showFirstColumn,

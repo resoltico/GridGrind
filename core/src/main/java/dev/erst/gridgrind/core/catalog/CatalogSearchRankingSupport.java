@@ -112,9 +112,9 @@ final class CatalogSearchRankingSupport {
 
   static boolean isTopLevelPublishedGroup(String catalogGroup) {
     return switch (catalogGroup) {
-      case "sourceTypes",
-          "persistenceTypes",
-          "stepTypes",
+      case "workbookSourceTypes",
+          "workbookPersistenceTypes",
+          "workbookStepTypes",
           "mutationActionTypes",
           "assertionTypes",
           "inspectionQueryTypes" ->

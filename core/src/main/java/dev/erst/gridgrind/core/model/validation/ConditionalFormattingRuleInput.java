@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.model.validation;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
 import dev.erst.gridgrind.core.model.style.ColorInput;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
@@ -16,36 +16,24 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing authored conditional-formatting rule families. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleInput.FormulaRule.class,
-      name = "FORMULA_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleInput.CellValueRule.class,
-      name = "CELL_VALUE_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleInput.ColorScaleRule.class,
-      name = "COLOR_SCALE_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleInput.DataBarRule.class,
-      name = "DATA_BAR_RULE"),
-  @JsonSubTypes.Type(
-      value = ConditionalFormattingRuleInput.IconSetRule.class,
-      name = "ICON_SET_RULE"),
-  @JsonSubTypes.Type(value = ConditionalFormattingRuleInput.Top10Rule.class, name = "TOP10_RULE")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 64)
 public sealed interface ConditionalFormattingRuleInput
-    permits ConditionalFormattingRuleInput.FormulaRule,
-        ConditionalFormattingRuleInput.CellValueRule,
-        ConditionalFormattingRuleInput.ColorScaleRule,
-        ConditionalFormattingRuleInput.DataBarRule,
-        ConditionalFormattingRuleInput.IconSetRule,
-        ConditionalFormattingRuleInput.Top10Rule {
+    permits dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput.FormulaRule,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput.CellValueRule,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput.ColorScaleRule,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput.DataBarRule,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput.IconSetRule,
+        dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput.Top10Rule {
 
   /** Formula-driven conditional-formatting rule with one differential-style payload. */
+  @Variant(
+      id = "FORMULA_RULE",
+      summary =
+          "Apply one formula-driven conditional-formatting rule. Supply one differential style.")
   record FormulaRule(
-      String formula,
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula,
       boolean stopIfTrue,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleInput> style)
       implements ConditionalFormattingRuleInput {
@@ -61,6 +49,10 @@ public sealed interface ConditionalFormattingRuleInput
   }
 
   /** Cell-value comparison rule with one or two operands and one differential-style payload. */
+  @Variant(
+      id = "CELL_VALUE_RULE",
+      summary =
+          "Apply one cell-value comparison conditional-formatting rule. formula2 is used only for BETWEEN and NOT_BETWEEN. Supply one differential style.")
   record CellValueRule(
       ExcelComparisonOperator operator,
       String formula1,
@@ -83,6 +75,10 @@ public sealed interface ConditionalFormattingRuleInput
   }
 
   /** Color-scale rule with ordered thresholds and control-point colors. */
+  @Variant(
+      id = "COLOR_SCALE_RULE",
+      summary =
+          "Apply one color-scale conditional-formatting rule with ordered thresholds and colors.")
   record ColorScaleRule(
       boolean stopIfTrue,
       List<ConditionalFormattingThresholdInput> thresholds,
@@ -101,12 +97,32 @@ public sealed interface ConditionalFormattingRuleInput
   }
 
   /** Data-bar rule with thresholds, widths, and a fill color. */
+  @Variant(
+      id = "DATA_BAR_RULE",
+      summary =
+          "Apply one data-bar conditional-formatting rule with explicit thresholds and widths.")
   record DataBarRule(
       boolean stopIfTrue,
       ColorInput color,
       boolean iconOnly,
-      int widthMin,
-      int widthMax,
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.INTEGRAL)
+          @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NUMBER_RANGE,
+              minimum =
+                  dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.DATA_BAR_WIDTH_MIN,
+              maximum =
+                  dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.DATA_BAR_WIDTH_MAX)
+          int widthMin,
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.INTEGRAL)
+          @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NUMBER_RANGE,
+              minimum =
+                  dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.DATA_BAR_WIDTH_MIN,
+              maximum =
+                  dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.DATA_BAR_WIDTH_MAX)
+          int widthMax,
       ConditionalFormattingThresholdInput minThreshold,
       ConditionalFormattingThresholdInput maxThreshold)
       implements ConditionalFormattingRuleInput {
@@ -129,6 +145,9 @@ public sealed interface ConditionalFormattingRuleInput
   }
 
   /** Icon-set rule with authored icon set and thresholds. */
+  @Variant(
+      id = "ICON_SET_RULE",
+      summary = "Apply one icon-set conditional-formatting rule with authored thresholds.")
   record IconSetRule(
       boolean stopIfTrue,
       ExcelConditionalFormattingIconSet iconSet,
@@ -150,6 +169,9 @@ public sealed interface ConditionalFormattingRuleInput
   }
 
   /** Top-N or bottom-N conditional-format rule with a differential style. */
+  @Variant(
+      id = "TOP10_RULE",
+      summary = "Apply one top/bottom-N conditional-formatting rule with a differential style.")
   record Top10Rule(
       boolean stopIfTrue,
       int rank,

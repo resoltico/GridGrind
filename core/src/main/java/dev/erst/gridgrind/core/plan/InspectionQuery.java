@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import java.util.Objects;
 
 /** Ordered post-mutation inspection queries that introspect or analyze workbook state. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@Union(discriminator = "type")
 public sealed interface InspectionQuery
     permits InspectionQuery.Introspection, InspectionQuery.Surface, InspectionQuery.Analysis {
 

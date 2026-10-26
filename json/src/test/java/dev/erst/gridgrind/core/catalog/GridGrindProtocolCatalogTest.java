@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
@@ -24,7 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the machine-readable catalog and built-in request template. */
@@ -240,7 +238,7 @@ class GridGrindProtocolCatalogTest {
         List.of(new FieldConstraint.StringPattern(ProtocolConstraintValues.RGB_HEX_PATTERN)),
         rgb.constraints());
 
-    TypeEntry dataBar = nestedType(catalog, "conditionalFormattingRuleTypes", "DATA_BAR_RULE");
+    TypeEntry dataBar = nestedType(catalog, "conditionalFormattingRuleInputTypes", "DATA_BAR_RULE");
     assertEquals(
         List.of(new FieldConstraint.Integral(), new FieldConstraint.NumberRange(0.0d, 100.0d)),
         assertInstanceOf(FieldShape.Scalar.class, dataBar.field("widthMin").orElseThrow().shape())
@@ -272,19 +270,13 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
-  void requiredFieldsExcludeCatalogAndJsonIgnoredRecordComponents() {
+  void requiredFieldsExcludeMetadataIgnoredRecordComponents() {
     assertEquals(
         List.of("visible"),
         CatalogTypeEntryFactory.requiredFields(CatalogIgnoredComponentRecord.class));
     assertEquals(
         List.of("visible"),
         CatalogTypeEntryFactory.requiredFields(CatalogIgnoredAccessorRecord.class));
-    assertEquals(
-        List.of("visible"),
-        CatalogTypeEntryFactory.requiredFields(JsonIgnoredComponentRecord.class));
-    assertEquals(
-        List.of("visible"),
-        CatalogTypeEntryFactory.requiredFields(JsonIgnoredAccessorRecord.class));
   }
 
   @Test
@@ -332,10 +324,10 @@ class GridGrindProtocolCatalogTest {
     CatalogSearchResult search = GridGrindProtocolCatalog.searchCatalog("request-owned paths");
     assertTrue(
         search.matches().stream()
-            .anyMatch(match -> "sourceTypes:EXISTING".equals(match.qualifiedId())));
+            .anyMatch(match -> "workbookSourceTypes:EXISTING".equals(match.qualifiedId())));
     assertTrue(
         search.matches().stream()
-            .anyMatch(match -> "persistenceTypes:SAVE_AS".equals(match.qualifiedId())));
+            .anyMatch(match -> "workbookPersistenceTypes:SAVE_AS".equals(match.qualifiedId())));
     assertTrue(
         search.matches().stream()
             .anyMatch(
@@ -594,53 +586,6 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
-  void validatesCatalogCoverageFailurePaths() {
-    IllegalStateException missingNestedDescriptor =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                GridGrindProtocolCatalogCoverageValidator.validateReverseGroupMappings(
-                    Set.of(), Set.of()));
-    assertTrue(
-        missingNestedDescriptor
-            .getMessage()
-            .contains("Field-shape nested group map contains type with no catalog descriptor"));
-
-    IllegalStateException badWorkbookStepCoverage =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-                    dev.erst.gridgrind.core.plan.WorkbookStep.class,
-                    Map.of(MutationStep.class, "MUTATION")));
-    assertTrue(badWorkbookStepCoverage.getMessage().contains("Catalog coverage mismatch"));
-
-    IllegalStateException nonRecordCoverage =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-                    NonAnnotatedSealedType.class, Map.of(NotARecord.class, "BROKEN")));
-    assertEquals(
-        "Catalog coverage requires "
-            + NonAnnotatedSealedType.class.getName()
-            + " to declare a non-blank @JsonTypeInfo property",
-        nonRecordCoverage.getMessage());
-
-    IllegalStateException blankDiscriminatorCoverage =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                GridGrindProtocolCatalogCoverageValidator.validateCoverage(
-                    BlankPropertySealedType.class, Map.of(BlankPropertyRecord.class, "BROKEN")));
-    assertEquals(
-        "Catalog coverage requires "
-            + BlankPropertySealedType.class.getName()
-            + " to declare a non-blank @JsonTypeInfo property",
-        blankDiscriminatorCoverage.getMessage());
-  }
-
-  @Test
   void validatesProjectedFieldMetadataFailurePaths() {
     CatalogProjectedField projectedField = new CatalogProjectedField("displayValue", "FORMAT");
 
@@ -728,17 +673,6 @@ class GridGrindProtocolCatalogTest {
   private record CatalogIgnoredAccessorRecord(String visible, String hidden) {
     @SuppressWarnings("UnusedMethod")
     @CatalogIgnored
-    @Override
-    public String hidden() {
-      return hidden;
-    }
-  }
-
-  private record JsonIgnoredComponentRecord(String visible, @JsonIgnore String hidden) {}
-
-  private record JsonIgnoredAccessorRecord(String visible, String hidden) {
-    @SuppressWarnings("UnusedMethod")
-    @JsonIgnore
     @Override
     public String hidden() {
       return hidden;

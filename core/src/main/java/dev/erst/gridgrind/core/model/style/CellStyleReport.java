@@ -1,9 +1,14 @@
 package dev.erst.gridgrind.core.model.style;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import java.util.Objects;
 
 /** Effective style facts returned with every analyzed cell. */
+@CatalogType(
+    id = "CellStyleReport",
+    summary = "Exact effective cell-style report used by style assertions.",
+    displayOrder = 78)
 public record CellStyleReport(
     String numberFormat,
     CellAlignmentReport alignment,

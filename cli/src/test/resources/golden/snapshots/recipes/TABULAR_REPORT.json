@@ -47,7 +47,7 @@
         "commonPitfalls" : [ "Large authored literals belong in UTF8_FILE, FILE, or STANDARD_INPUT sources instead of huge inline JSON.", "Table headers must remain nonblank and unique.", "Formula authoring is scalar-only unless you use SET_ARRAY_FORMULA." ],
         "phases" : [ {
           "capabilityRefs" : [ {
-            "group" : "sourceTypes",
+            "group" : "workbookSourceTypes",
             "id" : "NEW"
           }, {
             "group" : "mutationActionTypes",
@@ -68,7 +68,7 @@
             "group" : "mutationActionTypes",
             "id" : "AUTO_SIZE_COLUMNS"
           }, {
-            "group" : "persistenceTypes",
+            "group" : "workbookPersistenceTypes",
             "id" : "SAVE_AS"
           } ],
           "label" : "Model The Table",

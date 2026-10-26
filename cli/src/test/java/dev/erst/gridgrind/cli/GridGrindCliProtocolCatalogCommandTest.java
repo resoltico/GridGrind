@@ -156,7 +156,9 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--lookup", "sourceTypes:EXISTING"},
+                new String[] {
+                  "--print-protocol-catalog", "--lookup", "workbookSourceTypes:EXISTING"
+                },
                 InputStream.nullInputStream(),
                 stdout);
 

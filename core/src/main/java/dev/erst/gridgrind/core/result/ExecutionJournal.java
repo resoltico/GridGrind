@@ -1,8 +1,9 @@
 package dev.erst.gridgrind.core.result;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -12,6 +13,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Structured execution telemetry returned for every GridGrind run, including failures. */
+@CatalogType(
+    id = "ExecutionJournal",
+    summary =
+        "Structured execution telemetry returned on every success and failure response, including validation, input resolution, open, calculation, step, persistence, and close phases.",
+    displayOrder = 0)
 public record ExecutionJournal(
     ExecutionJournalLevel level,
     SourceSummary source,
@@ -37,6 +43,10 @@ public record ExecutionJournal(
   }
 
   /** Summary of the authored workbook source for one execution. */
+  @CatalogType(
+      id = "ExecutionJournalSourceSummary",
+      summary = "Journal summary of the authored workbook source.",
+      displayOrder = 1)
   public record SourceSummary(
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> type,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> path) {
@@ -50,15 +60,12 @@ public record ExecutionJournal(
   }
 
   /** One timed execution phase. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Phase.NotStarted.class, name = "NOT_STARTED"),
-    @JsonSubTypes.Type(value = Phase.NotRequested.class, name = "NOT_REQUESTED"),
-    @JsonSubTypes.Type(value = Phase.Succeeded.class, name = "SUCCEEDED"),
-    @JsonSubTypes.Type(value = Phase.Failed.class, name = "FAILED")
-  })
+  @Union(discriminator = "status", catalog = true, displayOrder = 41)
   public sealed interface Phase
-      permits Phase.NotStarted, Phase.NotRequested, Phase.Succeeded, Phase.Failed {
+      permits dev.erst.gridgrind.core.result.ExecutionJournal.Phase.NotStarted,
+          dev.erst.gridgrind.core.result.ExecutionJournal.Phase.NotRequested,
+          dev.erst.gridgrind.core.result.ExecutionJournal.Phase.Succeeded,
+          dev.erst.gridgrind.core.result.ExecutionJournal.Phase.Failed {
 
     /** Canonical phase status token. */
     Status status();
@@ -94,6 +101,9 @@ public record ExecutionJournal(
     }
 
     /** Phase never began. */
+    @Variant(
+        id = "NOT_STARTED",
+        summary = "Execution phase that never began and therefore exposes no timing payload.")
     record NotStarted() implements Phase {
       @Override
       public Status status() {
@@ -102,6 +112,9 @@ public record ExecutionJournal(
     }
 
     /** Phase was intentionally skipped. */
+    @Variant(
+        id = "NOT_REQUESTED",
+        summary = "Execution phase intentionally skipped and therefore exposing no timing payload.")
     record NotRequested() implements Phase {
       @Override
       public Status status() {
@@ -110,6 +123,9 @@ public record ExecutionJournal(
     }
 
     /** Phase finished successfully with measured timing. */
+    @Variant(
+        id = "SUCCEEDED",
+        summary = "Execution phase that completed successfully and may include one timing payload.")
     record Succeeded(@JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Timing> timing)
         implements Phase {
       public Succeeded {
@@ -123,6 +139,9 @@ public record ExecutionJournal(
     }
 
     /** Phase ended in failure with measured timing. */
+    @Variant(
+        id = "FAILED",
+        summary = "Execution phase that ended in failure and may include one timing payload.")
     record Failed(@JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Timing> timing)
         implements Phase {
       public Failed {
@@ -137,6 +156,10 @@ public record ExecutionJournal(
   }
 
   /** Coherent timing payload for one phase that actually ran. */
+  @CatalogType(
+      id = "ExecutionJournalTiming",
+      summary = "Measured timestamps and duration for one execution phase that actually ran.",
+      displayOrder = 6)
   public record Timing(String startedAt, String finishedAt, long durationMillis) {
     public Timing {
       startedAt = requireExecutionTimestamp(startedAt, "startedAt");
@@ -146,6 +169,11 @@ public record ExecutionJournal(
   }
 
   /** Per-step execution journal entry. */
+  @CatalogType(
+      id = "ExecutionJournalStep",
+      summary =
+          "Per-step execution telemetry with resolved targets, timing, outcome, and optional failure detail.",
+      displayOrder = 2)
   public record Step(
       int stepIndex,
       StepId stepId,
@@ -176,6 +204,10 @@ public record ExecutionJournal(
   }
 
   /** One canonical target entry recorded for a step journal. */
+  @CatalogType(
+      id = "ExecutionJournalTarget",
+      summary = "One canonical target label recorded inside a step journal.",
+      displayOrder = 3)
   public record Target(String kind, String label) {
     public Target {
       WorkbookPlan.requireNonBlank(kind, "kind");
@@ -184,6 +216,10 @@ public record ExecutionJournal(
   }
 
   /** Structured failure classification for a failed step. */
+  @CatalogType(
+      id = "ExecutionJournalFailureClassification",
+      summary = "Structured problem-code classification for one failed step.",
+      displayOrder = 4)
   public record FailureClassification(
       GridGrindProblemCode code, GridGrindProblemCategory category, String stage, String message) {
     public FailureClassification {
@@ -195,6 +231,10 @@ public record ExecutionJournal(
   }
 
   /** Top-level calculation phase timings recorded for one execution. */
+  @CatalogType(
+      id = "ExecutionJournalCalculation",
+      summary = "Top-level calculation preflight and execution timings for one request.",
+      displayOrder = 5)
   public record Calculation(Phase preflight, Phase execution) {
     public Calculation {
       if (preflight == null) {
@@ -207,12 +247,10 @@ public record ExecutionJournal(
   }
 
   /** Final execution outcome summary. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = Outcome.Succeeded.class, name = "SUCCEEDED"),
-    @JsonSubTypes.Type(value = Outcome.Failed.class, name = "FAILED")
-  })
-  public sealed interface Outcome permits Outcome.Succeeded, Outcome.Failed {
+  @Union(discriminator = "status", catalog = true, displayOrder = 42)
+  public sealed interface Outcome
+      permits dev.erst.gridgrind.core.result.ExecutionJournal.Outcome.Succeeded,
+          dev.erst.gridgrind.core.result.ExecutionJournal.Outcome.Failed {
 
     /** Canonical execution outcome status token. */
     Status status();
@@ -234,6 +272,7 @@ public record ExecutionJournal(
     }
 
     /** Execution finished successfully. */
+    @Variant(id = "SUCCEEDED", summary = "Execution outcome summary for a successful run.")
     record Succeeded(int plannedStepCount, int completedStepCount, long durationMillis)
         implements Outcome {
       public Succeeded {
@@ -247,6 +286,10 @@ public record ExecutionJournal(
     }
 
     /** Execution failed with one canonical failing-step summary. */
+    @Variant(
+        id = "FAILED",
+        summary =
+            "Execution outcome summary for a failed run, including the canonical failure code and an optional failing-step reference.")
     record Failed(
         int plannedStepCount,
         int completedStepCount,
@@ -268,6 +311,11 @@ public record ExecutionJournal(
   }
 
   /** Canonical failing-step reference when a failure is attributable to one authored step. */
+  @CatalogType(
+      id = "ExecutionJournalFailureStep",
+      summary =
+          "Canonical failing-step reference recorded when an execution failure is attributable to one authored step.",
+      displayOrder = 7)
   public record FailureStep(int failedStepIndex, StepId failedStepId) {
     public FailureStep {
       if (failedStepIndex < 0) {

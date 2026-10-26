@@ -2,10 +2,10 @@ package dev.erst.gridgrind.core.model.chart;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -20,37 +20,26 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** One authored chart plot. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ChartPlotInput.Area.class, name = "AREA"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Area3D.class, name = "AREA_3D"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Bar.class, name = "BAR"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Bar3D.class, name = "BAR_3D"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Doughnut.class, name = "DOUGHNUT"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Line.class, name = "LINE"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Line3D.class, name = "LINE_3D"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Pie.class, name = "PIE"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Pie3D.class, name = "PIE_3D"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Radar.class, name = "RADAR"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Scatter.class, name = "SCATTER"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Surface.class, name = "SURFACE"),
-  @JsonSubTypes.Type(value = ChartPlotInput.Surface3D.class, name = "SURFACE_3D")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 49)
 public sealed interface ChartPlotInput
-    permits ChartPlotInput.Area,
-        ChartPlotInput.Area3D,
-        ChartPlotInput.Bar,
-        ChartPlotInput.Bar3D,
-        ChartPlotInput.Doughnut,
-        ChartPlotInput.Line,
-        ChartPlotInput.Line3D,
-        ChartPlotInput.Pie,
-        ChartPlotInput.Pie3D,
-        ChartPlotInput.Radar,
-        ChartPlotInput.Scatter,
-        ChartPlotInput.Surface,
-        ChartPlotInput.Surface3D {
+    permits dev.erst.gridgrind.core.model.chart.ChartPlotInput.Area,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Area3D,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Bar,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Bar3D,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Doughnut,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Line,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Line3D,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Pie,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Pie3D,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Radar,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Scatter,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Surface,
+        dev.erst.gridgrind.core.model.chart.ChartPlotInput.Surface3D {
   /** Area chart plot. */
+  @Variant(
+      id = "AREA",
+      summary =
+          "Authored area-chart plot. Supply explicit grouping and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Area(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -81,6 +70,10 @@ public sealed interface ChartPlotInput
   }
 
   /** 3D area chart plot. */
+  @Variant(
+      id = "AREA_3D",
+      summary =
+          "Authored 3D area-chart plot. Supply explicit grouping and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Area3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -118,6 +111,10 @@ public sealed interface ChartPlotInput
   }
 
   /** Bar chart plot. */
+  @Variant(
+      id = "BAR",
+      summary =
+          "Authored bar-chart plot. Supply explicit barDirection, grouping, and axes. The Java authoring surface exposes one convenience constructor for the standard category/value axis pair.")
   record Bar(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -173,6 +170,10 @@ public sealed interface ChartPlotInput
   }
 
   /** 3D bar chart plot. */
+  @Variant(
+      id = "BAR_3D",
+      summary =
+          "Authored 3D bar-chart plot. Supply explicit barDirection, grouping, and axes. The Java authoring surface exposes one convenience constructor for the standard category/value axis pair.")
   record Bar3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -238,6 +239,10 @@ public sealed interface ChartPlotInput
   }
 
   /** Doughnut chart plot. */
+  @Variant(
+      id = "DOUGHNUT",
+      summary =
+          "Authored doughnut-chart plot. varyColors, firstSliceAngle, and holeSize are optional.")
   record Doughnut(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -267,6 +272,10 @@ public sealed interface ChartPlotInput
   }
 
   /** Line chart plot. */
+  @Variant(
+      id = "LINE",
+      summary =
+          "Authored line-chart plot. Supply explicit grouping and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Line(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -297,6 +306,10 @@ public sealed interface ChartPlotInput
   }
 
   /** 3D line chart plot. */
+  @Variant(
+      id = "LINE_3D",
+      summary =
+          "Authored 3D line-chart plot. Supply explicit grouping and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Line3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -334,6 +347,9 @@ public sealed interface ChartPlotInput
   }
 
   /** Pie chart plot. */
+  @Variant(
+      id = "PIE",
+      summary = "Authored pie-chart plot. varyColors and firstSliceAngle are optional.")
   record Pie(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -357,6 +373,7 @@ public sealed interface ChartPlotInput
   }
 
   /** 3D pie chart plot. */
+  @Variant(id = "PIE_3D", summary = "Authored 3D pie-chart plot.")
   record Pie3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -376,6 +393,10 @@ public sealed interface ChartPlotInput
   }
 
   /** Radar chart plot. */
+  @Variant(
+      id = "RADAR",
+      summary =
+          "Authored radar-chart plot. Supply explicit style and axes, or use the Java convenience constructor for the standard category/value axis pair.")
   record Radar(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -406,6 +427,10 @@ public sealed interface ChartPlotInput
   }
 
   /** Scatter chart plot. */
+  @Variant(
+      id = "SCATTER",
+      summary =
+          "Authored scatter-chart plot. Supply explicit style and axes, or use the Java convenience constructor for the standard X/Y axis pair.")
   record Scatter(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -437,6 +462,10 @@ public sealed interface ChartPlotInput
   }
 
   /** Surface chart plot. */
+  @Variant(
+      id = "SURFACE",
+      summary =
+          "Authored surface-chart plot. Supply explicit axes, or use the Java convenience constructor for the standard category/value/series axis set.")
   record Surface(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,
@@ -467,6 +496,10 @@ public sealed interface ChartPlotInput
   }
 
   /** 3D surface chart plot. */
+  @Variant(
+      id = "SURFACE_3D",
+      summary =
+          "Authored 3D surface-chart plot. Supply explicit axes, or use the Java convenience constructor for the standard category/value/series axis set.")
   record Surface3D(
       @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
           boolean varyColors,

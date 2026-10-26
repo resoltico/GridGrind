@@ -606,7 +606,7 @@ class RuntimeResidualCoverageTest {
     return new PivotTableInput(
         "Sales Pivot 2026",
         new SheetName("Report"),
-        new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+        new PivotTableInput.PivotSourceSpec.Range(new SheetName("Data"), new RangeRef("A1:D5")),
         new PivotTableInput.Anchor(new CellAddress("C5")),
         List.of("Region"),
         List.of("Stage"),

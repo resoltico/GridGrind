@@ -1,16 +1,12 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** Ordered assertion outcome carrying complete evidence for every failed assertion step. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "outcome")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = AssertionResult.Passed.class, name = "PASSED"),
-  @JsonSubTypes.Type(value = AssertionResult.Failed.class, name = "FAILED")
-})
+@Union(discriminator = "outcome")
 public sealed interface AssertionResult permits AssertionResult.Passed, AssertionResult.Failed {
   /** Returns the stable outcome discriminator. */
   AssertionOutcome outcome();
@@ -22,6 +18,7 @@ public sealed interface AssertionResult permits AssertionResult.Passed, Assertio
   String assertionType();
 
   /** A passed assertion without failure evidence. */
+  @Variant(id = "PASSED", summary = "A passed assertion without failure evidence.")
   record Passed(StepId stepId, String assertionType) implements AssertionResult {
     public Passed {
 
@@ -36,6 +33,10 @@ public sealed interface AssertionResult permits AssertionResult.Passed, Assertio
   }
 
   /** A failed assertion with the complete target, authored assertion, and observed evidence. */
+  @Variant(
+      id = "FAILED",
+      summary =
+          "A failed assertion with the complete target, authored assertion, and observed evidence.")
   record Failed(StepId stepId, String assertionType, AssertionFailure failure)
       implements AssertionResult {
     public Failed {

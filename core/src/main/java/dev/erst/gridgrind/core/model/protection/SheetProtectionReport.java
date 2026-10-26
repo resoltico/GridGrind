@@ -1,21 +1,22 @@
 package dev.erst.gridgrind.core.model.protection;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 
 /** Captures whether a sheet is protected and, if so, with which supported lock flags. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = SheetProtectionReport.Unprotected.class, name = "UNPROTECTED"),
-  @JsonSubTypes.Type(value = SheetProtectionReport.Protected.class, name = "PROTECTED")
-})
+@Union(discriminator = "kind", catalog = true, displayOrder = 7)
 public sealed interface SheetProtectionReport
-    permits SheetProtectionReport.Unprotected, SheetProtectionReport.Protected {
+    permits dev.erst.gridgrind.core.model.protection.SheetProtectionReport.Unprotected,
+        dev.erst.gridgrind.core.model.protection.SheetProtectionReport.Protected {
   /** Sheet protection is disabled. */
+  @Variant(id = "UNPROTECTED", summary = "Expect the sheet to have no protection.")
   record Unprotected() implements SheetProtectionReport {}
 
   /** Sheet protection is enabled with the reported supported lock flags. */
+  @Variant(
+      id = "PROTECTED",
+      summary = "Expect the sheet to be protected with explicit lock settings.")
   record Protected(SheetProtectionSettings settings) implements SheetProtectionReport {
     public Protected {
       Objects.requireNonNull(settings, "settings must not be null");

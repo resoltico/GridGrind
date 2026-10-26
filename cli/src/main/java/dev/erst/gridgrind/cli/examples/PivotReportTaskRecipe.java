@@ -79,7 +79,7 @@ final class PivotReportTaskRecipe {
                         "Model Source Data",
                         "Create one table-backed source surface for later summarization.",
                         List.of(
-                            GridGrindTaskRecipeSupport.ref("sourceTypes", "NEW"),
+                            GridGrindTaskRecipeSupport.ref("workbookSourceTypes", "NEW"),
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "ENSURE_SHEET"),
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "SET_RANGE"),
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "SET_TABLE")),
@@ -92,7 +92,7 @@ final class PivotReportTaskRecipe {
                             GridGrindTaskRecipeSupport.ref(
                                 "mutationActionTypes", "SET_PIVOT_TABLE"),
                             GridGrindTaskRecipeSupport.ref("mutationActionTypes", "ENSURE_SHEET"),
-                            GridGrindTaskRecipeSupport.ref("persistenceTypes", "SAVE_AS")),
+                            GridGrindTaskRecipeSupport.ref("workbookPersistenceTypes", "SAVE_AS")),
                         List.of("Author the destination shape before adding later visual layers.")),
                     GridGrindTaskRecipeSupport.phase(
                         TaskPhasePurpose.VERIFY,

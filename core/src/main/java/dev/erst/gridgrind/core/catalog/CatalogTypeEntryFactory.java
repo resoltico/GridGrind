@@ -1,9 +1,8 @@
 package dev.erst.gridgrind.core.catalog;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.catalog.gather.CatalogGatherers;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
+import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -132,13 +131,13 @@ final class CatalogTypeEntryFactory {
   }
 
   static String discriminatorFieldFor(Class<?> sealedType) {
-    JsonTypeInfo jsonTypeInfo = sealedType.getAnnotation(JsonTypeInfo.class);
-    if (jsonTypeInfo == null || jsonTypeInfo.property().isBlank()) {
+    Union union = sealedType.getAnnotation(Union.class);
+    if (union == null || union.discriminator().isBlank()) {
       throw new IllegalStateException(
-          "Catalog coverage requires %s to declare a non-blank @JsonTypeInfo property"
+          "Catalog coverage requires %s to declare a non-blank @Union discriminator"
               .formatted(sealedType.getName()));
     }
-    return jsonTypeInfo.property();
+    return union.discriminator();
   }
 
   @SuppressWarnings("unchecked")
@@ -229,7 +228,6 @@ final class CatalogTypeEntryFactory {
 
   private static boolean isCatalogVisible(RecordComponent component) {
     return !component.isAnnotationPresent(CatalogIgnored.class)
-        && !component.getAccessor().isAnnotationPresent(CatalogIgnored.class)
-        && !component.getAccessor().isAnnotationPresent(JsonIgnore.class);
+        && !component.getAccessor().isAnnotationPresent(CatalogIgnored.class);
   }
 }

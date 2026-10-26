@@ -69,6 +69,8 @@ public final class GridGrindJsonMapperSupport {
       JsonFactory jsonFactory, boolean omitNullValues, boolean prettyPrint) {
     JsonMapper.Builder builder =
         JsonMapper.builder(jsonFactory)
+            .annotationIntrospector(new CoreMetadataIntrospector())
+            .enable(tools.jackson.databind.MapperFeature.INFER_RECORD_GETTERS_FROM_COMPONENTS_ONLY)
             .addModule(coreCodecs())
             .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)

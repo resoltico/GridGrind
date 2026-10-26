@@ -1,19 +1,19 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selects a column band or one column-band insertion point on one sheet. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ColumnBandSelector.Span.class, name = "COLUMN_BAND_SPAN"),
-  @JsonSubTypes.Type(value = ColumnBandSelector.Insertion.class, name = "COLUMN_BAND_INSERTION")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 30)
 public sealed interface ColumnBandSelector extends Selector
-    permits ColumnBandSelector.Span, ColumnBandSelector.Insertion {
+    permits dev.erst.gridgrind.core.plan.ColumnBandSelector.Span,
+        dev.erst.gridgrind.core.plan.ColumnBandSelector.Insertion {
 
   /** Selects one inclusive zero-based column span on one sheet. */
+  @Variant(
+      id = "COLUMN_BAND_SPAN",
+      summary = "Select one inclusive zero-based column span on one sheet.")
   record Span(SheetName sheetName, int firstColumnIndex, int lastColumnIndex)
       implements ColumnBandSelector {
     public Span {
@@ -37,6 +37,9 @@ public sealed interface ColumnBandSelector extends Selector
   }
 
   /** Selects one column insertion point and band count on one sheet. */
+  @Variant(
+      id = "COLUMN_BAND_INSERTION",
+      summary = "Select one column insertion point plus column count on one sheet.")
   record Insertion(SheetName sheetName, int beforeColumnIndex, int columnCount)
       implements ColumnBandSelector {
     public Insertion {

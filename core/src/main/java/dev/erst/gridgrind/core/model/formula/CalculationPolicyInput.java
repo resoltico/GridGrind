@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import java.util.Objects;
@@ -12,6 +13,11 @@ import java.util.Objects;
  * Explicit request-side calculation policy covering evaluation, cache handling, and open-time
  * recalc.
  */
+@CatalogType(
+    id = "CalculationPolicyInput",
+    summary =
+        "Explicit formula-calculation policy. Use CalculationPolicyInput.defaults() for DO_NOT_CALCULATE with markRecalculateOnOpen=false. Use DEFERRED_CALCULATION to inspect capabilities without immediate evaluation, Use EVALUATE_ALL or EVALUATE_TARGETS for immediate server-side evaluation, CLEAR_CACHES_ONLY to strip persisted caches, or markRecalculateOnOpen=true when Excel-compatible clients should recalculate later.",
+    displayOrder = 10)
 public record CalculationPolicyInput(
     @ProtocolField(optional = true)
         @JsonInclude(

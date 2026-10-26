@@ -1,10 +1,16 @@
 package dev.erst.gridgrind.core.model.style;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing differential style payload for authored conditional-formatting rules. */
+@CatalogType(
+    id = "DifferentialStyleInput",
+    summary =
+        "Differential style payload used by authored conditional-formatting rules. At least one field must be set. Colors preserve RGB, theme, indexed, and tint semantics.",
+    displayOrder = 60)
 public record DifferentialStyleInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> numberFormat,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> bold,

@@ -330,7 +330,7 @@ class GridGrindSpreadsheetDocsAuditTest {
                 "operations doc must document bare support-group lookup"),
         () ->
             assertTrue(
-                normalizedOperations.contains("nestedTypes:executionModeTypes")
+                normalizedOperations.contains("nestedTypes:executionModeInputTypes")
                     && normalizedOperations.contains("nested tagged-union group"),
                 "operations doc must document explicit nestedTypes lookup"),
         () ->

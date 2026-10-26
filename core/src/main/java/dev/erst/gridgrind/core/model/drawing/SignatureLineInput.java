@@ -2,10 +2,16 @@ package dev.erst.gridgrind.core.model.drawing;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Authoritative signature-line creation or replacement payload. */
+@CatalogType(
+    id = "SignatureLineInput",
+    summary =
+        "Named signature-line authoring payload for SET_SIGNATURE_LINE. allowComments is explicit and plainSignature is optional, but caption or suggested signer metadata must still be present.",
+    displayOrder = 38)
 public record SignatureLineInput(
     String name,
     DrawingAnchorInput anchor,

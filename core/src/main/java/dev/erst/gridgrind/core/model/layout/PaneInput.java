@@ -1,22 +1,24 @@
 package dev.erst.gridgrind.core.model.layout;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import java.util.Objects;
 
 /** One explicit sheet pane state requested through the wire protocol. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = PaneInput.None.class, name = "NONE"),
-  @JsonSubTypes.Type(value = PaneInput.Frozen.class, name = "FROZEN"),
-  @JsonSubTypes.Type(value = PaneInput.Split.class, name = "SPLIT")
-})
-public sealed interface PaneInput permits PaneInput.None, PaneInput.Frozen, PaneInput.Split {
+@Union(discriminator = "type", catalog = true, displayOrder = 20)
+public sealed interface PaneInput
+    permits dev.erst.gridgrind.core.model.layout.PaneInput.None,
+        dev.erst.gridgrind.core.model.layout.PaneInput.Frozen,
+        dev.erst.gridgrind.core.model.layout.PaneInput.Split {
   /** Sheet has no active pane split or freeze state. */
+  @Variant(id = "NONE", summary = "Sheet has no active pane split or freeze.")
   record None() implements PaneInput {}
 
   /** Sheet is frozen at the provided split and visible-origin coordinates. */
+  @Variant(
+      id = "FROZEN",
+      summary = "Freeze the sheet at the provided split and visible-origin coordinates.")
   record Frozen(int splitColumn, int splitRow, int leftmostColumn, int topRow)
       implements PaneInput {
     public Frozen {
@@ -43,6 +45,9 @@ public sealed interface PaneInput permits PaneInput.None, PaneInput.Frozen, Pane
   }
 
   /** Sheet uses split panes with explicit split offsets, visible origin, and active pane. */
+  @Variant(
+      id = "SPLIT",
+      summary = "Apply split panes with explicit split offsets, visible origin, and active pane.")
   record Split(
       int xSplitPosition,
       int ySplitPosition,

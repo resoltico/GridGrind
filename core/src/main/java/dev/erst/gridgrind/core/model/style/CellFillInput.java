@@ -1,27 +1,18 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.Objects;
 
 /** Protocol-facing fill patch used by {@link CellStylePatchInput}. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellFillInput.PatternOnly.class, name = "PATTERN_ONLY"),
-  @JsonSubTypes.Type(value = CellFillInput.PatternForeground.class, name = "PATTERN_FOREGROUND"),
-  @JsonSubTypes.Type(value = CellFillInput.PatternBackground.class, name = "PATTERN_BACKGROUND"),
-  @JsonSubTypes.Type(
-      value = CellFillInput.PatternForegroundBackground.class,
-      name = "PATTERN_FOREGROUND_BACKGROUND"),
-  @JsonSubTypes.Type(value = CellFillInput.Gradient.class, name = "GRADIENT")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 57)
 public sealed interface CellFillInput
-    permits CellFillInput.PatternOnly,
-        CellFillInput.PatternForeground,
-        CellFillInput.PatternBackground,
-        CellFillInput.PatternForegroundBackground,
-        CellFillInput.Gradient {
+    permits dev.erst.gridgrind.core.model.style.CellFillInput.PatternOnly,
+        dev.erst.gridgrind.core.model.style.CellFillInput.PatternForeground,
+        dev.erst.gridgrind.core.model.style.CellFillInput.PatternBackground,
+        dev.erst.gridgrind.core.model.style.CellFillInput.PatternForegroundBackground,
+        dev.erst.gridgrind.core.model.style.CellFillInput.Gradient {
   /** Creates one pattern-only fill patch. */
   static PatternOnly pattern(ExcelFillPattern pattern) {
     return new PatternOnly(pattern);
@@ -49,6 +40,9 @@ public sealed interface CellFillInput
   }
 
   /** Pattern-only fill patch with no explicit colors. */
+  @Variant(
+      id = "PATTERN_ONLY",
+      summary = "Write one patterned fill with no explicit foreground or background colors.")
   record PatternOnly(ExcelFillPattern pattern) implements CellFillInput {
     public PatternOnly {
       Objects.requireNonNull(pattern, "pattern must not be null");
@@ -56,6 +50,9 @@ public sealed interface CellFillInput
   }
 
   /** Patterned fill patch carrying one foreground color. */
+  @Variant(
+      id = "PATTERN_FOREGROUND",
+      summary = "Write one patterned fill with one explicit foreground color.")
   record PatternForeground(ExcelFillPattern pattern, ColorInput foregroundColor)
       implements CellFillInput {
     public PatternForeground {
@@ -65,6 +62,9 @@ public sealed interface CellFillInput
   }
 
   /** Patterned fill patch carrying one background color. */
+  @Variant(
+      id = "PATTERN_BACKGROUND",
+      summary = "Write one patterned fill with one explicit background color.")
   record PatternBackground(ExcelFillPattern pattern, ColorInput backgroundColor)
       implements CellFillInput {
     public PatternBackground {
@@ -74,6 +74,9 @@ public sealed interface CellFillInput
   }
 
   /** Patterned fill patch carrying both foreground and background colors. */
+  @Variant(
+      id = "PATTERN_FOREGROUND_BACKGROUND",
+      summary = "Write one patterned fill with explicit foreground and background colors.")
   record PatternForegroundBackground(
       ExcelFillPattern pattern, ColorInput foregroundColor, ColorInput backgroundColor)
       implements CellFillInput {
@@ -85,6 +88,7 @@ public sealed interface CellFillInput
   }
 
   /** Gradient fill patch. */
+  @Variant(id = "GRADIENT", summary = "Write one gradient fill patch.")
   record Gradient(CellGradientFillInput gradient) implements CellFillInput {
     public Gradient {
       Objects.requireNonNull(gradient, "gradient must not be null");

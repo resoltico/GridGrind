@@ -98,7 +98,7 @@ final class DashboardTaskRecipe {
                         "Assemble Summary Sheets",
                         "Create the dashboard canvas and key text or formula cells first.",
                         List.of(
-                            ref("sourceTypes", "NEW"),
+                            ref("workbookSourceTypes", "NEW"),
                             ref("mutationActionTypes", "ENSURE_SHEET"),
                             ref("mutationActionTypes", "SET_CELL"),
                             ref("mutationActionTypes", "SET_RANGE")),
@@ -120,7 +120,7 @@ final class DashboardTaskRecipe {
                         List.of(
                             ref("inspectionQueryTypes", "GET_CHARTS"),
                             ref("assertionTypes", "EXPECT_CHART_PRESENT"),
-                            ref("persistenceTypes", "SAVE_AS")),
+                            ref("workbookPersistenceTypes", "SAVE_AS")),
                         List.of(
                             "Use factual chart readback to confirm what the workbook now contains."))),
                 List.of(

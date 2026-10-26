@@ -47,7 +47,7 @@
         "commonPitfalls" : [ "IMPORT_CUSTOM_XML_MAPPING requires an existing mapping; discovery comes first.", "Large XML payloads belong in UTF8_FILE or STANDARD_INPUT sources instead of huge inline JSON.", "Mapped workbook structure is workbook-specific, so replace placeholder mapping locators before execution." ],
         "phases" : [ {
           "capabilityRefs" : [ {
-            "group" : "sourceTypes",
+            "group" : "workbookSourceTypes",
             "id" : "EXISTING"
           }, {
             "group" : "inspectionQueryTypes",
@@ -65,7 +65,7 @@
             "group" : "mutationActionTypes",
             "id" : "IMPORT_CUSTOM_XML_MAPPING"
           }, {
-            "group" : "persistenceTypes",
+            "group" : "workbookPersistenceTypes",
             "id" : "SAVE_AS"
           } ],
           "label" : "Import Updated XML",

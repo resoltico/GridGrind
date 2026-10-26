@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.model.security;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
@@ -9,17 +9,18 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import java.util.Objects;
 
 /** Factual OOXML package-encryption report for one workbook package. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = OoxmlEncryptionReport.None.class, name = "NONE"),
-  @JsonSubTypes.Type(value = OoxmlEncryptionReport.Encrypted.class, name = "ENCRYPTED")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 44)
 public sealed interface OoxmlEncryptionReport
-    permits OoxmlEncryptionReport.None, OoxmlEncryptionReport.Encrypted {
+    permits dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport.None,
+        dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport.Encrypted {
   /** Package carries no OOXML encryption envelope. */
+  @Variant(id = "NONE", summary = "Package carries no OOXML encryption envelope.")
   record None() implements OoxmlEncryptionReport {}
 
   /** Package is encrypted with one fully specified OOXML encryption envelope. */
+  @Variant(
+      id = "ENCRYPTED",
+      summary = "Package is encrypted with one fully specified OOXML encryption envelope.")
   record Encrypted(
       ExcelOoxmlEncryptionMode mode,
       ExcelOoxmlCipherAlgorithm cipherAlgorithm,

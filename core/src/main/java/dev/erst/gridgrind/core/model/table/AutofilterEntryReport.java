@@ -2,19 +2,15 @@ package dev.erst.gridgrind.core.model.table;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing factual report for one sheet- or table-owned autofilter. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = AutofilterEntryReport.SheetOwned.class, name = "SHEET"),
-  @JsonSubTypes.Type(value = AutofilterEntryReport.TableOwned.class, name = "TABLE")
-})
+@Union(discriminator = "type")
 public sealed interface AutofilterEntryReport
     permits AutofilterEntryReport.SheetOwned, AutofilterEntryReport.TableOwned {
 
@@ -28,6 +24,7 @@ public sealed interface AutofilterEntryReport
   Optional<AutofilterSortStateReport> sortState();
 
   /** One sheet-owned autofilter stored directly on the worksheet. */
+  @Variant(id = "SHEET", summary = "One sheet-owned autofilter stored directly on the worksheet.")
   record SheetOwned(
       RangeLabel range,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
@@ -47,6 +44,7 @@ public sealed interface AutofilterEntryReport
   }
 
   /** One table-owned autofilter stored on a table definition. */
+  @Variant(id = "TABLE", summary = "One table-owned autofilter stored on a table definition.")
   record TableOwned(
       RangeLabel range,
       String tableName,

@@ -83,7 +83,7 @@ final class WorkbookMaintenanceTaskRecipe {
                         "Inspect The Current Workbook",
                         "Read source workbook facts before changing sheet structure.",
                         List.of(
-                            ref("sourceTypes", "EXISTING"),
+                            ref("workbookSourceTypes", "EXISTING"),
                             ref("inspectionQueryTypes", "GET_WORKBOOK_SUMMARY"),
                             ref("inspectionQueryTypes", "GET_COMMENTS")),
                         List.of("Factual inspection is the baseline for any maintenance pass.")),
@@ -93,7 +93,7 @@ final class WorkbookMaintenanceTaskRecipe {
                         "Copy one existing sheet into a new workbook-visible destination sheet.",
                         List.of(
                             ref("mutationActionTypes", "COPY_SHEET"),
-                            ref("persistenceTypes", "SAVE_AS")),
+                            ref("workbookPersistenceTypes", "SAVE_AS")),
                         List.of(
                             "Copy-sheet work is safest when the destination name is explicit.")),
                     phase(

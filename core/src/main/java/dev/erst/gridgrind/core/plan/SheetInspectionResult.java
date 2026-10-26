@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
@@ -34,7 +34,7 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
         SheetInspectionResult.AutofiltersResult {
 
   /** Returns summary facts for one sheet. */
-  @JsonTypeName("GET_SHEET_SUMMARY")
+  @Variant(id = "GET_SHEET_SUMMARY", summary = "Returns summary facts for one sheet.")
   record SheetSummaryResult(StepId stepId, SheetSummaryReport sheet)
       implements SheetInspectionResult {
     public SheetSummaryResult {
@@ -45,7 +45,9 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns factual array-formula groups across the selected sheets. */
-  @JsonTypeName("GET_ARRAY_FORMULAS")
+  @Variant(
+      id = "GET_ARRAY_FORMULAS",
+      summary = "Returns factual array-formula groups across the selected sheets.")
   record ArrayFormulasResult(StepId stepId, List<ArrayFormulaReport> arrayFormulas)
       implements SheetInspectionResult {
     public ArrayFormulasResult {
@@ -56,7 +58,7 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns exact cell snapshots for one sheet. */
-  @JsonTypeName("GET_CELLS")
+  @Variant(id = "GET_CELLS", summary = "Returns exact cell snapshots for one sheet.")
   record CellsResult(StepId stepId, SheetLabel sheetName, List<CellReport> cells)
       implements SheetInspectionResult {
     public CellsResult {
@@ -68,7 +70,9 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
-  @JsonTypeName("GET_WINDOW")
+  @Variant(
+      id = "GET_WINDOW",
+      summary = "Returns a rectangular window of cell snapshots anchored at one top-left address.")
   record WindowResult(StepId stepId, WindowReport window) implements SheetInspectionResult {
     public WindowResult {
 
@@ -78,7 +82,7 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns every merged region present on one sheet. */
-  @JsonTypeName("GET_MERGED_REGIONS")
+  @Variant(id = "GET_MERGED_REGIONS", summary = "Returns every merged region present on one sheet.")
   record MergedRegionsResult(
       StepId stepId, SheetLabel sheetName, List<MergedRegionReport> mergedRegions)
       implements SheetInspectionResult {
@@ -91,7 +95,9 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns hyperlink metadata for selected cells on one sheet. */
-  @JsonTypeName("GET_HYPERLINKS")
+  @Variant(
+      id = "GET_HYPERLINKS",
+      summary = "Returns hyperlink metadata for selected cells on one sheet.")
   record HyperlinksResult(StepId stepId, SheetLabel sheetName, List<CellHyperlinkReport> hyperlinks)
       implements SheetInspectionResult {
     public HyperlinksResult {
@@ -103,7 +109,9 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns comment metadata for selected cells on one sheet. */
-  @JsonTypeName("GET_COMMENTS")
+  @Variant(
+      id = "GET_COMMENTS",
+      summary = "Returns comment metadata for selected cells on one sheet.")
   record CommentsResult(StepId stepId, SheetLabel sheetName, List<CellCommentReport> comments)
       implements SheetInspectionResult {
     public CommentsResult {
@@ -115,7 +123,9 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns layout facts such as pane state, zoom, and explicit sizing. */
-  @JsonTypeName("GET_SHEET_LAYOUT")
+  @Variant(
+      id = "GET_SHEET_LAYOUT",
+      summary = "Returns layout facts such as pane state, zoom, and explicit sizing.")
   record SheetLayoutResult(StepId stepId, SheetLayoutReport layout)
       implements SheetInspectionResult {
     public SheetLayoutResult {
@@ -126,7 +136,7 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns supported print-layout facts for one sheet. */
-  @JsonTypeName("GET_PRINT_LAYOUT")
+  @Variant(id = "GET_PRINT_LAYOUT", summary = "Returns supported print-layout facts for one sheet.")
   record PrintLayoutResult(StepId stepId, PrintLayoutReport layout)
       implements SheetInspectionResult {
     public PrintLayoutResult {
@@ -137,7 +147,9 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns data-validation metadata for the selected ranges on one sheet. */
-  @JsonTypeName("GET_DATA_VALIDATIONS")
+  @Variant(
+      id = "GET_DATA_VALIDATIONS",
+      summary = "Returns data-validation metadata for the selected ranges on one sheet.")
   record DataValidationsResult(
       StepId stepId, SheetLabel sheetName, List<DataValidationEntryReport> validations)
       implements SheetInspectionResult {
@@ -150,7 +162,9 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns conditional-formatting metadata for the selected ranges on one sheet. */
-  @JsonTypeName("GET_CONDITIONAL_FORMATTING")
+  @Variant(
+      id = "GET_CONDITIONAL_FORMATTING",
+      summary = "Returns conditional-formatting metadata for the selected ranges on one sheet.")
   record ConditionalFormattingResult(
       StepId stepId,
       SheetLabel sheetName,
@@ -167,7 +181,9 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   }
 
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
-  @JsonTypeName("GET_AUTOFILTERS")
+  @Variant(
+      id = "GET_AUTOFILTERS",
+      summary = "Returns sheet- and table-owned autofilter metadata for one sheet.")
   record AutofiltersResult(
       StepId stepId, SheetLabel sheetName, List<AutofilterEntryReport> autofilters)
       implements SheetInspectionResult {

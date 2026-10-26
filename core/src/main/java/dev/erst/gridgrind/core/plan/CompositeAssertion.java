@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
-import dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.semantics.ProtocolTargetingMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +14,12 @@ public sealed interface CompositeAssertion extends Assertion
       "Matches the intersection of every nested assertion's target selectors.";
   String NESTED_RULE = "Matches the nested assertion's target selectors.";
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "ALL_OF",
       summary = "Require every nested assertion to pass against the same step target.",
       targetingMode = ProtocolTargetingMode.INTERSECTION_OF_NESTED_ASSERTIONS,
-      targetSelectorRule = INTERSECTION_RULE)
+      targetSelectorRule = INTERSECTION_RULE,
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record AllOf(List<Assertion> assertions) implements CompositeAssertion {
     public AllOf {
       assertions = AssertionSupport.copyAssertions(assertions, "assertions");
@@ -26,11 +27,12 @@ public sealed interface CompositeAssertion extends Assertion
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "ANY_OF",
       summary = "Require at least one nested assertion to pass against the same step target.",
       targetingMode = ProtocolTargetingMode.INTERSECTION_OF_NESTED_ASSERTIONS,
-      targetSelectorRule = INTERSECTION_RULE)
+      targetSelectorRule = INTERSECTION_RULE,
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record AnyOf(List<Assertion> assertions) implements CompositeAssertion {
     public AnyOf {
       assertions = AssertionSupport.copyAssertions(assertions, "assertions");
@@ -38,11 +40,12 @@ public sealed interface CompositeAssertion extends Assertion
     }
   }
 
-  @ProtocolTypeMetadata(
+  @Variant(
       id = "NOT",
       summary = "Invert one nested assertion against the same step target.",
       targetingMode = ProtocolTargetingMode.NESTED_ASSERTION,
-      targetSelectorRule = NESTED_RULE)
+      targetSelectorRule = NESTED_RULE,
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record Not(Assertion assertion) implements CompositeAssertion {
     public Not {
       Objects.requireNonNull(assertion, "assertion must not be null");

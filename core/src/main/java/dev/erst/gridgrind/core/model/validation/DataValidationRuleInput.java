@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.model.validation;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import java.util.List;
@@ -10,30 +10,24 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing data-validation rule families. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = DataValidationRuleInput.ExplicitList.class, name = "EXPLICIT_LIST"),
-  @JsonSubTypes.Type(value = DataValidationRuleInput.FormulaList.class, name = "FORMULA_LIST"),
-  @JsonSubTypes.Type(value = DataValidationRuleInput.WholeNumber.class, name = "WHOLE_NUMBER"),
-  @JsonSubTypes.Type(value = DataValidationRuleInput.DecimalNumber.class, name = "DECIMAL_NUMBER"),
-  @JsonSubTypes.Type(value = DataValidationRuleInput.DateRule.class, name = "DATE"),
-  @JsonSubTypes.Type(value = DataValidationRuleInput.TimeRule.class, name = "TIME"),
-  @JsonSubTypes.Type(value = DataValidationRuleInput.TextLength.class, name = "TEXT_LENGTH"),
-  @JsonSubTypes.Type(value = DataValidationRuleInput.CustomFormula.class, name = "CUSTOM_FORMULA")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 62)
 public sealed interface DataValidationRuleInput
-    permits DataValidationRuleInput.ExplicitList,
-        DataValidationRuleInput.FormulaList,
-        DataValidationRuleInput.WholeNumber,
-        DataValidationRuleInput.DecimalNumber,
-        DataValidationRuleInput.DateRule,
-        DataValidationRuleInput.TimeRule,
-        DataValidationRuleInput.TextLength,
-        DataValidationRuleInput.CustomFormula {
+    permits dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.ExplicitList,
+        dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.FormulaList,
+        dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.WholeNumber,
+        dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.DecimalNumber,
+        dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.DateRule,
+        dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.TimeRule,
+        dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.TextLength,
+        dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.CustomFormula {
 
   int MAX_EXPLICIT_LIST_FORMULA_LENGTH = 255; // LIM-040
 
   /** Explicit-list validation rule. */
+  @Variant(
+      id = "EXPLICIT_LIST",
+      summary =
+          "Allow only one of the supplied explicit values. An empty values array preserves Excel's explicit-empty-list state.")
   record ExplicitList(List<String> values) implements DataValidationRuleInput {
     public ExplicitList {
       values = copyValues(values);
@@ -41,7 +35,12 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Formula-driven list validation rule. */
-  record FormulaList(String formula) implements DataValidationRuleInput {
+  @Variant(id = "FORMULA_LIST", summary = "Allow values from a formula-driven list expression.")
+  record FormulaList(
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula)
+      implements DataValidationRuleInput {
     public FormulaList {
       formula = requireNonBlank(formula, "formula");
       FormulaInputSecurity.rejectDde(formula); // LIM-027
@@ -49,10 +48,19 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Whole-number comparison validation rule. */
+  @Variant(
+      id = "WHOLE_NUMBER",
+      summary =
+          "Apply a whole-number comparison rule. formula2 is used only for BETWEEN and NOT_BETWEEN.")
   record WholeNumber(
       ExcelComparisonOperator operator,
-      String formula1,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2)
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula1,
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<String> formula2)
       implements DataValidationRuleInput {
     public WholeNumber {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -63,10 +71,19 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Decimal-number comparison validation rule. */
+  @Variant(
+      id = "DECIMAL_NUMBER",
+      summary =
+          "Apply a decimal-number comparison rule. formula2 is used only for BETWEEN and NOT_BETWEEN.")
   record DecimalNumber(
       ExcelComparisonOperator operator,
-      String formula1,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2)
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula1,
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<String> formula2)
       implements DataValidationRuleInput {
     public DecimalNumber {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -77,10 +94,18 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Date comparison validation rule. */
+  @Variant(
+      id = "DATE",
+      summary = "Apply a date comparison rule. formula2 is used only for BETWEEN and NOT_BETWEEN.")
   record DateRule(
       ExcelComparisonOperator operator,
-      String formula1,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2)
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula1,
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<String> formula2)
       implements DataValidationRuleInput {
     public DateRule {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -91,10 +116,18 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Time comparison validation rule. */
+  @Variant(
+      id = "TIME",
+      summary = "Apply a time comparison rule. formula2 is used only for BETWEEN and NOT_BETWEEN.")
   record TimeRule(
       ExcelComparisonOperator operator,
-      String formula1,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2)
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula1,
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<String> formula2)
       implements DataValidationRuleInput {
     public TimeRule {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -105,10 +138,19 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Text-length comparison validation rule. */
+  @Variant(
+      id = "TEXT_LENGTH",
+      summary =
+          "Apply a text-length comparison rule. formula2 is used only for BETWEEN and NOT_BETWEEN.")
   record TextLength(
       ExcelComparisonOperator operator,
-      String formula1,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2)
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula1,
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<String> formula2)
       implements DataValidationRuleInput {
     public TextLength {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -119,7 +161,12 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Custom formula validation rule. */
-  record CustomFormula(String formula) implements DataValidationRuleInput {
+  @Variant(id = "CUSTOM_FORMULA", summary = "Allow values that satisfy a custom formula.")
+  record CustomFormula(
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
+          String formula)
+      implements DataValidationRuleInput {
     public CustomFormula {
       formula = requireNonBlank(formula, "formula");
       FormulaInputSecurity.rejectDde(formula); // LIM-027

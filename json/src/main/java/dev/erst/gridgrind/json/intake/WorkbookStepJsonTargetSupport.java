@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.json.intake;
 
 import dev.erst.gridgrind.core.plan.Selector;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
 import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
 import java.util.Optional;
@@ -27,7 +27,7 @@ final class WorkbookStepJsonTargetSupport {
                   Optional.empty())));
     }
     String authoredType = requiredTargetType(targetObject, parser, typeFieldName);
-    if (!SelectorJsonSupport.isKnownTypeId(authoredType)) {
+    if (!SelectorTypes.isKnownTypeId(authoredType)) {
       throw WorkbookStepJsonFailurePathSupport.fieldFailure(
           typeFieldName,
           WorkbookStepJsonFailurePathSupport.inputMismatch(
@@ -41,7 +41,7 @@ final class WorkbookStepJsonTargetSupport {
     return WorkbookStepJsonDeserializer.deserializeField(
         targetNode,
         parser,
-        castSelectorType(SelectorJsonSupport.typeFor(authoredType).orElseThrow()),
+        castSelectorType(SelectorTypes.typeFor(authoredType).orElseThrow()),
         fieldName);
   }
 

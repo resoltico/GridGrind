@@ -1,8 +1,7 @@
 package dev.erst.gridgrind.core.model.layout;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -11,15 +10,10 @@ import java.util.List;
 import java.util.Objects;
 
 /** Rectangular cell window returned in sparse or dense form. */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    property = "shape")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = WindowReport.Sparse.class, name = "SPARSE"),
-  @JsonSubTypes.Type(value = WindowReport.Dense.class, name = "DENSE")
-})
-public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.Dense {
+@Union(discriminator = "shape", catalog = true, displayOrder = 3)
+public sealed interface WindowReport
+    permits dev.erst.gridgrind.core.model.layout.WindowReport.Sparse,
+        dev.erst.gridgrind.core.model.layout.WindowReport.Dense {
   /** Returns the published window shape discriminator. */
   String shape();
 
@@ -33,6 +27,9 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
   WindowDimensionsReport dimensions();
 
   /** Sparse window shape that omits blank cells entirely. */
+  @Variant(
+      id = "SPARSE",
+      summary = "Sparse window omitting blank cells and publishing populatedCells only.")
   record Sparse(
       SheetLabel sheetName,
       CellAddress topLeftAddress,
@@ -52,13 +49,15 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
     }
 
     @Override
-    @JsonProperty
     public String shape() {
       return "SPARSE";
     }
   }
 
   /** Dense window shape that retains the explicit row grid, including blanks. */
+  @Variant(
+      id = "DENSE",
+      summary = "Dense window preserving explicit row structure including blank cells.")
   record Dense(
       SheetLabel sheetName,
       CellAddress topLeftAddress,
@@ -73,7 +72,6 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
     }
 
     @Override
-    @JsonProperty
     public String shape() {
       return "DENSE";
     }

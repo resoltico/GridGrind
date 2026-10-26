@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.semantics;
 
 import dev.erst.gridgrind.core.plan.Selector;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +12,7 @@ final class SelectorTargetingSupport {
   static String humanTargetTypes(Class<? extends Selector>[] allowedTypes) {
     List<String> typeIds = new ArrayList<>();
     for (Class<? extends Selector> allowedType : allowedTypes) {
-      typeIds.addAll(SelectorJsonSupport.typeIdsFor(allowedType));
+      typeIds.addAll(SelectorTypes.typeIdsFor(allowedType));
     }
     if (typeIds.size() == 1) {
       return typeIds.getFirst();

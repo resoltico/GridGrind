@@ -73,7 +73,7 @@ class ExampleDslSupportTest {
             REGIONAL_TOTALS, RANGE_REPORT, PIVOT_SOURCE);
 
     assertEquals(REGIONAL_TOTALS, pivot.name());
-    assertInstanceOf(PivotTableInput.Source.Table.class, pivot.source());
+    assertInstanceOf(PivotTableInput.PivotSourceSpec.Table.class, pivot.source());
     assertEquals(java.util.List.of(REGION), pivot.rowLabels());
     assertTrue(
         pivot.dataFields().stream().anyMatch(field -> AMOUNT.equals(field.sourceColumnName())));

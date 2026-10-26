@@ -1,20 +1,18 @@
 package dev.erst.gridgrind.core.model.drawing;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Authoritative simple-shape or connector creation or replacement payload. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ShapeInput.SimpleShape.class, name = "SIMPLE_SHAPE"),
-  @JsonSubTypes.Type(value = ShapeInput.Connector.class, name = "CONNECTOR")
-})
-public sealed interface ShapeInput permits ShapeInput.SimpleShape, ShapeInput.Connector {
+@Union(discriminator = "type", catalog = true, displayOrder = 24)
+public sealed interface ShapeInput
+    permits dev.erst.gridgrind.core.model.drawing.ShapeInput.SimpleShape,
+        dev.erst.gridgrind.core.model.drawing.ShapeInput.Connector {
   /** Stable drawing object name that replaces or creates the target shape. */
   String name();
 
@@ -25,6 +23,10 @@ public sealed interface ShapeInput permits ShapeInput.SimpleShape, ShapeInput.Co
   ExcelAuthoredDrawingShapeKind kind();
 
   /** Simple shape with required preset geometry and optional text. */
+  @Variant(
+      id = "SIMPLE_SHAPE",
+      summary =
+          "Write one authored simple shape with required geometry token and optional text payload.")
   record SimpleShape(
       String name,
       DrawingAnchorInput anchor,
@@ -51,6 +53,9 @@ public sealed interface ShapeInput permits ShapeInput.SimpleShape, ShapeInput.Co
   }
 
   /** Connector drawing with no geometry token and no text payload. */
+  @Variant(
+      id = "CONNECTOR",
+      summary = "Write one authored connector with no geometry token or text payload.")
   record Connector(String name, DrawingAnchorInput anchor) implements ShapeInput {
     public Connector {
       name = requireNonBlank(name, "name");

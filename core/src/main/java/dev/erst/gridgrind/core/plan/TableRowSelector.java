@@ -1,21 +1,21 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import java.util.Objects;
 
 /** Selects one or more logical rows within one selected table. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = TableRowSelector.AllRows.class, name = "TABLE_ROW_ALL_ROWS"),
-  @JsonSubTypes.Type(value = TableRowSelector.ByIndex.class, name = "TABLE_ROW_BY_INDEX"),
-  @JsonSubTypes.Type(value = TableRowSelector.ByKeyCell.class, name = "TABLE_ROW_BY_KEY_CELL")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 32)
 public sealed interface TableRowSelector extends Selector
-    permits TableRowSelector.AllRows, TableRowSelector.ByIndex, TableRowSelector.ByKeyCell {
+    permits dev.erst.gridgrind.core.plan.TableRowSelector.AllRows,
+        dev.erst.gridgrind.core.plan.TableRowSelector.ByIndex,
+        dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell {
 
   /** Selects every data row in one selected table. */
+  @Variant(
+      id = "TABLE_ROW_ALL_ROWS",
+      summary = "Select every logical data row in one selected table.")
   record AllRows(TableSelector table) implements TableRowSelector {
     public AllRows {
       Objects.requireNonNull(table, "table must not be null");
@@ -28,6 +28,9 @@ public sealed interface TableRowSelector extends Selector
   }
 
   /** Selects one zero-based data row by index within one selected table. */
+  @Variant(
+      id = "TABLE_ROW_BY_INDEX",
+      summary = "Select one zero-based data row by index in one selected table.")
   record ByIndex(TableSelector table, int rowIndex) implements TableRowSelector {
     public ByIndex {
       Objects.requireNonNull(table, "table must not be null");
@@ -42,6 +45,9 @@ public sealed interface TableRowSelector extends Selector
   }
 
   /** Selects one logical data row by matching one key-column cell within one selected table. */
+  @Variant(
+      id = "TABLE_ROW_BY_KEY_CELL",
+      summary = "Select one logical data row by matching one key-column cell value.")
   record ByKeyCell(TableSelector table, String columnName, CellInput expectedValue)
       implements TableRowSelector {
     public ByKeyCell {

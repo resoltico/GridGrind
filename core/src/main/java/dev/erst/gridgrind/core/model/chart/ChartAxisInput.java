@@ -2,12 +2,17 @@ package dev.erst.gridgrind.core.model.chart;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
 import java.util.Objects;
 
 /** Authored axis definition used by one plot. */
+@CatalogType(
+    id = "ChartAxisInput",
+    summary = "One authored chart axis used by a chart plot with explicit visibility state.",
+    displayOrder = 34)
 public record ChartAxisInput(
     ExcelChartAxisKind kind,
     ExcelChartAxisPosition position,

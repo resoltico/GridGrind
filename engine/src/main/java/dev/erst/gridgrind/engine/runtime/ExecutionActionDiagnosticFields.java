@@ -51,7 +51,8 @@ final class ExecutionActionDiagnosticFields {
       return Optional.of(setTable.table().range().value());
     }
     if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable) {
-      if (setPivotTable.pivotTable().source() instanceof PivotTableInput.Source.Range range) {
+      if (setPivotTable.pivotTable().source()
+          instanceof PivotTableInput.PivotSourceSpec.Range range) {
         return Optional.of(range.range().value());
       }
       return Optional.empty();
@@ -97,7 +98,7 @@ final class ExecutionActionDiagnosticFields {
     }
     if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable
         && setPivotTable.pivotTable().source()
-            instanceof PivotTableInput.Source.NamedRange namedRange) {
+            instanceof PivotTableInput.PivotSourceSpec.NamedRange namedRange) {
       return Optional.of(namedRange.name().value());
     }
     return Optional.empty();

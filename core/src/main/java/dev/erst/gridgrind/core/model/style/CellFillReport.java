@@ -1,27 +1,18 @@
 package dev.erst.gridgrind.core.model.style;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.Objects;
 
 /** Effective fill facts reported with every analyzed cell. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellFillReport.PatternOnly.class, name = "PATTERN_ONLY"),
-  @JsonSubTypes.Type(value = CellFillReport.PatternForeground.class, name = "PATTERN_FOREGROUND"),
-  @JsonSubTypes.Type(value = CellFillReport.PatternBackground.class, name = "PATTERN_BACKGROUND"),
-  @JsonSubTypes.Type(
-      value = CellFillReport.PatternForegroundBackground.class,
-      name = "PATTERN_FOREGROUND_BACKGROUND"),
-  @JsonSubTypes.Type(value = CellFillReport.Gradient.class, name = "GRADIENT")
-})
+@Union(discriminator = "kind", catalog = true, displayOrder = 61)
 public sealed interface CellFillReport
-    permits CellFillReport.PatternOnly,
-        CellFillReport.PatternForeground,
-        CellFillReport.PatternBackground,
-        CellFillReport.PatternForegroundBackground,
-        CellFillReport.Gradient {
+    permits dev.erst.gridgrind.core.model.style.CellFillReport.PatternOnly,
+        dev.erst.gridgrind.core.model.style.CellFillReport.PatternForeground,
+        dev.erst.gridgrind.core.model.style.CellFillReport.PatternBackground,
+        dev.erst.gridgrind.core.model.style.CellFillReport.PatternForegroundBackground,
+        dev.erst.gridgrind.core.model.style.CellFillReport.Gradient {
   /** Returns one pattern-only fill report. */
   static PatternOnly pattern(ExcelFillPattern pattern) {
     return new PatternOnly(pattern);
@@ -51,6 +42,9 @@ public sealed interface CellFillReport
   }
 
   /** Pattern-only fill report. */
+  @Variant(
+      id = "PATTERN_ONLY",
+      summary = "Read one patterned fill with no explicit foreground or background colors.")
   record PatternOnly(ExcelFillPattern pattern) implements CellFillReport {
     public PatternOnly {
       Objects.requireNonNull(pattern, "pattern must not be null");
@@ -58,6 +52,9 @@ public sealed interface CellFillReport
   }
 
   /** Patterned fill report carrying one foreground color. */
+  @Variant(
+      id = "PATTERN_FOREGROUND",
+      summary = "Read one patterned fill with one factual foreground color.")
   record PatternForeground(ExcelFillPattern pattern, CellColorReport foregroundColor)
       implements CellFillReport {
     public PatternForeground {
@@ -67,6 +64,9 @@ public sealed interface CellFillReport
   }
 
   /** Patterned fill report carrying one background color. */
+  @Variant(
+      id = "PATTERN_BACKGROUND",
+      summary = "Read one patterned fill with one factual background color.")
   record PatternBackground(ExcelFillPattern pattern, CellColorReport backgroundColor)
       implements CellFillReport {
     public PatternBackground {
@@ -76,6 +76,9 @@ public sealed interface CellFillReport
   }
 
   /** Patterned fill report carrying foreground and background colors. */
+  @Variant(
+      id = "PATTERN_FOREGROUND_BACKGROUND",
+      summary = "Read one patterned fill with factual foreground and background colors.")
   record PatternForegroundBackground(
       ExcelFillPattern pattern, CellColorReport foregroundColor, CellColorReport backgroundColor)
       implements CellFillReport {
@@ -87,6 +90,7 @@ public sealed interface CellFillReport
   }
 
   /** Gradient fill report. */
+  @Variant(id = "GRADIENT", summary = "Read one factual gradient fill.")
   record Gradient(CellGradientFillReport gradient) implements CellFillReport {
     public Gradient {
       Objects.requireNonNull(gradient, "gradient must not be null");

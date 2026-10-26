@@ -47,7 +47,7 @@
         "commonPitfalls" : [ "SET_CHART supports the authoritative simple-chart family listed in the protocol catalog.", "Chart title and series FORMULA titles must resolve to one cell.", "Unsupported loaded chart detail is preserved on unrelated edits but is not available for authoritative mutation." ],
         "phases" : [ {
           "capabilityRefs" : [ {
-            "group" : "sourceTypes",
+            "group" : "workbookSourceTypes",
             "id" : "NEW"
           }, {
             "group" : "mutationActionTypes",
@@ -83,7 +83,7 @@
             "group" : "assertionTypes",
             "id" : "EXPECT_CHART_PRESENT"
           }, {
-            "group" : "persistenceTypes",
+            "group" : "workbookPersistenceTypes",
             "id" : "SAVE_AS"
           } ],
           "label" : "Author And Inspect Visuals",

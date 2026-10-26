@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
@@ -13,6 +14,11 @@ import java.util.Objects;
  * Request-side execution policy surface for low-memory execution modes, structured journaling, and
  * explicit calculation handling.
  */
+@CatalogType(
+    id = "ExecutionPolicyInput",
+    summary =
+        "Optional request execution policy covering execution.mode, execution.journal, execution.calculation, and execution.assertionMode. Omit execution when the standard FULL_XSSF / SUMMARY / DO_NOT_CALCULATE / FAIL_FAST policy is intended, and omit any nested execution field that should keep its own default.",
+    displayOrder = 9)
 public record ExecutionPolicyInput(
     @ProtocolField(optional = true)
         @JsonInclude(

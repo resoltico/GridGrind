@@ -7,7 +7,7 @@ import dev.erst.gridgrind.core.plan.ExecutionModeInput;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.plan.MutationAction;
 import dev.erst.gridgrind.core.plan.Selector;
-import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -59,7 +59,7 @@ final class WorkbookOperationContract {
             + " requires target type "
             + SelectorTargetingSupport.humanTargetTypes(toArray(accepted))
             + " but got "
-            + SelectorJsonSupport.typeIdFor(target.getClass()));
+            + SelectorTypes.typeIdFor(target.getClass()));
   }
 
   Class<? extends Selector>[] acceptedSelectors(Object operation) {

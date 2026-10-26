@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.plan;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** One validated mutation action expressed in protocol form. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@Union(discriminator = "type")
 public sealed interface MutationAction
     permits WorkbookMutationAction,
         CellMutationAction,

@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.catalog;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.lang.reflect.ParameterizedType;
@@ -24,11 +24,11 @@ public final class GridGrindProtocolContractSupport {
   /** Returns the discriminator field for one typed protocol root when the type declares one. */
   public static Optional<String> discriminatorField(Class<?> type) {
     Objects.requireNonNull(type, "type must not be null");
-    JsonTypeInfo jsonTypeInfo = type.getAnnotation(JsonTypeInfo.class);
-    if (jsonTypeInfo == null || jsonTypeInfo.property().isBlank()) {
+    Union union = type.getAnnotation(Union.class);
+    if (union == null || union.discriminator().isBlank()) {
       return Optional.empty();
     }
-    return Optional.of(jsonTypeInfo.property());
+    return Optional.of(union.discriminator());
   }
 
   /** Returns the effective required request fields for one record type. */

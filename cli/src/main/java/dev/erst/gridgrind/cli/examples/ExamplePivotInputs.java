@@ -18,7 +18,7 @@ final class ExamplePivotInputs {
     return regionalTotalsPivot(
         pivotName,
         reportSheetName,
-        new PivotTableInput.Source.Range(
+        new PivotTableInput.PivotSourceSpec.Range(
             new SheetName(sourceSheetName), new RangeRef(sourceRangeAddress)));
   }
 
@@ -27,11 +27,11 @@ final class ExamplePivotInputs {
     return regionalTotalsPivot(
         pivotName,
         reportSheetName,
-        new PivotTableInput.Source.Table(new TableName(sourceTableName)));
+        new PivotTableInput.PivotSourceSpec.Table(new TableName(sourceTableName)));
   }
 
   private static PivotTableInput regionalTotalsPivot(
-      String pivotName, String reportSheetName, PivotTableInput.Source source) {
+      String pivotName, String reportSheetName, PivotTableInput.PivotSourceSpec source) {
     return new PivotTableInput(
         pivotName,
         new SheetName(reportSheetName),

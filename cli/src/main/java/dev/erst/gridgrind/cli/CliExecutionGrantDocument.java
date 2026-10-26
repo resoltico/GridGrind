@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
@@ -42,11 +42,7 @@ public record CliExecutionGrantDocument(
   }
 
   /** One resource the CLI host explicitly permits the plan to read. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = ReadableResource.File.class, name = "FILE"),
-    @JsonSubTypes.Type(value = ReadableResource.StandardInput.class, name = "STANDARD_INPUT")
-  })
+  @Union(discriminator = "type")
   public sealed interface ReadableResource
       permits ReadableResource.File, ReadableResource.StandardInput {
     /** Translates one CLI resource into the engine-owned authority value. */
@@ -55,6 +51,10 @@ public record CliExecutionGrantDocument(
     /**
      * Grants one exact file resource, rooted at the CLI process working directory when relative.
      */
+    @Variant(
+        id = "FILE",
+        summary =
+            "Grants one exact file resource, rooted at the CLI process working directory when relative.")
     record File(String path) implements ReadableResource {
       public File {
         path = CliGrantValueSupport.requireNonBlank(path, "path");
@@ -68,6 +68,9 @@ public record CliExecutionGrantDocument(
     }
 
     /** Grants the standard-input payload already bound by the CLI host. */
+    @Variant(
+        id = "STANDARD_INPUT",
+        summary = "Grants the standard-input payload already bound by the CLI host.")
     record StandardInput() implements ReadableResource {
       @Override
       public GridGrindExecutionGrant.ReadAuthority toEngineAuthority(Path cliWorkingDirectory) {

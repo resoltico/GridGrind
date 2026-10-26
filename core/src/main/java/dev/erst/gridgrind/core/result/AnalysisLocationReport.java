@@ -1,20 +1,13 @@
 package dev.erst.gridgrind.core.result;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Precise workbook location attached to one derived analysis finding. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = AnalysisLocationReport.Workbook.class, name = "WORKBOOK"),
-  @JsonSubTypes.Type(value = AnalysisLocationReport.Sheet.class, name = "SHEET"),
-  @JsonSubTypes.Type(value = AnalysisLocationReport.Cell.class, name = "CELL"),
-  @JsonSubTypes.Type(value = AnalysisLocationReport.Range.class, name = "RANGE"),
-  @JsonSubTypes.Type(value = AnalysisLocationReport.NamedRange.class, name = "NAMED_RANGE")
-})
+@Union(discriminator = "type")
 public sealed interface AnalysisLocationReport
     permits AnalysisLocationReport.Workbook,
         AnalysisLocationReport.Sheet,
@@ -22,9 +15,11 @@ public sealed interface AnalysisLocationReport
         AnalysisLocationReport.Range,
         AnalysisLocationReport.NamedRange {
   /** Workbook-level finding with no narrower location. */
+  @Variant(id = "WORKBOOK", summary = "Workbook-level finding with no narrower location.")
   record Workbook() implements AnalysisLocationReport {}
 
   /** One whole-sheet finding. */
+  @Variant(id = "SHEET", summary = "One whole-sheet finding.")
   record Sheet(SheetLabel sheetName) implements AnalysisLocationReport {
     public Sheet {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -32,6 +27,7 @@ public sealed interface AnalysisLocationReport
   }
 
   /** One concrete cell finding. */
+  @Variant(id = "CELL", summary = "One concrete cell finding.")
   record Cell(SheetLabel sheetName, String address) implements AnalysisLocationReport {
     public Cell {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -43,6 +39,7 @@ public sealed interface AnalysisLocationReport
   }
 
   /** One rectangular range finding. */
+  @Variant(id = "RANGE", summary = "One rectangular range finding.")
   record Range(SheetLabel sheetName, String range) implements AnalysisLocationReport {
     public Range {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -54,6 +51,7 @@ public sealed interface AnalysisLocationReport
   }
 
   /** One named-range finding. */
+  @Variant(id = "NAMED_RANGE", summary = "One named-range finding.")
   record NamedRange(String name, NamedRangeScope scope) implements AnalysisLocationReport {
     public NamedRange {
       Objects.requireNonNull(name, "name must not be null");

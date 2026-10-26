@@ -472,17 +472,19 @@ class CatalogLookupSupportCoverageTest {
         new TypeEntry(
             "USE_SOURCE_TYPES",
             "Searchable through source type references.",
-            List.of(field("source", new FieldShape.TopLevelTypeSetRef("sourceTypes"))));
+            List.of(field("source", new FieldShape.TopLevelTypeSetRef("workbookSourceTypes"))));
     TypeEntry usePersistence =
         new TypeEntry(
             "USE_PERSISTENCE_TYPES",
             "Searchable through persistence type references.",
-            List.of(field("persistence", new FieldShape.TopLevelTypeSetRef("persistenceTypes"))));
+            List.of(
+                field(
+                    "persistence", new FieldShape.TopLevelTypeSetRef("workbookPersistenceTypes"))));
     TypeEntry useStep =
         new TypeEntry(
             "USE_STEP_TYPES",
             "Searchable through step type references.",
-            List.of(field("step", new FieldShape.TopLevelTypeSetRef("stepTypes"))));
+            List.of(field("step", new FieldShape.TopLevelTypeSetRef("workbookStepTypes"))));
     TypeEntry useNested =
         new TypeEntry(
             "USE_NESTED_GROUP",

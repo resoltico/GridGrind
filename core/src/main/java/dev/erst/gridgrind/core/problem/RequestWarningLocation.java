@@ -1,32 +1,25 @@
 package dev.erst.gridgrind.core.problem;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** The authored request surface to which one non-fatal warning applies. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = RequestWarningLocation.Step.class, name = "STEP"),
-  @JsonSubTypes.Type(value = RequestWarningLocation.RequestPath.class, name = "REQUEST_PATH"),
-  @JsonSubTypes.Type(
-      value = RequestWarningLocation.RequestByteOffset.class,
-      name = "REQUEST_BYTE_OFFSET"),
-  @JsonSubTypes.Type(value = RequestWarningLocation.FormulaCell.class, name = "FORMULA_CELL")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 47)
 public sealed interface RequestWarningLocation
-    permits RequestWarningLocation.Step,
-        RequestWarningLocation.RequestPath,
-        RequestWarningLocation.RequestByteOffset,
-        RequestWarningLocation.FormulaCell {
+    permits dev.erst.gridgrind.core.problem.RequestWarningLocation.Step,
+        dev.erst.gridgrind.core.problem.RequestWarningLocation.RequestPath,
+        dev.erst.gridgrind.core.problem.RequestWarningLocation.RequestByteOffset,
+        dev.erst.gridgrind.core.problem.RequestWarningLocation.FormulaCell {
   /** Returns the step index for ordered step warnings, or {@code -1} for request-level warnings. */
   default int orderingStepIndex() {
     return this instanceof Step step ? step.stepIndex() : -1;
   }
 
   /** One warning attached to a concrete authored workbook step. */
+  @Variant(id = "STEP", summary = "Warning located at one authored workbook step.")
   record Step(int stepIndex, StepId stepId, String stepType) implements RequestWarningLocation {
     public Step {
       if (stepIndex < 0) {
@@ -39,6 +32,7 @@ public sealed interface RequestWarningLocation
   }
 
   /** One warning attached to a request-owned filesystem path. */
+  @Variant(id = "REQUEST_PATH", summary = "Warning located at one request-owned filesystem path.")
   record RequestPath(String path, String pathRole) implements RequestWarningLocation {
     public RequestPath {
       path = requireNonBlank(path, "path");
@@ -47,6 +41,9 @@ public sealed interface RequestWarningLocation
   }
 
   /** One warning attached to an exact byte position in the authored request stream. */
+  @Variant(
+      id = "REQUEST_BYTE_OFFSET",
+      summary = "Warning located at one authored request byte offset.")
   record RequestByteOffset(long byteOffset) implements RequestWarningLocation {
     public RequestByteOffset {
       if (byteOffset < 0) {
@@ -56,6 +53,9 @@ public sealed interface RequestWarningLocation
   }
 
   /** One warning attached to a formula cell identified during calculation capability analysis. */
+  @Variant(
+      id = "FORMULA_CELL",
+      summary = "Warning located at one formula cell assessed by calculation capability analysis.")
   record FormulaCell(SheetLabel sheetName, String address, String formula)
       implements RequestWarningLocation {
     public FormulaCell {

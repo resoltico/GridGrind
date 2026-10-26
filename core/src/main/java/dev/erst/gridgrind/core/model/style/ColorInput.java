@@ -1,20 +1,18 @@
 package dev.erst.gridgrind.core.model.style;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing color payload preserving RGB, theme, indexed, and tint semantics. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = ColorInput.Rgb.class, name = "RGB"),
-  @JsonSubTypes.Type(value = ColorInput.Theme.class, name = "THEME"),
-  @JsonSubTypes.Type(value = ColorInput.Indexed.class, name = "INDEXED")
-})
-public sealed interface ColorInput permits ColorInput.Rgb, ColorInput.Theme, ColorInput.Indexed {
+@Union(discriminator = "type", catalog = true, displayOrder = 55)
+public sealed interface ColorInput
+    permits dev.erst.gridgrind.core.model.style.ColorInput.Rgb,
+        dev.erst.gridgrind.core.model.style.ColorInput.Theme,
+        dev.erst.gridgrind.core.model.style.ColorInput.Indexed {
   /** Optional tint adjustment applied to the base color reference. */
   Optional<Double> tint();
 
@@ -49,7 +47,15 @@ public sealed interface ColorInput permits ColorInput.Rgb, ColorInput.Theme, Col
   }
 
   /** Explicit RGB color reference. */
-  record Rgb(RgbHex rgb, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
+  @Variant(
+      id = "RGB",
+      summary = "Write one explicit RGB color reference plus optional tint metadata.")
+  record Rgb(
+      @dev.erst.gridgrind.core.metadata.FieldRule(
+              kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.STRING_PATTERN,
+              text = dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.RGB_HEX_PATTERN)
+          RgbHex rgb,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
       implements ColorInput {
     public Rgb {
       java.util.Objects.requireNonNull(rgb, "rgb must not be null");
@@ -58,6 +64,9 @@ public sealed interface ColorInput permits ColorInput.Rgb, ColorInput.Theme, Col
   }
 
   /** Theme-slot color reference. */
+  @Variant(
+      id = "THEME",
+      summary = "Write one workbook theme-slot color reference plus optional tint metadata.")
   record Theme(int theme, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
       implements ColorInput {
     public Theme {
@@ -67,6 +76,9 @@ public sealed interface ColorInput permits ColorInput.Rgb, ColorInput.Theme, Col
   }
 
   /** Indexed-palette color reference. */
+  @Variant(
+      id = "INDEXED",
+      summary = "Write one indexed-palette color reference plus optional tint metadata.")
   record Indexed(int indexed, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
       implements ColorInput {
     public Indexed {

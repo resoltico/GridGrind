@@ -783,7 +783,7 @@ class SequenceIntrospectionTest {
     return new PivotTableInput(
         "OpsPivot",
         new SheetName("Budget"),
-        new PivotTableInput.Source.Range(new SheetName("Budget"), new RangeRef("A1:C4")),
+        new PivotTableInput.PivotSourceSpec.Range(new SheetName("Budget"), new RangeRef("A1:C4")),
         new PivotTableInput.Anchor(new CellAddress("F4")),
         List.of("Month"),
         List.of(),

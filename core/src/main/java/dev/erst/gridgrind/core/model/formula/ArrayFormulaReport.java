@@ -1,11 +1,16 @@
 package dev.erst.gridgrind.core.model.formula;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Factual array-formula group metadata returned by workbook inspection. */
+@CatalogType(
+    id = "ArrayFormulaReport",
+    summary = "One factual array-formula group report returned by GET_ARRAY_FORMULAS.",
+    displayOrder = 100)
 public record ArrayFormulaReport(
     SheetLabel sheetName,
     RangeLabel range,

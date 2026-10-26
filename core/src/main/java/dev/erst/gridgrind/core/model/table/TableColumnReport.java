@@ -3,10 +3,12 @@ package dev.erst.gridgrind.core.model.table;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Factual metadata for one persisted workbook table column. */
+@CatalogType(id = "TableColumnReport", summary = "Exact table-column report.", displayOrder = 95)
 public record TableColumnReport(
     long id,
     String name,

@@ -79,8 +79,8 @@ final class AuditExistingWorkbookTaskRecipe {
                         "Open And Inspect The Package",
                         "Start with workbook-level facts and security state before diving into sheet logic.",
                         List.of(
-                            ref("sourceTypes", "EXISTING"),
-                            ref("persistenceTypes", "NONE"),
+                            ref("workbookSourceTypes", "EXISTING"),
+                            ref("workbookPersistenceTypes", "NONE"),
                             ref("inspectionQueryTypes", "GET_WORKBOOK_SUMMARY"),
                             ref("inspectionQueryTypes", "GET_PACKAGE_SECURITY")),
                         List.of("A no-persistence audit pass reduces accidental mutation.")),

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.model.value;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
 import dev.erst.gridgrind.core.model.formula.FormulaTextValidation;
 import dev.erst.gridgrind.core.model.style.RichTextRunInput;
@@ -12,35 +12,28 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /** JSON-friendly typed cell input used at the agent protocol boundary. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = CellInput.Blank.class, name = "BLANK"),
-  @JsonSubTypes.Type(value = CellInput.Text.class, name = "TEXT"),
-  @JsonSubTypes.Type(value = CellInput.RichText.class, name = "RICH_TEXT"),
-  @JsonSubTypes.Type(value = CellInput.NumberValue.class, name = "NUMBER"),
-  @JsonSubTypes.Type(value = CellInput.BooleanValue.class, name = "BOOLEAN"),
-  @JsonSubTypes.Type(value = CellInput.ErrorValue.class, name = "ERROR"),
-  @JsonSubTypes.Type(value = CellInput.Date.class, name = "DATE"),
-  @JsonSubTypes.Type(value = CellInput.DateTime.class, name = "DATE_TIME"),
-  @JsonSubTypes.Type(value = CellInput.Formula.class, name = "FORMULA"),
-  @JsonSubTypes.Type(value = CellInput.RawFormula.class, name = "RAW_FORMULA")
-})
+@Union(discriminator = "type", catalog = true, displayOrder = 16)
 public sealed interface CellInput
-    permits CellInput.Blank,
-        CellInput.Text,
-        CellInput.RichText,
-        CellInput.NumberValue,
-        CellInput.BooleanValue,
-        CellInput.ErrorValue,
-        CellInput.Date,
-        CellInput.DateTime,
-        CellInput.Formula,
-        CellInput.RawFormula {
+    permits dev.erst.gridgrind.core.model.value.CellInput.Blank,
+        dev.erst.gridgrind.core.model.value.CellInput.Text,
+        dev.erst.gridgrind.core.model.value.CellInput.RichText,
+        dev.erst.gridgrind.core.model.value.CellInput.NumberValue,
+        dev.erst.gridgrind.core.model.value.CellInput.BooleanValue,
+        dev.erst.gridgrind.core.model.value.CellInput.ErrorValue,
+        dev.erst.gridgrind.core.model.value.CellInput.Date,
+        dev.erst.gridgrind.core.model.value.CellInput.DateTime,
+        dev.erst.gridgrind.core.model.value.CellInput.Formula,
+        dev.erst.gridgrind.core.model.value.CellInput.RawFormula {
 
   /** Blank (empty) cell input that clears the target cell. */
+  @Variant(id = "BLANK", summary = "Write an empty cell.")
   record Blank() implements CellInput {}
 
   /** Source-backed plain string cell input. */
+  @Variant(
+      id = "TEXT",
+      summary =
+          "Write one string cell value from an inline, file-backed, or standard-input text source. Blank resolved text is rejected; use BLANK for empty cells.")
   record Text(TextSourceInput source) implements CellInput {
     public Text {
       source = Validation.requireNonBlankTextSource(source, "source");
@@ -48,6 +41,10 @@ public sealed interface CellInput
   }
 
   /** Structured rich-text string cell input. */
+  @Variant(
+      id = "RICH_TEXT",
+      summary =
+          "Write a structured string cell value with an ordered rich-text run list. Run text concatenates to the stored plain string value and each run may override font attributes independently.")
   record RichText(List<RichTextRunInput> runs) implements CellInput {
     public RichText {
       Validation.required(runs, "runs");
@@ -62,6 +59,7 @@ public sealed interface CellInput
   }
 
   /** Numeric cell input stored as a double. */
+  @Variant(id = "NUMBER", summary = "Write one numeric cell value.")
   record NumberValue(double number) implements CellInput {
     public NumberValue {
       Validation.requireFinite(number, "number");
@@ -69,9 +67,14 @@ public sealed interface CellInput
   }
 
   /** Boolean cell input. */
+  @Variant(id = "BOOLEAN", summary = "Write one boolean cell value.")
   record BooleanValue(boolean bool) implements CellInput {}
 
   /** Stored Excel error cell input such as {@code #REF!}, {@code #DIV/0!}, or {@code #N/A}. */
+  @Variant(
+      id = "ERROR",
+      summary =
+          "Write one exact stored Excel error literal such as #REF!, #DIV/0!, or #N/A. Evaluation-only states such as #CIRCULAR_REF! are reported on readback but cannot be authored as stored cell values.")
   record ErrorValue(String error) implements CellInput {
     public ErrorValue {
       error = Validation.requireNonBlank(error, "error");
@@ -80,6 +83,10 @@ public sealed interface CellInput
   }
 
   /** Parseable Excel formula cell input loaded from one text source. */
+  @Variant(
+      id = "FORMULA",
+      summary =
+          "Write one Excel formula from an inline, file-backed, or standard-input text source. Formula text is the OOXML <f> body: it must not begin with = and is parsed by Apache POI.")
   record Formula(TextSourceInput source) implements CellInput {
     public Formula {
       source = Validation.normalizeFormulaSource(source, "source");
@@ -87,6 +94,10 @@ public sealed interface CellInput
   }
 
   /** Opaque OOXML formula-body input that bypasses POI's normal formula parser on write. */
+  @Variant(
+      id = "RAW_FORMULA",
+      summary =
+          "Write opaque OOXML <f> character data from one text source without POI formula parsing. It must be nonempty, must not begin with =, and rejects XML 1.0-invalid characters as INVALID_FORMULA_TEXT; XML-looking formula string literals are preserved.")
   record RawFormula(TextSourceInput source) implements CellInput {
     public RawFormula {
       source = Validation.normalizeRawFormulaSource(source, "source");
@@ -94,6 +105,10 @@ public sealed interface CellInput
   }
 
   /** ISO-8601 date cell input formatted as a date value in Excel (e.g. {@code "2024-03-15"}). */
+  @Variant(
+      id = "DATE",
+      summary =
+          "Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE.")
   record Date(LocalDate date) implements CellInput {
     public Date {
       Validation.required(date, "date");
@@ -104,6 +119,10 @@ public sealed interface CellInput
    * ISO-8601 date-time cell input formatted as a date-time value in Excel (e.g. {@code
    * "2024-03-15T09:30:00"}).
    */
+  @Variant(
+      id = "DATE_TIME",
+      summary =
+          "Write an ISO-8601 date-time value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE_TIME.")
   record DateTime(LocalDateTime dateTime) implements CellInput {
     public DateTime {
       Validation.required(dateTime, "dateTime");

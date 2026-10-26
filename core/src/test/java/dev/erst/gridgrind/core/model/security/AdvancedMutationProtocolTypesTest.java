@@ -1359,7 +1359,7 @@ class AdvancedMutationProtocolTypesTest {
         new PivotTableInput(
             "Sales Pivot 2026",
             new SheetName("Report"),
-            new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+            new PivotTableInput.PivotSourceSpec.Range(new SheetName("Data"), new RangeRef("A1:D5")),
             new PivotTableInput.Anchor(new CellAddress("$C$5")),
             List.of("Region"),
             List.of("Stage"),
@@ -1374,7 +1374,7 @@ class AdvancedMutationProtocolTypesTest {
         new PivotTableInput(
             "Sales Table Pivot",
             new SheetName("Report"),
-            new PivotTableInput.Source.Table(new TableName("SalesTable2026")),
+            new PivotTableInput.PivotSourceSpec.Table(new TableName("SalesTable2026")),
             new PivotTableInput.Anchor(new CellAddress("D7")),
             List.of(),
             List.of(),
@@ -1397,33 +1397,36 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(List.of(), tableSourceInput.reportFilters());
     assertEquals(
         "SalesTable2026",
-        ((PivotTableInput.Source.Table) tableSourceInput.source()).name().value());
+        ((PivotTableInput.PivotSourceSpec.Table) tableSourceInput.source()).name().value());
     assertEquals("B12", ProtocolCellAddressValidation.validateAddress("B12"));
     assertThrows(
         IllegalArgumentException.class,
         () -> ProtocolCellAddressValidation.validateAddress("A1048577"));
     assertEquals(
         "PivotSource",
-        new PivotTableInput.Source.NamedRange(new DefinedName("PivotSource")).name().value());
+        new PivotTableInput.PivotSourceSpec.NamedRange(new DefinedName("PivotSource"))
+            .name()
+            .value());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.Source.NamedRange(new DefinedName("Sales Pivot 2026")));
+        () -> new PivotTableInput.PivotSourceSpec.NamedRange(new DefinedName("Sales Pivot 2026")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.Source.Table(new TableName("Sales Table")));
+        () -> new PivotTableInput.PivotSourceSpec.Table(new TableName("Sales Table")));
     assertThrows(
         NullPointerException.class,
-        () -> new PivotTableInput.Source.Range(new SheetName("Data"), null));
+        () -> new PivotTableInput.PivotSourceSpec.Range(new SheetName("Data"), null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef(" ")));
+        () -> new PivotTableInput.PivotSourceSpec.Range(new SheetName("Data"), new RangeRef(" ")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+                new PivotTableInput.PivotSourceSpec.Range(
+                    new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region"),
                 List.of("Stage"),
@@ -1440,7 +1443,8 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+                new PivotTableInput.PivotSourceSpec.Range(
+                    new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region", "region"),
                 List.of(),
@@ -1457,7 +1461,8 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+                new PivotTableInput.PivotSourceSpec.Range(
+                    new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region"),
                 List.of("region"),
@@ -1474,7 +1479,8 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+                new PivotTableInput.PivotSourceSpec.Range(
+                    new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of((String) null),
                 List.of(),
@@ -1491,7 +1497,8 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+                new PivotTableInput.PivotSourceSpec.Range(
+                    new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(" "),
                 List.of(),
@@ -1508,7 +1515,8 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+                new PivotTableInput.PivotSourceSpec.Range(
+                    new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
@@ -1520,7 +1528,8 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+                new PivotTableInput.PivotSourceSpec.Range(
+                    new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
