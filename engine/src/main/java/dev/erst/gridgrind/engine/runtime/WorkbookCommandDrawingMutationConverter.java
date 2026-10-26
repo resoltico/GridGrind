@@ -40,8 +40,7 @@ final class WorkbookCommandDrawingMutationConverter {
         yield new WorkbookDrawingCommand.SetDrawingObjectAnchor(
             selector.sheetName().value(),
             selector.objectName(),
-            WorkbookCommandDrawingInputConverter.toExcelDrawingAnchor(
-                setDrawingObjectAnchor.anchor()));
+            WorkbookCommandDrawingInputConverter.twoCellAnchor(setDrawingObjectAnchor.anchor()));
       }
       case DrawingMutationAction.DeleteDrawingObject _ -> {
         DrawingObjectSelector.ByName selector =

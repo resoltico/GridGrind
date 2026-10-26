@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.Objects;
 import java.util.Optional;
@@ -7,7 +8,7 @@ import java.util.Optional;
 /** Immutable factual signature-line snapshot returned by workbook reads. */
 public record ExcelSignatureLineSnapshot(
     String name,
-    ExcelDrawingAnchor.TwoCell anchor,
+    DrawingAnchorReport.TwoCell anchor,
     Optional<Setup> setup,
     Optional<Preview> preview) {
   public ExcelSignatureLineSnapshot {

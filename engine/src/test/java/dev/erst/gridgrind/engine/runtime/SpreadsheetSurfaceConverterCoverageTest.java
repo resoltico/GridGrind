@@ -46,6 +46,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
@@ -54,8 +55,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -156,7 +155,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
     ExcelChartSnapshot snapshot =
         new ExcelChartSnapshot(
             "ExtendedChart",
-            excelAnchor(),
+            DrawingGeometryFixtures.report(excelAnchor()),
             new ExcelChartSnapshot.Title.Text("Extended"),
             new ExcelChartSnapshot.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
@@ -396,10 +395,10 @@ class SpreadsheetSurfaceConverterCoverageTest {
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static ExcelDrawingAnchor.TwoCell excelAnchor() {
-    return new ExcelDrawingAnchor.TwoCell(
-        new ExcelDrawingMarker(1, 2, 0, 0),
-        new ExcelDrawingMarker(8, 14, 0, 0),
+  private static DrawingAnchorSpec.TwoCell excelAnchor() {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(1, 2, 0, 0),
+        new DrawingMarkerSpec(8, 14, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 

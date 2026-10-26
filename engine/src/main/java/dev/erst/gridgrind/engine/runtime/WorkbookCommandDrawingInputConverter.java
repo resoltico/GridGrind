@@ -17,8 +17,6 @@ import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
@@ -40,7 +38,7 @@ final class WorkbookCommandDrawingInputConverter {
         new ExcelBinaryData(
             WorkbookCommandSourceSupport.inlineBinary(picture.image().source(), "picture payload")),
         picture.image().format(),
-        toExcelDrawingAnchor(picture.anchor()),
+        twoCellAnchor(picture.anchor()),
         picture
             .description()
             .map(
@@ -51,7 +49,7 @@ final class WorkbookCommandDrawingInputConverter {
   static ExcelChartDefinition toExcelChartDefinition(ChartSpec chart) {
     return new ExcelChartDefinition(
         chart.name(),
-        toExcelDrawingAnchor(chart.anchor()),
+        twoCellAnchor(chart.anchor()),
         toExcelChartTitle(chart.title()),
         toExcelChartLegend(chart.legend()),
         chart.displayBlanksAs(),
@@ -65,7 +63,7 @@ final class WorkbookCommandDrawingInputConverter {
       SignatureLineSpec signatureLine) {
     return new ExcelSignatureLineDefinition(
         signatureLine.name(),
-        toExcelDrawingAnchor(signatureLine.anchor()),
+        twoCellAnchor(signatureLine.anchor()),
         signatureLine.allowComments(),
         signatureLine.signingInstructions().orElse(null),
         signatureLine.suggestedSigner().orElse(null),
@@ -88,14 +86,13 @@ final class WorkbookCommandDrawingInputConverter {
       case ShapeSpec.SimpleShape simpleShape ->
           new ExcelShapeDefinition.SimpleShape(
               simpleShape.name(),
-              toExcelDrawingAnchor(simpleShape.anchor()),
+              twoCellAnchor(simpleShape.anchor()),
               simpleShape.presetGeometryToken(),
               simpleShape
                   .text()
                   .map(text -> WorkbookCommandSourceSupport.inlineText(text, "shape text")));
       case ShapeSpec.Connector connector ->
-          new ExcelShapeDefinition.Connector(
-              connector.name(), toExcelDrawingAnchor(connector.anchor()));
+          new ExcelShapeDefinition.Connector(connector.name(), twoCellAnchor(connector.anchor()));
     };
   }
 
@@ -113,24 +110,12 @@ final class WorkbookCommandDrawingInputConverter {
         new ExcelBinaryData(
             WorkbookCommandSourceSupport.inlineBinary(
                 embeddedObject.previewImage().source(), "embedded-object preview image")),
-        toExcelDrawingAnchor(embeddedObject.anchor()));
+        twoCellAnchor(embeddedObject.anchor()));
   }
 
-  static ExcelDrawingAnchor.TwoCell toExcelDrawingAnchor(DrawingAnchorSpec anchor) {
+  static DrawingAnchorSpec.TwoCell twoCellAnchor(DrawingAnchorSpec anchor) {
     return switch (anchor) {
-      case DrawingAnchorSpec.TwoCell twoCell ->
-          new ExcelDrawingAnchor.TwoCell(
-              new ExcelDrawingMarker(
-                  twoCell.from().columnIndex(),
-                  twoCell.from().rowIndex(),
-                  twoCell.from().dx(),
-                  twoCell.from().dy()),
-              new ExcelDrawingMarker(
-                  twoCell.to().columnIndex(),
-                  twoCell.to().rowIndex(),
-                  twoCell.to().dx(),
-                  twoCell.to().dy()),
-              twoCell.behavior());
+      case DrawingAnchorSpec.TwoCell twoCell -> twoCell;
     };
   }
 

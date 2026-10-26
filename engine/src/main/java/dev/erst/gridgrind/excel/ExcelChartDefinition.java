@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -12,7 +13,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +21,7 @@ import java.util.Optional;
 /** Authored chart definition used by workbook-core mutations. */
 public record ExcelChartDefinition(
     String name,
-    ExcelDrawingAnchor.TwoCell anchor,
+    DrawingAnchorSpec.TwoCell anchor,
     Title title,
     Legend legend,
     ExcelChartDisplayBlanksAs displayBlanksAs,

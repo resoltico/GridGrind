@@ -5,7 +5,7 @@ import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import java.util.Objects;
 
-/** Authored drawing anchor input. Phase 5 currently supports two-cell anchors for mutation. */
+/** Authored two-cell drawing geometry for workbook mutation. */
 @Union(discriminator = "type", catalog = true, displayOrder = 48)
 public sealed interface DrawingAnchorSpec
     permits dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec.TwoCell {

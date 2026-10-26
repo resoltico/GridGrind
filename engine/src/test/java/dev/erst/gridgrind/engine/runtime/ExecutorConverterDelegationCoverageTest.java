@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -17,11 +15,8 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
-import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -41,24 +36,6 @@ class ExecutorConverterDelegationCoverageTest {
             .text());
     assertEquals("Bold", WorkbookCommandCellValueSpecConverter.toResolvedRichTextRun(run).text());
     assertTrue(WorkbookCommandStructuredInputConverter.toExcelDifferentialStyle(null).isEmpty());
-  }
-
-  @Test
-  void inspectionResultConversionSupportDelegatesRemainCovered() {
-    ExcelDrawingMarker marker = new ExcelDrawingMarker(1, 2, 3, 4);
-    DrawingMarkerReport markerReport =
-        InspectionResultDrawingReportSupport.toDrawingMarkerReport(marker);
-    DrawingAnchorReport.TwoCell anchorReport =
-        assertInstanceOf(
-            DrawingAnchorReport.TwoCell.class,
-            InspectionResultDrawingReportSupport.toDrawingAnchorReport(
-                new ExcelDrawingAnchor.TwoCell(
-                    marker,
-                    new ExcelDrawingMarker(5, 6, 7, 8),
-                    ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE)));
-
-    assertEquals(1, markerReport.columnIndex());
-    assertEquals(5, anchorReport.to().columnIndex());
   }
 
   @Test

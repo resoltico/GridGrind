@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.util.AreaReference;
@@ -41,7 +41,7 @@ sealed interface PreparedChartDefinition
   String name();
 
   /** Returns the target chart anchor. */
-  ExcelDrawingAnchor.TwoCell anchor();
+  DrawingAnchorSpec.TwoCell anchor();
 
   /** Returns the validated chart title payload. */
   PreparedChartTitle title();
@@ -66,7 +66,7 @@ sealed interface PreparedSeriesTitle
 
 record PreparedBarChart(
     String name,
-    ExcelDrawingAnchor.TwoCell anchor,
+    DrawingAnchorSpec.TwoCell anchor,
     PreparedChartTitle title,
     ExcelChartDefinition.Legend legend,
     ExcelChartDisplayBlanksAs displayBlanksAs,
@@ -88,7 +88,7 @@ record PreparedBarChart(
 
 record PreparedLineChart(
     String name,
-    ExcelDrawingAnchor.TwoCell anchor,
+    DrawingAnchorSpec.TwoCell anchor,
     PreparedChartTitle title,
     ExcelChartDefinition.Legend legend,
     ExcelChartDisplayBlanksAs displayBlanksAs,
@@ -108,7 +108,7 @@ record PreparedLineChart(
 
 record PreparedPieChart(
     String name,
-    ExcelDrawingAnchor.TwoCell anchor,
+    DrawingAnchorSpec.TwoCell anchor,
     PreparedChartTitle title,
     ExcelChartDefinition.Legend legend,
     ExcelChartDisplayBlanksAs displayBlanksAs,

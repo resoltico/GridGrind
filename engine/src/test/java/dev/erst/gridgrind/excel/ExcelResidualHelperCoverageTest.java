@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
@@ -24,7 +25,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
@@ -270,14 +270,14 @@ class ExcelResidualHelperCoverageTest {
       XSSFSheet sheet = workbook.createSheet("Ops");
       ExcelDrawingController controller = new ExcelDrawingController();
       ExcelSignatureLineController signatureLineController = new ExcelSignatureLineController();
-      ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
+      DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
 
       controller.setSignatureLine(sheet, signatureDefinition("OpsSignature", anchor));
       assertFalse(signatureLineController.hasNamedSignatureLine(sheet, "Missing"));
       CTShape signatureShape = signatureShapes(sheet.getVMLDrawing(false)).getFirst();
       CTClientData clientData = signatureShape.getClientDataArray(0);
       String originalAnchor = clientData.getAnchorArray(0);
-      ExcelDrawingAnchor.TwoCell movedAnchor = ExcelChartTestSupport.anchor(2, 2, 5, 7);
+      DrawingAnchorSpec.TwoCell movedAnchor = ExcelChartTestSupport.anchor(2, 2, 5, 7);
       assertTrue(signatureLineController.updateAnchorIfPresent(sheet, "OpsSignature", movedAnchor));
       assertEquals(1, clientData.sizeOfAnchorArray());
       assertNotEquals(originalAnchor, clientData.getAnchorArray(0));
@@ -792,7 +792,7 @@ class ExcelResidualHelperCoverageTest {
   }
 
   private static ExcelSignatureLineDefinition signatureDefinition(
-      String name, ExcelDrawingAnchor.TwoCell anchor) {
+      String name, DrawingAnchorSpec.TwoCell anchor) {
     return new ExcelSignatureLineDefinition(
         name,
         anchor,

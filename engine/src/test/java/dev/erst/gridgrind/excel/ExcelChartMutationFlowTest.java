@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +56,9 @@ class ExcelChartMutationFlowTest {
                   new ExcelChartDefinition.Title.Text("Actual")));
       ExcelChartSnapshot updatedLine =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsLine");
-      assertEquals(ExcelChartTestSupport.anchor(6, 2, 12, 18), updatedLine.anchor());
+      assertEquals(
+          DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(6, 2, 12, 18)),
+          updatedLine.anchor());
       assertEquals(new ExcelChartSnapshot.Title.Text("Line focus"), updatedLine.title());
 
       sheet
@@ -84,7 +86,9 @@ class ExcelChartMutationFlowTest {
                   120));
       ExcelChartSnapshot updatedPie =
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsPie");
-      assertEquals(ExcelChartTestSupport.anchor(14, 2, 20, 13), updatedPie.anchor());
+      assertEquals(
+          DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(14, 2, 20, 13)),
+          updatedPie.anchor());
       assertEquals(
           Optional.of(120),
           ExcelChartTestSupport.singlePlot(updatedPie, ExcelChartSnapshot.Pie.class)
@@ -234,7 +238,7 @@ class ExcelChartMutationFlowTest {
 
   private static ExcelChartDefinition lineChartDefinition(
       String name,
-      ExcelDrawingAnchor.TwoCell anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       ExcelChartDefinition.Title title,
       ExcelChartDefinition.Title seriesTitle) {
     return ExcelChartTestSupport.lineChart(
@@ -258,7 +262,7 @@ class ExcelChartMutationFlowTest {
 
   private static ExcelChartDefinition pieChartDefinition(
       String name,
-      ExcelDrawingAnchor.TwoCell anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       ExcelChartDefinition.Title title,
       int firstSliceAngle) {
     return ExcelChartTestSupport.pieChart(
@@ -282,7 +286,7 @@ class ExcelChartMutationFlowTest {
   }
 
   private static ExcelChartDefinition barChartDefinition(
-      String name, ExcelDrawingAnchor.TwoCell anchor, List<ExcelChartDefinition.Series> series) {
+      String name, DrawingAnchorSpec.TwoCell anchor, List<ExcelChartDefinition.Series> series) {
     return ExcelChartTestSupport.barChart(
         name,
         anchor,

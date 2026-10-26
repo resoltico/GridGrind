@@ -1786,3 +1786,33 @@ definitions 12, Support 206 and blank checks 434 remain open. Baseline diff empt
 This is an actual shared closed-type implementation of the earlier Java probe: unannotated resolved
 contracts reuse existing wire records without adding wire variants or a parallel scalar model.
 Drawing anchors still need separate authored/report routing before drawing resolved payloads move.
+
+## WP-40 drawing geometry ownership
+
+Deleted the combined engine drawing-anchor union and marker. Writer definitions/APIs now use the
+existing DrawingAnchorSpec.TwoCell and DrawingMarkerSpec; readers emit DrawingAnchorReport and
+DrawingMarkerReport directly, preserving TWO_CELL/ONE_CELL/ABSOLUTE. Removed report identity
+converters and constructor-copy translation. The small remaining twoCellAnchor switch only narrows
+the current authored union; it returns the original core record. Obsolete duplicate harness anchor
+factories were deleted. No new wire variant or compatibility API was added.
+
+Challenge found a real contract distinction: authoring enforces from/to ordering, while the factual
+core report does not impose that authoring constraint. A raw OOXML regression proves reversed
+observed coordinates are retained and the authored rectangle still rejects them. Existing one-cell
+and absolute observations remain covered. Test fixtures project authored coordinates into expected
+report records independently of POI; eight old cross-type equality assertions were updated without
+reducing coordinate/behavior coverage. Sole identity-converter assertions were retired.
+
+Initial compilation exposed fixture roles after the split; writer builders now create specs and
+read fixtures/oracles create reports (main sources compiled immediately; final source-set compile
+9s). Engine/parity/static gate first exposed those eight spec-versus-report equalities, then passed
+(29s). A mechanical assertion retarget briefly changed unrelated whitespace; formatting restored
+it, and review confirmed only drawing-related test diffs remained. Nested compilation caught six
+factual fixture roles, corrected; deterministic check and all retained seed replay pass (21s).
+./gradlew check passes (3m44s): core 346, JSON 348, engine 1483 plus 14 parity, CLI 588,
+architecture 14 plus 12 rule tests, zero failures/errors/skips. All 143 golden cases are unchanged.
+No mutation or active fuzz campaign ran.
+
+Inventories: converter lines 4300→4252, main Java 121920→121771; snapshots 38, definitions 12,
+Support 206 and blank checks 434 remain open. Baseline diff empty. Shared source-free drawing
+geometry now unblocks moving actual source-resolved picture/chart/shape payloads to core.

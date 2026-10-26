@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
@@ -15,7 +16,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +26,7 @@ class ExcelResidualValidationCoverageTest {
   @Test
   @SuppressWarnings("PMD.NcssCount")
   void residualConstructorsRejectInvalidInputs() {
-    ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
+    DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
     ResolvedArrayFormula arrayFormula = new ResolvedArrayFormula("SUM(A1:A2)");
     CustomXmlMappingLocator locator =
         new CustomXmlMappingLocator(
@@ -733,7 +733,7 @@ class ExcelResidualValidationCoverageTest {
   }
 
   private static ExcelSignatureLineDefinition signatureDefinition(
-      ExcelDrawingAnchor.TwoCell anchor) {
+      DrawingAnchorSpec.TwoCell anchor) {
     return new ExcelSignatureLineDefinition(
         "OpsSignature",
         anchor,

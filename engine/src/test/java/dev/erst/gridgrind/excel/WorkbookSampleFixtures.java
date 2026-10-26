@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
@@ -24,8 +26,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
@@ -94,11 +94,11 @@ final class WorkbookSampleFixtures {
   }
 
   static List<WorkbookCommand> workbookCommands() {
-    ExcelDrawingAnchor.TwoCell firstAnchor = anchor(1, 1, 4, 6);
-    ExcelDrawingAnchor.TwoCell movedAnchor =
-        new ExcelDrawingAnchor.TwoCell(
-            new ExcelDrawingMarker(6, 2),
-            new ExcelDrawingMarker(9, 7),
+    DrawingAnchorSpec.TwoCell firstAnchor = anchor(1, 1, 4, 6);
+    DrawingAnchorSpec.TwoCell movedAnchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(6, 2, 0, 0),
+            new DrawingMarkerSpec(9, 7, 0, 0),
             ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
 
     return List.of(
@@ -275,14 +275,14 @@ final class WorkbookSampleFixtures {
         new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
   }
 
-  static ExcelDrawingAnchor.TwoCell anchor(int fromRow, int fromColumn, int toRow, int toColumn) {
-    return new ExcelDrawingAnchor.TwoCell(
-        new ExcelDrawingMarker(fromRow, fromColumn),
-        new ExcelDrawingMarker(toRow, toColumn),
+  static DrawingAnchorSpec.TwoCell anchor(int fromRow, int fromColumn, int toRow, int toColumn) {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(fromRow, fromColumn, 0, 0),
+        new DrawingMarkerSpec(toRow, toColumn, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static ExcelChartDefinition chartDefinition(ExcelDrawingAnchor.TwoCell anchor) {
+  private static ExcelChartDefinition chartDefinition(DrawingAnchorSpec.TwoCell anchor) {
     return ExcelChartTestSupport.barChart(
         "BudgetChart",
         anchor,

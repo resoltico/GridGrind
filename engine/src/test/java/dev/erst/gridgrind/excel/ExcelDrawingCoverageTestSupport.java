@@ -2,12 +2,12 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingRemovalSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingSnapshotSupport;
 import java.io.ByteArrayInputStream;
@@ -114,10 +114,10 @@ abstract class ExcelDrawingCoverageTestSupport {
     return drawing.createAnchor(0, 0, 0, 0, col1, row1, col2, row2);
   }
 
-  static ExcelDrawingAnchor.TwoCell anchor(int fromColumn, int fromRow, int toColumn, int toRow) {
-    return new ExcelDrawingAnchor.TwoCell(
-        new ExcelDrawingMarker(fromColumn, fromRow),
-        new ExcelDrawingMarker(toColumn, toRow),
+  static DrawingAnchorSpec.TwoCell anchor(int fromColumn, int fromRow, int toColumn, int toRow) {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(fromColumn, fromRow, 0, 0),
+        new DrawingMarkerSpec(toColumn, toRow, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
@@ -298,7 +298,7 @@ abstract class ExcelDrawingCoverageTestSupport {
               (XSSFSheet) args[0],
               (String) args[1],
               (org.apache.xmlbeans.XmlObject) args[2],
-              (ExcelDrawingAnchor.TwoCell) args[3]);
+              (DrawingAnchorSpec.TwoCell) args[3]);
           yield null;
         }
         default -> throw new IllegalArgumentException("Unsupported helper invocation: " + name);

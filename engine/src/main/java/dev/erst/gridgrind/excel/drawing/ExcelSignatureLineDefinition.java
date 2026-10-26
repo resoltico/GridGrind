@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import java.util.Objects;
@@ -9,7 +10,7 @@ import org.jspecify.annotations.Nullable;
 /** Authoritative signature-line creation or replacement payload. */
 public record ExcelSignatureLineDefinition(
     String name,
-    ExcelDrawingAnchor.TwoCell anchor,
+    DrawingAnchorSpec.TwoCell anchor,
     boolean allowComments,
     @Nullable String signingInstructions,
     @Nullable String suggestedSigner,

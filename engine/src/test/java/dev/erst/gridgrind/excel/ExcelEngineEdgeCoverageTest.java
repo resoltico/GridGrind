@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -25,7 +26,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
@@ -59,7 +59,7 @@ class ExcelEngineEdgeCoverageTest {
 
   @Test
   void signatureLineValueObjectsRejectInvalidInputsAcrossAllSurfaces() {
-    ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
+    DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
 
     assertDoesNotThrow(
         () ->
@@ -795,7 +795,7 @@ class ExcelEngineEdgeCoverageTest {
         () ->
             new ExcelChartSnapshot(
                 " ",
-                ExcelChartTestSupport.anchor(1, 1, 4, 6),
+                DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(1, 1, 4, 6)),
                 new ExcelChartSnapshot.Title.None(),
                 new ExcelChartSnapshot.Legend.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,
@@ -821,7 +821,7 @@ class ExcelEngineEdgeCoverageTest {
         () ->
             new ExcelChartSnapshot(
                 "Chart",
-                ExcelChartTestSupport.anchor(1, 1, 4, 6),
+                DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(1, 1, 4, 6)),
                 new ExcelChartSnapshot.Title.None(),
                 new ExcelChartSnapshot.Legend.Hidden(),
                 ExcelChartDisplayBlanksAs.GAP,

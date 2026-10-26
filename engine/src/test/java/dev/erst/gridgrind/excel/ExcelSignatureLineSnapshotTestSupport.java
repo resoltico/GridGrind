@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import java.util.Optional;
@@ -14,7 +14,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
   @SuppressWarnings("PMD.ExcessiveParameterList")
   static ExcelSignatureLineSnapshot signatureLineSnapshot(
       String name,
-      ExcelDrawingAnchor.TwoCell anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       @Nullable String setupId,
       @Nullable Boolean allowComments,
       @Nullable String signingInstructions,
@@ -29,7 +29,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
       @Nullable Integer previewHeightPixels) {
     return new ExcelSignatureLineSnapshot(
         name,
-        anchor,
+        DrawingGeometryFixtures.report(anchor),
         signatureSetup(
             setupId,
             allowComments,
@@ -49,7 +49,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
   @SuppressWarnings("PMD.ExcessiveParameterList")
   static ExcelDrawingObjectSnapshot.SignatureLine drawingSignatureLine(
       String name,
-      ExcelDrawingAnchor.TwoCell anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       @Nullable String setupId,
       @Nullable Boolean allowComments,
       @Nullable String signingInstructions,
@@ -64,7 +64,7 @@ final class ExcelSignatureLineSnapshotTestSupport {
       @Nullable Integer previewHeightPixels) {
     return new ExcelDrawingObjectSnapshot.SignatureLine(
         name,
-        anchor,
+        DrawingGeometryFixtures.report(anchor),
         signatureSetup(
             setupId,
             allowComments,

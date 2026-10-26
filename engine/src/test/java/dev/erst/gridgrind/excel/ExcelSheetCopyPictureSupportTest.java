@@ -2,11 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingPictureSupport;
@@ -244,11 +244,11 @@ class ExcelSheetCopyPictureSupportTest {
     return new ExcelSheetCopyPictureSupport.PictureCopyPlan(objectName, sourcePartName, format);
   }
 
-  private static ExcelDrawingAnchor.TwoCell anchor(
+  private static DrawingAnchorSpec.TwoCell anchor(
       int fromColumn, int fromRow, int toColumn, int toRow) {
-    return new ExcelDrawingAnchor.TwoCell(
-        new ExcelDrawingMarker(fromColumn, fromRow, 0, 0),
-        new ExcelDrawingMarker(toColumn, toRow, 0, 0),
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(fromColumn, fromRow, 0, 0),
+        new DrawingMarkerSpec(toColumn, toRow, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
   }
 }

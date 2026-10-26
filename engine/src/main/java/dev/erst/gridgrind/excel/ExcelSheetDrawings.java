@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -52,7 +52,7 @@ public final class ExcelSheetDrawings {
 
   /** Moves one existing drawing object by replacing its anchor authoritatively. */
   public ExcelSheetDrawings setDrawingObjectAnchor(
-      String objectName, ExcelDrawingAnchor.TwoCell anchor) {
+      String objectName, DrawingAnchorSpec.TwoCell anchor) {
     drawingSupport.setDrawingObjectAnchor(objectName, anchor, sheet);
     return this;
   }

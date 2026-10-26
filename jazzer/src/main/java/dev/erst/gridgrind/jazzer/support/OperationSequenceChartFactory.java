@@ -44,7 +44,7 @@ final class OperationSequenceChartFactory {
   static ExcelChartDefinition nextExcelChartDefinition(GridGrindFuzzData data) {
     return new ExcelChartDefinition(
         DRAWING_CHART_NAME,
-        OperationSequenceValueFactory.nextExcelDrawingAnchor(data),
+        OperationSequenceValueFactory.nextDrawingAnchorInput(data),
         nextExcelChartTitle(data),
         nextExcelChartLegend(data),
         nextChartDisplayBlanksAs(data),

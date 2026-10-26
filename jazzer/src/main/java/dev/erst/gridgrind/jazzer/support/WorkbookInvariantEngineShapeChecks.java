@@ -505,16 +505,16 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineDrawingAnchorShape(
-      dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor anchor) {
+      dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport anchor) {
     WorkbookInvariantChecks.require(anchor != null, "engine drawing anchor must not be null");
     switch (anchor) {
-      case dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor.TwoCell twoCell -> {
+      case dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.TwoCell twoCell -> {
         requireEngineDrawingMarkerShape(twoCell.from());
         requireEngineDrawingMarkerShape(twoCell.to());
         WorkbookInvariantChecks.require(
             twoCell.behavior() != null, "engine two-cell anchor behavior must not be null");
       }
-      case dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor.OneCell oneCell -> {
+      case dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.OneCell oneCell -> {
         requireEngineDrawingMarkerShape(oneCell.from());
         WorkbookInvariantChecks.require(
             oneCell.widthEmu() > 0L, "engine one-cell widthEmu must be positive");
@@ -523,7 +523,7 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.require(
             oneCell.behavior() != null, "engine one-cell anchor behavior must not be null");
       }
-      case dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor.Absolute absolute -> {
+      case dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.Absolute absolute -> {
         WorkbookInvariantChecks.require(
             absolute.xEmu() >= 0L, "engine absolute xEmu must not be negative");
         WorkbookInvariantChecks.require(
@@ -539,7 +539,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineDrawingMarkerShape(
-      dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker marker) {
+      dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport marker) {
     WorkbookInvariantChecks.require(marker != null, "engine drawing marker must not be null");
     WorkbookInvariantChecks.require(
         marker.columnIndex() >= 0, "engine drawing marker columnIndex must not be negative");

@@ -7,6 +7,9 @@ import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
@@ -63,14 +66,13 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
@@ -400,10 +402,11 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     var signatureDrawingObject =
         new ExcelDrawingObjectSnapshot.SignatureLine(
             "OpsSignature",
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(7, 3, 0, 0),
-                new ExcelDrawingMarker(10, 9, 0, 0),
-                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            DrawingGeometryFixtures.report(
+                new DrawingAnchorSpec.TwoCell(
+                    new DrawingMarkerSpec(7, 3, 0, 0),
+                    new DrawingMarkerSpec(10, 9, 0, 0),
+                    ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE)),
             Optional.of(signatureSetup),
             Optional.of(signaturePreview));
     WorkbookAssetInspectionResult.DrawingObjectsResult drawingObjects =
@@ -416,10 +419,11 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     List.of(
                         new ExcelDrawingObjectSnapshot.Picture(
                             "OpsPicture",
-                            new ExcelDrawingAnchor.TwoCell(
-                                new ExcelDrawingMarker(1, 2, 3, 4),
-                                new ExcelDrawingMarker(4, 6, 7, 8),
-                                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+                            DrawingGeometryFixtures.report(
+                                new DrawingAnchorSpec.TwoCell(
+                                    new DrawingMarkerSpec(1, 2, 3, 4),
+                                    new DrawingMarkerSpec(4, 6, 7, 8),
+                                    ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE)),
                             ExcelPictureFormat.PNG,
                             "image/png",
                             68L,
@@ -429,24 +433,25 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                             "Queue preview"),
                         new ExcelDrawingObjectSnapshot.Shape(
                             "OpsShape",
-                            new ExcelDrawingAnchor.OneCell(
-                                new ExcelDrawingMarker(5, 6, 0, 0), 10L, 20L, null),
+                            new DrawingAnchorReport.OneCell(
+                                new DrawingMarkerReport(5, 6, 0, 0), 10L, 20L, null),
                             ExcelDrawingShapeKind.SIMPLE_SHAPE,
                             "rect",
                             "Queue",
                             0),
                         new ExcelDrawingObjectSnapshot.Chart(
                             "OpsChart",
-                            new ExcelDrawingAnchor.TwoCell(
-                                new ExcelDrawingMarker(1, 2, 0, 0),
-                                new ExcelDrawingMarker(6, 12, 0, 0),
-                                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+                            DrawingGeometryFixtures.report(
+                                new DrawingAnchorSpec.TwoCell(
+                                    new DrawingMarkerSpec(1, 2, 0, 0),
+                                    new DrawingMarkerSpec(6, 12, 0, 0),
+                                    ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE)),
                             true,
                             List.of("BAR"),
                             "Roadmap"),
                         new ExcelDrawingObjectSnapshot.EmbeddedObject(
                             "OpsEmbed",
-                            new ExcelDrawingAnchor.Absolute(1L, 2L, 10L, 20L, null),
+                            new DrawingAnchorReport.Absolute(1L, 2L, 10L, 20L, null),
                             ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                             "Payload",
                             "payload.txt",
@@ -697,9 +702,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     ExcelChartSnapshot lineSnapshot =
         chartSnapshot(
             "OpsLine",
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(2, 3, 0, 0),
-                new ExcelDrawingMarker(7, 14, 0, 0),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(2, 3, 0, 0),
+                new DrawingMarkerSpec(7, 14, 0, 0),
                 ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             new ExcelChartSnapshot.Title.None(),
             new ExcelChartSnapshot.Legend.Hidden(),
@@ -728,9 +733,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     ExcelChartSnapshot pieSnapshot =
         chartSnapshot(
             "OpsPie",
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(8, 3, 0, 0),
-                new ExcelDrawingMarker(13, 14, 0, 0),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(8, 3, 0, 0),
+                new DrawingMarkerSpec(13, 14, 0, 0),
                 ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             new ExcelChartSnapshot.Title.Formula("Budget!$C$1", "Actual"),
             new ExcelChartSnapshot.Legend.Hidden(),
@@ -749,9 +754,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     ExcelChartSnapshot unsupportedSnapshot =
         chartSnapshot(
             "AreaOnly",
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(14, 3, 0, 0),
-                new ExcelDrawingMarker(19, 14, 0, 0),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(14, 3, 0, 0),
+                new DrawingMarkerSpec(19, 14, 0, 0),
                 ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             new ExcelChartSnapshot.Title.None(),
             new ExcelChartSnapshot.Legend.Hidden(),
@@ -804,9 +809,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         List.of(
             chartSnapshot(
                 "OpsChart",
-                new ExcelDrawingAnchor.TwoCell(
-                    new ExcelDrawingMarker(1, 2, 0, 0),
-                    new ExcelDrawingMarker(6, 12, 0, 0),
+                new DrawingAnchorSpec.TwoCell(
+                    new DrawingMarkerSpec(1, 2, 0, 0),
+                    new DrawingMarkerSpec(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
                 new ExcelChartSnapshot.Title.Text("Roadmap"),
                 new ExcelChartSnapshot.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
@@ -848,9 +853,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         List.of(
             chartSnapshot(
                 "TrendChart",
-                new ExcelDrawingAnchor.TwoCell(
-                    new ExcelDrawingMarker(2, 3, 0, 0),
-                    new ExcelDrawingMarker(7, 14, 0, 0),
+                new DrawingAnchorSpec.TwoCell(
+                    new DrawingMarkerSpec(2, 3, 0, 0),
+                    new DrawingMarkerSpec(7, 14, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 new ExcelChartSnapshot.Title.None(),
                 new ExcelChartSnapshot.Legend.Hidden(),
@@ -878,9 +883,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                                 Optional.of("0.0"), List.of("10", "18")))))),
             chartSnapshot(
                 "ShareChart",
-                new ExcelDrawingAnchor.TwoCell(
-                    new ExcelDrawingMarker(8, 3, 0, 0),
-                    new ExcelDrawingMarker(13, 14, 0, 0),
+                new DrawingAnchorSpec.TwoCell(
+                    new DrawingMarkerSpec(8, 3, 0, 0),
+                    new DrawingMarkerSpec(13, 14, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 new ExcelChartSnapshot.Title.Formula("Budget!$C$1", "Actual"),
                 new ExcelChartSnapshot.Legend.Hidden(),
@@ -898,9 +903,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                                 "ChartActual", Optional.of("0.0"), List.of("12", "16")))))),
             chartSnapshot(
                 "AreaOnly",
-                new ExcelDrawingAnchor.TwoCell(
-                    new ExcelDrawingMarker(14, 3, 0, 0),
-                    new ExcelDrawingMarker(19, 14, 0, 0),
+                new DrawingAnchorSpec.TwoCell(
+                    new DrawingMarkerSpec(14, 3, 0, 0),
+                    new DrawingMarkerSpec(19, 14, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 new ExcelChartSnapshot.Title.None(),
                 new ExcelChartSnapshot.Legend.Hidden(),
@@ -913,14 +918,20 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
   private static ExcelChartSnapshot chartSnapshot(
       String name,
-      ExcelDrawingAnchor anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       ExcelChartSnapshot.Title title,
       ExcelChartSnapshot.Legend legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       boolean plotOnlyVisibleCells,
       ExcelChartSnapshot.Plot plot) {
     return new ExcelChartSnapshot(
-        name, anchor, title, legend, displayBlanksAs, plotOnlyVisibleCells, List.of(plot));
+        name,
+        DrawingGeometryFixtures.report(anchor),
+        title,
+        legend,
+        displayBlanksAs,
+        plotOnlyVisibleCells,
+        List.of(plot));
   }
 
   private static ExcelChartSnapshot.Series chartSnapshotSeries(

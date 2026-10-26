@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import java.io.IOException;
@@ -82,10 +82,11 @@ class XlsxPicturePackageInvariantSupportTest {
                   new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
-                  new ExcelDrawingAnchor.TwoCell(
-                      new ExcelDrawingMarker(1, 1, 0, 0),
-                      new ExcelDrawingMarker(4, 6, 0, 0),
-                      null)));
+                  new DrawingAnchorSpec.TwoCell(
+                      new DrawingMarkerSpec(1, 1, 0, 0),
+                      new DrawingMarkerSpec(4, 6, 0, 0),
+                      dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
+                          .MOVE_AND_RESIZE)));
       workbook.sheets().copySheet("Ops", "Ops Copy", new ExcelSheetCopyPosition.AppendAtEnd());
       JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }
@@ -113,10 +114,11 @@ class XlsxPicturePackageInvariantSupportTest {
                   new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
-                  new ExcelDrawingAnchor.TwoCell(
-                      new ExcelDrawingMarker(1, 1, 0, 0),
-                      new ExcelDrawingMarker(4, 6, 0, 0),
-                      null)));
+                  new DrawingAnchorSpec.TwoCell(
+                      new DrawingMarkerSpec(1, 1, 0, 0),
+                      new DrawingMarkerSpec(4, 6, 0, 0),
+                      dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
+                          .MOVE_AND_RESIZE)));
       JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }
 
@@ -150,8 +152,11 @@ class XlsxPicturePackageInvariantSupportTest {
                   "OpsPicture",
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
-                  new ExcelDrawingAnchor.TwoCell(
-                      new ExcelDrawingMarker(1, 1, 0, 0), new ExcelDrawingMarker(4, 6, 0, 0), null),
+                  new DrawingAnchorSpec.TwoCell(
+                      new DrawingMarkerSpec(1, 1, 0, 0),
+                      new DrawingMarkerSpec(4, 6, 0, 0),
+                      dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
+                          .MOVE_AND_RESIZE),
                   Optional.of("Queue preview")));
       JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }

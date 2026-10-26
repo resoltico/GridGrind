@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,7 +12,7 @@ public sealed interface ExcelShapeDefinition
   String name();
 
   /** Returns the required two-cell anchor describing the authored shape placement. */
-  ExcelDrawingAnchor.TwoCell anchor();
+  DrawingAnchorSpec.TwoCell anchor();
 
   /** Returns the authored shape kind represented by this definition. */
   ExcelAuthoredDrawingShapeKind kind();
@@ -19,7 +20,7 @@ public sealed interface ExcelShapeDefinition
   /** Simple shape with required preset geometry and optional text. */
   record SimpleShape(
       String name,
-      ExcelDrawingAnchor.TwoCell anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       String presetGeometryToken,
       Optional<String> text)
       implements ExcelShapeDefinition {
@@ -50,7 +51,7 @@ public sealed interface ExcelShapeDefinition
   }
 
   /** Connector drawing with no geometry token and no text payload. */
-  record Connector(String name, ExcelDrawingAnchor.TwoCell anchor) implements ExcelShapeDefinition {
+  record Connector(String name, DrawingAnchorSpec.TwoCell anchor) implements ExcelShapeDefinition {
     public Connector {
       Objects.requireNonNull(name, "name must not be null");
       if (name.isBlank()) {

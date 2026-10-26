@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
@@ -77,7 +77,7 @@ public sealed interface WorkbookDrawingCommand extends WorkbookCommand
 
   /** Moves one existing drawing object by replacing its anchor authoritatively. */
   record SetDrawingObjectAnchor(
-      String sheetName, String objectName, ExcelDrawingAnchor.TwoCell anchor)
+      String sheetName, String objectName, DrawingAnchorSpec.TwoCell anchor)
       implements WorkbookDrawingCommand {
     public SetDrawingObjectAnchor {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

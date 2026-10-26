@@ -15,7 +15,9 @@ import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
@@ -155,8 +157,6 @@ import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -1145,10 +1145,11 @@ class WorkbookInvariantChecksTest {
                       "Ops",
                       new ExcelChartDefinition(
                           "OpsChart",
-                          new ExcelDrawingAnchor.TwoCell(
-                              new ExcelDrawingMarker(0, 0, 0, 0),
-                              new ExcelDrawingMarker(2, 8, 0, 0),
-                              null),
+                          new DrawingAnchorSpec.TwoCell(
+                              new DrawingMarkerSpec(0, 0, 0, 0),
+                              new DrawingMarkerSpec(2, 8, 0, 0),
+                              dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
+                                  .MOVE_AND_RESIZE),
                           new ExcelChartDefinition.Title.Text("Roadmap"),
                           new ExcelChartDefinition.Legend.Visible(
                               ExcelChartLegendPosition.TOP_RIGHT),

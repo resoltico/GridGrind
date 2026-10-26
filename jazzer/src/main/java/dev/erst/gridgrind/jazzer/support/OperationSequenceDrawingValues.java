@@ -17,8 +17,6 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
@@ -117,7 +115,7 @@ final class OperationSequenceDrawingValues {
         DRAWING_PICTURE_NAME,
         new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
         ExcelPictureFormat.PNG,
-        nextExcelDrawingAnchor(data),
+        nextDrawingAnchorInput(data),
         data.consumeBoolean() ? Optional.of("Queue preview") : Optional.empty());
   }
 
@@ -129,11 +127,11 @@ final class OperationSequenceDrawingValues {
     if (data.consumeBoolean()) {
       return new ExcelShapeDefinition.SimpleShape(
           DRAWING_SHAPE_NAME,
-          nextExcelDrawingAnchor(data),
+          nextDrawingAnchorInput(data),
           data.consumeBoolean() ? "roundRect" : "rect",
           data.consumeBoolean() ? Optional.of("Queue") : Optional.empty());
     }
-    return new ExcelShapeDefinition.Connector(DRAWING_CONNECTOR_NAME, nextExcelDrawingAnchor(data));
+    return new ExcelShapeDefinition.Connector(DRAWING_CONNECTOR_NAME, nextDrawingAnchorInput(data));
   }
 
   static ExcelEmbeddedObjectDefinition nextExcelEmbeddedObjectDefinition(GridGrindFuzzData data) {
@@ -146,20 +144,7 @@ final class OperationSequenceDrawingValues {
             ("GridGrind payload " + data.consumeInt(0, 9)).getBytes(StandardCharsets.UTF_8)),
         ExcelPictureFormat.PNG,
         new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
-        nextExcelDrawingAnchor(data));
-  }
-
-  static ExcelDrawingAnchor.TwoCell nextExcelDrawingAnchor(GridGrindFuzzData data) {
-    DrawingAnchorSpec.TwoCell anchor = nextDrawingAnchorInput(data);
-    return new ExcelDrawingAnchor.TwoCell(
-        new ExcelDrawingMarker(
-            anchor.from().columnIndex(),
-            anchor.from().rowIndex(),
-            anchor.from().dx(),
-            anchor.from().dy()),
-        new ExcelDrawingMarker(
-            anchor.to().columnIndex(), anchor.to().rowIndex(), anchor.to().dx(), anchor.to().dy()),
-        anchor.behavior());
+        nextDrawingAnchorInput(data));
   }
 
   static ExcelDrawingAnchorBehavior nextDrawingAnchorBehavior(GridGrindFuzzData data) {

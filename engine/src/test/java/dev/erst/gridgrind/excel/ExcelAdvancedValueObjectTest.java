@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
@@ -26,8 +30,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -343,10 +345,10 @@ class ExcelAdvancedValueObjectTest {
   @Test
   void drawingValueObjectsNormalizeDefaultsAndValidate() {
     ExcelBinaryData binary = new ExcelBinaryData(new byte[] {1, 2, 3});
-    ExcelDrawingMarker from = new ExcelDrawingMarker(1, 2, 3, 4);
-    ExcelDrawingMarker to = new ExcelDrawingMarker(4, 6);
-    ExcelDrawingAnchor.TwoCell twoCell =
-        new ExcelDrawingAnchor.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    DrawingMarkerSpec from = new DrawingMarkerSpec(1, 2, 3, 4);
+    DrawingMarkerSpec to = new DrawingMarkerSpec(4, 6, 0, 0);
+    DrawingAnchorSpec.TwoCell twoCell =
+        new DrawingAnchorSpec.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
     ExcelPictureDefinition picture =
         new ExcelPictureDefinition(
             "OpsPicture", binary, ExcelPictureFormat.PNG, twoCell, Optional.empty());
@@ -365,7 +367,7 @@ class ExcelAdvancedValueObjectTest {
     ExcelDrawingObjectSnapshot.Shape groupSnapshot =
         new ExcelDrawingObjectSnapshot.Shape(
             "OpsGroup",
-            new ExcelDrawingAnchor.Absolute(1L, 2L, 10L, 20L, null),
+            new DrawingAnchorReport.Absolute(1L, 2L, 10L, 20L, null),
             ExcelDrawingShapeKind.GROUP,
             null,
             null,
@@ -390,20 +392,26 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(2, groupSnapshot.childCount());
     assertEquals("Payload", payload.label());
     assertThrows(IllegalArgumentException.class, () -> new ExcelBinaryData(new byte[0]));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelDrawingMarker(-1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(2, 2, 0, 0), new ExcelDrawingMarker(1, 2, 0, 0), null));
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(2, 2, 0, 0),
+                new DrawingMarkerSpec(1, 2, 0, 0),
+                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertDoesNotThrow(
         () ->
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(2, 1, 0, 3), new ExcelDrawingMarker(2, 3, 0, 4), null));
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(2, 1, 0, 3),
+                new DrawingMarkerSpec(2, 3, 0, 4),
+                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertDoesNotThrow(
         () ->
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(1, 2, 3, 0), new ExcelDrawingMarker(3, 2, 4, 0), null));
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(1, 2, 3, 0),
+                new DrawingMarkerSpec(3, 2, 4, 0),
+                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelShapeDefinition.SimpleShape("OpsShape", twoCell, " ", Optional.empty()));

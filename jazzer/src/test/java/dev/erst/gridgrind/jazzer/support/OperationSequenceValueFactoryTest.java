@@ -289,11 +289,11 @@ class OperationSequenceValueFactoryTest {
                 OperationSequenceValueFactory.nextExcelEmbeddedObjectDefinition(
                     (GridGrindFuzzData) args[0])),
         new CoverageCase(
-            "nextExcelDrawingAnchor",
+            "nextDrawingAnchorInput",
             List.of(CoverageParameterKind.DATA),
             false,
             args ->
-                OperationSequenceValueFactory.nextExcelDrawingAnchor((GridGrindFuzzData) args[0])),
+                OperationSequenceValueFactory.nextDrawingAnchorInput((GridGrindFuzzData) args[0])),
         new CoverageCase(
             "nextDrawingAnchorBehavior",
             List.of(CoverageParameterKind.DATA),

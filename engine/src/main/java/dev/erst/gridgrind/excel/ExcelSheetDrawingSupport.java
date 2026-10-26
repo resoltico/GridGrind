@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -69,7 +69,7 @@ final class ExcelSheetDrawingSupport {
   }
 
   ExcelSheet setDrawingObjectAnchor(
-      String objectName, ExcelDrawingAnchor.TwoCell anchor, ExcelSheet owner) {
+      String objectName, DrawingAnchorSpec.TwoCell anchor, ExcelSheet owner) {
     requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");
     drawingController.setDrawingObjectAnchor(xssfSheet(), objectName, anchor);

@@ -2,9 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
@@ -84,7 +84,7 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
           () -> controller.drawingObjectPayload(sheet, simpleShape.getShapeName()));
       controller.setDrawingObjectAnchor(sheet, chartName, anchor(1, 1, 2, 2));
       assertEquals(
-          anchor(1, 1, 2, 2),
+          DrawingGeometryFixtures.report(anchor(1, 1, 2, 2)),
           controller.drawingObjects(sheet).stream()
               .filter(ExcelDrawingObjectSnapshot.Chart.class::isInstance)
               .map(ExcelDrawingObjectSnapshot.Chart.class::cast)
@@ -181,17 +181,17 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
     }
 
     CTShape oneCellShape = oneCellShape();
-    ExcelDrawingAnchor.OneCell reflectedOneCell =
+    DrawingAnchorReport.OneCell reflectedOneCell =
         assertInstanceOf(
-            ExcelDrawingAnchor.OneCell.class,
-            invoke(controller, "snapshotAnchor", ExcelDrawingAnchor.class, oneCellShape));
+            DrawingAnchorReport.OneCell.class,
+            invoke(controller, "snapshotAnchor", DrawingAnchorReport.class, oneCellShape));
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, reflectedOneCell.behavior());
 
     CTShape absoluteShape = absoluteShape();
-    ExcelDrawingAnchor.Absolute reflectedAbsolute =
+    DrawingAnchorReport.Absolute reflectedAbsolute =
         assertInstanceOf(
-            ExcelDrawingAnchor.Absolute.class,
-            invoke(controller, "snapshotAnchor", ExcelDrawingAnchor.class, absoluteShape));
+            DrawingAnchorReport.Absolute.class,
+            invoke(controller, "snapshotAnchor", DrawingAnchorReport.class, absoluteShape));
     assertEquals(ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE, reflectedAbsolute.behavior());
 
     IllegalStateException missingParent =
@@ -201,7 +201,7 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
                 invoke(
                     controller,
                     "snapshotAnchor",
-                    ExcelDrawingAnchor.class,
+                    DrawingAnchorReport.class,
                     CTShape.Factory.newInstance()));
     assertTrue(missingParent.getMessage().contains("missing its parent anchor"));
 
@@ -212,7 +212,7 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
                 invoke(
                     controller,
                     "snapshotAnchor",
-                    ExcelDrawingAnchor.class,
+                    DrawingAnchorReport.class,
                     unsupportedParentShape()));
     assertTrue(unsupportedParent.getMessage().contains("Unsupported parent anchor type"));
 

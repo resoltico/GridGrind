@@ -78,8 +78,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
@@ -270,18 +268,18 @@ class AdvancedMutationCommandConverterTest {
             "OpsPicture",
             new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
             ExcelPictureFormat.PNG,
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(1, 2, 3, 4),
-                new ExcelDrawingMarker(4, 6, 7, 8),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(1, 2, 3, 4),
+                new DrawingMarkerSpec(4, 6, 7, 8),
                 ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
             Optional.of("Queue preview")),
         pictureCommand.picture());
     assertEquals(
         new ExcelSignatureLineDefinition(
             "OpsSignature",
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(1, 2, 3, 4),
-                new ExcelDrawingMarker(4, 6, 7, 8),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(1, 2, 3, 4),
+                new DrawingMarkerSpec(4, 6, 7, 8),
                 ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
             false,
             "Review before signing.",
@@ -297,9 +295,9 @@ class AdvancedMutationCommandConverterTest {
     assertEquals(
         new ExcelShapeDefinition.SimpleShape(
             "OpsShape",
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(1, 2, 3, 4),
-                new ExcelDrawingMarker(4, 6, 7, 8),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(1, 2, 3, 4),
+                new DrawingMarkerSpec(4, 6, 7, 8),
                 ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
             "rect",
             Optional.of("Queue")),
@@ -313,9 +311,9 @@ class AdvancedMutationCommandConverterTest {
             new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
             ExcelPictureFormat.PNG,
             new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
-            new ExcelDrawingAnchor.TwoCell(
-                new ExcelDrawingMarker(1, 2, 3, 4),
-                new ExcelDrawingMarker(4, 6, 7, 8),
+            new DrawingAnchorSpec.TwoCell(
+                new DrawingMarkerSpec(1, 2, 3, 4),
+                new DrawingMarkerSpec(4, 6, 7, 8),
                 ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE)),
         embeddedObjectCommand.embeddedObject());
     assertEquals("OpsPicture", moveCommand.objectName());

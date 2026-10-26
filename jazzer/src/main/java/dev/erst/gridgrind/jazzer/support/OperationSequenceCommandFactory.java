@@ -136,7 +136,7 @@ final class OperationSequenceCommandFactory {
                     targetSheet, nextExcelEmbeddedObjectDefinition(data));
             case 0x8 ->
                 new WorkbookDrawingCommand.SetDrawingObjectAnchor(
-                    targetSheet, nextDrawingObjectName(data), nextExcelDrawingAnchor(data));
+                    targetSheet, nextDrawingObjectName(data), nextDrawingAnchorInput(data));
             case 0x9 ->
                 new WorkbookDrawingCommand.DeleteDrawingObject(
                     targetSheet, nextDrawingObjectName(data));

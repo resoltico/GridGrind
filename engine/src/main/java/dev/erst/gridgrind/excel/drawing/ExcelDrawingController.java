@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.excel.DrawingObjectNotFoundException;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
@@ -222,7 +223,7 @@ public final class ExcelDrawingController {
   }
 
   public void setDrawingObjectAnchor(
-      XSSFSheet sheet, String objectName, ExcelDrawingAnchor.TwoCell anchor) {
+      XSSFSheet sheet, String objectName, DrawingAnchorSpec.TwoCell anchor) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     ExcelDrawingArgumentSupport.requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");

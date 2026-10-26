@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import java.util.Objects;
@@ -13,7 +14,7 @@ public record ExcelEmbeddedObjectDefinition(
     ExcelBinaryData payload,
     ExcelPictureFormat previewFormat,
     ExcelBinaryData previewImage,
-    ExcelDrawingAnchor.TwoCell anchor) {
+    DrawingAnchorSpec.TwoCell anchor) {
   public ExcelEmbeddedObjectDefinition {
     Objects.requireNonNull(name, "name must not be null");
     Objects.requireNonNull(label, "label must not be null");

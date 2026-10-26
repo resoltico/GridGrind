@@ -84,8 +84,6 @@ import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
@@ -797,9 +795,11 @@ class SequenceIntrospectionTest {
                 Optional.empty())));
   }
 
-  private static ExcelDrawingAnchor.TwoCell excelAnchor() {
-    return new ExcelDrawingAnchor.TwoCell(
-        new ExcelDrawingMarker(0, 0, 0, 0), new ExcelDrawingMarker(2, 3, 0, 0), null);
+  private static DrawingAnchorSpec.TwoCell excelAnchor() {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(0, 0, 0, 0),
+        new DrawingMarkerSpec(2, 3, 0, 0),
+        dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
   private static ExcelPictureDefinition excelPictureDefinition() {

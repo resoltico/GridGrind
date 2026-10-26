@@ -3,6 +3,9 @@ package dev.erst.gridgrind.excel.drawing;
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.office.office.CTSignatureLine;
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.ArrayList;
@@ -54,7 +57,7 @@ public final class ExcelSignatureLineController {
   }
 
   public boolean updateAnchorIfPresent(
-      XSSFSheet sheet, String objectName, ExcelDrawingAnchor.TwoCell anchor) {
+      XSSFSheet sheet, String objectName, DrawingAnchorSpec.TwoCell anchor) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");
@@ -250,7 +253,7 @@ public final class ExcelSignatureLineController {
             .orElse(null);
   }
 
-  private static ExcelDrawingAnchor.TwoCell anchor(CTShape shape, String objectName) {
+  private static DrawingAnchorReport.TwoCell anchor(CTShape shape, String objectName) {
     String value = requiredClientData(null, shape, objectName).getAnchorArray(0);
     String[] tokens = VML_ANCHOR_SEPARATOR.split(value, -1);
     if (tokens.length != 8) {
@@ -258,13 +261,13 @@ public final class ExcelSignatureLineController {
           "Signature line '" + objectName + "' is backed by an invalid VML anchor: " + value);
     }
     try {
-      return new ExcelDrawingAnchor.TwoCell(
-          new ExcelDrawingMarker(
+      return new DrawingAnchorReport.TwoCell(
+          new DrawingMarkerReport(
               Integer.parseInt(tokens[0]),
               Integer.parseInt(tokens[2]),
               Integer.parseInt(tokens[1]),
               Integer.parseInt(tokens[3])),
-          new ExcelDrawingMarker(
+          new DrawingMarkerReport(
               Integer.parseInt(tokens[4]),
               Integer.parseInt(tokens[6]),
               Integer.parseInt(tokens[5]),
@@ -289,7 +292,7 @@ public final class ExcelSignatureLineController {
     return clientData;
   }
 
-  private static String anchorString(ExcelDrawingAnchor.TwoCell anchor) {
+  private static String anchorString(DrawingAnchorSpec.TwoCell anchor) {
     return anchor.from().columnIndex()
         + ", "
         + anchor.from().dx()
@@ -307,7 +310,7 @@ public final class ExcelSignatureLineController {
         + anchor.to().dy();
   }
 
-  private static XSSFClientAnchor toPoiAnchor(ExcelDrawingAnchor.TwoCell anchor) {
+  private static XSSFClientAnchor toPoiAnchor(DrawingAnchorSpec.TwoCell anchor) {
     return new XSSFClientAnchor(
         anchor.from().dx(),
         anchor.from().dy(),

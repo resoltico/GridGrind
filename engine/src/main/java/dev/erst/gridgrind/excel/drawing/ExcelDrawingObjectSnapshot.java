@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -19,12 +20,12 @@ public sealed interface ExcelDrawingObjectSnapshot
   String name();
 
   /** Stored anchor backing the drawing object. */
-  ExcelDrawingAnchor anchor();
+  DrawingAnchorReport anchor();
 
   /** Factual picture snapshot. */
   record Picture(
       String name,
-      ExcelDrawingAnchor anchor,
+      DrawingAnchorReport anchor,
       ExcelPictureFormat format,
       String contentType,
       long byteSize,
@@ -56,7 +57,7 @@ public sealed interface ExcelDrawingObjectSnapshot
   /** Factual chart snapshot surfaced through the drawing-object inventory. */
   record Chart(
       String name,
-      ExcelDrawingAnchor anchor,
+      DrawingAnchorReport anchor,
       boolean supported,
       List<String> plotTypeTokens,
       String title)
@@ -75,7 +76,7 @@ public sealed interface ExcelDrawingObjectSnapshot
   /** Factual non-binary drawing shape snapshot. */
   record Shape(
       String name,
-      ExcelDrawingAnchor anchor,
+      DrawingAnchorReport anchor,
       ExcelDrawingShapeKind kind,
       @Nullable String presetGeometryToken,
       @Nullable String text,
@@ -99,7 +100,7 @@ public sealed interface ExcelDrawingObjectSnapshot
   /** Factual embedded-object snapshot. */
   record EmbeddedObject(
       String name,
-      ExcelDrawingAnchor anchor,
+      DrawingAnchorReport anchor,
       ExcelEmbeddedObjectPackagingKind packagingKind,
       @Nullable String label,
       @Nullable String fileName,
@@ -146,7 +147,7 @@ public sealed interface ExcelDrawingObjectSnapshot
   /** Factual signature-line snapshot. */
   record SignatureLine(
       String name,
-      ExcelDrawingAnchor anchor,
+      DrawingAnchorReport anchor,
       java.util.Optional<ExcelSignatureLineSnapshot.Setup> setup,
       java.util.Optional<ExcelSignatureLineSnapshot.Preview> preview)
       implements ExcelDrawingObjectSnapshot {
@@ -161,7 +162,7 @@ public sealed interface ExcelDrawingObjectSnapshot
     }
   }
 
-  private static void validateCommon(String name, ExcelDrawingAnchor anchor) {
+  private static void validateCommon(String name, DrawingAnchorReport anchor) {
     requireNonBlank(name, "name");
     Objects.requireNonNull(anchor, "anchor must not be null");
   }

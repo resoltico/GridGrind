@@ -2,6 +2,8 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
@@ -34,8 +36,6 @@ import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
@@ -232,10 +232,11 @@ class XlsxRoundTripVerifierTest {
                             "QueuePreview",
                             new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
                             ExcelPictureFormat.PNG,
-                            new ExcelDrawingAnchor.TwoCell(
-                                new ExcelDrawingMarker(1, 1, 0, 0),
-                                new ExcelDrawingMarker(4, 6, 0, 0),
-                                null),
+                            new DrawingAnchorSpec.TwoCell(
+                                new DrawingMarkerSpec(1, 1, 0, 0),
+                                new DrawingMarkerSpec(4, 6, 0, 0),
+                                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
+                                    .MOVE_AND_RESIZE),
                             Optional.of("Queue preview"))),
                     new WorkbookDrawingCommand.SetPicture(
                         "Queue",
@@ -243,10 +244,11 @@ class XlsxRoundTripVerifierTest {
                             "QueuePreview2",
                             new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
                             ExcelPictureFormat.PNG,
-                            new ExcelDrawingAnchor.TwoCell(
-                                new ExcelDrawingMarker(6, 1, 0, 0),
-                                new ExcelDrawingMarker(9, 6, 0, 0),
-                                null),
+                            new DrawingAnchorSpec.TwoCell(
+                                new DrawingMarkerSpec(6, 1, 0, 0),
+                                new DrawingMarkerSpec(9, 6, 0, 0),
+                                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
+                                    .MOVE_AND_RESIZE),
                             Optional.empty())),
                     new WorkbookSheetCommand.CopySheet(
                         "Queue",
@@ -273,10 +275,11 @@ class XlsxRoundTripVerifierTest {
                                 "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                             ExcelPictureFormat.PNG,
                             new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
-                            new ExcelDrawingAnchor.TwoCell(
-                                new ExcelDrawingMarker(1, 1, 0, 0),
-                                new ExcelDrawingMarker(4, 6, 0, 0),
-                                null))),
+                            new DrawingAnchorSpec.TwoCell(
+                                new DrawingMarkerSpec(1, 1, 0, 0),
+                                new DrawingMarkerSpec(4, 6, 0, 0),
+                                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
+                                    .MOVE_AND_RESIZE))),
                     new WorkbookAnnotationCommand.SetComment(
                         "Queue", "B2", new ResolvedComment("Queue note", "GridGrind", true)),
                     new WorkbookSheetCommand.CopySheet(
@@ -334,8 +337,10 @@ class XlsxRoundTripVerifierTest {
   private static ExcelSignatureLineDefinition signatureLineDefinition() {
     return new ExcelSignatureLineDefinition(
         "BudgetSignature",
-        new ExcelDrawingAnchor.TwoCell(
-            new ExcelDrawingMarker(1, 1, 0, 0), new ExcelDrawingMarker(4, 6, 0, 0), null),
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(1, 1, 0, 0),
+            new DrawingMarkerSpec(4, 6, 0, 0),
+            dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
         false,
         "Review the budget before signing.",
         "Ada Lovelace",

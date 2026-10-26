@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -18,10 +20,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSecurityPoiBridge;
@@ -56,9 +56,11 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
     assertEquals(Optional.of(0.25d), CellColorReport.rgb(new RgbHex("#112233"), 0.25d).tint());
     assertEquals(Optional.of(-0.5d), CellColorReport.indexed(7, -0.5d).tint());
 
-    ExcelDrawingAnchor.TwoCell anchor =
-        new ExcelDrawingAnchor.TwoCell(
-            new ExcelDrawingMarker(0, 0), new ExcelDrawingMarker(2, 2), null);
+    DrawingAnchorSpec.TwoCell anchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(0, 0, 0, 0),
+            new DrawingMarkerSpec(2, 2, 0, 0),
+            dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
     ExcelShapeDefinition.SimpleShape simpleShape =
         new ExcelShapeDefinition.SimpleShape("Queue Banner", anchor, "rect", Optional.of("Ready"));
     assertEquals(ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, simpleShape.kind());

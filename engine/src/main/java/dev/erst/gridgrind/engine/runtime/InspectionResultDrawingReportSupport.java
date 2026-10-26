@@ -1,13 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
-import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.util.Base64;
@@ -21,7 +17,7 @@ final class InspectionResultDrawingReportSupport {
       case ExcelDrawingObjectSnapshot.Picture picture ->
           new DrawingObjectReport.Picture(
               picture.name(),
-              toDrawingAnchorReport(picture.anchor()),
+              picture.anchor(),
               picture.format(),
               picture.contentType(),
               picture.byteSize(),
@@ -32,14 +28,14 @@ final class InspectionResultDrawingReportSupport {
       case ExcelDrawingObjectSnapshot.Chart chart ->
           new DrawingObjectReport.Chart(
               chart.name(),
-              toDrawingAnchorReport(chart.anchor()),
+              chart.anchor(),
               chart.supported(),
               chart.plotTypeTokens(),
               chart.title());
       case ExcelDrawingObjectSnapshot.Shape shape ->
           new DrawingObjectReport.Shape(
               shape.name(),
-              toDrawingAnchorReport(shape.anchor()),
+              shape.anchor(),
               shape.kind(),
               shape.presetGeometryToken(),
               shape.text(),
@@ -47,7 +43,7 @@ final class InspectionResultDrawingReportSupport {
       case ExcelDrawingObjectSnapshot.EmbeddedObject embeddedObject ->
           new DrawingObjectReport.EmbeddedObject(
               embeddedObject.name(),
-              toDrawingAnchorReport(embeddedObject.anchor()),
+              embeddedObject.anchor(),
               embeddedObject.packagingKind(),
               embeddedObject.label(),
               embeddedObject.fileName(),
@@ -61,7 +57,7 @@ final class InspectionResultDrawingReportSupport {
       case ExcelDrawingObjectSnapshot.SignatureLine signatureLine ->
           new DrawingObjectReport.SignatureLine(
               signatureLine.name(),
-              toDrawingAnchorReport(signatureLine.anchor()),
+              signatureLine.anchor(),
               signatureLine
                   .setup()
                   .map(
@@ -90,7 +86,7 @@ final class InspectionResultDrawingReportSupport {
   static ChartReport toChartReport(ExcelChartSnapshot snapshot) {
     return new ChartReport(
         snapshot.name(),
-        toDrawingAnchorReport(snapshot.anchor()),
+        snapshot.anchor(),
         toChartTitleReport(snapshot.title()),
         toChartLegendReport(snapshot.legend()),
         snapshot.displayBlanksAs(),
@@ -123,34 +119,6 @@ final class InspectionResultDrawingReportSupport {
               embeddedObject.label(),
               embeddedObject.command());
     };
-  }
-
-  static DrawingAnchorReport toDrawingAnchorReport(ExcelDrawingAnchor anchor) {
-    return switch (anchor) {
-      case ExcelDrawingAnchor.TwoCell twoCell ->
-          new DrawingAnchorReport.TwoCell(
-              toDrawingMarkerReport(twoCell.from()),
-              toDrawingMarkerReport(twoCell.to()),
-              twoCell.behavior());
-      case ExcelDrawingAnchor.OneCell oneCell ->
-          new DrawingAnchorReport.OneCell(
-              toDrawingMarkerReport(oneCell.from()),
-              oneCell.widthEmu(),
-              oneCell.heightEmu(),
-              oneCell.behavior());
-      case ExcelDrawingAnchor.Absolute absolute ->
-          new DrawingAnchorReport.Absolute(
-              absolute.xEmu(),
-              absolute.yEmu(),
-              absolute.widthEmu(),
-              absolute.heightEmu(),
-              absolute.behavior());
-    };
-  }
-
-  static DrawingMarkerReport toDrawingMarkerReport(ExcelDrawingMarker marker) {
-    return new DrawingMarkerReport(
-        marker.columnIndex(), marker.rowIndex(), marker.dx(), marker.dy());
   }
 
   private static ChartReport.Title toChartTitleReport(ExcelChartSnapshot.Title title) {

@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
@@ -22,8 +24,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
@@ -511,15 +511,15 @@ class WorkbookCommandExecutorTest {
   void appliesDrawingCommandsThroughTheWorkbookCommandSurface() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
-      ExcelDrawingAnchor.TwoCell firstAnchor =
-          new ExcelDrawingAnchor.TwoCell(
-              new ExcelDrawingMarker(1, 1),
-              new ExcelDrawingMarker(4, 6),
+      DrawingAnchorSpec.TwoCell firstAnchor =
+          new DrawingAnchorSpec.TwoCell(
+              new DrawingMarkerSpec(1, 1, 0, 0),
+              new DrawingMarkerSpec(4, 6, 0, 0),
               ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-      ExcelDrawingAnchor.TwoCell movedAnchor =
-          new ExcelDrawingAnchor.TwoCell(
-              new ExcelDrawingMarker(6, 2),
-              new ExcelDrawingMarker(9, 7),
+      DrawingAnchorSpec.TwoCell movedAnchor =
+          new DrawingAnchorSpec.TwoCell(
+              new DrawingMarkerSpec(6, 2, 0, 0),
+              new DrawingMarkerSpec(9, 7, 0, 0),
               ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
       byte[] pngBytes =
           java.util.Base64.getDecoder()
@@ -561,7 +561,7 @@ class WorkbookCommandExecutorTest {
           List.of("OpsShape", "OpsEmbed"),
           drawingObjects.stream().map(ExcelDrawingObjectSnapshot::name).toList());
       assertEquals(
-          movedAnchor,
+          DrawingGeometryFixtures.report(movedAnchor),
           assertInstanceOf(ExcelDrawingObjectSnapshot.Shape.class, drawingObjects.getFirst())
               .anchor());
     }
@@ -948,9 +948,9 @@ class WorkbookCommandExecutorTest {
               "Budget",
               new ExcelShapeDefinition.SimpleShape(
                   "BudgetShape",
-                  new ExcelDrawingAnchor.TwoCell(
-                      new ExcelDrawingMarker(0, 0),
-                      new ExcelDrawingMarker(2, 3),
+                  new DrawingAnchorSpec.TwoCell(
+                      new DrawingMarkerSpec(0, 0, 0, 0),
+                      new DrawingMarkerSpec(2, 3, 0, 0),
                       ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                   "rect",
                   Optional.of("Queue"))));

@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.ClientAnchor;
@@ -17,7 +21,7 @@ public final class ExcelDrawingAnchorSupport {
   private ExcelDrawingAnchorSupport() {}
 
   public static org.apache.poi.xssf.usermodel.XSSFClientAnchor toPoiAnchor(
-      XSSFDrawing drawing, ExcelDrawingAnchor.TwoCell anchor) {
+      XSSFDrawing drawing, DrawingAnchorSpec.TwoCell anchor) {
     org.apache.poi.xssf.usermodel.XSSFClientAnchor poiAnchor =
         drawing.createAnchor(
             anchor.from().dx(),
@@ -40,25 +44,25 @@ public final class ExcelDrawingAnchorSupport {
     };
   }
 
-  public static ExcelDrawingAnchor snapshotAnchor(XmlObject shapeXml) {
+  public static DrawingAnchorReport snapshotAnchor(XmlObject shapeXml) {
     XmlObject parentAnchor = parentAnchor(shapeXml).orElse(null);
     return switch (parentAnchor) {
       case org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTTwoCellAnchor
               twoCellAnchor ->
-          new ExcelDrawingAnchor.TwoCell(
+          new DrawingAnchorReport.TwoCell(
               marker(twoCellAnchor.getFrom()),
               marker(twoCellAnchor.getTo()),
               behavior(twoCellAnchor.getEditAs()));
       case org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTOneCellAnchor
               oneCellAnchor ->
-          new ExcelDrawingAnchor.OneCell(
+          new DrawingAnchorReport.OneCell(
               marker(oneCellAnchor.getFrom()),
               oneCellAnchor.getExt().getCx(),
               oneCellAnchor.getExt().getCy(),
               ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
       case org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTAbsoluteAnchor
               absoluteAnchor ->
-          new ExcelDrawingAnchor.Absolute(
+          new DrawingAnchorReport.Absolute(
               ((Number) absoluteAnchor.getPos().getX()).longValue(),
               ((Number) absoluteAnchor.getPos().getY()).longValue(),
               absoluteAnchor.getExt().getCx(),
@@ -84,9 +88,9 @@ public final class ExcelDrawingAnchorSupport {
     };
   }
 
-  public static ExcelDrawingMarker marker(
+  public static DrawingMarkerReport marker(
       org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTMarker marker) {
-    return new ExcelDrawingMarker(
+    return new DrawingMarkerReport(
         marker.getCol(),
         marker.getRow(),
         Math.toIntExact(((Number) marker.getColOff()).longValue()),
@@ -145,7 +149,7 @@ public final class ExcelDrawingAnchorSupport {
       XSSFSheet sheet,
       String objectName,
       @Nullable XmlObject parentAnchor,
-      ExcelDrawingAnchor.TwoCell anchor) {
+      DrawingAnchorSpec.TwoCell anchor) {
     if (!(parentAnchor
         instanceof
         org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTTwoCellAnchor
@@ -188,7 +192,7 @@ public final class ExcelDrawingAnchorSupport {
 
   private static void applyMarker(
       org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTMarker target,
-      ExcelDrawingMarker source) {
+      DrawingMarkerSpec source) {
     target.setCol(source.columnIndex());
     target.setRow(source.rowIndex());
     target.setColOff(source.dx());

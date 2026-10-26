@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 class ExcelChartValueObjectTest {
   @Test
   void definitionShapesAndCommandWrappersValidateCanonicalState() {
-    ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 6, 10);
+    DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 6, 10);
     ExcelChartDefinition.Series definitionSeries =
         new ExcelChartDefinition.Series(
             new ExcelChartDefinition.Title.None(),
@@ -117,7 +117,7 @@ class ExcelChartValueObjectTest {
 
   @Test
   void snapshotShapesAreTopLevelChartsWithTypedPlots() {
-    ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 6, 10);
+    DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 6, 10);
     ExcelChartSnapshot.Axis categoryAxis =
         new ExcelChartSnapshot.Axis(
             ExcelChartAxisKind.CATEGORY,
@@ -144,7 +144,7 @@ class ExcelChartValueObjectTest {
     ExcelChartSnapshot lineSnapshot =
         new ExcelChartSnapshot(
             "OpsLine",
-            anchor,
+            DrawingGeometryFixtures.report(anchor),
             new ExcelChartSnapshot.Title.None(),
             new ExcelChartSnapshot.Legend.Visible(ExcelChartLegendPosition.RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
@@ -161,7 +161,7 @@ class ExcelChartValueObjectTest {
     ExcelChartSnapshot unsupported =
         new ExcelChartSnapshot(
             "OpsUnsupported",
-            anchor,
+            DrawingGeometryFixtures.report(anchor),
             new ExcelChartSnapshot.Title.Text("Broken"),
             new ExcelChartSnapshot.Legend.Hidden(),
             ExcelChartDisplayBlanksAs.GAP,
@@ -193,7 +193,7 @@ class ExcelChartValueObjectTest {
 
   @Test
   void preparedModelsAndAllModeledPlotFamiliesRetainCanonicalState() throws Exception {
-    ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(2, 2, 8, 14);
+    DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(2, 2, 8, 14);
     List<ExcelChartDefinition.Axis> categoryAxes =
         List.of(
             new ExcelChartDefinition.Axis(

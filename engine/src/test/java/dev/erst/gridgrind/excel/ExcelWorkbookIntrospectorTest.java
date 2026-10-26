@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
@@ -10,8 +12,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import java.io.IOException;
@@ -283,9 +283,9 @@ class ExcelWorkbookIntrospectorTest {
                           .decode(
                               "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC")),
                   ExcelPictureFormat.PNG,
-                  new ExcelDrawingAnchor.TwoCell(
-                      new ExcelDrawingMarker(1, 2),
-                      new ExcelDrawingMarker(4, 6),
+                  new DrawingAnchorSpec.TwoCell(
+                      new DrawingMarkerSpec(1, 2, 0, 0),
+                      new DrawingMarkerSpec(4, 6, 0, 0),
                       ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                   java.util.Optional.of("Queue preview")))
           .setEmbeddedObject(
@@ -300,9 +300,9 @@ class ExcelWorkbookIntrospectorTest {
                       java.util.Base64.getDecoder()
                           .decode(
                               "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC")),
-                  new ExcelDrawingAnchor.TwoCell(
-                      new ExcelDrawingMarker(5, 2),
-                      new ExcelDrawingMarker(8, 6),
+                  new DrawingAnchorSpec.TwoCell(
+                      new DrawingMarkerSpec(5, 2, 0, 0),
+                      new DrawingMarkerSpec(8, 6, 0, 0),
                       ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE)));
 
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();

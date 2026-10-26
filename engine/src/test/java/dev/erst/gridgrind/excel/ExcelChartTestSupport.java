@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -9,8 +11,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,10 +18,10 @@ import java.util.Optional;
 final class ExcelChartTestSupport {
   private ExcelChartTestSupport() {}
 
-  static ExcelDrawingAnchor.TwoCell anchor(int fromColumn, int fromRow, int toColumn, int toRow) {
-    return new ExcelDrawingAnchor.TwoCell(
-        new ExcelDrawingMarker(fromColumn, fromRow),
-        new ExcelDrawingMarker(toColumn, toRow),
+  static DrawingAnchorSpec.TwoCell anchor(int fromColumn, int fromRow, int toColumn, int toRow) {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(fromColumn, fromRow, 0, 0),
+        new DrawingMarkerSpec(toColumn, toRow, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
@@ -31,7 +31,7 @@ final class ExcelChartTestSupport {
 
   static ExcelChartDefinition lineChart(
       String name,
-      ExcelDrawingAnchor.TwoCell anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       ExcelChartDefinition.Title title,
       ExcelChartDefinition.Legend legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
@@ -52,7 +52,7 @@ final class ExcelChartTestSupport {
 
   static ExcelChartDefinition barChart(
       String name,
-      ExcelDrawingAnchor.TwoCell anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       ExcelChartDefinition.Title title,
       ExcelChartDefinition.Legend legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
@@ -80,7 +80,7 @@ final class ExcelChartTestSupport {
 
   static ExcelChartDefinition pieChart(
       String name,
-      ExcelDrawingAnchor.TwoCell anchor,
+      DrawingAnchorSpec.TwoCell anchor,
       ExcelChartDefinition.Title title,
       ExcelChartDefinition.Legend legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,

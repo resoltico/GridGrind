@@ -205,11 +205,15 @@ class ExcelSheetCopyControllerTest {
                   .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
-      assertEquals(ExcelChartTestSupport.anchor(0, 5, 3, 9), copiedPicture.anchor());
+      assertEquals(
+          DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(0, 5, 3, 9)),
+          copiedPicture.anchor());
 
       ExcelChartSnapshot copiedChart = replica.drawings().charts().getFirst();
       assertEquals("OpsChart", copiedChart.name());
-      assertEquals(ExcelChartTestSupport.anchor(6, 1, 12, 14), copiedChart.anchor());
+      assertEquals(
+          DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(6, 1, 12, 14)),
+          copiedChart.anchor());
       ExcelChartSnapshot.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
               .series()

@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -179,11 +179,11 @@ class ExcelChartReadbackTest {
     sheet.cells().setCell("C4", new ResolvedFormula("B4*2"));
   }
 
-  private static ExcelDrawingAnchor.TwoCell anchor(
+  private static DrawingAnchorSpec.TwoCell anchor(
       int firstRow, int firstColumn, int lastRow, int lastColumn) {
-    return new ExcelDrawingAnchor.TwoCell(
-        new ExcelDrawingMarker(firstRow, firstColumn),
-        new ExcelDrawingMarker(lastRow, lastColumn),
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(firstRow, firstColumn, 0, 0),
+        new DrawingMarkerSpec(lastRow, lastColumn, 0, 0),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 

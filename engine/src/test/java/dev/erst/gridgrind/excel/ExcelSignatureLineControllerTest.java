@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
@@ -38,8 +38,8 @@ class ExcelSignatureLineControllerTest {
   @Test
   void controllerHandlesEmptySheetsLifecycleAndPreviewReferenceTracking() throws Exception {
     ExcelSignatureLineController controller = new ExcelSignatureLineController();
-    ExcelDrawingAnchor.TwoCell initialAnchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
-    ExcelDrawingAnchor.TwoCell movedAnchor = ExcelChartTestSupport.anchor(6, 2, 10, 7);
+    DrawingAnchorSpec.TwoCell initialAnchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
+    DrawingAnchorSpec.TwoCell movedAnchor = ExcelChartTestSupport.anchor(6, 2, 10, 7);
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
@@ -69,7 +69,9 @@ class ExcelSignatureLineControllerTest {
               sheet, PackagingURIHelper.createPartName("/xl/media/other-preview.png")));
 
       assertTrue(controller.updateAnchorIfPresent(sheet, "OpsSignature", movedAnchor));
-      assertEquals(movedAnchor, controller.signatureLines(sheet).getFirst().anchor());
+      assertEquals(
+          DrawingGeometryFixtures.report(movedAnchor),
+          controller.signatureLines(sheet).getFirst().anchor());
 
       assertTrue(controller.deleteIfPresent(sheet, "OpsSignature"));
       assertFalse(controller.hasNamedSignatureLine(sheet, "OpsSignature"));
@@ -81,7 +83,7 @@ class ExcelSignatureLineControllerTest {
   @Test
   void controllerRejectsMissingClientDataAndMissingAnchors() throws Exception {
     ExcelSignatureLineController controller = new ExcelSignatureLineController();
-    ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
+    DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
@@ -128,7 +130,7 @@ class ExcelSignatureLineControllerTest {
   @Test
   void controllerRejectsInvalidAnchorsAndDuplicateResolvedNames() throws Exception {
     ExcelSignatureLineController controller = new ExcelSignatureLineController();
-    ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
+    DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
@@ -235,7 +237,7 @@ class ExcelSignatureLineControllerTest {
   }
 
   private static ExcelSignatureLineDefinition definition(
-      String name, ExcelDrawingAnchor.TwoCell anchor) {
+      String name, DrawingAnchorSpec.TwoCell anchor) {
     return new ExcelSignatureLineDefinition(
         name,
         anchor,

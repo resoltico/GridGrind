@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import java.util.Objects;
@@ -10,7 +11,7 @@ public record ExcelPictureDefinition(
     String name,
     ExcelBinaryData imageData,
     ExcelPictureFormat format,
-    ExcelDrawingAnchor.TwoCell anchor,
+    DrawingAnchorSpec.TwoCell anchor,
     Optional<String> description) {
   public ExcelPictureDefinition {
     Objects.requireNonNull(name, "name must not be null");
