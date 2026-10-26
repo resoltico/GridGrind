@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
@@ -10,6 +11,7 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -157,12 +159,12 @@ class AdvancedReadEngineTypesTest {
   @Test
   void commentPrintAndProtectionSnapshotsValidateRichReadShapes() {
     CellFontReport baseFont = font(rgb("#112233"));
-    ExcelCommentAnchorSnapshot anchor = new ExcelCommentAnchorSnapshot(1, 2, 4, 6);
-    ExcelRichTextSnapshot runs =
-        new ExcelRichTextSnapshot(
+    CommentAnchorReport anchor = new CommentAnchorReport(1, 2, 4, 6);
+    List<RichTextRunReport> runs =
+        List.copyOf(
             List.of(
-                new ExcelRichTextRunSnapshot("Hi ", baseFont),
-                new ExcelRichTextRunSnapshot("there", font(CellColorReport.theme(5, 0.2d)))));
+                new RichTextRunReport("Hi ", baseFont),
+                new RichTextRunReport("there", font(CellColorReport.theme(5, 0.2d)))));
     ExcelCommentSnapshot comment =
         new ExcelCommentSnapshot("Hi there", "Ada", true, Optional.of(runs), Optional.of(anchor));
 
@@ -179,9 +181,7 @@ class AdvancedReadEngineTypesTest {
                 "Mismatch",
                 "Ada",
                 true,
-                Optional.of(
-                    new ExcelRichTextSnapshot(
-                        List.of(new ExcelRichTextRunSnapshot("Other", baseFont)))),
+                Optional.of(List.copyOf(List.of(new RichTextRunReport("Other", baseFont)))),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
@@ -189,9 +189,9 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelCommentSnapshot("Hi there", " ", true, Optional.empty(), Optional.empty()));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchorSnapshot(2, 0, 1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchorSnapshot(0, 2, 0, 1));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchorSnapshot(-1, 0, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(2, 0, 1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(0, 2, 0, 1));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(-1, 0, 1, 1));
 
     ExcelPrintSetupSnapshot setup =
         new ExcelPrintSetupSnapshot(

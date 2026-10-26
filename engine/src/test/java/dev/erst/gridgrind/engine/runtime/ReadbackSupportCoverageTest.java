@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
@@ -32,11 +33,8 @@ import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCommentAnchorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
-import dev.erst.gridgrind.excel.ExcelRichTextRunSnapshot;
-import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -83,8 +81,8 @@ class ReadbackSupportCoverageTest {
     ExcelCellReadProjection valueOnly = ExcelCellReadProjection.defaults();
     ExcelCellReadProjection formulaOnly =
         new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA));
-    ExcelRichTextSnapshot richText =
-        new ExcelRichTextSnapshot(List.of(new ExcelRichTextRunSnapshot("Ada", fontSnapshot())));
+    List<RichTextRunReport> richText =
+        List.copyOf(List.of(new RichTextRunReport("Ada", fontSnapshot())));
     ExcelCellSnapshot.TextSnapshot textSnapshot =
         new ExcelCellSnapshot.TextSnapshot(
             "A1", "Ada", style("General"), metadata(), "Ada", richText);
@@ -201,12 +199,6 @@ class ReadbackSupportCoverageTest {
             IllegalArgumentException.class,
             () -> InspectionResultCellReportSupport.toCellValue(formulaSnapshot));
     assertEquals("Formula evaluations must not recursively remain FORMULA", exception.getMessage());
-
-    assertEquals(
-        Optional.empty(), InspectionResultCellReportSupport.toRichTextRunReports(Optional.empty()));
-    assertEquals(
-        Optional.empty(),
-        InspectionResultCellReportSupport.toRichTextRunReports((ExcelRichTextSnapshot) null));
   }
 
   @Test
@@ -417,8 +409,7 @@ class ReadbackSupportCoverageTest {
             style("General"),
             metadata(),
             "Ada",
-            new ExcelRichTextSnapshot(
-                List.of(new ExcelRichTextRunSnapshot("Ada", fontSnapshot()))));
+            List.copyOf(List.of(new RichTextRunReport("Ada", fontSnapshot()))));
     var formulaSnapshot =
         new ExcelCellSnapshot.FormulaSnapshot(
             "A7", "Ada", style("General"), metadata(), "A1", Optional.of(textSnapshot));
@@ -487,10 +478,8 @@ class ReadbackSupportCoverageTest {
                 "Review",
                 "Alice",
                 true,
-                Optional.of(
-                    new ExcelRichTextSnapshot(
-                        List.of(new ExcelRichTextRunSnapshot("Review", fontSnapshot())))),
-                Optional.of(new ExcelCommentAnchorSnapshot(0, 0, 1, 2)))));
+                Optional.of(List.copyOf(List.of(new RichTextRunReport("Review", fontSnapshot())))),
+                Optional.of(new CommentAnchorReport(0, 0, 1, 2)))));
   }
 
   private static CellStyleReport style(String numberFormat) {

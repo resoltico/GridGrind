@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -62,7 +62,7 @@ final class XlsxRoundTripExpectedStateSupport {
   record ExpectedWorkbookState(
       Map<String, Map<CellCoordinate, CellStyleReport>> expectedStyles,
       Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata,
-      Map<String, Map<CellCoordinate, ExcelRichTextSnapshot>> expectedRichText,
+      Map<String, Map<CellCoordinate, List<RichTextRunReport>>> expectedRichText,
       Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
       dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary,
       Map<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> expectedSheetSummaries,

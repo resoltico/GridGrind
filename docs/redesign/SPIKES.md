@@ -1665,3 +1665,36 @@ of their engine snapshots. Rich-text list wrapping, comment conversion methods a
 projection need producer/consumer migration rather than a substitute wrapper. Comment producers
 already filter absent/blank text/author before constructing the old snapshot; preserve that current
 observable filtering while removing the duplicated record checks.
+
+## WP-40 canonical rich-text runs and comment anchors
+
+Deleted ExcelRichTextRunSnapshot and ExcelCommentAnchorSnapshot in favor of the identical core
+reports. Deleted ExcelRichTextSnapshot: POI extraction returns an immutable List<RichTextRunReport>,
+and comments, readback, repair and independent round-trip expectations consume it directly. Removed
+run/anchor identity report construction. JDK list-wrapper-only assertions were retired; the actual
+POI readback result now has an immutability assertion. Canonical report constructors retain the
+nonempty optional-list and concatenation invariants; the raw cell mirror remains pending migration.
+No substitute rich-text model wrapper or compatibility API was added.
+
+Compilation caught old runs()/plainText() consumers, which now use lists and JDK joining (19s).
+Focused checking first caught the comment repair adapter's import count after crossing packages;
+a scoped suppression records its coordinate/anchor/rich-text correspondence. Focused engine,
+14 parity and PMD passed (33s); nested deterministic check and all retained seed replay passed
+(22s). Root check first stopped on one formatting line after a variable rename (43s); formatting
+was corrected. Final ./gradlew check passed (3m36s), core 344, JSON 348, engine 1482 plus 14
+parity, CLI 588, architecture 14 plus 12 rule tests, zero failures/errors/skips. All 143 golden
+cases are unchanged. No mutation or active fuzz campaign ran.
+
+Inventories: snapshots 41→38, converter lines 4343→4309, main Java lines 122046→121967.
+Definitions 13, Support 206 and blank checks 434 remain open. Baseline diff empty. CommentReport
+migration still needs moving the removed-model authoring projections to the feature adapter or
+source-resolved contract; producer blank-comment filtering is existing observable behavior.
+
+Resolved-plan review evidence: RequestPreflightInputResolver currently reconstructs WorkbookPlan
+with inline source-bearing specs; successful PreparedRequest holds that plan and the path-access
+bindings. Semantic selectors resolve per step after earlier mutations, so targets cannot all be
+made concrete before execution. ExecutionInputBindings.resolveSecret currently grants/checks each
+reference, resolves char[] to String and wipes the supplied array; the source-backed text/binary
+preflight does not call it. Preserve owned error paths, resource cleanup and secret handling when
+introducing actual source-resolved forms and ResolvedPlan/ResolvedStep/ResolvedTarget. Do not wrap
+the retired command hierarchy or label remaining authored source references fully resolved.

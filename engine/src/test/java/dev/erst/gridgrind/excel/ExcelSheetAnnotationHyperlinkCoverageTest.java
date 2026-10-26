@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -147,11 +148,11 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
 
       assertEquals("Hi there", snapshot.text());
       assertEquals("GridGrind", snapshot.author());
-      assertEquals(new ExcelCommentAnchorSnapshot(0, 0, 3, 3), snapshot.anchor().orElseThrow());
+      assertEquals(new CommentAnchorReport(0, 0, 3, 3), snapshot.anchor().orElseThrow());
       assertTrue(snapshot.runs().isPresent());
-      assertEquals(2, snapshot.runs().orElseThrow().runs().size());
-      assertEquals("Hi ", snapshot.runs().orElseThrow().runs().get(0).text());
-      assertEquals("there", snapshot.runs().orElseThrow().runs().get(1).text());
+      assertEquals(2, snapshot.runs().orElseThrow().size());
+      assertEquals("Hi ", snapshot.runs().orElseThrow().get(0).text());
+      assertEquals("there", snapshot.runs().orElseThrow().get(1).text());
     }
   }
 

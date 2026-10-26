@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -64,37 +65,18 @@ class ExcelRichTextSupportTest {
     assertEquals("Quarterly Report", richText.plainText());
     assertEquals(2, richText.runs().size());
 
-    assertThrows(NullPointerException.class, () -> new ExcelRichTextSnapshot(null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelRichTextSnapshot(List.of()));
-
-    List<ExcelRichTextRunSnapshot> invalidSnapshots = new ArrayList<>();
-    invalidSnapshots.add(null);
-    assertThrows(NullPointerException.class, () -> new ExcelRichTextSnapshot(invalidSnapshots));
-
-    assertThrows(NullPointerException.class, () -> new ExcelRichTextRunSnapshot(null, baseFont()));
-    assertThrows(NullPointerException.class, () -> new ExcelRichTextRunSnapshot("text", null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelRichTextRunSnapshot("", baseFont()));
-
-    List<ExcelRichTextRunSnapshot> snapshotRuns =
-        new ArrayList<>(
-            List.of(
-                new ExcelRichTextRunSnapshot("Quarterly", baseFont()),
-                new ExcelRichTextRunSnapshot(" Report", baseFont())));
-    ExcelRichTextSnapshot snapshot = new ExcelRichTextSnapshot(snapshotRuns);
-    snapshotRuns.clear();
-
-    assertEquals("Quarterly Report", snapshot.plainText());
-    assertEquals(2, snapshot.runs().size());
+    assertThrows(NullPointerException.class, () -> new RichTextRunReport(null, baseFont()));
+    assertThrows(NullPointerException.class, () -> new RichTextRunReport("text", null));
+    assertThrows(IllegalArgumentException.class, () -> new RichTextRunReport("", baseFont()));
   }
 
   @Test
   void textSnapshotsRequireRichTextRunsToMatchTheStoredStringValue() {
-    ExcelRichTextSnapshot richText =
-        new ExcelRichTextSnapshot(
+    List<RichTextRunReport> richText =
+        List.copyOf(
             List.of(
-                new ExcelRichTextRunSnapshot("Quarterly", baseFont()),
-                new ExcelRichTextRunSnapshot(" Report", baseFont())));
+                new RichTextRunReport("Quarterly", baseFont()),
+                new RichTextRunReport(" Report", baseFont())));
 
     ExcelCellSnapshot.TextSnapshot snapshot =
         new ExcelCellSnapshot.TextSnapshot(
@@ -150,23 +132,34 @@ class ExcelRichTextSupportTest {
 
       XSSFRichTextString runWithoutProperties = new XSSFRichTextString();
       runWithoutProperties.getCTRst().addNewR().setT("Base");
-      ExcelRichTextSnapshot inheritedWithoutProperties =
+      List<RichTextRunReport> inheritedWithoutProperties =
           ExcelRichTextSupport.snapshot(workbook, runWithoutProperties, baseFont()).orElseThrow();
 
       assertNotNull(inheritedWithoutProperties);
-      assertEquals("Base", inheritedWithoutProperties.plainText());
-      assertEquals(baseFont(), inheritedWithoutProperties.runs().get(0).font());
+      assertThrows(
+          UnsupportedOperationException.class,
+          () -> inheritedWithoutProperties.add(new RichTextRunReport("extra", baseFont())));
+      assertEquals(
+          "Base",
+          inheritedWithoutProperties.stream()
+              .map(RichTextRunReport::text)
+              .collect(java.util.stream.Collectors.joining()));
+      assertEquals(baseFont(), inheritedWithoutProperties.get(0).font());
 
       XSSFRichTextString runWithEmptyProperties = new XSSFRichTextString();
       CTRElt run = runWithEmptyProperties.getCTRst().addNewR();
       run.setT(" Still Base");
       run.addNewRPr();
-      ExcelRichTextSnapshot inheritedWithEmptyProperties =
+      List<RichTextRunReport> inheritedWithEmptyProperties =
           ExcelRichTextSupport.snapshot(workbook, runWithEmptyProperties, baseFont()).orElseThrow();
 
       assertNotNull(inheritedWithEmptyProperties);
-      assertEquals(" Still Base", inheritedWithEmptyProperties.plainText());
-      assertEquals(baseFont(), inheritedWithEmptyProperties.runs().get(0).font());
+      assertEquals(
+          " Still Base",
+          inheritedWithEmptyProperties.stream()
+              .map(RichTextRunReport::text)
+              .collect(java.util.stream.Collectors.joining()));
+      assertEquals(baseFont(), inheritedWithEmptyProperties.get(0).font());
     }
   }
 
@@ -205,14 +198,14 @@ class ExcelRichTextSupportTest {
                                   Optional.empty(),
                                   Optional.empty()))))));
 
-      ExcelRichTextSnapshot snapshot =
+      List<RichTextRunReport> snapshot =
           ExcelRichTextSupport.snapshot(workbook, richText, baseFont()).orElseThrow();
 
-      assertEquals(CellColorReport.theme(4, -0.20d), snapshot.runs().get(0).font().fontColor());
-      assertEquals(baseFont().fontColor(), snapshot.runs().get(1).font().fontColor());
+      assertEquals(CellColorReport.theme(4, -0.20d), snapshot.get(0).font().fontColor());
+      assertEquals(baseFont().fontColor(), snapshot.get(1).font().fontColor());
       assertEquals(
           CellColorReport.indexed(Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex())),
-          snapshot.runs().get(2).font().fontColor());
+          snapshot.get(2).font().fontColor());
     }
   }
 
@@ -257,16 +250,20 @@ class ExcelRichTextSupportTest {
                               Optional.empty()))),
                   new ExcelRichTextRun(" Gamma", Optional.empty())));
 
-      ExcelRichTextSnapshot snapshot =
+      List<RichTextRunReport> snapshot =
           ExcelRichTextSupport.snapshot(
                   workbook, ExcelRichTextSupport.toPoiRichText(workbook, richText), baseFont())
               .orElseThrow();
 
       assertNotNull(snapshot);
-      assertEquals("Alpha Beta Delta Gamma", snapshot.plainText());
-      assertEquals(4, snapshot.runs().size());
+      assertEquals(
+          "Alpha Beta Delta Gamma",
+          snapshot.stream()
+              .map(RichTextRunReport::text)
+              .collect(java.util.stream.Collectors.joining()));
+      assertEquals(4, snapshot.size());
 
-      ExcelRichTextRunSnapshot alpha = snapshot.runs().get(0);
+      RichTextRunReport alpha = snapshot.get(0);
       assertEquals("Alpha", alpha.text());
       assertFalse(alpha.font().bold());
       assertFalse(alpha.font().italic());
@@ -276,7 +273,7 @@ class ExcelRichTextSupportTest {
       assertFalse(alpha.font().underline());
       assertTrue(alpha.font().strikeout());
 
-      ExcelRichTextRunSnapshot beta = snapshot.runs().get(1);
+      RichTextRunReport beta = snapshot.get(1);
       assertEquals(" Beta", beta.text());
       assertTrue(beta.font().bold());
       assertTrue(beta.font().italic());
@@ -286,7 +283,7 @@ class ExcelRichTextSupportTest {
       assertTrue(beta.font().underline());
       assertFalse(beta.font().strikeout());
 
-      ExcelRichTextRunSnapshot delta = snapshot.runs().get(2);
+      RichTextRunReport delta = snapshot.get(2);
       assertEquals(" Delta", delta.text());
       assertEquals(baseFont().bold(), delta.font().bold());
       assertFalse(delta.font().italic());
@@ -296,7 +293,7 @@ class ExcelRichTextSupportTest {
       assertEquals(baseFont().underline(), delta.font().underline());
       assertEquals(baseFont().strikeout(), delta.font().strikeout());
 
-      ExcelRichTextRunSnapshot gamma = snapshot.runs().get(3);
+      RichTextRunReport gamma = snapshot.get(3);
       assertEquals(" Gamma", gamma.text());
       assertEquals(baseFont(), gamma.font());
     }
@@ -321,13 +318,17 @@ class ExcelRichTextSupportTest {
           .addNewColor()
           .setRgb(ExcelRgbColorSupport.toXssfColor(workbook, "#00AA11").getARGB());
 
-      ExcelRichTextSnapshot snapshot =
+      List<RichTextRunReport> snapshot =
           ExcelRichTextSupport.snapshot(workbook, richText, baseFont()).orElseThrow();
 
       assertNotNull(snapshot);
-      assertEquals("Flags", snapshot.plainText());
-      assertEquals(1, snapshot.runs().size());
-      CellFontReport font = snapshot.runs().get(0).font();
+      assertEquals(
+          "Flags",
+          snapshot.stream()
+              .map(RichTextRunReport::text)
+              .collect(java.util.stream.Collectors.joining()));
+      assertEquals(1, snapshot.size());
+      CellFontReport font = snapshot.get(0).font();
       assertTrue(font.bold());
       assertTrue(font.italic());
       assertEquals("Fira Code", font.fontName());
@@ -400,21 +401,19 @@ class ExcelRichTextSupportTest {
                               Optional.empty(),
                               Optional.of(Boolean.TRUE))))));
 
-      ExcelRichTextSnapshot snapshot =
+      List<RichTextRunReport> snapshot =
           ExcelRichTextSupport.snapshot(
                   workbook, ExcelRichTextSupport.toPoiRichText(workbook, richText), baseFont())
               .orElseThrow();
 
       assertNotNull(snapshot);
-      assertEquals(5, snapshot.runs().size());
-      assertEquals("Courier New", snapshot.runs().get(0).font().fontName());
+      assertEquals(5, snapshot.size());
+      assertEquals("Courier New", snapshot.get(0).font().fontName());
       assertEquals(
-          FontHeightReport.fromPoints(new BigDecimal("13")),
-          snapshot.runs().get(1).font().fontHeight());
-      assertEquals(
-          CellColorReport.rgb(new RgbHex("#ABCDEF")), snapshot.runs().get(2).font().fontColor());
-      assertFalse(snapshot.runs().get(3).font().underline());
-      assertTrue(snapshot.runs().get(4).font().strikeout());
+          FontHeightReport.fromPoints(new BigDecimal("13")), snapshot.get(1).font().fontHeight());
+      assertEquals(CellColorReport.rgb(new RgbHex("#ABCDEF")), snapshot.get(2).font().fontColor());
+      assertFalse(snapshot.get(3).font().underline());
+      assertTrue(snapshot.get(4).font().strikeout());
     }
   }
 

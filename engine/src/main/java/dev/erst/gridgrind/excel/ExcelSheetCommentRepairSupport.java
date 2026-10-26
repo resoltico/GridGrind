@@ -1,8 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
@@ -31,6 +33,8 @@ import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTComment;
 
 /** Repairs authoritative sheet comment state after POI mutations that can corrupt OOXML. */
+// Comment repair spans coordinate shifts, drawing anchors and canonical rich-text facts.
+@SuppressWarnings("PMD.ExcessiveImports")
 final class ExcelSheetCommentRepairSupport {
   private static final Comparator<CellAddress> CELL_ADDRESS_ORDER =
       Comparator.comparingInt(CellAddress::getRow).thenComparingInt(CellAddress::getColumn);
@@ -124,12 +128,11 @@ final class ExcelSheetCommentRepairSupport {
   private XSSFComment newRawComment(
       int rowIndex, int columnIndex, CommentRewriteSnapshot expectedComment) {
     ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
-    Optional<ExcelCommentAnchorSnapshot> authoredAnchor = expectedComment.anchor();
-    anchor.setRow1(authoredAnchor.map(ExcelCommentAnchorSnapshot::firstRow).orElse(rowIndex));
-    anchor.setRow2(authoredAnchor.map(ExcelCommentAnchorSnapshot::lastRow).orElse(rowIndex + 3));
-    anchor.setCol1(authoredAnchor.map(ExcelCommentAnchorSnapshot::firstColumn).orElse(columnIndex));
-    anchor.setCol2(
-        authoredAnchor.map(ExcelCommentAnchorSnapshot::lastColumn).orElse(columnIndex + 3));
+    Optional<CommentAnchorReport> authoredAnchor = expectedComment.anchor();
+    anchor.setRow1(authoredAnchor.map(CommentAnchorReport::firstRow).orElse(rowIndex));
+    anchor.setRow2(authoredAnchor.map(CommentAnchorReport::lastRow).orElse(rowIndex + 3));
+    anchor.setCol1(authoredAnchor.map(CommentAnchorReport::firstColumn).orElse(columnIndex));
+    anchor.setCol2(authoredAnchor.map(CommentAnchorReport::lastColumn).orElse(columnIndex + 3));
     XSSFComment poiComment = (XSSFComment) sheet.createDrawingPatriarch().createCellComment(anchor);
     poiComment.setAuthor(expectedComment.author());
     poiComment.setVisible(expectedComment.visible());
@@ -316,12 +319,12 @@ final class ExcelSheetCommentRepairSupport {
     return cell == null ? row.createCell(columnIndex) : cell;
   }
 
-  private static ExcelRichText toAuthoringRichText(ExcelRichTextSnapshot runs) {
+  private static ExcelRichText toAuthoringRichText(List<RichTextRunReport> runs) {
     return new ExcelRichText(
-        runs.runs().stream().map(ExcelSheetCommentRepairSupport::toAuthoringRun).toList());
+        runs.stream().map(ExcelSheetCommentRepairSupport::toAuthoringRun).toList());
   }
 
-  private static ExcelRichTextRun toAuthoringRun(ExcelRichTextRunSnapshot run) {
+  private static ExcelRichTextRun toAuthoringRun(RichTextRunReport run) {
     return new ExcelRichTextRun(run.text(), Optional.of(toAuthoringFont(run.font())));
   }
 
@@ -341,8 +344,8 @@ final class ExcelSheetCommentRepairSupport {
       String text,
       String author,
       boolean visible,
-      Optional<ExcelRichTextSnapshot> runs,
-      Optional<ExcelCommentAnchorSnapshot> anchor) {
+      Optional<List<RichTextRunReport>> runs,
+      Optional<CommentAnchorReport> anchor) {
     CommentRewriteSnapshot {
       Objects.requireNonNull(address, "address must not be null");
       text = text == null ? "" : text;
@@ -363,18 +366,18 @@ final class ExcelSheetCommentRepairSupport {
 
     static CommentRewriteSnapshot from(
         CellAddress address, XSSFComment comment, XSSFWorkbook workbook) {
-      Optional<ExcelCommentAnchorSnapshot> anchor = Optional.empty();
+      Optional<CommentAnchorReport> anchor = Optional.empty();
       if (comment.getClientAnchor() instanceof XSSFClientAnchor clientAnchor) {
         anchor =
             Optional.of(
-                new ExcelCommentAnchorSnapshot(
+                new CommentAnchorReport(
                     clientAnchor.getCol1(),
                     clientAnchor.getRow1(),
                     clientAnchor.getCol2(),
                     clientAnchor.getRow2()));
       }
       XSSFRichTextString richText = comment.getString();
-      Optional<ExcelRichTextSnapshot> runs =
+      Optional<List<RichTextRunReport>> runs =
           richText == null
               ? Optional.empty()
               : ExcelRichTextSupport.snapshot(

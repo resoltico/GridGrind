@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
 import java.util.List;
@@ -234,17 +236,17 @@ final class ExcelSheetCommentSupport {
     if (plainComment.isEmpty()) {
       return Optional.empty();
     }
-    Optional<ExcelCommentAnchorSnapshot> anchor = Optional.empty();
+    Optional<CommentAnchorReport> anchor = Optional.empty();
     if (xssfComment.getClientAnchor() instanceof XSSFClientAnchor clientAnchor) {
       anchor =
           Optional.of(
-              new ExcelCommentAnchorSnapshot(
+              new CommentAnchorReport(
                   clientAnchor.getCol1(),
                   clientAnchor.getRow1(),
                   clientAnchor.getCol2(),
                   clientAnchor.getRow2()));
     }
-    Optional<ExcelRichTextSnapshot> runs =
+    Optional<List<RichTextRunReport>> runs =
         workbook.isEmpty()
             ? Optional.empty()
             : ExcelRichTextSupport.snapshot(

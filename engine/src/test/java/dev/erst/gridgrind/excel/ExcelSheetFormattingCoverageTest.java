@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -251,10 +252,14 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
 
       assertEquals("Quarterly Report", textSnapshot.textValue());
       assertNotNull(textSnapshot.richText());
-      assertEquals("Quarterly Report", textSnapshot.richText().plainText());
-      assertEquals(2, textSnapshot.richText().runs().size());
+      assertEquals(
+          "Quarterly Report",
+          textSnapshot.richText().stream()
+              .map(RichTextRunReport::text)
+              .collect(java.util.stream.Collectors.joining()));
+      assertEquals(2, textSnapshot.richText().size());
 
-      ExcelRichTextRunSnapshot firstRun = textSnapshot.richText().runs().get(0);
+      RichTextRunReport firstRun = textSnapshot.richText().get(0);
       assertEquals("Quarterly", firstRun.text());
       assertEquals("Aptos", firstRun.font().fontName());
       assertEquals(FontHeightReport.fromTwips(260), firstRun.font().fontHeight());
@@ -262,7 +267,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertFalse(firstRun.font().bold());
       assertTrue(firstRun.font().italic());
 
-      ExcelRichTextRunSnapshot secondRun = textSnapshot.richText().runs().get(1);
+      RichTextRunReport secondRun = textSnapshot.richText().get(1);
       assertEquals(" Report", secondRun.text());
       assertEquals("Aptos", secondRun.font().fontName());
       assertEquals(FontHeightReport.fromTwips(260), secondRun.font().fontHeight());

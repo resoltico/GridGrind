@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
@@ -10,7 +11,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
-import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
@@ -262,9 +262,10 @@ final class XlsxRoundTripExpectationVerification {
         }
       }
       for (Map.Entry<
-              String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelRichTextSnapshot>>
+              String,
+              Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>>
           entry : expectedWorkbookState.expectedRichText().entrySet()) {
-        for (Map.Entry<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelRichTextSnapshot>
+        for (Map.Entry<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>
             cellEntry : entry.getValue().entrySet()) {
           ExcelCellSnapshot actualSnapshot =
               workbook.sheet(entry.getKey()).cells().snapshotCell(cellEntry.getKey().a1Address());
@@ -279,7 +280,9 @@ final class XlsxRoundTripExpectationVerification {
               entry.getKey(),
               cellEntry.getKey(),
               "textValue",
-              cellEntry.getValue().plainText(),
+              cellEntry.getValue().stream()
+                  .map(RichTextRunReport::text)
+                  .collect(java.util.stream.Collectors.joining()),
               textSnapshot.textValue());
           requireEquals(
               entry.getKey(),

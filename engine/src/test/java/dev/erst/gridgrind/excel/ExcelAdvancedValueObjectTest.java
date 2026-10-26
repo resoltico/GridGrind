@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -11,6 +12,7 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -444,9 +446,9 @@ class ExcelAdvancedValueObjectTest {
             "GridGrind",
             true,
             Optional.of(
-                new ExcelRichTextSnapshot(
+                List.copyOf(
                     List.of(
-                        new ExcelRichTextRunSnapshot(
+                        new RichTextRunReport(
                             "Quarterly",
                             new CellFontReport(
                                 false,
@@ -456,7 +458,7 @@ class ExcelAdvancedValueObjectTest {
                                 null,
                                 false,
                                 false)),
-                        new ExcelRichTextRunSnapshot(
+                        new RichTextRunReport(
                             " Review",
                             new CellFontReport(
                                 true,
@@ -466,7 +468,7 @@ class ExcelAdvancedValueObjectTest {
                                 CellColorReport.rgb(new RgbHex("#112233")),
                                 false,
                                 false))))),
-            Optional.of(new ExcelCommentAnchorSnapshot(1, 2, 4, 6)));
+            Optional.of(new CommentAnchorReport(1, 2, 4, 6)));
     var formulaTarget = ExcelNamedRangeTarget.formula("SUM(Ops!$B$2:$B$5)");
     var table =
         new ExcelTableDefinition(

@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -14,7 +13,6 @@ import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
-import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelTemporalFormatSupport;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,11 +56,7 @@ final class InspectionResultCellReportSupport {
     }
     return Optional.of(
         new CommentReport(
-            comment.text(),
-            comment.author(),
-            comment.visible(),
-            toRichTextRunReports(comment.runs()),
-            commentAnchorReport(comment)));
+            comment.text(), comment.author(), comment.visible(), comment.runs(), comment.anchor()));
   }
 
   static CellReport toCellReport(
@@ -154,22 +148,6 @@ final class InspectionResultCellReportSupport {
     };
   }
 
-  static Optional<List<RichTextRunReport>> toRichTextRunReports(
-      Optional<ExcelRichTextSnapshot> richText) {
-    if (richText.isEmpty()) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        richText.orElseThrow().runs().stream()
-            .map(run -> new RichTextRunReport(run.text(), run.font()))
-            .toList());
-  }
-
-  static Optional<List<RichTextRunReport>> toRichTextRunReports(
-      @Nullable ExcelRichTextSnapshot richText) {
-    return toRichTextRunReports(Optional.ofNullable(richText));
-  }
-
   private static Optional<String> projectedDisplayValue(
       ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
     return projection.includes(ExcelCellReadFacet.FORMAT)
@@ -210,9 +188,9 @@ final class InspectionResultCellReportSupport {
   }
 
   private static Optional<List<RichTextRunReport>> projectedRuns(
-      ExcelCellReadProjection projection, @Nullable ExcelRichTextSnapshot richText) {
+      ExcelCellReadProjection projection, @Nullable List<RichTextRunReport> richText) {
     return projection.includes(ExcelCellReadFacet.RICH_TEXT_RUNS)
-        ? toRichTextRunReports(richText)
+        ? Optional.ofNullable(richText)
         : Optional.empty();
   }
 
@@ -245,17 +223,5 @@ final class InspectionResultCellReportSupport {
       case DATE_TIME ->
           CellTemporalReport.temporal(CellTemporalKind.DATE_TIME, localDateTime.toString());
     };
-  }
-
-  private static Optional<CommentAnchorReport> commentAnchorReport(ExcelCommentSnapshot comment) {
-    return comment
-        .anchor()
-        .map(
-            anchor ->
-                new CommentAnchorReport(
-                    anchor.firstColumn(),
-                    anchor.firstRow(),
-                    anchor.lastColumn(),
-                    anchor.lastRow()));
   }
 }

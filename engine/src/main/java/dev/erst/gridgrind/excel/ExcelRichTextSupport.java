@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -39,23 +40,22 @@ public final class ExcelRichTextSupport {
   }
 
   /** Returns factual rich-text runs, or empty when the cell stores only a scalar plain string. */
-  static Optional<ExcelRichTextSnapshot> snapshot(
+  static Optional<List<RichTextRunReport>> snapshot(
       XSSFWorkbook workbook, XSSFRichTextString richText, CellFontReport baseFont) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(richText, "richText must not be null");
     Objects.requireNonNull(baseFont, "baseFont must not be null");
 
-    CTRElt[] runs = richText.getCTRst().getRArray();
-    if (runs.length == 0) {
+    CTRElt[] storedRuns = richText.getCTRst().getRArray();
+    if (storedRuns.length == 0) {
       return Optional.empty();
     }
 
-    List<ExcelRichTextRunSnapshot> snapshots = new ArrayList<>(runs.length);
-    for (CTRElt run : runs) {
-      snapshots.add(
-          new ExcelRichTextRunSnapshot(run.getT(), merge(baseFont, runFontPatch(workbook, run))));
+    List<RichTextRunReport> runs = new ArrayList<>(storedRuns.length);
+    for (CTRElt run : storedRuns) {
+      runs.add(new RichTextRunReport(run.getT(), merge(baseFont, runFontPatch(workbook, run))));
     }
-    return Optional.of(new ExcelRichTextSnapshot(snapshots));
+    return Optional.of(List.copyOf(runs));
   }
 
   private static XSSFFont fontPatch(XSSFWorkbook workbook, CellFontPatch fontPatch) {

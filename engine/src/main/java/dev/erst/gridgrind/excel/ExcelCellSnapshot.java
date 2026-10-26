@@ -1,7 +1,9 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
+import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
@@ -40,7 +42,7 @@ public sealed interface ExcelCellSnapshot {
       CellStyleReport style,
       ExcelCellMetadataSnapshot metadata,
       String textValue,
-      @Nullable ExcelRichTextSnapshot richText)
+      @Nullable List<RichTextRunReport> richText)
       implements ExcelCellSnapshot {
     public TextSnapshot {
       java.util.Objects.requireNonNull(address, "address must not be null");
@@ -48,7 +50,11 @@ public sealed interface ExcelCellSnapshot {
       java.util.Objects.requireNonNull(style, "style must not be null");
       java.util.Objects.requireNonNull(metadata, "metadata must not be null");
       java.util.Objects.requireNonNull(textValue, "textValue must not be null");
-      if (richText != null && !textValue.equals(richText.plainText())) {
+      if (richText != null
+          && !textValue.equals(
+              richText.stream()
+                  .map(RichTextRunReport::text)
+                  .collect(java.util.stream.Collectors.joining()))) {
         throw new IllegalArgumentException("richText run text must concatenate to the textValue");
       }
     }

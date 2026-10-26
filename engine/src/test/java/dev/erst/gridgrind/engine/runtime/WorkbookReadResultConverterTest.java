@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.engine.runtime.ProtocolStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
@@ -23,6 +24,7 @@ import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
@@ -935,8 +937,8 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
   }
 
   private static ExcelCellSnapshot advancedCell() {
-    ExcelRichTextSnapshot richText =
-        new ExcelRichTextSnapshot(List.of(new ExcelRichTextRunSnapshot("Styled", advancedFont())));
+    List<RichTextRunReport> richText =
+        List.copyOf(List.of(new RichTextRunReport("Styled", advancedFont())));
     return new ExcelCellSnapshot.TextSnapshot(
         "C3",
         "Styled",
@@ -954,11 +956,11 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         "Ada",
         true,
         Optional.of(
-            new ExcelRichTextSnapshot(
+            List.copyOf(
                 List.of(
-                    new ExcelRichTextRunSnapshot("Hi ", advancedFont()),
-                    new ExcelRichTextRunSnapshot("there", accentFont())))),
-        Optional.of(new ExcelCommentAnchorSnapshot(1, 2, 4, 6)));
+                    new RichTextRunReport("Hi ", advancedFont()),
+                    new RichTextRunReport("there", accentFont())))),
+        Optional.of(new CommentAnchorReport(1, 2, 4, 6)));
   }
 
   private static CellStyleReport advancedStyle() {

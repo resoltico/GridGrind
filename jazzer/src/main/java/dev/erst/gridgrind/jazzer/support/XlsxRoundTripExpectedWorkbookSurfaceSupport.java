@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
@@ -10,7 +11,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
-import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -81,13 +81,13 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expectedMetadataBySheet);
   }
 
-  static Map<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelRichTextSnapshot>>
+  static Map<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>>
       expectedRichText(Map<String, List<ExcelCellSnapshot>> candidateSnapshots) {
     LinkedHashMap<
-            String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelRichTextSnapshot>>
+            String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>>
         expectedRichTextBySheet = new LinkedHashMap<>();
     for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
-      LinkedHashMap<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelRichTextSnapshot>
+      LinkedHashMap<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>
           expectedRichText = new LinkedHashMap<>();
       for (ExcelCellSnapshot snapshot : entry.getValue()) {
         if (snapshot instanceof ExcelCellSnapshot.TextSnapshot text && text.richText() != null) {

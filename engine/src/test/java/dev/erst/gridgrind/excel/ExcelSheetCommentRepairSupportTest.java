@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import java.io.IOException;
 import java.io.InputStream;
@@ -161,13 +163,12 @@ class ExcelSheetCommentRepairSupportTest {
 
       ExcelSheetCommentRepairSupport support =
           new ExcelSheetCommentRepairSupport(workbook.sheet("Ops").xssfSheet());
-      ExcelRichTextSnapshot richText =
-          new ExcelRichTextSnapshot(
-              List.of(new ExcelRichTextRunSnapshot("Raw rich", baseFontWithoutColor())));
-      ExcelRichTextSnapshot readbackRichText =
-          new ExcelRichTextSnapshot(
+      List<RichTextRunReport> richText =
+          List.copyOf(List.of(new RichTextRunReport("Raw rich", baseFontWithoutColor())));
+      List<RichTextRunReport> readbackRichText =
+          List.copyOf(
               List.of(
-                  new ExcelRichTextRunSnapshot(
+                  new RichTextRunReport(
                       "Raw rich",
                       new CellFontReport(
                           false,
@@ -177,7 +178,7 @@ class ExcelSheetCommentRepairSupportTest {
                           CellColorReport.indexed(8),
                           false,
                           false))));
-      ExcelCommentAnchorSnapshot explicitAnchor = new ExcelCommentAnchorSnapshot(2, 2, 6, 7);
+      CommentAnchorReport explicitAnchor = new CommentAnchorReport(2, 2, 6, 7);
 
       support.replaceComments(
           List.of(
@@ -195,7 +196,7 @@ class ExcelSheetCommentRepairSupportTest {
                       "",
                       true,
                       Optional.empty(),
-                      Optional.of(new ExcelCommentAnchorSnapshot(1, 3, 4, 6))),
+                      Optional.of(new CommentAnchorReport(1, 3, 4, 6))),
               "C3",
                   new ExcelSheetCommentRepairSupport.CommentRewriteSnapshot(
                       "C3",

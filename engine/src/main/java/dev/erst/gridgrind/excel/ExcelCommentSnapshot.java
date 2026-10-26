@@ -1,7 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -10,8 +13,8 @@ public record ExcelCommentSnapshot(
     String text,
     String author,
     boolean visible,
-    Optional<ExcelRichTextSnapshot> runs,
-    Optional<ExcelCommentAnchorSnapshot> anchor) {
+    Optional<List<RichTextRunReport>> runs,
+    Optional<CommentAnchorReport> anchor) {
   public ExcelCommentSnapshot {
     Objects.requireNonNull(text, "text must not be null");
     Objects.requireNonNull(author, "author must not be null");
@@ -23,7 +26,11 @@ public record ExcelCommentSnapshot(
     if (author.isBlank()) {
       throw new IllegalArgumentException("author must not be blank");
     }
-    if (runs.isPresent() && !text.equals(runs.orElseThrow().plainText())) {
+    if (runs.isPresent()
+        && !text.equals(
+            runs.orElseThrow().stream()
+                .map(RichTextRunReport::text)
+                .collect(java.util.stream.Collectors.joining()))) {
       throw new IllegalArgumentException("comment run text must concatenate to the plain text");
     }
   }
@@ -42,7 +49,7 @@ public record ExcelCommentSnapshot(
         runs.map(
             snapshot ->
                 new ExcelRichText(
-                    snapshot.runs().stream()
+                    snapshot.stream()
                         .map(
                             run ->
                                 new ExcelRichTextRun(
