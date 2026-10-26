@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,12 +17,12 @@ public final class ExcelWorkbookCustomXml {
   }
 
   /** Returns factual workbook custom-XML mapping metadata. */
-  public List<ExcelCustomXmlMappingSnapshot> customXmlMappings() {
+  public List<CustomXmlMappingReport> customXmlMappings() {
     return new ExcelCustomXmlController().mappings(workbook.xssfWorkbook());
   }
 
   /** Exports XML for one existing workbook custom-XML mapping. */
-  public ExcelCustomXmlExportSnapshot exportCustomXmlMapping(
+  public CustomXmlExportReport exportCustomXmlMapping(
       CustomXmlMappingLocator locator, boolean validateSchema, String encoding) {
     return new ExcelCustomXmlController()
         .exportMapping(workbook.xssfWorkbook(), locator, validateSchema, encoding);

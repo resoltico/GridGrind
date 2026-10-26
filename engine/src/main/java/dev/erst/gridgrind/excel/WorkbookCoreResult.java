@@ -5,12 +5,12 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.validateCommonWorkbookSummaryFields;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import java.util.List;
 import java.util.Objects;
 
@@ -54,7 +54,7 @@ public sealed interface WorkbookCoreResult extends WorkbookReadIntrospectionResu
   }
 
   /** Returns factual workbook custom-XML mapping metadata. */
-  record CustomXmlMappingsResult(StepId stepId, List<ExcelCustomXmlMappingSnapshot> mappings)
+  record CustomXmlMappingsResult(StepId stepId, List<CustomXmlMappingReport> mappings)
       implements WorkbookCoreResult {
     public CustomXmlMappingsResult {
 
@@ -64,7 +64,7 @@ public sealed interface WorkbookCoreResult extends WorkbookReadIntrospectionResu
   }
 
   /** Returns XML exported from one selected workbook custom-XML mapping. */
-  record CustomXmlExportResult(StepId stepId, ExcelCustomXmlExportSnapshot export)
+  record CustomXmlExportResult(StepId stepId, CustomXmlExportReport export)
       implements WorkbookCoreResult {
     public CustomXmlExportResult {
 

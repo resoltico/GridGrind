@@ -1,6 +1,11 @@
 package dev.erst.gridgrind.excel.customxml;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,16 +56,16 @@ public final class ExcelCustomXmlController {
     this.importer = Objects.requireNonNull(importer, "importer must not be null");
   }
 
-  public List<ExcelCustomXmlMappingSnapshot> mappings(XSSFWorkbook workbook) {
+  public List<CustomXmlMappingReport> mappings(XSSFWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    List<ExcelCustomXmlMappingSnapshot> snapshots = new ArrayList<>();
+    List<CustomXmlMappingReport> snapshots = new ArrayList<>();
     for (XSSFMap mapping : workbook.getCustomXMLMappings()) {
       snapshots.add(snapshot(mapping));
     }
     return List.copyOf(snapshots);
   }
 
-  public ExcelCustomXmlExportSnapshot exportMapping(
+  public CustomXmlExportReport exportMapping(
       XSSFWorkbook workbook,
       CustomXmlMappingLocator locator,
       boolean validateSchema,
@@ -87,7 +92,7 @@ public final class ExcelCustomXmlController {
               + "'",
           exception);
     }
-    return new ExcelCustomXmlExportSnapshot(
+    return new CustomXmlExportReport(
         snapshot(mapping), charset.name(), validateSchema, output.toString(charset));
   }
 
@@ -146,81 +151,77 @@ public final class ExcelCustomXmlController {
     return matches.getFirst();
   }
 
-  public static ExcelCustomXmlMappingSnapshot snapshot(XSSFMap mapping) {
+  public static CustomXmlMappingReport snapshot(XSSFMap mapping) {
     CTMap ctMap = mapping.getCtMap();
     CTSchema schema = mapping.getCTSchema();
-    return new ExcelCustomXmlMappingSnapshot(
+    return new CustomXmlMappingReport(
         ctMap.getID(),
         ctMap.getName(),
         ctMap.getRootElement(),
         ctMap.getSchemaID(),
-        new ExcelCustomXmlMappingSettings(
+        new CustomXmlMappingReport.Settings(
             ctMap.getShowImportExportValidationErrors(),
             ctMap.getAutoFit(),
             ctMap.getAppend(),
             ctMap.getPreserveSortAFLayout(),
             ctMap.getPreserveFormat()),
-        new ExcelCustomXmlSchemaSnapshot(
+        new CustomXmlMappingReport.Schema(
             schema != null && schema.isSetNamespace()
-                ? blankAsOptional(schema.getNamespace())
-                : Optional.empty(),
+                ? blankAsOptional(schema.getNamespace()).orElse(null)
+                : null,
             schema != null && schema.isSetSchemaLanguage()
-                ? blankAsOptional(schema.getSchemaLanguage())
-                : Optional.empty(),
+                ? blankAsOptional(schema.getSchemaLanguage()).orElse(null)
+                : null,
             schema != null && schema.isSetSchemaRef()
-                ? blankAsOptional(schema.getSchemaRef())
-                : Optional.empty(),
-            schemaXml(mapping)),
-        dataBinding(ctMap),
+                ? blankAsOptional(schema.getSchemaRef()).orElse(null)
+                : null,
+            schemaXml(mapping).orElse(null)),
+        dataBinding(ctMap).orElse(null),
         linkedCells(mapping),
         linkedTables(mapping));
   }
 
-  public static Optional<ExcelCustomXmlDataBindingSnapshot> dataBinding(CTMap ctMap) {
-    if (!ctMap.isSetDataBinding()) {
-      return Optional.empty();
-    }
-    CTDataBinding dataBinding = ctMap.getDataBinding();
+  public static Optional<CustomXmlDataBindingReport> dataBinding(CTMap ctMap) {
+    if (!ctMap.isSetDataBinding()) return Optional.empty();
+    CTDataBinding binding = ctMap.getDataBinding();
     return Optional.of(
-        new ExcelCustomXmlDataBindingSnapshot(
-            dataBinding.isSetDataBindingName()
-                ? blankAsOptional(dataBinding.getDataBindingName())
-                : Optional.empty(),
-            dataBinding.isSetFileBinding()
-                ? Optional.of(dataBinding.getFileBinding())
-                : Optional.empty(),
-            dataBinding.isSetConnectionID()
-                ? Optional.of(dataBinding.getConnectionID())
-                : Optional.empty(),
-            dataBinding.isSetFileBindingName()
-                ? blankAsOptional(dataBinding.getFileBindingName())
-                : Optional.empty(),
-            dataBinding.getDataBindingLoadMode()));
+        new CustomXmlDataBindingReport(
+            binding.isSetDataBindingName()
+                ? blankAsOptional(binding.getDataBindingName()).orElse(null)
+                : null,
+            binding.isSetFileBinding() ? binding.getFileBinding() : null,
+            binding.isSetConnectionID() ? binding.getConnectionID() : null,
+            binding.isSetFileBindingName()
+                ? blankAsOptional(binding.getFileBindingName()).orElse(null)
+                : null,
+            binding.getDataBindingLoadMode()));
   }
 
-  public static List<ExcelCustomXmlLinkedCellSnapshot> linkedCells(XSSFMap mapping) {
-    List<ExcelCustomXmlLinkedCellSnapshot> snapshots = new ArrayList<>();
+  public static List<CustomXmlLinkedCellReport> linkedCells(XSSFMap mapping) {
+    List<CustomXmlLinkedCellReport> snapshots = new ArrayList<>();
     for (XSSFSingleXmlCell linkedCell : mapping.getRelatedSingleXMLCell()) {
       snapshots.add(
-          new ExcelCustomXmlLinkedCellSnapshot(
-              linkedCell.getReferencedCell().getSheet().getSheetName(),
-              linkedCell.getReferencedCell().getAddress().formatAsString(),
+          new CustomXmlLinkedCellReport(
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+                  linkedCell.getReferencedCell().getSheet().getSheetName()),
+              new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                  linkedCell.getReferencedCell().getAddress().formatAsString()),
               linkedCell.getXpath(),
               linkedCell.getXmlDataType()));
     }
     return List.copyOf(snapshots);
   }
 
-  public static List<ExcelCustomXmlLinkedTableSnapshot> linkedTables(XSSFMap mapping) {
-    List<ExcelCustomXmlLinkedTableSnapshot> snapshots = new ArrayList<>();
+  public static List<CustomXmlLinkedTableReport> linkedTables(XSSFMap mapping) {
+    List<CustomXmlLinkedTableReport> snapshots = new ArrayList<>();
     for (XSSFTable table : mapping.getRelatedTables()) {
       XSSFSheet sheet = table.getXSSFSheet();
       snapshots.add(
-          new ExcelCustomXmlLinkedTableSnapshot(
-              sheet.getSheetName(),
+          new CustomXmlLinkedTableReport(
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheet.getSheetName()),
               table.getName(),
               table.getDisplayName(),
-              table.getArea().formatAsString(),
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel(table.getArea().formatAsString()),
               table.getCommonXpath()));
     }
     return List.copyOf(snapshots);

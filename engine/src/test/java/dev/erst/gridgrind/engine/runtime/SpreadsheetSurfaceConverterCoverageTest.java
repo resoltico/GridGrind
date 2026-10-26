@@ -15,8 +15,12 @@ import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
@@ -50,12 +54,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -128,29 +126,29 @@ class SpreadsheetSurfaceConverterCoverageTest {
 
   @Test
   void inspectionResultConverterCoversEveryExtendedChartPlotAndCustomXmlLinkedTables() {
-    ExcelCustomXmlMappingSnapshot mappingSnapshot =
-        new ExcelCustomXmlMappingSnapshot(
+    CustomXmlMappingReport mappingSnapshot =
+        new CustomXmlMappingReport(
             1L,
             "CORSO_mapping",
             "CORSO",
             "Schema1",
-            new ExcelCustomXmlMappingSettings(false, true, false, true, true),
-            new ExcelCustomXmlSchemaSnapshot(
-                Optional.of("urn:gridgrind:test"),
-                Optional.of("XSD"),
-                Optional.of("schema.xsd"),
-                Optional.of("<xsd:schema/>")),
-            Optional.of(
-                new ExcelCustomXmlDataBindingSnapshot(
-                    Optional.of("binding"),
-                    Optional.of(true),
-                    Optional.of(5L),
-                    Optional.of("binding.xml"),
-                    2L)),
-            List.of(new ExcelCustomXmlLinkedCellSnapshot("Foglio1", "A1", "/CORSO/NOME", "string")),
+            new CustomXmlMappingReport.Settings(false, true, false, true, true),
+            new CustomXmlMappingReport.Schema(
+                "urn:gridgrind:test", "XSD", "schema.xsd", "<xsd:schema/>"),
+            new CustomXmlDataBindingReport("binding", true, 5L, "binding.xml", 2L),
             List.of(
-                new ExcelCustomXmlLinkedTableSnapshot(
-                    "Foglio1", "Table1", "CourseTable", "A1:B4", "/CORSO/RIGHE/RIGA")));
+                new CustomXmlLinkedCellReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Foglio1"),
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                    "/CORSO/NOME",
+                    "string")),
+            List.of(
+                new CustomXmlLinkedTableReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Foglio1"),
+                    "Table1",
+                    "CourseTable",
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B4"),
+                    "/CORSO/RIGHE/RIGA")));
     ExcelChartSnapshot snapshot =
         new ExcelChartSnapshot(
             "ExtendedChart",

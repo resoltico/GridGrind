@@ -14,7 +14,11 @@ import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.source.BinaryContent;
@@ -26,12 +30,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
@@ -556,42 +554,19 @@ class ExcelEngineEdgeCoverageTest {
 
   @Test
   void customXmlAndChartValueObjectsRejectInvalidInputs() {
-    assertDoesNotThrow(
-        () ->
-            new ExcelCustomXmlDataBindingSnapshot(
-                Optional.of("binding"),
-                Optional.of(true),
-                Optional.of(7L),
-                Optional.of("file"),
-                0L));
+    assertDoesNotThrow(() -> new CustomXmlDataBindingReport("binding", true, 7L, "file", 0L));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelCustomXmlDataBindingSnapshot(
-                Optional.of(" "), Optional.of(true), Optional.of(7L), Optional.of("file"), 0L));
+        () -> new CustomXmlDataBindingReport(" ", true, 7L, "file", 0L));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelCustomXmlDataBindingSnapshot(
-                Optional.of("binding"),
-                Optional.of(true),
-                Optional.of(-1L),
-                Optional.of("file"),
-                0L));
+        () -> new CustomXmlDataBindingReport("binding", true, -1L, "file", 0L));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelCustomXmlDataBindingSnapshot(
-                Optional.of("binding"), Optional.of(true), Optional.of(7L), Optional.of(" "), 0L));
+        () -> new CustomXmlDataBindingReport("binding", true, 7L, " ", 0L));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelCustomXmlDataBindingSnapshot(
-                Optional.of("binding"),
-                Optional.of(true),
-                Optional.of(7L),
-                Optional.of("file"),
-                -1L));
+        () -> new CustomXmlDataBindingReport("binding", true, 7L, "file", -1L));
 
     assertDoesNotThrow(
         () -> new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.empty()));
@@ -608,10 +583,19 @@ class ExcelEngineEdgeCoverageTest {
         IllegalArgumentException.class,
         () -> new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.of(" ")));
 
-    ExcelCustomXmlLinkedCellSnapshot linkedCell =
-        new ExcelCustomXmlLinkedCellSnapshot("Sheet1", "A1", "/root/value", "string");
-    ExcelCustomXmlLinkedTableSnapshot linkedTable =
-        new ExcelCustomXmlLinkedTableSnapshot("Sheet1", "Table1", "Table1", "A1:B2", "/root");
+    CustomXmlLinkedCellReport linkedCell =
+        new CustomXmlLinkedCellReport(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Sheet1"),
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            "/root/value",
+            "string");
+    CustomXmlLinkedTableReport linkedTable =
+        new CustomXmlLinkedTableReport(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Sheet1"),
+            "Table1",
+            "Table1",
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
+            "/root");
     assertDoesNotThrow(
         () ->
             customXmlMappingSnapshot(
@@ -625,13 +609,7 @@ class ExcelEngineEdgeCoverageTest {
                     Optional.of("XSD"),
                     Optional.of("schema.xsd"),
                     Optional.of("<schema/>")),
-                Optional.of(
-                    new ExcelCustomXmlDataBindingSnapshot(
-                        Optional.of("binding"),
-                        Optional.of(true),
-                        Optional.of(7L),
-                        Optional.of("file"),
-                        0L)),
+                Optional.of(new CustomXmlDataBindingReport("binding", true, 7L, "file", 0L)),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -736,7 +714,7 @@ class ExcelEngineEdgeCoverageTest {
                 settings(true, false, true, false, true),
                 schema(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
                 Optional.empty(),
-                List.of((ExcelCustomXmlLinkedCellSnapshot) null),
+                List.of((CustomXmlLinkedCellReport) null),
                 List.of(linkedTable)));
 
     assertThrows(
@@ -957,43 +935,48 @@ class ExcelEngineEdgeCoverageTest {
     return List.copyOf(shapes);
   }
 
-  private static ExcelCustomXmlMappingSnapshot customXmlMappingSnapshot(
+  private static CustomXmlMappingReport customXmlMappingSnapshot(
       long mapId,
       String name,
       String rootElement,
       String schemaId,
-      ExcelCustomXmlMappingSettings settings,
-      ExcelCustomXmlSchemaSnapshot schema,
-      Optional<ExcelCustomXmlDataBindingSnapshot> dataBinding,
-      List<ExcelCustomXmlLinkedCellSnapshot> linkedCells,
-      List<ExcelCustomXmlLinkedTableSnapshot> linkedTables) {
-    return new ExcelCustomXmlMappingSnapshot(
+      CustomXmlMappingReport.Settings settings,
+      CustomXmlMappingReport.Schema schema,
+      Optional<CustomXmlDataBindingReport> dataBinding,
+      List<CustomXmlLinkedCellReport> linkedCells,
+      List<CustomXmlLinkedTableReport> linkedTables) {
+    return new CustomXmlMappingReport(
         mapId,
         name,
         rootElement,
         schemaId,
         settings,
         schema,
-        dataBinding,
+        dataBinding == null ? null : dataBinding.orElse(null),
         linkedCells,
         linkedTables);
   }
 
-  private static ExcelCustomXmlMappingSettings settings(
+  private static CustomXmlMappingReport.Settings settings(
       boolean showImportExportValidationErrors,
       boolean autoFit,
       boolean append,
       boolean preserveSortAfLayout,
       boolean preserveFormat) {
-    return new ExcelCustomXmlMappingSettings(
+    return new CustomXmlMappingReport.Settings(
         showImportExportValidationErrors, autoFit, append, preserveSortAfLayout, preserveFormat);
   }
 
-  private static ExcelCustomXmlSchemaSnapshot schema(
+  private static CustomXmlMappingReport.Schema schema(
       Optional<String> namespace,
       Optional<String> language,
       Optional<String> reference,
       Optional<String> xml) {
-    return new ExcelCustomXmlSchemaSnapshot(namespace, language, reference, xml);
+    return new CustomXmlMappingReport.Schema(
+        nullable(namespace), nullable(language), nullable(reference), nullable(xml));
+  }
+
+  private static <T> T nullable(Optional<T> value) {
+    return value == null ? null : value.orElse(null);
   }
 }

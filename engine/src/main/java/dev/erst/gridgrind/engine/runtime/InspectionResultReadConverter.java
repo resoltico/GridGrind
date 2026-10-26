@@ -30,15 +30,10 @@ final class InspectionResultReadConverter {
               protection.stepId(), protection.protection());
       case dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlMappingsResult customXmlMappings ->
           new WorkbookInspectionResult.CustomXmlMappingsResult(
-              customXmlMappings.stepId(),
-              customXmlMappings.mappings().stream()
-                  .map(InspectionResultWorkbookStructureReportSupport::toCustomXmlMappingReport)
-                  .toList());
+              customXmlMappings.stepId(), customXmlMappings.mappings());
       case dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlExportResult customXmlExport ->
           new WorkbookInspectionResult.CustomXmlExportResult(
-              customXmlExport.stepId(),
-              InspectionResultWorkbookStructureReportSupport.toCustomXmlExportReport(
-                  customXmlExport.export()));
+              customXmlExport.stepId(), customXmlExport.export());
       case dev.erst.gridgrind.excel.WorkbookCoreResult.NamedRangesResult namedRanges ->
           new WorkbookInspectionResult.NamedRangesResult(
               namedRanges.stepId(), namedRanges.namedRanges());

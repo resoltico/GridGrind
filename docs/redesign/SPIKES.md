@@ -2261,3 +2261,21 @@ security behavior/static/parity checks pass, deterministic check/all retained se
 Final ./gradlew check passes (3m), all 143 golden cases unchanged; no active mutation/fuzz campaign.
 Inventories: snapshots 19→15, converter lines 3124→3067, blank checks 391→389, main Java
 118471→118271; definition 1 and Support 205 remain. Baseline diff empty. WP-40 remains open.
+
+## WP-40 direct custom-XML reports
+
+Deleted custom-XML mapping/schema/data-binding/linked-cell/linked-table/export snapshots and the
+settings mirror. POI introspection returns existing core reports directly, using their established
+nullable optional fields and typed observed coordinates. Removed the entire structure-report
+converter; mapping and export inspection pass through canonical reports. Kept XML import/export,
+malformed metadata, linked table/cell and schema behavior checks.
+
+Compilation exposed two ternary optional-unwrapping mistakes in producer edits; rewrote those
+expressions clearly. Test compile exposed old optional schema accessors, a missing assertion import
+and one redundant optional wrapper. Behavior/static/parity checks surfaced six representation/fixture
+assertions, including a null fixture that failed before its intended invalid-map-ID check; corrected
+fixture construction so the actual domain failure is exercised. Final targeted XML tests pass (12s),
+retained core/engine/14 parity/static checks pass, deterministic check/all retained seeds pass (15s).
+Final ./gradlew check passes (3m27s), all 143 golden cases unchanged; no active mutation/fuzz campaign.
+Inventories: snapshots 15→9, converter lines 3067→2976, Support 205→204, blank checks 389→383,
+main Java 118271→117984; definition 1 remains. Baseline diff empty. WP-40 remains open.

@@ -4,6 +4,10 @@ import static dev.erst.gridgrind.engine.runtime.ProtocolStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
@@ -83,12 +87,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
@@ -154,15 +152,14 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                                 Optional.empty(),
                                 Optional.of("<xsd:schema/>")),
                             Optional.of(
-                                new ExcelCustomXmlDataBindingSnapshot(
-                                    Optional.of("binding"),
-                                    Optional.of(true),
-                                    Optional.of(5L),
-                                    Optional.of("binding.xml"),
-                                    2L)),
+                                new CustomXmlDataBindingReport(
+                                    "binding", true, 5L, "binding.xml", 2L)),
                             List.of(
-                                new ExcelCustomXmlLinkedCellSnapshot(
-                                    "Foglio1", "A1", "/CORSO/NOME", "string")),
+                                new CustomXmlLinkedCellReport(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Foglio1"),
+                                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                                    "/CORSO/NOME",
+                                    "string")),
                             List.of())))));
     WorkbookInspectionResult.CustomXmlExportResult exported =
         assertInstanceOf(
@@ -170,7 +167,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlExportResult(
                     new StepId("custom-xml-export"),
-                    new ExcelCustomXmlExportSnapshot(
+                    new CustomXmlExportReport(
                         customXmlMappingSnapshot(
                             1L,
                             "CORSO_mapping",
@@ -184,8 +181,11 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                                 Optional.of("<xsd:schema/>")),
                             Optional.empty(),
                             List.of(
-                                new ExcelCustomXmlLinkedCellSnapshot(
-                                    "Foglio1", "A1", "/CORSO/NOME", "string")),
+                                new CustomXmlLinkedCellReport(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Foglio1"),
+                                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                                    "/CORSO/NOME",
+                                    "string")),
                             List.of()),
                         "UTF-8",
                         true,
@@ -1210,44 +1210,45 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             Optional.of(" "), Optional.of(""), Optional.of(" "), Optional.empty()));
   }
 
-  private static ExcelCustomXmlMappingSnapshot customXmlMappingSnapshot(
+  private static CustomXmlMappingReport customXmlMappingSnapshot(
       long mapId,
       String name,
       String rootElement,
       String schemaId,
-      ExcelCustomXmlMappingSettings settings,
-      ExcelCustomXmlSchemaSnapshot schema,
-      Optional<ExcelCustomXmlDataBindingSnapshot> dataBinding,
-      List<ExcelCustomXmlLinkedCellSnapshot> linkedCells,
-      List<dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot> linkedTables) {
-    return new ExcelCustomXmlMappingSnapshot(
+      CustomXmlMappingReport.Settings settings,
+      CustomXmlMappingReport.Schema schema,
+      Optional<CustomXmlDataBindingReport> dataBinding,
+      List<CustomXmlLinkedCellReport> linkedCells,
+      List<dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport> linkedTables) {
+    return new CustomXmlMappingReport(
         mapId,
         name,
         rootElement,
         schemaId,
         settings,
         schema,
-        dataBinding,
+        dataBinding == null ? null : dataBinding.orElse(null),
         linkedCells,
         linkedTables);
   }
 
-  private static ExcelCustomXmlMappingSettings settings(
+  private static CustomXmlMappingReport.Settings settings(
       boolean showImportExportValidationErrors,
       boolean autoFit,
       boolean append,
       boolean preserveSortAfLayout,
       boolean preserveFormat) {
-    return new ExcelCustomXmlMappingSettings(
+    return new CustomXmlMappingReport.Settings(
         showImportExportValidationErrors, autoFit, append, preserveSortAfLayout, preserveFormat);
   }
 
-  private static ExcelCustomXmlSchemaSnapshot schema(
+  private static CustomXmlMappingReport.Schema schema(
       Optional<String> namespace,
       Optional<String> language,
       Optional<String> reference,
       Optional<String> xml) {
-    return new ExcelCustomXmlSchemaSnapshot(namespace, language, reference, xml);
+    return new CustomXmlMappingReport.Schema(
+        nullable(namespace), nullable(language), nullable(reference), nullable(xml));
   }
 
   private static DifferentialStyleReport differentialStyle() {
@@ -1264,5 +1265,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         Optional.empty(),
         Optional.empty(),
         List.of());
+  }
+
+  private static <T> T nullable(Optional<T> value) {
+    return value == null ? null : value.orElse(null);
   }
 }

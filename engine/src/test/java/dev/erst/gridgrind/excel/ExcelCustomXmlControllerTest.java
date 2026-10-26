@@ -3,16 +3,17 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -31,10 +32,10 @@ class ExcelCustomXmlControllerTest {
   @Test
   void readsWorkbookCustomXmlMappingsAndExportsXml() throws IOException {
     try (ExcelWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
-      List<ExcelCustomXmlMappingSnapshot> mappings = workbook.customXml().customXmlMappings();
+      List<CustomXmlMappingReport> mappings = workbook.customXml().customXmlMappings();
 
       assertEquals(1, mappings.size());
-      ExcelCustomXmlMappingSnapshot mapping = mappings.getFirst();
+      CustomXmlMappingReport mapping = mappings.getFirst();
       assertEquals(1L, mapping.mapId());
       assertEquals("CORSO_mapping", mapping.name());
       assertEquals("CORSO", mapping.rootElement());
@@ -44,15 +45,15 @@ class ExcelCustomXmlControllerTest {
       assertFalse(mapping.settings().append());
       assertTrue(mapping.settings().preserveSortAfLayout());
       assertTrue(mapping.settings().preserveFormat());
-      assertTrue(mapping.schema().xml().orElseThrow().contains("<xsd:element name=\"CORSO\""));
+      assertTrue(mapping.schema().xml().contains("<xsd:element name=\"CORSO\""));
       assertEquals(8, mapping.linkedCells().size());
-      assertEquals("Foglio1", mapping.linkedCells().getFirst().sheetName());
-      assertEquals("A1", mapping.linkedCells().getFirst().address());
+      assertEquals("Foglio1", mapping.linkedCells().getFirst().sheetName().value());
+      assertEquals("A1", mapping.linkedCells().getFirst().address().value());
       assertEquals("/CORSO/NOME", mapping.linkedCells().getFirst().xpath());
       assertEquals("string", mapping.linkedCells().getFirst().xmlDataType());
       assertEquals(List.of(), mapping.linkedTables());
 
-      ExcelCustomXmlExportSnapshot exported =
+      CustomXmlExportReport exported =
           workbook
               .customXml()
               .exportCustomXmlMapping(
@@ -302,12 +303,12 @@ class ExcelCustomXmlControllerTest {
     ctMap.setPreserveFormat(true);
     ctMap.addNewDataBinding().setDataBindingLoadMode(7L);
 
-    ExcelCustomXmlDataBindingSnapshot dataBinding =
+    CustomXmlDataBindingReport dataBinding =
         ExcelCustomXmlController.dataBinding(ctMap).orElseThrow();
-    assertEquals(Optional.empty(), dataBinding.dataBindingName());
-    assertEquals(Optional.empty(), dataBinding.fileBinding());
-    assertEquals(Optional.empty(), dataBinding.connectionId());
-    assertEquals(Optional.empty(), dataBinding.fileBindingName());
+    org.junit.jupiter.api.Assertions.assertNull(dataBinding.dataBindingName());
+    org.junit.jupiter.api.Assertions.assertNull(dataBinding.fileBinding());
+    org.junit.jupiter.api.Assertions.assertNull(dataBinding.connectionId());
+    org.junit.jupiter.api.Assertions.assertNull(dataBinding.fileBindingName());
     assertEquals(7L, dataBinding.loadMode());
   }
 
@@ -324,12 +325,12 @@ class ExcelCustomXmlControllerTest {
     fullBinding.setConnectionID(9L);
     fullBinding.setFileBindingName("orders.xml");
     fullBinding.setDataBindingLoadMode(5L);
-    ExcelCustomXmlDataBindingSnapshot fullDataBinding =
+    CustomXmlDataBindingReport fullDataBinding =
         ExcelCustomXmlController.dataBinding(boundCtMap).orElseThrow();
-    assertEquals(Optional.of("Binding"), fullDataBinding.dataBindingName());
-    assertEquals(Optional.of(true), fullDataBinding.fileBinding());
-    assertEquals(Optional.of(9L), fullDataBinding.connectionId());
-    assertEquals(Optional.of("orders.xml"), fullDataBinding.fileBindingName());
+    assertEquals("Binding", fullDataBinding.dataBindingName());
+    assertEquals(true, fullDataBinding.fileBinding());
+    assertEquals(9L, fullDataBinding.connectionId());
+    assertEquals("orders.xml", fullDataBinding.fileBindingName());
     assertEquals(5L, fullDataBinding.loadMode());
   }
 
@@ -356,16 +357,16 @@ class ExcelCustomXmlControllerTest {
           ExcelCustomXmlControllerTestSupport.fakeMap(
               ctMap, schema, schemaNode, List.of(), List.of(table));
 
-      ExcelCustomXmlMappingSnapshot snapshot = ExcelCustomXmlController.snapshot(map);
+      CustomXmlMappingReport snapshot = ExcelCustomXmlController.snapshot(map);
       assertEquals("OrdersMapping", snapshot.name());
-      assertEquals(Optional.empty(), snapshot.schema().namespace());
-      assertEquals(Optional.of("XSD"), snapshot.schema().language());
-      assertEquals(Optional.empty(), snapshot.schema().reference());
-      assertTrue(snapshot.schema().xml().isPresent());
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().namespace());
+      assertEquals("XSD", snapshot.schema().language());
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().reference());
+      assertNotNull(snapshot.schema().xml());
       assertEquals(List.of(), snapshot.linkedCells());
       assertEquals(1, snapshot.linkedTables().size());
       assertEquals("OrdersTable", snapshot.linkedTables().getFirst().tableName());
-      assertEquals("Orders!A1:B2", snapshot.linkedTables().getFirst().range());
+      assertEquals("Orders!A1:B2", snapshot.linkedTables().getFirst().range().value());
       assertEquals("OrdersMapping", ExcelCustomXmlController.mappingName(map));
       assertEquals(Optional.empty(), ExcelCustomXmlController.blankAsOptional(null));
       assertEquals(Optional.empty(), ExcelCustomXmlController.blankAsOptional(" "));
@@ -378,32 +379,32 @@ class ExcelCustomXmlControllerTest {
                   ctMap, schema, null, List.of(), List.of())));
 
       CTSchema emptySchema = CTSchema.Factory.newInstance();
-      ExcelCustomXmlMappingSnapshot emptySchemaSnapshot =
+      CustomXmlMappingReport emptySchemaSnapshot =
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, emptySchema, schemaNode, List.of(), List.of(table)));
-      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().namespace());
-      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().language());
-      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().reference());
+      org.junit.jupiter.api.Assertions.assertNull(emptySchemaSnapshot.schema().namespace());
+      org.junit.jupiter.api.Assertions.assertNull(emptySchemaSnapshot.schema().language());
+      org.junit.jupiter.api.Assertions.assertNull(emptySchemaSnapshot.schema().reference());
 
-      ExcelCustomXmlMappingSnapshot nullSchemaSnapshot =
+      CustomXmlMappingReport nullSchemaSnapshot =
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, null, schemaNode, List.of(), List.of(table)));
-      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().namespace());
-      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().language());
-      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().reference());
+      org.junit.jupiter.api.Assertions.assertNull(nullSchemaSnapshot.schema().namespace());
+      org.junit.jupiter.api.Assertions.assertNull(nullSchemaSnapshot.schema().language());
+      org.junit.jupiter.api.Assertions.assertNull(nullSchemaSnapshot.schema().reference());
 
       CTSchema richSchema = CTSchema.Factory.newInstance();
       richSchema.setNamespace("urn:orders");
       richSchema.setSchemaRef("orders.xsd");
-      ExcelCustomXmlMappingSnapshot richSchemaSnapshot =
+      CustomXmlMappingReport richSchemaSnapshot =
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, richSchema, schemaNode, List.of(), List.of(table)));
-      assertEquals(Optional.of("urn:orders"), richSchemaSnapshot.schema().namespace());
-      assertEquals(Optional.empty(), richSchemaSnapshot.schema().language());
-      assertEquals(Optional.of("orders.xsd"), richSchemaSnapshot.schema().reference());
+      assertEquals("urn:orders", richSchemaSnapshot.schema().namespace());
+      org.junit.jupiter.api.Assertions.assertNull(richSchemaSnapshot.schema().language());
+      assertEquals("orders.xsd", richSchemaSnapshot.schema().reference());
     }
   }
 

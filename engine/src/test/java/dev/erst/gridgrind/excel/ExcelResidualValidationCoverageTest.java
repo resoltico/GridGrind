@@ -8,7 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
@@ -16,12 +20,6 @@ import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -36,11 +34,20 @@ class ExcelResidualValidationCoverageTest {
     CustomXmlMappingLocator locator =
         new CustomXmlMappingLocator(
             java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping"));
-    ExcelCustomXmlLinkedCellSnapshot linkedCell =
-        new ExcelCustomXmlLinkedCellSnapshot("Ops", "A1", "/root/value", "string");
-    ExcelCustomXmlLinkedTableSnapshot linkedTable =
-        new ExcelCustomXmlLinkedTableSnapshot("Ops", "Table1", "Table 1", "A1:B2", "/root");
-    ExcelCustomXmlMappingSnapshot mapping =
+    CustomXmlLinkedCellReport linkedCell =
+        new CustomXmlLinkedCellReport(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            "/root/value",
+            "string");
+    CustomXmlLinkedTableReport linkedTable =
+        new CustomXmlLinkedTableReport(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+            "Table1",
+            "Table 1",
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
+            "/root");
+    CustomXmlMappingReport mapping =
         customXmlMappingSnapshot(
             1L,
             "CORSO_mapping",
@@ -87,13 +94,24 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(IllegalArgumentException.class, () -> new ResolvedCustomXmlImport(locator, " "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCustomXmlExportSnapshot(mapping, " ", false, "<CORSO/>"));
+        () -> new CustomXmlExportReport(mapping, " ", false, "<CORSO/>"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCustomXmlLinkedCellSnapshot(" ", "A1", "/root/value", "string"));
+        () ->
+            new CustomXmlLinkedCellReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(" "),
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                "/root/value",
+                "string"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCustomXmlLinkedTableSnapshot(" ", "Table1", "Table 1", "A1:B2", "/root"));
+        () ->
+            new CustomXmlLinkedTableReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(" "),
+                "Table1",
+                "Table 1",
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
+                "/root"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -757,43 +775,48 @@ class ExcelResidualValidationCoverageTest {
         Optional.of(new BinaryContent(new byte[] {1})));
   }
 
-  private static ExcelCustomXmlMappingSnapshot customXmlMappingSnapshot(
+  private static CustomXmlMappingReport customXmlMappingSnapshot(
       long mapId,
       String name,
       String rootElement,
       String schemaId,
-      ExcelCustomXmlMappingSettings settings,
-      ExcelCustomXmlSchemaSnapshot schema,
-      Optional<dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot> dataBinding,
-      List<ExcelCustomXmlLinkedCellSnapshot> linkedCells,
-      List<ExcelCustomXmlLinkedTableSnapshot> linkedTables) {
-    return new ExcelCustomXmlMappingSnapshot(
+      CustomXmlMappingReport.Settings settings,
+      CustomXmlMappingReport.Schema schema,
+      Optional<dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport> dataBinding,
+      List<CustomXmlLinkedCellReport> linkedCells,
+      List<CustomXmlLinkedTableReport> linkedTables) {
+    return new CustomXmlMappingReport(
         mapId,
         name,
         rootElement,
         schemaId,
         settings,
         schema,
-        dataBinding,
+        dataBinding == null ? null : dataBinding.orElse(null),
         linkedCells,
         linkedTables);
   }
 
-  private static ExcelCustomXmlMappingSettings settings(
+  private static CustomXmlMappingReport.Settings settings(
       boolean showImportExportValidationErrors,
       boolean autoFit,
       boolean append,
       boolean preserveSortAfLayout,
       boolean preserveFormat) {
-    return new ExcelCustomXmlMappingSettings(
+    return new CustomXmlMappingReport.Settings(
         showImportExportValidationErrors, autoFit, append, preserveSortAfLayout, preserveFormat);
   }
 
-  private static ExcelCustomXmlSchemaSnapshot schema(
+  private static CustomXmlMappingReport.Schema schema(
       Optional<String> namespace,
       Optional<String> language,
       Optional<String> reference,
       Optional<String> xml) {
-    return new ExcelCustomXmlSchemaSnapshot(namespace, language, reference, xml);
+    return new CustomXmlMappingReport.Schema(
+        nullable(namespace), nullable(language), nullable(reference), nullable(xml));
+  }
+
+  private static <T> T nullable(Optional<T> value) {
+    return value == null ? null : value.orElse(null);
   }
 }

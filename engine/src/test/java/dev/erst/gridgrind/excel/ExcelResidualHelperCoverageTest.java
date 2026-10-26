@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
@@ -35,7 +36,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
@@ -650,11 +650,11 @@ class ExcelResidualHelperCoverageTest {
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSchema.Factory.newInstance();
       var fakeMap =
           ExcelCustomXmlControllerTestSupport.fakeMap(ctMap, ctSchema, null, List.of(), List.of());
-      ExcelCustomXmlMappingSnapshot snapshot = ExcelCustomXmlController.snapshot(fakeMap);
-      assertEquals(Optional.empty(), snapshot.schema().namespace());
-      assertEquals(Optional.empty(), snapshot.schema().language());
-      assertEquals(Optional.empty(), snapshot.schema().reference());
-      assertEquals(Optional.empty(), snapshot.schema().xml());
+      CustomXmlMappingReport snapshot = ExcelCustomXmlController.snapshot(fakeMap);
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().namespace());
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().language());
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().reference());
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().xml());
     }
   }
 
