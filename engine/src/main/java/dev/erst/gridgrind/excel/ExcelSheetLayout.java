@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
@@ -29,7 +30,7 @@ public final class ExcelSheetLayout {
   }
 
   /** Applies one explicit pane state to this sheet. */
-  public ExcelSheetLayout setPane(ExcelSheetPane pane) {
+  public ExcelSheetLayout setPane(PaneSpec pane) {
     layoutSupport.setPane(pane);
     return this;
   }

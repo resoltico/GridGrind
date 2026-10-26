@@ -13,7 +13,7 @@
         "SET_COMMENT" : 1,
         "SET_EMBEDDED_OBJECT" : 1,
         "COPY_SHEET" : 1,
-        "CREATE_SHEET" : 5
+        "ENSURE_SHEET" : 5
       },
       "styleKinds" : { }
     }

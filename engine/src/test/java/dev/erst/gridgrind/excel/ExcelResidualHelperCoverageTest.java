@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import static dev.erst.gridgrind.excel.WorkbookSampleFixtures.deleteNamedRangeStep;
+import static dev.erst.gridgrind.excel.WorkbookSampleFixtures.setNamedRangeStep;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.office.excel.CTClientData;
@@ -22,10 +24,21 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.source.BinaryContent;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -36,7 +49,9 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
@@ -50,7 +65,6 @@ import java.util.Optional;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Name;
-import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;
 import org.apache.poi.xddf.usermodel.chart.ChartTypes;
@@ -420,9 +434,9 @@ class ExcelResidualHelperCoverageTest {
       ExcelSheetAnnotationSupport.ensureLegacyDrawingReference(blankAnnotationSheet);
       assertFalse(blankAnnotationSheet.getCTWorksheet().isSetLegacyDrawing());
       ExcelSheetAnnotationSupport.removeCommentFromTable(
-          blankAnnotationSheet, new CellAddress("A1"));
+          blankAnnotationSheet, new org.apache.poi.ss.util.CellAddress("A1"));
       ExcelSheetAnnotationSupport.removeCommentShapeIfPresent(
-          annotationSheet, new CellAddress("A1"));
+          annotationSheet, new org.apache.poi.ss.util.CellAddress("A1"));
 
       ExcelSheetPresentationController.clearTabColor(workbook.createSheet("NoSheetPr"));
       XSSFSheet colorSheet = workbook.createSheet("Color");
@@ -432,8 +446,8 @@ class ExcelResidualHelperCoverageTest {
       assertNull(colorSheet.getTabColor());
 
       XSSFSheet paneSheet = workbook.createSheet("Pane");
-      ExcelSheetViewSupport.setPane(paneSheet, new ExcelSheetPane.None());
-      assertInstanceOf(ExcelSheetPane.None.class, ExcelSheetViewSupport.pane(paneSheet));
+      ExcelSheetViewSupport.setPane(paneSheet, new PaneSpec.None());
+      assertInstanceOf(PaneSpec.None.class, ExcelSheetViewSupport.pane(paneSheet));
     }
   }
 
@@ -452,14 +466,18 @@ class ExcelResidualHelperCoverageTest {
       sheet.cells().setCell("A1", new ResolvedFormula("1+1"));
       assertEquals(List.of(), sheet.cells().arrayFormulas());
 
-      WorkbookCommandExecutor.applyCellValueCommand(
+      ResolvedMutationExecutor.apply(
           workbook,
-          new WorkbookCellCommand.SetArrayFormula(
-              "Ops", "D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4")));
+          new ResolvedStep(
+              new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D2:D4")),
+              new ResolvedMutationAction.SetArrayFormula(new ResolvedArrayFormula("B2:B4*C2:C4"))));
       assertEquals(1, sheet.cells().arrayFormulas().size());
 
-      WorkbookCommandExecutor.applyCellValueCommand(
-          workbook, new WorkbookCellCommand.ClearArrayFormula("Ops", "D2"));
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("D2")),
+              new CellMutationAction.ClearArrayFormula()));
       assertEquals(List.of(), sheet.cells().arrayFormulas());
 
       assertThrows(
@@ -493,51 +511,58 @@ class ExcelResidualHelperCoverageTest {
                   "A1048577",
                   new CellReference(SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1, 0)));
 
-      WorkbookCommandExecutor.applyDrawingCommand(
+      ResolvedMutationExecutor.apply(
           workbook,
-          new WorkbookDrawingCommand.SetSignatureLine(
-              "Ops",
-              signatureDefinition("OpsSignature", ExcelChartTestSupport.anchor(1, 8, 4, 12))));
-      WorkbookCommandExecutor.applyMetadataCommand(
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.SetSignatureLine(
+                  signatureDefinition("OpsSignature", ExcelChartTestSupport.anchor(1, 8, 4, 12)))));
+      ResolvedMutationExecutor.apply(
           workbook,
-          new WorkbookMetadataCommand.SetNamedRange(
+          setNamedRangeStep(
               new StructuredMutationAction.SetNamedRange(
                   new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
                   new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
                   NamedRangeTarget.range(
                       new dev.erst.gridgrind.core.vocabulary.SheetName("Ops"),
                       new dev.erst.gridgrind.core.vocabulary.RangeRef("B2")))));
-      WorkbookCommandExecutor.applyMetadataCommand(
+      ResolvedMutationExecutor.apply(
+          workbook, deleteNamedRangeStep("BudgetTotal", new NamedRangeScopeReport.Workbook()));
+      ResolvedMutationExecutor.apply(
           workbook,
-          new WorkbookMetadataCommand.DeleteNamedRange(
-              "BudgetTotal", new NamedRangeScopeReport.Workbook()));
-      WorkbookCommandExecutor.applyDrawingCommand(
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.SetShape(
+                  new ResolvedShape.SimpleShape(
+                      "Mover",
+                      ExcelChartTestSupport.anchor(5, 8, 8, 12),
+                      "rect",
+                      Optional.of("text")))));
+      ResolvedMutationExecutor.apply(
           workbook,
-          new WorkbookDrawingCommand.SetShape(
-              "Ops",
-              new ResolvedShape.SimpleShape(
-                  "Mover",
-                  ExcelChartTestSupport.anchor(5, 8, 8, 12),
-                  "rect",
-                  Optional.of("text"))));
-      WorkbookCommandExecutor.applyDrawingCommand(
+          new ResolvedStep(
+              new DrawingObjectSelector.ByName(new SheetName("Ops"), "Mover"),
+              new DrawingMutationAction.SetDrawingObjectAnchor(
+                  ExcelChartTestSupport.anchor(9, 8, 12, 12))));
+      ResolvedMutationExecutor.apply(
           workbook,
-          new WorkbookDrawingCommand.SetDrawingObjectAnchor(
-              "Ops", "Mover", ExcelChartTestSupport.anchor(9, 8, 12, 12)));
-      WorkbookCommandExecutor.applyDrawingCommand(
-          workbook, new WorkbookDrawingCommand.DeleteDrawingObject("Ops", "Mover"));
+          new ResolvedStep(
+              new DrawingObjectSelector.ByName(new SheetName("Ops"), "Mover"),
+              new DrawingMutationAction.DeleteDrawingObject()));
     }
 
     try (ExcelWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
-      WorkbookCommandExecutor.applyMetadataCommand(
+      ResolvedMutationExecutor.apply(
           workbook,
-          new WorkbookMetadataCommand.ImportCustomXmlMapping(
-              new ResolvedCustomXmlImport(
-                  new CustomXmlMappingLocator(
-                      java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
-                  "<CORSO><NOME>Ops</NOME><DOCENTE>Agent</DOCENTE><TUTOR>Grid</TUTOR><CDL>QA</CDL>"
-                      + "<DURATA>4</DURATA><ARGOMENTO>Coverage</ARGOMENTO>"
-                      + "<PROGETTO>Parity</PROGETTO><CREDITI>8</CREDITI></CORSO>")));
+          new ResolvedStep(
+              new WorkbookSelector.Current(),
+              new ResolvedMutationAction.ImportCustomXmlMapping(
+                  new ResolvedCustomXmlImport(
+                      new CustomXmlMappingLocator(
+                          java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+                      "<CORSO><NOME>Ops</NOME><DOCENTE>Agent</DOCENTE><TUTOR>Grid</TUTOR><CDL>QA</CDL>"
+                          + "<DURATA>4</DURATA><ARGOMENTO>Coverage</ARGOMENTO>"
+                          + "<PROGETTO>Parity</PROGETTO><CREDITI>8</CREDITI></CORSO>"))));
       assertEquals(
           "Ops",
           workbook

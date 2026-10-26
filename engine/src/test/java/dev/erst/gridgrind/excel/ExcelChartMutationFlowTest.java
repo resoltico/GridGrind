@@ -11,9 +11,13 @@ import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.util.List;
@@ -25,7 +29,7 @@ class ExcelChartMutationFlowTest {
   @Test
   void lineAndPieChartsExerciseMutationExecutorAndIntrospection() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+      WorkbookExecutionEngine executor = new WorkbookExecutionEngine();
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
       ExcelSheet sheet = workbook.getOrCreateSheet("Charts");
       ExcelChartTestSupport.seedChartData(sheet);
@@ -33,13 +37,14 @@ class ExcelChartMutationFlowTest {
 
       executor.apply(
           workbook,
-          new WorkbookDrawingCommand.SetChart(
-              "Charts",
-              lineChartDefinition(
-                  "OpsLine",
-                  ExcelChartTestSupport.anchor(4, 1, 10, 16),
-                  new ResolvedChartTitle.Text("Line roadmap"),
-                  new ChartTitleSpec.Formula("B1"))));
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Charts")),
+              new ResolvedMutationAction.SetChart(
+                  lineChartDefinition(
+                      "OpsLine",
+                      ExcelChartTestSupport.anchor(4, 1, 10, 16),
+                      new ResolvedChartTitle.Text("Line roadmap"),
+                      new ChartTitleSpec.Formula("B1")))));
 
       WorkbookDrawingResult.ChartsResult lineRead =
           assertInstanceOf(

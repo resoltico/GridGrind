@@ -7,17 +7,16 @@ import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookAnnotationCommand;
-import dev.erst.gridgrind.excel.WorkbookCellCommand;
-import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.excel.WorkbookDrawingCommand;
-import dev.erst.gridgrind.excel.WorkbookFormattingCommand;
-import dev.erst.gridgrind.excel.WorkbookLayoutCommand;
-import dev.erst.gridgrind.excel.WorkbookMetadataCommand;
-import dev.erst.gridgrind.excel.WorkbookSheetCommand;
-import dev.erst.gridgrind.excel.WorkbookStructureCommand;
-import dev.erst.gridgrind.excel.WorkbookTabularCommand;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,137 +30,151 @@ final class XlsxRoundTripExpectedFootprintSupport {
   private XlsxRoundTripExpectedFootprintSupport() {}
 
   static XlsxRoundTripExpectedStateSupport.ExpectedWorkbookFootprint expectedWorkbookFootprint(
-      List<WorkbookCommand> commands) {
+      List<ResolvedStep> commands) {
     LinkedHashMap<String, Set<XlsxRoundTripExpectedStateSupport.CellCoordinate>>
         candidateCoordinatesBySheet = new LinkedHashMap<>();
     LinkedHashMap<String, Set<XlsxRoundTripExpectedStateSupport.CellCoordinate>>
         valueBearingCoordinatesBySheet = new LinkedHashMap<>();
 
-    for (WorkbookCommand command : commands) {
-      switch (command) {
-        case WorkbookSheetCommand.CreateSheet createSheet ->
+    for (ResolvedStep command : commands) {
+      switch (command.action()) {
+        case WorkbookMutationAction.EnsureSheet _ ->
             candidateCoordinatesBySheet.computeIfAbsent(
-                createSheet.sheetName(), sheetKey -> new LinkedHashSet<>());
-        case WorkbookSheetCommand.RenameSheet renameSheet -> {
+                ((SheetSelector.ByName) command.target()).name().value(),
+                sheetKey -> new LinkedHashSet<>());
+        case WorkbookMutationAction.RenameSheet renameSheet -> {
           renameExpectedSheetState(
-              candidateCoordinatesBySheet, renameSheet.sheetName(), renameSheet.newSheetName());
+              candidateCoordinatesBySheet,
+              ((SheetSelector.ByName) command.target()).name().value(),
+              renameSheet.newSheetName().value());
           renameExpectedSheetState(
-              valueBearingCoordinatesBySheet, renameSheet.sheetName(), renameSheet.newSheetName());
+              valueBearingCoordinatesBySheet,
+              ((SheetSelector.ByName) command.target()).name().value(),
+              renameSheet.newSheetName().value());
         }
-        case WorkbookSheetCommand.DeleteSheet deleteSheet -> {
-          candidateCoordinatesBySheet.remove(deleteSheet.sheetName());
-          valueBearingCoordinatesBySheet.remove(deleteSheet.sheetName());
+        case WorkbookMutationAction.DeleteSheet _ -> {
+          candidateCoordinatesBySheet.remove(
+              ((SheetSelector.ByName) command.target()).name().value());
+          valueBearingCoordinatesBySheet.remove(
+              ((SheetSelector.ByName) command.target()).name().value());
         }
-        case WorkbookSheetCommand.MoveSheet _ -> {
+        case WorkbookMutationAction.MoveSheet _ -> {
           // Sheet order does not affect candidate or append-location tracking.
         }
-        case WorkbookSheetCommand.CopySheet copySheet -> {
+        case WorkbookMutationAction.CopySheet copySheet -> {
           copyExpectedSheetState(
-              candidateCoordinatesBySheet, copySheet.sourceSheetName(), copySheet.newSheetName());
+              candidateCoordinatesBySheet,
+              ((SheetSelector.ByName) command.target()).name().value(),
+              copySheet.newSheetName().value());
           copyExpectedSheetState(
               valueBearingCoordinatesBySheet,
-              copySheet.sourceSheetName(),
-              copySheet.newSheetName());
+              ((SheetSelector.ByName) command.target()).name().value(),
+              copySheet.newSheetName().value());
         }
-        case WorkbookSheetCommand.SetActiveSheet _ -> {
+        case WorkbookMutationAction.SetActiveSheet _ -> {
           // Active sheet state does not affect cell-level round-trip expectations.
         }
-        case WorkbookSheetCommand.SetSelectedSheets _ -> {
+        case WorkbookMutationAction.SetSelectedSheets _ -> {
           // Selected sheet state does not affect cell-level round-trip expectations.
         }
-        case WorkbookSheetCommand.SetSheetVisibility _ -> {
+        case WorkbookMutationAction.SetSheetVisibility _ -> {
           // Visibility state does not affect cell-level round-trip expectations.
         }
-        case WorkbookSheetCommand.SetSheetProtection _ -> {
+        case ResolvedMutationAction.SetSheetProtection _ -> {
           // Sheet protection is tracked independently from cell-level expectations.
         }
-        case WorkbookSheetCommand.ClearSheetProtection _ -> {
+        case WorkbookMutationAction.ClearSheetProtection _ -> {
           // Sheet protection is tracked independently from cell-level expectations.
         }
-        case WorkbookSheetCommand.SetWorkbookProtection _ -> {
+        case ResolvedMutationAction.SetWorkbookProtection _ -> {
           // Workbook protection is tracked independently from cell-level expectations.
         }
-        case WorkbookSheetCommand.ClearWorkbookProtection _ -> {
+        case WorkbookMutationAction.ClearWorkbookProtection _ -> {
           // Workbook protection is tracked independently from cell-level expectations.
         }
-        case WorkbookStructureCommand.MergeCells _ -> {
+        case WorkbookMutationAction.MergeCells _ -> {
           // Merge state does not add new candidate cells.
         }
-        case WorkbookStructureCommand.UnmergeCells _ -> {
+        case WorkbookMutationAction.UnmergeCells _ -> {
           // Unmerge state does not add new candidate cells.
         }
-        case WorkbookStructureCommand.SetColumnWidth _ -> {
+        case WorkbookMutationAction.SetColumnWidth _ -> {
           // Column width does not affect cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.SetRowHeight _ -> {
+        case WorkbookMutationAction.SetRowHeight _ -> {
           // Row height does not affect cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.InsertRows _ -> {
+        case WorkbookMutationAction.InsertRows _ -> {
           // Structural row state is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.DeleteRows _ -> {
+        case WorkbookMutationAction.DeleteRows _ -> {
           // Structural row state is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.ShiftRows _ -> {
+        case WorkbookMutationAction.ShiftRows _ -> {
           // Structural row state is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.InsertColumns _ -> {
+        case WorkbookMutationAction.InsertColumns _ -> {
           // Structural column state is tracked independently from cell-level round-trip
           // expectations.
         }
-        case WorkbookStructureCommand.DeleteColumns _ -> {
+        case WorkbookMutationAction.DeleteColumns _ -> {
           // Structural column state is tracked independently from cell-level round-trip
           // expectations.
         }
-        case WorkbookStructureCommand.ShiftColumns _ -> {
+        case WorkbookMutationAction.ShiftColumns _ -> {
           // Structural column state is tracked independently from cell-level round-trip
           // expectations.
         }
-        case WorkbookStructureCommand.SetRowVisibility _ -> {
+        case WorkbookMutationAction.SetRowVisibility _ -> {
           // Row visibility is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.SetColumnVisibility _ -> {
+        case WorkbookMutationAction.SetColumnVisibility _ -> {
           // Column visibility is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.GroupRows _ -> {
+        case WorkbookMutationAction.GroupRows _ -> {
           // Row outline state is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.UngroupRows _ -> {
+        case WorkbookMutationAction.UngroupRows _ -> {
           // Row outline state is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.GroupColumns _ -> {
+        case WorkbookMutationAction.GroupColumns _ -> {
           // Column outline state is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookStructureCommand.UngroupColumns _ -> {
+        case WorkbookMutationAction.UngroupColumns _ -> {
           // Column outline state is tracked independently from cell-level round-trip expectations.
         }
-        case WorkbookLayoutCommand.SetSheetPane _ -> {
+        case WorkbookMutationAction.SetSheetPane _ -> {
           // Pane state does not affect cell-level round-trip expectations.
         }
-        case WorkbookLayoutCommand.SetSheetZoom _ -> {
+        case WorkbookMutationAction.SetSheetZoom _ -> {
           // Zoom state does not affect cell-level round-trip expectations.
         }
-        case WorkbookLayoutCommand.SetSheetPresentation _ -> {
+        case WorkbookMutationAction.SetSheetPresentation _ -> {
           // Sheet presentation does not affect cell-level round-trip expectations.
         }
-        case WorkbookLayoutCommand.SetPrintLayout _ -> {
+        case ResolvedMutationAction.SetPrintLayout _ -> {
           // Print layout does not affect cell-level round-trip expectations.
         }
-        case WorkbookLayoutCommand.ClearPrintLayout _ -> {
+        case WorkbookMutationAction.ClearPrintLayout _ -> {
           // Print layout clearing does not affect cell-level round-trip expectations.
         }
-        case WorkbookCellCommand.SetCell setCell -> {
+        case ResolvedMutationAction.SetCell setCell -> {
           XlsxRoundTripExpectedStateSupport.CellCoordinate coordinate =
-              XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(setCell.address());
-          recordCandidate(candidateCoordinatesBySheet, setCell.sheetName(), coordinate);
+              XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(
+                  ((CellSelector.ByAddress) command.target()).address().value());
+          recordCandidate(
+              candidateCoordinatesBySheet,
+              ((CellSelector.ByAddress) command.target()).sheetName().value(),
+              coordinate);
           recordValueBearing(
               valueBearingCoordinatesBySheet,
-              setCell.sheetName(),
+              ((CellSelector.ByAddress) command.target()).sheetName().value(),
               coordinate,
               isValueBearing(setCell.value()));
         }
-        case WorkbookCellCommand.SetRange setRange -> {
-          CellRangeAddress range = CellRangeAddress.valueOf(setRange.range());
+        case ResolvedMutationAction.SetRange setRange -> {
+          CellRangeAddress range =
+              CellRangeAddress.valueOf(((RangeSelector.ByRange) command.target()).range().value());
           for (int rowOffset = 0; rowOffset < setRange.rows().size(); rowOffset++) {
             for (int columnOffset = 0;
                 columnOffset < setRange.rows().get(rowOffset).size();
@@ -169,148 +182,174 @@ final class XlsxRoundTripExpectedFootprintSupport {
               XlsxRoundTripExpectedStateSupport.CellCoordinate coordinate =
                   new XlsxRoundTripExpectedStateSupport.CellCoordinate(
                       range.getFirstRow() + rowOffset, range.getFirstColumn() + columnOffset);
-              recordCandidate(candidateCoordinatesBySheet, setRange.sheetName(), coordinate);
+              recordCandidate(
+                  candidateCoordinatesBySheet,
+                  ((RangeSelector.ByRange) command.target()).sheetName().value(),
+                  coordinate);
               recordValueBearing(
                   valueBearingCoordinatesBySheet,
-                  setRange.sheetName(),
+                  ((RangeSelector.ByRange) command.target()).sheetName().value(),
                   coordinate,
                   isValueBearing(setRange.rows().get(rowOffset).get(columnOffset)));
             }
           }
         }
-        case WorkbookCellCommand.ClearRange clearRange ->
+        case CellMutationAction.ClearRange _ ->
             forEachCell(
-                clearRange.range(),
-                coordinate -> {
-                  recordCandidate(candidateCoordinatesBySheet, clearRange.sheetName(), coordinate);
-                  recordValueBearing(
-                      valueBearingCoordinatesBySheet, clearRange.sheetName(), coordinate, false);
-                });
-        case WorkbookCellCommand.SetArrayFormula setArrayFormula ->
-            forEachCell(
-                setArrayFormula.range(),
+                ((RangeSelector.ByRange) command.target()).range().value(),
                 coordinate -> {
                   recordCandidate(
-                      candidateCoordinatesBySheet, setArrayFormula.sheetName(), coordinate);
+                      candidateCoordinatesBySheet,
+                      ((RangeSelector.ByRange) command.target()).sheetName().value(),
+                      coordinate);
                   recordValueBearing(
                       valueBearingCoordinatesBySheet,
-                      setArrayFormula.sheetName(),
+                      ((RangeSelector.ByRange) command.target()).sheetName().value(),
+                      coordinate,
+                      false);
+                });
+        case ResolvedMutationAction.SetArrayFormula _ ->
+            forEachCell(
+                ((RangeSelector.ByRange) command.target()).range().value(),
+                coordinate -> {
+                  recordCandidate(
+                      candidateCoordinatesBySheet,
+                      ((RangeSelector.ByRange) command.target()).sheetName().value(),
+                      coordinate);
+                  recordValueBearing(
+                      valueBearingCoordinatesBySheet,
+                      ((RangeSelector.ByRange) command.target()).sheetName().value(),
                       coordinate,
                       true);
                 });
-        case WorkbookCellCommand.ClearArrayFormula clearArrayFormula -> {
+        case CellMutationAction.ClearArrayFormula _ -> {
           XlsxRoundTripExpectedStateSupport.CellCoordinate coordinate =
               XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(
-                  clearArrayFormula.address());
-          recordCandidate(candidateCoordinatesBySheet, clearArrayFormula.sheetName(), coordinate);
+                  ((CellSelector.ByAddress) command.target()).address().value());
+          recordCandidate(
+              candidateCoordinatesBySheet,
+              ((CellSelector.ByAddress) command.target()).sheetName().value(),
+              coordinate);
           recordValueBearing(
-              valueBearingCoordinatesBySheet, clearArrayFormula.sheetName(), coordinate, false);
+              valueBearingCoordinatesBySheet,
+              ((CellSelector.ByAddress) command.target()).sheetName().value(),
+              coordinate,
+              false);
         }
-        case WorkbookMetadataCommand.ImportCustomXmlMapping _ -> {
+        case ResolvedMutationAction.ImportCustomXmlMapping _ -> {
           // Custom-XML imports mutate workbook content outside the fuzz model's candidate-cell set.
         }
-        case WorkbookAnnotationCommand.SetHyperlink setHyperlink ->
+        case CellMutationAction.SetHyperlink _ ->
             recordCandidate(
                 candidateCoordinatesBySheet,
-                setHyperlink.sheetName(),
+                ((CellSelector.ByAddress) command.target()).sheetName().value(),
                 XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(
-                    setHyperlink.address()));
-        case WorkbookAnnotationCommand.ClearHyperlink clearHyperlink ->
+                    ((CellSelector.ByAddress) command.target()).address().value()));
+        case CellMutationAction.ClearHyperlink _ ->
             recordCandidate(
                 candidateCoordinatesBySheet,
-                clearHyperlink.sheetName(),
+                ((CellSelector.ByAddress) command.target()).sheetName().value(),
                 XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(
-                    clearHyperlink.address()));
-        case WorkbookAnnotationCommand.SetComment setComment ->
+                    ((CellSelector.ByAddress) command.target()).address().value()));
+        case ResolvedMutationAction.SetComment _ ->
             recordCandidate(
                 candidateCoordinatesBySheet,
-                setComment.sheetName(),
-                XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(setComment.address()));
-        case WorkbookAnnotationCommand.ClearComment clearComment ->
-            recordCandidate(
-                candidateCoordinatesBySheet,
-                clearComment.sheetName(),
+                ((CellSelector.ByAddress) command.target()).sheetName().value(),
                 XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(
-                    clearComment.address()));
-        case WorkbookDrawingCommand.SetPicture _ -> {
+                    ((CellSelector.ByAddress) command.target()).address().value()));
+        case CellMutationAction.ClearComment _ ->
+            recordCandidate(
+                candidateCoordinatesBySheet,
+                ((CellSelector.ByAddress) command.target()).sheetName().value(),
+                XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(
+                    ((CellSelector.ByAddress) command.target()).address().value()));
+        case ResolvedMutationAction.SetPicture _ -> {
           // Drawing objects are validated through workbook readability, not candidate cell grids.
         }
-        case WorkbookDrawingCommand.SetSignatureLine _ -> {
+        case ResolvedMutationAction.SetSignatureLine _ -> {
           // Signature lines are validated through workbook readability, not candidate cell grids.
         }
-        case WorkbookDrawingCommand.SetShape _ -> {
+        case ResolvedMutationAction.SetShape _ -> {
           // Drawing objects are validated through workbook readability, not candidate cell grids.
         }
-        case WorkbookDrawingCommand.SetEmbeddedObject _ -> {
+        case ResolvedMutationAction.SetEmbeddedObject _ -> {
           // Drawing objects are validated through workbook readability, not candidate cell grids.
         }
-        case WorkbookDrawingCommand.SetChart _ -> {
+        case ResolvedMutationAction.SetChart _ -> {
           // Charts are validated through workbook-level drawing and chart snapshots.
         }
-        case WorkbookTabularCommand.SetPivotTable _ -> {
+        case StructuredMutationAction.SetPivotTable _ -> {
           // Pivot tables are validated through workbook-level pivot snapshots.
         }
-        case WorkbookDrawingCommand.SetDrawingObjectAnchor _ -> {
+        case DrawingMutationAction.SetDrawingObjectAnchor _ -> {
           // Anchor mutation changes drawing geometry only.
         }
-        case WorkbookDrawingCommand.DeleteDrawingObject _ -> {
+        case DrawingMutationAction.DeleteDrawingObject _ -> {
           // Drawing deletion does not alter candidate cell tracking.
         }
-        case WorkbookFormattingCommand.ApplyStyle applyStyle ->
+        case CellMutationAction.ApplyStyle _ ->
             forEachCell(
-                applyStyle.range(),
+                ((RangeSelector.ByRange) command.target()).range().value(),
                 coordinate ->
                     recordCandidate(
-                        candidateCoordinatesBySheet, applyStyle.sheetName(), coordinate));
-        case WorkbookFormattingCommand.SetDataValidation _ -> {
+                        candidateCoordinatesBySheet,
+                        ((RangeSelector.ByRange) command.target()).sheetName().value(),
+                        coordinate));
+        case ResolvedMutationAction.SetDataValidation _ -> {
           // Data validations are tracked independently from cell-style and metadata expectations.
         }
-        case WorkbookFormattingCommand.ClearDataValidations _ -> {
+        case StructuredMutationAction.ClearDataValidations _ -> {
           // Data validations are tracked independently from cell-style and metadata expectations.
         }
-        case WorkbookFormattingCommand.SetConditionalFormatting _ -> {
+        case StructuredMutationAction.SetConditionalFormatting _ -> {
           // Conditional formatting is tracked independently from cell-style and metadata
           // expectations.
         }
-        case WorkbookFormattingCommand.ClearConditionalFormatting _ -> {
+        case StructuredMutationAction.ClearConditionalFormatting _ -> {
           // Conditional formatting is tracked independently from cell-style and metadata
           // expectations.
         }
-        case WorkbookTabularCommand.SetAutofilter _ -> {
+        case StructuredMutationAction.SetAutofilter _ -> {
           // Autofilters are tracked independently from cell-style and metadata expectations.
         }
-        case WorkbookTabularCommand.ClearAutofilter _ -> {
+        case StructuredMutationAction.ClearAutofilter _ -> {
           // Autofilters are tracked independently from cell-style and metadata expectations.
         }
-        case WorkbookTabularCommand.SetTable _ -> {
+        case ResolvedMutationAction.SetTable _ -> {
           // Tables are tracked independently from cell-style and metadata expectations.
         }
-        case WorkbookTabularCommand.DeleteTable _ -> {
+        case StructuredMutationAction.DeleteTable _ -> {
           // Tables are tracked independently from cell-style and metadata expectations.
         }
-        case WorkbookTabularCommand.DeletePivotTable _ -> {
+        case StructuredMutationAction.DeletePivotTable _ -> {
           // Pivot tables are tracked independently from cell-style and metadata expectations.
         }
-        case WorkbookMetadataCommand.SetNamedRange _ -> {
+        case StructuredMutationAction.SetNamedRange _ -> {
           // Named ranges are derived directly from the applied workbook state.
         }
-        case WorkbookMetadataCommand.DeleteNamedRange _ -> {
+        case StructuredMutationAction.DeleteNamedRange _ -> {
           // Named ranges are derived directly from the applied workbook state.
         }
-        case WorkbookCellCommand.AppendRow appendRow -> {
-          int rowIndex = nextAppendRowIndex(valueBearingCoordinatesBySheet, appendRow.sheetName());
+        case ResolvedMutationAction.AppendRow appendRow -> {
+          int rowIndex =
+              nextAppendRowIndex(
+                  valueBearingCoordinatesBySheet,
+                  ((SheetSelector.ByName) command.target()).name().value());
           for (int columnIndex = 0; columnIndex < appendRow.values().size(); columnIndex++) {
             XlsxRoundTripExpectedStateSupport.CellCoordinate coordinate =
                 new XlsxRoundTripExpectedStateSupport.CellCoordinate(rowIndex, columnIndex);
-            recordCandidate(candidateCoordinatesBySheet, appendRow.sheetName(), coordinate);
+            recordCandidate(
+                candidateCoordinatesBySheet,
+                ((SheetSelector.ByName) command.target()).name().value(),
+                coordinate);
             recordValueBearing(
                 valueBearingCoordinatesBySheet,
-                appendRow.sheetName(),
+                ((SheetSelector.ByName) command.target()).name().value(),
                 coordinate,
                 isValueBearing(appendRow.values().get(columnIndex)));
           }
         }
-        case WorkbookLayoutCommand.AutoSizeColumns _ -> {
+        case WorkbookMutationAction.AutoSizeColumns _ -> {
           // Auto-sizing does not add new candidate cells.
         }
       }

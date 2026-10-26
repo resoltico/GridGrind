@@ -15,6 +15,9 @@ import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -101,26 +104,28 @@ final class OperationSequenceRuleValues {
                     Optional.of(nextDifferentialStyleInput(data)))));
   }
 
-  static WorkbookFormattingCommand.SetConditionalFormatting nextConditionalFormattingCommand(
+  static ResolvedStep nextConditionalFormattingCommand(
       GridGrindFuzzData data, boolean validRange, String sheetName) {
-    return new WorkbookFormattingCommand.SetConditionalFormatting(
-        sheetName,
-        List.of(
-            new dev.erst.gridgrind.core.vocabulary.RangeRef(
-                validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false))),
-        new ConditionalFormattingSpec(
+    return new ResolvedStep(
+        new RangeSelector.ByRanges(
+            new SheetName(sheetName),
             List.of(
-                data.consumeBoolean()
-                    ? new ConditionalFormattingRuleSpec.FormulaRule(
-                        "A1>0",
-                        data.consumeBoolean(),
-                        Optional.of(nextExcelDifferentialStyle(data)))
-                    : new ConditionalFormattingRuleSpec.CellValueRule(
-                        ExcelComparisonOperator.GREATER_THAN,
-                        "1",
-                        Optional.empty(),
-                        data.consumeBoolean(),
-                        Optional.of(nextExcelDifferentialStyle(data))))));
+                new dev.erst.gridgrind.core.vocabulary.RangeRef(
+                    validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)))),
+        new StructuredMutationAction.SetConditionalFormatting(
+            new ConditionalFormattingSpec(
+                List.of(
+                    data.consumeBoolean()
+                        ? new ConditionalFormattingRuleSpec.FormulaRule(
+                            "A1>0",
+                            data.consumeBoolean(),
+                            Optional.of(nextExcelDifferentialStyle(data)))
+                        : new ConditionalFormattingRuleSpec.CellValueRule(
+                            ExcelComparisonOperator.GREATER_THAN,
+                            "1",
+                            Optional.empty(),
+                            data.consumeBoolean(),
+                            Optional.of(nextExcelDifferentialStyle(data)))))));
   }
 
   static DifferentialStylePatch nextDifferentialStyleInput(GridGrindFuzzData data) {

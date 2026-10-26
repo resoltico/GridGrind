@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.setPivotTableStep;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.assertThat;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -95,6 +96,8 @@ import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
@@ -1147,36 +1150,37 @@ class WorkbookInvariantChecksTest {
           .apply(
               workbook,
               List.of(
-                  new WorkbookDrawingCommand.SetChart(
-                      "Ops",
-                      new ResolvedChart(
-                          "OpsChart",
-                          new DrawingAnchorSpec.TwoCell(
-                              new DrawingMarkerSpec(0, 0, 0, 0),
-                              new DrawingMarkerSpec(2, 8, 0, 0),
-                              dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
-                                  .MOVE_AND_RESIZE),
-                          new ResolvedChartTitle.Text("Roadmap"),
-                          new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
-                          ExcelChartDisplayBlanksAs.SPAN,
-                          false,
-                          List.of(
-                              new ResolvedChart.Bar(
-                                  true,
-                                  ExcelChartBarDirection.COLUMN,
-                                  ExcelChartBarGrouping.CLUSTERED,
-                                  Optional.empty(),
-                                  Optional.empty(),
-                                  excelCategoryAxes(),
-                                  List.of(
-                                      new ResolvedChart.Series(
-                                          new ResolvedChartTitle.Text("Actual"),
-                                          new ChartDataSourceSpec.Reference("Ops!$A$2:$A$4"),
-                                          new ChartDataSourceSpec.Reference("Ops!$B$2:$B$4"),
-                                          Optional.empty(),
-                                          Optional.empty(),
-                                          Optional.empty(),
-                                          Optional.empty()))))))));
+                  new ResolvedStep(
+                      new SheetSelector.ByName(new SheetName("Ops")),
+                      new ResolvedMutationAction.SetChart(
+                          new ResolvedChart(
+                              "OpsChart",
+                              new DrawingAnchorSpec.TwoCell(
+                                  new DrawingMarkerSpec(0, 0, 0, 0),
+                                  new DrawingMarkerSpec(2, 8, 0, 0),
+                                  dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
+                                      .MOVE_AND_RESIZE),
+                              new ResolvedChartTitle.Text("Roadmap"),
+                              new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                              ExcelChartDisplayBlanksAs.SPAN,
+                              false,
+                              List.of(
+                                  new ResolvedChart.Bar(
+                                      true,
+                                      ExcelChartBarDirection.COLUMN,
+                                      ExcelChartBarGrouping.CLUSTERED,
+                                      Optional.empty(),
+                                      Optional.empty(),
+                                      excelCategoryAxes(),
+                                      List.of(
+                                          new ResolvedChart.Series(
+                                              new ResolvedChartTitle.Text("Actual"),
+                                              new ChartDataSourceSpec.Reference("Ops!$A$2:$A$4"),
+                                              new ChartDataSourceSpec.Reference("Ops!$B$2:$B$4"),
+                                              Optional.empty(),
+                                              Optional.empty(),
+                                              Optional.empty(),
+                                              Optional.empty())))))))));
 
       assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
     }
@@ -1198,7 +1202,7 @@ class WorkbookInvariantChecksTest {
           .apply(
               workbook,
               List.of(
-                  new WorkbookTabularCommand.SetPivotTable(
+                  setPivotTableStep(
                       new PivotTableSpec(
                           "OpsPivot",
                           new dev.erst.gridgrind.core.vocabulary.SheetName("Pivot"),

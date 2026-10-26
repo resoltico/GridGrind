@@ -26,6 +26,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
@@ -52,7 +53,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceLayoutValues.nextPaneInput(data);
   }
 
-  static ExcelSheetPane nextExcelSheetPane(GridGrindFuzzData data) {
+  static PaneSpec nextExcelSheetPane(GridGrindFuzzData data) {
     return OperationSequenceLayoutValues.nextExcelSheetPane(data);
   }
 
@@ -76,7 +77,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceLayoutValues.nextSheetCopyPosition(data);
   }
 
-  static ExcelSheetCopyPosition nextExcelSheetCopyPosition(GridGrindFuzzData data) {
+  static SheetCopyPosition nextExcelSheetCopyPosition(GridGrindFuzzData data) {
     return OperationSequenceLayoutValues.nextExcelSheetCopyPosition(data);
   }
 
@@ -189,7 +190,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceRuleValues.nextConditionalFormattingInput(data);
   }
 
-  static WorkbookFormattingCommand.SetConditionalFormatting nextConditionalFormattingCommand(
+  static ResolvedStep nextConditionalFormattingCommand(
       GridGrindFuzzData data, boolean validRange, String sheetName) {
     return OperationSequenceRuleValues.nextConditionalFormattingCommand(
         data, validRange, sheetName);

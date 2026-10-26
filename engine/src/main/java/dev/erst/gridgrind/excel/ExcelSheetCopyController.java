@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,7 +33,7 @@ final class ExcelSheetCopyController {
       ExcelWorkbook workbook,
       String sourceSheetName,
       String newSheetName,
-      ExcelSheetCopyPosition position) {
+      SheetCopyPosition position) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelWorkbookSheetSupport.requireSheetName(sourceSheetName, "sourceSheetName");
     ExcelWorkbookSheetSupport.requireSheetName(newSheetName, "newSheetName");
@@ -94,10 +95,10 @@ final class ExcelSheetCopyController {
     workbook.xssfWorkbook().setSheetVisibility(targetSheetIndex, SheetVisibility.VISIBLE);
     targetPoiSheet.setSelected(false);
     switch (position) {
-      case ExcelSheetCopyPosition.AppendAtEnd _ -> {
+      case SheetCopyPosition.AppendAtEnd _ -> {
         // cloneSheet already appends at the end.
       }
-      case ExcelSheetCopyPosition.AtIndex atIndex -> {
+      case SheetCopyPosition.AtIndex atIndex -> {
         ExcelWorkbookSheetSupport.requireTargetIndex(
             workbook.xssfWorkbook(), atIndex.targetIndex());
         workbook.xssfWorkbook().setSheetOrder(newSheetName, atIndex.targetIndex());

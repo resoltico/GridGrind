@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
@@ -21,7 +22,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -51,8 +51,7 @@ public final class XlsxRoundTripVerifier {
 
   /** Requires the saved workbook to reopen and preserve bounded structural and style invariants. */
   public static void requireRoundTripReadable(
-      ExcelWorkbook workbook, Path workbookPath, List<WorkbookCommand> commands)
-      throws IOException {
+      ExcelWorkbook workbook, Path workbookPath, List<ResolvedStep> commands) throws IOException {
     if (workbook == null) {
       throw new IllegalArgumentException("workbook must not be null");
     }

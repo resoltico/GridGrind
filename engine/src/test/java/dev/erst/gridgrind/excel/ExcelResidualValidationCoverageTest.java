@@ -19,8 +19,17 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.source.BinaryContent;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -78,19 +87,35 @@ class ExcelResidualValidationCoverageTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCellCommand.SetArrayFormula(" ", "A1:A2", arrayFormula));
+        () ->
+            new ResolvedStep(
+                new RangeSelector.ByRange(new SheetName(" "), new RangeRef("A1:A2")),
+                new ResolvedMutationAction.SetArrayFormula(arrayFormula)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCellCommand.SetArrayFormula("Ops", " ", arrayFormula));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCellCommand.ClearArrayFormula(" ", "A1"));
+        () ->
+            new ResolvedStep(
+                new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef(" ")),
+                new ResolvedMutationAction.SetArrayFormula(arrayFormula)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCellCommand.ClearArrayFormula("Ops", " "));
+        () ->
+            new ResolvedStep(
+                new CellSelector.ByAddress(new SheetName(" "), new CellAddress("A1")),
+                new CellMutationAction.ClearArrayFormula()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ResolvedStep(
+                new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress(" ")),
+                new CellMutationAction.ClearArrayFormula()));
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookDrawingCommand.SetSignatureLine(" ", signatureDefinition(anchor)));
+        () ->
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName(" ")),
+                new ResolvedMutationAction.SetSignatureLine(signatureDefinition(anchor))));
 
     assertThrows(IllegalArgumentException.class, () -> new ResolvedCustomXmlImport(locator, " "));
     assertThrows(

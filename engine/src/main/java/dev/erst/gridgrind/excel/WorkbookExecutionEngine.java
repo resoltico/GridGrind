@@ -6,30 +6,26 @@ import java.util.Objects;
 
 /** Public workbook-core execution facade for applying commands and running workbook reads. */
 public final class WorkbookExecutionEngine {
-  private final WorkbookCommandExecutor commandExecutor;
   private final WorkbookReadExecutor readExecutor;
 
   /** Creates the production workbook execution facade. */
   public WorkbookExecutionEngine() {
-    this(new WorkbookCommandExecutor(), new WorkbookReadExecutor());
+    this.readExecutor = new WorkbookReadExecutor();
   }
 
-  WorkbookExecutionEngine(
-      WorkbookCommandExecutor commandExecutor, WorkbookReadExecutor readExecutor) {
-    this.commandExecutor =
-        Objects.requireNonNull(commandExecutor, "commandExecutor must not be null");
-    this.readExecutor = Objects.requireNonNull(readExecutor, "readExecutor must not be null");
+  /** Applies executable core mutations in order. */
+  public ExcelWorkbook apply(
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedStep... steps) {
+    return apply(workbook, Arrays.asList(steps));
   }
 
-  /** Applies one or more commands in order to one workbook instance. */
-  public ExcelWorkbook apply(ExcelWorkbook workbook, WorkbookCommand... commands) {
-    Objects.requireNonNull(commands, "commands must not be null");
-    return apply(workbook, Arrays.asList(commands));
-  }
-
-  /** Applies commands from any iterable source in order to one workbook instance. */
-  public ExcelWorkbook apply(ExcelWorkbook workbook, Iterable<WorkbookCommand> commands) {
-    return commandExecutor.apply(workbook, commands);
+  /** Applies executable core mutations from an ordered source. */
+  public ExcelWorkbook apply(
+      ExcelWorkbook workbook, Iterable<dev.erst.gridgrind.core.plan.ResolvedStep> steps) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(steps, "steps must not be null");
+    for (var step : steps) ResolvedMutationExecutor.apply(workbook, step);
+    return workbook;
   }
 
   /** Executes one or more read commands against one workbook instance. */

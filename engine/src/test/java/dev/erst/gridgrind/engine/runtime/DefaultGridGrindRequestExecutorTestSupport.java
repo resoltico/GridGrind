@@ -16,7 +16,6 @@ import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
@@ -282,8 +281,15 @@ class DefaultGridGrindRequestExecutorTestSupport
     ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
   }
 
-  static WorkbookCommand command(ExecutorTestPlanSupport.PendingMutation mutation) {
-    return WorkbookCommandConverter.toCommand(mutation.target(), mutation.action());
+  static ResolvedStep command(ExecutorTestPlanSupport.PendingMutation mutation) {
+    return command(mutation.target(), mutation.action());
+  }
+
+  static ResolvedStep command(Selector target, MutationAction action) {
+    return new ResolvedStep(
+        (ResolvedTarget) target,
+        MutationResolution.resolve(
+            action, ExecutionInputBindingsFixtureSupport.bindings(Path.of("."))));
   }
 
   static WorkbookReadCommand readCommand(InspectionStep step) {

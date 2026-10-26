@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
@@ -39,7 +40,13 @@ import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -50,6 +57,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
@@ -76,20 +84,31 @@ class ExcelWorkbookTest {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-engine-", ".xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      WorkbookCommandExecutor commandExecutor = new WorkbookCommandExecutor();
+      WorkbookExecutionEngine commandExecutor = new WorkbookExecutionEngine();
       commandExecutor.apply(
           workbook,
-          List.<WorkbookCommand>of(
-              new WorkbookSheetCommand.CreateSheet("Budget"),
-              new WorkbookCellCommand.AppendRow(
-                  "Budget", List.of(new CellValue.Text("Item"), new CellValue.Text("Amount"))),
-              new WorkbookCellCommand.AppendRow(
-                  "Budget",
-                  List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(49.0))),
-              new WorkbookCellCommand.AppendRow(
-                  "Budget", List.of(new CellValue.Text("Domain"), new CellValue.NumberValue(12.0))),
-              new WorkbookCellCommand.SetCell("Budget", "A4", new CellValue.Text("Total")),
-              new WorkbookCellCommand.SetCell("Budget", "B4", new ResolvedFormula("SUM(B2:B3)"))));
+          List.<ResolvedStep>of(
+              new ResolvedStep(
+                  new SheetSelector.ByName(new SheetName("Budget")),
+                  new WorkbookMutationAction.EnsureSheet()),
+              new ResolvedStep(
+                  new SheetSelector.ByName(new SheetName("Budget")),
+                  new ResolvedMutationAction.AppendRow(
+                      List.of(new CellValue.Text("Item"), new CellValue.Text("Amount")))),
+              new ResolvedStep(
+                  new SheetSelector.ByName(new SheetName("Budget")),
+                  new ResolvedMutationAction.AppendRow(
+                      List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(49.0)))),
+              new ResolvedStep(
+                  new SheetSelector.ByName(new SheetName("Budget")),
+                  new ResolvedMutationAction.AppendRow(
+                      List.of(new CellValue.Text("Domain"), new CellValue.NumberValue(12.0)))),
+              new ResolvedStep(
+                  new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A4")),
+                  new ResolvedMutationAction.SetCell(new CellValue.Text("Total"))),
+              new ResolvedStep(
+                  new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
+                  new ResolvedMutationAction.SetCell(new ResolvedFormula("SUM(B2:B3)")))));
       workbook.formulas().evaluateAll();
       workbook
           .persistence()
@@ -268,7 +287,7 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Alpha").cells().setCell("A1", new CellValue.Text("Live"));
       workbook.getOrCreateSheet("Beta");
       workbook.getOrCreateSheet("Gamma");
-      workbook.sheets().copySheet("Alpha", "Replica", new ExcelSheetCopyPosition.AtIndex(1));
+      workbook.sheets().copySheet("Alpha", "Replica", new SheetCopyPosition.AtIndex(1));
       workbook.sheets().setActiveSheet("Beta");
       workbook.sheets().setSelectedSheets(List.of("Gamma", "Alpha"));
       workbook.sheets().setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
@@ -426,7 +445,7 @@ class ExcelWorkbookTest {
                                   Optional.of(ColorSpec.rgb(new RgbHex("#E0F0AA"))),
                                   Optional.empty()))))));
       workbook.sheet("Source").layout().mergeCells("A1:B1");
-      workbook.sheet("Source").layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      workbook.sheet("Source").layout().setPane(new PaneSpec.Frozen(1, 1, 1, 1));
       workbook.sheet("Source").layout().setZoom(140);
       workbook
           .sheet("Source")
@@ -450,7 +469,7 @@ class ExcelWorkbookTest {
                   NamedRangeTarget.range(
                       new dev.erst.gridgrind.core.vocabulary.SheetName("Source"),
                       new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"))));
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
       workbook
           .persistence()
           .save(
@@ -459,8 +478,7 @@ class ExcelWorkbookTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    assertEquals(
-        new ExcelSheetPane.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Replica"));
+    assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Replica"));
     assertEquals(140, XlsxRoundTrip.zoomPercent(workbookPath, "Replica"));
     assertEquals(
         ExcelPrintOrientation.LANDSCAPE,
@@ -575,9 +593,7 @@ class ExcelWorkbookTest {
                   false,
                   new TableStyleSpec.None()));
 
-      workbook
-          .sheets()
-          .copySheet("Tables", "Tables Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Tables", "Tables Copy", new SheetCopyPosition.AppendAtEnd());
 
       assertEquals(List.of("Tables", "Tables Copy"), workbook.sheets().sheetNames());
       assertEquals(1, workbook.xssfWorkbook().getSheet("Tables").getTables().size());
@@ -598,7 +614,7 @@ class ExcelWorkbookTest {
 
       workbook
           .sheets()
-          .copySheet("FormulaNames", "FormulaNames Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+          .copySheet("FormulaNames", "FormulaNames Copy", new SheetCopyPosition.AppendAtEnd());
 
       assertEquals(
           List.of(
@@ -626,7 +642,7 @@ class ExcelWorkbookTest {
       budget.layout().mergeCells("A1:B1");
       budget.columns().setWidth(0, 1, 16.0);
       budget.rows().setHeight(0, 0, 28.5);
-      budget.layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      budget.layout().setPane(new PaneSpec.Frozen(1, 1, 1, 1));
       budget.layout().setZoom(125);
       budget
           .layout()
@@ -650,7 +666,7 @@ class ExcelWorkbookTest {
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
     assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
     assertEquals(
         new PrintAreaSpec.Range(new RangeRef("A1:B12")),
@@ -1048,7 +1064,7 @@ class ExcelWorkbookTest {
     assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(new ExcelSheetPane.Frozen(1, 2, 3, 4), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(new PaneSpec.Frozen(1, 2, 3, 4), XlsxRoundTrip.pane(workbookPath, "Budget"));
   }
 
   @Test

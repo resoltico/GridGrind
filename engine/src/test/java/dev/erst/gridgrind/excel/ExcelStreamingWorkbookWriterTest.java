@@ -4,13 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
-import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -39,25 +42,35 @@ class ExcelStreamingWorkbookWriterTest {
             .resolve("streaming workbook.xlsx");
 
     try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
-      writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
-      writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
       writer.apply(
-          new WorkbookCellCommand.AppendRow(
-              "Ops",
-              List.of(
-                  new CellValue.Blank(),
-                  new CellValue.Text("Item"),
-                  new ResolvedRichText(List.of(new ResolvedRichTextRun("Rich", Optional.empty()))),
-                  new CellValue.NumberValue(42.5d),
-                  new CellValue.BooleanValue(true),
-                  new CellValue.ErrorValue("#REF!"),
-                  new CellValueSpec.Date(LocalDate.of(2026, 4, 13)),
-                  new CellValueSpec.DateTime(LocalDateTime.of(2026, 4, 13, 9, 30, 15)),
-                  new ResolvedFormula("2+3"),
-                  new ResolvedRawFormula("LAMBDA(x,x+1)(A1)"))));
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new WorkbookMutationAction.EnsureSheet()));
       writer.apply(
-          new WorkbookCellCommand.AppendRow(
-              "Ops", List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(9.0d))));
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new WorkbookMutationAction.EnsureSheet()));
+      writer.apply(
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.AppendRow(
+                  List.of(
+                      new CellValue.Blank(),
+                      new CellValue.Text("Item"),
+                      new ResolvedRichText(
+                          List.of(new ResolvedRichTextRun("Rich", Optional.empty()))),
+                      new CellValue.NumberValue(42.5d),
+                      new CellValue.BooleanValue(true),
+                      new CellValue.ErrorValue("#REF!"),
+                      new CellValueSpec.Date(LocalDate.of(2026, 4, 13)),
+                      new CellValueSpec.DateTime(LocalDateTime.of(2026, 4, 13, 9, 30, 15)),
+                      new ResolvedFormula("2+3"),
+                      new ResolvedRawFormula("LAMBDA(x,x+1)(A1)")))));
+      writer.apply(
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.AppendRow(
+                  List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(9.0d)))));
       writer.markRecalculateOnOpen();
       writer.save(
           workbookPath, dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
@@ -92,13 +105,15 @@ class ExcelStreamingWorkbookWriterTest {
               SheetNotFoundException.class,
               () ->
                   writer.apply(
-                      new WorkbookCellCommand.AppendRow(
-                          "Ops", List.of(new CellValue.Text("missing")))));
+                      new ResolvedStep(
+                          new SheetSelector.ByName(new SheetName("Ops")),
+                          new ResolvedMutationAction.AppendRow(
+                              List.of(new CellValue.Text("missing"))))));
       assertEquals("Sheet does not exist: Ops", missingSheet.getMessage());
 
-      for (WorkbookCommand command : WorkbookSampleFixtures.workbookCommands()) {
-        if (command instanceof WorkbookSheetCommand.CreateSheet
-            || command instanceof WorkbookCellCommand.AppendRow) {
+      for (ResolvedStep command : WorkbookSampleFixtures.workbookCommands()) {
+        if (command.action() instanceof WorkbookMutationAction.EnsureSheet
+            || command.action() instanceof ResolvedMutationAction.AppendRow) {
           continue;
         }
 
@@ -110,30 +125,16 @@ class ExcelStreamingWorkbookWriterTest {
                     "expected STREAMING_WRITE rejection for " + command.getClass().getSimpleName());
 
         assertTrue(unsupported.getMessage().contains("execution.mode.type=STREAMING_WRITE"));
-        assertTrue(unsupported.getMessage().contains(command.commandType()));
+        assertTrue(
+            unsupported
+                .getMessage()
+                .contains(
+                    dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames
+                        .mutationActionTypeName(command.action().authoredType())));
       }
     } catch (IOException exception) {
       fail(exception);
     }
-  }
-
-  @Test
-  void workbookCommandsExposeCanonicalOperationStyleNames() {
-    assertEquals("ENSURE_SHEET", new WorkbookSheetCommand.CreateSheet("Ops").commandType());
-    assertEquals(
-        "APPEND_ROW",
-        new WorkbookCellCommand.AppendRow("Ops", List.of(new CellValue.Text("value")))
-            .commandType());
-    assertEquals(
-        "SET_SHEET_PRESENTATION",
-        new WorkbookLayoutCommand.SetSheetPresentation("Ops", SheetPresentationSpec.defaults())
-            .commandType());
-    assertEquals(
-        "SET_WORKBOOK_PROTECTION",
-        new WorkbookSheetCommand.SetWorkbookProtection(
-                new ResolvedWorkbookProtection(
-                    true, false, false, Optional.empty(), Optional.empty()))
-            .commandType());
   }
 
   @Test
@@ -152,9 +153,14 @@ class ExcelStreamingWorkbookWriterTest {
             new CellValue.Text("Approved"));
 
     try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
-      WorkbookCellCommand.AppendRow repeatedAppendRow =
-          new WorkbookCellCommand.AppendRow("Ops", repeatedValues);
-      writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
+      ResolvedStep repeatedAppendRow =
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.AppendRow(repeatedValues));
+      writer.apply(
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new WorkbookMutationAction.EnsureSheet()));
       for (int rowIndex = 0; rowIndex < 4_000; rowIndex++) {
         writer.apply(repeatedAppendRow);
       }
@@ -204,9 +210,14 @@ class ExcelStreamingWorkbookWriterTest {
       assertArrayEquals(firstSaveBytes, secondSaveBytes);
 
       try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
-        writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
         writer.apply(
-            new WorkbookCellCommand.AppendRow("Ops", List.of(new CellValue.Text("collision"))));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new WorkbookMutationAction.EnsureSheet()));
+        writer.apply(
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new ResolvedMutationAction.AppendRow(List.of(new CellValue.Text("collision")))));
         assertThrows(
             FileAlreadyExistsException.class,
             () ->
@@ -221,10 +232,15 @@ class ExcelStreamingWorkbookWriterTest {
 
   private static byte[] saveStreamingBudgetWorkbook(Path workbookPath) throws IOException {
     try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
-      writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
       writer.apply(
-          new WorkbookCellCommand.AppendRow(
-              "Ops", List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(9.0d))));
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new WorkbookMutationAction.EnsureSheet()));
+      writer.apply(
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.AppendRow(
+                  List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(9.0d)))));
       writer.markRecalculateOnOpen();
       writer.save(
           workbookPath, dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);

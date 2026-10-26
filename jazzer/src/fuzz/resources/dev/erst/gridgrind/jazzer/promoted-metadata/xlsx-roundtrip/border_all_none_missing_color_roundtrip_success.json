@@ -11,7 +11,7 @@
       "commandCount" : 8,
       "commandKinds" : {
         "APPEND_ROW" : 1,
-        "CREATE_SHEET" : 7
+        "ENSURE_SHEET" : 7
       },
       "styleKinds" : { }
     }

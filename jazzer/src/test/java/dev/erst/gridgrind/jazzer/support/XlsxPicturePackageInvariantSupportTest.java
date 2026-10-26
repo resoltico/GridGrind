@@ -10,7 +10,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.IOException;
@@ -87,7 +87,7 @@ class XlsxPicturePackageInvariantSupportTest {
                       new DrawingMarkerSpec(4, 6, 0, 0),
                       dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior
                           .MOVE_AND_RESIZE)));
-      workbook.sheets().copySheet("Ops", "Ops Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Ops", "Ops Copy", new SheetCopyPosition.AppendAtEnd());
       JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }
 

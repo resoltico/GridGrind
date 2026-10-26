@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
@@ -233,22 +234,22 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertThrows(NullPointerException.class, () -> sheet.layout().setPane(null));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(-1, 0, 0, 0)));
+          () -> sheet.layout().setPane(new PaneSpec.Frozen(-1, 0, 0, 0)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(0, 0, 0, 0)));
+          () -> sheet.layout().setPane(new PaneSpec.Frozen(0, 0, 0, 0)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(0, 1, 1, 1)));
+          () -> sheet.layout().setPane(new PaneSpec.Frozen(0, 1, 1, 1)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(1, 0, 1, 1)));
+          () -> sheet.layout().setPane(new PaneSpec.Frozen(1, 0, 1, 1)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(2, 1, 1, 1)));
+          () -> sheet.layout().setPane(new PaneSpec.Frozen(2, 1, 1, 1)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(1, 2, 1, 1)));
+          () -> sheet.layout().setPane(new PaneSpec.Frozen(1, 2, 1, 1)));
       assertThrows(IllegalArgumentException.class, () -> sheet.layout().setZoom(9));
       assertThrows(IllegalArgumentException.class, () -> sheet.layout().setZoom(401));
       assertThrows(NullPointerException.class, () -> sheet.layout().setPrintLayout(null));
@@ -812,7 +813,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
       WorkbookSheetResult.SheetLayout emptyLayout = sheet.layout().snapshot();
-      assertEquals(new ExcelSheetPane.None(), emptyLayout.pane());
+      assertEquals(new PaneSpec.None(), emptyLayout.pane());
       assertEquals(100, emptyLayout.zoomPercent());
       assertEquals(
           dev.erst.gridgrind.core.model.layout.SheetDisplayReport.defaults(),
@@ -874,7 +875,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals("C3", selectedComments.getFirst().address());
 
       WorkbookSheetResult.SheetLayout unfrozenLayout = sheet.layout().snapshot();
-      assertEquals(new ExcelSheetPane.None(), unfrozenLayout.pane());
+      assertEquals(new PaneSpec.None(), unfrozenLayout.pane());
       assertEquals(100, unfrozenLayout.zoomPercent());
       assertEquals(
           new dev.erst.gridgrind.core.model.layout.SheetDisplayReport(
@@ -898,17 +899,16 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(3, unfrozenLayout.columns().size());
       assertEquals(3, unfrozenLayout.rows().size());
 
-      sheet.layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      sheet.layout().setPane(new PaneSpec.Frozen(1, 1, 1, 1));
       sheet.layout().setZoom(135);
       WorkbookSheetResult.SheetLayout frozenLayout = sheet.layout().snapshot();
-      assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), frozenLayout.pane());
+      assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), frozenLayout.pane());
       assertEquals(135, frozenLayout.zoomPercent());
 
       poiSheet.createSplitPane(2000, 2000, 0, 0, PaneType.LOWER_RIGHT);
       WorkbookSheetResult.SheetLayout splitLayout = sheet.layout().snapshot();
       assertEquals(
-          new ExcelSheetPane.Split(2000, 2000, 0, 0, ExcelPaneRegion.LOWER_RIGHT),
-          splitLayout.pane());
+          new PaneSpec.Split(2000, 2000, 0, 0, ExcelPaneRegion.LOWER_RIGHT), splitLayout.pane());
     }
   }
 

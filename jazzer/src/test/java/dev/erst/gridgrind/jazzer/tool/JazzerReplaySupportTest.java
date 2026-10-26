@@ -206,7 +206,7 @@ class JazzerReplaySupportTest {
         new XlsxRoundTripDetails(
             83,
             4,
-            Map.of("AUTO_SIZE_COLUMNS", 2L, "CREATE_SHEET", 1L, "SET_NAMED_RANGE", 1L),
+            Map.of("AUTO_SIZE_COLUMNS", 2L, "ENSURE_SHEET", 1L, "SET_NAMED_RANGE", 1L),
             Map.of()),
         expectedInvalid.details());
   }
@@ -225,7 +225,7 @@ class JazzerReplaySupportTest {
             6,
             Map.of(
                 "CLEAR_SHEET_PROTECTION", 1L,
-                "CREATE_SHEET", 1L,
+                "ENSURE_SHEET", 1L,
                 "UNGROUP_COLUMNS", 4L),
             Map.of()),
         success.details());

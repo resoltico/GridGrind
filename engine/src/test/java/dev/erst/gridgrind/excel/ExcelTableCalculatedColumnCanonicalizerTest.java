@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.io.IOException;
@@ -34,9 +35,7 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       seedCalculatedTableSheet(workbook, "Ledger", "OpsCloseTable");
 
-      workbook
-          .sheets()
-          .copySheet("Ledger", "Ledger Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Ledger", "Ledger Copy", new SheetCopyPosition.AppendAtEnd());
 
       assertNoFormulaCell(workbook.xssfWorkbook().getSheet("Ledger Copy"), "D2");
       assertNoFormulaCell(workbook.xssfWorkbook().getSheet("Ledger Copy"), "D3");

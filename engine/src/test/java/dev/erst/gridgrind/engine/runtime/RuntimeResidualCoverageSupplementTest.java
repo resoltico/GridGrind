@@ -169,7 +169,7 @@ class RuntimeResidualCoverageSupplementTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandStructuredMutationConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new RangeSelector.AllOnSheet(new SheetName("Budget")),
                     new StructuredMutationAction.SetConditionalFormatting(
                         new ConditionalFormattingSpec(
@@ -177,7 +177,6 @@ class RuntimeResidualCoverageSupplementTest {
                                 new ConditionalFormattingRuleSpec.FormulaRule(
                                     "A1>0", true, Optional.empty()))))));
 
-    assertEquals(
-        "SET_CONDITIONAL_FORMATTING requires explicit range targets", failure.getMessage());
+    assertEquals("Mutation target does not match SetConditionalFormatting", failure.getMessage());
   }
 }

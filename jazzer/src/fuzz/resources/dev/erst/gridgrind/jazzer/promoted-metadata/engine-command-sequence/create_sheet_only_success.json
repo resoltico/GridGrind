@@ -10,7 +10,7 @@
       "inputBytes" : 5,
       "commandCount" : 1,
       "commandKinds" : {
-        "CREATE_SHEET" : 1
+        "ENSURE_SHEET" : 1
       },
       "styleKinds" : { }
     }

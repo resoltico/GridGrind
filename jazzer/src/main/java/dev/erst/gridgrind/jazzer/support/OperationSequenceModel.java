@@ -4,7 +4,7 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
-import dev.erst.gridgrind.excel.WorkbookCommand;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.WorkflowStorage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -82,12 +82,12 @@ public final class OperationSequenceModel {
   }
 
   /** Returns a bounded sequence of workbook-core commands. */
-  public static List<WorkbookCommand> nextWorkbookCommands(GridGrindFuzzData data) {
+  public static List<ResolvedStep> nextWorkbookCommands(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     String primarySheet = FuzzDataDecoders.nextSheetName(data, true);
     String secondarySheet = FuzzDataDecoders.nextSheetName(data, true);
-    List<WorkbookCommand> commands = new ArrayList<>();
+    List<ResolvedStep> commands = new ArrayList<>();
     String workbookNamedRange = nextNamedRangeName(data, true);
     String sheetNamedRange = nextNamedRangeName(data, true);
     String pivotTableName = nextPivotTableName(data, true);

@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
@@ -235,7 +236,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   /** Layout metadata such as pane state, zoom, and visible row and column sizing for one sheet. */
   record SheetLayout(
       String sheetName,
-      ExcelSheetPane pane,
+      PaneSpec pane,
       int zoomPercent,
       SheetPresentationReport presentation,
       List<ColumnLayout> columns,

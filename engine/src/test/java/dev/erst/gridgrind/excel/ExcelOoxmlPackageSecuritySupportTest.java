@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
@@ -12,6 +16,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageInspectionSupport;
@@ -187,10 +192,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
             encryptedWorkbook.workbookPath(),
             new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      new WorkbookCommandExecutor()
+      new WorkbookExecutionEngine()
           .apply(
               workbook,
-              new WorkbookCellCommand.SetCell("Encrypted", "B2", new CellValue.Text("Mutated")));
+              new ResolvedStep(
+                  new CellSelector.ByAddress(new SheetName("Encrypted"), new CellAddress("B2")),
+                  new ResolvedMutationAction.SetCell(new CellValue.Text("Mutated"))));
       workbook
           .persistence()
           .save(
@@ -233,10 +240,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
           ExcelOoxmlSignatureState.VALID,
           beforeMutation.security().signatures().getFirst().state());
 
-      new WorkbookCommandExecutor()
+      new WorkbookExecutionEngine()
           .apply(
               workbook,
-              new WorkbookCellCommand.SetCell("Signed", "C1", new CellValue.Text("Touch")));
+              new ResolvedStep(
+                  new CellSelector.ByAddress(new SheetName("Signed"), new CellAddress("C1")),
+                  new ResolvedMutationAction.SetCell(new CellValue.Text("Touch"))));
 
       WorkbookCoreResult.PackageSecurityResult afterMutation =
           assertInstanceOf(

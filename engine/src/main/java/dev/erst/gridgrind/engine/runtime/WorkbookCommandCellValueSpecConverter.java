@@ -6,8 +6,6 @@ import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
-import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
@@ -64,17 +62,6 @@ final class WorkbookCommandCellValueSpecConverter {
         comment.visible(),
         commentRuns(comment),
         comment.anchor());
-  }
-
-  static Optional<FontHeightReport> toFontHeightReport(FontHeightSpec fontHeight) {
-    if (fontHeight == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        switch (fontHeight) {
-          case FontHeightSpec.Points points -> FontHeightReport.fromPoints(points.points());
-          case FontHeightSpec.Twips twips -> FontHeightReport.fromTwips(twips.twips());
-        });
   }
 
   private static Optional<ResolvedRichText> commentRuns(CommentSpec comment) {

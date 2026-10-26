@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.tool;
 
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
@@ -9,7 +10,6 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
@@ -225,7 +225,7 @@ public final class JazzerReplaySupport {
 
   private static ReplayOutcome replayCommandSequence(byte[] input) {
     GridGrindFuzzData data = GridGrindFuzzData.replay(input);
-    List<WorkbookCommand> commands = List.of();
+    List<ResolvedStep> commands = List.of();
     try {
       commands = OperationSequenceModel.nextWorkbookCommands(data);
       try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
@@ -253,7 +253,7 @@ public final class JazzerReplaySupport {
   private static ReplayOutcome replayRoundTrip(byte[] input) {
     GridGrindFuzzData data = GridGrindFuzzData.replay(input);
     Path directory = null;
-    List<WorkbookCommand> commands = List.of();
+    List<ResolvedStep> commands = List.of();
     try {
       commands = OperationSequenceModel.nextWorkbookCommands(data);
       directory = Files.createTempDirectory("gridgrind-jazzer-replay-");
@@ -337,7 +337,7 @@ public final class JazzerReplaySupport {
   }
 
   private static CommandSequenceDetails commandSequenceDetails(
-      int inputLength, List<WorkbookCommand> commands) {
+      int inputLength, List<ResolvedStep> commands) {
     return new CommandSequenceDetails(
         inputLength,
         commands.size(),
@@ -346,7 +346,7 @@ public final class JazzerReplaySupport {
   }
 
   private static XlsxRoundTripDetails roundTripDetails(
-      int inputLength, List<WorkbookCommand> commands) {
+      int inputLength, List<ResolvedStep> commands) {
     return new XlsxRoundTripDetails(
         inputLength,
         commands.size(),

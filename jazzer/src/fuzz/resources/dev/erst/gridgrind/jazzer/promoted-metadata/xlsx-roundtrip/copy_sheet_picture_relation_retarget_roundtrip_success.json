@@ -10,7 +10,7 @@
       "inputBytes" : 79,
       "commandCount" : 9,
       "commandKinds" : {
-        "CREATE_SHEET" : 6,
+        "ENSURE_SHEET" : 6,
         "COPY_SHEET" : 1,
         "SET_PICTURE" : 2
       },

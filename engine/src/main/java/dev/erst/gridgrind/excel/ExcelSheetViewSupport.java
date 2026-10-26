@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import java.util.Objects;
 import org.apache.poi.ss.util.PaneInformation;
@@ -11,15 +12,15 @@ final class ExcelSheetViewSupport {
   private ExcelSheetViewSupport() {}
 
   /** Applies one explicit pane state to the provided sheet. */
-  static void setPane(XSSFSheet sheet, ExcelSheetPane pane) {
+  static void setPane(XSSFSheet sheet, PaneSpec pane) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(pane, "pane must not be null");
     switch (pane) {
-      case ExcelSheetPane.None _ -> sheet.createFreezePane(0, 0, 0, 0);
-      case ExcelSheetPane.Frozen frozen ->
+      case PaneSpec.None _ -> sheet.createFreezePane(0, 0, 0, 0);
+      case PaneSpec.Frozen frozen ->
           sheet.createFreezePane(
               frozen.splitColumn(), frozen.splitRow(), frozen.leftmostColumn(), frozen.topRow());
-      case ExcelSheetPane.Split split ->
+      case PaneSpec.Split split ->
           sheet.createSplitPane(
               split.xSplitPosition(),
               split.ySplitPosition(),
@@ -30,20 +31,20 @@ final class ExcelSheetViewSupport {
   }
 
   /** Returns the current pane state captured on the provided sheet. */
-  static ExcelSheetPane pane(XSSFSheet sheet) {
+  static PaneSpec pane(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     PaneInformation paneInformation = sheet.getPaneInformation();
     if (paneInformation == null) {
-      return new ExcelSheetPane.None();
+      return new PaneSpec.None();
     }
     if (paneInformation.isFreezePane()) {
-      return new ExcelSheetPane.Frozen(
+      return new PaneSpec.Frozen(
           paneInformation.getVerticalSplitPosition(),
           paneInformation.getHorizontalSplitPosition(),
           paneInformation.getVerticalSplitLeftColumn(),
           paneInformation.getHorizontalSplitTopRow());
     }
-    return new ExcelSheetPane.Split(
+    return new PaneSpec.Split(
         paneInformation.getVerticalSplitPosition(),
         paneInformation.getHorizontalSplitPosition(),
         paneInformation.getVerticalSplitLeftColumn(),

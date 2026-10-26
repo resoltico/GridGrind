@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,7 +93,7 @@ class OperationSequenceValueFactoryTest {
       }
 
       try {
-        List<WorkbookCommand> commands =
+        List<ResolvedStep> commands =
             OperationSequenceModel.nextWorkbookCommands(
                 GridGrindFuzzData.replay(selectorBytes(selector)));
         successfulCommandSequences++;

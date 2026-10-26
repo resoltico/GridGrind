@@ -1,5 +1,10 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.clearRangesStep;
+import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.deleteNamedRangeStep;
+import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.setNamedRangeStep;
+import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.setPivotTableStep;
+import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.setTableStep;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.mutate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,6 +59,8 @@ import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
@@ -84,7 +91,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
-import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -337,99 +343,140 @@ class SequenceIntrospectionTest {
     assertEquals(
         "COPY_SHEET",
         SequenceIntrospection.commandKind(
-            new WorkbookSheetCommand.CopySheet(
-                "Budget", "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd())));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.CopySheet(
+                    new SheetName("Budget Copy"), new SheetCopyPosition.AppendAtEnd()))));
     assertEquals(
         "SET_ACTIVE_SHEET",
-        SequenceIntrospection.commandKind(new WorkbookSheetCommand.SetActiveSheet("Budget")));
+        SequenceIntrospection.commandKind(
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.SetActiveSheet())));
     assertEquals(
         "SET_SELECTED_SHEETS",
         SequenceIntrospection.commandKind(
-            new WorkbookSheetCommand.SetSelectedSheets(List.of("Budget", "Archive"))));
+            new ResolvedStep(
+                new SheetSelector.ByNames(
+                    List.of("Budget", "Archive").stream().map(SheetName::new).toList()),
+                new WorkbookMutationAction.SetSelectedSheets())));
     assertEquals(
         "SET_SHEET_VISIBILITY",
         SequenceIntrospection.commandKind(
-            new WorkbookSheetCommand.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN))));
     assertEquals(
         "SET_SHEET_PROTECTION",
         SequenceIntrospection.commandKind(
-            new WorkbookSheetCommand.SetSheetProtection("Budget", excelProtectionSettings())));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new ResolvedMutationAction.SetSheetProtection(
+                    excelProtectionSettings(), Optional.empty()))));
     assertEquals(
         "CLEAR_SHEET_PROTECTION",
-        SequenceIntrospection.commandKind(new WorkbookSheetCommand.ClearSheetProtection("Budget")));
+        SequenceIntrospection.commandKind(
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.ClearSheetProtection())));
     assertEquals(
         "SET_HYPERLINK",
         SequenceIntrospection.commandKind(
-            new WorkbookAnnotationCommand.SetHyperlink(
-                "Budget", "A1", new HyperlinkTarget.Url("https://example.com"))));
+            new ResolvedStep(
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                new CellMutationAction.SetHyperlink(
+                    new HyperlinkTarget.Url("https://example.com")))));
     assertEquals(
         "CLEAR_HYPERLINK",
         SequenceIntrospection.commandKind(
-            new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1")));
+            new ResolvedStep(
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                new CellMutationAction.ClearHyperlink())));
     assertEquals(
         "SET_COMMENT",
         SequenceIntrospection.commandKind(
-            new WorkbookAnnotationCommand.SetComment(
-                "Budget", "A1", new ResolvedComment("Review", "GridGrind", false))));
+            new ResolvedStep(
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                new ResolvedMutationAction.SetComment(
+                    new ResolvedComment("Review", "GridGrind", false)))));
     assertEquals(
         "CLEAR_COMMENT",
         SequenceIntrospection.commandKind(
-            new WorkbookAnnotationCommand.ClearComment("Budget", "A1")));
+            new ResolvedStep(
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                new CellMutationAction.ClearComment())));
     assertEquals(
         "SET_PICTURE",
         SequenceIntrospection.commandKind(
-            new WorkbookDrawingCommand.SetPicture("Budget", excelPictureDefinition())));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new ResolvedMutationAction.SetPicture(excelPictureDefinition()))));
     assertEquals(
         "SET_SHAPE",
         SequenceIntrospection.commandKind(
-            new WorkbookDrawingCommand.SetShape("Budget", excelShapeDefinition())));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new ResolvedMutationAction.SetShape(excelShapeDefinition()))));
     assertEquals(
         "SET_EMBEDDED_OBJECT",
         SequenceIntrospection.commandKind(
-            new WorkbookDrawingCommand.SetEmbeddedObject(
-                "Budget", excelEmbeddedObjectDefinition())));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new ResolvedMutationAction.SetEmbeddedObject(excelEmbeddedObjectDefinition()))));
     assertEquals(
         "SET_CHART",
         SequenceIntrospection.commandKind(
-            new WorkbookDrawingCommand.SetChart("Budget", excelChartDefinition())));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new ResolvedMutationAction.SetChart(excelChartDefinition()))));
     assertEquals(
         "SET_PIVOT_TABLE",
-        SequenceIntrospection.commandKind(
-            new WorkbookTabularCommand.SetPivotTable(excelPivotTableDefinition())));
+        SequenceIntrospection.commandKind(setPivotTableStep(excelPivotTableDefinition())));
     assertEquals(
         "SET_ARRAY_FORMULA",
         SequenceIntrospection.commandKind(
-            new WorkbookCellCommand.SetArrayFormula(
-                "Budget", "D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4"))));
+            new ResolvedStep(
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("D2:D4")),
+                new ResolvedMutationAction.SetArrayFormula(
+                    new ResolvedArrayFormula("B2:B4*C2:C4")))));
     assertEquals(
         "CLEAR_ARRAY_FORMULA",
         SequenceIntrospection.commandKind(
-            new WorkbookCellCommand.ClearArrayFormula("Budget", "D2")));
+            new ResolvedStep(
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("D2")),
+                new CellMutationAction.ClearArrayFormula())));
     assertEquals(
         "IMPORT_CUSTOM_XML_MAPPING",
         SequenceIntrospection.commandKind(
-            new WorkbookMetadataCommand.ImportCustomXmlMapping(
-                new ResolvedCustomXmlImport(
-                    new CustomXmlMappingLocator(
-                        java.util.Optional.of(1L), java.util.Optional.of("BudgetMap")),
-                    "<Budget><Owner>Ada</Owner></Budget>"))));
+            new ResolvedStep(
+                new WorkbookSelector.Current(),
+                new ResolvedMutationAction.ImportCustomXmlMapping(
+                    new ResolvedCustomXmlImport(
+                        new CustomXmlMappingLocator(
+                            java.util.Optional.of(1L), java.util.Optional.of("BudgetMap")),
+                        "<Budget><Owner>Ada</Owner></Budget>")))));
     assertEquals(
         "SET_SIGNATURE_LINE",
         SequenceIntrospection.commandKind(
-            new WorkbookDrawingCommand.SetSignatureLine("Budget", excelSignatureLineDefinition())));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new ResolvedMutationAction.SetSignatureLine(excelSignatureLineDefinition()))));
     assertEquals(
         "SET_DRAWING_OBJECT_ANCHOR",
         SequenceIntrospection.commandKind(
-            new WorkbookDrawingCommand.SetDrawingObjectAnchor(
-                "Budget", "OpsPicture", excelAnchor())));
+            new ResolvedStep(
+                new DrawingObjectSelector.ByName(new SheetName("Budget"), "OpsPicture"),
+                new DrawingMutationAction.SetDrawingObjectAnchor(excelAnchor()))));
     assertEquals(
         "DELETE_DRAWING_OBJECT",
         SequenceIntrospection.commandKind(
-            new WorkbookDrawingCommand.DeleteDrawingObject("Budget", "OpsPicture")));
+            new ResolvedStep(
+                new DrawingObjectSelector.ByName(new SheetName("Budget"), "OpsPicture"),
+                new DrawingMutationAction.DeleteDrawingObject())));
     assertEquals(
         "SET_NAMED_RANGE",
         SequenceIntrospection.commandKind(
-            new WorkbookMetadataCommand.SetNamedRange(
+            setNamedRangeStep(
                 new StructuredMutationAction.SetNamedRange(
                     new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
                     new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
@@ -439,70 +486,80 @@ class SequenceIntrospectionTest {
     assertEquals(
         "DELETE_NAMED_RANGE",
         SequenceIntrospection.commandKind(
-            new WorkbookMetadataCommand.DeleteNamedRange(
-                "BudgetTotal", new NamedRangeScopeReport.Workbook())));
+            deleteNamedRangeStep("BudgetTotal", new NamedRangeScopeReport.Workbook())));
     assertEquals(
         "SET_DATA_VALIDATION",
         SequenceIntrospection.commandKind(
-            new WorkbookFormattingCommand.SetDataValidation(
-                "Budget",
-                "A2:A5",
-                new ResolvedDataValidation(
-                    new DataValidationRuleSpec.WholeNumber(
-                        ExcelComparisonOperator.GREATER_OR_EQUAL,
-                        ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
-                        ExcelComparisonFormulaSupport.normalizeOptionalFormula(
-                            Optional.empty(), "formula2")),
-                    false,
-                    false,
-                    Optional.empty(),
-                    Optional.empty()))));
+            new ResolvedStep(
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2:A5")),
+                new ResolvedMutationAction.SetDataValidation(
+                    new ResolvedDataValidation(
+                        new DataValidationRuleSpec.WholeNumber(
+                            ExcelComparisonOperator.GREATER_OR_EQUAL,
+                            ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                            ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                                Optional.empty(), "formula2")),
+                        false,
+                        false,
+                        Optional.empty(),
+                        Optional.empty())))));
     assertEquals(
         "CLEAR_DATA_VALIDATIONS",
         SequenceIntrospection.commandKind(
-            new WorkbookFormattingCommand.ClearDataValidations(
-                "Budget", new dev.erst.gridgrind.excel.ExcelRangeSelection.All())));
+            clearRangesStep(
+                new SheetName("Budget"),
+                new dev.erst.gridgrind.excel.ExcelRangeSelection.All(),
+                new StructuredMutationAction.ClearDataValidations())));
     assertEquals(
         "SET_CONDITIONAL_FORMATTING",
         SequenceIntrospection.commandKind(
-            new WorkbookFormattingCommand.SetConditionalFormatting(
-                "Budget",
-                List.of("A2:A5").stream()
-                    .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
-                    .toList(),
-                new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
-                    List.of(
-                        new dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec
-                            .FormulaRule(
-                            "A2>0",
-                            true,
-                            Optional.of(
-                                new dev.erst.gridgrind.core.model.style.DifferentialStylePatch(
-                                    Optional.of("0.00"),
-                                    Optional.of(true),
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.empty()))))))));
+            new ResolvedStep(
+                new RangeSelector.ByRanges(
+                    new SheetName("Budget"),
+                    List.of("A2:A5").stream()
+                        .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                        .toList()),
+                new StructuredMutationAction.SetConditionalFormatting(
+                    new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
+                        List.of(
+                            new dev.erst.gridgrind.core.model.validation
+                                .ConditionalFormattingRuleSpec.FormulaRule(
+                                "A2>0",
+                                true,
+                                Optional.of(
+                                    new dev.erst.gridgrind.core.model.style.DifferentialStylePatch(
+                                        Optional.of("0.00"),
+                                        Optional.of(true),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty())))))))));
     assertEquals(
         "CLEAR_CONDITIONAL_FORMATTING",
         SequenceIntrospection.commandKind(
-            new WorkbookFormattingCommand.ClearConditionalFormatting(
-                "Budget", new dev.erst.gridgrind.excel.ExcelRangeSelection.All())));
+            clearRangesStep(
+                new SheetName("Budget"),
+                new dev.erst.gridgrind.excel.ExcelRangeSelection.All(),
+                new StructuredMutationAction.ClearConditionalFormatting())));
     assertEquals(
         "SET_AUTOFILTER",
         SequenceIntrospection.commandKind(
-            new WorkbookTabularCommand.SetAutofilter("Budget", "E1:F4")));
+            new ResolvedStep(
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("E1:F4")),
+                new StructuredMutationAction.SetAutofilter(List.of(), Optional.empty()))));
     assertEquals(
         "CLEAR_AUTOFILTER",
-        SequenceIntrospection.commandKind(new WorkbookTabularCommand.ClearAutofilter("Budget")));
+        SequenceIntrospection.commandKind(
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new StructuredMutationAction.ClearAutofilter())));
     assertEquals(
         "SET_TABLE",
         SequenceIntrospection.commandKind(
-            new WorkbookTabularCommand.SetTable(
+            setTableStep(
                 new ResolvedTable(
                     new TableName("BudgetTable"),
                     new SheetName("Budget"),
@@ -512,32 +569,46 @@ class SequenceIntrospectionTest {
     assertEquals(
         "DELETE_TABLE",
         SequenceIntrospection.commandKind(
-            new WorkbookTabularCommand.DeleteTable("BudgetTable", "Budget")));
+            new ResolvedStep(
+                new TableSelector.ByNameOnSheet(
+                    new TableName("BudgetTable"), new SheetName("Budget")),
+                new StructuredMutationAction.DeleteTable())));
     assertEquals(
         "DELETE_PIVOT_TABLE",
         SequenceIntrospection.commandKind(
-            new WorkbookTabularCommand.DeletePivotTable("OpsPivot", "Budget")));
+            new ResolvedStep(
+                new PivotTableSelector.ByNameOnSheet("OpsPivot", new SheetName("Budget")),
+                new StructuredMutationAction.DeletePivotTable())));
     assertEquals(
         "SET_WORKBOOK_PROTECTION",
         SequenceIntrospection.commandKind(
-            new WorkbookSheetCommand.SetWorkbookProtection(
-                new ResolvedWorkbookProtection(
-                    true, false, false, Optional.empty(), Optional.empty()))));
+            new ResolvedStep(
+                new WorkbookSelector.Current(),
+                new ResolvedMutationAction.SetWorkbookProtection(
+                    new ResolvedWorkbookProtection(
+                        true, false, false, Optional.empty(), Optional.empty())))));
     assertEquals(
         "CLEAR_WORKBOOK_PROTECTION",
-        SequenceIntrospection.commandKind(new WorkbookSheetCommand.ClearWorkbookProtection()));
+        SequenceIntrospection.commandKind(
+            new ResolvedStep(
+                new WorkbookSelector.Current(),
+                new WorkbookMutationAction.ClearWorkbookProtection())));
     assertEquals(
         "SET_SHEET_PRESENTATION",
         SequenceIntrospection.commandKind(
-            new WorkbookLayoutCommand.SetSheetPresentation(
-                "Budget", SheetPresentationSpec.defaults())));
+            new ResolvedStep(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.SetSheetPresentation(
+                    SheetPresentationSpec.defaults()))));
 
     assertEquals(
         1L,
         SequenceIntrospection.commandKinds(
                 List.of(
-                    new WorkbookAnnotationCommand.SetComment(
-                        "Budget", "A1", new ResolvedComment("Review", "GridGrind", false))))
+                    new ResolvedStep(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                        new ResolvedMutationAction.SetComment(
+                            new ResolvedComment("Review", "GridGrind", false)))))
             .get("SET_COMMENT"));
   }
 

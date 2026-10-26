@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import java.io.IOException;
@@ -71,7 +72,7 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
       sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       DrawingObjectPayloadReport.EmbeddedObject copiedPayload =
           assertInstanceOf(
@@ -124,7 +125,7 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
           .setComment("C11", new ResolvedComment("Note Name3", "GridGrind", false));
       sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
-      workbook.sheets().copySheet("LL", "LL_B1", new ExcelSheetCopyPosition.AtIndex(0));
+      workbook.sheets().copySheet("LL", "LL_B1", new SheetCopyPosition.AtIndex(0));
       workbook.getOrCreateSheet("LL");
       workbook.getOrCreateSheet("LL");
       workbook.getOrCreateSheet("LL");

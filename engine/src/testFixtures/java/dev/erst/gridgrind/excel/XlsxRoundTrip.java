@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
@@ -183,7 +184,7 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns the explicit pane state stored on the named sheet. */
-  public static ExcelSheetPane pane(Path workbookPath, String sheetName) throws IOException {
+  public static PaneSpec pane(Path workbookPath, String sheetName) throws IOException {
     return readSheet(workbookPath, sheetName, ExcelSheetViewSupport::pane);
   }
 

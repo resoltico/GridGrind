@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
 import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
@@ -124,21 +125,21 @@ class WorkbookReadResultTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookRuleResult.TablesResult(new StepId("tables"), null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(-1, 0, 0, 0));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, -1, 0, 0));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 0, -1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 0, 0, -1));
+    assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(-1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(0, -1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(0, 0, -1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(0, 0, 0, -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookSheetResult.SheetLayout(
                 "Budget",
-                new ExcelSheetPane.None(),
+                new PaneSpec.None(),
                 9,
                 defaultSheetPresentationSnapshot(),
                 List.of(),
                 List.of()));
-    assertInstanceOf(ExcelSheetPane.None.class, new ExcelSheetPane.None());
+    assertInstanceOf(PaneSpec.None.class, new PaneSpec.None());
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookSheetResult.PrintLayoutResult(new StepId("print"), "Budget", null));
@@ -593,7 +594,7 @@ class WorkbookReadResultTest {
             new StepId("layout"),
             new WorkbookSheetResult.SheetLayout(
                 "Budget",
-                new ExcelSheetPane.Frozen(1, 1, 1, 1),
+                new PaneSpec.Frozen(1, 1, 1, 1),
                 125,
                 defaultSheetPresentationSnapshot(),
                 columns,
@@ -637,7 +638,7 @@ class WorkbookReadResultTest {
                 fixture.hyperlinksResult().hyperlinks().getFirst().hyperlink())
             .target());
     assertEquals("Review", fixture.commentsResult().comments().getFirst().comment().text());
-    assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), fixture.layoutResult().layout().pane());
+    assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), fixture.layoutResult().layout().pane());
     assertEquals(125, fixture.layoutResult().layout().zoomPercent());
     assertEquals(defaultPrintLayoutSnapshot(), fixture.printLayoutResult().printLayout());
     assertEquals(

@@ -42,15 +42,7 @@ public final class ResolvedMutationExecutor {
       case WorkbookMutationAction.CopySheet action ->
           workbook
               .sheets()
-              .copySheet(
-                  sheet(target),
-                  action.newSheetName().value(),
-                  switch (action.position()) {
-                    case dev.erst.gridgrind.core.vocabulary.SheetCopyPosition.AppendAtEnd _ ->
-                        new ExcelSheetCopyPosition.AppendAtEnd();
-                    case dev.erst.gridgrind.core.vocabulary.SheetCopyPosition.AtIndex index ->
-                        new ExcelSheetCopyPosition.AtIndex(index.targetIndex());
-                  });
+              .copySheet(sheet(target), action.newSheetName().value(), action.position());
       case WorkbookMutationAction.SetActiveSheet _ ->
           workbook.sheets().setActiveSheet(sheet(target));
       case WorkbookMutationAction.SetSelectedSheets _ ->
@@ -128,27 +120,7 @@ public final class ResolvedMutationExecutor {
       case WorkbookMutationAction.UngroupColumns _ ->
           workbook.sheet(sheet(target)).columns().ungroup(columns(target));
       case WorkbookMutationAction.SetSheetPane action ->
-          workbook
-              .sheet(sheet(target))
-              .layout()
-              .setPane(
-                  switch (action.pane()) {
-                    case dev.erst.gridgrind.core.model.layout.PaneSpec.None _ ->
-                        new ExcelSheetPane.None();
-                    case dev.erst.gridgrind.core.model.layout.PaneSpec.Frozen frozen ->
-                        new ExcelSheetPane.Frozen(
-                            frozen.splitColumn(),
-                            frozen.splitRow(),
-                            frozen.leftmostColumn(),
-                            frozen.topRow());
-                    case dev.erst.gridgrind.core.model.layout.PaneSpec.Split split ->
-                        new ExcelSheetPane.Split(
-                            split.xSplitPosition(),
-                            split.ySplitPosition(),
-                            split.leftmostColumn(),
-                            split.topRow(),
-                            split.activePane());
-                  });
+          workbook.sheet(sheet(target)).layout().setPane(action.pane());
       case WorkbookMutationAction.SetSheetZoom action ->
           workbook.sheet(sheet(target)).layout().setZoom(action.zoomPercent());
       case WorkbookMutationAction.SetSheetPresentation action ->

@@ -18,9 +18,6 @@ import dev.erst.gridgrind.excel.ExcelRichTextSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbookDocumentMetadataSupport;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.WorkbookCellCommand;
-import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.excel.WorkbookSheetCommand;
 import dev.erst.gridgrind.excel.WorkbookStyleRegistry;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageFileSupport;
 import java.io.IOException;
@@ -53,40 +50,21 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
     this.nextRowIndexes = new HashMap<>();
   }
 
-  /** Applies one supported streaming command to the current workbook session. */
-  public void apply(WorkbookCommand command) {
-    Objects.requireNonNull(command, "command must not be null");
-    switch (command) {
-      case WorkbookSheetCommand.CreateSheet createSheet ->
-          sheets.computeIfAbsent(
-              createSheet.sheetName(),
-              sheetName -> {
-                nextRowIndexes.put(sheetName, 0);
-                return workbook.createSheet(sheetName);
-              });
-      case WorkbookCellCommand.AppendRow appendRow ->
-          appendRow(requiredSheet(appendRow.sheetName()), appendRow);
-      default ->
-          throw new IllegalArgumentException(
-              "execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW"
-                  + " only; unsupported mutation action type: "
-                  + command.commandType());
-    }
-  }
-
   /** Applies a materialized core mutation to the streaming session. */
   public void apply(ResolvedStep step) {
-    String sheetName = ((SheetSelector.ByName) step.target()).name().value();
     switch (step.action()) {
       case WorkbookMutationAction.EnsureSheet _ ->
           sheets.computeIfAbsent(
-              sheetName,
+              ((SheetSelector.ByName) step.target()).name().value(),
               name -> {
                 nextRowIndexes.put(name, 0);
                 return workbook.createSheet(name);
               });
       case ResolvedMutationAction.AppendRow action ->
-          appendValues(requiredSheet(sheetName), sheetName, action.values());
+          appendValues(
+              requiredSheet(((SheetSelector.ByName) step.target()).name().value()),
+              ((SheetSelector.ByName) step.target()).name().value(),
+              action.values());
       default ->
           throw new IllegalArgumentException(
               "execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: "
@@ -126,10 +104,6 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
       throw new SheetNotFoundException(sheetName);
     }
     return sheet;
-  }
-
-  private void appendRow(SXSSFSheet sheet, WorkbookCellCommand.AppendRow appendRow) {
-    appendValues(sheet, appendRow.sheetName(), appendRow.values());
   }
 
   private void appendValues(

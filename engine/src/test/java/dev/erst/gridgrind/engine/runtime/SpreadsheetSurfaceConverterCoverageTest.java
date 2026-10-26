@@ -76,12 +76,6 @@ class SpreadsheetSurfaceConverterCoverageTest {
             false,
             inputPlots(inlineSeries(TextSourceSpec.inline("Series"))));
     ResolvedChart definition = WorkbookCommandDrawingInputConverter.toResolvedChart(chart);
-    WorkbookDrawingCommand.SetChart chartCommand =
-        assertInstanceOf(
-            WorkbookDrawingCommand.SetChart.class,
-            WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName(new SheetName("Ops")),
-                new DrawingMutationAction.SetChart(chart)));
     ResolvedSignatureLine signatureLine =
         WorkbookCommandDrawingInputConverter.toResolvedSignatureLine(
             new SignatureLineSpec(
@@ -118,7 +112,6 @@ class SpreadsheetSurfaceConverterCoverageTest {
     assertEquals(
         Optional.of(ExcelChartBarShape.CONE),
         assertInstanceOf(ResolvedChart.Bar3D.class, definition.plots().get(3)).shape());
-    assertEquals(chartCommand.chart(), definition);
     assertEquals(Optional.empty(), signatureLine.plainSignatureFormat());
     assertEquals(Optional.empty(), signatureLine.plainSignature());
   }

@@ -7,9 +7,27 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.ResolvedTarget;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
-import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
-import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +36,7 @@ import java.util.Optional;
 final class OperationSequenceCommandFactory {
   private OperationSequenceCommandFactory() {}
 
-  static WorkbookCommand nextCommand(
+  static ResolvedStep nextCommand(
       GridGrindFuzzData data,
       String primarySheet,
       String secondarySheet,
@@ -38,139 +56,238 @@ final class OperationSequenceCommandFactory {
     return switch (selectorFamily(selector)) {
       case 0x0 ->
           switch (selectorSlot(selector)) {
-            case 0x0 -> new WorkbookSheetCommand.CreateSheet(targetSheet);
-            case 0x1 -> new WorkbookSheetCommand.RenameSheet(targetSheet, primarySheet + "Renamed");
-            case 0x2 -> new WorkbookSheetCommand.DeleteSheet(targetSheet);
-            case 0x3 -> new WorkbookSheetCommand.MoveSheet(targetSheet, data.consumeInt(0, 2));
+            case 0x0 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.EnsureSheet());
+            case 0x1 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.RenameSheet(
+                        new SheetName(primarySheet + "Renamed")));
+            case 0x2 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.DeleteSheet());
+            case 0x3 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.MoveSheet(data.consumeInt(0, 2)));
             case 0x4 ->
-                new WorkbookSheetCommand.CopySheet(
-                    targetSheet, nextCopySheetName(targetSheet), nextExcelSheetCopyPosition(data));
-            case 0x5 -> new WorkbookSheetCommand.SetActiveSheet(targetSheet);
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.CopySheet(
+                        new SheetName(nextCopySheetName(targetSheet)),
+                        nextExcelSheetCopyPosition(data)));
+            case 0x5 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.SetActiveSheet());
             case 0x6 ->
-                new WorkbookSheetCommand.SetSelectedSheets(
-                    nextSelectedSheetNames(data, primarySheet, secondarySheet));
+                new ResolvedStep(
+                    new SheetSelector.ByNames(
+                        nextSelectedSheetNames(data, primarySheet, secondarySheet).stream()
+                            .map(SheetName::new)
+                            .toList()),
+                    new WorkbookMutationAction.SetSelectedSheets());
             case 0x7 ->
-                new WorkbookSheetCommand.SetSheetVisibility(targetSheet, nextSheetVisibility(data));
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.SetSheetVisibility(nextSheetVisibility(data)));
             case 0x8 ->
-                new WorkbookSheetCommand.SetSheetProtection(
-                    targetSheet, nextSheetProtectionSettings(data));
-            default -> new WorkbookSheetCommand.ClearSheetProtection(targetSheet);
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new ResolvedMutationAction.SetSheetProtection(
+                        nextSheetProtectionSettings(data), Optional.empty()));
+            default ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.ClearSheetProtection());
           };
       case 0x1 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookStructureCommand.MergeCells(
-                    targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+                new ResolvedStep(
+                    new RangeSelector.ByRange(
+                        new SheetName(targetSheet),
+                        new RangeRef(FuzzDataDecoders.nextNonBlankRange(data, validRange))),
+                    new WorkbookMutationAction.MergeCells());
             case 0x1 ->
-                new WorkbookStructureCommand.UnmergeCells(
-                    targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+                new ResolvedStep(
+                    new RangeSelector.ByRange(
+                        new SheetName(targetSheet),
+                        new RangeRef(FuzzDataDecoders.nextNonBlankRange(data, validRange))),
+                    new WorkbookMutationAction.UnmergeCells());
             case 0x2 ->
-                new WorkbookStructureCommand.SetColumnWidth(
-                    targetSheet,
-                    columnSpan.first(),
-                    columnSpan.last(),
-                    data.consumeRegularDouble(1.0d, 20.0d));
+                new ResolvedStep(
+                    new ColumnBandSelector.Span(
+                        new SheetName(targetSheet), columnSpan.first(), columnSpan.last()),
+                    new WorkbookMutationAction.SetColumnWidth(
+                        data.consumeRegularDouble(1.0d, 20.0d)));
             case 0x3 ->
-                new WorkbookStructureCommand.SetRowHeight(
-                    targetSheet,
-                    rowSpan.first(),
-                    rowSpan.last(),
-                    data.consumeRegularDouble(5.0d, 40.0d));
+                new ResolvedStep(
+                    new RowBandSelector.Span(
+                        new SheetName(targetSheet), rowSpan.first(), rowSpan.last()),
+                    new WorkbookMutationAction.SetRowHeight(
+                        data.consumeRegularDouble(5.0d, 40.0d)));
             case 0x4 ->
-                new WorkbookLayoutCommand.SetSheetPane(targetSheet, nextExcelSheetPane(data));
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.SetSheetPane(nextExcelSheetPane(data)));
             case 0x5 ->
-                new WorkbookLayoutCommand.SetSheetZoom(targetSheet, data.consumeInt(10, 400));
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.SetSheetZoom(data.consumeInt(10, 400)));
             case 0x6 ->
-                new WorkbookLayoutCommand.SetPrintLayout(targetSheet, nextExcelPrintLayout(data));
-            default -> new WorkbookLayoutCommand.ClearPrintLayout(targetSheet);
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new ResolvedMutationAction.SetPrintLayout(nextExcelPrintLayout(data)));
+            default ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.ClearPrintLayout());
           };
       case 0x2 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookCellCommand.SetCell(
-                    targetSheet,
-                    FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-                    FuzzDataDecoders.nextExcelCellValue(data));
+                new ResolvedStep(
+                    new CellSelector.ByAddress(
+                        new SheetName(targetSheet),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
+                    new ResolvedMutationAction.SetCell(FuzzDataDecoders.nextExcelCellValue(data)));
             case 0x1 -> {
               String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
-              yield new WorkbookCellCommand.SetRange(
-                  targetSheet, range, FuzzDataDecoders.nextExcelMatrix(data, 2, 2));
+              yield new ResolvedStep(
+                  new RangeSelector.ByRange(new SheetName(targetSheet), new RangeRef(range)),
+                  new ResolvedMutationAction.SetRange(
+                      FuzzDataDecoders.nextExcelMatrix(data, 2, 2)));
             }
             case 0x2 ->
-                new WorkbookCellCommand.ClearRange(
-                    targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+                new ResolvedStep(
+                    new RangeSelector.ByRange(
+                        new SheetName(targetSheet),
+                        new RangeRef(FuzzDataDecoders.nextNonBlankRange(data, validRange))),
+                    new CellMutationAction.ClearRange());
             default ->
-                new WorkbookCellCommand.AppendRow(
-                    targetSheet,
-                    List.of(
-                        FuzzDataDecoders.nextExcelCellValue(data),
-                        FuzzDataDecoders.nextExcelCellValue(data)));
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new ResolvedMutationAction.AppendRow(
+                        List.of(
+                            FuzzDataDecoders.nextExcelCellValue(data),
+                            FuzzDataDecoders.nextExcelCellValue(data))));
           };
       case 0x3 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookAnnotationCommand.SetHyperlink(
-                    targetSheet,
-                    FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-                    nextExcelHyperlink(data));
+                new ResolvedStep(
+                    new CellSelector.ByAddress(
+                        new SheetName(targetSheet),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
+                    new CellMutationAction.SetHyperlink(nextExcelHyperlink(data)));
             case 0x1 ->
-                new WorkbookAnnotationCommand.ClearHyperlink(
-                    targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
+                new ResolvedStep(
+                    new CellSelector.ByAddress(
+                        new SheetName(targetSheet),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
+                    new CellMutationAction.ClearHyperlink());
             case 0x2 ->
-                new WorkbookAnnotationCommand.SetComment(
-                    targetSheet,
-                    FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-                    nextExcelComment(data));
+                new ResolvedStep(
+                    new CellSelector.ByAddress(
+                        new SheetName(targetSheet),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
+                    new ResolvedMutationAction.SetComment(nextExcelComment(data)));
             case 0x3 ->
-                new WorkbookAnnotationCommand.ClearComment(
-                    targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
+                new ResolvedStep(
+                    new CellSelector.ByAddress(
+                        new SheetName(targetSheet),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
+                    new CellMutationAction.ClearComment());
             case 0x4 ->
-                new WorkbookDrawingCommand.SetPicture(
-                    targetSheet, nextExcelPictureDefinition(data));
-            case 0x5 -> new WorkbookDrawingCommand.SetChart(targetSheet, nextResolvedChart(data));
-            case 0x6 -> new WorkbookDrawingCommand.SetShape(targetSheet, nextResolvedShape(data));
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new ResolvedMutationAction.SetPicture(nextExcelPictureDefinition(data)));
+            case 0x5 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new ResolvedMutationAction.SetChart(nextResolvedChart(data)));
+            case 0x6 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new ResolvedMutationAction.SetShape(nextResolvedShape(data)));
             case 0x7 ->
-                new WorkbookDrawingCommand.SetEmbeddedObject(
-                    targetSheet, nextExcelEmbeddedObjectDefinition(data));
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new ResolvedMutationAction.SetEmbeddedObject(
+                        nextExcelEmbeddedObjectDefinition(data)));
             case 0x8 ->
-                new WorkbookDrawingCommand.SetDrawingObjectAnchor(
-                    targetSheet, nextDrawingObjectName(data), nextDrawingAnchorInput(data));
+                new ResolvedStep(
+                    new DrawingObjectSelector.ByName(
+                        new SheetName(targetSheet), nextDrawingObjectName(data)),
+                    new DrawingMutationAction.SetDrawingObjectAnchor(nextDrawingAnchorInput(data)));
             case 0x9 ->
-                new WorkbookDrawingCommand.DeleteDrawingObject(
-                    targetSheet, nextDrawingObjectName(data));
+                new ResolvedStep(
+                    new DrawingObjectSelector.ByName(
+                        new SheetName(targetSheet), nextDrawingObjectName(data)),
+                    new DrawingMutationAction.DeleteDrawingObject());
             default ->
-                new WorkbookFormattingCommand.ApplyStyle(
-                    targetSheet,
-                    validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false),
-                    FuzzDataDecoders.nextStyle(data));
+                new ResolvedStep(
+                    new RangeSelector.ByRange(
+                        new SheetName(targetSheet),
+                        new RangeRef(
+                            validRange
+                                ? "A1:B2"
+                                : FuzzDataDecoders.nextNonBlankRange(data, false))),
+                    new CellMutationAction.ApplyStyle(FuzzDataDecoders.nextStyle(data)));
           };
       case 0x4 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookFormattingCommand.SetDataValidation(
-                    targetSheet,
-                    validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false),
-                    nextExcelDataValidationDefinition(data));
+                new ResolvedStep(
+                    new RangeSelector.ByRange(
+                        new SheetName(targetSheet),
+                        new RangeRef(
+                            validRange
+                                ? "A1:A4"
+                                : FuzzDataDecoders.nextNonBlankRange(data, false))),
+                    new ResolvedMutationAction.SetDataValidation(
+                        nextExcelDataValidationDefinition(data)));
             case 0x1 ->
-                new WorkbookFormattingCommand.ClearDataValidations(
-                    targetSheet, nextExcelRangeSelection(data, validRange));
+                clearRangesStep(
+                    new SheetName(targetSheet),
+                    nextExcelRangeSelection(data, validRange),
+                    new StructuredMutationAction.ClearDataValidations());
             case 0x2 -> nextConditionalFormattingCommand(data, validRange, targetSheet);
             default ->
-                new WorkbookFormattingCommand.ClearConditionalFormatting(
-                    targetSheet, nextExcelRangeSelection(data, validRange));
+                clearRangesStep(
+                    new SheetName(targetSheet),
+                    nextExcelRangeSelection(data, validRange),
+                    new StructuredMutationAction.ClearConditionalFormatting());
           };
       case 0x5 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookTabularCommand.SetAutofilter(
-                    targetSheet, nextAutofilterRange(validRange));
-            case 0x1 -> new WorkbookTabularCommand.ClearAutofilter(targetSheet);
+                new ResolvedStep(
+                    new RangeSelector.ByRange(
+                        new SheetName(targetSheet), new RangeRef(nextAutofilterRange(validRange))),
+                    new StructuredMutationAction.SetAutofilter(List.of(), Optional.empty()));
+            case 0x1 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new StructuredMutationAction.ClearAutofilter());
             case 0x2 ->
-                new WorkbookTabularCommand.SetTable(
-                    nextExcelTableDefinition(data, targetSheet, tableName, validRange));
-            case 0x3 -> new WorkbookTabularCommand.DeleteTable(tableName, targetSheet);
+                setTableStep(nextExcelTableDefinition(data, targetSheet, tableName, validRange));
+            case 0x3 ->
+                new ResolvedStep(
+                    new TableSelector.ByNameOnSheet(
+                        new TableName(tableName), new SheetName(targetSheet)),
+                    new StructuredMutationAction.DeleteTable());
             case 0x4 ->
-                new WorkbookTabularCommand.SetPivotTable(
+                setPivotTableStep(
                     nextPivotTableSpec(
                         data,
                         targetSheet,
@@ -180,13 +297,16 @@ final class OperationSequenceCommandFactory {
                         validName,
                         validRange));
             default ->
-                new WorkbookTabularCommand.DeletePivotTable(
-                    validName ? pivotTableName : nextPivotTableName(data, false), targetSheet);
+                new ResolvedStep(
+                    new PivotTableSelector.ByNameOnSheet(
+                        validName ? pivotTableName : nextPivotTableName(data, false),
+                        new SheetName(targetSheet)),
+                    new StructuredMutationAction.DeletePivotTable());
           };
       case 0x6 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookMetadataCommand.SetNamedRange(
+                setNamedRangeStep(
                     new StructuredMutationAction.SetNamedRange(
                         new dev.erst.gridgrind.core.vocabulary.DefinedName(
                             validName ? namedRangeName : nextNamedRangeName(data, false)),
@@ -201,7 +321,7 @@ final class OperationSequenceCommandFactory {
                                     ? "A1:B2"
                                     : FuzzDataDecoders.nextNonBlankRange(data, false)))));
             default ->
-                new WorkbookMetadataCommand.DeleteNamedRange(
+                deleteNamedRangeStep(
                     validName ? namedRangeName : nextNamedRangeName(data, false),
                     data.consumeBoolean()
                         ? new NamedRangeScopeReport.Workbook()
@@ -211,67 +331,149 @@ final class OperationSequenceCommandFactory {
       case 0x7 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookStructureCommand.InsertRows(
-                    targetSheet, rowSpan.first(), rowSpan.last() - rowSpan.first() + 1);
+                new ResolvedStep(
+                    new RowBandSelector.Insertion(
+                        new SheetName(targetSheet),
+                        rowSpan.first(),
+                        rowSpan.last() - rowSpan.first() + 1),
+                    new WorkbookMutationAction.InsertRows());
             case 0x1 ->
-                new WorkbookStructureCommand.DeleteRows(
-                    targetSheet, new ExcelRowSpan(rowSpan.first(), rowSpan.last()));
+                new ResolvedStep(
+                    new RowBandSelector.Span(
+                        new SheetName(targetSheet), rowSpan.first(), rowSpan.last()),
+                    new WorkbookMutationAction.DeleteRows());
             case 0x2 ->
-                new WorkbookStructureCommand.ShiftRows(
-                    targetSheet,
-                    new ExcelRowSpan(rowSpan.first(), rowSpan.last()),
-                    nextNonZeroDelta(data, 2));
+                new ResolvedStep(
+                    new RowBandSelector.Span(
+                        new SheetName(targetSheet), rowSpan.first(), rowSpan.last()),
+                    new WorkbookMutationAction.ShiftRows(nextNonZeroDelta(data, 2)));
             case 0x3 ->
-                new WorkbookStructureCommand.InsertColumns(
-                    targetSheet, columnSpan.first(), columnSpan.last() - columnSpan.first() + 1);
+                new ResolvedStep(
+                    new ColumnBandSelector.Insertion(
+                        new SheetName(targetSheet),
+                        columnSpan.first(),
+                        columnSpan.last() - columnSpan.first() + 1),
+                    new WorkbookMutationAction.InsertColumns());
             case 0x4 ->
-                new WorkbookStructureCommand.DeleteColumns(
-                    targetSheet, new ExcelColumnSpan(columnSpan.first(), columnSpan.last()));
+                new ResolvedStep(
+                    new ColumnBandSelector.Span(
+                        new SheetName(targetSheet), columnSpan.first(), columnSpan.last()),
+                    new WorkbookMutationAction.DeleteColumns());
             case 0x5 ->
-                new WorkbookStructureCommand.ShiftColumns(
-                    targetSheet,
-                    new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
-                    nextNonZeroDelta(data, 2));
+                new ResolvedStep(
+                    new ColumnBandSelector.Span(
+                        new SheetName(targetSheet), columnSpan.first(), columnSpan.last()),
+                    new WorkbookMutationAction.ShiftColumns(nextNonZeroDelta(data, 2)));
             case 0x6 ->
-                new WorkbookStructureCommand.SetRowVisibility(
-                    targetSheet,
-                    new ExcelRowSpan(rowSpan.first(), rowSpan.last()),
-                    data.consumeBoolean());
+                new ResolvedStep(
+                    new RowBandSelector.Span(
+                        new SheetName(targetSheet), rowSpan.first(), rowSpan.last()),
+                    new WorkbookMutationAction.SetRowVisibility(data.consumeBoolean()));
             case 0x7 ->
-                new WorkbookStructureCommand.SetColumnVisibility(
-                    targetSheet,
-                    new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
-                    data.consumeBoolean());
+                new ResolvedStep(
+                    new ColumnBandSelector.Span(
+                        new SheetName(targetSheet), columnSpan.first(), columnSpan.last()),
+                    new WorkbookMutationAction.SetColumnVisibility(data.consumeBoolean()));
             case 0x8 ->
-                new WorkbookStructureCommand.GroupRows(
-                    targetSheet,
-                    new ExcelRowSpan(rowSpan.first(), rowSpan.last()),
-                    data.consumeBoolean());
+                new ResolvedStep(
+                    new RowBandSelector.Span(
+                        new SheetName(targetSheet), rowSpan.first(), rowSpan.last()),
+                    new WorkbookMutationAction.GroupRows(data.consumeBoolean()));
             case 0x9 ->
-                new WorkbookStructureCommand.UngroupRows(
-                    targetSheet, new ExcelRowSpan(rowSpan.first(), rowSpan.last()));
+                new ResolvedStep(
+                    new RowBandSelector.Span(
+                        new SheetName(targetSheet), rowSpan.first(), rowSpan.last()),
+                    new WorkbookMutationAction.UngroupRows());
             case 0xA ->
-                new WorkbookStructureCommand.GroupColumns(
-                    targetSheet,
-                    new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
-                    data.consumeBoolean());
+                new ResolvedStep(
+                    new ColumnBandSelector.Span(
+                        new SheetName(targetSheet), columnSpan.first(), columnSpan.last()),
+                    new WorkbookMutationAction.GroupColumns(data.consumeBoolean()));
             default ->
-                new WorkbookStructureCommand.UngroupColumns(
-                    targetSheet, new ExcelColumnSpan(columnSpan.first(), columnSpan.last()));
+                new ResolvedStep(
+                    new ColumnBandSelector.Span(
+                        new SheetName(targetSheet), columnSpan.first(), columnSpan.last()),
+                    new WorkbookMutationAction.UngroupColumns());
           };
       default ->
           switch (selectorSlot(selector)) {
-            case 0x0 -> new WorkbookLayoutCommand.AutoSizeColumns(targetSheet);
+            case 0x0 ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.AutoSizeColumns());
             case 0x1 ->
-                new WorkbookSheetCommand.SetWorkbookProtection(
-                    new ResolvedWorkbookProtection(
-                        true, false, false, Optional.empty(), Optional.empty()));
-            case 0x2 -> new WorkbookSheetCommand.ClearWorkbookProtection();
+                new ResolvedStep(
+                    new WorkbookSelector.Current(),
+                    new ResolvedMutationAction.SetWorkbookProtection(
+                        new ResolvedWorkbookProtection(
+                            true, false, false, Optional.empty(), Optional.empty())));
+            case 0x2 ->
+                new ResolvedStep(
+                    new WorkbookSelector.Current(),
+                    new WorkbookMutationAction.ClearWorkbookProtection());
             case 0x3 ->
-                new WorkbookLayoutCommand.SetSheetPresentation(
-                    targetSheet, SheetPresentationSpec.defaults());
-            default -> new WorkbookLayoutCommand.AutoSizeColumns(targetSheet);
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.SetSheetPresentation(
+                        SheetPresentationSpec.defaults()));
+            default ->
+                new ResolvedStep(
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
+                    new WorkbookMutationAction.AutoSizeColumns());
           };
     };
+  }
+
+  static ResolvedStep setTableStep(dev.erst.gridgrind.core.model.table.ResolvedTable table) {
+    return new ResolvedStep(
+        new TableSelector.ByNameOnSheet(table.name(), table.sheetName()),
+        new ResolvedMutationAction.SetTable(table));
+  }
+
+  static ResolvedStep setPivotTableStep(dev.erst.gridgrind.core.model.pivot.PivotTableSpec pivot) {
+    return new ResolvedStep(
+        new PivotTableSelector.ByNameOnSheet(pivot.name(), pivot.sheetName()),
+        new StructuredMutationAction.SetPivotTable(pivot));
+  }
+
+  static ResolvedStep setNamedRangeStep(StructuredMutationAction.SetNamedRange action) {
+    ResolvedTarget target =
+        switch (action.scope()) {
+          case dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook _ ->
+              new NamedRangeSelector.WorkbookScope(action.name());
+          case dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet scope ->
+              new NamedRangeSelector.SheetScope(action.name(), scope.sheetName());
+        };
+    return new ResolvedStep(target, action);
+  }
+
+  static ResolvedStep deleteNamedRangeStep(
+      String name, dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport scope) {
+    ResolvedTarget target =
+        switch (scope) {
+          case dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook _ ->
+              new NamedRangeSelector.WorkbookScope(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName(name));
+          case dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Sheet sheet ->
+              new NamedRangeSelector.SheetScope(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName(name),
+                  new SheetName(sheet.sheetName().value()));
+        };
+    return new ResolvedStep(target, new StructuredMutationAction.DeleteNamedRange());
+  }
+
+  static ResolvedStep clearRangesStep(
+      SheetName sheet,
+      dev.erst.gridgrind.excel.ExcelRangeSelection selection,
+      ResolvedMutationAction action) {
+    ResolvedTarget target =
+        switch (selection) {
+          case dev.erst.gridgrind.excel.ExcelRangeSelection.All _ ->
+              new RangeSelector.AllOnSheet(sheet);
+          case dev.erst.gridgrind.excel.ExcelRangeSelection.Selected selected ->
+              new RangeSelector.ByRanges(
+                  sheet, selected.ranges().stream().map(RangeRef::new).toList());
+        };
+    return new ResolvedStep(target, action);
   }
 }

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -15,7 +16,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
-import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -363,7 +363,7 @@ final class XlsxRoundTripExpectationVerification {
       String sheetName,
       XlsxRoundTripExpectedStateSupport.ExpectedSheetLayoutState expectedSheetLayout,
       XSSFSheet sheet) {
-    ExcelSheetPane actualPane = pane(sheet);
+    PaneSpec actualPane = pane(sheet);
     int actualZoomPercent = zoomPercent(sheet);
     if (expectedSheetLayout.pane() != null && !expectedSheetLayout.pane().equals(actualPane)) {
       throw new IllegalStateException(
@@ -533,19 +533,19 @@ final class XlsxRoundTripExpectationVerification {
             .formatted(axis, index, fieldName, sheetName, expected, actual));
   }
 
-  static ExcelSheetPane pane(XSSFSheet sheet) {
+  static PaneSpec pane(XSSFSheet sheet) {
     PaneInformation paneInformation = sheet.getPaneInformation();
     if (paneInformation == null) {
-      return new ExcelSheetPane.None();
+      return new PaneSpec.None();
     }
     if (paneInformation.isFreezePane()) {
-      return new ExcelSheetPane.Frozen(
+      return new PaneSpec.Frozen(
           paneInformation.getVerticalSplitPosition(),
           paneInformation.getHorizontalSplitPosition(),
           paneInformation.getVerticalSplitLeftColumn(),
           paneInformation.getHorizontalSplitTopRow());
     }
-    return new ExcelSheetPane.Split(
+    return new PaneSpec.Split(
         paneInformation.getVerticalSplitPosition(),
         paneInformation.getHorizontalSplitPosition(),
         paneInformation.getVerticalSplitLeftColumn(),

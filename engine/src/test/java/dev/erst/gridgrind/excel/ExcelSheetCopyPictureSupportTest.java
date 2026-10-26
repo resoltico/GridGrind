@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingPictureSupport;
 import java.io.IOException;
@@ -83,7 +84,7 @@ class ExcelSheetCopyPictureSupportTest {
       sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
       sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture2", 6, 1, 9, 6));
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       XSSFSheet replicaPoiSheet = workbook.xssfWorkbook().getSheet("Replica");
       assertTrue(

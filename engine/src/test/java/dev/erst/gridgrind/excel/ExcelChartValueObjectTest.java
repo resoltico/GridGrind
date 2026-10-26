@@ -95,15 +95,6 @@ class ExcelChartValueObjectTest {
                 false,
                 List.of()));
 
-    WorkbookDrawingCommand.SetChart setChart =
-        new WorkbookDrawingCommand.SetChart("Charts", pieDefinition);
-    assertEquals("Charts", setChart.sheetName());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookDrawingCommand.SetChart(" ", pieDefinition));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookDrawingCommand.SetChart("Charts", null));
-
     WorkbookReadCommand.GetCharts getCharts =
         new WorkbookReadCommand.GetCharts(
             new StepId("charts"), new ExcelChartSelection.AllOnSheet("Charts"));

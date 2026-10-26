@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import java.nio.file.*;
 import java.util.*;
 

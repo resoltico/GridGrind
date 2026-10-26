@@ -101,7 +101,7 @@ class ExecutorPolicyCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new TableSelector.ByNameOnSheet(
                         new TableName("OtherTable"), new SheetName("Budget")),
                     new StructuredMutationAction.SetTable(
@@ -118,7 +118,7 @@ class ExecutorPolicyCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new TableSelector.ByNameOnSheet(
                         new TableName("BudgetTable"), new SheetName("Archive")),
                     new StructuredMutationAction.SetTable(
@@ -136,7 +136,7 @@ class ExecutorPolicyCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new PivotTableSelector.ByNameOnSheet("OtherPivot", new SheetName("Budget")),
                     new StructuredMutationAction.SetPivotTable(
                         new PivotTableSpec(
@@ -163,7 +163,7 @@ class ExecutorPolicyCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new PivotTableSelector.ByNameOnSheet("SalesPivot", new SheetName("Archive")),
                     new StructuredMutationAction.SetPivotTable(
                         new PivotTableSpec(
@@ -190,7 +190,7 @@ class ExecutorPolicyCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new NamedRangeSelector.SheetScope(
                         new DefinedName("BudgetTotal"), new SheetName("Archive")),
                     new StructuredMutationAction.SetNamedRange(
@@ -204,7 +204,7 @@ class ExecutorPolicyCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new NamedRangeSelector.SheetScope(
                         new DefinedName("OtherTotal"), new SheetName("Budget")),
                     new StructuredMutationAction.SetNamedRange(
@@ -219,7 +219,7 @@ class ExecutorPolicyCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                     new StructuredMutationAction.SetNamedRange(
                         new DefinedName("BudgetTotal"),
@@ -233,13 +233,10 @@ class ExecutorPolicyCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookCommandConverter.toCommand(
+                DefaultGridGrindRequestExecutorTestSupport.command(
                     new NamedRangeSelector.ByName(new DefinedName("BudgetTotal")),
                     new StructuredMutationAction.DeleteNamedRange()));
-    assertEquals(
-        "DELETE_NAMED_RANGE requires target type NAMED_RANGE_WORKBOOK_SCOPE or"
-            + " NAMED_RANGE_SHEET_SCOPE but got NAMED_RANGE_BY_NAME",
-        broadDelete.getMessage());
+    assertEquals("Mutation target does not match DeleteNamedRange", broadDelete.getMessage());
   }
 
   @Test

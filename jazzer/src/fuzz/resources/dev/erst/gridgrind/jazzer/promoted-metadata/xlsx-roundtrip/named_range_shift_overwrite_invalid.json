@@ -10,7 +10,7 @@
       "inputBytes" : 83,
       "commandCount" : 4,
       "commandKinds" : {
-        "CREATE_SHEET" : 1,
+        "ENSURE_SHEET" : 1,
         "SET_NAMED_RANGE" : 1,
         "AUTO_SIZE_COLUMNS" : 2
       },

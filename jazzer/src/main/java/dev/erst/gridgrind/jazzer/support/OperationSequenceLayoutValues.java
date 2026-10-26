@@ -59,29 +59,28 @@ final class OperationSequenceLayoutValues {
     };
   }
 
-  static ExcelSheetPane nextExcelSheetPane(GridGrindFuzzData data) {
+  static PaneSpec nextExcelSheetPane(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new ExcelSheetPane.None();
+      case 0 -> new PaneSpec.None();
       case 1 -> {
         int splitColumn = data.consumeInt(1, 3);
-        yield new ExcelSheetPane.Frozen(
-            splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
+        yield new PaneSpec.Frozen(splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
       }
       case 2 -> {
         int splitRow = data.consumeInt(1, 3);
-        yield new ExcelSheetPane.Frozen(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
+        yield new PaneSpec.Frozen(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
       }
       case 3 -> {
         int splitColumn = data.consumeInt(1, 3);
         int splitRow = data.consumeInt(1, 3);
-        yield new ExcelSheetPane.Frozen(
+        yield new PaneSpec.Frozen(
             splitColumn,
             splitRow,
             data.consumeInt(splitColumn, splitColumn + 2),
             data.consumeInt(splitRow, splitRow + 2));
       }
       default ->
-          new ExcelSheetPane.Split(
+          new PaneSpec.Split(
               data.consumeInt(0, 2400),
               data.consumeInt(1, 2400),
               0,
@@ -159,10 +158,10 @@ final class OperationSequenceLayoutValues {
     };
   }
 
-  static ExcelSheetCopyPosition nextExcelSheetCopyPosition(GridGrindFuzzData data) {
+  static SheetCopyPosition nextExcelSheetCopyPosition(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new ExcelSheetCopyPosition.AppendAtEnd();
-      default -> new ExcelSheetCopyPosition.AtIndex(data.consumeInt(0, 2));
+      case 0 -> new SheetCopyPosition.AppendAtEnd();
+      default -> new SheetCopyPosition.AtIndex(data.consumeInt(0, 2));
     };
   }
 

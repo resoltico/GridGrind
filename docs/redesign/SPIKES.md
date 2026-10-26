@@ -2461,3 +2461,42 @@ mutation/fuzz campaign. Inventories: definitions0, snapshots2(runtime), converte
 Support201 unchanged; main Java116274→117070 during the execution cutover. The superseded command API
 and its test/generator consumers remain to be deleted in the next batch; they no longer drive public
 mutation execution. WP-40 is open, including ResolvedPlan and the read-side cutover. Baseline diff empty.
+
+## WP-40 remove mutation commands and retarget deterministic replay
+
+Deleted WorkbookCommand, its nine families, executor, discriminator table, four family converters,
+selector translator and fake-grant convenience. WorkbookExecutionEngine and streaming authoring accept
+ResolvedStep directly. Shared PaneSpec and SheetCopyPosition reach POI adapters without engine model
+copies or reconstruction. Removed unused named-range, pane/copy and font-height converters; core
+constructors/factories own the remaining contracts. Retained real mutation, persistence, selection,
+protection, copy, chart and package-security integration tests; migrated their fixtures to core
+coordinates/actions. Removed only retired model/translation assertions and their unused scaffolding.
+Copied-sheet placement checks now live in core. Protection diagnostics remain as a separately named
+test. The direct adapter integration suite is ResolvedMutationExecutorTest.
+
+Retargeted the deterministic sequence generator, engine-sequence harness, round-trip verifier and
+independent cell-footprint oracle to resolved steps. Existing seed bytes, command counts, outcomes,
+style telemetry and byte-consumption order remain unchanged. Telemetry now derives the operation id
+from core metadata: CREATE_SHEET becomes ENSURE_SHEET. Reviewed exactly28 promoted metadata files,
+one key rename each, and two replay-test expectations; recursive comparison proves every other
+field/value unchanged (external review-sequence-metadata-labels.json). Historical source paths and
+failure narratives remain evidence, without runtime aliases. All94 seeds pass:48 protocol-request,
+11 protocol-workflow,9 engine-sequence and26 round-trip. Nested check passes10s; no active campaigns.
+
+Compilation/static retries removed stale imports, record accessors and private test helpers. A broad
+fixture cleanup accidentally removed live diagnostic inputs; restored them from HEAD and verified the
+final diff removes only the unused mutation-mirror declaration/assertions. Behavioral tests found a
+real empty-batch null-workbook regression in the reduced facade; restored the boundary check. Streaming
+now rejects unsupported action kinds before casting target coordinates. A copied-sheet constructor
+message assertion was adapted to the canonical core constructor. Failures/logs retained externally.
+Focused core/engine/parity/PMD checks pass29s. Final ./gradlew check passes4m: core382, JSON353,
+engine1415 plus14 parity, CLI588, zero failures/errors/skips; all143 CLI golden cases unchanged.
+Packaged engine/test-fixture/CLI/shadow JARs contain no retired command/pane/copy-position classes.
+
+Inventories: converter lines2283→1677, blank checks364→288, Support201→200, main Java117070→114886,
+test Java155456→153526; definitions0, snapshots2(runtime), core Specs75/Patches8/Reports98 unchanged.
+Stopped only owned idle daemon11774 after the completed gate and zero active test executors, releasing
+its4,958MiB aggregate retained worker RSS; ownership/process evidence is external. Baseline diff empty.
+WP-40 remains open for ResolvedPlan, the read-side query/result/selection cutover and folding remaining
+source-only operand materialization into source resolution. WP-21's under50 blank-check criterion
+also remains open. No Phase4 completion or final verification claim is made here.

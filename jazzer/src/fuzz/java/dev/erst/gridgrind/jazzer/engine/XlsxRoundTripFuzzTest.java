@@ -2,9 +2,9 @@ package dev.erst.gridgrind.jazzer.engine;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;
@@ -29,7 +29,7 @@ class XlsxRoundTripFuzzTest {
   void roundTrip(FuzzedDataProvider data) throws IOException {
     GridGrindFuzzData fuzzData = GridGrindFuzzData.wrap(data);
     TELEMETRY.beginIteration(fuzzData.remainingBytes());
-    List<WorkbookCommand> commands;
+    List<ResolvedStep> commands;
     try {
       commands = OperationSequenceModel.nextWorkbookCommands(fuzzData);
     } catch (IllegalArgumentException expected) {

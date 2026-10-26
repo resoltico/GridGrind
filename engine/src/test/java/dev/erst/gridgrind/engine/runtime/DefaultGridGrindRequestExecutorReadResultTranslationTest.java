@@ -128,7 +128,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                 new StepId("layout"),
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
                     "Budget",
-                    new dev.erst.gridgrind.excel.ExcelSheetPane.Frozen(1, 1, 1, 1),
+                    new dev.erst.gridgrind.core.model.layout.PaneSpec.Frozen(1, 1, 1, 1),
                     125,
                     defaultSheetPresentationSnapshot(),
                     List.of(
@@ -545,7 +545,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     new StepId("layout"),
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
                         "Budget",
-                        new dev.erst.gridgrind.excel.ExcelSheetPane.None(),
+                        new dev.erst.gridgrind.core.model.layout.PaneSpec.None(),
                         100,
                         defaultSheetPresentationSnapshot(),
                         List.of(),
@@ -564,7 +564,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     new StepId("layout"),
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
                         "Budget",
-                        new dev.erst.gridgrind.excel.ExcelSheetPane.Split(
+                        new dev.erst.gridgrind.core.model.layout.PaneSpec.Split(
                             1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
                         100,
                         defaultSheetPresentationSnapshot(),

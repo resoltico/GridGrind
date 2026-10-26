@@ -161,14 +161,6 @@ class DefaultGridGrindRequestExecutorCoverageTest
 
   @Test
   void convertsStepNativeMutationsAndInspectionsIntoWorkbookCoreCommands() {
-    MutationStep setNamedRange =
-        new MutationStep(
-            new StepId("step-01-set-named-range"),
-            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetExpr")),
-            new StructuredMutationAction.SetNamedRange(
-                new DefinedName("BudgetExpr"),
-                new NamedRangeScope.Workbook(),
-                NamedRangeTarget.formula("SUM(Budget!A1:A3)")));
     InspectionStep getNamedRanges =
         new InspectionStep(
             new StepId("step-03-get-named-ranges"),
@@ -180,10 +172,6 @@ class DefaultGridGrindRequestExecutorCoverageTest
             new WorkbookSelector.Current(),
             new InspectionAnalysisQuery.AnalyzeWorkbookFindings());
 
-    WorkbookMetadataCommand.SetNamedRange namedRangeCommand =
-        assertInstanceOf(
-            WorkbookMetadataCommand.SetNamedRange.class,
-            WorkbookCommandConverter.toCommand(setNamedRange));
     WorkbookReadCommand.GetNamedRanges namedRangesCommand =
         assertInstanceOf(
             WorkbookReadCommand.GetNamedRanges.class,
@@ -192,7 +180,6 @@ class DefaultGridGrindRequestExecutorCoverageTest
         WorkbookReadCommand.AnalyzeWorkbookFindings.class,
         InspectionCommandConverter.toReadCommand(workbookFindings));
 
-    assertEquals("BudgetExpr", namedRangeCommand.definition().name().value());
     assertEquals("step-03-get-named-ranges", namedRangesCommand.stepId().value());
   }
 

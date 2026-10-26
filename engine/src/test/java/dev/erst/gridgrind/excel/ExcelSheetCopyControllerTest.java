@@ -63,6 +63,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.io.IOException;
@@ -93,7 +94,7 @@ class ExcelSheetCopyControllerTest {
           new CellRangeAddress[] {CellRangeAddress.valueOf("A1:A3")},
           formatting.createConditionalFormattingRule("Source!A1>0"));
       new ExcelSheetCopyController()
-          .copySheet(workbook, "Source", "Copied", new ExcelSheetCopyPosition.AppendAtEnd());
+          .copySheet(workbook, "Source", "Copied", new SheetCopyPosition.AppendAtEnd());
       var copied =
           workbook
               .xssfWorkbook()
@@ -128,8 +129,7 @@ class ExcelSheetCopyControllerTest {
           IllegalArgumentException.class,
           () ->
               new ExcelSheetCopyController()
-                  .copySheet(
-                      workbook, "Source", "Copied", new ExcelSheetCopyPosition.AppendAtEnd()));
+                  .copySheet(workbook, "Source", "Copied", new SheetCopyPosition.AppendAtEnd()));
       assertEquals(1, workbook.xssfWorkbook().getNumberOfSheets());
     }
   }
@@ -145,7 +145,7 @@ class ExcelSheetCopyControllerTest {
       workbook.getOrCreateSheet("Source");
       workbook.sheets().setSheetProtection("Source", protectionSettings());
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       assertEquals(List.of("Source", "Replica"), workbook.sheets().sheetNames());
       assertEquals(
@@ -179,7 +179,7 @@ class ExcelSheetCopyControllerTest {
           () ->
               workbook
                   .sheets()
-                  .copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
+                  .copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd()));
       assertEquals(
           "Review",
           workbook
@@ -200,7 +200,7 @@ class ExcelSheetCopyControllerTest {
           .sheets()
           .setSheetProtection("Source", protectionSettings(), Optional.of("gridgrind-copy"));
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       assertTrue(
           workbook.xssfWorkbook().getSheet("Replica").validateSheetPassword("gridgrind-copy"));
@@ -241,7 +241,7 @@ class ExcelSheetCopyControllerTest {
                   List.of(3)));
       workbook.sheet("Source").layout().setPrintLayout(advancedPrintLayout);
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       assertEquals(advancedPrintLayout, workbook.sheet("Replica").layout().printLayout());
     }
@@ -281,7 +281,7 @@ class ExcelSheetCopyControllerTest {
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       ExcelSheet replica = workbook.sheet("Replica");
       assertEquals(
@@ -377,7 +377,7 @@ class ExcelSheetCopyControllerTest {
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("C2:C4")))));
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       ExcelSheet replica = workbook.sheet("Replica");
       assertEquals(
@@ -424,7 +424,7 @@ class ExcelSheetCopyControllerTest {
           () ->
               workbook
                   .sheets()
-                  .copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
+                  .copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd()));
       assertEquals(List.of("Source", "Replica"), workbook.sheets().sheetNames());
 
       ChartReport sourceChart = workbook.sheet("Source").drawings().charts().getFirst();
@@ -497,7 +497,7 @@ class ExcelSheetCopyControllerTest {
       List<WorkbookSheetResult.CellComment> sourceComments =
           source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       ExcelSheet replica = workbook.sheet("Replica");
       assertEquals("SUM(Replica!B2:B3)", replica.cells().formula("C2"));
@@ -648,7 +648,7 @@ class ExcelSheetCopyControllerTest {
       sourceComments =
           source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
       workbook
           .persistence()
           .save(
@@ -767,7 +767,7 @@ class ExcelSheetCopyControllerTest {
                   "",
                   List.of()));
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       assertEquals(
           List.of(
@@ -928,7 +928,7 @@ class ExcelSheetCopyControllerTest {
       addRawValidation(
           workbook.xssfWorkbook().getSheet("Source"), "C1:C3", STDataValidationType.LIST, null);
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       List<DataValidationEntryReport> replicaValidations =
           workbook.sheet("Replica").metadata().dataValidations(new ExcelRangeSelection.All());
@@ -993,7 +993,7 @@ class ExcelSheetCopyControllerTest {
       missingType.setFormula1("Source!$A$1");
       validations.setCount(validations.sizeOfDataValidationArray());
 
-      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       List<CTDataValidation> rawReplica =
           List.of(

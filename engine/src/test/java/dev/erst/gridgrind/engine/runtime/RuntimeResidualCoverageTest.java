@@ -2,7 +2,6 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
@@ -31,7 +30,6 @@ import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
@@ -64,7 +62,6 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.source.BinarySourceSpec;
-import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
@@ -85,53 +82,19 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused closure tests for runtime seams left uncovered by broader end-to-end suites. */
 class RuntimeResidualCoverageTest {
-  @Test
-  void secretBearingProtectionConversionsRequireExecutionBindings() {
-    WorkbookProtectionSpec workbookProtection =
-        new WorkbookProtectionSpec(
-            true,
-            false,
-            false,
-            Optional.of(new SecretReference("workbook-password")),
-            Optional.empty());
-    SheetProtectionSettings sheetProtection =
-        new SheetProtectionSettings(
-            false, false, false, false, false, false, false, false, false, false, false, false,
-            false, false, false);
-
-    assertThrows(
-        IllegalStateException.class,
-        () ->
-            WorkbookCommandLayoutInputConverter.toResolvedWorkbookProtection(
-                workbookProtection, null));
-    assertThrows(
-        IllegalStateException.class,
-        () ->
-            WorkbookCommandWorkbookMutationConverter.toCommand(
-                new SheetSelector.ByName(new SheetName("Budget")),
-                new WorkbookMutationAction.SetSheetProtection(
-                    sheetProtection, Optional.of(new SecretReference("sheet-password"))),
-                null));
-  }
 
   @Test
   void converterNullBranchesAndResolvedPromptFieldsStayTyped() {
-    assertTrue(WorkbookCommandCellValueSpecConverter.toFontHeightReport(null).isEmpty());
     assertTrue(WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(null).isEmpty());
     assertTrue(
         WorkbookCommandStructuredInputConverter.toResolvedValidationErrorAlert(null).isEmpty());
 
-    Optional<FontHeightReport> fontHeight =
-        WorkbookCommandCellValueSpecConverter.toFontHeightReport(
-            new dev.erst.gridgrind.core.model.style.FontHeightSpec.Points(
-                BigDecimal.valueOf(12.5d)));
     Optional<ResolvedValidationPrompt> prompt =
         WorkbookCommandStructuredInputConverter.toResolvedValidationPrompt(
             new DataValidationPromptSpec(
@@ -144,7 +107,6 @@ class RuntimeResidualCoverageTest {
                 TextSourceSpec.inline("Alert text"),
                 true));
 
-    assertEquals(Optional.of(FontHeightReport.fromTwips(250)), fontHeight);
     assertEquals("Prompt title", prompt.orElseThrow().title());
     assertEquals(ExcelDataValidationErrorStyle.WARNING, alert.orElseThrow().style());
   }

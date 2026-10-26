@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -14,9 +15,8 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.excel.ExcelSheetPane;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ final class XlsxRoundTripExpectedStateSupport {
   private XlsxRoundTripExpectedStateSupport() {}
 
   static ExpectedWorkbookState expectedWorkbookState(
-      ExcelWorkbook workbook, List<WorkbookCommand> commands) throws IOException {
+      ExcelWorkbook workbook, List<ResolvedStep> commands) throws IOException {
     ExpectedWorkbookFootprint footprint =
         XlsxRoundTripExpectedFootprintSupport.expectedWorkbookFootprint(commands);
     Map<String, List<CellReport>> candidateSnapshots =
@@ -100,7 +100,7 @@ final class XlsxRoundTripExpectedStateSupport {
   }
 
   record ExpectedSheetLayoutState(
-      ExcelSheetPane pane,
+      PaneSpec pane,
       Integer zoomPercent,
       Map<Integer, ExpectedRowLayoutState> rows,
       Map<Integer, ExpectedColumnLayoutState> columns) {}

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
@@ -57,7 +58,7 @@ final class ExcelSheetLayoutSupport {
     sheet.removeMergedRegion(mergedRegionIndex);
   }
 
-  void setPane(ExcelSheetPane pane) {
+  void setPane(PaneSpec pane) {
     Objects.requireNonNull(pane, "pane must not be null");
     ExcelSheetViewSupport.setPane(xssfSheet(), pane);
   }

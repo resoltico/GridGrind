@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,7 +35,7 @@ public final class ExcelWorkbookSheets {
 
   /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
   public ExcelWorkbookSheets copySheet(
-      String sourceSheetName, String newSheetName, ExcelSheetCopyPosition position) {
+      String sourceSheetName, String newSheetName, SheetCopyPosition position) {
     new ExcelSheetCopyController().copySheet(workbook, sourceSheetName, newSheetName, position);
     return this;
   }

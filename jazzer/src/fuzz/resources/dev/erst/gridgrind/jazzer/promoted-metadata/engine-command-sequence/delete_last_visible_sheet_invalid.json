@@ -12,7 +12,7 @@
       "commandKinds" : {
         "SET_SHEET_VISIBILITY" : 2,
         "CLEAR_SHEET_PROTECTION" : 1,
-        "CREATE_SHEET" : 1
+        "ENSURE_SHEET" : 1
       },
       "styleKinds" : { }
     }

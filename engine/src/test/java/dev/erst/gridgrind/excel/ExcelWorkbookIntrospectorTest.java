@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
@@ -121,7 +122,7 @@ class ExcelWorkbookIntrospectorTest {
                   results.hyperlinks().hyperlinks().getFirst().hyperlink())
               .target());
       assertEquals("Review", results.comments().comments().getFirst().comment().text());
-      assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), results.layout().layout().pane());
+      assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), results.layout().layout().pane());
       assertEquals(130, results.layout().layout().zoomPercent());
       assertEquals(
           ExcelPrintOrientation.LANDSCAPE, results.printLayout().printLayout().orientation());
@@ -608,7 +609,7 @@ class ExcelWorkbookIntrospectorTest {
     budget.layout().mergeCells("A1:B1");
     budget.columns().setWidth(0, 0, 12.5);
     budget.rows().setHeight(0, 0, 18.0);
-    budget.layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+    budget.layout().setPane(new PaneSpec.Frozen(1, 1, 1, 1));
     budget.layout().setZoom(130);
     budget
         .layout()

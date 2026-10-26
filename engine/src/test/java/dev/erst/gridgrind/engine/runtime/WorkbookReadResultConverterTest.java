@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
 import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
@@ -953,7 +954,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
   private static dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout advancedSheetLayout() {
     return new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
         "Budget",
-        new ExcelSheetPane.Frozen(1, 1, 1, 1),
+        new PaneSpec.Frozen(1, 1, 1, 1),
         125,
         new SheetPresentationReport(
             new SheetDisplayReport(false, false, true, true, true),

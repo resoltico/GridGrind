@@ -10,7 +10,7 @@
       "inputBytes" : 255,
       "commandCount" : 10,
       "commandKinds" : {
-        "CREATE_SHEET" : 2,
+        "ENSURE_SHEET" : 2,
         "SET_CHART" : 1,
         "APPEND_ROW" : 7
       },

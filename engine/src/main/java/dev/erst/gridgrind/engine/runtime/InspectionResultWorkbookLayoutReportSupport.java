@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.model.layout.PaneReport;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
@@ -10,7 +11,6 @@ import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
-import dev.erst.gridgrind.excel.ExcelSheetPane;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,13 +103,13 @@ final class InspectionResultWorkbookLayoutReportSupport {
             .toList());
   }
 
-  static PaneReport toPaneReport(ExcelSheetPane pane) {
+  static PaneReport toPaneReport(PaneSpec pane) {
     return switch (pane) {
-      case ExcelSheetPane.None _ -> new PaneReport.None();
-      case ExcelSheetPane.Frozen frozen ->
+      case PaneSpec.None _ -> new PaneReport.None();
+      case PaneSpec.Frozen frozen ->
           new PaneReport.Frozen(
               frozen.splitColumn(), frozen.splitRow(), frozen.leftmostColumn(), frozen.topRow());
-      case ExcelSheetPane.Split split ->
+      case PaneSpec.Split split ->
           new PaneReport.Split(
               split.xSplitPosition(),
               split.ySplitPosition(),
