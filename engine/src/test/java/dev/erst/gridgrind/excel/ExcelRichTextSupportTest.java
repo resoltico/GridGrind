@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -81,30 +82,33 @@ class ExcelRichTextSupportTest {
                 new RichTextRunReport("Quarterly", baseFont()),
                 new RichTextRunReport(" Report", baseFont())));
 
-    ExcelCellSnapshot.TextSnapshot snapshot =
-        new ExcelCellSnapshot.TextSnapshot(
-            "A1",
-            "Quarterly Report",
-            defaultStyle(),
-            ExcelCellMetadataSnapshot.empty(),
-            "Quarterly Report",
-            richText);
+    CellReport.TextReport snapshot =
+        new CellReport.TextReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            Optional.ofNullable("Quarterly Report"),
+            Optional.ofNullable(defaultStyle()),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Text("Quarterly Report")),
+            Optional.ofNullable(richText));
 
     assertEquals("TEXT", snapshot.type());
-    assertEquals(richText, snapshot.richText());
+    assertEquals(richText, snapshot.runs().orElseThrow());
 
     IllegalArgumentException mismatch =
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ExcelCellSnapshot.TextSnapshot(
-                    "A1",
-                    "Quarterly Report",
-                    defaultStyle(),
-                    ExcelCellMetadataSnapshot.empty(),
-                    "Different",
-                    richText));
-    assertEquals("richText run text must concatenate to the textValue", mismatch.getMessage());
+                new CellReport.TextReport(
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                    Optional.ofNullable("Quarterly Report"),
+                    Optional.ofNullable(defaultStyle()),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(
+                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Different")),
+                    Optional.ofNullable(richText)));
+    assertEquals("runs text must concatenate to the value", mismatch.getMessage());
   }
 
   @Test

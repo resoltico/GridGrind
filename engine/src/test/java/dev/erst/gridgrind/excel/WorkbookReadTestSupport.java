@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
@@ -7,8 +9,8 @@ import java.util.List;
 final class WorkbookReadTestSupport {
   private WorkbookReadTestSupport() {}
 
-  static ExcelCellReadProjection projection() {
-    return ExcelCellReadProjection.defaults();
+  static CellReadProjection projection() {
+    return CellReadProjection.defaults();
   }
 
   static WorkbookReadCommand.GetCells getCells(
@@ -36,7 +38,7 @@ final class WorkbookReadTestSupport {
   }
 
   static WorkbookSheetResult.CellsResult cellsResult(
-      String stepId, String sheetName, List<ExcelCellSnapshot> cells) {
+      String stepId, String sheetName, List<CellReport> cells) {
     return new WorkbookSheetResult.CellsResult(
         new StepId(stepId), sheetName, cells, projection(), false);
   }

@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
@@ -89,13 +90,13 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
               FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
-      ExcelCellSnapshot blankEvaluatedFormula = nullEvaluatedCellSheet.cells().snapshotCell("A1");
+      CellReport blankEvaluatedFormula = nullEvaluatedCellSheet.cells().snapshotCell("A1");
       assertEquals("FORMULA", blankEvaluatedFormula.type());
       assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().number("A1"));
       assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().bool("A1"));
       assertInstanceOf(
-          ExcelCellSnapshot.BlankSnapshot.class,
-          ((ExcelCellSnapshot.FormulaSnapshot) blankEvaluatedFormula).evaluation().orElseThrow());
+          dev.erst.gridgrind.core.model.value.CellValue.Blank.class,
+          ((CellReport.FormulaReport) blankEvaluatedFormula).value().orElseThrow());
     }
   }
 

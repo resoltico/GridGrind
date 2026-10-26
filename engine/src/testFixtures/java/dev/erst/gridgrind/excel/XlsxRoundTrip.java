@@ -255,25 +255,30 @@ public final class XlsxRoundTrip {
         });
   }
 
-  /** Returns the optional hyperlink and comment facts stored at one saved cell address. */
-  public static ExcelCellMetadataSnapshot cellMetadata(
+  /** Returns the independently read hyperlink stored at one saved cell. */
+  public static Optional<dev.erst.gridgrind.core.model.value.HyperlinkTarget> cellHyperlink(
       Path workbookPath, String sheetName, String address) throws IOException {
-    requireNonBlank(address, "address");
-    CellReference cellReference = new CellReference(address);
     return readSheet(
         workbookPath,
         sheetName,
-        sheet -> {
-          Row row = sheet.getRow(cellReference.getRow());
-          if (row == null) {
-            throw new CellNotFoundException(address);
-          }
-          XSSFCell cell = (XSSFCell) row.getCell(cellReference.getCol());
-          if (cell == null) {
-            throw new CellNotFoundException(address);
-          }
-          return ExcelCellMetadataSnapshot.of(hyperlink(cell), commentSnapshot(cell));
-        });
+        sheet ->
+            hyperlink(
+                sheet
+                    .getRow(new CellReference(address).getRow())
+                    .getCell(new CellReference(address).getCol())));
+  }
+
+  /** Returns the independently read comment stored at one saved cell. */
+  public static Optional<dev.erst.gridgrind.core.model.drawing.CommentReport> cellComment(
+      Path workbookPath, String sheetName, String address) throws IOException {
+    return readSheet(
+        workbookPath,
+        sheetName,
+        sheet ->
+            commentSnapshot(
+                sheet
+                    .getRow(new CellReference(address).getRow())
+                    .getCell(new CellReference(address).getCol())));
   }
 
   /** Returns every analyzable named range stored in the saved workbook. */

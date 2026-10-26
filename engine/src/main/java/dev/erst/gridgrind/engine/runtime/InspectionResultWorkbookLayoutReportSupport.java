@@ -7,9 +7,9 @@ import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
-import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
 
   static dev.erst.gridgrind.core.model.layout.WindowReport toWindowReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.Window window,
-      ExcelCellReadProjection projection,
+      CellReadProjection projection,
       boolean includeBlanks,
       boolean date1904) {
     dev.erst.gridgrind.core.model.layout.WindowDimensionsReport dimensions =
@@ -45,23 +45,16 @@ final class InspectionResultWorkbookLayoutReportSupport {
               .map(
                   row ->
                       new dev.erst.gridgrind.core.model.layout.WindowRowReport(
-                          row.rowIndex(),
-                          row.cells().stream()
-                              .map(
-                                  cell ->
-                                      InspectionResultCellReportSupport.toCellReport(
-                                          cell, projection, date1904))
-                              .toList()))
+                          row.rowIndex(), row.cells()))
               .toList());
     }
     List<dev.erst.gridgrind.core.model.value.CellReport> populatedCells = new ArrayList<>();
     for (dev.erst.gridgrind.excel.WorkbookSheetResult.WindowRow row : window.rows()) {
-      for (dev.erst.gridgrind.excel.ExcelCellSnapshot cell : row.cells()) {
-        if (cell instanceof dev.erst.gridgrind.excel.ExcelCellSnapshot.BlankSnapshot) {
+      for (dev.erst.gridgrind.core.model.value.CellReport cell : row.cells()) {
+        if (cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport) {
           continue;
         }
-        populatedCells.add(
-            InspectionResultCellReportSupport.toCellReport(cell, projection, date1904));
+        populatedCells.add(cell);
       }
     }
     return new dev.erst.gridgrind.core.model.layout.WindowReport.Sparse(

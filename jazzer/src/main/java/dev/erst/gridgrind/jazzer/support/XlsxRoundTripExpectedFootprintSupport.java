@@ -3,10 +3,10 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookAnnotationCommand;
 import dev.erst.gridgrind.excel.WorkbookCellCommand;
@@ -328,18 +328,17 @@ final class XlsxRoundTripExpectedFootprintSupport {
         Map.copyOf(snapshotCoordinatesBySheet));
   }
 
-  static Map<String, List<ExcelCellSnapshot>> expectedCellSnapshots(
+  static Map<String, List<CellReport>> expectedCellSnapshots(
       ExcelWorkbook workbook,
       XlsxRoundTripExpectedStateSupport.ExpectedWorkbookFootprint footprint) {
-    LinkedHashMap<String, List<ExcelCellSnapshot>> snapshotsBySheet = new LinkedHashMap<>();
+    LinkedHashMap<String, List<CellReport>> snapshotsBySheet = new LinkedHashMap<>();
     for (Map.Entry<String, List<XlsxRoundTripExpectedStateSupport.CellCoordinate>> entry :
         footprint.candidateCoordinatesBySheet().entrySet()) {
       List<String> addresses =
           entry.getValue().stream()
               .map(XlsxRoundTripExpectedStateSupport.CellCoordinate::a1Address)
               .toList();
-      List<ExcelCellSnapshot> snapshots =
-          workbook.sheet(entry.getKey()).cells().snapshotCells(addresses);
+      List<CellReport> snapshots = workbook.sheet(entry.getKey()).cells().snapshotCells(addresses);
       if (!snapshots.isEmpty()) {
         snapshotsBySheet.put(entry.getKey(), snapshots);
       }

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
@@ -72,9 +73,11 @@ class ExcelOoxmlPackageSecuritySupportTest {
       assertEquals(
           "Encrypted workbook",
           assertInstanceOf(
-                  ExcelCellSnapshot.TextSnapshot.class,
+                  CellReport.TextReport.class,
                   workbook.sheet("Encrypted").cells().snapshotCell("A1"))
-              .textValue());
+              .value()
+              .orElseThrow()
+              .value());
 
       WorkbookCoreResult.PackageSecurityResult securityResult =
           assertInstanceOf(

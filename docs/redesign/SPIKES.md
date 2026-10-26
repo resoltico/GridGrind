@@ -2377,3 +2377,39 @@ Corrected those without changing internal byte-only tests. Core/engine/14 parity
 golden cases unchanged; no active mutation/fuzz campaign. Inventories: converter lines 2565→2529,
 Support 203→202, blank checks 369→364, main Java 116807→116687; snapshots 4 and definition 1 remain.
 Baseline diff empty. WP-40 remains open; cell/metadata mirrors and the resolved execution seam remain.
+
+## WP-40 canonical cell reports at the POI read boundary
+
+Deleted ExcelCellSnapshot/metadata and duplicate engine projection/facet types. POI cell reads now
+produce CellReport with shared CellValue scalars directly; removed the runtime cell converter and
+metadata grouping. Public commands pass canonical projections unchanged. Internal no-projection
+cell/window helpers explicitly request full facts; preview requests VALUE/FORMAT, semantic keys
+request VALUE/FORMULA, and schema inference requests the facts it actually uses. Formula results
+are scalar values, not recursively nested cell snapshots. Date/temporal interpretation happens at
+the POI boundary with the workbook date system. Runtime inspection no longer reconstructs cell models.
+
+Replaced retired snapshot/converter/reflection-only tests with real workbook facet tests covering
+formula/value/format masks, missing-cell projections, rich text, metadata, temporal/schema inference
+and formula-derived temporal values. Saved metadata fixtures use independent typed hyperlink/comment
+accessors. Retained real sheet style/copy/selection/error/preview and public executor behavior checks;
+fixture construction uses canonical report fields rather than a replacement raw snapshot type.
+Compilation and behavior retries corrected optional/typed accessors and several overbroad test edits,
+including unrelated rich-text list access and default preview formatting. Final core/JSON/engine,
+14 parity/static checks pass (42s); deterministic check/all retained seeds pass (17s).
+
+Resolved the pre-existing nonfinite formula observation failure retained from WP-23. A real public
+executor regression now includes a stored NaN numeric cell, a normal numeric cell and a formula with
+stored NaN. Direct diagnosis showed unrequested DataFormatter execution mutating/erroring the formula
+and then throwing a numeric/error mismatch. VALUE-only reads now skip formatting and preserve the
+actual evaluator NaN result. An initial diagnostic used an inaccessible test helper (compile failure),
+then the public rooted temp factory exposed the full cause. My first guard edit missed formatted
+source, and an intermediate expected-error assumption was disproved by the returned numeric NaN;
+corrected both against direct output. The regression passes and roundtrips the complete response.
+This establishes VALUE-only nonfinite observation, not all possible FORMAT/temporal combinations.
+
+Final ./gradlew check passes (2m57s): core 377, JSON 353, engine 1447 plus 14 parity, CLI 588, zero
+failures/errors/skips; all 143 golden cases unchanged. No active mutation/fuzz campaign. Inventories:
+snapshots 4→2, converter lines 2529→2289, Support 202→201, main Java 116687→116301; definition 1 and
+blank checks 364 remain. Remaining HostAcceptanceSnapshot and ColumnAxisSnapshot are actual runtime
+concepts (host acceptance evidence and parsed pivot axis state), not core model mirrors. Baseline
+diff empty. WP-40 remains open: selected-range block, resolved plan/step/target and command/query cutover.

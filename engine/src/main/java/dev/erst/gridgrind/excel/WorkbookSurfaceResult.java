@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -29,7 +30,7 @@ public sealed interface WorkbookSurfaceResult extends WorkbookReadSurfaceResult
 
   /** Returns inferred schema facts for one rectangular sheet window. */
   record SheetSchemaResult(
-      StepId stepId, SheetSchema surface, ExcelCellReadProjection projection, boolean date1904)
+      StepId stepId, SheetSchema surface, CellReadProjection projection, boolean date1904)
       implements WorkbookSurfaceResult {
     public SheetSchemaResult {
 

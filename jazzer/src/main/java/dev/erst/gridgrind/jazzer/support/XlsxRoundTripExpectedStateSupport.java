@@ -12,9 +12,8 @@ import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
@@ -33,7 +32,7 @@ final class XlsxRoundTripExpectedStateSupport {
       ExcelWorkbook workbook, List<WorkbookCommand> commands) throws IOException {
     ExpectedWorkbookFootprint footprint =
         XlsxRoundTripExpectedFootprintSupport.expectedWorkbookFootprint(commands);
-    Map<String, List<ExcelCellSnapshot>> candidateSnapshots =
+    Map<String, List<CellReport>> candidateSnapshots =
         XlsxRoundTripExpectedFootprintSupport.expectedCellSnapshots(workbook, footprint);
     return new ExpectedWorkbookState(
         XlsxRoundTripExpectedWorkbookSurfaceSupport.expectedStyles(
@@ -89,7 +88,7 @@ final class XlsxRoundTripExpectedStateSupport {
 
   record ExpectedCellMetadata(
       Optional<HyperlinkTarget> hyperlink, Optional<ResolvedComment> comment) {
-    static ExpectedCellMetadata from(ExcelCellMetadataSnapshot metadata) {
+    static ExpectedCellMetadata from(CellReport metadata) {
       return new ExpectedCellMetadata(
           metadata.hyperlink(),
           metadata

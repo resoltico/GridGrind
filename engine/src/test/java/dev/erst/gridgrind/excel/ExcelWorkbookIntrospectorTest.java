@@ -22,8 +22,11 @@ import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -71,7 +74,7 @@ class ExcelWorkbookIntrospectorTest {
                       new StepId("formula-cell"),
                       "Raw",
                       List.of("A1"),
-                      new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA)))));
+                      new CellReadProjection(List.copyOf(Set.of(CellReadFacet.FORMULA))))));
       WorkbookSurfaceResult.SheetSchemaResult schema =
           assertInstanceOf(
               WorkbookSurfaceResult.SheetSchemaResult.class,
@@ -81,16 +84,16 @@ class ExcelWorkbookIntrospectorTest {
                       new StepId("formula-schema"),
                       "Schema",
                       new ExcelReadWindow("A1", 2, 1),
-                      new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA)))));
+                      new CellReadProjection(List.copyOf(Set.of(CellReadFacet.FORMULA))))));
 
       assertEquals(1, formulaSurface.surface().totalFormulaCellCount());
       assertEquals(
           "_xlfn.UNIQUE({1,2,2})",
           formulaSurface.surface().sheets().getFirst().formulas().getFirst().formula());
-      ExcelCellSnapshot.FormulaSnapshot formulaCell =
-          assertInstanceOf(ExcelCellSnapshot.FormulaSnapshot.class, cells.cells().getFirst());
-      assertEquals("_xlfn.UNIQUE({1,2,2})", formulaCell.formula());
-      assertTrue(formulaCell.evaluation().isEmpty());
+      CellReport.FormulaReport formulaCell =
+          assertInstanceOf(CellReport.FormulaReport.class, cells.cells().getFirst());
+      assertEquals("_xlfn.UNIQUE({1,2,2})", formulaCell.formula().orElseThrow());
+      assertTrue(formulaCell.value().isEmpty());
       assertEquals(
           "NUMBER", schema.surface().columns().getFirst().observedTypes().getFirst().type());
     }
@@ -107,8 +110,9 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals(List.of("Budget", "Ops"), results.workbookSummary().workbook().sheetNames());
       assertEquals("BudgetTotal", results.namedRanges().namedRanges().getFirst().name().value());
       assertEquals("Budget", results.sheetSummary().sheet().sheetName());
-      assertEquals("A1", results.cells().cells().getFirst().address());
-      assertEquals("A1", results.window().window().rows().getFirst().cells().getFirst().address());
+      assertEquals("A1", results.cells().cells().getFirst().address().value());
+      assertEquals(
+          "A1", results.window().window().rows().getFirst().cells().getFirst().address().value());
       assertEquals("A1:B1", results.mergedRegions().mergedRegions().getFirst().range());
       assertEquals(
           "https://example.com/report",

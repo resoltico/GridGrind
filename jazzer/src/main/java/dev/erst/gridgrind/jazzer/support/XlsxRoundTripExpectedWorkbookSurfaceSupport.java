@@ -11,9 +11,8 @@ import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -30,17 +29,18 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
 
   static Map<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport>>
       expectedStyles(
-          Map<String, List<ExcelCellSnapshot>> candidateSnapshots, CellStyleReport defaultStyle) {
+          Map<String, List<CellReport>> candidateSnapshots, CellStyleReport defaultStyle) {
     LinkedHashMap<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport>>
         expectedStylesBySheet = new LinkedHashMap<>();
-    for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
+    for (Map.Entry<String, List<CellReport>> entry : candidateSnapshots.entrySet()) {
       LinkedHashMap<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport>
           expectedStyles = new LinkedHashMap<>();
-      for (ExcelCellSnapshot snapshot : entry.getValue()) {
-        if (!snapshot.style().equals(defaultStyle)) {
+      for (CellReport snapshot : entry.getValue()) {
+        if (!snapshot.style().orElseThrow().equals(defaultStyle)) {
           expectedStyles.put(
-              XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(snapshot.address()),
-              snapshot.style());
+              XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(
+                  snapshot.address().value()),
+              snapshot.style().orElseThrow());
         }
       }
       if (!expectedStyles.isEmpty()) {
@@ -55,23 +55,24 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
           Map<
               XlsxRoundTripExpectedStateSupport.CellCoordinate,
               XlsxRoundTripExpectedStateSupport.ExpectedCellMetadata>>
-      expectedMetadata(Map<String, List<ExcelCellSnapshot>> candidateSnapshots) {
+      expectedMetadata(Map<String, List<CellReport>> candidateSnapshots) {
     LinkedHashMap<
             String,
             Map<
                 XlsxRoundTripExpectedStateSupport.CellCoordinate,
                 XlsxRoundTripExpectedStateSupport.ExpectedCellMetadata>>
         expectedMetadataBySheet = new LinkedHashMap<>();
-    for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
+    for (Map.Entry<String, List<CellReport>> entry : candidateSnapshots.entrySet()) {
       LinkedHashMap<
               XlsxRoundTripExpectedStateSupport.CellCoordinate,
               XlsxRoundTripExpectedStateSupport.ExpectedCellMetadata>
           expectedMetadata = new LinkedHashMap<>();
-      for (ExcelCellSnapshot snapshot : entry.getValue()) {
-        if (hasMetadata(snapshot.metadata())) {
+      for (CellReport snapshot : entry.getValue()) {
+        if (hasMetadata(snapshot)) {
           expectedMetadata.put(
-              XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(snapshot.address()),
-              XlsxRoundTripExpectedStateSupport.ExpectedCellMetadata.from(snapshot.metadata()));
+              XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(
+                  snapshot.address().value()),
+              XlsxRoundTripExpectedStateSupport.ExpectedCellMetadata.from(snapshot));
         }
       }
       if (!expectedMetadata.isEmpty()) {
@@ -82,18 +83,18 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   }
 
   static Map<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>>
-      expectedRichText(Map<String, List<ExcelCellSnapshot>> candidateSnapshots) {
+      expectedRichText(Map<String, List<CellReport>> candidateSnapshots) {
     LinkedHashMap<
             String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>>
         expectedRichTextBySheet = new LinkedHashMap<>();
-    for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
+    for (Map.Entry<String, List<CellReport>> entry : candidateSnapshots.entrySet()) {
       LinkedHashMap<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>
           expectedRichText = new LinkedHashMap<>();
-      for (ExcelCellSnapshot snapshot : entry.getValue()) {
-        if (snapshot instanceof ExcelCellSnapshot.TextSnapshot text && text.richText() != null) {
+      for (CellReport snapshot : entry.getValue()) {
+        if (snapshot instanceof CellReport.TextReport text && text.runs().isPresent()) {
           expectedRichText.put(
-              XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(text.address()),
-              text.richText());
+              XlsxRoundTripExpectedStateSupport.CellCoordinate.fromAddress(text.address().value()),
+              text.runs().orElseThrow());
         }
       }
       if (!expectedRichText.isEmpty()) {
@@ -253,7 +254,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return List.copyOf(result.tables());
   }
 
-  static boolean hasMetadata(ExcelCellMetadataSnapshot metadata) {
+  static boolean hasMetadata(CellReport metadata) {
     return metadata.hyperlink().isPresent() || metadata.comment().isPresent();
   }
 }

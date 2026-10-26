@@ -54,14 +54,7 @@ final class InspectionResultReadConverter {
               arrayFormulas.stepId(), arrayFormulas.arrayFormulas());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult cells ->
           new SheetInspectionResult.CellsResult(
-              cells.stepId(),
-              new SheetLabel(cells.sheetName()),
-              cells.cells().stream()
-                  .map(
-                      cell ->
-                          InspectionResultCellReportSupport.toCellReport(
-                              cell, cells.projection(), cells.date1904()))
-                  .toList());
+              cells.stepId(), new SheetLabel(cells.sheetName()), cells.cells());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.WindowResult window ->
           new SheetInspectionResult.WindowResult(
               window.stepId(),

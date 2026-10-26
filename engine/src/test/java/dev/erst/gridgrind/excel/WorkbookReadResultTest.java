@@ -31,6 +31,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
@@ -301,9 +302,14 @@ class WorkbookReadResultTest {
 
   @Test
   void reportsExcelNativeIndexDiagnosticsForReadResults() {
-    ExcelCellSnapshot.BlankSnapshot blank =
-        new ExcelCellSnapshot.BlankSnapshot(
-            "A1", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
+    CellReport.BlankReport blank =
+        new CellReport.BlankReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            Optional.ofNullable(""),
+            Optional.ofNullable(defaultStyle()),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Blank()));
 
     IllegalArgumentException windowRowFailure =
         assertThrows(
@@ -445,9 +451,14 @@ class WorkbookReadResultTest {
   }
 
   private ReadResultFixture createReadResultFixture() {
-    ExcelCellSnapshot.BlankSnapshot blank =
-        new ExcelCellSnapshot.BlankSnapshot(
-            "A1", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
+    CellReport.BlankReport blank =
+        new CellReport.BlankReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            Optional.ofNullable(""),
+            Optional.ofNullable(defaultStyle()),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Blank()));
     List<String> sheetNames = new ArrayList<>(List.of("Budget"));
     List<NamedRangeReport> namedRanges =
         new ArrayList<>(
@@ -459,7 +470,7 @@ class WorkbookReadResultTest {
                     NamedRangeTarget.range(
                         new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                         new dev.erst.gridgrind.core.vocabulary.RangeRef("B4")))));
-    List<ExcelCellSnapshot> cells = new ArrayList<>(List.of(blank));
+    List<CellReport> cells = new ArrayList<>(List.of(blank));
     List<WorkbookSheetResult.WindowRow> rows =
         new ArrayList<>(List.of(new WorkbookSheetResult.WindowRow(0, List.of(blank))));
     List<WorkbookSheetResult.MergedRegion> mergedRegions =
@@ -614,9 +625,10 @@ class WorkbookReadResultTest {
     assertEquals(List.of("Budget"), fixture.workbookSummary().workbook().sheetNames());
     assertEquals(1, fixture.namedRangesResult().namedRanges().size());
     assertEquals("Budget", fixture.sheetSummary().sheet().sheetName());
-    assertEquals("A1", fixture.cellsResult().cells().getFirst().address());
+    assertEquals("A1", fixture.cellsResult().cells().getFirst().address().value());
     assertEquals(
-        "A1", fixture.windowResult().window().rows().getFirst().cells().getFirst().address());
+        "A1",
+        fixture.windowResult().window().rows().getFirst().cells().getFirst().address().value());
     assertEquals("A1:B2", fixture.mergedRegionsResult().mergedRegions().getFirst().range());
     assertEquals(
         "https://example.com/report",
@@ -646,7 +658,7 @@ class WorkbookReadResultTest {
   private record ReadResultFixture(
       List<String> sheetNames,
       List<NamedRangeReport> namedRanges,
-      List<ExcelCellSnapshot> cells,
+      List<CellReport> cells,
       List<WorkbookSheetResult.WindowRow> rows,
       List<WorkbookSheetResult.MergedRegion> mergedRegions,
       List<WorkbookSheetResult.CellHyperlink> hyperlinks,

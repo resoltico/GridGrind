@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
@@ -43,10 +44,9 @@ class ExcelArrayFormulaTest {
       assertFalse(multiCell.singleCell());
       assertTrue(singleCell.singleCell());
 
-      ExcelCellSnapshot.FormulaSnapshot formulaCell =
-          assertInstanceOf(
-              ExcelCellSnapshot.FormulaSnapshot.class, sheet.cells().snapshotCell("D3"));
-      assertEquals("B2:B4*C2:C4", formulaCell.formula());
+      CellReport.FormulaReport formulaCell =
+          assertInstanceOf(CellReport.FormulaReport.class, sheet.cells().snapshotCell("D3"));
+      assertEquals("B2:B4*C2:C4", formulaCell.formula().orElseThrow());
 
       workbook
           .persistence()

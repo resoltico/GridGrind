@@ -10,9 +10,9 @@ import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
@@ -267,9 +267,9 @@ final class XlsxRoundTripExpectationVerification {
           entry : expectedWorkbookState.expectedRichText().entrySet()) {
         for (Map.Entry<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>
             cellEntry : entry.getValue().entrySet()) {
-          ExcelCellSnapshot actualSnapshot =
+          CellReport actualSnapshot =
               workbook.sheet(entry.getKey()).cells().snapshotCell(cellEntry.getKey().a1Address());
-          if (!(actualSnapshot instanceof ExcelCellSnapshot.TextSnapshot textSnapshot)) {
+          if (!(actualSnapshot instanceof CellReport.TextReport textSnapshot)) {
             throw new IllegalStateException(
                 "rich text cell must reopen as a text snapshot for "
                     + entry.getKey()
@@ -283,13 +283,13 @@ final class XlsxRoundTripExpectationVerification {
               cellEntry.getValue().stream()
                   .map(RichTextRunReport::text)
                   .collect(java.util.stream.Collectors.joining()),
-              textSnapshot.textValue());
+              textSnapshot.value().orElseThrow().value());
           requireEquals(
               entry.getKey(),
               cellEntry.getKey(),
               "richText",
               cellEntry.getValue(),
-              textSnapshot.richText());
+              textSnapshot.runs().orElseThrow());
         }
       }
       for (Map.Entry<String, List<DrawingObjectReport>> entry :

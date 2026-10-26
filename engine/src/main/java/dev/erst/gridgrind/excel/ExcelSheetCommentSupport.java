@@ -60,11 +60,6 @@ final class ExcelSheetCommentSupport {
     drawingController.cleanupEmptyDrawingPatriarch((XSSFSheet) sheet);
   }
 
-  ExcelCellMetadataSnapshot metadata(Cell cell) {
-    return ExcelCellMetadataSnapshot.of(
-        ExcelSheetHyperlinkSupport.hyperlink(cell), commentSnapshot(cell));
-  }
-
   List<WorkbookSheetResult.CellComment> comments(ExcelCellSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     return switch (selection) {

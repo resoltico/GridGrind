@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -12,21 +15,24 @@ import org.junit.jupiter.api.Test;
 class ExcelReadProjectionCoverageTest {
   @Test
   void projectionDefaultsIncludesAndValidationCoverResidualBranches() {
-    ExcelCellReadProjection defaults = ExcelCellReadProjection.defaults();
-    ExcelCellReadProjection projection =
-        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.STYLE, ExcelCellReadFacet.VALUE));
+    CellReadProjection defaults = CellReadProjection.defaults();
+    CellReadProjection projection =
+        new CellReadProjection(List.copyOf(Set.of(CellReadFacet.STYLE, CellReadFacet.VALUE)));
 
-    assertEquals(Set.of(ExcelCellReadFacet.VALUE), defaults.facets());
-    assertTrue(defaults.includes(ExcelCellReadFacet.VALUE));
-    assertFalse(defaults.includes(ExcelCellReadFacet.STYLE));
-    assertTrue(projection.includes(ExcelCellReadFacet.STYLE));
+    assertEquals(List.of(CellReadFacet.VALUE), defaults.facets());
+    assertTrue(defaults.includes(CellReadFacet.VALUE));
+    assertFalse(defaults.includes(CellReadFacet.STYLE));
+    assertTrue(projection.includes(CellReadFacet.STYLE));
 
     assertThrows(NullPointerException.class, () -> defaults.includes(null));
-    assertThrows(NullPointerException.class, () -> new ExcelCellReadProjection(null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCellReadProjection(Set.of()));
+    assertThrows(NullPointerException.class, () -> new CellReadProjection(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new CellReadProjection(List.copyOf(Set.of())));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelCellReadProjection(java.util.Collections.singleton(null)));
+        () ->
+            new CellReadProjection(
+                new java.util.ArrayList<>(java.util.Arrays.asList((CellReadFacet) null))));
   }
 
   @Test

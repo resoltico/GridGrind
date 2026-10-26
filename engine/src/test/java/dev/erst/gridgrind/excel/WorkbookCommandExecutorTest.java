@@ -205,10 +205,8 @@ class WorkbookCommandExecutorTest {
       assertEquals(List.of("History", "Budget", "Ops"), workbook.sheets().sheetNames());
       assertEquals("Item", workbook.sheet("Budget").cells().text("A1"));
       assertEquals(54.0, workbook.sheet("Budget").cells().number("B3"));
-      assertTrue(
-          workbook.sheet("Budget").cells().snapshotCell("A1").metadata().hyperlink().isEmpty());
-      assertTrue(
-          workbook.sheet("Budget").cells().snapshotCell("B1").metadata().comment().isEmpty());
+      assertTrue(workbook.sheet("Budget").cells().snapshotCell("A1").hyperlink().isEmpty());
+      assertTrue(workbook.sheet("Budget").cells().snapshotCell("B1").comment().isEmpty());
       assertEquals(1, workbook.names().namedRangeCount());
       assertEquals(
           ExcelHorizontalAlignment.CENTER,
@@ -217,6 +215,7 @@ class WorkbookCommandExecutorTest {
               .cells()
               .snapshotCell("A1")
               .style()
+              .orElseThrow()
               .alignment()
               .horizontalAlignment());
       assertEquals("BLANK", workbook.sheet("Budget").cells().snapshotCell("A2").type());
@@ -1046,7 +1045,6 @@ class WorkbookCommandExecutorTest {
                       .sheet("Budget")
                       .cells()
                       .snapshotCell("A1")
-                      .metadata()
                       .comment()
                       .orElseThrow()
                       .text()),
@@ -1057,7 +1055,6 @@ class WorkbookCommandExecutorTest {
                       .sheet("Budget")
                       .cells()
                       .snapshotCell("A1")
-                      .metadata()
                       .comment()
                       .orElseThrow()
                       .author()),
@@ -1067,7 +1064,6 @@ class WorkbookCommandExecutorTest {
                       .sheet("Budget")
                       .cells()
                       .snapshotCell("A1")
-                      .metadata()
                       .comment()
                       .orElseThrow()
                       .visible()));
@@ -1080,6 +1076,7 @@ class WorkbookCommandExecutorTest {
               .cells()
               .snapshotCell("A1")
               .style()
+              .orElseThrow()
               .alignment()
               .horizontalAlignment());
       WorkbookRuleResult.AutofiltersResult autofilters =

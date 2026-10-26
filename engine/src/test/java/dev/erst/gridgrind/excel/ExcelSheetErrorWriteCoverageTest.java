@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
@@ -25,17 +26,21 @@ class ExcelSheetErrorWriteCoverageTest {
       sheet.cells().setCell("A2", new CellValue.ErrorValue("#DIV/0!"));
       sheet.cells().setCell("A3", new CellValue.ErrorValue("#N/A"));
 
-      ExcelCellSnapshot.ErrorSnapshot snapshot =
-          assertInstanceOf(ExcelCellSnapshot.ErrorSnapshot.class, sheet.cells().snapshotCell("A1"));
-      assertEquals("#REF!", snapshot.errorValue());
+      CellReport.ErrorReport snapshot =
+          assertInstanceOf(CellReport.ErrorReport.class, sheet.cells().snapshotCell("A1"));
+      assertEquals("#REF!", snapshot.value().orElseThrow().value());
       assertEquals(
           "#DIV/0!",
-          assertInstanceOf(ExcelCellSnapshot.ErrorSnapshot.class, sheet.cells().snapshotCell("A2"))
-              .errorValue());
+          assertInstanceOf(CellReport.ErrorReport.class, sheet.cells().snapshotCell("A2"))
+              .value()
+              .orElseThrow()
+              .value());
       assertEquals(
           "#N/A",
-          assertInstanceOf(ExcelCellSnapshot.ErrorSnapshot.class, sheet.cells().snapshotCell("A3"))
-              .errorValue());
+          assertInstanceOf(CellReport.ErrorReport.class, sheet.cells().snapshotCell("A3"))
+              .value()
+              .orElseThrow()
+              .value());
 
       Path workbookPath = Files.createTempFile("gridgrind-stored-errors-", ".xlsx");
       workbook

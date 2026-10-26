@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -49,12 +50,11 @@ class ExcelWorkbookFormulasTest {
       assertSame(workbook, formulas.evaluateAll());
       assertEquals(
           4.0d,
-          ((ExcelCellSnapshot.NumberSnapshot)
-                  ((ExcelCellSnapshot.FormulaSnapshot)
-                          workbook.sheet("Budget").cells().snapshotCell("B1"))
-                      .evaluation()
+          ((dev.erst.gridgrind.core.model.value.CellValue.NumberValue)
+                  ((CellReport.FormulaReport) workbook.sheet("Budget").cells().snapshotCell("B1"))
+                      .value()
                       .orElseThrow())
-              .numberValue());
+              .value());
       assertEquals(
           List.of(
               new ExcelFormulaCapabilityAssessment(

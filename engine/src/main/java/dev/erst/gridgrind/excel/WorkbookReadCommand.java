@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.ExcelAddressLists;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -133,7 +134,7 @@ public sealed interface WorkbookReadCommand
 
   /** Returns exact cell snapshots for the provided ordered A1 addresses. */
   record GetCells(
-      StepId stepId, String sheetName, List<String> addresses, ExcelCellReadProjection projection)
+      StepId stepId, String sheetName, List<String> addresses, CellReadProjection projection)
       implements Introspection {
     public GetCells {
 
@@ -157,7 +158,7 @@ public sealed interface WorkbookReadCommand
       StepId stepId,
       String sheetName,
       ExcelReadWindow window,
-      ExcelCellReadProjection projection,
+      CellReadProjection projection,
       boolean includeBlanks)
       implements Introspection {
     public GetWindow {
@@ -308,7 +309,7 @@ public sealed interface WorkbookReadCommand
 
   /** Infers a simple column schema from a rectangular window on one sheet. */
   record GetSheetSchema(
-      StepId stepId, String sheetName, ExcelReadWindow window, ExcelCellReadProjection projection)
+      StepId stepId, String sheetName, ExcelReadWindow window, CellReadProjection projection)
       implements Surface {
     public GetSheetSchema {
 

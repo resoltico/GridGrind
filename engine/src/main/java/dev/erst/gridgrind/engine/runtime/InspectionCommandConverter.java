@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.plan.CellReadFacet;
-import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
@@ -19,11 +17,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelCellReadFacet;
-import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import java.util.EnumSet;
-import java.util.Set;
 
 /** Converts contract inspection steps into workbook-core read commands. */
 final class InspectionCommandConverter {
@@ -65,10 +59,7 @@ final class InspectionCommandConverter {
         SelectorConverter.SheetLocalCellAddresses selection =
             SelectorConverter.toSheetLocalCellAddresses((CellSelector) target);
         yield new WorkbookReadCommand.GetCells(
-            stepId,
-            selection.sheetName(),
-            selection.addresses(),
-            toExcelProjection(getCells.resolvedProjection()));
+            stepId, selection.sheetName(), selection.addresses(), getCells.resolvedProjection());
       }
       case SheetIntrospectionQuery.GetWindow _ -> {
         SheetIntrospectionQuery.GetWindow getWindow = (SheetIntrospectionQuery.GetWindow) query;
@@ -78,7 +69,7 @@ final class InspectionCommandConverter {
             selector.sheetName().value(),
             new dev.erst.gridgrind.excel.ExcelReadWindow(
                 selector.topLeftAddress().value(), selector.rowCount(), selector.columnCount()),
-            toExcelProjection(getWindow.resolvedProjection()),
+            getWindow.resolvedProjection(),
             getWindow.includeBlanks());
       }
       case SheetIntrospectionQuery.GetMergedRegions _ ->
@@ -150,7 +141,7 @@ final class InspectionCommandConverter {
             selector.sheetName().value(),
             new dev.erst.gridgrind.excel.ExcelReadWindow(
                 selector.topLeftAddress().value(), selector.rowCount(), selector.columnCount()),
-            toExcelProjection(getSheetSchema.resolvedProjection()));
+            getSheetSchema.resolvedProjection());
       }
       case InspectionSurfaceQuery.GetNamedRangeSurface _ ->
           new WorkbookReadCommand.GetNamedRangeSurface(
@@ -182,23 +173,5 @@ final class InspectionCommandConverter {
       case InspectionAnalysisQuery.AnalyzeWorkbookFindings _ ->
           new WorkbookReadCommand.AnalyzeWorkbookFindings(stepId);
     };
-  }
-
-  private static ExcelCellReadProjection toExcelProjection(CellReadProjection projection) {
-    Set<ExcelCellReadFacet> facets = EnumSet.noneOf(ExcelCellReadFacet.class);
-    for (CellReadFacet facet : projection.facets()) {
-      facets.add(
-          switch (facet) {
-            case VALUE -> ExcelCellReadFacet.VALUE;
-            case STYLE -> ExcelCellReadFacet.STYLE;
-            case FORMAT -> ExcelCellReadFacet.FORMAT;
-            case HYPERLINK -> ExcelCellReadFacet.HYPERLINK;
-            case COMMENT -> ExcelCellReadFacet.COMMENT;
-            case FORMULA -> ExcelCellReadFacet.FORMULA;
-            case RICH_TEXT_RUNS -> ExcelCellReadFacet.RICH_TEXT_RUNS;
-            case TEMPORAL -> ExcelCellReadFacet.TEMPORAL;
-          });
-    }
-    return new ExcelCellReadProjection(facets);
   }
 }

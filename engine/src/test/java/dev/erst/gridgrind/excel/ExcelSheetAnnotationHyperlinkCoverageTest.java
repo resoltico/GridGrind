@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -362,7 +363,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       sheet.cells().setCell("A3", new CellValue.Text("third"));
 
       WorkbookSheetResult.Window window = sheet.cells().window("A1", 3, 1);
-      assertEquals("A2", window.rows().get(1).cells().getFirst().address());
+      assertEquals("A2", window.rows().get(1).cells().getFirst().address().value());
       assertEquals("BLANK", window.rows().get(1).cells().getFirst().type());
 
       WorkbookSheetResult.SheetLayout layout = sheet.layout().snapshot();
@@ -506,14 +507,14 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       sheet.cells().setCell("A1", new CellValue.Text("Header"));
 
       // A cell in a non-existent row returns blank.
-      ExcelCellSnapshot blankInNewRow = sheet.cells().snapshotCell("C5");
-      assertInstanceOf(ExcelCellSnapshot.BlankSnapshot.class, blankInNewRow);
-      assertEquals("C5", blankInNewRow.address());
+      CellReport blankInNewRow = sheet.cells().snapshotCell("C5");
+      assertInstanceOf(CellReport.BlankReport.class, blankInNewRow);
+      assertEquals("C5", blankInNewRow.address().value());
 
       // A cell in a row that exists but in a column that has not been written returns blank.
-      ExcelCellSnapshot blankInExistingRow = sheet.cells().snapshotCell("B1");
-      assertInstanceOf(ExcelCellSnapshot.BlankSnapshot.class, blankInExistingRow);
-      assertEquals("B1", blankInExistingRow.address());
+      CellReport blankInExistingRow = sheet.cells().snapshotCell("B1");
+      assertInstanceOf(CellReport.BlankReport.class, blankInExistingRow);
+      assertEquals("B1", blankInExistingRow.address().value());
     }
   }
 }

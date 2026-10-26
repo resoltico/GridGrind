@@ -1,14 +1,15 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import java.util.List;
 import java.util.Objects;
 
 /** Reads reusable introspection facts from one sheet wrapper. */
 final class ExcelSheetIntrospector {
   /** Returns exact cell snapshots for the provided ordered addresses on one sheet. */
-  List<ExcelCellSnapshot> cells(
-      ExcelSheet sheet, List<String> addresses, ExcelCellReadProjection projection) {
+  List<CellReport> cells(ExcelSheet sheet, List<String> addresses, CellReadProjection projection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(addresses, "addresses must not be null");
     Objects.requireNonNull(projection, "projection must not be null");
@@ -21,7 +22,7 @@ final class ExcelSheetIntrospector {
       String topLeftAddress,
       int rowCount,
       int columnCount,
-      ExcelCellReadProjection projection) {
+      CellReadProjection projection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(projection, "projection must not be null");
     return sheet.cells().window(topLeftAddress, rowCount, columnCount, projection);

@@ -19,10 +19,13 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -95,59 +98,62 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(3, sheet.rows().lastIndex());
       assertEquals(5, sheet.columns().lastIndex());
 
-      ExcelCellSnapshot.TextSnapshot textSnapshot =
-          (ExcelCellSnapshot.TextSnapshot) sheet.cells().snapshotCell("A1");
+      CellReport.TextReport textSnapshot = (CellReport.TextReport) sheet.cells().snapshotCell("A1");
       assertEquals("TEXT", textSnapshot.type());
-      assertEquals("Name", textSnapshot.textValue());
-      assertNull(textSnapshot.richText());
+      assertEquals("Name", textSnapshot.value().orElseThrow().value());
+      assertTrue(textSnapshot.runs().isEmpty());
 
-      ExcelCellSnapshot.NumberSnapshot numberSnapshot =
-          (ExcelCellSnapshot.NumberSnapshot) sheet.cells().snapshotCell("B1");
+      CellReport.NumberReport numberSnapshot =
+          (CellReport.NumberReport) sheet.cells().snapshotCell("B1");
       assertEquals("NUMBER", numberSnapshot.type());
-      assertEquals(42.5, numberSnapshot.numberValue());
+      assertEquals(42.5, numberSnapshot.value().orElseThrow().value());
 
-      ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =
-          (ExcelCellSnapshot.BooleanSnapshot) sheet.cells().snapshotCell("C1");
+      CellReport.BooleanReport booleanSnapshot =
+          (CellReport.BooleanReport) sheet.cells().snapshotCell("C1");
       assertEquals("BOOLEAN", booleanSnapshot.type());
-      assertTrue(booleanSnapshot.booleanValue());
+      assertTrue(booleanSnapshot.value().orElseThrow().value());
 
-      ExcelCellSnapshot.BlankSnapshot blankSnapshot =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A2");
+      CellReport.BlankReport blankSnapshot =
+          (CellReport.BlankReport) sheet.cells().snapshotCell("A2");
       assertEquals("BLANK", blankSnapshot.type());
 
-      ExcelCellSnapshot.FormulaSnapshot stringFormulaSnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("F1");
+      CellReport.FormulaReport stringFormulaSnapshot =
+          (CellReport.FormulaReport) sheet.cells().snapshotCell("F1");
       assertEquals("FORMULA", stringFormulaSnapshot.type());
-      assertEquals("\"Hi\"", stringFormulaSnapshot.formula());
+      assertEquals("\"Hi\"", stringFormulaSnapshot.formula().orElseThrow());
       assertEquals(
           "Hi",
-          ((ExcelCellSnapshot.TextSnapshot) stringFormulaSnapshot.evaluation().orElseThrow())
-              .textValue());
+          ((dev.erst.gridgrind.core.model.value.CellValue.Text)
+                  stringFormulaSnapshot.value().orElseThrow())
+              .value());
 
-      ExcelCellSnapshot.FormulaSnapshot errorFormulaSnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("D2");
+      CellReport.FormulaReport errorFormulaSnapshot =
+          (CellReport.FormulaReport) sheet.cells().snapshotCell("D2");
       assertEquals("FORMULA", errorFormulaSnapshot.type());
       assertEquals(
           "#DIV/0!",
-          ((ExcelCellSnapshot.ErrorSnapshot) errorFormulaSnapshot.evaluation().orElseThrow())
-              .errorValue());
+          ((dev.erst.gridgrind.core.model.value.CellValue.ErrorValue)
+                  errorFormulaSnapshot.value().orElseThrow())
+              .value());
 
-      ExcelCellSnapshot.ErrorSnapshot errorSnapshot =
-          (ExcelCellSnapshot.ErrorSnapshot) sheet.cells().snapshotCell("A4");
+      CellReport.ErrorReport errorSnapshot =
+          (CellReport.ErrorReport) sheet.cells().snapshotCell("A4");
       assertEquals("ERROR", errorSnapshot.type());
-      assertEquals("#DIV/0!", errorSnapshot.errorValue());
-      ExcelCellSnapshot.FormulaSnapshot circularFormulaSnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("D3");
+      assertEquals("#DIV/0!", errorSnapshot.value().orElseThrow().value());
+      CellReport.FormulaReport circularFormulaSnapshot =
+          (CellReport.FormulaReport) sheet.cells().snapshotCell("D3");
       assertEquals(
           "#CIRCULAR_REF!",
-          ((ExcelCellSnapshot.ErrorSnapshot) circularFormulaSnapshot.evaluation().orElseThrow())
-              .errorValue());
+          ((dev.erst.gridgrind.core.model.value.CellValue.ErrorValue)
+                  circularFormulaSnapshot.value().orElseThrow())
+              .value());
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(4, 6);
       assertEquals(4, preview.size());
-      assertEquals("A1", preview.get(0).cells().get(0).address());
-      assertTrue(preview.get(1).cells().stream().noneMatch(cell -> "A2".equals(cell.address())));
-      assertEquals("Hi", preview.get(0).cells().get(5).displayValue());
+      assertEquals("A1", preview.get(0).cells().get(0).address().value());
+      assertTrue(
+          preview.get(1).cells().stream().noneMatch(cell -> "A2".equals(cell.address().value())));
+      assertEquals("Hi", preview.get(0).cells().get(5).displayValue().orElseThrow());
     }
   }
 
@@ -160,17 +166,18 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator).cells();
       cells.setCell("A1", new ResolvedFormula("1+1"));
 
-      ExcelCellReadProjection formulaOnly =
-          new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA));
-      ExcelCellReadProjection formatOnly =
-          new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMAT));
-      ExcelCellSnapshot.FormulaSnapshot formulaOnlySnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) cells.snapshotCell("A1", formulaOnly);
-      ExcelCellSnapshot.FormulaSnapshot formatOnlySnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) cells.snapshotCell("A1", formatOnly);
+      CellReadProjection formulaOnly =
+          new CellReadProjection(List.copyOf(Set.of(CellReadFacet.FORMULA)));
+      CellReadProjection formatOnly =
+          new CellReadProjection(List.copyOf(Set.of(CellReadFacet.FORMAT)));
+      CellReport.FormulaReport formulaOnlySnapshot =
+          (CellReport.FormulaReport) cells.snapshotCell("A1", formulaOnly);
+      CellReport.FormulaReport formatOnlySnapshot =
+          (CellReport.FormulaReport) cells.snapshotCell("A1", formatOnly);
 
-      assertTrue(formulaOnlySnapshot.evaluation().isEmpty());
-      assertTrue(formatOnlySnapshot.evaluation().isPresent());
+      assertTrue(formulaOnlySnapshot.value().isEmpty());
+      assertTrue(formatOnlySnapshot.displayValue().isPresent());
+      assertTrue(formatOnlySnapshot.value().isEmpty());
       assertEquals(1, cells.snapshotCells(List.of("A1")).size());
     }
   }
@@ -496,48 +503,65 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                   Optional.empty(),
                   Optional.empty()));
 
-      ExcelCellSnapshot styledValue = sheet.cells().snapshotCell("A1");
-      assertEquals("#,##0.00", styledValue.style().numberFormat());
-      assertTrue(styledValue.style().font().bold());
-      assertTrue(styledValue.style().alignment().wrapText());
+      CellReport styledValue = sheet.cells().snapshotCell("A1");
+      assertEquals("#,##0.00", styledValue.style().orElseThrow().numberFormat());
+      assertTrue(styledValue.style().orElseThrow().font().bold());
+      assertTrue(styledValue.style().orElseThrow().alignment().wrapText());
       assertEquals(
-          ExcelHorizontalAlignment.CENTER, styledValue.style().alignment().horizontalAlignment());
-      assertEquals(ExcelVerticalAlignment.TOP, styledValue.style().alignment().verticalAlignment());
-      assertEquals("Calibri", styledValue.style().font().fontName());
-      assertEquals(220, styledValue.style().font().fontHeight().twips());
-      assertFalse(styledValue.style().font().underline());
-      assertFalse(styledValue.style().font().strikeout());
-      assertEquals(CellColorReport.indexed(8), styledValue.style().font().fontColor());
-      assertNull(fillForegroundColor(styledValue.style().fill()));
-      assertEquals(ExcelBorderStyle.NONE, borderStyle(styledValue.style().border().top()));
-      assertEquals(ExcelBorderStyle.NONE, borderStyle(styledValue.style().border().right()));
-      assertEquals(ExcelBorderStyle.NONE, borderStyle(styledValue.style().border().bottom()));
-      assertEquals(ExcelBorderStyle.NONE, borderStyle(styledValue.style().border().left()));
+          ExcelHorizontalAlignment.CENTER,
+          styledValue.style().orElseThrow().alignment().horizontalAlignment());
+      assertEquals(
+          ExcelVerticalAlignment.TOP,
+          styledValue.style().orElseThrow().alignment().verticalAlignment());
+      assertEquals("Calibri", styledValue.style().orElseThrow().font().fontName());
+      assertEquals(220, styledValue.style().orElseThrow().font().fontHeight().twips());
+      assertFalse(styledValue.style().orElseThrow().font().underline());
+      assertFalse(styledValue.style().orElseThrow().font().strikeout());
+      assertEquals(
+          CellColorReport.indexed(8), styledValue.style().orElseThrow().font().fontColor());
+      assertNull(fillForegroundColor(styledValue.style().orElseThrow().fill()));
+      assertEquals(
+          ExcelBorderStyle.NONE, borderStyle(styledValue.style().orElseThrow().border().top()));
+      assertEquals(
+          ExcelBorderStyle.NONE, borderStyle(styledValue.style().orElseThrow().border().right()));
+      assertEquals(
+          ExcelBorderStyle.NONE, borderStyle(styledValue.style().orElseThrow().border().bottom()));
+      assertEquals(
+          ExcelBorderStyle.NONE, borderStyle(styledValue.style().orElseThrow().border().left()));
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(2, 3);
-      assertTrue(preview.getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
+      assertTrue(
+          preview.getFirst().cells().stream()
+              .anyMatch(cell -> "C1".equals(cell.address().value())));
       assertEquals("BLANK", sheet.cells().snapshotCell("C1").type());
-      assertTrue(sheet.cells().snapshotCell("C1").style().font().italic());
+      assertTrue(sheet.cells().snapshotCell("C1").style().orElseThrow().font().italic());
 
       sheet.cells().clearRange("A2:B2");
 
-      ExcelCellSnapshot cleared = sheet.cells().snapshotCell("A2");
+      CellReport cleared = sheet.cells().snapshotCell("A2");
       assertEquals("BLANK", cleared.type());
-      assertEquals("General", cleared.style().numberFormat());
-      assertFalse(cleared.style().font().bold());
+      assertEquals("General", cleared.style().orElseThrow().numberFormat());
+      assertFalse(cleared.style().orElseThrow().font().bold());
       assertEquals(
-          ExcelHorizontalAlignment.GENERAL, cleared.style().alignment().horizontalAlignment());
-      assertEquals(ExcelVerticalAlignment.BOTTOM, cleared.style().alignment().verticalAlignment());
-      assertEquals("Calibri", cleared.style().font().fontName());
-      assertEquals(220, cleared.style().font().fontHeight().twips());
-      assertEquals(CellColorReport.indexed(8), cleared.style().font().fontColor());
-      assertFalse(cleared.style().font().underline());
-      assertFalse(cleared.style().font().strikeout());
-      assertNull(fillForegroundColor(cleared.style().fill()));
-      assertEquals(ExcelBorderStyle.NONE, borderStyle(cleared.style().border().top()));
-      assertEquals(ExcelBorderStyle.NONE, borderStyle(cleared.style().border().right()));
-      assertEquals(ExcelBorderStyle.NONE, borderStyle(cleared.style().border().bottom()));
-      assertEquals(ExcelBorderStyle.NONE, borderStyle(cleared.style().border().left()));
+          ExcelHorizontalAlignment.GENERAL,
+          cleared.style().orElseThrow().alignment().horizontalAlignment());
+      assertEquals(
+          ExcelVerticalAlignment.BOTTOM,
+          cleared.style().orElseThrow().alignment().verticalAlignment());
+      assertEquals("Calibri", cleared.style().orElseThrow().font().fontName());
+      assertEquals(220, cleared.style().orElseThrow().font().fontHeight().twips());
+      assertEquals(CellColorReport.indexed(8), cleared.style().orElseThrow().font().fontColor());
+      assertFalse(cleared.style().orElseThrow().font().underline());
+      assertFalse(cleared.style().orElseThrow().font().strikeout());
+      assertNull(fillForegroundColor(cleared.style().orElseThrow().fill()));
+      assertEquals(
+          ExcelBorderStyle.NONE, borderStyle(cleared.style().orElseThrow().border().top()));
+      assertEquals(
+          ExcelBorderStyle.NONE, borderStyle(cleared.style().orElseThrow().border().right()));
+      assertEquals(
+          ExcelBorderStyle.NONE, borderStyle(cleared.style().orElseThrow().border().bottom()));
+      assertEquals(
+          ExcelBorderStyle.NONE, borderStyle(cleared.style().orElseThrow().border().left()));
 
       assertThrows(
           IllegalArgumentException.class,
@@ -642,23 +666,28 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty())),
                   Optional.empty()));
 
-      ExcelCellSnapshot styled = sheet.cells().snapshotCell("A1");
-      assertTrue(styled.style().font().bold());
-      assertFalse(styled.style().font().italic());
-      assertTrue(styled.style().alignment().wrapText());
+      CellReport styled = sheet.cells().snapshotCell("A1");
+      assertTrue(styled.style().orElseThrow().font().bold());
+      assertFalse(styled.style().orElseThrow().font().italic());
+      assertTrue(styled.style().orElseThrow().alignment().wrapText());
       assertEquals(
-          ExcelHorizontalAlignment.CENTER, styled.style().alignment().horizontalAlignment());
-      assertEquals(ExcelVerticalAlignment.TOP, styled.style().alignment().verticalAlignment());
-      assertEquals("Aptos", styled.style().font().fontName());
-      assertEquals(280, styled.style().font().fontHeight().twips());
-      assertEquals(rgb("#1F4E78"), styled.style().font().fontColor());
-      assertTrue(styled.style().font().underline());
-      assertTrue(styled.style().font().strikeout());
-      assertEquals(rgb("#FFF2CC"), fillForegroundColor(styled.style().fill()));
-      assertEquals(ExcelBorderStyle.THIN, borderStyle(styled.style().border().top()));
-      assertEquals(ExcelBorderStyle.DOUBLE, borderStyle(styled.style().border().right()));
-      assertEquals(ExcelBorderStyle.THIN, borderStyle(styled.style().border().bottom()));
-      assertEquals(ExcelBorderStyle.THIN, borderStyle(styled.style().border().left()));
+          ExcelHorizontalAlignment.CENTER,
+          styled.style().orElseThrow().alignment().horizontalAlignment());
+      assertEquals(
+          ExcelVerticalAlignment.TOP, styled.style().orElseThrow().alignment().verticalAlignment());
+      assertEquals("Aptos", styled.style().orElseThrow().font().fontName());
+      assertEquals(280, styled.style().orElseThrow().font().fontHeight().twips());
+      assertEquals(rgb("#1F4E78"), styled.style().orElseThrow().font().fontColor());
+      assertTrue(styled.style().orElseThrow().font().underline());
+      assertTrue(styled.style().orElseThrow().font().strikeout());
+      assertEquals(rgb("#FFF2CC"), fillForegroundColor(styled.style().orElseThrow().fill()));
+      assertEquals(ExcelBorderStyle.THIN, borderStyle(styled.style().orElseThrow().border().top()));
+      assertEquals(
+          ExcelBorderStyle.DOUBLE, borderStyle(styled.style().orElseThrow().border().right()));
+      assertEquals(
+          ExcelBorderStyle.THIN, borderStyle(styled.style().orElseThrow().border().bottom()));
+      assertEquals(
+          ExcelBorderStyle.THIN, borderStyle(styled.style().orElseThrow().border().left()));
     }
   }
 
@@ -673,34 +702,33 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       sheet.annotations().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
       sheet.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", true));
 
-      ExcelCellSnapshot.BlankSnapshot snapshot =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
+      CellReport.BlankReport snapshot = (CellReport.BlankReport) sheet.cells().snapshotCell("A1");
       assertEquals(
           new HyperlinkTarget.Url("https://example.com/report"),
-          snapshot.metadata().hyperlink().orElseThrow());
+          snapshot.hyperlink().orElseThrow());
       assertAll(
-          () -> assertEquals("Review", snapshot.metadata().comment().orElseThrow().text()),
-          () -> assertEquals("GridGrind", snapshot.metadata().comment().orElseThrow().author()),
-          () -> assertTrue(snapshot.metadata().comment().orElseThrow().visible()));
+          () -> assertEquals("Review", snapshot.comment().orElseThrow().text()),
+          () -> assertEquals("GridGrind", snapshot.comment().orElseThrow().author()),
+          () -> assertTrue(snapshot.comment().orElseThrow().visible()));
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(1, 1);
       assertEquals(1, preview.size());
-      assertEquals("A1", preview.getFirst().cells().getFirst().address());
+      assertEquals("A1", preview.getFirst().cells().getFirst().address().value());
 
       sheet.annotations().clearHyperlink("A1");
       sheet.annotations().clearComment("A1");
-      ExcelCellSnapshot.BlankSnapshot clearedMetadata =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
-      assertTrue(clearedMetadata.metadata().hyperlink().isEmpty());
-      assertTrue(clearedMetadata.metadata().comment().isEmpty());
+      CellReport.BlankReport clearedMetadata =
+          (CellReport.BlankReport) sheet.cells().snapshotCell("A1");
+      assertTrue(clearedMetadata.hyperlink().isEmpty());
+      assertTrue(clearedMetadata.comment().isEmpty());
 
       sheet.annotations().setHyperlink("A1", new HyperlinkTarget.Document("Budget!B4"));
       sheet.annotations().setComment("A1", new ResolvedComment("Again", "GridGrind", false));
       sheet.cells().clearRange("A1");
-      ExcelCellSnapshot.BlankSnapshot clearedRange =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
-      assertTrue(clearedRange.metadata().hyperlink().isEmpty());
-      assertTrue(clearedRange.metadata().comment().isEmpty());
+      CellReport.BlankReport clearedRange =
+          (CellReport.BlankReport) sheet.cells().snapshotCell("A1");
+      assertTrue(clearedRange.hyperlink().isEmpty());
+      assertTrue(clearedRange.comment().isEmpty());
 
       // clearHyperlink and clearComment are no-ops on cells that do not physically exist
       assertDoesNotThrow(() -> sheet.annotations().clearHyperlink("B2"));
@@ -770,7 +798,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       sheet.cells().setCell("B2", new CellValue.Text("present"));
       assertDoesNotThrow(() -> sheet.cells().clearRange("B2:C2"));
       // B2 must now be blank after the clear
-      ExcelCellSnapshot b2 = sheet.cells().snapshotCell("B2");
+      CellReport b2 = sheet.cells().snapshotCell("B2");
       assertEquals("BLANK", b2.type());
     }
   }
@@ -817,10 +845,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
 
       WorkbookSheetResult.Window window = sheet.cells().window("A1", 3, 3);
-      assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
-      assertEquals("B2", window.rows().get(1).cells().get(1).address());
-      assertEquals("Center", window.rows().get(1).cells().get(1).displayValue());
-      assertEquals("C3", window.rows().get(2).cells().get(2).address());
+      assertEquals("A1", window.rows().getFirst().cells().getFirst().address().value());
+      assertEquals("B2", window.rows().get(1).cells().get(1).address().value());
+      assertEquals("Center", window.rows().get(1).cells().get(1).displayValue().orElseThrow());
+      assertEquals("C3", window.rows().get(2).cells().get(2).address().value());
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 0, 1));
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1, 0));
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1048577, 1));
@@ -899,11 +927,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           .annotations()
           .setHyperlink("F18", new HyperlinkTarget.Email("Summary.Total@example.com"));
 
-      ExcelCellSnapshot.BlankSnapshot snapshot =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("F18");
+      CellReport.BlankReport snapshot = (CellReport.BlankReport) sheet.cells().snapshotCell("F18");
       assertEquals(
           new HyperlinkTarget.Email("Summary.Total@example.com"),
-          snapshot.metadata().hyperlink().orElseThrow());
+          snapshot.hyperlink().orElseThrow());
     }
   }
 }

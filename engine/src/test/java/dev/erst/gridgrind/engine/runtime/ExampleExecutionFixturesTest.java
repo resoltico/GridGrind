@@ -43,6 +43,10 @@ class ExampleExecutionFixturesTest {
       observed.setCellValue(1.0);
       observed.getCTCell().setV("NaN");
       row.createCell(1).setCellValue(1.0);
+      var formula = row.createCell(2);
+      formula.setCellFormula("A1");
+      formula.getCTCell().setT(org.openxmlformats.schemas.spreadsheetml.x2006.main.STCellType.N);
+      formula.getCTCell().setV("NaN");
       try (OutputStream output = Files.newOutputStream(source)) {
         workbook.write(output);
       }
@@ -52,14 +56,14 @@ class ExampleExecutionFixturesTest {
             """
         {"protocolVersion":1,"source":{"type":"EXISTING","path":"observed-number.xlsx"},
          "persistence":{"type":"NONE"},"steps":[{"stepId":"numbers",
-         "target":{"type":"CELL_BY_ADDRESSES","sheetName":"Data","addresses":["A1","B1"]},
+         "target":{"type":"CELL_BY_ADDRESSES","sheetName":"Data","addresses":["A1","B1","C1"]},
          "query":{"type":"GET_CELLS"}}]}
         """);
+    var executed =
+        new DefaultGridGrindRequestExecutor()
+            .execute(request, bindingsForExample(tempDir, request));
     var result =
-        assertInstanceOf(
-            WorkbookResult.Success.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(request, bindingsForExample(tempDir, request)));
+        assertInstanceOf(WorkbookResult.Success.class, executed, () -> executed.toString());
     var cells =
         assertInstanceOf(
                 dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult.class,
@@ -78,6 +82,16 @@ class ExampleExecutionFixturesTest {
             .value()
             .orElseThrow()
             .value());
+    var formulaValue =
+        assertInstanceOf(
+                dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class, cells.get(2))
+            .value()
+            .orElseThrow();
+    assertTrue(
+        Double.isNaN(
+            assertInstanceOf(
+                    dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class, formulaValue)
+                .value()));
     assertEquals(
         result,
         GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(result)));

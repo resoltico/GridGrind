@@ -1249,28 +1249,19 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     assertEquals(
         new HyperlinkTarget.Url("https://example.com/report"),
-        XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").hyperlink().orElseThrow());
+        XlsxRoundTrip.cellHyperlink(workbookPath, "Budget", "A1").orElseThrow());
     assertAll(
         () ->
             assertEquals(
                 "Review",
-                XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
-                    .comment()
-                    .orElseThrow()
-                    .text()),
+                XlsxRoundTrip.cellComment(workbookPath, "Budget", "A1").orElseThrow().text()),
         () ->
             assertEquals(
                 "GridGrind",
-                XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
-                    .comment()
-                    .orElseThrow()
-                    .author()),
+                XlsxRoundTrip.cellComment(workbookPath, "Budget", "A1").orElseThrow().author()),
         () ->
             assertTrue(
-                XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
-                    .comment()
-                    .orElseThrow()
-                    .visible()));
+                XlsxRoundTrip.cellComment(workbookPath, "Budget", "A1").orElseThrow().visible()));
     assertEquals(2, XlsxRoundTrip.namedRanges(workbookPath).size());
   }
 

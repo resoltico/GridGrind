@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
@@ -20,7 +21,6 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -100,9 +100,8 @@ class ArrayFormulaSourcesTest {
     try (var workbook = ExecutionContextFixtureSupport.openWorkbook(output)) {
       var cell =
           assertInstanceOf(
-              ExcelCellSnapshot.FormulaSnapshot.class,
-              workbook.sheet("Budget").cells().snapshotCell("B1"));
-      assertEquals("SUM(1,2)", cell.formula());
+              CellReport.FormulaReport.class, workbook.sheet("Budget").cells().snapshotCell("B1"));
+      assertEquals("SUM(1,2)", cell.formula().orElseThrow());
     }
   }
 }

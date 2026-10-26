@@ -1,22 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
-import dev.erst.gridgrind.excel.ExcelCellReadFacet;
-import dev.erst.gridgrind.excel.ExcelCellReadProjection;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import java.util.Set;
 
 /** Shared cell-value matching for semantic table-row key resolution. */
 final class SemanticSelectorKeyMatchSupport {
-  private static final ExcelCellReadProjection KEY_MATCH_PROJECTION =
-      new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.VALUE, ExcelCellReadFacet.FORMULA));
-
   private SemanticSelectorKeyMatchSupport() {}
 
   static boolean matchesKeyCell(
-      ExcelCellSnapshot snapshot, CellValueSpec expectedValue, boolean date1904) {
-    dev.erst.gridgrind.core.model.value.CellReport report =
-        InspectionResultCellReportSupport.toCellReport(snapshot, KEY_MATCH_PROJECTION, date1904);
+      CellReport snapshot, CellValueSpec expectedValue, boolean date1904) {
+    var report = snapshot;
     return switch (expectedValue) {
       case CellValueSpec.Blank _ ->
           report instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport;

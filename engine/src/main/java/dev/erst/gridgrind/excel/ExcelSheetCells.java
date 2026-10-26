@@ -3,7 +3,9 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import java.util.List;
 import java.util.Objects;
 
@@ -86,25 +88,24 @@ public final class ExcelSheetCells {
   }
 
   /** Captures a formatted, typed snapshot of a single cell, returning blank for unwritten cells. */
-  public ExcelCellSnapshot snapshotCell(String address) {
+  public CellReport snapshotCell(String address) {
     return readSupport.snapshotCell(address);
   }
 
   /** Captures one cell snapshot while evaluating formulas only when the projection needs it. */
-  public ExcelCellSnapshot snapshotCell(String address, ExcelCellReadProjection projection) {
+  public CellReport snapshotCell(String address, CellReadProjection projection) {
     return readSupport.snapshotCell(address, projection);
   }
 
   /** Captures exact snapshots for the provided ordered A1 addresses. */
-  public List<ExcelCellSnapshot> snapshotCells(List<String> addresses) {
+  public List<CellReport> snapshotCells(List<String> addresses) {
     return readSupport.snapshotCells(addresses);
   }
 
   /**
    * Captures ordered cell snapshots while evaluating formulas only when the projection needs it.
    */
-  public List<ExcelCellSnapshot> snapshotCells(
-      List<String> addresses, ExcelCellReadProjection projection) {
+  public List<CellReport> snapshotCells(List<String> addresses, CellReadProjection projection) {
     return readSupport.snapshotCells(addresses, projection);
   }
 
@@ -122,7 +123,7 @@ public final class ExcelSheetCells {
    * Captures one rectangular window while evaluating formulas only when the projection needs it.
    */
   public WorkbookSheetResult.Window window(
-      String topLeftAddress, int rowCount, int columnCount, ExcelCellReadProjection projection) {
+      String topLeftAddress, int rowCount, int columnCount, CellReadProjection projection) {
     return readSupport.window(topLeftAddress, rowCount, columnCount, projection);
   }
 

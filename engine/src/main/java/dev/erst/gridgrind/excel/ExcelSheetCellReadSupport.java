@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,20 +29,16 @@ final class ExcelSheetCellReadSupport {
   private final WorkbookStyleRegistry styleRegistry;
   private final ExcelFormulaRuntime formulaRuntime;
   private final DataFormatter dataFormatter;
-  private final ExcelSheetAnnotationSupport annotationSupport;
 
   ExcelSheetCellReadSupport(
       Sheet sheet,
       WorkbookStyleRegistry styleRegistry,
       ExcelFormulaRuntime formulaRuntime,
-      DataFormatter dataFormatter,
-      ExcelSheetAnnotationSupport annotationSupport) {
+      DataFormatter dataFormatter) {
     this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
     this.styleRegistry = Objects.requireNonNull(styleRegistry, "styleRegistry must not be null");
     this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
     this.dataFormatter = Objects.requireNonNull(dataFormatter, "dataFormatter must not be null");
-    this.annotationSupport =
-        Objects.requireNonNull(annotationSupport, "annotationSupport must not be null");
   }
 
   String text(String address) {
@@ -94,11 +93,11 @@ final class ExcelSheetCellReadSupport {
     return cell.getCellFormula();
   }
 
-  ExcelCellSnapshot snapshotCell(String address) {
-    return snapshotCell(address, ExcelCellReadProjection.defaults());
+  CellReport snapshotCell(String address) {
+    return snapshotCell(address, new CellReadProjection(java.util.List.of(CellReadFacet.values())));
   }
 
-  ExcelCellSnapshot snapshotCell(String address, ExcelCellReadProjection projection) {
+  CellReport snapshotCell(String address, CellReadProjection projection) {
     ExcelSheet.requireNonBlank(address, "address");
     Objects.requireNonNull(projection, "projection must not be null");
     CellReference cellReference = parseCellReference(address);
@@ -106,15 +105,15 @@ final class ExcelSheetCellReadSupport {
     return snapshotCellOrBlank(address, cellReference.getRow(), cellReference.getCol(), projection);
   }
 
-  List<ExcelCellSnapshot> snapshotCells(List<String> addresses) {
-    return snapshotCells(addresses, ExcelCellReadProjection.defaults());
+  List<CellReport> snapshotCells(List<String> addresses) {
+    return snapshotCells(
+        addresses, new CellReadProjection(java.util.List.of(CellReadFacet.values())));
   }
 
-  List<ExcelCellSnapshot> snapshotCells(
-      List<String> addresses, ExcelCellReadProjection projection) {
+  List<CellReport> snapshotCells(List<String> addresses, CellReadProjection projection) {
     Objects.requireNonNull(addresses, "addresses must not be null");
     Objects.requireNonNull(projection, "projection must not be null");
-    List<ExcelCellSnapshot> cells = new ArrayList<>(addresses.size());
+    List<CellReport> cells = new ArrayList<>(addresses.size());
     for (String address : List.copyOf(addresses)) {
       ExcelSheet.requireNonBlank(address, "address");
       cells.add(snapshotCell(address, projection));
@@ -139,12 +138,16 @@ final class ExcelSheetCellReadSupport {
   }
 
   WorkbookSheetResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
-    return window(topLeftAddress, rowCount, columnCount, ExcelCellReadProjection.defaults());
+    return window(
+        topLeftAddress,
+        rowCount,
+        columnCount,
+        new CellReadProjection(java.util.List.of(CellReadFacet.values())));
   }
 
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
   WorkbookSheetResult.Window window(
-      String topLeftAddress, int rowCount, int columnCount, ExcelCellReadProjection projection) {
+      String topLeftAddress, int rowCount, int columnCount, CellReadProjection projection) {
     ExcelSheet.requireNonBlank(topLeftAddress, "topLeftAddress");
     Objects.requireNonNull(projection, "projection must not be null");
     if (rowCount <= 0) {
@@ -171,7 +174,7 @@ final class ExcelSheetCellReadSupport {
     List<WorkbookSheetResult.WindowRow> rows = new ArrayList<>(rowCount);
     for (int rowOffset = 0; rowOffset < rowCount; rowOffset++) {
       int rowIndex = topLeft.getRow() + rowOffset;
-      List<ExcelCellSnapshot> cells = new ArrayList<>(columnCount);
+      List<CellReport> cells = new ArrayList<>(columnCount);
       for (int columnOffset = 0; columnOffset < columnCount; columnOffset++) {
         int columnIndex = topLeft.getCol() + columnOffset;
         String address = new CellReference(rowIndex, columnIndex).formatAsString();
@@ -228,9 +231,9 @@ final class ExcelSheetCellReadSupport {
     return cell;
   }
 
-  private List<ExcelCellSnapshot> previewRow(int rowIndex, int maxColumns) {
+  private List<CellReport> previewRow(int rowIndex, int maxColumns) {
     Row row = sheet.getRow(rowIndex);
-    List<ExcelCellSnapshot> cells = new ArrayList<>();
+    List<CellReport> cells = new ArrayList<>();
     if (row != null) {
       for (int columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
         Cell cell = row.getCell(columnIndex);
@@ -239,167 +242,216 @@ final class ExcelSheetCellReadSupport {
               snapshot(
                   new CellReference(rowIndex, columnIndex).formatAsString(),
                   cell,
-                  ExcelCellReadProjection.defaults()));
+                  CellReadProjection.of(CellReadFacet.VALUE, CellReadFacet.FORMAT)));
         }
       }
     }
     return List.copyOf(cells);
   }
 
-  private ExcelCellSnapshot snapshotCellOrBlank(
-      String address, int rowIndex, int columnIndex, ExcelCellReadProjection projection) {
+  private CellReport snapshotCellOrBlank(
+      String address, int rowIndex, int columnIndex, CellReadProjection projection) {
     Row row = sheet.getRow(rowIndex);
-    if (row == null) {
-      return blankSnapshot(address);
-    }
-    Cell cell = row.getCell(columnIndex);
-    if (cell == null) {
-      return blankSnapshot(address);
-    }
+    Cell cell = row == null ? null : row.getCell(columnIndex);
+    if (cell == null) return blankReport(address, projection);
     return snapshot(address, cell, projection);
   }
 
-  private ExcelCellSnapshot snapshot(
-      String address, Cell cell, ExcelCellReadProjection projection) {
-    CellType declaredType = cell.getCellType();
-    String formulaExpression = declaredType == CellType.FORMULA ? cell.getCellFormula() : null;
-    String displayValue = displayValue(address, cell, declaredType, formulaExpression, projection);
-    CellStyleReport style = styleRegistry.snapshot(cell);
-    ExcelCellMetadataSnapshot metadata = annotationSupport.metadata(cell);
-
-    if (declaredType == CellType.FORMULA) {
-      return formulaSnapshot(address, cell, displayValue, style, metadata, projection);
-    }
-
-    return plainSnapshot(address, cell, declaredType, displayValue, style, metadata);
-  }
-
-  private String displayValue(
-      String address,
-      Cell cell,
-      CellType declaredType,
-      @Nullable String formulaExpression,
-      ExcelCellReadProjection projection) {
+  private CellReport snapshot(String address, Cell cell, CellReadProjection projection) {
+    var coordinate = new dev.erst.gridgrind.core.vocabulary.CellAddress(address);
+    CellType declared = cell.getCellType();
+    String formula = declared == CellType.FORMULA ? cell.getCellFormula() : null;
+    String display;
     try {
-      return declaredType == CellType.FORMULA
-          ? requiresFormulaEvaluation(projection)
-              ? formulaRuntime.displayValue(dataFormatter, cell)
-              : Objects.requireNonNull(formulaExpression, "formulaExpression must not be null")
-          : dataFormatter.formatCellValue(cell);
-    } catch (RuntimeException exception) {
-      throw FormulaExceptions.wrap(
-          formulaRuntime, sheet.getSheetName(), address, formulaExpression, exception);
+      display =
+          !projection.includes(CellReadFacet.FORMAT)
+              ? ""
+              : declared == CellType.FORMULA
+                  ? requiresFormulaEvaluation(projection)
+                      ? formulaRuntime.displayValue(dataFormatter, cell)
+                      : cell.getCellFormula()
+                  : dataFormatter.formatCellValue(cell);
+    } catch (RuntimeException failure) {
+      throw FormulaExceptions.wrap(formulaRuntime, sheet.getSheetName(), address, formula, failure);
     }
-  }
-
-  private ExcelCellSnapshot.FormulaSnapshot formulaSnapshot(
-      String address,
-      Cell cell,
-      String displayValue,
-      CellStyleReport style,
-      ExcelCellMetadataSnapshot metadata,
-      ExcelCellReadProjection projection) {
-    String formula = cell.getCellFormula();
-    java.util.Optional<ExcelCellSnapshot> evaluation =
-        requiresFormulaEvaluation(projection)
-            ? java.util.Optional.of(
-                evaluatedFormulaSnapshot(
-                    address,
-                    displayValue,
-                    style,
-                    metadata,
-                    evaluateFormulaCell(address, formula, cell)))
-            : java.util.Optional.empty();
-    return new ExcelCellSnapshot.FormulaSnapshot(
-        address, displayValue, style, metadata, formula, evaluation);
-  }
-
-  private static boolean requiresFormulaEvaluation(ExcelCellReadProjection projection) {
-    return projection.includes(ExcelCellReadFacet.VALUE)
-        || projection.includes(ExcelCellReadFacet.FORMAT);
-  }
-
-  private CellValue evaluateFormulaCell(String address, String formula, Cell cell) {
-    try {
-      return formulaRuntime.evaluate(cell);
-    } catch (RuntimeException exception) {
-      throw FormulaExceptions.wrap(
-          formulaRuntime, sheet.getSheetName(), address, formula, exception);
+    CellStyleReport effectiveStyle = styleRegistry.snapshot(cell);
+    var format =
+        projection.includes(CellReadFacet.FORMAT)
+            ? java.util.Optional.of(display)
+            : java.util.Optional.<String>empty();
+    var style =
+        projection.includes(CellReadFacet.STYLE)
+            ? java.util.Optional.of(effectiveStyle)
+            : java.util.Optional.<CellStyleReport>empty();
+    var hyperlink =
+        projection.includes(CellReadFacet.HYPERLINK)
+            ? ExcelSheetHyperlinkSupport.hyperlink(cell)
+            : java.util.Optional.<dev.erst.gridgrind.core.model.value.HyperlinkTarget>empty();
+    var comment =
+        projection.includes(CellReadFacet.COMMENT)
+            ? ExcelSheetCommentSupport.commentSnapshot(cell)
+            : java.util.Optional.<dev.erst.gridgrind.core.model.drawing.CommentReport>empty();
+    if (declared == CellType.FORMULA) {
+      org.apache.poi.ss.usermodel.CellValue evaluated = null;
+      if (requiresFormulaEvaluation(projection)) {
+        try {
+          evaluated = formulaRuntime.evaluate(cell);
+        } catch (RuntimeException failure) {
+          throw FormulaExceptions.wrap(
+              formulaRuntime, sheet.getSheetName(), address, formula, failure);
+        }
+      }
+      var value =
+          projection.includes(CellReadFacet.VALUE)
+              ? java.util.Optional.of(evaluatedValue(evaluated))
+              : java.util.Optional.<dev.erst.gridgrind.core.model.value.CellValue>empty();
+      var temporal =
+          projection.includes(CellReadFacet.TEMPORAL)
+                  && value.orElse(null)
+                      instanceof dev.erst.gridgrind.core.model.value.CellValue.NumberValue number
+              ? java.util.Optional.of(temporal(number.value(), effectiveStyle.numberFormat()))
+              : java.util.Optional.<dev.erst.gridgrind.core.model.value.CellTemporalReport>empty();
+      return new CellReport.FormulaReport(
+          coordinate,
+          format,
+          style,
+          hyperlink,
+          comment,
+          projection.includes(CellReadFacet.FORMULA)
+              ? java.util.Optional.of(cell.getCellFormula())
+              : java.util.Optional.empty(),
+          value,
+          java.util.Optional.empty(),
+          temporal);
     }
-  }
-
-  private ExcelCellSnapshot evaluatedFormulaSnapshot(
-      String address,
-      String displayValue,
-      CellStyleReport style,
-      ExcelCellMetadataSnapshot metadata,
-      CellValue evaluatedCell) {
-    CellType evaluatedType = evaluatedCell != null ? evaluatedCell.getCellType() : CellType.BLANK;
-    return switch (evaluatedType) {
+    return switch (declared) {
       case STRING ->
-          new ExcelCellSnapshot.TextSnapshot(
-              address, displayValue, style, metadata, evaluatedCell.getStringValue(), null);
-      case NUMERIC ->
-          new ExcelCellSnapshot.NumberSnapshot(
-              address, displayValue, style, metadata, evaluatedCell.getNumberValue());
-      case BOOLEAN ->
-          new ExcelCellSnapshot.BooleanSnapshot(
-              address, displayValue, style, metadata, evaluatedCell.getBooleanValue());
-      case ERROR ->
-          new ExcelCellSnapshot.ErrorSnapshot(
-              address,
-              displayValue,
+          new CellReport.TextReport(
+              coordinate,
+              format,
               style,
-              metadata,
-              ExcelCellErrorLiteralSupport.toReportedWireValue(
-                  FormulaError.forInt(evaluatedCell.getErrorValue())));
-      case BLANK, _NONE, FORMULA ->
-          new ExcelCellSnapshot.BlankSnapshot(address, displayValue, style, metadata);
-    };
-  }
-
-  private ExcelCellSnapshot plainSnapshot(
-      String address,
-      Cell cell,
-      CellType declaredType,
-      String displayValue,
-      CellStyleReport style,
-      ExcelCellMetadataSnapshot metadata) {
-    return switch (declaredType) {
-      case STRING ->
-          new ExcelCellSnapshot.TextSnapshot(
-              address,
-              displayValue,
-              style,
-              metadata,
-              cell.getStringCellValue(),
-              ExcelRichTextSupport.snapshot(
+              hyperlink,
+              comment,
+              projected(
+                  projection,
+                  new dev.erst.gridgrind.core.model.value.CellValue.Text(
+                      cell.getStringCellValue())),
+              projection.includes(CellReadFacet.RICH_TEXT_RUNS)
+                  ? ExcelRichTextSupport.snapshot(
                       xssfSheet().getWorkbook(),
                       (XSSFRichTextString) cell.getRichStringCellValue(),
-                      style.font())
-                  .orElse(null));
+                      effectiveStyle.font())
+                  : java.util.Optional.empty());
       case NUMERIC ->
-          new ExcelCellSnapshot.NumberSnapshot(
-              address, displayValue, style, metadata, cell.getNumericCellValue());
-      case BOOLEAN ->
-          new ExcelCellSnapshot.BooleanSnapshot(
-              address, displayValue, style, metadata, cell.getBooleanCellValue());
-      case ERROR ->
-          new ExcelCellSnapshot.ErrorSnapshot(
-              address,
-              displayValue,
+          new CellReport.NumberReport(
+              coordinate,
+              format,
               style,
-              metadata,
-              ExcelCellErrorLiteralSupport.toReportedWireValue(
-                  FormulaError.forInt(cell.getErrorCellValue())));
+              hyperlink,
+              comment,
+              projected(
+                  projection,
+                  new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(
+                      cell.getNumericCellValue())),
+              projection.includes(CellReadFacet.TEMPORAL)
+                  ? java.util.Optional.of(
+                      temporal(cell.getNumericCellValue(), effectiveStyle.numberFormat()))
+                  : java.util.Optional.empty());
+      case BOOLEAN ->
+          new CellReport.BooleanReport(
+              coordinate,
+              format,
+              style,
+              hyperlink,
+              comment,
+              projected(
+                  projection,
+                  new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(
+                      cell.getBooleanCellValue())));
+      case ERROR ->
+          new CellReport.ErrorReport(
+              coordinate,
+              format,
+              style,
+              hyperlink,
+              comment,
+              projected(
+                  projection,
+                  new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue(
+                      ExcelCellErrorLiteralSupport.toReportedWireValue(
+                          FormulaError.forInt(cell.getErrorCellValue())))));
       case BLANK, _NONE, FORMULA ->
-          new ExcelCellSnapshot.BlankSnapshot(address, displayValue, style, metadata);
+          new CellReport.BlankReport(
+              coordinate,
+              format,
+              style,
+              hyperlink,
+              comment,
+              projected(projection, new dev.erst.gridgrind.core.model.value.CellValue.Blank()));
     };
   }
 
-  private ExcelCellSnapshot blankSnapshot(String address) {
-    return new ExcelCellSnapshot.BlankSnapshot(
-        address, "", styleRegistry.defaultSnapshot(), ExcelCellMetadataSnapshot.empty());
+  private static boolean requiresFormulaEvaluation(CellReadProjection projection) {
+    return projection.includes(CellReadFacet.VALUE) || projection.includes(CellReadFacet.FORMAT);
+  }
+
+  private static <T> java.util.Optional<T> projected(CellReadProjection projection, T value) {
+    return projection.includes(CellReadFacet.VALUE)
+        ? java.util.Optional.of(value)
+        : java.util.Optional.empty();
+  }
+
+  private static dev.erst.gridgrind.core.model.value.CellValue evaluatedValue(
+      @Nullable CellValue value) {
+    if (value == null) return new dev.erst.gridgrind.core.model.value.CellValue.Blank();
+    return switch (value.getCellType()) {
+      case STRING -> new dev.erst.gridgrind.core.model.value.CellValue.Text(value.getStringValue());
+      case NUMERIC ->
+          new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(value.getNumberValue());
+      case BOOLEAN ->
+          new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(value.getBooleanValue());
+      case ERROR ->
+          new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue(
+              ExcelCellErrorLiteralSupport.toReportedWireValue(
+                  FormulaError.forInt(value.getErrorValue())));
+      default -> new dev.erst.gridgrind.core.model.value.CellValue.Blank();
+    };
+  }
+
+  private dev.erst.gridgrind.core.model.value.CellTemporalReport temporal(
+      double number, String numberFormat) {
+    var kind = ExcelTemporalFormatSupport.observedKind(numberFormat);
+    if (kind.isEmpty()) return dev.erst.gridgrind.core.model.value.CellTemporalReport.notDate();
+    var value =
+        org.apache.poi.ss.usermodel.DateUtil.getLocalDateTime(
+            number, xssfSheet().getWorkbook().isDate1904());
+    return switch (kind.orElseThrow()) {
+      case DATE ->
+          dev.erst.gridgrind.core.model.value.CellTemporalReport.temporal(
+              dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE,
+              value.toLocalDate().toString());
+      case TIME ->
+          dev.erst.gridgrind.core.model.value.CellTemporalReport.temporal(
+              dev.erst.gridgrind.core.model.value.CellTemporalKind.TIME,
+              value.toLocalTime().toString());
+      case DATE_TIME ->
+          dev.erst.gridgrind.core.model.value.CellTemporalReport.temporal(
+              dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME, value.toString());
+    };
+  }
+
+  private CellReport blankReport(String address, CellReadProjection projection) {
+    return new CellReport.BlankReport(
+        new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
+        projection.includes(CellReadFacet.FORMAT)
+            ? java.util.Optional.of("")
+            : java.util.Optional.empty(),
+        projection.includes(CellReadFacet.STYLE)
+            ? java.util.Optional.of(styleRegistry.defaultSnapshot())
+            : java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        projected(projection, new dev.erst.gridgrind.core.model.value.CellValue.Blank()));
   }
 
   private XSSFSheet xssfSheet() {

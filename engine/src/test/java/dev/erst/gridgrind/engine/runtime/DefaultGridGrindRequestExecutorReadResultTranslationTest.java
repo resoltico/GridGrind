@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
@@ -32,8 +33,6 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -43,9 +42,14 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     extends DefaultGridGrindRequestExecutorTestSupport {
   @Test
   void convertsReadResultsIntoProtocolReadResults() {
-    ExcelCellSnapshot.BlankSnapshot blank =
-        new ExcelCellSnapshot.BlankSnapshot(
-            "A1", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
+    CellReport.BlankReport blank =
+        new CellReport.BlankReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            Optional.ofNullable(""),
+            Optional.ofNullable(defaultStyle()),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Blank()));
 
     InspectionResult workbookSummary =
         InspectionResultConverter.toReadResult(

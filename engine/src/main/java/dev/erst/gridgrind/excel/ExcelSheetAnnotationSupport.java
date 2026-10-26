@@ -42,10 +42,6 @@ final class ExcelSheetAnnotationSupport {
     commentSupport.clearComment(address);
   }
 
-  ExcelCellMetadataSnapshot metadata(Cell cell) {
-    return commentSupport.metadata(cell);
-  }
-
   List<WorkbookSheetResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
     return hyperlinkSupport.hyperlinks(selection);
   }

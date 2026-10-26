@@ -555,10 +555,10 @@ class ExcelDrawingControllerTest {
       ExcelSheet commentOnly = workbook.getOrCreateSheet("Comments");
       commentOnly.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
 
-      assertTrue(commentOnly.cells().snapshotCell("A1").metadata().comment().isPresent());
+      assertTrue(commentOnly.cells().snapshotCell("A1").comment().isPresent());
 
       commentOnly.annotations().clearComment("A1");
-      assertFalse(commentOnly.cells().snapshotCell("A1").metadata().comment().isPresent());
+      assertFalse(commentOnly.cells().snapshotCell("A1").comment().isPresent());
 
       ExcelSheet withDrawing = workbook.getOrCreateSheet("Ops");
       withDrawing

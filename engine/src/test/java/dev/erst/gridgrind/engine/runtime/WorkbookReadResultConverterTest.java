@@ -16,7 +16,6 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
-import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
 import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
@@ -57,6 +56,7 @@ import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
@@ -200,18 +200,6 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     assertEquals("custom-xml-export", exported.stepId().value());
     assertEquals("UTF-8", exported.export().encoding());
     assertTrue(exported.export().xml().contains("<NOME>Grid</NOME>"));
-  }
-
-  @Test
-  void convertsPlainCommentFactsDirectly() {
-    assertTrue(InspectionResultCellReportSupport.toCommentReport((ResolvedComment) null).isEmpty());
-    CommentReport plainComment =
-        InspectionResultCellReportSupport.toCommentReport(
-                new ResolvedComment("Review", "GridGrind", false))
-            .orElseThrow();
-    assertEquals("Review", plainComment.text());
-    assertEquals("GridGrind", plainComment.author());
-    assertEquals(java.util.Optional.empty(), plainComment.runs());
   }
 
   @Test
@@ -869,18 +857,17 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         Optional.empty());
   }
 
-  private static ExcelCellSnapshot advancedCell() {
+  private static CellReport advancedCell() {
     List<RichTextRunReport> richText =
         List.copyOf(List.of(new RichTextRunReport("Styled", advancedFont())));
-    return new ExcelCellSnapshot.TextSnapshot(
-        "C3",
-        "Styled",
-        advancedStyle(),
-        ExcelCellMetadataSnapshot.of(
-            Optional.of(new HyperlinkTarget.Url("https://example.com/tasks/42")),
-            Optional.of(richComment())),
-        "Styled",
-        richText);
+    return new CellReport.TextReport(
+        new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+        Optional.ofNullable("Styled"),
+        Optional.ofNullable(advancedStyle()),
+        Optional.of(new HyperlinkTarget.Url("https://example.com/tasks/42")),
+        Optional.of(richComment()),
+        Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Text("Styled")),
+        Optional.ofNullable(richText));
   }
 
   private static CommentReport richComment() {

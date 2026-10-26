@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.CellAssertion;
@@ -20,7 +21,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheet;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -178,7 +178,14 @@ final class SemanticSelectorResolver {
         rowIndex <= table.dataLastRowIndex();
         rowIndex++) {
       String address = a1Address(rowIndex, table.firstColumnIndex() + keyColumnOffset);
-      ExcelCellSnapshot snapshot = sheet.cells().snapshotCell(address);
+      CellReport snapshot =
+          sheet
+              .cells()
+              .snapshotCell(
+                  address,
+                  dev.erst.gridgrind.core.plan.CellReadProjection.of(
+                      dev.erst.gridgrind.core.plan.CellReadFacet.VALUE,
+                      dev.erst.gridgrind.core.plan.CellReadFacet.FORMULA));
       if (matchesKeyCell(
           snapshot, selector.expectedValue(), workbook.xssfWorkbook().isDate1904())) {
         if (matchedRowIndex != null) {
@@ -205,7 +212,7 @@ final class SemanticSelectorResolver {
   }
 
   static boolean matchesKeyCell(
-      ExcelCellSnapshot snapshot, CellValueSpec expectedValue, boolean date1904) {
+      CellReport snapshot, CellValueSpec expectedValue, boolean date1904) {
     return SemanticSelectorKeyMatchSupport.matchesKeyCell(snapshot, expectedValue, date1904);
   }
 

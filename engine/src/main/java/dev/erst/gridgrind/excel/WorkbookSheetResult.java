@@ -8,7 +8,9 @@ import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -50,8 +52,8 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   record CellsResult(
       StepId stepId,
       String sheetName,
-      List<ExcelCellSnapshot> cells,
-      ExcelCellReadProjection projection,
+      List<CellReport> cells,
+      CellReadProjection projection,
       boolean date1904)
       implements WorkbookSheetResult {
     public CellsResult {
@@ -67,7 +69,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   record WindowResult(
       StepId stepId,
       Window window,
-      ExcelCellReadProjection projection,
+      CellReadProjection projection,
       boolean includeBlanks,
       boolean date1904)
       implements WorkbookSheetResult {
@@ -197,7 +199,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** One row inside a rectangular window of cell snapshots. */
-  record WindowRow(int rowIndex, List<ExcelCellSnapshot> cells) {
+  record WindowRow(int rowIndex, List<CellReport> cells) {
     public WindowRow {
       if (rowIndex < 0) {
         throw new IllegalArgumentException(

@@ -60,8 +60,7 @@ public final class ExcelSheet {
     ExcelSheetCellMutationSupport mutationSupport =
         new ExcelSheetCellMutationSupport(sheet, styleRegistry, formulaRuntime, drawingController);
     ExcelSheetCellReadSupport readSupport =
-        new ExcelSheetCellReadSupport(
-            sheet, styleRegistry, formulaRuntime, dataFormatter, annotationSupport);
+        new ExcelSheetCellReadSupport(sheet, styleRegistry, formulaRuntime, dataFormatter);
     this.cells = new ExcelSheetCells(this, mutationSupport, readSupport);
     this.annotations = new ExcelSheetAnnotations(this, annotationSupport);
     this.drawings = new ExcelSheetDrawings(this, drawingSupport);

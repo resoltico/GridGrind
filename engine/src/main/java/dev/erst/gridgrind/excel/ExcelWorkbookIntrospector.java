@@ -3,6 +3,9 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -317,7 +320,7 @@ final class ExcelWorkbookIntrospector {
       String topLeftAddress,
       int rowCount,
       int columnCount,
-      ExcelCellReadProjection projection,
+      CellReadProjection projection,
       boolean date1904) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelSheet sheet = workbook.sheet(sheetName);
@@ -331,37 +334,39 @@ final class ExcelWorkbookIntrospector {
     int topLeftColumn = new CellReference(topLeftAddress).getCol();
     boolean headerRowIsBlank =
         window.rows().getFirst().cells().stream()
-            .allMatch(ExcelCellSnapshot.BlankSnapshot.class::isInstance);
+            .allMatch(CellReport.BlankReport.class::isInstance);
     int dataRowCount = headerRowIsBlank ? 0 : Math.max(0, rowCount - 1);
 
     List<WorkbookSurfaceResult.SchemaColumn> columns = new ArrayList<>(columnCount);
     for (int columnOffset = 0; columnOffset < columnCount; columnOffset++) {
-      ExcelCellSnapshot headerCell = window.rows().getFirst().cells().get(columnOffset);
+      CellReport headerCell = window.rows().getFirst().cells().get(columnOffset);
       Map<String, Integer> typeCounts = new LinkedHashMap<>();
       int populatedCellCount = 0;
       int blankCellCount = 0;
       for (int rowIndex = 1; rowIndex < window.rows().size(); rowIndex++) {
-        ExcelCellSnapshot cell = window.rows().get(rowIndex).cells().get(columnOffset);
+        CellReport cell = window.rows().get(rowIndex).cells().get(columnOffset);
         switch (cell) {
-          case ExcelCellSnapshot.BlankSnapshot _ -> blankCellCount++;
-          case ExcelCellSnapshot.FormulaSnapshot f -> {
+          case CellReport.BlankReport _ -> blankCellCount++;
+          case CellReport.FormulaReport f -> {
             populatedCellCount++;
             typeCounts.merge(
-                schemaObservedType(f.evaluation().orElseThrow(), projection), 1, Integer::sum);
+                schemaObservedValue(f.value().orElseThrow(), f.temporal(), projection),
+                1,
+                Integer::sum);
           }
-          case ExcelCellSnapshot.TextSnapshot _ -> {
+          case CellReport.TextReport _ -> {
             populatedCellCount++;
             typeCounts.merge(schemaObservedType(cell, projection), 1, Integer::sum);
           }
-          case ExcelCellSnapshot.NumberSnapshot _ -> {
+          case CellReport.NumberReport _ -> {
             populatedCellCount++;
             typeCounts.merge(schemaObservedType(cell, projection), 1, Integer::sum);
           }
-          case ExcelCellSnapshot.BooleanSnapshot _ -> {
+          case CellReport.BooleanReport _ -> {
             populatedCellCount++;
             typeCounts.merge(schemaObservedType(cell, projection), 1, Integer::sum);
           }
-          case ExcelCellSnapshot.ErrorSnapshot _ -> {
+          case CellReport.ErrorReport _ -> {
             populatedCellCount++;
             typeCounts.merge(schemaObservedType(cell, projection), 1, Integer::sum);
           }
@@ -379,7 +384,7 @@ final class ExcelWorkbookIntrospector {
               new CellReference(
                       new CellReference(topLeftAddress).getRow(), topLeftColumn + columnOffset)
                   .formatAsString(),
-              headerCell.displayValue(),
+              headerCell.displayValue().orElse(""),
               populatedCellCount,
               blankCellCount,
               List.copyOf(observedTypes),
@@ -454,46 +459,59 @@ final class ExcelWorkbookIntrospector {
     return tie ? null : dominantType;
   }
 
-  private static String schemaObservedType(
-      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
+  private static String schemaObservedType(CellReport snapshot, CellReadProjection projection) {
     return switch (snapshot) {
-      case ExcelCellSnapshot.TextSnapshot _ -> "TEXT";
-      case ExcelCellSnapshot.NumberSnapshot number ->
-          projection.includes(ExcelCellReadFacet.TEMPORAL)
+      case CellReport.TextReport _ -> "TEXT";
+      case CellReport.NumberReport number ->
+          projection.includes(CellReadFacet.TEMPORAL)
               ? temporalObservedType(number).orElse("NUMBER")
               : "NUMBER";
-      case ExcelCellSnapshot.BooleanSnapshot _ -> "BOOLEAN";
-      case ExcelCellSnapshot.ErrorSnapshot _ -> "ERROR";
-      case ExcelCellSnapshot.BlankSnapshot _ -> "BLANK";
-      case ExcelCellSnapshot.FormulaSnapshot _ ->
+      case CellReport.BooleanReport _ -> "BOOLEAN";
+      case CellReport.ErrorReport _ -> "ERROR";
+      case CellReport.BlankReport _ -> "BLANK";
+      case CellReport.FormulaReport _ ->
           throw new IllegalArgumentException(
               "Schema observed types must not receive FORMULA directly");
     };
   }
 
-  private static Optional<String> temporalObservedType(ExcelCellSnapshot.NumberSnapshot snapshot) {
-    return ExcelTemporalFormatSupport.observedKind(snapshot.style().numberFormat())
-        .map(
-            observedKind ->
-                switch (observedKind) {
-                  case DATE -> "DATE";
-                  case TIME -> "TIME";
-                  case DATE_TIME -> "DATE_TIME";
-                });
+  private static String schemaObservedValue(
+      dev.erst.gridgrind.core.model.value.CellValue value,
+      Optional<dev.erst.gridgrind.core.model.value.CellTemporalReport> temporal,
+      CellReadProjection projection) {
+    return switch (value) {
+      case dev.erst.gridgrind.core.model.value.CellValue.Blank _ -> "BLANK";
+      case dev.erst.gridgrind.core.model.value.CellValue.Text _ -> "TEXT";
+      case dev.erst.gridgrind.core.model.value.CellValue.BooleanValue _ -> "BOOLEAN";
+      case dev.erst.gridgrind.core.model.value.CellValue.ErrorValue _ -> "ERROR";
+      case dev.erst.gridgrind.core.model.value.CellValue.NumberValue _ ->
+          projection.includes(CellReadFacet.TEMPORAL)
+              ? temporal
+                  .flatMap(dev.erst.gridgrind.core.model.value.CellTemporalReport::kind)
+                  .map(Enum::name)
+                  .orElse("NUMBER")
+              : "NUMBER";
+    };
   }
 
-  private static ExcelCellReadProjection projectionIncludingFormulaEvaluation(
-      ExcelCellReadProjection projection) {
-    if (projection.includes(ExcelCellReadFacet.VALUE)) {
-      return projection;
-    }
-    java.util.Set<ExcelCellReadFacet> facets = java.util.EnumSet.noneOf(ExcelCellReadFacet.class);
-    for (ExcelCellReadFacet facet : ExcelCellReadFacet.values()) {
+  private static Optional<String> temporalObservedType(CellReport.NumberReport snapshot) {
+    return snapshot
+        .temporal()
+        .flatMap(dev.erst.gridgrind.core.model.value.CellTemporalReport::kind)
+        .map(Enum::name);
+  }
+
+  private static CellReadProjection projectionIncludingFormulaEvaluation(
+      CellReadProjection projection) {
+
+    java.util.Set<CellReadFacet> facets = java.util.EnumSet.noneOf(CellReadFacet.class);
+    for (CellReadFacet facet : CellReadFacet.values()) {
       if (projection.includes(facet)) {
         facets.add(facet);
       }
     }
-    facets.add(ExcelCellReadFacet.VALUE);
-    return new ExcelCellReadProjection(facets);
+    facets.add(CellReadFacet.VALUE);
+    facets.add(CellReadFacet.FORMAT);
+    return new CellReadProjection(List.copyOf(facets));
   }
 }

@@ -419,12 +419,7 @@ class SemanticSelectorResolverTest {
     assertEquals(expectedAddress, assertionTarget.address().value());
 
     CellStyleReport expectedStyle =
-        InspectionResultCellReportSupport.toCellReport(
-                workbook.sheet(expectedSheet).cells().snapshotCell(expectedAddress),
-                DefaultGridGrindRequestExecutorTestSupport.projection(),
-                false)
-            .style()
-            .orElseThrow();
+        workbook.sheet(expectedSheet).cells().snapshotCell(expectedAddress).style().orElseThrow();
     assertEquals(
         expectedAddress,
         assertInstanceOf(

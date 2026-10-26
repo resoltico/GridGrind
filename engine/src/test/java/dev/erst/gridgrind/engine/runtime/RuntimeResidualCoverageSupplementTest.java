@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
@@ -23,7 +24,6 @@ import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.nio.charset.StandardCharsets;
@@ -153,7 +153,7 @@ class RuntimeResidualCoverageSupplementTest {
   void semanticSelectorResolverTreatsUnsupportedKeyCellKindsAsNonMatches() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Ada"));
-      ExcelCellSnapshot snapshot = workbook.sheet("Budget").cells().snapshotCell("A1");
+      CellReport snapshot = workbook.sheet("Budget").cells().snapshotCell("A1");
 
       boolean matched =
           SemanticSelectorResolver.matchesKeyCell(

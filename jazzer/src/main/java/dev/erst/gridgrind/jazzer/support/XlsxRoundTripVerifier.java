@@ -166,7 +166,7 @@ public final class XlsxRoundTripVerifier {
   static CellStyleReport defaultStyleSnapshot() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Default");
-      return workbook.sheet("Default").cells().snapshotCell("A1").style();
+      return workbook.sheet("Default").cells().snapshotCell("A1").style().orElseThrow();
     }
   }
 

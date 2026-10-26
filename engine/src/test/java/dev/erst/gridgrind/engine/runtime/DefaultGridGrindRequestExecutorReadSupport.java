@@ -23,6 +23,8 @@ import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -109,8 +111,8 @@ class DefaultGridGrindRequestExecutorReadSupport {
     return cast(WindowReport.Dense.class, window);
   }
 
-  static ExcelCellReadProjection projection() {
-    return new ExcelCellReadProjection(EnumSet.allOf(ExcelCellReadFacet.class));
+  static CellReadProjection projection() {
+    return new CellReadProjection(List.copyOf(EnumSet.allOf(CellReadFacet.class)));
   }
 
   static SheetIntrospectionQuery.GetCells allFacetCellsQuery() {
@@ -126,7 +128,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
   }
 
   static dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult excelCellsResult(
-      String stepId, String sheetName, List<ExcelCellSnapshot> cells) {
+      String stepId, String sheetName, List<CellReport> cells) {
     return new dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult(
         new StepId(stepId), sheetName, cells, projection(), false);
   }

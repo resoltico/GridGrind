@@ -548,7 +548,8 @@ class ExcelResidualHelperCoverageTest {
               .getFirst()
               .cells()
               .getFirst()
-              .displayValue());
+              .displayValue()
+              .orElseThrow());
     }
 
     String originalSystemTemp = System.getProperty("java.io.tmpdir");

@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -36,8 +37,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
@@ -46,6 +45,7 @@ import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused current-API coverage for executor-owned helper and conversion seams. */
@@ -213,12 +213,16 @@ class DefaultGridGrindRequestExecutorCoverageTest
                     "step-02-cells",
                     "Budget",
                     List.of(
-                        new ExcelCellSnapshot.NumberSnapshot(
-                            "B4",
-                            "61",
-                            defaultStyle(),
-                            ExcelCellMetadataSnapshot.empty(),
-                            61.0d)))));
+                        new CellReport.NumberReport(
+                            new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+                            Optional.ofNullable("61"),
+                            Optional.ofNullable(defaultStyle()),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.of(
+                                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(
+                                    61.0d)),
+                            Optional.empty())))));
 
     assertTrue(protection.protection().structureLocked());
     assertEquals("step-02-cells", cells.stepId().value());

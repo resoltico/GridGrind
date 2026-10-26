@@ -1,13 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
-import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
@@ -21,20 +17,14 @@ import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellTemporalKind;
 import dev.erst.gridgrind.core.model.value.CellTemporalReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
-import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
-import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellReadFacet;
-import dev.erst.gridgrind.excel.ExcelCellReadProjection;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -42,154 +32,54 @@ import org.junit.jupiter.api.Test;
  */
 class ReadbackSupportCoverageTest {
   @Test
-  void cellReportConversionProjectsFacetsAcrossAllSnapshotKinds() {
-    ExcelCellReadProjection allFacets =
-        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.values()));
-    ExcelCellReadProjection valueOnly = ExcelCellReadProjection.defaults();
-    ExcelCellReadProjection formulaOnly =
-        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA));
-    List<RichTextRunReport> richText =
-        List.copyOf(List.of(new RichTextRunReport("Ada", fontSnapshot())));
-    ExcelCellSnapshot.TextSnapshot textSnapshot =
-        new ExcelCellSnapshot.TextSnapshot(
-            "A1", "Ada", style("General"), metadata(), "Ada", richText);
-    ExcelCellSnapshot.NumberSnapshot dateSnapshot =
-        new ExcelCellSnapshot.NumberSnapshot(
-            "A2", "7/1/2025", style("m/d/yyyy"), metadata(), 45839.0d);
-    ExcelCellSnapshot.NumberSnapshot dateTimeSnapshot =
-        new ExcelCellSnapshot.NumberSnapshot(
-            "A8", "7/1/2025 12:00", style("m/d/yyyy h:mm"), metadata(), 45839.5d);
-    ExcelCellSnapshot.NumberSnapshot timeSnapshot =
-        new ExcelCellSnapshot.NumberSnapshot("A9", "12:00", style("h:mm"), metadata(), 0.5d);
-    ExcelCellSnapshot.NumberSnapshot plainNumberSnapshot =
-        new ExcelCellSnapshot.NumberSnapshot("A3", "42", style("0.00"), metadata(), 42.0d);
-    ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =
-        new ExcelCellSnapshot.BooleanSnapshot("A4", "TRUE", style("General"), metadata(), true);
-    ExcelCellSnapshot.ErrorSnapshot errorSnapshot =
-        new ExcelCellSnapshot.ErrorSnapshot("A5", "#REF!", style("General"), metadata(), "#REF!");
-    ExcelCellSnapshot.BlankSnapshot blankSnapshot =
-        new ExcelCellSnapshot.BlankSnapshot("A6", "", style("General"), metadata());
-    ExcelCellSnapshot.FormulaSnapshot formulaSnapshot =
-        new ExcelCellSnapshot.FormulaSnapshot(
-            "A7",
-            "Ada",
-            style("General"),
-            metadata(),
-            "CONCAT(\"A\",\"da\")",
-            java.util.Optional.of(textSnapshot));
-
-    CellReport.TextReport textReport =
-        assertInstanceOf(
-            CellReport.TextReport.class,
-            InspectionResultCellReportSupport.toCellReport(textSnapshot, allFacets, false));
-    CellReport.NumberReport dateReport =
-        assertInstanceOf(
-            CellReport.NumberReport.class,
-            InspectionResultCellReportSupport.toCellReport(dateSnapshot, allFacets, false));
-    CellReport.NumberReport dateTimeReport =
-        assertInstanceOf(
-            CellReport.NumberReport.class,
-            InspectionResultCellReportSupport.toCellReport(dateTimeSnapshot, allFacets, false));
-    CellReport.NumberReport timeReport =
-        assertInstanceOf(
-            CellReport.NumberReport.class,
-            InspectionResultCellReportSupport.toCellReport(timeSnapshot, allFacets, false));
-    CellReport.NumberReport plainNumberReport =
-        assertInstanceOf(
-            CellReport.NumberReport.class,
-            InspectionResultCellReportSupport.toCellReport(plainNumberSnapshot, allFacets, false));
-    CellReport.TextReport textValueOnly =
-        assertInstanceOf(
-            CellReport.TextReport.class,
-            InspectionResultCellReportSupport.toCellReport(textSnapshot, valueOnly, false));
-    CellReport.NumberReport dateValueOnly =
-        assertInstanceOf(
-            CellReport.NumberReport.class,
-            InspectionResultCellReportSupport.toCellReport(dateSnapshot, valueOnly, false));
-    CellReport.FormulaReport formulaValueOnly =
-        assertInstanceOf(
-            CellReport.FormulaReport.class,
-            InspectionResultCellReportSupport.toCellReport(formulaSnapshot, valueOnly, false));
-    CellReport.FormulaReport formulaFormulaOnly =
-        assertInstanceOf(
-            CellReport.FormulaReport.class,
-            InspectionResultCellReportSupport.toCellReport(formulaSnapshot, formulaOnly, false));
-
-    assertEquals(
-        Optional.of("Ada"),
-        textReport.value().map(dev.erst.gridgrind.core.model.value.CellValue.Text::value));
-    assertEquals("Ada", textReport.runs().orElseThrow().getFirst().text());
-    assertEquals(HyperlinkTarget.Url.class, textReport.hyperlink().orElseThrow().getClass());
-    assertEquals("Review", textReport.comment().orElseThrow().text());
-    assertEquals(Optional.of("Ada"), textReport.displayValue());
-    assertEquals(CellTemporalKind.DATE, dateReport.temporal().orElseThrow().kind().orElseThrow());
-    assertEquals(
-        CellTemporalKind.DATE_TIME, dateTimeReport.temporal().orElseThrow().kind().orElseThrow());
-    assertEquals(CellTemporalKind.TIME, timeReport.temporal().orElseThrow().kind().orElseThrow());
-    assertEquals("12:00", timeReport.temporal().orElseThrow().isoValue().orElseThrow());
-    assertFalse(plainNumberReport.temporal().orElseThrow().isDate());
-    assertEquals(Optional.empty(), textValueOnly.displayValue());
-    assertEquals(Optional.empty(), textValueOnly.style());
-    assertEquals(Optional.empty(), textValueOnly.runs());
-    assertEquals(Optional.empty(), dateValueOnly.displayValue());
-    assertEquals(Optional.empty(), dateValueOnly.style());
-    assertEquals(Optional.empty(), dateValueOnly.temporal());
-    assertEquals(Optional.empty(), formulaValueOnly.formula());
-    assertEquals(Optional.empty(), formulaValueOnly.style());
-    assertEquals(Optional.of("CONCAT(\"A\",\"da\")"), formulaFormulaOnly.formula());
-    assertEquals(Optional.empty(), formulaFormulaOnly.value());
-
-    assertInstanceOf(
-        CellReport.BooleanReport.class,
-        InspectionResultCellReportSupport.toCellReport(booleanSnapshot, valueOnly, false));
-    assertInstanceOf(
-        CellReport.ErrorReport.class,
-        InspectionResultCellReportSupport.toCellReport(errorSnapshot, valueOnly, false));
-    assertInstanceOf(
-        CellReport.BlankReport.class,
-        InspectionResultCellReportSupport.toCellReport(blankSnapshot, valueOnly, false));
-
-    assertInstanceOf(
-        CellValue.Blank.class, InspectionResultCellReportSupport.toCellValue(blankSnapshot));
-    assertInstanceOf(
-        CellValue.Text.class, InspectionResultCellReportSupport.toCellValue(textSnapshot));
-    assertInstanceOf(
-        CellValue.NumberValue.class, InspectionResultCellReportSupport.toCellValue(dateSnapshot));
-    assertInstanceOf(
-        CellValue.BooleanValue.class,
-        InspectionResultCellReportSupport.toCellValue(booleanSnapshot));
-    assertInstanceOf(
-        CellValue.ErrorValue.class, InspectionResultCellReportSupport.toCellValue(errorSnapshot));
-
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> InspectionResultCellReportSupport.toCellValue(formulaSnapshot));
-    assertEquals("Formula evaluations must not recursively remain FORMULA", exception.getMessage());
-  }
-
-  @Test
   void semanticSelectorKeyMatchingHandlesSupportedScalarKinds() {
-    ExcelCellSnapshot.TextSnapshot textSnapshot =
-        new ExcelCellSnapshot.TextSnapshot(
-            "A1", "Ada", style("General"), ExcelCellMetadataSnapshot.empty(), "Ada", null);
-    ExcelCellSnapshot.NumberSnapshot numberSnapshot =
-        new ExcelCellSnapshot.NumberSnapshot(
-            "A2", "42", style("0.00"), ExcelCellMetadataSnapshot.empty(), 42.0d);
-    ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =
-        new ExcelCellSnapshot.BooleanSnapshot(
-            "A3", "TRUE", style("General"), ExcelCellMetadataSnapshot.empty(), true);
-    ExcelCellSnapshot.FormulaSnapshot formulaSnapshot =
-        new ExcelCellSnapshot.FormulaSnapshot(
-            "A4",
-            "42",
-            style("General"),
-            ExcelCellMetadataSnapshot.empty(),
-            "SUM(A1:A2)",
-            java.util.Optional.of(numberSnapshot));
-    ExcelCellSnapshot.BlankSnapshot blankSnapshot =
-        new ExcelCellSnapshot.BlankSnapshot(
-            "A5", "", style("General"), ExcelCellMetadataSnapshot.empty());
+    CellReport.TextReport textSnapshot =
+        new CellReport.TextReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            Optional.ofNullable("Ada"),
+            Optional.ofNullable(style("General")),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
+            Optional.ofNullable(null));
+    CellReport.NumberReport numberSnapshot =
+        new CellReport.NumberReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            Optional.ofNullable("42"),
+            Optional.ofNullable(style("0.00")),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(42.0d)),
+            Optional.empty());
+    CellReport.BooleanReport booleanSnapshot =
+        new CellReport.BooleanReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            Optional.ofNullable("TRUE"),
+            Optional.ofNullable(style("General")),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(true)));
+    CellReport.FormulaReport formulaSnapshot =
+        new CellReport.FormulaReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+            Optional.ofNullable("42"),
+            Optional.ofNullable(style("General")),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.ofNullable("SUM(A1:A2)"),
+            java.util.Optional.of(numberSnapshot)
+                .flatMap(CellReport::value)
+                .map(value -> (dev.erst.gridgrind.core.model.value.CellValue) value),
+            Optional.empty(),
+            Optional.empty());
+    CellReport.BlankReport blankSnapshot =
+        new CellReport.BlankReport(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A5"),
+            Optional.ofNullable(""),
+            Optional.ofNullable(style("General")),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Blank()));
 
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
@@ -230,34 +120,6 @@ class ReadbackSupportCoverageTest {
                 new dev.erst.gridgrind.core.model.value.CellValueSpec.Text(
                     TextSourceSpec.standardInput()),
                 false));
-  }
-
-  @Test
-  void formulaSnapshotRejectsFormulaEvaluations() {
-    ExcelCellSnapshot.NumberSnapshot evaluatedNumber =
-        new ExcelCellSnapshot.NumberSnapshot(
-            "A2", "42", style("General"), ExcelCellMetadataSnapshot.empty(), 42.0d);
-    ExcelCellSnapshot.FormulaSnapshot nestedFormula =
-        new ExcelCellSnapshot.FormulaSnapshot(
-            "A2",
-            "42",
-            style("General"),
-            ExcelCellMetadataSnapshot.empty(),
-            "SUM(A1:A1)",
-            java.util.Optional.of(evaluatedNumber));
-
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                new ExcelCellSnapshot.FormulaSnapshot(
-                    "A1",
-                    "42",
-                    style("General"),
-                    ExcelCellMetadataSnapshot.empty(),
-                    "SUM(A1:A2)",
-                    java.util.Optional.of(nestedFormula)));
-    assertEquals("formula evaluation must not itself be FORMULA", exception.getMessage());
   }
 
   @Test
@@ -360,93 +222,6 @@ class ReadbackSupportCoverageTest {
             booleanFormula, new CellValue.ErrorValue("#REF!")));
     assertFalse(
         AssertionValueEvaluator.matchesCellValue(missingEvaluation, new CellValue.Text("Ada")));
-  }
-
-  @Test
-  void scalarMetadataAndBlankValuesFollowTheirProjectionMasks() {
-    ExcelCellReadProjection allFacets =
-        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.values()));
-    ExcelCellReadProjection valueOnly = ExcelCellReadProjection.defaults();
-    ExcelCellReadProjection formulaOnly =
-        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA));
-    var textSnapshot =
-        new ExcelCellSnapshot.TextSnapshot(
-            "A1",
-            "Ada",
-            style("General"),
-            metadata(),
-            "Ada",
-            List.copyOf(List.of(new RichTextRunReport("Ada", fontSnapshot()))));
-    var formulaSnapshot =
-        new ExcelCellSnapshot.FormulaSnapshot(
-            "A7", "Ada", style("General"), metadata(), "A1", Optional.of(textSnapshot));
-    var blankSnapshot = new ExcelCellSnapshot.BlankSnapshot("A6", "", style("General"), metadata());
-    var dateSnapshot =
-        new ExcelCellSnapshot.NumberSnapshot(
-            "A2", "7/1/2025", style("m/d/yyyy"), metadata(), 45839.0);
-    var formulaValueOnly =
-        assertInstanceOf(
-            CellReport.FormulaReport.class,
-            InspectionResultCellReportSupport.toCellReport(formulaSnapshot, valueOnly, false));
-    var formulaFormulaOnly =
-        assertInstanceOf(
-            CellReport.FormulaReport.class,
-            InspectionResultCellReportSupport.toCellReport(formulaSnapshot, formulaOnly, false));
-    CellReport.FormulaReport formulaAll =
-        assertInstanceOf(
-            CellReport.FormulaReport.class,
-            InspectionResultCellReportSupport.toCellReport(formulaSnapshot, allFacets, false));
-    assertEquals(new CellValue.Text("Ada"), formulaAll.value().orElseThrow());
-    assertEquals("Ada", formulaAll.runs().orElseThrow().getFirst().text());
-    assertEquals(Optional.empty(), formulaValueOnly.runs());
-    assertEquals(Optional.empty(), formulaFormulaOnly.runs());
-    CellReport.BlankReport blankValue =
-        assertInstanceOf(
-            CellReport.BlankReport.class,
-            InspectionResultCellReportSupport.toCellReport(blankSnapshot, valueOnly, false));
-    assertEquals(Optional.of(new CellValue.Blank()), blankValue.value());
-    assertEquals(
-        Optional.empty(),
-        assertInstanceOf(
-                CellReport.BlankReport.class,
-                InspectionResultCellReportSupport.toCellReport(blankSnapshot, formulaOnly, false))
-            .value());
-    ExcelCellReadProjection temporalOnly =
-        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.TEMPORAL));
-    CellReport.NumberReport dateWithoutValue =
-        assertInstanceOf(
-            CellReport.NumberReport.class,
-            InspectionResultCellReportSupport.toCellReport(dateSnapshot, temporalOnly, false));
-    assertEquals(Optional.empty(), dateWithoutValue.value());
-    assertEquals(
-        CellTemporalKind.DATE, dateWithoutValue.temporal().orElseThrow().kind().orElseThrow());
-    var numericFormula =
-        new ExcelCellSnapshot.FormulaSnapshot(
-            "A7", "7/1/2025", style("m/d/yyyy"), metadata(), "A2", Optional.of(dateSnapshot));
-    CellReport.FormulaReport numericFormulaAll =
-        assertInstanceOf(
-            CellReport.FormulaReport.class,
-            InspectionResultCellReportSupport.toCellReport(numericFormula, allFacets, false));
-    assertEquals(new CellValue.NumberValue(45839), numericFormulaAll.value().orElseThrow());
-    assertEquals(Optional.of("2025-07-01"), numericFormulaAll.temporal().orElseThrow().isoValue());
-    assertEquals(
-        Optional.empty(),
-        assertInstanceOf(
-                CellReport.FormulaReport.class,
-                InspectionResultCellReportSupport.toCellReport(numericFormula, temporalOnly, false))
-            .temporal());
-  }
-
-  private static ExcelCellMetadataSnapshot metadata() {
-    return ExcelCellMetadataSnapshot.of(
-        Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
-        Optional.of(
-            new CommentReport(
-                "Review",
-                "Alice",
-                true,
-                Optional.of(List.copyOf(List.of(new RichTextRunReport("Review", fontSnapshot())))),
-                Optional.of(new CommentAnchorReport(0, 0, 1, 2)))));
   }
 
   private static CellStyleReport style(String numberFormat) {

@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
@@ -102,22 +103,24 @@ class ExcelWorkbookTest {
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Budget");
 
-      ExcelCellSnapshot.FormulaSnapshot totalSnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("B4");
+      CellReport.FormulaReport totalSnapshot =
+          (CellReport.FormulaReport) sheet.cells().snapshotCell("B4");
       assertEquals("FORMULA", totalSnapshot.type());
       assertEquals("FORMULA", totalSnapshot.type());
-      assertEquals("SUM(B2:B3)", totalSnapshot.formula());
+      assertEquals("SUM(B2:B3)", totalSnapshot.formula().orElseThrow());
       assertEquals(
           61.0,
-          ((ExcelCellSnapshot.NumberSnapshot) totalSnapshot.evaluation().orElseThrow())
-              .numberValue());
+          ((dev.erst.gridgrind.core.model.value.CellValue.NumberValue)
+                  totalSnapshot.value().orElseThrow())
+              .value());
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(4, 2);
       assertEquals(4, preview.size());
-      assertEquals("A1", preview.get(0).cells().get(0).address());
+      assertEquals("A1", preview.get(0).cells().get(0).address().value());
       assertEquals(
-          "Hosting", ((ExcelCellSnapshot.TextSnapshot) preview.get(1).cells().get(0)).textValue());
-      assertEquals("61", preview.get(3).cells().get(1).displayValue());
+          "Hosting",
+          ((CellReport.TextReport) preview.get(1).cells().get(0)).value().orElseThrow().value());
+      assertEquals("61", preview.get(3).cells().get(1).displayValue().orElseThrow());
     }
   }
 
@@ -507,20 +510,12 @@ class ExcelWorkbookTest {
               .sheet("Replica")
               .cells()
               .snapshotCell("A2")
-              .metadata()
               .hyperlink()
               .map(link -> assertInstanceOf(HyperlinkTarget.Url.class, link).target())
               .orElseThrow());
       assertEquals(
           "Review",
-          workbook
-              .sheet("Replica")
-              .cells()
-              .snapshotCell("A2")
-              .metadata()
-              .comment()
-              .orElseThrow()
-              .text());
+          workbook.sheet("Replica").cells().snapshotCell("A2").comment().orElseThrow().text());
       assertEquals(
           List.of("A1:B1"),
           workbook.sheet("Replica").layout().mergedRegions().stream()
@@ -689,9 +684,9 @@ class ExcelWorkbookTest {
 
       workbook.formulas().evaluateAll();
 
-      ExcelCellSnapshot.FormulaSnapshot snapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) workbook.sheet("Budget").cells().snapshotCell("A1");
-      assertEquals("2", snapshot.displayValue());
+      CellReport.FormulaReport snapshot =
+          (CellReport.FormulaReport) workbook.sheet("Budget").cells().snapshotCell("A1");
+      assertEquals("2", snapshot.displayValue().orElseThrow());
     }
   }
 
@@ -702,12 +697,11 @@ class ExcelWorkbookTest {
 
       workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(0.0d));
 
-      ExcelCellSnapshot.NumberSnapshot snapshot =
+      CellReport.NumberReport snapshot =
           assertInstanceOf(
-              ExcelCellSnapshot.NumberSnapshot.class,
-              workbook.sheet("Budget").cells().snapshotCell("A1"));
+              CellReport.NumberReport.class, workbook.sheet("Budget").cells().snapshotCell("A1"));
       assertEquals("NUMBER", snapshot.type());
-      assertEquals(0.0d, snapshot.numberValue());
+      assertEquals(0.0d, snapshot.value().orElseThrow().value());
     }
   }
 
@@ -724,16 +718,14 @@ class ExcelWorkbookTest {
               "A1:B1",
               List.of(List.of(new CellValue.NumberValue(0.0d), new CellValue.NumberValue(5.0d))));
 
-      ExcelCellSnapshot.NumberSnapshot first =
+      CellReport.NumberReport first =
           assertInstanceOf(
-              ExcelCellSnapshot.NumberSnapshot.class,
-              workbook.sheet("Budget").cells().snapshotCell("A1"));
-      ExcelCellSnapshot.NumberSnapshot second =
+              CellReport.NumberReport.class, workbook.sheet("Budget").cells().snapshotCell("A1"));
+      CellReport.NumberReport second =
           assertInstanceOf(
-              ExcelCellSnapshot.NumberSnapshot.class,
-              workbook.sheet("Budget").cells().snapshotCell("B1"));
-      assertEquals(0.0d, first.numberValue());
-      assertEquals(5.0d, second.numberValue());
+              CellReport.NumberReport.class, workbook.sheet("Budget").cells().snapshotCell("B1"));
+      assertEquals(0.0d, first.value().orElseThrow().value());
+      assertEquals(5.0d, second.value().orElseThrow().value());
     }
   }
 
@@ -1159,7 +1151,7 @@ class ExcelWorkbookTest {
     try (ExcelWorkbook reopenedWorkbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       CellStyleReport linearStyle =
-          reopenedWorkbook.sheet("Budget").cells().snapshotCell("A1").style();
+          reopenedWorkbook.sheet("Budget").cells().snapshotCell("A1").style().orElseThrow();
 
       CellGradientFillReport gradient = fillGradient(linearStyle.fill());
       assertEquals("LINEAR", gradientType(gradient));
@@ -1211,13 +1203,13 @@ class ExcelWorkbookTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1");
-    assertEquals(
-        new HyperlinkTarget.Url("https://example.com/report"), metadata.hyperlink().orElseThrow());
+    var hyperlink = XlsxRoundTrip.cellHyperlink(workbookPath, "Budget", "A1");
+    var comment = XlsxRoundTrip.cellComment(workbookPath, "Budget", "A1");
+    assertEquals(new HyperlinkTarget.Url("https://example.com/report"), hyperlink.orElseThrow());
     assertAll(
-        () -> assertEquals("Review", metadata.comment().orElseThrow().text()),
-        () -> assertEquals("GridGrind", metadata.comment().orElseThrow().author()),
-        () -> assertTrue(metadata.comment().orElseThrow().visible()));
+        () -> assertEquals("Review", comment.orElseThrow().text()),
+        () -> assertEquals("GridGrind", comment.orElseThrow().author()),
+        () -> assertTrue(comment.orElseThrow().visible()));
     List<NamedRangeReport> namedRanges = XlsxRoundTrip.namedRanges(workbookPath);
     assertEquals(2, namedRanges.size());
     assertTrue(
@@ -1277,9 +1269,8 @@ class ExcelWorkbookTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "C", "F18");
-    assertEquals(
-        new HyperlinkTarget.Email("Summary.Total@example.com"), metadata.hyperlink().orElseThrow());
+    var hyperlink = XlsxRoundTrip.cellHyperlink(workbookPath, "C", "F18");
+    assertEquals(new HyperlinkTarget.Email("Summary.Total@example.com"), hyperlink.orElseThrow());
   }
 
   @Test
