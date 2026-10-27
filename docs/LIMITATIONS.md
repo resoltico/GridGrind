@@ -32,7 +32,7 @@ exists.
 `lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region
 with multiple bounded `GET_WINDOW` reads.
 
-Enforcement: [InspectionQuery](../core/src/main/java/dev/erst/gridgrind/core/plan/InspectionQuery.java), [SelectorValueValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorValueValidation.java), [ExcelAddressLists](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelAddressLists.java).
+Enforcement: [InspectionQuery](../core/src/main/java/dev/erst/gridgrind/core/plan/InspectionQuery.java), [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorNumberValidation.java), [SelectorValueValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorValueValidation.java).
 
 ## LIM-002 — File Format
 
@@ -142,7 +142,7 @@ Enforcement: [StepId](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/S
 
 A nonempty distinct address list defines one factual result per requested coordinate.
 
-Enforcement: [ExcelAddressLists](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelAddressLists.java).
+Enforcement: [SelectorListValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorListValidation.java).
 
 ## LIM-008 — Maximum Rows per Worksheet
 
@@ -160,7 +160,7 @@ GridGrind already rejects out-of-bounds addressed rows on the public request pat
 row-band operations, row-structural edits, and print-title row bands instead of deferring those
 errors to Apache POI.
 
-Enforcement: [ExcelRowSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelRowSpan.java).
+Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorNumberValidation.java), [ExcelRowSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelRowSpan.java), [ProtocolCellAddressValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolCellAddressValidation.java), [CellAccess](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellAccess.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [DataValidationAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/validation/DataValidationAdapter.java).
 
 ## LIM-009 — Maximum Columns per Worksheet
 
@@ -177,7 +177,7 @@ Last valid zero-based column index: 16,383.
 GridGrind already rejects out-of-bounds addressed columns on the public request path for
 selectors, column-band operations, column-structural edits, and print-title column bands.
 
-Enforcement: [ExcelColumnSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelColumnSpan.java).
+Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorNumberValidation.java), [ExcelColumnSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelColumnSpan.java), [ProtocolCellAddressValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolCellAddressValidation.java), [ProtocolDefinedNameValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolDefinedNameValidation.java), [CellAccess](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellAccess.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [DataValidationAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/validation/DataValidationAdapter.java).
 
 ## LIM-010 — Maximum Text Characters per Cell
 

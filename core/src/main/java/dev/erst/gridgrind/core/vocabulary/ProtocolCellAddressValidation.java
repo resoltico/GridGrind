@@ -1,14 +1,17 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-owned validation helpers for single-cell A1-style addresses. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_ROWS_PER_WORKSHEET,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_COLUMNS_PER_WORKSHEET
+})
 public final class ProtocolCellAddressValidation {
-  private static final int MAX_COLUMN_NUMBER = 16_384;
-  private static final int MAX_ROW_NUMBER = 1_048_576;
-  private static final int MAX_ROW_DIGITS = Integer.toString(MAX_ROW_NUMBER).length();
+  private static final int MAX_ROW_DIGITS = Integer.toString(Limit.MAX_ROW_INDEX + 1).length();
 
   private ProtocolCellAddressValidation() {}
 
@@ -45,7 +48,8 @@ public final class ProtocolCellAddressValidation {
       return Optional.of(Violation.BOUNDS);
     }
     int rowNumber = Integer.parseInt(rowDigits);
-    if (columnNumber(columnLabel) > MAX_COLUMN_NUMBER || rowNumber > MAX_ROW_NUMBER) {
+    if (columnNumber(columnLabel) > Limit.MAX_COLUMN_INDEX + 1
+        || rowNumber > Limit.MAX_ROW_INDEX + 1) {
       return Optional.of(Violation.BOUNDS);
     }
     return Optional.empty();

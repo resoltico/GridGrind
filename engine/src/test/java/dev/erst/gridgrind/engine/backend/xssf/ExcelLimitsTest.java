@@ -7,12 +7,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.limits.Limit;
+import dev.erst.gridgrind.engine.cells.CellAccess;
 import dev.erst.gridgrind.engine.cells.CellTextLimits;
+import dev.erst.gridgrind.engine.cells.CellsAdapter;
 import dev.erst.gridgrind.engine.formulas.FormulaLimits;
 import dev.erst.gridgrind.engine.links.LinkAdapter;
 import dev.erst.gridgrind.engine.styles.StyleAdapter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -33,13 +37,11 @@ class ExcelLimitsTest {
 
   @Test
   void rejectsNewStylesOnceTheWorkbookStyleCapIsReached() {
-    assertDoesNotThrow(
-        () -> StyleAdapter.requireCellStyleCapacity(StyleAdapter.MAX_CELL_STYLES - 1));
+    assertDoesNotThrow(() -> StyleAdapter.requireCellStyleCapacity(63_999));
 
     IllegalArgumentException failure =
         assertThrows(
-            IllegalArgumentException.class,
-            () -> StyleAdapter.requireCellStyleCapacity(StyleAdapter.MAX_CELL_STYLES));
+            IllegalArgumentException.class, () -> StyleAdapter.requireCellStyleCapacity(64_000));
 
     org.junit.jupiter.api.Assertions.assertTrue(
         failure.getMessage().contains("workbook style limit"));
@@ -197,5 +199,38 @@ class ExcelLimitsTest {
       formula.insert(0, "ABS(").append(')');
     }
     return formula.toString();
+  }
+
+  @Test
+  void nativeXlsxDialectHasTheSameCapacityAsTheCoreProductPolicy() {
+    assertEquals(1_048_576, SpreadsheetVersion.EXCEL2007.getMaxRows());
+    assertEquals(16_384, SpreadsheetVersion.EXCEL2007.getMaxColumns());
+    assertEquals(64_000, SpreadsheetVersion.EXCEL2007.getMaxCellStyles());
+    assertEquals(Limit.MAX_ROW_INDEX, SpreadsheetVersion.EXCEL2007.getLastRowIndex());
+    assertEquals(Limit.MAX_COLUMN_INDEX, SpreadsheetVersion.EXCEL2007.getLastColumnIndex());
+    assertEquals(Limit.MAX_CELL_STYLES, SpreadsheetVersion.EXCEL2007.getMaxCellStyles());
+  }
+
+  @Test
+  void cellAddressConsumersRejectCoordinatesBeyondTheLastXlsxCell() throws Exception {
+    var last = CellAccess.parseCellReference("XFD1048576");
+    assertEquals(1_048_575, last.getRow());
+    assertEquals(16_383, last.getCol());
+    assertDoesNotThrow(() -> CellsAdapter.requireValidCellReference("XFD1048576", last));
+    assertThrows(InvalidCellAddressException.class, () -> CellAccess.parseCellReference("XFE1"));
+    assertThrows(
+        InvalidCellAddressException.class, () -> CellAccess.parseCellReference("A1048577"));
+    assertThrows(
+        InvalidCellAddressException.class,
+        () -> CellsAdapter.requireValidCellReference("XFE1", new CellReference(0, 16_384)));
+    assertThrows(
+        InvalidCellAddressException.class,
+        () -> CellsAdapter.requireValidCellReference("A1048577", new CellReference(1_048_576, 0)));
+    try (var workbook = XssfWorkbooks.create()) {
+      var cells = workbook.getOrCreateSheet("Boundary").cells();
+      assertDoesNotThrow(() -> cells.window("XFD1048576", 1, 1));
+      assertThrows(IllegalArgumentException.class, () -> cells.window("XFD1048576", 2, 1));
+      assertThrows(IllegalArgumentException.class, () -> cells.window("XFD1048576", 1, 2));
+    }
   }
 }

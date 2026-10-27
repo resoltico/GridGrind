@@ -44,6 +44,10 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
 
 /** Owns data-validation writes, truthful readback, range rewrites and diagnostics. */
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CommentRequired"})
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_ROWS_PER_WORKSHEET,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_COLUMNS_PER_WORKSHEET
+})
 public final class DataValidationAdapter {
   /** Returns the count of stored validation elements, including unsupported ones. */
   public int dataValidationCount(XSSFSheet sheet) {
@@ -919,7 +923,7 @@ public final class DataValidationAdapter {
             sheetIndex,
             sheet.getSheetName(),
             rowIndex,
-            SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
+            Limit.MAX_ROW_INDEX,
             rowCount,
             SpreadsheetVersion.EXCEL2007);
     List<CTDataValidation> rewritten = new ArrayList<>();
@@ -951,7 +955,7 @@ public final class DataValidationAdapter {
             sheetIndex,
             sheet.getSheetName(),
             columnIndex,
-            SpreadsheetVersion.EXCEL2007.getLastColumnIndex(),
+            Limit.MAX_COLUMN_INDEX,
             columnCount,
             SpreadsheetVersion.EXCEL2007);
     List<CTDataValidation> rewritten = new ArrayList<>();
@@ -1110,7 +1114,7 @@ public final class DataValidationAdapter {
               + " on sheet '"
               + sheet.getSheetName()
               + "' beyond the maximum column "
-              + SpreadsheetVersion.EXCEL2007.getLastColumnName());
+              + org.apache.poi.ss.util.CellReference.convertNumToColString(Limit.MAX_COLUMN_INDEX));
     }
     return SheetStructure.formatRange(new CellBounds(firstRow, lastRow, firstColumn, lastColumn));
   }

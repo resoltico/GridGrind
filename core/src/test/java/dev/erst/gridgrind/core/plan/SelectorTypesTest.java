@@ -339,4 +339,21 @@ class SelectorTypesTest {
   private static TextSourceSpec text(String value) {
     return TextSourceSpec.inline(value);
   }
+
+  @Test
+  void exactAddressSelectorsEnforceTheActiveListContract() {
+    var sheet = new SheetName("Boundary");
+    var last = new CellAddress("XFD1048576");
+    assertEquals(List.of(last), new CellSelector.ByAddresses(sheet, List.of(last)).addresses());
+    assertThrows(
+        IllegalArgumentException.class, () -> new CellSelector.ByAddresses(sheet, List.of()));
+    assertEquals(
+        "addresses must not exceed 250000 but was 250001",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CellSelector.ByAddresses(
+                        sheet, java.util.Collections.nCopies(250_001, last)))
+            .getMessage());
+  }
 }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.cells;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
@@ -32,7 +33,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -48,7 +48,9 @@ import org.jspecify.annotations.Nullable;
 /** Owns typed cell reads, projection, mutation, previews and array formula groups. */
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CommentRequired"})
 @dev.erst.gridgrind.core.limits.EnforcesLimit({
-  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_TEXT_CHARACTERS_PER_CELL
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_TEXT_CHARACTERS_PER_CELL,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_ROWS_PER_WORKSHEET,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_COLUMNS_PER_WORKSHEET
 })
 public final class CellsAdapter {
   private final Sheet sheet;
@@ -189,8 +191,7 @@ public final class CellsAdapter {
     requireValidCellReference(topLeftAddress, topLeft);
     int lastRow = topLeft.getRow() + rowCount - 1;
     int lastCol = topLeft.getCol() + columnCount - 1;
-    if (lastRow > SpreadsheetVersion.EXCEL2007.getLastRowIndex()
-        || lastCol > SpreadsheetVersion.EXCEL2007.getLastColumnIndex()) {
+    if (lastRow > Limit.MAX_ROW_INDEX || lastCol > Limit.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
           "window extends beyond the Excel sheet boundary: topLeft="
               + topLeftAddress
@@ -500,10 +501,7 @@ public final class CellsAdapter {
   public static void requireValidCellReference(String address, CellReference cellReference) {
     int row = cellReference.getRow();
     int col = cellReference.getCol();
-    if (row < 0
-        || col < 0
-        || row > SpreadsheetVersion.EXCEL2007.getLastRowIndex()
-        || col > SpreadsheetVersion.EXCEL2007.getLastColumnIndex()) {
+    if (row < 0 || col < 0 || row > Limit.MAX_ROW_INDEX || col > Limit.MAX_COLUMN_INDEX) {
       throw new InvalidCellAddressException(
           address, new IllegalArgumentException("not a valid A1-style cell address: " + address));
     }

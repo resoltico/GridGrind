@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.FieldValidationProblemMappers;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
@@ -8,6 +9,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-owned validation helpers for defined names and related identifiers. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_COLUMNS_PER_WORKSHEET
+})
 public final class ProtocolDefinedNameValidation {
   private ProtocolDefinedNameValidation() {}
 
@@ -64,7 +68,7 @@ public final class ProtocolDefinedNameValidation {
     for (int index = 0; index < columnLabel.length(); index++) {
       columnNumber = (columnNumber * 26) + (columnLabel.charAt(index) - 'A' + 1);
     }
-    return columnNumber <= 16384;
+    return columnNumber <= Limit.MAX_COLUMN_INDEX + 1;
   }
 
   private static boolean isSupportedIdentifier(String name) {

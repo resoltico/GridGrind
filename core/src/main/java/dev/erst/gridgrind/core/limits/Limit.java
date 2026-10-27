@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.limits;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /** Stable limit identities and facts shared by enforcement and published references. */
@@ -245,7 +246,9 @@ public record Limit(
           "GridGrind",
           MAX_MATERIALIZED_WORK_ITEMS + " materialized worksheet items per plan",
           List.of("INVALID_REQUEST"),
-          "`materialized worksheet work must not exceed 250000 items per plan; this step raises the total to {n}`",
+          "`materialized worksheet work must not exceed "
+              + MAX_MATERIALIZED_WORK_ITEMS
+              + " items per plan; this step raises the total to {n}`",
           List.of(
               "APPLY_STYLE",
               "CLEAR_RANGE",
@@ -277,9 +280,19 @@ public record Limit(
           "GridGrind",
           MAX_READ_CELLS + " cells",
           List.of("INVALID_REQUEST"),
-          "`addresses must not exceed 250000 but was {n}` / `rowCount * columnCount must not exceed 250000 but was {n}`",
+          "`addresses must not exceed "
+              + MAX_READ_CELLS
+              + " but was {n}` / `rowCount * columnCount must not exceed "
+              + MAX_READ_CELLS
+              + " but was {n}`",
           List.of("GET_CELLS", "GET_WINDOW", "GET_SHEET_SCHEMA"),
-          "Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily\nlarge windows and exact address lists; GridGrind must then materialize and serialize factual cell\npayloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does not change the\nworst case: a dense 50,000-cell window still returns 50,000 factual cells, `GET_SHEET_SCHEMA`\nstill examines the entire rectangular sample even when many cells are blank, and an oversized\n`GET_CELLS` address list still asks GridGrind to return one factual cell report per address. The\n250,000-cell cap keeps the request gate deterministic before workbook IO and prevents\n`OutOfMemoryError`, empty response files, and unstructured exit-code-1 failures on worst-case\ncell-returning reads.\n\nThis limit is not from Apache POI or Excel. A serialized-bytes cap was considered, but it would be\ndata-dependent and only knowable after reading the workbook, so the current contract keeps the\ndeterministic cell-count cap until response streaming or an equivalent two-phase size negotiation\nexists.\n\n**Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover `lastRowIndex` and\n`lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region\nwith multiple bounded `GET_WINDOW` reads.");
+          "Excel allows worksheets with up to "
+              + String.format(Locale.ROOT, "%,d", MAX_ROW_INDEX + 1)
+              + " rows and "
+              + String.format(Locale.ROOT, "%,d", MAX_COLUMN_INDEX + 1)
+              + " columns. POI can read arbitrarily\nlarge windows and exact address lists; GridGrind must then materialize and serialize factual cell\npayloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does not change the\nworst case: a dense 50,000-cell window still returns 50,000 factual cells, `GET_SHEET_SCHEMA`\nstill examines the entire rectangular sample even when many cells are blank, and an oversized\n`GET_CELLS` address list still asks GridGrind to return one factual cell report per address. The\n"
+              + String.format(Locale.ROOT, "%,d", MAX_READ_CELLS)
+              + "-cell cap keeps the request gate deterministic before workbook IO and prevents\n`OutOfMemoryError`, empty response files, and unstructured exit-code-1 failures on worst-case\ncell-returning reads.\n\nThis limit is not from Apache POI or Excel. A serialized-bytes cap was considered, but it would be\ndata-dependent and only knowable after reading the workbook, so the current contract keeps the\ndeterministic cell-count cap until response streaming or an equivalent two-phase size negotiation\nexists.\n\n**Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover `lastRowIndex` and\n`lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region\nwith multiple bounded `GET_WINDOW` reads.");
 
   /** File Format. */
   public static final Limit FILE_FORMAT =
@@ -581,7 +594,9 @@ public record Limit(
           List.of(),
           "",
           List.of(),
-          "Last valid zero-based row index: 1,048,575.\n\nGridGrind already rejects out-of-bounds addressed rows on the public request path for selectors,\nrow-band operations, row-structural edits, and print-title row bands instead of deferring those\nerrors to Apache POI.");
+          "Last valid zero-based row index: "
+              + String.format(Locale.ROOT, "%,d", MAX_ROW_INDEX)
+              + ".\n\nGridGrind already rejects out-of-bounds addressed rows on the public request path for selectors,\nrow-band operations, row-structural edits, and print-title row bands instead of deferring those\nerrors to Apache POI.");
 
   /** Maximum Columns per Worksheet. */
   public static final Limit MAXIMUM_COLUMNS_PER_WORKSHEET =
@@ -593,7 +608,9 @@ public record Limit(
           List.of(),
           "",
           List.of(),
-          "Last valid zero-based column index: 16,383.\n\nGridGrind already rejects out-of-bounds addressed columns on the public request path for\nselectors, column-band operations, column-structural edits, and print-title column bands.");
+          "Last valid zero-based column index: "
+              + String.format(Locale.ROOT, "%,d", MAX_COLUMN_INDEX)
+              + ".\n\nGridGrind already rejects out-of-bounds addressed columns on the public request path for\nselectors, column-band operations, column-structural edits, and print-title column bands.");
 
   /** Maximum Text Characters per Cell. */
   public static final Limit MAXIMUM_TEXT_CHARACTERS_PER_CELL =
@@ -617,7 +634,9 @@ public record Limit(
           List.of(),
           "",
           List.of(),
-          "Note: POI's cap (64,000) is more conservative than Excel's (65,490). The POI figure is the\neffective limit when writing via GridGrind.");
+          "Note: POI's cap ("
+              + String.format(Locale.ROOT, "%,d", MAX_CELL_STYLES)
+              + ") is more conservative than Excel's (65,490). The POI figure is the\neffective limit when writing via GridGrind.");
 
   /** Maximum Hyperlinks per Worksheet. */
   public static final Limit MAXIMUM_HYPERLINKS_PER_WORKSHEET =

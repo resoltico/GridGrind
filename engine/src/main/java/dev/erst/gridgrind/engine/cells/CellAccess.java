@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.cells;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import java.util.Optional;
-import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -11,6 +11,10 @@ import org.apache.poi.ss.util.CellReference;
 
 /** Cell-address parsing and cell lookup helpers shared by sheet annotation helpers. */
 @SuppressWarnings("PMD.CommentRequired")
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_ROWS_PER_WORKSHEET,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_COLUMNS_PER_WORKSHEET
+})
 public final class CellAccess {
   private CellAccess() {}
 
@@ -55,10 +59,7 @@ public final class CellAccess {
   private static void requireValidCellReference(String address, CellReference cellReference) {
     int row = cellReference.getRow();
     int col = cellReference.getCol();
-    if (row < 0
-        || col < 0
-        || row > SpreadsheetVersion.EXCEL2007.getLastRowIndex()
-        || col > SpreadsheetVersion.EXCEL2007.getLastColumnIndex()) {
+    if (row < 0 || col < 0 || row > Limit.MAX_ROW_INDEX || col > Limit.MAX_COLUMN_INDEX) {
       throw new InvalidCellAddressException(
           address, new IllegalArgumentException("not a valid A1-style cell address: " + address));
     }

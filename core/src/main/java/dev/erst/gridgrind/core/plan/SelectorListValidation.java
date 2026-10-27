@@ -16,6 +16,9 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Shared distinct-list validation for selector families. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_GET_CELLS_ADDRESS_LIST
+})
 final class SelectorListValidation {
   private SelectorListValidation() {}
 

@@ -8,6 +8,11 @@ import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import java.util.Optional;
 
 /** Numeric and size validation for selector families. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_CELL_RETURNING_READ_COUNT,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_ROWS_PER_WORKSHEET,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_COLUMNS_PER_WORKSHEET
+})
 final class SelectorNumberValidation {
   private SelectorNumberValidation() {}
 

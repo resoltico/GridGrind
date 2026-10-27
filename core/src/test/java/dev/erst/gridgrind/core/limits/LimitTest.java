@@ -31,4 +31,11 @@ class LimitTest {
         (Limit.MAX_COLUMN_INDEX + 1) + " columns", Limit.MAXIMUM_COLUMNS_PER_WORKSHEET.value());
     assertEquals("LIM-006A", Limit.STEP_ID_TOKEN_SHAPE.id());
   }
+
+  @Test
+  void workbookCoordinateAndStyleCeilingsMatchTheEstablishedXlsxContract() {
+    assertEquals(1_048_575, Limit.MAX_ROW_INDEX);
+    assertEquals(16_383, Limit.MAX_COLUMN_INDEX);
+    assertEquals(64_000, Limit.MAX_CELL_STYLES);
+  }
 }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.styles;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
@@ -41,7 +42,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -804,17 +804,15 @@ public final class StyleAdapter {
     return EnumMappings.requireMappedValue(TO_POI_FILL_PATTERN, pattern, "GridGrind fill pattern");
   }
 
-  public static final int MAX_CELL_STYLES = SpreadsheetVersion.EXCEL2007.getMaxCellStyles();
-
   public static void requireCellStyleCapacity(XSSFWorkbook workbook) {
     requireCellStyleCapacity(workbook.getNumCellStyles());
   }
 
   public static void requireCellStyleCapacity(int existingStyleCount) {
-    if (existingStyleCount >= MAX_CELL_STYLES) {
+    if (existingStyleCount >= Limit.MAX_CELL_STYLES) {
       throw new IllegalArgumentException(
           "workbook cannot create more than "
-              + MAX_CELL_STYLES
+              + Limit.MAX_CELL_STYLES
               + " cell styles (Excel/POI workbook style limit)");
     }
   }
