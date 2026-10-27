@@ -30,7 +30,7 @@ pitest = "1.30.0"
 pitest-gradle-plugin = "1.19.0"
 pitest-junit5-plugin = "1.2.3"
 shadow = "9.6.1"
-spotless = "8.10.2"
+spotless = "8.10.4"
 
 [libraries]
 json-schema-validator = { module = "com.networknt:json-schema-validator", version.ref = "json-schema-validator" }
