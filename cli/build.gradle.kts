@@ -145,6 +145,7 @@ tasks.named("distTar") {
 }
 
 tasks.named<Test>("test") {
+    testLogging.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     dependsOn("shadowJar", "installShadowDist", "shadowDistZip", "shadowDistTar")
     inputs.files(tasks.named("shadowJar"), tasks.named("installShadowDist"), tasks.named("shadowDistZip"), tasks.named("shadowDistTar"))
         .withPropertyName("deliveredArtifacts")
