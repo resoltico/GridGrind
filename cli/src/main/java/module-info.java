@@ -5,10 +5,9 @@ module dev.erst.gridgrind.cli {
   requires tools.jackson.databind;
 
   exports dev.erst.gridgrind.cli;
-  exports dev.erst.gridgrind.cli.discovery;
 
   opens dev.erst.gridgrind.cli to
       tools.jackson.databind;
-  opens dev.erst.gridgrind.cli.discovery to
+  opens dev.erst.gridgrind.cli.render to
       tools.jackson.databind;
 }

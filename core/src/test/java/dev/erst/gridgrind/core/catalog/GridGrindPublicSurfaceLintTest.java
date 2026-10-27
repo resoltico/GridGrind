@@ -40,12 +40,6 @@ class GridGrindPublicSurfaceLintTest {
         candidatePattern);
     collectUnknown(
         unknownBySurface,
-        "STANDARD_INPUT message",
-        GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
-        registeredIds,
-        candidatePattern);
-    collectUnknown(
-        unknownBySurface,
         "EVENT_READ calculation failure",
         BackendCapabilities.eventRead().calculationFailureMessage(),
         registeredIds,

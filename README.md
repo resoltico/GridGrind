@@ -39,13 +39,13 @@ From a repository checkout, the shortest reliable path is:
 ```bash
 ./gradlew :cli:installShadowDist
 export PATH="$(pwd)/cli/build/install/gridgrind/bin:$PATH"
-gridgrind --help
-gridgrind --print-recipe --lookup BUDGET --response budget-request.json
+gridgrind help
+gridgrind recipe show BUDGET --response budget-request.json
 mkdir -p generated-workbooks
-gridgrind --print-grant-template --response grant.json
+gridgrind template grant --response grant.json
 # Edit grant.json to authorize budget-request.json's exact resources, operations, and output.
-gridgrind --doctor-request --request budget-request.json --grant grant.json --response doctor-report.json
-gridgrind --request budget-request.json --grant grant.json --response response.json
+gridgrind doctor --request budget-request.json --grant grant.json --response doctor-report.json
+gridgrind run --request budget-request.json --grant grant.json --response response.json
 ```
 
 The rest of this README uses `gridgrind` for the active entry point. From a repository checkout,
@@ -54,7 +54,7 @@ ZIP or TAR launcher distribution, add its `bin/` directory to `PATH`; from the s
 release JAR, replace `gridgrind` with `java -jar gridgrind.jar`.
 
 Every executable request needs a separate host-owned `--grant <path>`; a plan cannot grant itself
-authority. `--print-grant-template` produces the safe starting document, and the
+authority. `template grant` produces the safe starting document, and the
 [request and execution reference](docs/REQUEST_AND_EXECUTION_REFERENCE.md#host-grants-secrets-and-acceptance)
 explains how to narrow it to the request. Secrets are named references supplied through a granted
 provider, never request literals. This is deliberately explicit: an omitted grant is denied before
@@ -72,7 +72,7 @@ notice. GridGrind never moves a primary payload to stderr or overwrites an exist
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.
-`--doctor-request` returns every independently provable blocking problem it can isolate safely before any workbook mutation or save attempt. Request intake reports invalid UTF-8, duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments. Bound steps then receive their operation-and-target contract checks, and a fully bound plan also batches independent source and authored-input preflight findings in the same doctor report. Normal `--request` performs the same intake and static validation before execution; static failures are rejected before workbook access, while any later preflight failure completes zero steps and persists no workbook.
+`doctor` returns every independently provable blocking problem it can isolate safely before any workbook mutation or save attempt. Request intake reports invalid UTF-8, duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments. Bound steps then receive their operation-and-target contract checks, and a fully bound plan also batches independent source and authored-input preflight findings in the same doctor report. Normal `--request` performs the same intake and static validation before execution; static failures are rejected before workbook access, while any later preflight failure completes zero steps and persists no workbook.
 
 If you want the repository JAR surface directly, run `./gradlew :cli:shadowJar` and invoke
 `java -jar cli/build/libs/gridgrind.jar ...` instead of `gridgrind ...`.
@@ -82,13 +82,13 @@ packaged runtime image on its own:
 
 ```bash
 docker buildx build --load -t gridgrind-local .
-docker run --rm gridgrind-local --help
+docker run --rm gridgrind-local help
 ```
 
 Fast Docker first-contact:
 
 ```bash
-docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest help
 ```
 
 For file-producing container runs, mount your workspace at `/work`, pass
@@ -102,7 +102,7 @@ docker run --pull=always --rm -i \
   --user "$(id -u):$(id -g)" \
   -v "$(pwd)":/work \
   ghcr.io/resoltico/gridgrind:latest \
-  --request request.json \
+  run --request request.json \
   --grant grant.json \
   --response response.json
 ```
@@ -112,32 +112,32 @@ docker run --pull=always --rm -i \
 GridGrind can print valid starting material instead of making you invent request shape by hand:
 
 ```bash
-gridgrind --print-request-template --response request.json
-gridgrind --print-grant-template --response grant.json
-gridgrind --print-recipe-catalog --response recipes.json
-gridgrind --print-recipe-catalog --lookup DASHBOARD --response dashboard-detail.json
-gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
-gridgrind --materialize-recipe --lookup CUSTOM_XML --workspace custom-xml-workspace
-gridgrind --print-recipe-keyword-match --query "monthly sales dashboard" --response task-match.json
-gridgrind --print-protocol-catalog --response protocol-index.json
-gridgrind --print-protocol-catalog --search pivot --response pivot-search.json
-gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL --response set-cell.json
-gridgrind --print-protocol-catalog --lookup plainTypes:cellReadProjectionType --response cell-read-projection.json
+gridgrind template request --response request.json
+gridgrind template grant --response grant.json
+gridgrind recipe list --response recipes.json
+gridgrind recipe show DASHBOARD --details --response dashboard-detail.json
+gridgrind recipe show DASHBOARD --response dashboard-request.json
+gridgrind recipe materialize CUSTOM_XML --workspace custom-xml-workspace
+gridgrind recipe match "monthly sales dashboard" --response task-match.json
+gridgrind catalog --response protocol-index.json
+gridgrind catalog search pivot --response pivot-search.json
+gridgrind catalog show mutationActionTypes:SET_CELL --response set-cell.json
+gridgrind catalog show plainTypes:cellReadProjectionType --response cell-read-projection.json
 ```
 
-The compact recipe catalog publishes `requestFileName`, `advisory`, and `requiredWorkspacePaths`, while `--print-recipe-catalog --lookup <id>` adds the exact runnable request profile for that recipe. Print self-contained recipes with `--print-recipe`; materialize asset-backed recipes with `--materialize-recipe --workspace <new-directory>`, which atomically writes the request and declared assets together. `VERBOSE` execution streams compact JSONL progress to stderr while its primary result remains on stdout or the requested response file. Shipped save-producing examples already use `SAVE_AS.ifExists=REPLACE`, so rerunning them does not depend on cleaning the workspace first.
+The compact recipe catalog publishes `requestFileName`, `advisory`, and `requiredWorkspacePaths`, while `recipe show <id> --details` adds the exact runnable request profile for that recipe. Print self-contained recipes with `recipe show`; materialize asset-backed recipes with `recipe materialize --workspace <new-directory>`, which atomically writes the request and declared assets together. `VERBOSE` execution streams compact JSONL progress to stderr while its primary result remains on stdout or the requested response file. Shipped save-producing examples already use `SAVE_AS.ifExists=REPLACE`, so rerunning them does not depend on cleaning the workspace first.
 
-The bare `--print-protocol-catalog` output is the compact first-contact index. Use
-`--print-protocol-catalog --search <text>` when you know the concept but not the exact id, follow
-up with `--print-protocol-catalog --lookup <group>:<id>` when you want one authoritative payload,
+The bare `catalog` output is the compact first-contact index. Use
+`catalog search <text>` when you know the concept but not the exact id, follow
+up with `catalog show <group>:<id>` when you want one authoritative payload,
 and keep discovery scoped instead of expecting one monolithic full-catalog dump. Field descriptors
 publish enforced scalar constraints and operations publish applicable preconditions, so tools can
 validate request material without extracting rules from prose. Machine-readable request-template,
 discovery, doctor, and execution payloads are compact JSON by default; add `--pretty` when you want
 indented JSON instead.
 
-Use `--help` for the short synopsis, `--help-protocol` for the authoritative CLI and request
-contract, and `--help-guidance` for workflow-oriented help.
+Use `help` for the short synopsis, `help protocol` for the authoritative CLI and request
+contract, and `help guidance` for workflow-oriented help.
 
 ## One Request, One Result
 
@@ -163,9 +163,9 @@ output.
 The safest way to start is to ask GridGrind to emit a valid request for you:
 
 ```bash
-gridgrind --print-request-template --response request.json
-gridgrind --print-recipe --lookup BUDGET --response budget-request.json
-gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
+gridgrind template request --response request.json
+gridgrind recipe show BUDGET --response budget-request.json
+gridgrind recipe show DASHBOARD --response dashboard-request.json
 ```
 
 ## Documentation
@@ -184,7 +184,7 @@ The executable JAR also bundles separately licensed components under Apache 2.0,
 Boost 1.0, BSD 2-Clause, and BSD 3-Clause terms; the Jakarta
 API terms are formally the Eclipse Distribution License v1.0, whose SPDX identifier is
 `BSD-3-Clause`. The standalone GitHub release JAR embeds the legal files, while Gradle-generated ZIP
-and TAR launcher distributions also place them beside the launcher. `gridgrind --license` prints
+and TAR launcher distributions also place them beside the launcher. `gridgrind license` prints
 the GridGrind license, third-party notices, and applicable dependency license texts.
 
 Corresponding source is available in [this repository](https://github.com/resoltico/GridGrind);

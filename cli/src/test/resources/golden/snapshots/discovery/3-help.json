@@ -29,24 +29,21 @@
         "rightHeader" : "Convention / Example"
       },
       "discovery" : {
-        "builtInExamplesLabel" : "Built-in generated examples",
+        "builtInExamplesLabel" : "Built-in recipes",
         "guidanceEntries" : [ {
-          "lines" : [ "SELF_CONTAINED starters execute from a blank working directory.", "REQUIRES_EXAMPLE_ASSETS starters require --materialize-recipe; it atomically creates the request file and every declared asset beneath one new workspace directory.", "ANALYZE_WORKBOOK_FINDINGS aggregates formula health, data-validation health, conditional-formatting health, autofilter health, table health, pivot-table health, hyperlink health, and named-range health. Include it in any diagnostic plan with persistence.type=NONE." ],
-          "title" : "Example portability"
+          "lines" : [ "SELF_CONTAINED recipes run from a blank workspace.", "Recipes with requiredWorkspacePaths must be materialized into a new workspace.", "Recipe and task metadata are also available through the core discovery API." ],
+          "title" : "Portability"
         }, {
-          "lines" : [ "The unified recipe catalog includes high-level office-work task starters composed from exact protocol capabilities.", "Each task-starter entry publishes requestFileName, advisory, and requiredWorkspacePaths so agents can decide whether one recipe is self-contained before printing it with --print-recipe or materializing it with --materialize-recipe.", "Use --print-recipe-catalog --lookup <id> when you need the richer view-specific detail payload, including the exact runnable request profile for that recipe." ],
-          "title" : "Task starters"
-        }, {
-          "lines" : [ "The protocol catalog remains the authoritative execution contract: it lists each field, whether it is required, and the nested/plain type group accepted by polymorphic fields such as target, action, query, value, style, and scope.", "The bare --print-protocol-catalog output is intentionally compact: it lists requestTypeId, group ids, and lookup namespace forms. Rerun --lookup for one scoped top-level category, nested type group, plain type group, or exact entry payload. Shared reusable notes such as request-owned path resolution live on those scoped lookup payloads, not on the bare index.", "Search output is summary-first: it lists ids, summaries, related entry ids, and supporting ids. Rerun --lookup when you need one full entry or type-group definition.", "Lookup forms stay stable: bare <id> resolves one globally unique top-level type, bare top-level group names such as mutationActionTypes resolve one category array, bare support-group names such as cellValueSpecTypes or executionPolicySpecType resolve one nested/plain group, nestedTypes:<group> and plainTypes:<group> resolve one explicit support-group namespace, and <topLevelGroup>:<id> resolves one qualified top-level type." ],
-          "title" : "Protocol catalog search"
+          "lines" : [ "Catalog search returns summary-first matches; catalog show returns exact fields and constraints.", "Use qualified group:id values when an ID appears in more than one group.", "Use schema request, schema grant and schema response for the exchanged documents." ],
+          "title" : "Protocol"
         } ],
         "label" : "Discovery",
-        "lines" : [ "gridgrind --print-request-template --response request.json", "gridgrind --doctor-request --request request.json --response doctor.json", "gridgrind --print-recipe-catalog --response recipes.json", "gridgrind --print-recipe --lookup <id> --response recipe.json", "gridgrind --materialize-recipe --lookup <asset-backed-id> --workspace recipe-workspace", "gridgrind --print-recipe-keyword-match --query \"monthly sales dashboard with charts\" --response recipe-keyword-match.json", "gridgrind --print-protocol-catalog --response protocol-index.json" ],
-        "printOneExampleCommand" : "gridgrind --print-recipe --lookup BUDGET --response example.json",
-        "printOneExampleLabel" : "Print one recipe"
+        "lines" : [ "gridgrind recipe list", "gridgrind recipe show BUDGET --response budget-request.json", "gridgrind recipe match \"monthly sales dashboard with charts\"", "gridgrind recipe materialize CUSTOM_XML --workspace custom-xml", "gridgrind catalog search \"chart title\"", "gridgrind schema request --response request.schema.json" ],
+        "printOneExampleCommand" : "gridgrind recipe show BUDGET --response budget-request.json",
+        "printOneExampleLabel" : "Show one recipe"
       },
       "dockerFileExample" : {
-        "commandLines" : [ "docker run --rm -i \\", "  --user \"$(id -u):$(id -g)\" \\", "  -v \"$(pwd)\":/work \\", "  {{CONTAINER_TAG}} \\", "  --request request.json \\", "  --grant grant.json \\", "  --response response.json" ],
+        "commandLines" : [ "docker run --rm -i \\", "  --user \"$(id -u):$(id -g)\" \\", "  -v \"$(pwd)\":/work \\", "  {{CONTAINER_TAG}} \\", "  run --request request.json \\", "  --grant grant.json \\", "  --response response.json" ],
         "description" : "Mount the host working directory at /work and rely on the image's prepared WORKDIR so relative CLI paths resolve inside that mounted directory without a separate -w override. Pass --user \"$(id -u):$(id -g)\" on ordinary bind mounts so response and workbook files stay owned by the calling host user; omit it only when Docker Desktop or a rootless runtime already remaps bind-mount ownership for you. From a repository checkout, build the same runtime surface with 'docker buildx build --load -t gridgrind-local .' and replace {{CONTAINER_TAG}} with 'gridgrind-local'.",
         "label" : "Docker Example"
       },
@@ -68,7 +65,7 @@
       },
       "execution" : {
         "label" : "Execution",
-        "lines" : [ "GridGrind executes ordered steps in sequence, then saves the workbook (unless persistence is NONE); if any step fails, no workbook is written.", "source.type=NEW starts with zero sheets; ENSURE_SHEET creates the first sheet.", "execution is optional; omit it for FULL_XSSF / SUMMARY / DO_NOT_CALCULATE, or supply only the nested execution.mode, execution.journal, and execution.calculation fields that need non-default behavior." ]
+        "lines" : [ "Without --response, the command payload is the sole stdout content. With --response, that payload is written to a new file; existing response files are not replaced.", "A response-file write failure with writable stdout recovers the already-rendered payload there unchanged and adds one compact transport notice on stderr. GridGrind never moves a primary payload to stderr.", "Use --format structured for JSON help, version and license reports. Use --pretty to indent JSON output.", "GridGrind executes ordered steps in sequence, then saves the workbook (unless persistence is NONE); if any step fails, no workbook is written.", "source.type=NEW starts with zero sheets; ENSURE_SHEET creates the first sheet.", "execution is optional; omit it for FULL_XSSF / SUMMARY / DO_NOT_CALCULATE, or supply only the nested execution.mode, execution.journal, and execution.calculation fields that need non-default behavior." ]
       },
       "fileWorkflow" : {
         "entries" : [ {
@@ -115,67 +112,37 @@
       },
       "flags" : {
         "entries" : [ {
-          "label" : "--request <path>",
-          "value" : "Read the JSON request from a file instead of stdin."
+          "label" : "--request",
+          "value" : "Request JSON path; '-' reads stdin and requires an explicit execution root."
         }, {
-          "label" : "--execution-root <path>",
-          "value" : "Required when the request JSON arrives on stdin; relative request-owned paths resolve from that directory."
+          "label" : "--grant",
+          "value" : "Explicit authority document; required for run and optional for static doctor analysis."
         }, {
-          "label" : "--temp-root <path>",
-          "value" : "Override the scratch-parent path. GridGrind creates one private per-run scratch directory. Without --temp-root, that scratch directory lives under the OS temporary-file root. With --temp-root <path>, GridGrind creates the private scratch directory under that supplied parent path. Best-effort cleanup removes the managed scratch directory on normal command completion."
+          "label" : "--response",
+          "value" : "Primary output path instead of stdout; cannot overwrite the request."
         }, {
-          "label" : "--response <path>",
-          "value" : "Write the primary command output to a new file instead of stdout; GridGrind never replaces an existing response file implicitly."
+          "label" : "--execution-root",
+          "value" : "Resolution root for stdin requests; cannot accompany a file request."
         }, {
-          "label" : "--format <text|structured>",
-          "value" : "Render CLI-owned prose surfaces as text or structured JSON. Help, version, and license default to text; JSON-native execution, doctor, request-template, and discovery payloads do not use --format."
+          "label" : "--temp-root",
+          "value" : "Parent directory for a private per-run scratch directory."
+        }, {
+          "label" : "--secrets-provider",
+          "value" : "Secrets-provider descriptor path, resolved by the host."
+        }, {
+          "label" : "--workspace",
+          "value" : "New directory atomically populated by recipe materialize."
+        }, {
+          "label" : "--details",
+          "value" : "Return recipe metadata and request profile with recipe show."
+        }, {
+          "label" : "--format",
+          "value" : "text or structured output for help, version and license."
         }, {
           "label" : "--pretty",
-          "value" : "Indent JSON output. Execution responses, doctor reports, request templates, discovery payloads, and structured help/version/license reports are compact by default and become multi-line JSON when --pretty is supplied."
-        }, {
-          "label" : "--doctor-request",
-          "value" : "Lint one request, preflight source-backed input resolution plus existing workbook-source accessibility, and emit a machine-readable doctor report without mutating a workbook. The doctor response returns warnings plus every independently provable blocking problem it can isolate safely, including structural and constructor-level request intake failures across multiple steps in one pass."
-        }, {
-          "label" : "--print-request-template",
-          "value" : "Print a minimal valid request JSON document with default execution and formula settings omitted."
-        }, {
-          "label" : "--print-recipe-catalog",
-          "value" : "Print the machine-readable unified recipe catalog of built-in examples and CLI-authored task starters. The bare list stays compact; scoped --lookup payloads add richer view-specific detail, including the exact runnable request profile."
-        }, {
-          "label" : "--lookup <id>",
-          "value" : "With --print-recipe, --materialize-recipe, --print-recipe-catalog, or --print-protocol-catalog, print one stable entry by id. With --print-protocol-catalog, that lookup id may also name one top-level category (mutationActionTypes, assertionTypes, inspectionQueryTypes, sourceTypes, persistenceTypes, stepTypes), one nested/plain support group (cellValueSpecTypes, calculationStrategyTypes, executionPolicySpecType, ...), one explicit namespace form (nestedTypes:<group>, plainTypes:<group>), or one qualified top-level entry <category>:<id> such as mutationActionTypes:SET_CELL when ids repeat across groups. Scoped lookup payloads may also publish shared top-level notes and entry-local noteRefs when a reusable rule would otherwise be repeated across multiple summaries."
-        }, {
-          "label" : "--print-recipe --lookup <id>",
-          "value" : "Print one self-contained built-in example or executable task-starter scenario by id."
-        }, {
-          "label" : "--materialize-recipe --lookup <id> --workspace <new-directory>",
-          "value" : "Atomically publish one recipe request and every declared asset into one new workspace."
-        }, {
-          "label" : "--print-recipe-keyword-match --query <text>",
-          "value" : "Print ranked built-in recipe matches for one English keyword query. Use --print-recipe for a self-contained starter or --materialize-recipe for an asset-backed starter after you choose a recipe id. After normalization, at least one searchable non-stop-word term must remain."
-        }, {
-          "label" : "--print-protocol-catalog",
-          "value" : "Print the compact protocol-catalog index with group ids, lookup namespace forms, and field-metadata legends such as projectedByFacets, noteRefs, and enumValueDocs. Shared reusable notes stay on scoped --lookup payloads instead of bloating the bare index."
-        }, {
-          "label" : "--search <text>",
-          "value" : "With --print-protocol-catalog, perform case-insensitive search across lookup ids, qualified ids, catalog groups, and summaries. Search promotes top-level operations first and uses relatedEntryIds on support-group hits."
-        }, {
-          "label" : "--help, -h",
-          "value" : "Print the short synopsis."
-        }, {
-          "label" : "--help-protocol",
-          "value" : "Print the authoritative CLI and request grammar only."
-        }, {
-          "label" : "--help-guidance",
-          "value" : "Print workflow guidance, examples, Docker usage, and discovery playbooks."
-        }, {
-          "label" : "--version",
-          "value" : "Print the GridGrind version and description."
-        }, {
-          "label" : "--license",
-          "value" : "Print the GridGrind license and third-party notices."
+          "value" : "Indent JSON output."
         } ],
-        "label" : "Flags"
+        "label" : "Options"
       },
       "limits" : {
         "entries" : [ {
@@ -259,23 +226,24 @@
       },
       "standardInputRequiresRequestMessage" : "STANDARD_INPUT-authored values require --request so stdin is available for input content instead of the request JSON",
       "stdinExample" : {
-        "commandLines" : [ "gridgrind --print-request-template | gridgrind --execution-root ." ],
-        "label" : "Stdin Example"
+        "commandLines" : [ "gridgrind run --request - --execution-root . --grant grant.json < request.json" ],
+        "description" : "The request document and STANDARD_INPUT payloads cannot consume the same stream.",
+        "label" : "Standard input"
       },
       "usage" : {
         "label" : "Usage",
-        "lines" : [ "gridgrind --request <path> [--temp-root <path>] [--response <path>] [--pretty]", "gridgrind --execution-root <path> [--temp-root <path>] [--response <path>] [--pretty] < request.json", "gridgrind --doctor-request --request <path> [--temp-root <path>] [--response <path>] [--pretty]", "gridgrind --doctor-request --execution-root <path> [--temp-root <path>] [--response <path>] [--pretty] < request.json", "gridgrind --print-request-template [--response <path>] [--pretty]", "gridgrind --print-grant-template [--response <path>] [--pretty]", "gridgrind --print-recipe --lookup <id> [--response <path>] [--pretty]", "gridgrind --materialize-recipe --lookup <id> --workspace <new-directory> [--pretty]", "gridgrind --print-recipe-catalog [--lookup <id>] [--response <path>] [--pretty]", "gridgrind --print-recipe-keyword-match --query <text> [--response <path>] [--pretty]", "gridgrind --print-protocol-catalog [--response <path>] [--pretty]", "gridgrind --print-protocol-catalog --lookup <lookup-id> [--response <path>] [--pretty]", "gridgrind --print-protocol-catalog --search <text> [--response <path>] [--pretty]", "gridgrind --help | -h | help [--response <path>] [--format <text|structured>] [--pretty]", "gridgrind --help-protocol | help-protocol [--response <path>] [--format <text|structured>] [--pretty]", "gridgrind --help-guidance | help-guidance [--response <path>] [--format <text|structured>] [--pretty]", "gridgrind --version | version [--response <path>] [--format <text|structured>] [--pretty]", "gridgrind --license | license [--response <path>] [--format <text|structured>] [--pretty]" ]
+        "lines" : [ "gridgrind run --request <path|-> --grant <path> [--response <path>] [--pretty]", "gridgrind doctor --request <path|-> [--grant <path>] [--response <path>] [--pretty]", "gridgrind catalog [search <text> | show <group>:<id>] [--response <path>] [--pretty]", "gridgrind schema request|grant|response [--response <path>] [--pretty]", "gridgrind recipe list | show <ID> | match <text> [--response <path>] [--pretty]", "gridgrind recipe materialize <ID> --workspace <new-directory> [--pretty]", "gridgrind template request|grant [--response <path>] [--pretty]", "gridgrind help [overview|protocol|guidance] [--format text|structured]", "gridgrind version | license [--format text|structured]", "For stdin requests use --request - with --execution-root <directory>.", "Run and doctor also accept --temp-root and --secrets-provider paths." ]
       },
       "workflows" : {
         "entries" : [ {
-          "lines" : [ "List every built-in recipe: gridgrind --print-recipe-catalog --response recipes.json", "Get one executable starter scenario: gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json", "Publish one asset-backed scenario atomically: gridgrind --materialize-recipe --lookup CUSTOM_XML --workspace custom-xml", "Get the compact protocol-catalog index: gridgrind --print-protocol-catalog --response protocol-index.json", "Search exact protocol shapes: gridgrind --print-protocol-catalog --search \"chart title\" --response catalog-search.json", "Resolve one scoped catalog group: gridgrind --print-protocol-catalog --lookup calculationStrategyTypes --response calculation-strategy-types.json" ],
-          "title" : "Discover What To Send"
+          "lines" : [ "List recipes: gridgrind recipe list", "Match a goal: gridgrind recipe match \"monthly dashboard\"", "Find protocol capabilities: gridgrind catalog search \"chart title\"", "Inspect an exact shape: gridgrind catalog show mutationActionTypes:SET_CELL" ],
+          "title" : "Discover"
         }, {
-          "lines" : [ "Start from the minimal request: gridgrind --print-request-template --response request.json", "Start from the fail-closed host grant: gridgrind --print-grant-template --response grant.json, then narrow it to the request's exact resources, operations, and output authority.", "For stdin-driven execution or doctoring, pass one explicit --execution-root so request-owned paths resolve from one explicit invocation directory.", "Use --print-recipe --lookup <id> when you want one shipped self-contained example or task-starter scenario instead of building from scratch; use --materialize-recipe for one asset-backed recipe workspace.", "Lint before executing: gridgrind --doctor-request --request request.json --response doctor.json" ],
-          "title" : "Draft And Preflight"
+          "lines" : [ "Create a request: gridgrind recipe show BUDGET --response budget-request.json", "Create fail-closed authority: gridgrind template grant --response grant.json", "Edit the grant to authorize the request's exact resources, targets and publication.", "Diagnose: gridgrind doctor --request budget-request.json --grant grant.json" ],
+          "title" : "Prepare and authorize"
         }, {
-          "lines" : [ "Run locally and capture the response: gridgrind --request request.json --response response.json", "Reopen a saved workbook by switching source.type to EXISTING and pointing source.path at the .xlsx file you want to inspect or mutate.", "Use persistence.type=SAVE_AS when the workbook should be written, together with one explicit SAVE_AS.ifExists policy, and persistence.type=NONE when the run is read-only or diagnostic." ],
-          "title" : "Execute And Keep Artifacts"
+          "lines" : [ "Run: gridgrind run --request budget-request.json --grant grant.json --response response.json", "Materialize asset-backed recipes into a new workspace before execution.", "Inspect the structured result, warnings, assertions and publication outcome." ],
+          "title" : "Execute"
         } ],
         "label" : "Workflows"
       }

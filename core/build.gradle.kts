@@ -5,6 +5,7 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     `java-library`
+    `java-test-fixtures`
     id("gridgrind.java-conventions")
     id("gridgrind.mutation-conventions")
 }

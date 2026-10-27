@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
-import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
+import dev.erst.gridgrind.core.discovery.Recipe;
+import dev.erst.gridgrind.core.discovery.RecipeRegistry;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -29,7 +29,7 @@ class GoldenCorpusTest {
   @TestFactory
   Stream<DynamicTest> examplesAndRecipes() throws IOException {
     List<DynamicTest> tests = new ArrayList<>();
-    for (GridGrindCliRecipe recipe : GridGrindCliRecipeRegistry.recipes()) {
+    for (Recipe recipe : RecipeRegistry.recipes()) {
       for (GoldenLauncher launcher : GoldenLauncher.values()) {
         tests.add(
             DynamicTest.dynamicTest(
@@ -38,8 +38,8 @@ class GoldenCorpusTest {
     }
     try (Stream<Path> files = Files.list(GoldenLauncher.REPOSITORY.resolve("examples"))) {
       for (Path file : files.filter(path -> path.toString().endsWith(".json")).sorted().toList()) {
-        GridGrindCliRecipe recipe =
-            GridGrindCliRecipeRegistry.recipes().stream()
+        Recipe recipe =
+            RecipeRegistry.recipes().stream()
                 .filter(value -> value.requestFileName().equals(file.getFileName().toString()))
                 .findFirst()
                 .orElseThrow();
@@ -57,27 +57,34 @@ class GoldenCorpusTest {
 
   @TestFactory
   Stream<DynamicTest> discovery() {
-    List<List<String>> commands =
+    List<DiscoveryCase> commands =
         List.of(
-            List.of("--help"),
-            List.of("--help-protocol"),
-            List.of("--help-guidance"),
-            List.of("--help", "--format", "structured"),
-            List.of("--version"),
-            List.of("--version", "--format", "structured"),
-            List.of("--license"),
-            List.of("--license", "--format", "structured"),
-            List.of("--print-request-template"),
-            List.of("--print-grant-template"),
-            List.of("--print-protocol-catalog"),
-            List.of("--print-protocol-catalog", "--search", "cell text"),
-            List.of("--print-protocol-catalog", "--lookup", "SET_CELL"),
-            List.of("--print-recipe-catalog"),
-            List.of("--print-recipe-keyword-match", "--query", "budget chart report"));
+            new DiscoveryCase("discovery/0-help", List.of("help")),
+            new DiscoveryCase("discovery/1-help-protocol", List.of("help", "protocol")),
+            new DiscoveryCase("discovery/2-help-guidance", List.of("help", "guidance")),
+            new DiscoveryCase("discovery/3-help", List.of("help", "--format", "structured")),
+            new DiscoveryCase("discovery/4-version", List.of("version")),
+            new DiscoveryCase("discovery/5-version", List.of("version", "--format", "structured")),
+            new DiscoveryCase("discovery/6-license", List.of("license")),
+            new DiscoveryCase("discovery/7-license", List.of("license", "--format", "structured")),
+            new DiscoveryCase("discovery/8-print-request-template", List.of("template", "request")),
+            new DiscoveryCase("discovery/9-print-grant-template", List.of("template", "grant")),
+            new DiscoveryCase("discovery/10-print-protocol-catalog", List.of("catalog")),
+            new DiscoveryCase(
+                "discovery/11-print-protocol-catalog", List.of("catalog", "search", "cell text")),
+            new DiscoveryCase(
+                "discovery/12-print-protocol-catalog", List.of("catalog", "show", "SET_CELL")),
+            new DiscoveryCase("discovery/13-print-recipe-catalog", List.of("recipe", "list")),
+            new DiscoveryCase(
+                "discovery/14-print-recipe-keyword-match",
+                List.of("recipe", "match", "budget chart report")),
+            new DiscoveryCase("discovery/15-schema-request", List.of("schema", "request")),
+            new DiscoveryCase("discovery/16-schema-grant", List.of("schema", "grant")),
+            new DiscoveryCase("discovery/17-schema-response", List.of("schema", "response")));
     List<DynamicTest> tests = new ArrayList<>();
-    for (int index = 0; index < commands.size(); index++) {
-      List<String> arguments = commands.get(index);
-      String id = "discovery/" + index + "-" + arguments.getFirst().substring(2);
+    for (DiscoveryCase command : commands) {
+      List<String> arguments = command.arguments();
+      String id = command.id();
       for (GoldenLauncher launcher : GoldenLauncher.values()) {
         tests.add(
             DynamicTest.dynamicTest(
@@ -111,8 +118,7 @@ class GoldenCorpusTest {
                     Path request = workspace.resolve("request.json");
                     Files.copy(file, request);
                     GoldenLauncher.Result result =
-                        launcher.run(
-                            workspace, "--doctor-request", "--request", request.toString());
+                        launcher.run(workspace, "doctor", "--request", request.toString());
                     assertEquals(1, result.exit(), () -> result.stdout() + result.stderr());
                     JsonNode report = GoldenSnapshots.JSON.readTree(result.stdout());
                     assertFalse(
@@ -176,6 +182,7 @@ class GoldenCorpusTest {
                     GoldenLauncher.Result result =
                         launcher.run(
                             workspace,
+                            "run",
                             "--request",
                             request.toString(),
                             "--grant",
@@ -193,18 +200,17 @@ class GoldenCorpusTest {
     return tests.stream();
   }
 
-  private void recipe(GridGrindCliRecipe recipe, GoldenLauncher launcher)
+  private void recipe(Recipe recipe, GoldenLauncher launcher)
       throws IOException, InterruptedException {
     String id = "recipes/" + recipe.id();
     Path workspace = workspace(id, launcher);
-    GoldenLauncher.Result printed =
-        launcher.run(workspace, "--print-recipe", "--lookup", recipe.id());
+    GoldenLauncher.Result printed = launcher.run(workspace, "recipe", "show", recipe.id());
     assertEquals(recipe.requiredWorkspacePaths().isEmpty() ? 0 : 2, printed.exit());
     ObjectNode observation = GoldenSnapshots.JSON.createObjectNode();
     observation.set("print", GoldenSnapshots.observation(printed));
     Path materialized = materialize(recipe, launcher, workspace);
     GoldenLauncher.Result detail =
-        launcher.run(workspace, "--print-recipe-catalog", "--lookup", recipe.id());
+        launcher.run(workspace, "recipe", "show", recipe.id(), "--details");
     assertEquals(0, detail.exit(), detail.stdout());
     observation.set("detail", GoldenSnapshots.observation(detail));
     observation.set(
@@ -218,7 +224,7 @@ class GoldenCorpusTest {
     GoldenSnapshots.verify(id, launcher, workspace, observation);
   }
 
-  private void example(Path file, GridGrindCliRecipe recipe, GoldenLauncher launcher)
+  private void example(Path file, Recipe recipe, GoldenLauncher launcher)
       throws IOException, InterruptedException {
     String id = "examples/" + file.getFileName();
     Path workspace = workspace(id, launcher);
@@ -229,15 +235,14 @@ class GoldenCorpusTest {
         id, launcher, workspace, GoldenWorkbook.execute(launcher, materialized, request));
   }
 
-  private static Path materialize(
-      GridGrindCliRecipe recipe, GoldenLauncher launcher, Path workspace)
+  private static Path materialize(Recipe recipe, GoldenLauncher launcher, Path workspace)
       throws IOException, InterruptedException {
     Path materialized = workspace.resolve("recipe");
     GoldenLauncher.Result result =
         launcher.run(
             workspace,
-            "--materialize-recipe",
-            "--lookup",
+            "recipe",
+            "materialize",
             recipe.id(),
             "--workspace",
             materialized.toString());
@@ -261,4 +266,7 @@ class GoldenCorpusTest {
   private Path workspace(String id, GoldenLauncher launcher) throws IOException {
     return Files.createDirectories(temporary.resolve(id + "-" + launcher));
   }
+
+  /** Stable observations retain their artifact IDs while command grammar changes. */
+  private record DiscoveryCase(String id, List<String> arguments) {}
 }

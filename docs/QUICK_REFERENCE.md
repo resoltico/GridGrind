@@ -14,28 +14,28 @@ Fast-start snippets and reminders for the shipped GridGrind `.xlsx` contract. Us
 ## Artifact Discovery
 
 ```bash
-gridgrind --help
-gridgrind --help-protocol
-gridgrind --help-guidance
-gridgrind --print-request-template --response request.json
-gridgrind --print-grant-template --response grant.json
-gridgrind --print-protocol-catalog --response protocol-index.json
-gridgrind --print-protocol-catalog --search validation --response validation-search.json
-gridgrind --print-protocol-catalog --lookup inspectionQueryTypes:GET_SHEET_LAYOUT
-gridgrind --print-protocol-catalog --lookup mutationActionTypes --response mutation-actions.json
-gridgrind --print-protocol-catalog --lookup nestedTypes:cellValueSpecTypes --response cell-input-types.json
-gridgrind --print-recipe --lookup BUDGET --response budget-request.json
-gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
-gridgrind --print-recipe --lookup SHEET_MAINTENANCE --response sheet-maintenance.json
-gridgrind --print-recipe --lookup WORKBOOK_HEALTH --response workbook-health.json
-gridgrind --print-recipe --lookup ASSERTION --response assertion.json
-gridgrind --print-request-template | gridgrind --doctor-request --execution-root .
-gridgrind --doctor-request --request request.json --grant grant.json --response doctor-report.json
+gridgrind help
+gridgrind help protocol
+gridgrind help guidance
+gridgrind template request --response request.json
+gridgrind template grant --response grant.json
+gridgrind catalog --response protocol-index.json
+gridgrind catalog search validation --response validation-search.json
+gridgrind catalog show inspectionQueryTypes:GET_SHEET_LAYOUT
+gridgrind catalog show mutationActionTypes --response mutation-actions.json
+gridgrind catalog show nestedTypes:cellValueSpecTypes --response cell-input-types.json
+gridgrind recipe show BUDGET --response budget-request.json
+gridgrind recipe show DASHBOARD --response dashboard-request.json
+gridgrind recipe show SHEET_MAINTENANCE --response sheet-maintenance.json
+gridgrind recipe show WORKBOOK_HEALTH --response workbook-health.json
+gridgrind recipe show ASSERTION --response assertion.json
+gridgrind template request | gridgrind doctor --execution-root .
+gridgrind doctor --request request.json --grant grant.json --response doctor-report.json
 ```
 
-`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook. Generate `grant.json` with `--print-grant-template`, then edit it to the request's exact resources, operations, target scope, and publication authority before bound doctoring or execution. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight. `--response <path>` works across execution, doctoring, and printable discovery commands, so the primary output can be captured to a file instead of stdout. Use `--materialize-recipe --lookup <id> --workspace <new-directory>` for an asset-backed recipe; it atomically creates the request and all declared assets. Built-in example and task catalogs publish `requestFileName`, `advisory`, and `requiredWorkspacePaths` so callers can select the correct flow.
+`help` is the short synopsis. `help protocol` is the authoritative CLI/request contract, `help guidance` is the workflow/example playbook, and `doctor` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook. Generate `grant.json` with `template grant`, then edit it to the request's exact resources, operations, target scope, and publication authority before bound doctoring or execution. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight. `--response <path>` works across execution, doctoring, and printable discovery commands, so the primary output can be captured to a file instead of stdout. Use `recipe materialize <id> --workspace <new-directory>` for an asset-backed recipe; it atomically creates the request and all declared assets. Built-in example and task catalogs publish `requestFileName`, `advisory`, and `requiredWorkspacePaths` so callers can select the correct flow.
 
-The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Exact identifiers rank first; multi-word searches then rank entries by how many query terms they match, so broad queries still return useful candidates. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index. Optional fields publish `defaultValue` for constant omission defaults or `defaultFrom` for a sibling-derived default; request payloads must still omit absent fields rather than sending `null`.
+The bare `catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Exact identifiers rank first; multi-word searches then rank entries by how many query terms they match, so broad queries still return useful candidates. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index. Optional fields publish `defaultValue` for constant omission defaults or `defaultFrom` for a sibling-derived default; request payloads must still omit absent fields rather than sending `null`.
 Machine-readable request-template, discovery, doctor, and execution payloads are compact JSON by default; add `--pretty` when you want indented JSON instead.
 
 `execution.journal.level=VERBOSE` also emits compact `ExecutionProgressEvent` JSONL records on stderr while execution runs. `--pretty` never changes those one-line progress records.
@@ -55,7 +55,7 @@ Machine-readable request-template, discovery, doctor, and execution payloads are
 }
 ```
 
-Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`, `assertion`, or `query`; do not send `step.type`. `gridgrind --print-request-template` emits this same canonical minimal envelope. Top-level `execution` and `formulaEnvironment` are optional: omit them for the default `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` path and the empty evaluator environment, or add them only when the request needs non-default behavior. The step snippets below are request fragments, not standalone full requests, unless the section explicitly shows the full top-level envelope. `SUMMARY` is the default journal level because it keeps the response compact and deterministic by omitting timing telemetry and live progress output.
+Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`, `assertion`, or `query`; do not send `step.type`. `gridgrind template request` emits this same canonical minimal envelope. Top-level `execution` and `formulaEnvironment` are optional: omit them for the default `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` path and the empty evaluator environment, or add them only when the request needs non-default behavior. The step snippets below are request fragments, not standalone full requests, unless the section explicitly shows the full top-level envelope. `SUMMARY` is the default journal level because it keeps the response compact and deterministic by omitting timing telemetry and live progress output.
 
 ## Common Source And Persistence Shapes
 

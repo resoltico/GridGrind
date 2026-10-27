@@ -40,7 +40,7 @@ command runs at a time.
 
 These scripts are thin shell wrappers, not a separate argument parser. They forward Gradle
 properties and options to the nested Jazzer build, so flags such as `-PjazzerMaxDuration=5m` and
-`--console=plain` are expected here. Public `--help` output and invalid-target rejection are owned
+`--console=plain` are expected here. Public `help` output and invalid-target rejection are owned
 by the wrapper surface itself, so first-contact users and agents do not fall through to generic
 Gradle help just to learn the command shape.
 

@@ -22,8 +22,8 @@ class ProblemContextCoverageTest {
         ProblemContextRequestSurfaces.JsonLocation.unavailable();
     ProblemContextRequestSurfaces.JsonLocation lineColumn =
         ProblemContextRequestSurfaces.JsonLocation.lineColumn(4, 12);
-    ProblemContextRequestSurfaces.CliArgument unknownArgument =
-        ProblemContextRequestSurfaces.CliArgument.unknown();
+    ProblemContextRequestSurfaces.HostArgument unknownArgument =
+        ProblemContextRequestSurfaces.HostArgument.unknown();
     ProblemContextWorkbookSurfaces.InputReference unknownInput =
         ProblemContextWorkbookSurfaces.InputReference.unknown();
     ProblemContextWorkbookSurfaces.InputReference kindInput =
@@ -107,6 +107,13 @@ class ProblemContextCoverageTest {
   }
 
   @Test
+  void hostContextPublishesTheSuppliedHostIdentity() {
+    HostContext context = new HostContext("cli");
+    assertEquals("HOST_RUNTIME", context.type());
+    assertEquals("cli", context.hostId());
+  }
+
+  @Test
   void stageContextsExposeTypedRequestInputLocationAndOutputFacts() {
     ProblemContextRequestSurfaces.RequestShape requestShape =
         ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "OVERWRITE");
@@ -121,7 +128,6 @@ class ProblemContextCoverageTest {
                 ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset("source.path", 41));
     ProblemContext.ValidateRequest validateRequest =
         new ProblemContext.ValidateRequest(requestShape);
-    CliRuntimeContext cliRuntime = new CliRuntimeContext();
     ProblemContext.ResolveInputs resolveInputs =
         new ProblemContext.ResolveInputs(
             requestShape, ProblemContextWorkbookSurfaces.InputReference.kind("comment"));
@@ -167,7 +173,6 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.of("request.json"), bindRequest.requestPath());
     assertEquals(Optional.of("source.path"), bindRequest.jsonPath());
     assertEquals(Optional.of(41L), bindRequest.byteOffset());
-    assertEquals("CLI_RUNTIME", cliRuntime.type());
     assertEquals(Optional.of("EXISTING"), validateRequest.sourceType());
     assertEquals(Optional.of("OVERWRITE"), validateRequest.persistenceType());
     assertEquals(Optional.of("EXISTING"), resolveInputs.sourceType());

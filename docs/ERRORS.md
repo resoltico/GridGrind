@@ -179,7 +179,7 @@ use the plural `CommandError` envelope instead of an execution result:
       "recovery": "CHANGE_REQUEST",
       "title": "Invalid CLI arguments",
       "message": "Unknown argument: --bogus",
-      "resolution": "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the grammar, or --help-guidance for workflow-oriented commands.",
+      "resolution": "Use gridgrind help to inspect commands and supported options.",
       "context": {
         "type": "PARSE_ARGUMENTS",
         "argument": {
@@ -199,7 +199,7 @@ finding. `REJECTED` means workbook execution never began; it does not describe t
 domain. Read `problems[*].category` for that domain.
 
 `WorkbookResult` is emitted only by the execution command after workbook execution begins. Its
-`status` is `SUCCEEDED` or `FAILED`; `problem` appears only on `FAILED`. `--doctor-request` keeps
+`status` is `SUCCEEDED` or `FAILED`; `problem` appears only on `FAILED`. `doctor` keeps
 its own successful `RequestDoctorReport` payload: findings make that report `valid:false`, not a
 `CommandError`. For the same request bytes, execution rejection and doctor findings use the same
 ordered problem core.
@@ -354,7 +354,7 @@ evaluation, unevaluable formulas remain unchanged and produce `FORMULA_NOT_EVALU
 | `INVALID_SIGNING_CONFIGURATION` | `persistence.security.signature keystore, alias, secret reference, or digest settings could not be resolved. |
 | `WORKBOOK_SECURITY_ERROR` | OOXML signature inspection on an already-opened package, encryption, or signing failed after request validation due to package or runtime security state. |
 | `UNSAFE_PATH_ACCESS` | The filesystem cannot provide GridGrind's required no-follow path binding, or a bound path topology changed before access. This failure is fail-closed. |
-| `AUTHORITY_DENIED` | The host grant omitted a requested bound file resource, secret reference, operation ID, target scope, or publication authority. Generate `--print-grant-template`, narrow it deliberately, and pass it through `--grant`; authored plans cannot broaden a grant. |
+| `AUTHORITY_DENIED` | The host grant omitted a requested bound file resource, secret reference, operation ID, target scope, or publication authority. Generate `template grant`, narrow it deliberately, and pass it through `--grant`; authored plans cannot broaden a grant. |
 
 ### I/O (`IO` category)
 

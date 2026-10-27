@@ -48,7 +48,7 @@
       },
       "message" : "Unknown type value 'UNKNOWN'; valid values: NONE, OVERWRITE, SAVE_AS",
       "recovery" : "CHANGE_REQUEST",
-      "resolution" : "Replace field 'persistence.type' with one supported type value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
+      "resolution" : "Replace field 'persistence.type' with one supported type value. Inspect the protocol catalog when you need the allowed values.",
       "title" : "Invalid request shape"
     }, {
       "category" : "REQUEST",

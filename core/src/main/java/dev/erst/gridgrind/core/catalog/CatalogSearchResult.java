@@ -4,7 +4,7 @@ import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 
-/** Case-insensitive protocol-catalog search result returned by CLI discovery commands. */
+/** Case-insensitive protocol-catalog search result returned by discovery operations. */
 public record CatalogSearchResult(
     ProtocolVersion protocolVersion,
     String query,

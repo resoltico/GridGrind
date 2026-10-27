@@ -1,50 +1,20 @@
 package dev.erst.gridgrind.core.catalog;
 
-/** Request-surface, CLI-path, and scratch-ownership wording shared by public contract surfaces. */
+/** Request size, workbook security and step semantics shared by public contract surfaces. */
 public final class GridGrindRequestSurfaceContractText {
   private static final long REQUEST_DOCUMENT_LIMIT_BYTES = 16L * 1024 * 1024;
 
   private GridGrindRequestSurfaceContractText() {}
 
-  /** One stable help and runtime message for stdin-backed authored values. */
-  public static String standardInputRequiresRequestMessage() {
-    return "STANDARD_INPUT-authored values require --request so stdin is available for input"
-        + " content instead of the request JSON";
-  }
-
-  /** One stable help and runtime message for stdin-rooted request execution. */
-  public static String stdinExecutionRootRequiredMessage() {
-    return "Requests read from stdin require --execution-root so request-owned paths resolve"
-        + " from one explicit directory";
-  }
-
-  /** Stable wording for how relative paths inside the request are resolved. */
+  /** Describes the host-independent execution-root rule for authored relative paths. */
   public static String requestOwnedPathResolutionSummary() {
-    return "When the CLI reads a request via --request, relative request-owned paths resolve from"
-        + " the request file directory. When the request JSON arrives on stdin, pass"
-        + " --execution-root <path> and relative request-owned paths resolve from that"
-        + " directory.";
-  }
-
-  /** Stable wording for how CLI file-flag paths are resolved. */
-  public static String cliFlagPathResolutionSummary() {
-    return "--request and --response resolve from the current working directory, as do"
-        + " --execution-root and --temp-root.";
-  }
-
-  /** Stable wording for how CLI-managed scratch space is owned and defaulted. */
-  public static String cliScratchSpaceSummary() {
-    return "GridGrind creates one private per-run scratch directory. Without --temp-root, that"
-        + " scratch directory lives under the OS temporary-file root. With --temp-root <path>,"
-        + " GridGrind creates the private scratch directory under that supplied parent path."
-        + " Best-effort cleanup removes the managed scratch directory on normal command"
-        + " completion.";
+    return "Relative request-owned paths resolve from the explicit execution root supplied by the host.";
   }
 
   /** Stable wording for encrypted OOXML plaintext temp ownership. */
   public static String encryptedWorkbookTempSecuritySummary() {
     return "Encrypted OOXML plaintext temp workbooks always stay in one private OS temporary"
-        + " directory rather than the request root, execution root, or CLI scratch-parent"
+        + " directory rather than the request root, execution root, or host scratch-parent"
         + " override.";
   }
 

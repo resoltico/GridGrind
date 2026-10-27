@@ -54,7 +54,7 @@ catalog summary, or help line.
 | **Message** | `materialized worksheet work must not exceed 250000 items per plan; this step raises the total to {n}` |
 | **Applies to** | `APPLY_STYLE`, `CLEAR_RANGE`, `SET_ARRAY_FORMULA`, `SET_RANGE`, `SET_ROW_HEIGHT`, `SET_ROW_VISIBILITY`, `GROUP_ROWS`, and `UNGROUP_ROWS` |
 | **Code** | `WorkbookStaticMaterializationValidation // LIM-039` |
-| **UX** | `--help` Limits section |
+| **UX** | `help` Limits section |
 
 GridGrind counts every action that must enumerate cells or create physical rows before the workbook
 is opened. The cumulative limit prevents a syntactically valid plan from exhausting the JVM by
@@ -93,7 +93,7 @@ exception.
 | **Message** | `addresses must not exceed 250000 but was {n}` / `rowCount * columnCount must not exceed 250000 but was {n}` |
 | **Applies to** | `GET_CELLS`, `GET_WINDOW`, `GET_SHEET_SCHEMA` |
 | **Code** | `ExcelReadLimits.MAX_READ_CELLS`; `SelectorNumberValidation.requireReadCellCount // LIM-001`; `SelectorValueValidation.requireWindowSize // LIM-001`; `ExcelAddressLists.copyNonEmptyDistinctAddresses // LIM-001`; `InspectionQuery.MAX_READ_CELLS // LIM-001` |
-| **UX** | `--help` Limits section; `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` docs |
+| **UX** | `help` Limits section; `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` docs |
 
 Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily
 large windows and exact address lists; GridGrind must then materialize and serialize factual cell
@@ -126,7 +126,7 @@ with multiple bounded `GET_WINDOW` reads.
 | **Message** | `path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: {path}` |
 | **Applies to** | `source` (EXISTING), `persistence` (SAVE_AS) |
 | **Code** | `WorkbookPlan.requireXlsxWorkbookPath` |
-| **UX** | `--help` Limits section |
+| **UX** | `help` Limits section |
 
 GridGrind intentionally narrows Apache POI's broader OOXML workbook support to plain `.xlsx`.
 `.xls` (BIFF8/HSSF), macro-enabled `.xlsm`, and `.xlsb` (binary) are all rejected by the product
@@ -144,7 +144,7 @@ contract even though Apache POI can preserve and extract VBA-bearing `.xlsm` pac
 | **Message** | `sheetName must not exceed 31 characters: {name}` or `sheetName contains invalid Excel character ':' at position 4: Bad:Name` |
 | **Applies to** | All operations with a `sheetName` field |
 | **Code** | `SheetName`; `ExcelSheetNames.requireValid`; `ExcelWorkbookSheetSupport.requireSheetName` |
-| **UX** | `--help` Limits section; `ENSURE_SHEET` and `RENAME_SHEET` catalog summaries |
+| **UX** | `help` Limits section; `ENSURE_SHEET` and `RENAME_SHEET` catalog summaries |
 
 The 31-character ceiling and reserved-character rules are Excel hard limits. GridGrind validates
 them at request parse time so the error is structured and reported before any workbook work
@@ -162,7 +162,7 @@ begins, instead of surfacing a raw Apache POI sheet-creation exception later in 
 | **Messages** | `widthCharacters must not exceed 255.0 (Excel column width limit): got {n}` / `widthCharacters is too small to produce a visible Excel column width: got {n}` |
 | **Applies to** | `SET_COLUMN_WIDTH`, `SET_SHEET_PRESENTATION.sheetDefaults.defaultColumnWidth` |
 | **Code** | `MutationAction.Validation.requireColumnWidthCharacters`; `ExcelSheetLayoutLimits.requireColumnWidthCharacters`; `ExcelSheetLayoutLimits.requireDefaultColumnWidth` |
-| **UX** | `--help` Limits section; `SET_COLUMN_WIDTH` and `SET_SHEET_PRESENTATION` catalog summaries |
+| **UX** | `help` Limits section; `SET_COLUMN_WIDTH` and `SET_SHEET_PRESENTATION` catalog summaries |
 
 255 character units is the Excel column width ceiling. POI converts explicit column widths to
 internal units with `round(widthCharacters * 256)`. Values that round to zero are also rejected.
@@ -182,7 +182,7 @@ widths can still be reported above `255` instead of being clamped.
 | **Messages** | `heightPoints must not exceed 409.0 (Excel row height limit): got {n}` / `heightPoints is too small to produce a visible Excel row height: {n}` |
 | **Applies to** | `SET_ROW_HEIGHT`, `SET_SHEET_PRESENTATION.sheetDefaults.defaultRowHeightPoints` |
 | **Code** | `MutationAction.Validation.requireRowHeightPoints`; `ExcelSheetLayoutLimits.requireRowHeightPoints` |
-| **UX** | `--help` Limits section; `SET_ROW_HEIGHT` and `SET_SHEET_PRESENTATION` catalog summaries |
+| **UX** | `help` Limits section; `SET_ROW_HEIGHT` and `SET_SHEET_PRESENTATION` catalog summaries |
 
 Excel's published maximum row height is 409 points for `.xlsx` worksheets. Apache POI can store a
 larger twip value internally, but GridGrind aligns the product contract to the real Excel limit
@@ -671,7 +671,7 @@ effective limit when writing via GridGrind.
 | **Message** | Product-owned `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected structure and sheet |
 | **Applies to** | `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
 | **Code** | `ExcelRowColumnStructureController.rejectAffectedRowStructuresFor*`; `ExcelRowColumnStructureController.rejectAffectedColumnStructuresFor*` |
-| **UX** | `--help` Limits section; structural-edit catalog summaries |
+| **UX** | `help` Limits section; structural-edit catalog summaries |
 
 Apache POI 5.5.1 does not reliably normalize table refs or sheet autofilter refs when rows or
 columns are structurally inserted, deleted, or shifted, and it still leaves data-validation
@@ -695,7 +695,7 @@ The rejection is precise and structure-owned. Example messages include:
 | **Message** | `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` product-owned message explaining that Apache POI leaves some column references stale |
 | **Applies to** | `INSERT_COLUMNS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
 | **Code** | `ExcelRowColumnStructureController.rejectFormulaBearingWorkbookForColumnEdit` |
-| **UX** | `--help` Limits section; structural-edit catalog summaries |
+| **UX** | `help` Limits section; structural-edit catalog summaries |
 
 Apache POI 5.5.1 updates some column references during `shiftColumns(...)`, but not all of them.
 In direct probes against formula-bearing workbooks, formulas such as `A2&B2` were rewritten while
@@ -718,7 +718,7 @@ Example message:
 | **Message** | Product-owned `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected named range and sheet |
 | **Applies to** | `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
 | **Code** | `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowDelete // LIM-018`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowShift // LIM-018`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnDelete // LIM-018`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnShift // LIM-018`; `ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForRowDelete // LIM-018`; `ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForRowShift // LIM-018`; `ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForColumnDelete // LIM-018`; `ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForColumnShift // LIM-018` |
-| **UX** | `--help` Limits section; structural-edit catalog summaries |
+| **UX** | `help` Limits section; structural-edit catalog summaries |
 
 Apache POI can safely translate a range-backed named range when the named range is fully contained
 inside the moved row or column band, or when it is completely untouched by the edit. Direct probes
@@ -743,7 +743,7 @@ Example messages:
 | **Message** | `execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
 | **Applies to** | top-level `execution.mode.type`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelEventWorkbookReader.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeSpecTypes` catalog summary |
+| **UX** | `help` Limits section; request-shape docs; `execution.mode` docs; `executionModeSpecTypes` catalog summary |
 
 `EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not
 materialize the full workbook object graph, so GridGrind restricts it to workbook and sheet
@@ -762,7 +762,7 @@ time instead of silently falling back to the normal in-memory executor.
 | **Message** | `execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
 | **Applies to** | top-level `execution.mode.type`, `source`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelStreamingWorkbookWriter.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeSpecTypes` catalog summary |
+| **UX** | `help` Limits section; request-shape docs; `execution.mode` docs; `executionModeSpecTypes` catalog summary |
 
 `STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only
 new workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced
@@ -781,7 +781,7 @@ streaming workbooks or hidden mode fallback.
 | **Message** | `Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.` |
 | **Applies to** | CLI stdin request ingestion, `--request <path>` file ingestion, `GridGrindJson.readRequest(InputStream)`, `GridGrindJson.readRequest(byte[])` |
 | **Code** | `GridGrindRequestSurfaceContractText.requestDocumentLimitBytes`; `GridGrindJson.requireSupportedRequestLength`; request JSON stream constraints in `GridGrindJson` |
-| **UX** | `--help` Limits section; request-shape docs; source-backed input docs |
+| **UX** | `help` Limits section; request-shape docs; source-backed input docs |
 
 GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`, `FILE`, and
 `STANDARD_INPUT`), not by letting the outer request document grow without bound. The CLI now
@@ -801,7 +801,7 @@ product-owned `INVALID_REQUEST` message.
 | **Message** | `zoomPercent must be between 10 and 400 inclusive: {n}` |
 | **Applies to** | `SET_SHEET_ZOOM` |
 | **Code** | `MutationAction.Validation.requireZoomPercent // LIM-022`; `ExcelSheetViewSupport.requireZoomPercent // LIM-022`; `SheetLayoutReport` |
-| **UX** | `--help` Limits section; `SET_SHEET_ZOOM` catalog summary |
+| **UX** | `help` Limits section; `SET_SHEET_ZOOM` catalog summary |
 
 Excel exposes worksheet zoom in the 10% to 400% range. GridGrind validates the authored value up
 front and reuses the same bound for factual sheet-layout reports so CLI operators and agents see

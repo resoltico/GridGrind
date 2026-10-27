@@ -5,7 +5,7 @@ import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Request and CLI surface facts reused across problem-context stages. */
+/** Request and host surface facts reused across problem-context stages. */
 public interface ProblemContextRequestSurfaces {
   /** Null-free request-shape summary reused across request-execution failure contexts. */
   @Union(discriminator = "type")
@@ -91,7 +91,7 @@ public interface ProblemContextRequestSurfaces {
     }
   }
 
-  /** CLI response destination, never encoded with a nullable path. */
+  /** Host response destination, never encoded with a nullable path. */
   @Union(discriminator = "type")
   sealed interface ResponseOutput
       permits ResponseOutput.StandardOutput, ResponseOutput.ResponseFile {
@@ -352,24 +352,24 @@ public interface ProblemContextRequestSurfaces {
     }
   }
 
-  /** Optional CLI argument reference without nullable string padding. */
+  /** Optional host argument reference without nullable string padding. */
   @Union(discriminator = "type")
-  sealed interface CliArgument permits CliArgument.Unknown, CliArgument.Named {
-    /** Returns the explicit unknown CLI-argument variant. */
-    static CliArgument unknown() {
-      return new CliArgument.Unknown();
+  sealed interface HostArgument permits HostArgument.Unknown, HostArgument.Named {
+    /** Returns the explicit unknown host-argument variant. */
+    static HostArgument unknown() {
+      return new HostArgument.Unknown();
     }
 
-    /** Returns the CLI-argument variant for one named flag or operand. */
-    static CliArgument named(String argument) {
+    /** Returns the host-argument variant for one named flag or operand. */
+    static HostArgument named(String argument) {
       return new Named(requireNonBlank(argument, "argument"));
     }
 
-    /** Returns the concrete CLI argument that triggered parsing failure when known. */
+    /** Returns the concrete host argument that triggered parsing failure when known. */
     default Optional<String> argumentValue() {
       return switch (this) {
         case Named named -> Optional.of(named.argument());
-        case CliArgument.Unknown _ -> Optional.empty();
+        case HostArgument.Unknown _ -> Optional.empty();
       };
     }
 
@@ -377,13 +377,13 @@ public interface ProblemContextRequestSurfaces {
     @Variant(
         id = "UNKNOWN",
         summary = "The parse failure was not attributable to one specific argument.")
-    record Unknown() implements CliArgument {}
+    record Unknown() implements HostArgument {}
 
     /** The parse failure was attributable to one named option or operand. */
     @Variant(
         id = "NAMED",
         summary = "The parse failure was attributable to one named option or operand.")
-    record Named(String argument) implements CliArgument {
+    record Named(String argument) implements HostArgument {
       public Named {
         argument = requireNonBlank(argument, "argument");
       }

@@ -128,7 +128,7 @@ top-level verification entrypoints are intentionally serialized.
   the pinned builder stage materialize the packaged JAR inside the image build itself
 - runs mounted-path container commands under the caller's UID:GID so response files and saved
   workbooks stay owned by the invoking operator on both macOS Docker Desktop and Linux CI runners
-- verifies `--help` and `--version`
+- verifies `help` and `version`
 - verifies that GridGrind, JRE, and base-package legal files remain discoverable and that the image
   does not publish a repository-level license as if it covered the aggregate contents
 - verifies create-from-`NEW`, reopen-from-`EXISTING`, signature-line authoring, and

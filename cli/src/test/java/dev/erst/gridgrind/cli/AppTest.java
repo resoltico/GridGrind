@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.cli.command.GridGrindCli;
 import dev.erst.gridgrind.core.grant.AcceptancePolicy;
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.result.WorkbookResult;
@@ -56,9 +57,9 @@ class AppTest {
                 },
             observedExitCode::set);
 
-    app.run(new String[] {"--request", "input.json"});
+    app.run(new String[] {"run", "--request", "input.json"});
 
-    assertEquals("--request,input.json", observedArgs.get());
+    assertEquals("run,--request,input.json", observedArgs.get());
     assertEquals(-1, observedExitCode.get());
   }
 
@@ -89,7 +90,15 @@ class AppTest {
     App app = new App(() -> new GridGrindCli()::run, observedExitCode::set);
 
     app.run(
-        new String[] {"--execution-root", workspace.toString(), "--grant", grant.toString()},
+        new String[] {
+          "run",
+          "--request",
+          "-",
+          "--execution-root",
+          workspace.toString(),
+          "--grant",
+          grant.toString()
+        },
         new ByteArrayInputStream(jsonRequest),
         capturedOut,
         capturedErr);
@@ -117,7 +126,15 @@ class AppTest {
       System.setErr(redirectedErr);
 
       App.main(
-          new String[] {"--execution-root", workspace.toString(), "--grant", grant.toString()});
+          new String[] {
+            "run",
+            "--request",
+            "-",
+            "--execution-root",
+            workspace.toString(),
+            "--grant",
+            grant.toString()
+          });
     } finally {
       originalStreams.restore();
       Files.deleteIfExists(grant);
@@ -136,7 +153,7 @@ class AppTest {
     Path grant = Files.createTempFile("gridgrind-app-grant-", ".json");
     Files.write(
         grant,
-        dev.erst.gridgrind.cli.discovery.GridGrindCliJson.writeBytes(
+        dev.erst.gridgrind.cli.render.GridGrindCliJson.writeBytes(
             new ExecutionGrant(
                 List.of(),
                 List.of(),

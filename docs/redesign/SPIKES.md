@@ -2936,3 +2936,63 @@ Inventories after the cutover: main Java 108,045 (112,089 before this batch); te
 inventories empty; top-level snapshots one, definitions zero. Blank-check occurrences remain 273;
 WP-21 and the optional-component follow-through in several core reports remain open.
 `git diff main -- AGENTS.md` is empty; no supplement exists yet.
+
+## WP-50/51 — Core discovery and explicit CLI commands
+
+Recipe definitions, task metadata, examples, matching and scoring now live in core.discovery;
+workspace publication stays in cli.io. Core uses HostContext(hostId), with concrete host
+wording and argument remediation in the CLI. Architecture negative controls reject concrete
+CLI/container/terminal types in core.
+
+The CLI parses the adopted commands directly. Run requires request and grant paths; doctor
+requires a request and permits static diagnosis without a grant. Explicit --request - requires
+an execution root. No arguments display help without reading stdin. Native terminal probing,
+implicit stdin peeking, lazy probe suppliers and old flag parsers were deleted. Commands,
+rendering and IO have separate packages; only the process entry package is exported.
+
+Recipe show --details preserves the rich descriptor and request profile. Golden review caught
+its dropped protocol-version envelope: this was a regression, fixed with the existing catalog
+lookup writer. The original protocolVersion field is retained in the snapshots.
+
+Reviewed golden changes:
+- Three text help snapshots and structured help publish explicit commands and ten options,
+  explicit request/grant authority, stdin selection and current discovery workflows. Existing
+  request, file-workflow and coordinate facts remain.
+- Four doctor snapshots replace CLI flag instructions with host-neutral catalog guidance;
+  missing-input guidance describes the explicit execution root. Classifications, locations,
+  diagnostic categories and sibling recovery are unchanged.
+- Seven asset-backed recipe snapshots update the rejected show command, materialization
+  instruction, remediation, the id argument pointer and shared host-neutral argument title. Materialization, request
+  profiles, execution and workbook readback facts are unchanged.
+- Three new schema snapshots cover request, grant and response through both launchers.
+  All 143 original cases remain; 149 golden cases passed the re-recording run.
+- No workbook-result or readback snapshot changes were accepted.
+
+CLI main code counted 5,520 lines before final boundary documentation, versus the package's
+approximately 12.3k starting estimate. The soft approximately 4k target is not met. Remaining
+transport/publication/diagnostic contracts were not shifted into core merely to reduce this
+number. Optional report components and blank-check reduction remain pending core follow-through.
+
+Checkpoint failures exposed a stale JSON-test host import, newly public boundary documentation,
+parser static-analysis findings, obsolete import suppressions and a negative-control container.
+Repairs narrow helper visibility, use core path guidance, preserve exception causes, and retain
+an invocation-local EnumMap with a narrow concurrency-rule exemption. Failed outputs and focused
+repair runs are retained in the external work-package evidence directory.
+
+The obsolete shell wrapper remains deferred to WP-61 under the user's minimal-gating instruction:
+it reruns root checks through its shell contracts. Full mutation and active fuzz campaigns remain
+deferred until all implementation is complete.
+
+The generated request schema now describes host progress rendering. The response schema
+replaces CliRuntimeContext/CLI_RUNTIME with HostContext/HOST_RUNTIME and required nonblank
+hostId, and renames the argument schema definitions to HostArgument while retaining their
+wire tags. Grant schema is unchanged. Example execution fixtures obtain pure recipe data
+from core and use current commands for host materialization. Focused fixture execution and
+all CLI test PMD checks passed after these consumer updates (50 s).
+
+Final host checkpoint: ./gradlew check passed in 5m17s. Core 422, JSON 353, engine 1359,
+parity 14, CLI 486 (golden 149), architecture controls 16 and product architecture 14;
+zero failures, errors or skips. Delivered inventories: main Java 106294, test Java 148389,
+Support classes 62, blank checks 274, shell lines 10842; CLI main Java 5566. Against the
+preceding checkpoint these are 108045/150182/73/273/10842 respectively. Host implementation
+is delivered; the soft CLI target and pending core follow-through remain explicit deviations.

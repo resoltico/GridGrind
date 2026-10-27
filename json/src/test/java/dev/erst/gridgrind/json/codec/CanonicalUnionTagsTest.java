@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.core.model.layout.WindowDimensionsReport;
 import dev.erst.gridgrind.core.model.layout.WindowReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.problem.CliRuntimeContext;
+import dev.erst.gridgrind.core.problem.HostContext;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -35,7 +35,7 @@ class CanonicalUnionTagsTest {
 
   @Test
   void contextsUseTypeAndRejectStage() {
-    verify(new CliRuntimeContext(), ProblemContext.class, "type", "stage", "CLI_RUNTIME");
+    verify(new HostContext("cli"), ProblemContext.class, "type", "stage", "HOST_RUNTIME");
   }
 
   @Test

@@ -348,7 +348,7 @@ class WorkbookResultTest {
   void parseArgumentsAndProblemsExposeStepCentricContext() {
     dev.erst.gridgrind.core.problem.ProblemContext.ParseArguments parseArguments =
         new dev.erst.gridgrind.core.problem.ProblemContext.ParseArguments(
-            dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.CliArgument.named(
+            dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.HostArgument.named(
                 "--request"));
     GridGrindProblemDetail.Problem problem =
         GridGrindProblemDetail.Problem.of(

@@ -58,6 +58,16 @@ enum ProductDependencyArchitectureRules {
         }
       };
 
+  static ArchRule coreDoesNotOwnConcreteHostTypes() {
+    return classes()
+        .that()
+        .resideInAPackage("dev.erst.gridgrind.core..")
+        .should()
+        .haveNameNotMatching(
+            ".*(Cli|Docker|Container|TerminalSession|TerminalCommand|TerminalWindow).*")
+        .because("product discovery and HostContext are independent of concrete host transports");
+  }
+
   static ArchRule coreDoesNotDependOnWorkbookOrJsonLibraries() {
     return noClasses()
         .that()

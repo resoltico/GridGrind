@@ -59,11 +59,11 @@ class GridGrindProblemCodeResolutionTest {
         GridGrindProblemCode.IO_ERROR.resolution(),
         GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", newWorkbookContext));
     assertEquals(
-        "Choose a new --response path or remove the conflicting file, then retry.",
+        "Choose a new response destination or remove the conflicting file, then retry.",
         GridGrindProblemCode.IO_ERROR.resolutionFor(
             "Could not write response: already exists", writeResponseContext));
     assertEquals(
-        "Check the --response destination path, parent directory permissions, free disk space, and file locks before retrying.",
+        "Check the response destination path, parent directory permissions, free disk space, and file locks before retrying.",
         GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", writeResponseContext));
     assertEquals(
         GridGrindProblemCode.IO_ERROR.resolution(),
@@ -71,30 +71,18 @@ class GridGrindProblemCodeResolutionTest {
   }
 
   @Test
-  void resolutionForCoversContextualInvalidArgumentBranches() {
-    ProblemContext.ParseArguments requestArgumentContext =
+  void argumentRecoveryDoesNotInterpretOneHostsGrammar() {
+    var context =
         new ProblemContext.ParseArguments(
-            ProblemContextRequestSurfaces.CliArgument.named("--request"));
-    ProblemContext.ParseArguments lookupArgumentContext =
-        new ProblemContext.ParseArguments(
-            ProblemContextRequestSurfaces.CliArgument.named("--lookup"));
-    ProblemContext.ParseArguments queryArgumentContext =
-        new ProblemContext.ParseArguments(
-            ProblemContextRequestSurfaces.CliArgument.named("--query"));
-
-    assertEquals(
-        "Requests that bind STANDARD_INPUT-authored payloads must arrive by --request so standard input stays available for payload bytes.",
-        GridGrindProblemCode.INVALID_ARGUMENTS.resolutionFor(
-            "Requests with STANDARD_INPUT-authored payloads must be provided via --request.",
-            requestArgumentContext));
-    assertEquals(
-        "Use --print-recipe-catalog first when you need the stable recipe ids, requestFileName, advisory, and requiredWorkspacePaths, or use --print-recipe-keyword-match when you know the goal but not the id.",
-        GridGrindProblemCode.INVALID_ARGUMENTS.resolutionFor(
-            "Unknown recipe: workbook_health", lookupArgumentContext));
-    assertEquals(
-        "Use a natural-language query that leaves at least one searchable non-stop-word term after normalization.",
-        GridGrindProblemCode.INVALID_ARGUMENTS.resolutionFor(
-            "Invalid keyword query: only stop words remain after normalization.",
-            queryArgumentContext));
+            ProblemContextRequestSurfaces.HostArgument.named("input"));
+    for (String message :
+        java.util.List.of(
+            "Unknown option: --request",
+            "Unknown recipe: workbook_health",
+            "Invalid keyword query")) {
+      assertEquals(
+          "Fix the host arguments and rerun the command.",
+          GridGrindProblemCode.INVALID_ARGUMENTS.resolutionFor(message, context));
+    }
   }
 }

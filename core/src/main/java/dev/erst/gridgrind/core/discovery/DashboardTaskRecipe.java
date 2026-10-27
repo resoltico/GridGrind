@@ -1,0 +1,192 @@
+package dev.erst.gridgrind.core.discovery;
+
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.discovery;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.intent;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.narrative;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.phase;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.profile;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.ref;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.selfContainedStarter;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.signals;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.task;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.workflow;
+
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import java.util.List;
+
+/** Published task recipe for executive dashboard workflows. */
+final class DashboardTaskRecipe {
+  private DashboardTaskRecipe() {}
+
+  static TaskRecipeTemplate definition() {
+    return TaskRecipes.definition(
+        task(
+            "DASHBOARD",
+            selfContainedStarter("DASHBOARD"),
+            List.of("office", "dashboard", "charts", "summary", "kpi", "sales", "revenue"),
+            discovery(
+                List.of(
+                    "dashboard",
+                    "charts",
+                    "chart",
+                    "kpi",
+                    "scorecard",
+                    "executive summary",
+                    "sales",
+                    "revenue"),
+                intent(
+                    List.of(TaskGoalKind.AUTHOR, TaskGoalKind.VERIFY, TaskGoalKind.ANALYZE),
+                    List.of(
+                        TaskArtifactKind.WORKBOOK,
+                        TaskArtifactKind.SHEET,
+                        TaskArtifactKind.CHART,
+                        TaskArtifactKind.NAMED_RANGE))),
+            narrative(
+                "Assemble an executive dashboard from reusable named surfaces and supported charts.",
+                List.of(
+                    "Summary sheets and KPI surfaces are intentionally structured.",
+                    "Reusable named surfaces back formulas or charts instead of fragile copied ranges.",
+                    "Charts are authored and then read back through the same contract surface."),
+                List.of(
+                    "Metric definitions and source ranges.",
+                    "Chart names and anchors.",
+                    "Target persistence path when the dashboard must be saved."),
+                List.of(
+                    "Assertions that required dashboard entities exist.",
+                    "Workbook-health analysis after authoring.",
+                    "Named-range-backed chart series for reusable models.")),
+            profile(
+                TaskSourceMode.NEW_WORKBOOK,
+                TaskPersistenceMode.SAVE_AS,
+                TaskMutationMode.MUTATING,
+                TaskAssetMode.SELF_CONTAINED),
+            signals(
+                List.of(
+                    TaskInputKind.TARGET_SHEET_NAMES,
+                    TaskInputKind.TARGET_OBJECT_NAMES,
+                    TaskInputKind.CELL_OR_RANGE_COORDINATES,
+                    TaskInputKind.PERSISTENCE_TARGET_PATH),
+                List.of(
+                    TaskVerificationKind.FACT_READBACK,
+                    TaskVerificationKind.ASSERTION_CHECKS,
+                    TaskVerificationKind.HEALTH_ANALYSIS)),
+            workflow(
+                List.of(
+                    phase(
+                        TaskPhasePurpose.PREPARE,
+                        "Assemble Summary Sheets",
+                        "Create the dashboard canvas and key text or formula cells first.",
+                        List.of(
+                            ref("workbookSourceTypes", "NEW"),
+                            ref("mutationActionTypes", "ENSURE_SHEET"),
+                            ref("mutationActionTypes", "SET_CELL"),
+                            ref("mutationActionTypes", "SET_RANGE")),
+                        List.of(
+                            "Keep summary layout intentional so later chart anchors are stable.")),
+                    phase(
+                        TaskPhasePurpose.AUTHOR,
+                        "Define Reusable Model Surfaces",
+                        "Create named ranges that charts and formulas can depend on.",
+                        List.of(
+                            ref("mutationActionTypes", "SET_NAMED_RANGE"),
+                            ref("mutationActionTypes", "SET_CHART")),
+                        List.of(
+                            "Named surfaces reduce accidental drift when the dashboard evolves.")),
+                    phase(
+                        TaskPhasePurpose.VERIFY,
+                        "Author And Inspect Visuals",
+                        "Create supported charts and verify that the expected entities exist.",
+                        List.of(
+                            ref("inspectionQueryTypes", "GET_CHARTS"),
+                            ref("assertionTypes", "EXPECT_CHART_PRESENT"),
+                            ref("workbookPersistenceTypes", "SAVE_AS")),
+                        List.of(
+                            "Use factual chart readback to confirm what the workbook now contains."))),
+                List.of(
+                    "SET_CHART supports the authoritative simple-chart family listed in the protocol catalog.",
+                    "Chart title and series FORMULA titles must resolve to one cell.",
+                    "Unsupported loaded chart detail is preserved on unrelated edits but is not available for authoritative mutation."))),
+        starterPlan());
+  }
+
+  private static WorkbookPlan starterPlan() {
+    String taskId = "DASHBOARD";
+    return ExampleWorkbookPlans.defaultExecutionPlan(
+        TaskStarters.taskPlanId(taskId),
+        new WorkbookPlan.WorkbookSource.New(),
+        ExampleWorkbookPlans.saveAs(TaskStarters.taskWorkbookPath(taskId)),
+        ExampleSteps.step(
+            new StepId("ensure-ops"),
+            ExampleSelectors.sheet("Ops"),
+            new WorkbookMutationAction.EnsureSheet()),
+        ExampleSteps.step(
+            new StepId("seed-ops-range"),
+            ExampleSelectors.range("Ops", "A1:C4"),
+            new CellMutationAction.SetRange(
+                ExampleCellValues.rows(
+                    ExampleCellValues.row(
+                        ExampleCellValues.text("Month"),
+                        ExampleCellValues.text("Plan"),
+                        ExampleCellValues.text("Actual")),
+                    ExampleCellValues.row(
+                        ExampleCellValues.text("Jan"),
+                        ExampleCellValues.number(10.0d),
+                        ExampleCellValues.number(12.0d)),
+                    ExampleCellValues.row(
+                        ExampleCellValues.text("Feb"),
+                        ExampleCellValues.number(18.0d),
+                        ExampleCellValues.number(17.0d)),
+                    ExampleCellValues.row(
+                        ExampleCellValues.text("Mar"),
+                        ExampleCellValues.number(15.0d),
+                        ExampleCellValues.number(16.0d))))),
+        ExampleSteps.step(
+            new StepId("define-chart-categories"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("DashboardCategories")),
+            new StructuredMutationAction.SetNamedRange(
+                new DefinedName("DashboardCategories"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
+                    new SheetName("Ops"), new RangeRef("A2:A4")))),
+        ExampleSteps.step(
+            new StepId("define-dashboard-actual"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("DashboardActual")),
+            new StructuredMutationAction.SetNamedRange(
+                new DefinedName("DashboardActual"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
+                    new SheetName("Ops"), new RangeRef("C2:C4")))),
+        ExampleSteps.step(
+            new StepId("author-dashboard-chart"),
+            ExampleSelectors.sheet("Ops"),
+            new DrawingMutationAction.SetChart(
+                ExampleChartSpecs.clusteredColumnComparisonChart(
+                    "DashboardChart",
+                    ExampleDrawingAnchors.anchor(4, 0, 8, 12),
+                    "Operations Dashboard",
+                    "DashboardCategories",
+                    "Plan",
+                    "Ops!$B$2:$B$4",
+                    "Actual",
+                    "DashboardActual"))),
+        ExampleSteps.read(
+            new StepId("read-dashboard-charts"),
+            new dev.erst.gridgrind.core.plan.ChartSelector.AllOnSheet(new SheetName("Ops")),
+            new WorkbookAssetIntrospectionQuery.GetCharts()),
+        ExampleSteps.assertStep(
+            new StepId("assert-dashboard-chart"),
+            new dev.erst.gridgrind.core.plan.ChartSelector.ByName(
+                new SheetName("Ops"), "DashboardChart"),
+            new dev.erst.gridgrind.core.plan.PresenceAssertion.ChartPresent()));
+  }
+}

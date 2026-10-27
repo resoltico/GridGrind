@@ -24,7 +24,7 @@
       },
       "message" : "Unsupported value 'UNKNOWN' for field 'execution.assertionMode'; expected one of: FAIL_FAST, COLLECT",
       "recovery" : "CHANGE_REQUEST",
-      "resolution" : "Replace field 'execution.assertionMode' with one supported value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
+      "resolution" : "Replace field 'execution.assertionMode' with one supported value. Inspect the protocol catalog for the allowed values.",
       "title" : "Invalid request shape"
     } ],
     "protocolVersion" : 1,

@@ -74,7 +74,7 @@ These flows still depend on the shell-visible `java` command when you are outsid
 - `java -jar cli/build/libs/gridgrind.jar`
 - `./check.sh`
 - local release-surface verification and Docker smoke setup
-- ad hoc CLI checks such as `./gradlew :cli:run --args="--version"`
+- ad hoc CLI checks such as `./gradlew :cli:run --args="version"`
 
 That is why the repository docs focus on shell-visible Java 26 rather than only on Gradle
 configuration.

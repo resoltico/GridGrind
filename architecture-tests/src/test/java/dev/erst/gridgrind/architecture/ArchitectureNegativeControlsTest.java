@@ -52,6 +52,29 @@ class ArchitectureNegativeControlsTest {
   }
 
   @Test
+  void coreRejectsConcreteHostTypes() {
+    AssertionError failure =
+        assertThrows(
+            AssertionError.class,
+            () ->
+                ProductDependencyArchitectureRules.coreDoesNotOwnConcreteHostTypes()
+                    .check(
+                        new ClassFileImporter()
+                            .importClasses(
+                                dev.erst.gridgrind.core.fixture.ArchitectureCoreHostTypes
+                                    .CliTransport.class,
+                                dev.erst.gridgrind.core.fixture.ArchitectureCoreHostTypes
+                                    .DockerInvocation.class,
+                                dev.erst.gridgrind.core.fixture.ArchitectureCoreHostTypes
+                                    .ContainerImage.class,
+                                dev.erst.gridgrind.core.fixture.ArchitectureCoreHostTypes
+                                    .TerminalSession.class)));
+    for (String name :
+        java.util.List.of("CliTransport", "DockerInvocation", "ContainerImage", "TerminalSession"))
+      assertTrue(failure.getMessage().contains(name));
+  }
+
+  @Test
   void coreRejectsWorkbookAndJsonLibraryDependencies() {
     AssertionError failure =
         assertThrows(

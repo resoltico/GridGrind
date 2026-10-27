@@ -82,7 +82,7 @@ Safe to assume in current GridGrind `.xlsx` workflows:
 
 CLI exposure status:
 - Every capability marked `COMPLETE` or `PARTIAL` in this document is invokable through the
-  current CLI JSON protocol and discoverable through `--print-protocol-catalog`.
+  current CLI JSON protocol and discoverable through `catalog`.
 - No implemented `.xlsx` capability audited in the current GridGrind contract was found to be
   missing from the CLI wiring, help surface, or catalog surface.
 

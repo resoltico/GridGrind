@@ -9,8 +9,7 @@ import java.util.Objects;
 /** Request-side configuration for execution-journal detail and rendering policy. */
 @CatalogType(
     id = "ExecutionJournalSpec",
-    summary =
-        "Explicit execution-journal settings. Use ExecutionJournalSpec.defaults() for SUMMARY detail. SUMMARY returns compact, stable target summaries without timing telemetry, NORMAL returns expanded target summaries with timing telemetry, and VERBOSE also enables fine-grained event emission for CLI stderr rendering.",
+    summary = dev.erst.gridgrind.core.catalog.GridGrindContractText.EXECUTION_JOURNAL_SUMMARY,
     displayOrder = 11)
 public record ExecutionJournalSpec(
     @ProtocolField(optional = true) @WireDefault(value = "SUMMARY", omit = true)

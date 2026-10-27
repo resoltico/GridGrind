@@ -394,7 +394,7 @@ class GridGrindJsonCoverageTest {
                                     .resolution(),
                                 new dev.erst.gridgrind.core.problem.ProblemContext.ParseArguments(
                                     dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces
-                                        .CliArgument.named("--request")),
+                                        .HostArgument.named("--request")),
                                 List.of())),
                         false))
             .getMessage());

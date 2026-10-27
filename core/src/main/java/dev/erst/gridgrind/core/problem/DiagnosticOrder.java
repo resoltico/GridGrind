@@ -82,7 +82,7 @@ public final class DiagnosticOrder {
   private static int phase(GridGrindProblemDetail.Problem problem) {
     return switch (problem.context()) {
       case ProblemContext.ParseArguments _ -> PRE_EXECUTION_PHASE;
-      case CliRuntimeContext _ -> PRE_EXECUTION_PHASE;
+      case HostContext _ -> PRE_EXECUTION_PHASE;
       case ProblemContext.ReadRequest _ -> PRE_EXECUTION_PHASE;
       case ProblemContext.BindRequest _ -> REQUEST_BINDING_PHASE;
       case ProblemContext.ValidateRequest _ -> STATIC_VALIDATION_PHASE;

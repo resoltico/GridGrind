@@ -1,0 +1,81 @@
+package dev.erst.gridgrind.core.discovery;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
+import org.junit.jupiter.api.Test;
+
+/** Focused tests for package-private example DSL helpers. */
+class ExampleDslSupportTest {
+  private static final String BUDGET_TABLE = "BudgetTable";
+  private static final String BUDGET_SHEET = "Budget";
+  private static final String REGIONAL_TOTALS = "RegionalTotals";
+  private static final String RANGE_REPORT = "RangeReport";
+  private static final String PIVOT_SOURCE = "PivotSource";
+  private static final String REGION = "Region";
+  private static final String AMOUNT = "Amount";
+
+  @Test
+  void tableHelperBuildsSheetOwnedTableSelectors() {
+    TableSelector.ByNameOnSheet selector = ExampleSelectors.table(BUDGET_TABLE, BUDGET_SHEET);
+
+    assertEquals(BUDGET_TABLE, selector.name().value());
+    assertEquals(BUDGET_SHEET, selector.sheetName().value());
+  }
+
+  @Test
+  void defaultExecutionPlanBuildsIdentifiedPlansWithRequestedPersistence() {
+    WorkbookPlan plan =
+        ExampleWorkbookPlans.defaultExecutionPlan(
+            new PlanId("budget-plan"),
+            new WorkbookPlan.WorkbookSource.New(),
+            ExampleWorkbookPlans.saveAs("budget.xlsx"));
+
+    assertEquals("budget-plan", plan.planId().orElseThrow().value());
+    assertInstanceOf(WorkbookPlan.WorkbookPersistence.SaveAs.class, plan.persistence());
+    assertEquals(
+        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none(),
+        ExampleWorkbookPlans.saveAsExisting("existing-budget.xlsx").security().orElseThrow());
+  }
+
+  @Test
+  void clusteredColumnComparisonChartBuildsTwoSeriesChartInputs() {
+    ChartSpec chart =
+        ExampleChartSpecs.clusteredColumnComparisonChart(
+            "OpsChart",
+            ExampleDrawingAnchors.anchor(1, 2, 3, 4),
+            "Roadmap",
+            "ChartCategories",
+            "Plan",
+            "Ops!$B$2:$B$4",
+            "Actual",
+            "ChartActual");
+
+    assertEquals("OpsChart", chart.name());
+    assertEquals(1, chart.plots().size());
+    assertEquals(
+        2,
+        ((dev.erst.gridgrind.core.model.chart.ChartPlotSpec.Bar) chart.plots().getFirst())
+            .series()
+            .size());
+  }
+
+  @Test
+  void regionalTotalsPivotFromTableBuildsExpectedPivotAxes() {
+    PivotTableSpec pivot =
+        ExamplePivotInputs.regionalTotalsPivotFromTable(
+            REGIONAL_TOTALS, RANGE_REPORT, PIVOT_SOURCE);
+
+    assertEquals(REGIONAL_TOTALS, pivot.name());
+    assertInstanceOf(PivotTableSpec.PivotSourceSpec.Table.class, pivot.source());
+    assertEquals(java.util.List.of(REGION), pivot.rowLabels());
+    assertTrue(
+        pivot.dataFields().stream().anyMatch(field -> AMOUNT.equals(field.sourceColumnName())));
+  }
+}

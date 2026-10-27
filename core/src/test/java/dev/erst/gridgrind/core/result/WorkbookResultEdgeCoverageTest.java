@@ -663,7 +663,7 @@ class WorkbookResultEdgeCoverageTest {
   void problemContextDefaultsAndCellSubtypeTypeNamesRemainTruthful() {
     dev.erst.gridgrind.core.problem.ProblemContext.ParseArguments parseArguments =
         new dev.erst.gridgrind.core.problem.ProblemContext.ParseArguments(
-            dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.CliArgument.named(
+            dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.HostArgument.named(
                 "--request"));
     dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanCell =
         new dev.erst.gridgrind.core.model.value.CellReport.BooleanReport(

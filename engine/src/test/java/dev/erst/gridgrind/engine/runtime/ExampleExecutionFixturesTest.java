@@ -4,18 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.GridGrindCli;
-import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
-import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
-import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
-import dev.erst.gridgrind.cli.discovery.RecipeType;
+import dev.erst.gridgrind.cli.command.GridGrindCli;
+import dev.erst.gridgrind.core.discovery.RecipeAdvisory;
+import dev.erst.gridgrind.core.discovery.RecipeCatalogEntry;
+import dev.erst.gridgrind.core.discovery.RecipeCatalogs;
+import dev.erst.gridgrind.core.discovery.RecipeType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -370,19 +368,8 @@ class ExampleExecutionFixturesTest {
     }
   }
 
-  private static List<RecipeCatalogEntry> exampleEntries() throws IOException {
-    GridGrindCli cli = new GridGrindCli();
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    int exitCode =
-        cli.run(
-            new String[] {"--print-recipe-catalog"},
-            InputStream.nullInputStream(),
-            stdout,
-            OutputStream.nullOutputStream());
-    assertEquals(0, exitCode, "example catalog command must succeed");
-    RecipeCatalog recipeCatalog =
-        GridGrindCliJson.readBytes(stdout.toByteArray(), RecipeCatalog.class);
-    return recipeCatalog.recipes().stream()
+  private static List<RecipeCatalogEntry> exampleEntries() {
+    return RecipeCatalogs.catalog().recipes().stream()
         .filter(recipe -> recipe.type() == RecipeType.EXAMPLE)
         .toList();
   }
@@ -420,12 +407,10 @@ class ExampleExecutionFixturesTest {
       RecipeCatalogEntry example, Path workspace, Path requestPath) {
     if (example.advisory() == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS) {
       return new String[] {
-        "--materialize-recipe", "--lookup", example.id(), "--workspace", workspace.toString()
+        "recipe", "materialize", example.id(), "--workspace", workspace.toString()
       };
     }
-    return new String[] {
-      "--print-recipe", "--lookup", example.id(), "--response", requestPath.toString()
-    };
+    return new String[] {"recipe", "show", example.id(), "--response", requestPath.toString()};
   }
 
   private record PublishedBuiltInExample(WorkbookPlan request, Path workspace) {}

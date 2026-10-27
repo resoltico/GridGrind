@@ -23,12 +23,6 @@ class GridGrindContractTextTest {
     assertTrue(
         GridGrindInspectionContractText.loadedFormulaSupportSummary()
             .contains("UNSUPPORTED_FORMULA"));
-    assertTrue(
-        GridGrindRequestSurfaceContractText.stdinExecutionRootRequiredMessage()
-            .contains("--execution-root"));
-    assertTrue(
-        GridGrindRequestSurfaceContractText.cliFlagPathResolutionSummary()
-            .contains("current working directory"));
   }
 
   @Test

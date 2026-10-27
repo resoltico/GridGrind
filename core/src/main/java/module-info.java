@@ -2,6 +2,7 @@ module dev.erst.gridgrind.core {
   requires static org.jspecify;
 
   exports dev.erst.gridgrind.core.authoring;
+  exports dev.erst.gridgrind.core.discovery;
   exports dev.erst.gridgrind.core.grant;
   exports dev.erst.gridgrind.core.catalog;
   exports dev.erst.gridgrind.core.catalog.gather;

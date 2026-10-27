@@ -100,7 +100,7 @@ class GridGrindRequestProblemSupportTest {
         "Add required field 'steps[0].stepId' to the request payload.",
         GridGrindRequestProblemSupport.resolution(new MissingRequiredField("stepId"), stepContext));
     assertEquals(
-        "Replace field 'steps[0].action.type' with one supported type value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
+        "Replace field 'steps[0].action.type' with one supported type value. Inspect the protocol catalog when you need the allowed values.",
         GridGrindRequestProblemSupport.resolution(
             new UnknownTypeValue(
                 "MOVEE",
@@ -124,7 +124,7 @@ class GridGrindRequestProblemSupportTest {
         GridGrindRequestProblemSupport.resolution(
             new UnknownField("steps[0].query.extra"), requestContext));
     assertEquals(
-        "Replace field 'steps[0].query.type' with one supported value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
+        "Replace field 'steps[0].query.type' with one supported value. Inspect the protocol catalog for the allowed values.",
         GridGrindRequestProblemSupport.resolution(
             new UnsupportedValue(
                 "BROKEN",

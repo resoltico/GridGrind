@@ -1,0 +1,846 @@
+package dev.erst.gridgrind.cli.command;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.erst.gridgrind.cli.render.GridGrindCliJson;
+import dev.erst.gridgrind.core.discovery.Recipe;
+import dev.erst.gridgrind.core.discovery.RecipeCatalog;
+import dev.erst.gridgrind.core.discovery.RecipeCatalogs;
+import dev.erst.gridgrind.core.discovery.RecipeKeywordMatchReport;
+import dev.erst.gridgrind.core.discovery.RecipeRegistry;
+import dev.erst.gridgrind.core.discovery.ShippedExamples;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.result.CommandError;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+/** Catalog and discovery command integration tests for GridGrindCli. */
+class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
+  @Test
+  void printGrantTemplateEmitsTheCanonicalFailClosedHostGrant() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(new String[] {"template", "grant"}, InputStream.nullInputStream(), stdout);
+
+    ExecutionGrant grant =
+        dev.erst.gridgrind.json.codec.GridGrindJson.readGrant(
+            stdout.toByteArray(), java.nio.file.Path.of(""));
+
+    assertEquals(0, exitCode);
+    assertTrue(grant.readableResources().isEmpty());
+    assertTrue(grant.operationIds().isEmpty());
+    assertInstanceOf(ExecutionGrant.PublicationAuthority.None.class, grant.publicationAuthority());
+    assertInstanceOf(AcceptancePolicy.MinimumOnly.class, grant.acceptancePolicy());
+  }
+
+  @Test
+  void printRecipeFlagPrintsKnownGeneratedExampleAndReturnsExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "WORKBOOK_HEALTH"},
+                new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals(ShippedExamples.find("WORKBOOK_HEALTH").orElseThrow().plan(), request);
+    assertFalse(stdout.toString(StandardCharsets.UTF_8).contains(": null"));
+  }
+
+  @Test
+  void printRecipeCatalogFlagPrintsUnifiedRecipeCatalogAndReturnsExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "list"},
+                new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    RecipeCatalog catalog = GridGrindCliJson.readBytes(stdout.toByteArray(), RecipeCatalog.class);
+
+    assertEquals(0, exitCode);
+    assertEquals(RecipeCatalogs.catalog(), catalog);
+    assertEquals(
+        dev.erst.gridgrind.core.discovery.RecipeAdvisory.SELF_CONTAINED,
+        catalog.recipes().stream()
+            .filter(recipe -> "BUDGET".equals(recipe.id()))
+            .findFirst()
+            .orElseThrow()
+            .advisory());
+    assertEquals(
+        dev.erst.gridgrind.core.discovery.RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
+        catalog.recipes().stream()
+            .filter(recipe -> "PACKAGE_SECURITY_INSPECTION".equals(recipe.id()))
+            .findFirst()
+            .orElseThrow()
+            .advisory());
+    assertEquals(
+        java.util.List.of("package-security-assets/gridgrind-package-security.xlsx"),
+        catalog.recipes().stream()
+            .filter(recipe -> "PACKAGE_SECURITY_INSPECTION".equals(recipe.id()))
+            .findFirst()
+            .orElseThrow()
+            .requiredWorkspacePaths());
+  }
+
+  @Test
+  void printRecipeFlagRejectsUnknownExampleId() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "BOGUS_EXAMPLE"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout,
+                stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("id"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.primaryProblem().message().contains("BOGUS_EXAMPLE"));
+    assertTrue(failure.primaryProblem().message().contains("recipe list"));
+  }
+
+  @Test
+  void printRecipeFlagWritesUnknownExampleFailureToResponsePathWithoutStderrDuplication()
+      throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-unknown-example-", ".json");
+    Files.deleteIfExists(responsePath);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {
+                  "recipe", "show", "BOGUS_EXAMPLE", "--response", responsePath.toString()
+                },
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    CommandError failure = commandError(Files.readAllBytes(responsePath));
+
+    assertEquals(2, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertTrue(failure.primaryProblem().message().contains("BOGUS_EXAMPLE"));
+  }
+
+  @Test
+  void printRecipeFlagSuggestsStableIdForCommonNonCanonicalTokens() throws IOException {
+    assertSuggestedExampleId("chart");
+    assertSuggestedExampleId("chart-request.json");
+    assertSuggestedExampleId("chart-request");
+    assertSuggestedExampleId("chart request");
+  }
+
+  @Test
+  void printRecipeCatalogContainsPublishedTaskStarterMetadata() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "list"},
+                new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    RecipeCatalog catalog = GridGrindCliJson.readBytes(stdout.toByteArray(), RecipeCatalog.class);
+
+    assertEquals(0, exitCode);
+    assertTrue(catalog.recipes().stream().anyMatch(recipe -> "DASHBOARD".equals(recipe.id())));
+    assertTrue(
+        catalog.recipes().stream()
+            .filter(recipe -> "DASHBOARD".equals(recipe.id()))
+            .findFirst()
+            .orElseThrow()
+            .summary()
+            .contains("dashboard"));
+  }
+
+  private static void assertSuggestedExampleId(String authoredValue) throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", authoredValue},
+                new ByteArrayInputStream(new byte[0]),
+                stdout,
+                stdout); // stdout passed for both streams; use the bytes overload directly
+    CommandError failure = commandError(stdout.toByteArray());
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("id"), parseArgumentsContext(failure).argumentName());
+    assertTrue(
+        failure.primaryProblem().message().contains("did you mean CHART?"),
+        () -> "expected CHART suggestion for authored value " + authoredValue);
+    assertTrue(
+        failure.primaryProblem().message().contains("recipe list"),
+        () -> "expected recovery guidance for authored value " + authoredValue);
+  }
+
+  @Test
+  void printRecipeCatalogWithRecipeFilterReturnsMatchingEntry() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "DASHBOARD", "--details"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    assertTrue(
+        stdout.toString(StandardCharsets.UTF_8).contains("\"DASHBOARD\""),
+        "output must contain the task id");
+  }
+
+  @Test
+  void printRecipeCatalogRejectsBlankRecipeFilterWithStructuredFailure() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "", "--details"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals("recipe", failure.command());
+    assertEquals(java.util.Optional.of("id"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.primaryProblem().message().contains("id must not be blank"));
+  }
+
+  @Test
+  void printRecipeCatalogWithUnknownRecipeReturnsError() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "BOGUS_TASK", "--details"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    assertEquals(2, exitCode);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("id"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.primaryProblem().message().contains("BOGUS_TASK"));
+    assertTrue(failure.primaryProblem().message().contains("recipe list"));
+    assertTrue(
+        failure.primaryProblem().message().contains("recipe match \"monthly sales dashboard\""));
+  }
+
+  @Test
+  void printRecipeCatalogWithNonCanonicalRecipeIdSuggestsStableToken() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "dashboard", "--details"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    assertEquals(2, exitCode);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("id"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.primaryProblem().message().contains("did you mean DASHBOARD?"));
+    assertTrue(failure.primaryProblem().message().contains("recipe list"));
+    assertTrue(
+        failure.primaryProblem().message().contains("recipe match \"monthly sales dashboard\""));
+  }
+
+  @Test
+  void printRecipeCatalogWithNormalizedRecipeIdSuggestsStableToken() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "audit existing workbook", "--details"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    assertEquals(2, exitCode);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("id"), parseArgumentsContext(failure).argumentName());
+    assertTrue(
+        failure.primaryProblem().message().contains("did you mean AUDIT_EXISTING_WORKBOOK?"));
+    assertTrue(failure.primaryProblem().message().contains("recipe list"));
+    assertTrue(
+        failure.primaryProblem().message().contains("recipe match \"monthly sales dashboard\""));
+  }
+
+  @Test
+  void printRecipeCatalogRejectsTrailingExecutionFlags() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "list", "version"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    assertEquals(2, exitCode);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(
+        java.util.Optional.of("recipe list"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.primaryProblem().message().contains("Unexpected operands for recipe list"));
+  }
+
+  @Test
+  void printRecipeFlagPrintsRunnableStarterRequestAndReturnsExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "DASHBOARD"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
+    String rendered = stdout.toString(StandardCharsets.UTF_8);
+    Recipe recipe =
+        RecipeRegistry.recipeFor("DASHBOARD")
+            .filter(
+                candidate ->
+                    candidate.type() == dev.erst.gridgrind.core.discovery.RecipeType.TASK_STARTER)
+            .orElseThrow();
+
+    assertEquals(0, exitCode);
+    assertEquals(recipe.plan(), request);
+    assertTrue(request.execution().isDefault());
+    assertTrue(request.formulaEnvironment().isEmpty());
+    assertFalse(rendered.contains("\"execution\""));
+    assertFalse(rendered.contains("\"formulaEnvironment\""));
+  }
+
+  @Test
+  void printRecipeWithUnknownTaskReturnsError() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "BOGUS_TASK"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    assertEquals(2, exitCode);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("id"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.primaryProblem().message().contains("BOGUS_TASK"));
+    assertTrue(failure.primaryProblem().message().contains("recipe list"));
+    assertTrue(
+        failure.primaryProblem().message().contains("recipe match \"monthly sales dashboard\""));
+  }
+
+  @Test
+  void printRecipeRejectsTrailingExecutionFlags() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "show", "DASHBOARD", "--request", "ignored.json"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout,
+                stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
+  }
+
+  @Test
+  void printRecipeKeywordMatchFlagPrintsRankedRecipeMatchesAndReturnsExitCodeZero()
+      throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "match", "monthly sales dashboard with charts"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    RecipeKeywordMatchReport report =
+        GridGrindCliJson.readBytes(stdout.toByteArray(), RecipeKeywordMatchReport.class);
+
+    assertEquals(0, exitCode);
+    assertEquals("monthly sales dashboard with charts", report.query());
+    assertEquals("DASHBOARD", report.candidates().getFirst().recipeId());
+    assertTrue(report.candidates().getFirst().matchedTerms().contains("dashboard"));
+    assertTrue(report.candidates().getFirst().matchedTerms().contains("chart"));
+  }
+
+  @Test
+  void printTaskKeywordMatchRejectsBlankQueries() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "match", ""},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("text"), parseArgumentsContext(failure).argumentName());
+  }
+
+  @Test
+  void printTaskKeywordMatchRejectsQueriesThatNormalizeToNoSearchableTerms() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"recipe", "match", "a"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals(java.util.Optional.of("text"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.primaryProblem().message().contains("searchable term after normalization"));
+  }
+
+  @Test
+  void printRequestTemplatePrintsTheCurrentMachineReadableTemplate() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(new String[] {"template", "request"}, InputStream.nullInputStream(), stdout);
+
+    dev.erst.gridgrind.core.plan.WorkbookPlan template =
+        GridGrindJson.readRequest(stdout.toByteArray());
+    String rendered = stdout.toString(StandardCharsets.UTF_8);
+
+    assertEquals(0, exitCode);
+    assertEquals("FULL_XSSF", template.execution().mode().modeType());
+    assertTrue(template.formulaEnvironment().isEmpty());
+    assertFalse(rendered.contains("\"execution\""));
+    assertFalse(rendered.contains("\"formulaEnvironment\""));
+  }
+
+  @Test
+  void doctorRequestFlagPrintsStructuredReportWithoutExecutingTheRequest() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-stdin-success-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        GridGrindCli.forTesting(
+                (ignoredRequest, ignoredBindings, ignoredSink) -> {
+                  throw new AssertionError("doctoring a request must not execute it");
+                })
+            .run(
+                new String[] {"doctor", "--request", "-", "--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "ensure-budget",
+                                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                                "action": { "type": "ENSURE_SHEET" }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertTrue(report.valid());
+    assertEquals("NEW", report.summary().orElseThrow().sourceType());
+    assertEquals(1, report.summary().orElseThrow().stepCount());
+    assertEquals(1, report.summary().orElseThrow().mutationStepCount());
+  }
+
+  @Test
+  void doctorRequestReturnsCompactReadFailureForInvalidJson() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-invalid-json-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"doctor", "--request", "-", "--execution-root", workspace.toString()},
+                new ByteArrayInputStream("{".getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(GridGrindProblemCode.INVALID_JSON, report.primaryProblem().orElseThrow().code());
+    assertEquals(java.util.Optional.of(1), requestIntakeContext(report).jsonLine());
+    assertEquals(java.util.Optional.of(1), requestIntakeContext(report).jsonColumn());
+  }
+
+  @Test
+  void doctorRequestRejectsMissingRequestInputWithCompactCommandError() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(new String[] {"doctor"}, InputStream.nullInputStream(), stdout, stderr);
+
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertEquals("doctor", failure.command());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.primaryProblem().message().contains("doctor requires --request"));
+  }
+
+  @Test
+  void doctorRequestRejectsImpossibleStandardInputBindingWhenRequestAlsoUsesStdin()
+      throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-stdin-binding-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"doctor", "--request", "-", "--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "ensure-budget",
+                                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                                "action": { "type": "ENSURE_SHEET" }
+                              },
+                              {
+                                "stepId": "set-title",
+                                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                                "action": {
+                                  "type": "SET_CELL",
+                                  "value": { "type": "TEXT", "value": { "type": "STANDARD_INPUT" } }
+                                }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
+    assertTrue(report.primaryProblem().orElseThrow().message().contains("STANDARD_INPUT"));
+  }
+
+  @Test
+  void doctorRequestBatchesIndependentProblemsWhenOneRequestHasMultipleDefects()
+      throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-batch-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"doctor", "--request", "-", "--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "EXISTING" },
+                      "persistence": { "type": "SAVE_AS" },
+                      "execution": {
+                        "mode": { "type": "EVENT_READ" },
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "EVALUATE_ALL" },
+                          "markRecalculateOnOpen": true
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": [
+                        {
+                          "stepId": "duplicate-step",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        },
+                        {
+                          "stepId": "duplicate-step",
+                          "target": {
+                            "type": "CELL_BY_ADDRESS",
+                            "sheetName": "Summary",
+                            "address": "A1"
+                          },
+                          "assertion": {
+                            "type": "EXPECT_CELL_VALUE",
+                            "expectedValue": { "type": "TEXT", "value": "x" }
+                          }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+    List<String> problemMessages =
+        report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(5, report.problems().size());
+    assertTrue(problemMessages.contains("Missing required field 'source.path'"));
+    assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
+    assertTrue(problemMessages.contains("Missing required field 'persistence.ifExists'"));
+    assertTrue(
+        problemMessages.contains(
+            "execution.mode.type=EVENT_READ requires execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false"));
+    assertTrue(
+        problemMessages.contains(
+            "execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: ASSERTION"));
+  }
+
+  @Test
+  void doctorRequestBatchesIndependentSemanticValidationProblems() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-semantic-batch-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"doctor", "--request", "-", "--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "OVERWRITE" },
+                      "execution": {
+                        "mode": { "type": "EVENT_READ" },
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "EVALUATE_ALL" },
+                          "markRecalculateOnOpen": true
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+    List<String> problemMessages =
+        report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(2, report.problems().size());
+    assertTrue(
+        problemMessages.contains(
+            "execution.mode.type=EVENT_READ requires"
+                + " execution.calculation.strategy=DO_NOT_CALCULATE and"
+                + " markRecalculateOnOpen=false"));
+    assertTrue(
+        problemMessages.contains(
+            "OVERWRITE persistence requires an EXISTING source; a NEW workbook has no source"
+                + " file to overwrite"));
+  }
+
+  @Test
+  void doctorRequestCanReadTheRequestFromAFile() throws IOException {
+    Path requestPath = Files.createTempFile("gridgrind-doctor-request-", ".json");
+    Files.writeString(
+        requestPath, requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]"));
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"doctor", "--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                stdout);
+
+    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertTrue(report.valid());
+    assertFalse(report.summary().orElseThrow().requiresStandardInputBinding());
+  }
+
+  @Test
+  void doctorRequestCanWriteReportToAnExplicitResponsePath() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-report-");
+    Path responsePath = Files.createTempFile("gridgrind-doctor-report-", ".json");
+    Files.deleteIfExists(responsePath);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {
+                  "doctor",
+                  "--request",
+                  "-",
+                  "--execution-root",
+                  workspace.toString(),
+                  "--response",
+                  responsePath.toString()
+                },
+                new ByteArrayInputStream(
+                    requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report =
+        GridGrindJson.readRequestDoctorReport(Files.readAllBytes(responsePath));
+
+    assertEquals(0, exitCode);
+    assertTrue(report.valid());
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void doctorRequestResolvesRelativeInputsFromTheRequestFileDirectory() throws IOException {
+    Path requestDirectory = Files.createTempDirectory("gridgrind-doctor-root-");
+    Path requestPath = requestDirectory.resolve("doctor request.json");
+    Path payloadPath = requestDirectory.resolve("blank.txt");
+    Files.writeString(payloadPath, "");
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("ENSURE_SHEET", "SET_CELL"), List.of(payloadPath));
+    Files.writeString(
+        requestPath,
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "value": { "type": "UTF8_FILE", "path": "blank.txt" }
+                  }
+                }
+              }
+            ]
+            """));
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {
+                  "doctor", "--request", requestPath.toString(), "--grant", grantPath.toString()
+                },
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
+    assertEquals("RESOLVE_INPUTS", report.primaryProblem().orElseThrow().context().type());
+    assertEquals("cell text must not be blank", report.primaryProblem().orElseThrow().message());
+  }
+}

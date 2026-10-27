@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli.golden;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.GridGrindCli;
+import dev.erst.gridgrind.cli.command.GridGrindCli;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

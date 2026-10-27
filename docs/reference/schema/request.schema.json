@@ -6456,7 +6456,7 @@
     },
     "dev.erst.gridgrind.core.plan.ExecutionJournalSpec" : {
       "additionalProperties" : false,
-      "description" : "Explicit execution-journal settings. Use ExecutionJournalSpec.defaults() for SUMMARY detail. SUMMARY returns compact, stable target summaries without timing telemetry, NORMAL returns expanded target summaries with timing telemetry, and VERBOSE also enables fine-grained event emission for CLI stderr rendering.",
+      "description" : "Explicit execution-journal settings. Use ExecutionJournalSpec.defaults() for SUMMARY detail. SUMMARY returns compact, stable target summaries without timing telemetry, NORMAL returns expanded target summaries with timing telemetry, and VERBOSE also enables fine-grained event emission for host progress rendering.",
       "properties" : {
         "level" : {
           "default" : "SUMMARY",

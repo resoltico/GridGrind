@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.problem;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.CliArgument;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.HostArgument;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape;
@@ -21,7 +21,7 @@ import java.util.Optional;
 @Union(discriminator = "type")
 public sealed interface ProblemContext
     permits ProblemContext.ParseArguments,
-        CliRuntimeContext,
+        HostContext,
         RequestInputContext,
         ProblemContext.RequestShapeContext,
         ProblemContext.ExecuteStep,
@@ -33,16 +33,16 @@ public sealed interface ProblemContext
     return dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport.requiredTypeId(getClass());
   }
 
-  /** Context for failures that occur while parsing CLI arguments. */
+  /** Context for failures that occur while parsing host arguments. */
   @Variant(
       id = "PARSE_ARGUMENTS",
-      summary = "Context for failures that occur while parsing CLI arguments.")
-  record ParseArguments(CliArgument argument) implements ProblemContext {
+      summary = "Context for failures that occur while parsing host arguments.")
+  record ParseArguments(HostArgument argument) implements ProblemContext {
     public ParseArguments {
       Objects.requireNonNull(argument, "argument must not be null");
     }
 
-    /** Returns the concrete CLI argument when parsing failure was attributable to one option. */
+    /** Returns the concrete host argument when parsing failure was attributable to one option. */
     public Optional<String> argumentName() {
       return argument.argumentValue();
     }

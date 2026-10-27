@@ -17,6 +17,10 @@ public enum ProductArchitectureRules {
       ProductDomainShapeArchitectureRules.canonicalModelNamesDescribeTheirRole();
 
   @ArchTest
+  static final ArchRule CORE_DOES_NOT_OWN_CONCRETE_HOST_TYPES =
+      ProductDependencyArchitectureRules.coreDoesNotOwnConcreteHostTypes();
+
+  @ArchTest
   static final ArchRule CORE_DOES_NOT_DEPEND_ON_WORKBOOK_OR_JSON_LIBRARIES =
       ProductDependencyArchitectureRules.coreDoesNotDependOnWorkbookOrJsonLibraries();
 

@@ -7,9 +7,9 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.AssertionFailure;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellSelector;
-import dev.erst.gridgrind.core.problem.CliRuntimeContext;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.HostContext;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.ProblemContext;
@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Test;
 /** Covers payload-location enrichment branches in {@link GridGrindProblems}. */
 class GridGrindProblemsCoverageTest {
   @Test
-  void enrichContextKeepsPreExecutionCliRuntimeContextUnchanged() {
-    CliRuntimeContext context = new CliRuntimeContext();
+  void enrichContextKeepsPreExecutionHostContextUnchanged() {
+    HostContext context = new HostContext("cli");
 
     assertSame(
         context, GridGrindProblems.enrichContext(context, new IllegalStateException("boom")));
@@ -177,7 +177,7 @@ class GridGrindProblemsCoverageTest {
         "Check the source workbook path, permissions, and file locks before retrying.",
         openWorkbookDenied.resolution());
     assertEquals(
-        "Check the --response destination path, parent directory permissions, free disk space, and file locks before retrying.",
+        "Check the response destination path, parent directory permissions, free disk space, and file locks before retrying.",
         writeResponseDenied.resolution());
   }
 

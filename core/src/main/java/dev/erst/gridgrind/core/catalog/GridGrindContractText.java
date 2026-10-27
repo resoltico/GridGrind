@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Core-owned public contract wording shared by thin downstream surfaces such as the CLI help,
+ * Core-owned public contract wording shared by thin downstream surfaces such as the host help,
  * protocol catalog summaries, and request-validation messages.
  */
 public final class GridGrindContractText {
@@ -24,6 +24,14 @@ public final class GridGrindContractText {
       List.of(
           WorkbookIntrospectionQuery.GetWorkbookSummary.class,
           SheetIntrospectionQuery.GetSheetSummary.class);
+
+  /** Canonical journal description shared with its model annotation. */
+  public static final String EXECUTION_JOURNAL_SUMMARY =
+      "Explicit execution-journal settings."
+          + " Use ExecutionJournalSpec.defaults() for SUMMARY detail."
+          + " SUMMARY returns compact, stable target summaries without timing telemetry,"
+          + " NORMAL returns expanded target summaries with timing telemetry,"
+          + " and VERBOSE also enables fine-grained event emission for host progress rendering.";
 
   private GridGrindContractText() {}
 
@@ -94,15 +102,6 @@ public final class GridGrindContractText {
         + " Omit formulaEnvironment when the default evaluator is intended.";
   }
 
-  /** One stable catalog summary for `ExecutionJournalSpec`. */
-  public static String executionJournalInputSummary() {
-    return "Explicit execution-journal settings."
-        + " Use ExecutionJournalSpec.defaults() for SUMMARY detail."
-        + " SUMMARY returns compact, stable target summaries without timing telemetry,"
-        + " NORMAL returns expanded target summaries with timing telemetry,"
-        + " and VERBOSE also enables fine-grained event emission for CLI stderr rendering.";
-  }
-
   /** One stable catalog summary for `CalculationPolicySpec`. */
   public static String calculationPolicyInputSummary() {
     return "Explicit formula-calculation policy."
@@ -157,5 +156,10 @@ public final class GridGrindContractText {
     return parts.subList(0, parts.size() - 1).stream().collect(Collectors.joining(", "))
         + ", and "
         + parts.getLast();
+  }
+
+  /** Returns the canonical execution-journal catalog description. */
+  public static String executionJournalInputSummary() {
+    return EXECUTION_JOURNAL_SUMMARY;
   }
 }

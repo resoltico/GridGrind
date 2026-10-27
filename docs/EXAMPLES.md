@@ -11,8 +11,8 @@ route:
 
 **Purpose**: Map the shipped example surfaces, explain how their paths resolve, and show how to
 refresh and verify them.
-**Fastest self-contained path**: `gridgrind --print-recipe --lookup <ID> --response request.json`
-**Asset-backed path**: `gridgrind --materialize-recipe --lookup <ID> --workspace <new-directory>`
+**Fastest self-contained path**: `gridgrind recipe show <ID> --response request.json`
+**Asset-backed path**: `gridgrind recipe materialize <ID> --workspace <new-directory>`
 **Docker `:latest` note**: for first-contact artifact runs, prefer
 `docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest ...` or refresh once with
 `docker pull ghcr.io/resoltico/gridgrind:latest` before using plain `docker run ...:latest`
@@ -20,8 +20,8 @@ refresh and verify them.
 
 GridGrind ships the same example workflows in two forms:
 
-- **Built-in artifact examples** from `gridgrind --print-recipe --lookup <ID> --response request.json`
-  when self-contained, or `gridgrind --materialize-recipe --lookup <ID> --workspace <new-directory>`
+- **Built-in artifact examples** from `gridgrind recipe show <ID> --response request.json`
+  when self-contained, or `gridgrind recipe materialize <ID> --workspace <new-directory>`
   when asset-backed.
   These are designed to run from an artifact working directory and use request-relative paths such
   as `generated-workbooks/...`. The machine-readable catalog publishes one portable
@@ -46,7 +46,7 @@ cell-reading example stays comfortably inside the shared deterministic 250,000-c
   or `:cli:run` when you first print the example into your own working directory.
 - Self-contained built-ins need no workbook or asset inputs and execute from an otherwise blank
   artifact workspace. `SAVE_AS` creates a missing contained `generated-workbooks/` parent.
-- Asset-backed built-ins require `--materialize-recipe`; it atomically creates the new workspace,
+- Asset-backed built-ins require `recipe materialize`; it atomically creates the new workspace,
   request file, and the paths named in `requiredWorkspacePaths` before you run them.
 - Any example that saves a workbook writes under `generated-workbooks/` beside the request file.
   Create that parent directory first; GridGrind intentionally does not create it through an
@@ -61,7 +61,7 @@ cell-reading example stays comfortably inside the shared deterministic 250,000-c
 ## Built-In Example Portability
 
 Self-contained built-ins execute from an otherwise blank artifact workspace with
-`--print-recipe --lookup <ID>`:
+`recipe show <ID>`:
 
 | Built-in ID | Matching fixture | Notes |
 |:------------|:-----------------|:------|
@@ -76,7 +76,7 @@ Self-contained built-ins execute from an otherwise blank artifact workspace with
 | `PIVOT` | [`../examples/pivot-request.json`](../examples/pivot-request.json) | pivot authoring and health analysis |
 | `INTROSPECTION_ANALYSIS` | [`../examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json) | inspection-heavy analysis surface |
 
-Repo-asset-backed built-ins use `--materialize-recipe --lookup <ID> --workspace <new-directory>`.
+Repo-asset-backed built-ins use `recipe materialize <ID> --workspace <new-directory>`.
 The created workspace contains the catalogued request file plus these declared asset paths:
 
 | Built-in ID | Matching fixture | Required assets |
@@ -94,9 +94,9 @@ The machine-readable CLI recipe catalog exposes stable example ids, file names, 
 portable `requestFileName` plus `advisory` contract, and exact
 `requiredWorkspacePaths` for asset-backed examples.
 `SELF_CONTAINED` means the printed request runs from a blank artifact workspace;
-`REQUIRES_EXAMPLE_ASSETS` means `--materialize-recipe` must create the request and its declared
+`REQUIRES_EXAMPLE_ASSETS` means `recipe materialize` must create the request and its declared
 assets together; `requiredWorkspacePaths` names those files directly.
-Print it directly with `gridgrind --print-recipe-catalog --response recipes.json`.
+Print it directly with `gridgrind recipe list --response recipes.json`.
 
 `PACKAGE_SECURITY_INSPECTION` keeps its password out of both the request and the materialized workspace. Its committed encrypted workbook is a public fixture: create a separate secret-provider directory with a file named `source-open-password` containing `GridGrind-2026`, authorize that reference in the host grant, and pass the directory through `--secrets-provider`. Treat this only as a fixture credential; use an independently managed secret provider and credential for any non-sample workbook.
 
@@ -141,7 +141,7 @@ Treat the checked-in `examples/*.json` fixtures and the generated package-securi
 The authoritative verification loop for the shipped examples is:
 
 ```bash
-./gradlew :cli:test --tests dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesTest
+./gradlew :cli:test --tests dev.erst.gridgrind.cli.io.ExampleRequestFixturesTest
 ./gradlew :engine:test --tests dev.erst.gridgrind.engine.runtime.ExampleExecutionFixturesTest
 ./gradlew :core:test --tests dev.erst.gridgrind.core.authoring.GridGrindPlanTest
 ./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
@@ -150,7 +150,7 @@ The authoritative verification loop for the shipped examples is:
 For a direct packaged-CLI spot check from a repository checkout, first create and narrow a host grant, then execute through it:
 
 ```bash
-java -jar cli/build/libs/gridgrind.jar --print-grant-template --response grant.json
+java -jar cli/build/libs/gridgrind.jar template grant --response grant.json
 # Edit grant.json to authorize examples/budget-request.json's exact resources, operations, and output.
 java -jar cli/build/libs/gridgrind.jar \
   --request examples/budget-request.json \

@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.problem;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Shared request-problem path and resolution helpers used by CLI and doctor/report surfaces. */
+/** Shared request-problem path and resolution helpers used by host and doctor/report surfaces. */
 public final class GridGrindRequestProblemSupport {
   private GridGrindRequestProblemSupport() {}
 
@@ -70,8 +70,7 @@ public final class GridGrindRequestProblemSupport {
                   jsonPath ->
                       "Replace field '"
                           + jsonPath
-                          + "' with one supported type value. Use"
-                          + " --print-protocol-catalog --lookup or --search when you need the"
+                          + "' with one supported type value. Inspect the protocol catalog when you need the"
                           + " allowed values.")
               .orElse("Replace the unknown type value with one supported by the protocol.");
       case UnsupportedValue unsupportedValue ->
@@ -81,8 +80,7 @@ public final class GridGrindRequestProblemSupport {
                   jsonPath ->
                       "Replace field '"
                           + jsonPath
-                          + "' with one supported value. Use --print-protocol-catalog --lookup"
-                          + " or --search when you need the allowed values.")
+                          + "' with one supported value. Inspect the protocol catalog for the allowed values.")
               .orElse("Replace the unsupported value with one allowed by the protocol.");
       case ExplicitNullField explicitNullField ->
           "Remove field '"

@@ -551,7 +551,7 @@ help_output="$(docker_with_repo_config run --rm \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
-    --help | tr -d '\r')"
+    help | tr -d '\r')"
 require_match "${help_output}" '^GridGrind ' \
     "docker smoke help output did not include the banner"
 require_match "${help_output}" '^Usage:' \
@@ -561,7 +561,7 @@ version_output="$(docker_with_repo_config run --rm \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
-    --version | tr -d '\r')"
+    version | tr -d '\r')"
 require_match "${version_output}" '^GridGrind ' \
     "docker smoke version output did not include the application name"
 docker_with_repo_config run --rm \
@@ -569,7 +569,7 @@ docker_with_repo_config run --rm \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
-    --request "${request_rel}" \
+    run --request "${request_rel}" \
     --grant "${grant_rel}" \
     --response "${response_rel}" >/dev/null 2>"${create_stderr_path}"
 [[ -f "${response_path}" ]] || die "docker smoke response file was not written: ${response_path}"
@@ -594,7 +594,7 @@ docker_with_repo_config run --rm \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
-    --request "${existing_request_rel}" \
+    run --request "${existing_request_rel}" \
     --grant "${existing_grant_rel}" \
     --response "${existing_response_rel}" >/dev/null 2>"${existing_stderr_path}"
 [[ -f "${existing_response_path}" ]] || die \
@@ -609,7 +609,7 @@ docker_with_repo_config run --rm \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
-    --request "${signature_request_rel}" \
+    run --request "${signature_request_rel}" \
     --grant "${signature_grant_rel}" \
     --response "${signature_response_rel}" >/dev/null 2>"${signature_stderr_path}"
 [[ -f "${signature_response_path}" ]] || die \
@@ -630,7 +630,7 @@ docker_with_repo_config run --rm \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
-    --request "${streaming_request_rel}" \
+    run --request "${streaming_request_rel}" \
     --grant "${streaming_grant_rel}" \
     --response "${streaming_response_rel}" >/dev/null 2>"${streaming_stderr_path}"
 [[ -f "${streaming_response_path}" ]] || die \
@@ -648,7 +648,7 @@ docker_with_repo_config run --rm \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
-    --request "${streaming_read_request_rel}" \
+    run --request "${streaming_read_request_rel}" \
     --grant "${streaming_read_grant_rel}" \
     --response "${streaming_read_response_rel}" >/dev/null 2>"${streaming_read_stderr_path}"
 [[ -f "${streaming_read_response_path}" ]] || die \

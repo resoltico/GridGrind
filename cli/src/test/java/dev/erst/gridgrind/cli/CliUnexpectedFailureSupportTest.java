@@ -3,10 +3,13 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
-import dev.erst.gridgrind.cli.discovery.CommandError;
-import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
+import dev.erst.gridgrind.cli.command.CliUnexpectedFailureSupport;
+import dev.erst.gridgrind.cli.command.GridGrindCliTestSupport;
+import dev.erst.gridgrind.cli.io.CliPrimaryOutputException;
+import dev.erst.gridgrind.cli.render.CliTransportNotice;
+import dev.erst.gridgrind.cli.render.GridGrindCliJson;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.CommandError;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,7 +36,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
                 },
             observedExitCode::set);
 
-    app.run(new String[] {"--help"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
+    app.run(new String[] {"help"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
     CommandError error = commandErrorOnStdout(stdout, stderr);
     assertEquals(1, observedExitCode.get());
@@ -49,7 +52,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
 
     int exitCode =
         CliUnexpectedFailureSupport.emit(
-            new String[] {"--help", "--response", responseDirectory.toString()},
+            new String[] {"help", "--response", responseDirectory.toString()},
             Optional.of(responseDirectory),
             false,
             stdout,
@@ -71,7 +74,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
 
     int exitCode =
         CliUnexpectedFailureSupport.emit(
-            new String[] {"--help"},
+            new String[] {"help"},
             Optional.empty(),
             false,
             failingOutputStream(writeAttempts),
@@ -96,7 +99,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
                 },
             observedExitCode::set);
 
-    app.run(new String[] {"--help"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
+    app.run(new String[] {"help"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
     assertEquals(1, observedExitCode.get());
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));

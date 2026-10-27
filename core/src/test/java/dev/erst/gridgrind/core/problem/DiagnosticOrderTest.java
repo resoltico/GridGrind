@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.problem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.CliArgument;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.HostArgument;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape;
@@ -30,8 +30,8 @@ class DiagnosticOrderTest {
         problem(new ProblemContext.ExecuteCalculation.Preflight(SHAPE, ProblemLocation.unknown()));
     GridGrindProblemDetail.Problem validation = problem(new ProblemContext.ValidateRequest(SHAPE));
     GridGrindProblemDetail.Problem parseArguments =
-        problem(new ProblemContext.ParseArguments(CliArgument.named("--request")));
-    GridGrindProblemDetail.Problem cliRuntime = problem(new CliRuntimeContext());
+        problem(new ProblemContext.ParseArguments(HostArgument.named("--request")));
+    GridGrindProblemDetail.Problem cliRuntime = problem(new HostContext("cli"));
     GridGrindProblemDetail.Problem readRequest =
         problem(
             new ProblemContext.ReadRequest(

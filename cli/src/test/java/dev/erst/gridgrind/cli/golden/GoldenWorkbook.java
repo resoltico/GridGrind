@@ -26,6 +26,7 @@ final class GoldenWorkbook {
     List<String> arguments =
         new ArrayList<>(
             List.of(
+                "run",
                 "--request",
                 request.toString(),
                 "--grant",
@@ -226,7 +227,8 @@ final class GoldenWorkbook {
     Files.writeString(request, GoldenSnapshots.JSON.writeValueAsString(plan));
     Path grant = grant(plan, workspace, "readback-grant.json");
     GoldenLauncher.Result result =
-        launcher.run(workspace, "--request", request.toString(), "--grant", grant.toString());
+        launcher.run(
+            workspace, "run", "--request", request.toString(), "--grant", grant.toString());
     assertEquals(
         0, result.exit(), () -> "Workbook readback failed: " + result.stdout() + result.stderr());
     return GoldenSnapshots.JSON.readTree(result.stdout());

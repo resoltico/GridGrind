@@ -79,6 +79,7 @@ description = "CLI transport adapter for the GridGrind protocol"
 
 
 dependencies {
+    testImplementation(testFixtures(project(":core")))
     implementation(project(":json"))
     implementation(project(":engine"))
     implementation(libs.jackson.databind)
@@ -109,7 +110,6 @@ tasks.named("check") {
 }
 
 application {
-    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
     mainClass = "dev.erst.gridgrind.cli.App"
 }
 
@@ -177,7 +177,6 @@ tasks.named("shadowDistTar") {
 }
 
 tasks.named<Test>("test") {
-    jvmArgs("--enable-native-access=ALL-UNNAMED")
     dependsOn(tasks.named("shadowJar"))
     systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
     systemProperty("gridgrind.golden.update", providers.gradleProperty("golden.update").getOrElse("false"))
@@ -249,7 +248,7 @@ pluginManager.withPlugin("java") {
     tasks.register<JavaExec>("writeRepositoryExamples") {
         group = "documentation"
         description =
-            "Regenerates the checkout-rooted examples/*.json fixtures from the CLI-owned example registry."
+            "Regenerates the checkout-rooted examples/*.json fixtures from the core-owned recipe registry."
         dependsOn(tasks.named("testClasses"))
         classpath =
             project.the<org.gradle.api.plugins.JavaPluginExtension>()
@@ -257,7 +256,7 @@ pluginManager.withPlugin("java") {
                 .named("test")
                 .get()
                 .runtimeClasspath
-        mainClass = "dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesWriter"
+        mainClass = "dev.erst.gridgrind.cli.io.ExampleRequestFixturesWriter"
         workingDir = rootProject.projectDir
     }
 }

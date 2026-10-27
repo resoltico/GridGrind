@@ -63,4 +63,5 @@ COPY LICENSE-BSD-3-CLAUSE /usr/share/doc/gridgrind/LICENSE-BSD-3-CLAUSE
 
 USER gridgrind:gridgrind
 
+# Arguments select an explicit GridGrind subcommand, such as help or run.
 ENTRYPOINT ["java", "-jar", "/app/gridgrind.jar"]

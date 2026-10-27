@@ -1,0 +1,135 @@
+package dev.erst.gridgrind.core.discovery;
+
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.assetBackedStarter;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.discovery;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.intent;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.narrative;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.phase;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.profile;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.ref;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.signals;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.task;
+import static dev.erst.gridgrind.core.discovery.TaskRecipes.workflow;
+
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import java.util.List;
+
+/** Published task recipe for workbook maintenance and sheet-copy workflows. */
+final class WorkbookMaintenanceTaskRecipe {
+  private WorkbookMaintenanceTaskRecipe() {}
+
+  static TaskRecipeTemplate definition() {
+    return TaskRecipes.definition(
+        task(
+            "WORKBOOK_MAINTENANCE",
+            assetBackedStarter(
+                "WORKBOOK_MAINTENANCE", "task-starter-assets/workbook-ops-source.xlsx"),
+            List.of("office", "maintenance", "repair", "copy", "comments"),
+            discovery(
+                List.of("maintenance", "copy sheet", "repair", "normalize workbook", "sheet clone"),
+                intent(
+                    List.of(TaskGoalKind.INSPECT, TaskGoalKind.MAINTAIN, TaskGoalKind.VERIFY),
+                    List.of(
+                        TaskArtifactKind.WORKBOOK,
+                        TaskArtifactKind.SHEET,
+                        TaskArtifactKind.COMMENT,
+                        TaskArtifactKind.DRAWING_OBJECT))),
+            narrative(
+                "Safely copy or normalize existing workbook sheets while verifying comments, drawings, and other cloned workbook state after the change.",
+                List.of(
+                    "Workbook maintenance flows can inspect the source before making structural changes.",
+                    "Copy-sheet work can be followed immediately by comment and drawing readback.",
+                    "The updated workbook can be saved separately while you verify the result."),
+                List.of(
+                    "Existing workbook path.",
+                    "Source sheet names and destination copy names.",
+                    "Persistence target when the maintained workbook should be kept."),
+                List.of(
+                    "Workbook-level findings after the maintenance pass.",
+                    "Comment rereads on copied sheets.",
+                    "Drawing-object rereads on copied sheets when they matter.")),
+            profile(
+                TaskSourceMode.EXISTING_WORKBOOK,
+                TaskPersistenceMode.SAVE_AS,
+                TaskMutationMode.MUTATING,
+                TaskAssetMode.SELF_CONTAINED),
+            signals(
+                List.of(
+                    TaskInputKind.SOURCE_WORKBOOK_PATH,
+                    TaskInputKind.TARGET_SHEET_NAMES,
+                    TaskInputKind.PERSISTENCE_TARGET_PATH),
+                List.of(TaskVerificationKind.FACT_READBACK, TaskVerificationKind.HEALTH_ANALYSIS)),
+            workflow(
+                List.of(
+                    phase(
+                        TaskPhasePurpose.INSPECT,
+                        "Inspect The Current Workbook",
+                        "Read source workbook facts before changing sheet structure.",
+                        List.of(
+                            ref("workbookSourceTypes", "EXISTING"),
+                            ref("inspectionQueryTypes", "GET_WORKBOOK_SUMMARY"),
+                            ref("inspectionQueryTypes", "GET_COMMENTS")),
+                        List.of("Factual inspection is the baseline for any maintenance pass.")),
+                    phase(
+                        TaskPhasePurpose.AUTHOR,
+                        "Apply Structural Maintenance",
+                        "Copy one existing sheet into a new workbook-visible destination sheet.",
+                        List.of(
+                            ref("mutationActionTypes", "COPY_SHEET"),
+                            ref("workbookPersistenceTypes", "SAVE_AS")),
+                        List.of(
+                            "Copy-sheet work is safest when the destination name is explicit.")),
+                    phase(
+                        TaskPhasePurpose.VERIFY,
+                        "Verify The Copied Surface",
+                        "Read back copied comments, drawings, and workbook findings immediately.",
+                        List.of(
+                            ref("inspectionQueryTypes", "GET_COMMENTS"),
+                            ref("inspectionQueryTypes", "GET_DRAWING_OBJECTS"),
+                            ref("inspectionQueryTypes", "ANALYZE_WORKBOOK_FINDINGS")),
+                        List.of("Verification closes the loop on maintenance changes."))),
+                List.of(
+                    "Replace placeholder sheet names before execution; copy-sheet requires an existing source sheet.",
+                    "Maintenance flows are safest with SAVE_AS so the source workbook stays intact until verification passes.",
+                    "Use targeted rereads after COPY_SHEET instead of assuming copied comments or drawings stayed coherent."))),
+        starterPlan());
+  }
+
+  private static WorkbookPlan starterPlan() {
+    String taskId = "WORKBOOK_MAINTENANCE";
+    String sourceAsset = TaskStarters.taskStarterAsset("workbook-ops-source.xlsx");
+    return ExampleWorkbookPlans.defaultExecutionPlan(
+        TaskStarters.taskPlanId(taskId),
+        new WorkbookPlan.WorkbookSource.ExistingFile(sourceAsset),
+        ExampleWorkbookPlans.saveAsExisting(TaskStarters.taskWorkbookPath(taskId)),
+        ExampleSteps.read(
+            new StepId("read-source-workbook"),
+            ExampleSelectors.workbook(),
+            new WorkbookIntrospectionQuery.GetWorkbookSummary()),
+        ExampleSteps.step(
+            new StepId("copy-template-sheet"),
+            ExampleSelectors.sheet("Template"),
+            new WorkbookMutationAction.CopySheet(new SheetName("Template Copy"))),
+        ExampleSteps.read(
+            new StepId("read-copied-comments"),
+            new dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet(
+                new SheetName("Template Copy")),
+            new SheetIntrospectionQuery.GetComments()),
+        ExampleSteps.read(
+            new StepId("read-copied-drawing-objects"),
+            new DrawingObjectSelector.AllOnSheet(new SheetName("Template Copy")),
+            new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
+        ExampleSteps.read(
+            new StepId("read-maintenance-findings"),
+            ExampleSelectors.workbook(),
+            new InspectionAnalysisQuery.AnalyzeWorkbookFindings()));
+  }
+}

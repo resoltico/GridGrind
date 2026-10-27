@@ -159,17 +159,17 @@ overlay contract in `.devcontainer/devcontainer.json`.
 
 # Build artifacts
 ./gradlew :cli:shadowJar
-./gradlew :cli:run --args="--print-grant-template --response grant.json"
+./gradlew :cli:run --args="template grant --response grant.json"
 # Edit grant.json to authorize examples/budget-request.json's exact resources, operations, and output.
 ./gradlew :cli:run --args="--request examples/budget-request.json --grant grant.json"
-./gradlew :cli:run --args="--version"
-./gradlew :cli:run --args="--print-request-template"
-./gradlew :cli:run --args="--print-protocol-catalog"
-./gradlew :cli:run --args="--print-recipe --lookup BUDGET"
-./gradlew :cli:run --args="--print-recipe-catalog"
-./gradlew :cli:run --args="--print-recipe-catalog --lookup DASHBOARD"
-./gradlew :cli:run --args="--print-recipe --lookup DASHBOARD"
-./gradlew :cli:run --args='--print-recipe-keyword-match --query "monthly sales dashboard with charts"'
+./gradlew :cli:run --args="version"
+./gradlew :cli:run --args="template request"
+./gradlew :cli:run --args="catalog"
+./gradlew :cli:run --args="recipe show BUDGET"
+./gradlew :cli:run --args="recipe list"
+./gradlew :cli:run --args="recipe show DASHBOARD" --details
+./gradlew :cli:run --args="recipe show DASHBOARD"
+./gradlew :cli:run --args='recipe match "monthly sales dashboard with charts"'
 ./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
 ./scripts/docker-smoke.sh
 ./scripts/validate-devcontainer.sh
@@ -207,7 +207,7 @@ The catalog build path still uses a small internal
 `contract.catalog.gather` seam for the two cases that genuinely benefit from Stream Gatherers:
 ordered uniqueness and reflected field-metadata expansion. The built-in request template remains
 an ordinary constant because no domain gatherer semantics are needed there. Keep
-`--print-request-template` as the smallest valid machine-readable request; workflow snippets such
+`template request` as the smallest valid machine-readable request; workflow snippets such
 as the no-save `ANALYZE_WORKBOOK_FINDINGS` lint pass belong in help text, public docs, and the
 example request set instead of the emitted template itself.
 
@@ -351,8 +351,8 @@ boundary: GridGrind does not emit a partially written workbook file.
 The shipped JSON fixtures are generated from the CLI-owned example registry in
 checkout-rooted form. Refresh them with
 [`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh), or print any one of
-the artifact-native built-in examples directly with `gridgrind --print-recipe --lookup <self-contained-id>`
-or materialize an asset-backed workspace with `gridgrind --materialize-recipe --lookup <id> --workspace <new-directory>`. The full
+the artifact-native built-in examples directly with `gridgrind recipe show <self-contained-id>`
+or materialize an asset-backed workspace with `gridgrind recipe materialize <id> --workspace <new-directory>`. The full
 map, path-rooting rules, and verification loop live in [EXAMPLES.md](./EXAMPLES.md). Do not
 hand-edit the checked-in `examples/*.json` fixtures or the generated package-security workbook;
 regenerate them from the CLI-owned recipe registry so the committed examples, built-in example surface,
@@ -379,7 +379,7 @@ fixtures and authoring examples cover the core surface:
 Run any JSON fixture through an explicit least-authority grant:
 
 ```bash
-./gradlew :cli:run --args="--print-grant-template --response grant.json"
+./gradlew :cli:run --args="template grant --response grant.json"
 # Edit grant.json to authorize examples/<file>.json's exact resources, operations, and output.
 ./gradlew :cli:run --args="--request examples/<file>.json --grant grant.json"
 ```

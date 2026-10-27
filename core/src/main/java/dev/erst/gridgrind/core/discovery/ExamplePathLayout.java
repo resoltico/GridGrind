@@ -1,0 +1,23 @@
+package dev.erst.gridgrind.core.discovery;
+
+/** Path layout policy for generated example requests. */
+enum ExamplePathLayout {
+  BUILT_IN("generated-workbooks/", ""),
+  REPOSITORY("generated-workbooks/", "");
+
+  private final String generatedWorkbookPrefix;
+  private final String assetPrefix;
+
+  ExamplePathLayout(String generatedWorkbookPrefix, String assetPrefix) {
+    this.generatedWorkbookPrefix = generatedWorkbookPrefix;
+    this.assetPrefix = assetPrefix;
+  }
+
+  String generatedWorkbook(String fileName) {
+    return generatedWorkbookPrefix + fileName;
+  }
+
+  String asset(String relativePath) {
+    return assetPrefix + relativePath;
+  }
+}

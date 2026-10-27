@@ -102,7 +102,7 @@
       },
       "message" : "cell text file does not exist: missing.txt",
       "recovery" : "CHANGE_REQUEST",
-      "resolution" : "Provide an existing authored input file or correct its path. When the CLI reads a request via --request, relative request-owned paths resolve from the request file directory.",
+      "resolution" : "Provide an existing authored input file or correct its path. Relative request-owned paths resolve from the explicit execution root.",
       "title" : "Input source not found"
     },
     "protocolVersion" : 1,

@@ -30,7 +30,7 @@ hand-writing JSON.
 
 A workbook plan states requested work; it does not authorize that work. Every Java execution receives a host-owned `ExecutionGrant`, and CLI execution or bound doctoring receives the equivalent document through `--grant <path>`. A CLI invocation without a grant remains structurally analyzable, but no executable plan is admitted: it fails closed with `AUTHORITY_DENIED` before workbook mutation or publication.
 
-Start from `gridgrind --print-grant-template --response grant.json`, then grant only the exact file resources, operation IDs, workbook scope, publication destination, secret references, and acceptance policy required by the request. Grant-relative paths resolve from the CLI process working directory, independently of request-owned path resolution. The plan cannot name, broaden, or embed the grant.
+Start from `gridgrind template grant --response grant.json`, then grant only the exact file resources, operation IDs, workbook scope, publication destination, secret references, and acceptance policy required by the request. Grant-relative paths resolve from the CLI process working directory, independently of request-owned path resolution. The plan cannot name, broaden, or embed the grant.
 
 ```json
 {
@@ -87,7 +87,7 @@ Binary-bearing mutation fields use `BinarySourceSpec`:
 
 ## Doctor Requests
 
-`--doctor-request` validates request shape, each bound operation's target contract,
+`doctor` validates request shape, each bound operation's target contract,
 execution-mode rules, source-backed authored input resolution, and existing workbook-source
 accessibility without mutating a workbook.
 
@@ -102,7 +102,7 @@ accessibility without mutating a workbook.
 - When every request fragment binds, doctoring batches independent source-backed input and existing-workbook preflight failures even when the plan also has static operation or execution-policy failures. This includes independent authored inputs nested in the same step, so one unreadable cell value does not hide a sibling value's failure. A source-backed input failure does not hide an inaccessible existing workbook, and doctoring never mutates or persists a workbook.
 - Normal execution performs the same request intake before any workbook work begins. For the
   same request bytes, a rejected `--request` command emits the same ordered problem core in
-  `CommandError.problems` that `--doctor-request` returns in `RequestDoctorReport.problems` for
+  `CommandError.problems` that `doctor` returns in `RequestDoctorReport.problems` for
   request-intake and static findings. Execution rejects static findings before workbook access;
   once static validation passes, a failed source/input preflight completes zero steps and persists
   no workbook.
@@ -150,7 +150,7 @@ Every tagged request union uses `type` as its discriminator field: `source`, `pe
 Every step object carries a caller-defined `stepId` plus exactly one of `action`, `assertion`, or
 `query`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step
 kind is inferred from that field; request steps do not carry a separate `step.type`.
-`gridgrind --print-request-template` emits the canonical minimal valid request with the minimal
+`gridgrind template request` emits the canonical minimal valid request with the minimal
 top-level envelope shown above. Add `execution` and/or `formulaEnvironment` only when the request
 needs non-default behavior.
 

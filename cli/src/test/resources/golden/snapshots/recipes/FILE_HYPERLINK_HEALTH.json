@@ -1113,22 +1113,22 @@
     "exit" : 2,
     "stderr" : "",
     "stdout" : {
-      "command" : "print-recipe",
+      "command" : "recipe show",
       "problems" : [ {
         "category" : "ARGUMENTS",
         "causes" : [ ],
         "code" : "INVALID_ARGUMENTS",
         "context" : {
           "argument" : {
-            "argument" : "--materialize-recipe",
+            "argument" : "id",
             "type" : "NAMED"
           },
           "type" : "PARSE_ARGUMENTS"
         },
-        "message" : "Asset-backed recipes require --materialize-recipe --lookup FILE_HYPERLINK_HEALTH --workspace <new-directory>.",
+        "message" : "Asset-backed recipes require recipe materialize FILE_HYPERLINK_HEALTH --workspace <new-directory>.",
         "recovery" : "CHANGE_REQUEST",
-        "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
-        "title" : "Invalid CLI arguments"
+        "resolution" : "Use gridgrind recipe list for IDs, or gridgrind recipe match for a goal.",
+        "title" : "Invalid host arguments"
       } ],
       "protocolVersion" : 1,
       "status" : "REJECTED"

@@ -7923,17 +7923,6 @@
       "required" : [ "stepId", "surface", "type" ],
       "type" : "object"
     },
-    "dev.erst.gridgrind.core.problem.CliRuntimeContext" : {
-      "additionalProperties" : false,
-      "description" : "Context for a CLI runtime failure before workbook execution begins.",
-      "properties" : {
-        "type" : {
-          "const" : "CLI_RUNTIME"
-        }
-      },
-      "required" : [ "type" ],
-      "type" : "object"
-    },
     "dev.erst.gridgrind.core.problem.GridGrindProblemDetail$Problem" : {
       "additionalProperties" : false,
       "properties" : {
@@ -7988,6 +7977,23 @@
       "required" : [ "code", "message", "stage" ],
       "type" : "object"
     },
+    "dev.erst.gridgrind.core.problem.HostContext" : {
+      "additionalProperties" : false,
+      "description" : "A host failure before workbook execution begins.",
+      "properties" : {
+        "hostId" : {
+          "allOf" : [ {
+            "pattern" : "[^\t\n\u000B\f\r\u001C\u001D\u001E\u001F               　]"
+          } ],
+          "type" : "string"
+        },
+        "type" : {
+          "const" : "HOST_RUNTIME"
+        }
+      },
+      "required" : [ "hostId", "type" ],
+      "type" : "object"
+    },
     "dev.erst.gridgrind.core.problem.ProblemContext" : {
       "oneOf" : [ {
         "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$BindRequest"
@@ -7996,11 +8002,11 @@
       }, {
         "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$ExecuteCalculation$Preflight"
       }, {
-        "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.CliRuntimeContext"
-      }, {
         "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$ExecuteRequest"
       }, {
         "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$ExecuteStep"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.HostContext"
       }, {
         "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$OpenWorkbook"
       }, {
@@ -8124,10 +8130,10 @@
     },
     "dev.erst.gridgrind.core.problem.ProblemContext$ParseArguments" : {
       "additionalProperties" : false,
-      "description" : "Context for failures that occur while parsing CLI arguments.",
+      "description" : "Context for failures that occur while parsing host arguments.",
       "properties" : {
         "argument" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$CliArgument"
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$HostArgument"
         },
         "type" : {
           "const" : "PARSE_ARGUMENTS"
@@ -8224,14 +8230,14 @@
       "required" : [ "output", "type" ],
       "type" : "object"
     },
-    "dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$CliArgument" : {
+    "dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$HostArgument" : {
       "oneOf" : [ {
-        "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$CliArgument$Named"
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$HostArgument$Named"
       }, {
-        "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$CliArgument$Unknown"
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$HostArgument$Unknown"
       } ]
     },
-    "dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$CliArgument$Named" : {
+    "dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$HostArgument$Named" : {
       "additionalProperties" : false,
       "description" : "The parse failure was attributable to one named option or operand.",
       "properties" : {
@@ -8245,7 +8251,7 @@
       "required" : [ "argument", "type" ],
       "type" : "object"
     },
-    "dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$CliArgument$Unknown" : {
+    "dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$HostArgument$Unknown" : {
       "additionalProperties" : false,
       "description" : "The parse failure was not attributable to one specific argument.",
       "properties" : {

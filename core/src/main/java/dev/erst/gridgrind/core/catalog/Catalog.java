@@ -4,7 +4,7 @@ import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 
-/** JSON-serializable top-level catalog emitted by {@code --print-protocol-catalog}. */
+/** JSON-serializable top-level protocol catalog. */
 public record Catalog(
     ProtocolVersion protocolVersion,
     String discriminatorField,
@@ -50,7 +50,8 @@ public record Catalog(
   }
 
   /**
-   * Returns the ordered list of top-level type categories addressable by bare name via --lookup.
+   * Returns the ordered list of top-level type categories addressable by their published bare
+   * names.
    */
   public List<TopLevelTypeGroup> topLevelGroups() {
     return List.of(

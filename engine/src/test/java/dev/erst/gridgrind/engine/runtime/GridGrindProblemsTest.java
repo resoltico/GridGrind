@@ -261,7 +261,7 @@ class GridGrindProblemsTest {
 
     ProblemContext.ParseArguments parseArguments =
         new ProblemContext.ParseArguments(
-            ProblemContextRequestSurfaces.CliArgument.named("--request"));
+            ProblemContextRequestSurfaces.HostArgument.named("--request"));
     ProblemContext.ValidateRequest validateRequest =
         new ProblemContext.ValidateRequest(ProblemContextRequestSurfaces.RequestShape.unknown());
     ProblemContext.OpenWorkbook openWorkbook =

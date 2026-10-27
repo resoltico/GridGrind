@@ -9,7 +9,7 @@ route:
 
 # Quick Start
 
-Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `--print-recipe --lookup BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
+Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `recipe show BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
 Generated example JSON already includes the top-level request envelope and omits the default
 `execution` and `formulaEnvironment` blocks, so the first printed request is ready for copy-paste
 edits without hand-authoring boilerplate defaults yourself.
@@ -20,12 +20,12 @@ edits without hand-authoring boilerplate defaults yourself.
 
 - A GridGrind runtime: the packaged `gridgrind` launcher, the Docker image, or the release JAR
 - A working directory where GridGrind can read the request file and write the response file
-- One example request to start from: the built-in `BUDGET` example emitted by `--print-recipe --lookup BUDGET --response budget-request.json`, or [budget-request.json](../examples/budget-request.json) when you are already in a repo checkout
+- One example request to start from: the built-in `BUDGET` example emitted by `recipe show BUDGET --response budget-request.json`, or [budget-request.json](../examples/budget-request.json) when you are already in a repo checkout
 
 GridGrind supports `.xlsx` workbooks only.
 
 If you are starting from the release artifact alone, generate the request into your working
-directory first so the later `--request` path already exists: `gridgrind --print-recipe --lookup BUDGET --response budget-request.json`.
+directory first so the later `--request` path already exists: `gridgrind recipe show BUDGET --response budget-request.json`.
 When you later run `--request budget-request.json`, relative paths inside that JSON request follow
 the request file's directory. If you prefer to pipe request JSON on stdin, pass
 `--execution-root <path>` and those same relative request-owned paths resolve from that explicit
@@ -42,7 +42,7 @@ path, and best-effort cleanup removes it on normal command completion.
 If Docker is the easiest path on your machine, the safest first-contact command is:
 
 ```bash
-docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest help
 ```
 
 If you prefer to refresh once and then run several commands locally, pull the current `latest`
@@ -70,7 +70,7 @@ release asset first, build the root Dockerfile directly:
 
 ```bash
 docker buildx build --load -t gridgrind-local .
-docker run --rm gridgrind-local --help
+docker run --rm gridgrind-local help
 ```
 
 ### Release JAR
@@ -79,10 +79,11 @@ If you want the standalone JAR, download it from the
 [latest release](https://github.com/resoltico/GridGrind/releases/latest).
 
 The JAR path requires Java 26.
-`java -jar gridgrind.jar --help` prints the short synopsis. `--help-protocol` prints the
-authoritative CLI/request contract, and `--help-guidance` prints workflows plus example guidance.
-A bare `java -jar gridgrind.jar` invocation now expects a real request document on stdin or
-`--request <path>` and exits non-zero when neither is present.
+`java -jar gridgrind.jar help` prints the short synopsis. `help protocol` prints the
+authoritative CLI/request contract, and `help guidance` prints workflows plus example guidance.
+A bare `java -jar gridgrind.jar` invocation prints help without reading stdin.
+Execute with `run --request <path> --grant <path>`. Use `--request -`
+and `--execution-root <path>` to read the request from stdin.
 
 ## First Successful Run
 
@@ -90,10 +91,10 @@ Use the built-in `BUDGET` example for the first pass. It writes a sample workboo
 response, so you can see both the output file and the run result. If you are already in a repo
 checkout, [budget-request.json](../examples/budget-request.json) is the matching checked-in copy.
 `BUDGET` is intentionally self-contained in a blank artifact workspace. A few other built-in
-examples are asset-backed and require `--materialize-recipe --lookup <id> --workspace <new-directory>`;
+examples are asset-backed and require `recipe materialize <id> --workspace <new-directory>`;
 that command atomically creates the request and the paths named by
 `requiredWorkspacePaths`. [EXAMPLES.md](./EXAMPLES.md) calls those out explicitly, and
-`--print-recipe-catalog` exposes that distinction through each example's `requestFileName`,
+`recipe list` exposes that distinction through each example's `requestFileName`,
 `advisory`, and asset-backed `requiredWorkspacePaths`.
 
 ### Docker Example
@@ -101,17 +102,17 @@ that command atomically creates the request and the paths named by
 Generate the built-in request once, then run it from the current directory:
 
 ```bash
-docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-recipe --lookup BUDGET \
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest recipe show BUDGET \
   --response budget-request.json
 
-docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-grant-template \
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest template grant \
   --response grant.json
 # Edit grant.json to authorize budget-request.json's exact resources, operations, and output.
 
 docker run --pull=always --rm -i \
   --user "$(id -u):$(id -g)" \
   -v "$(pwd)":/work \
-  ghcr.io/resoltico/gridgrind:latest \
+  ghcr.io/resoltico/gridgrind:latest run \
   --request budget-request.json \
   --grant grant.json \
   --response response.json
@@ -124,16 +125,16 @@ Build the runtime image locally once, then use that local tag in the same mounte
 ```bash
 docker buildx build --load -t gridgrind-local .
 
-docker run --rm gridgrind-local --print-recipe --lookup BUDGET \
+docker run --rm gridgrind-local recipe show BUDGET \
   --response budget-request.json
 
-docker run --rm gridgrind-local --print-grant-template --response grant.json
+docker run --rm gridgrind-local template grant --response grant.json
 # Edit grant.json to authorize budget-request.json's exact resources, operations, and output.
 
 docker run --rm -i \
   --user "$(id -u):$(id -g)" \
   -v "$(pwd)":/work \
-  gridgrind-local \
+  gridgrind-local run \
   --request budget-request.json \
   --grant grant.json \
   --response response.json
@@ -144,12 +145,12 @@ docker run --rm -i \
 Replace `gridgrind.jar` with the downloaded JAR filename if it differs on your machine.
 
 ```bash
-java -jar gridgrind.jar --print-recipe --lookup BUDGET --response budget-request.json
+java -jar gridgrind.jar recipe show BUDGET --response budget-request.json
 
-java -jar gridgrind.jar --print-grant-template --response grant.json
+java -jar gridgrind.jar template grant --response grant.json
 # Edit grant.json to authorize budget-request.json's exact resources, operations, and output.
 
-java -jar gridgrind.jar \
+java -jar gridgrind.jar run \
   --request budget-request.json \
   --grant grant.json \
   --response response.json
@@ -167,12 +168,12 @@ After a successful run:
 
 - Want the full example map, path rules, and refresh flow: [EXAMPLES.md](./EXAMPLES.md)
 - Want GridGrind to explain itself from the artifact instead of from prose:
-  - `--print-recipe-catalog --response recipes.json` lists the compact unified recipe index across built-in examples and CLI-authored task starters.
-  - `--print-recipe-catalog --lookup DASHBOARD --response dashboard-detail.json` returns one view-specific recipe detail payload, including the exact runnable request profile for that recipe.
-  - `--print-recipe --lookup DASHBOARD --response dashboard-request.json` emits one validated executable starter request for one task id.
-  - `--print-recipe-keyword-match --query "monthly sales dashboard with charts" --response recipe-keyword-match.json` ranks likely recipes for one English keyword query and falls back to published intent tags when nothing matches.
-  - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report with every independently provable blocking problem it can isolate safely without mutating a workbook. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight.
-  - `--doctor-request --request request.json --response doctor-report.json` saves that diagnostics report to disk when stdout is not the right transport.
+  - `recipe list --response recipes.json` lists the compact unified recipe index across built-in examples and CLI-authored task starters.
+  - `recipe show DASHBOARD --details --response dashboard-detail.json` returns one view-specific recipe detail payload, including the exact runnable request profile for that recipe.
+  - `recipe show DASHBOARD --response dashboard-request.json` emits one validated executable starter request for one task id.
+  - `recipe match "monthly sales dashboard with charts" --response recipe-keyword-match.json` ranks likely recipes for one English keyword query and falls back to published intent tags when nothing matches.
+  - `doctor` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report with every independently provable blocking problem it can isolate safely without mutating a workbook. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight.
+  - `doctor --request request.json --response doctor-report.json` saves that diagnostics report to disk when stdout is not the right transport.
 - Want Java instead of raw JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
 - Want a no-save health check: [workbook-health-request.json](../examples/workbook-health-request.json)
