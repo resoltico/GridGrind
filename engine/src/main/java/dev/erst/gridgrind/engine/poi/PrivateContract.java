@@ -1,10 +1,8 @@
 package dev.erst.gridgrind.engine.poi;
 
 import java.lang.invoke.MethodType;
-import java.lang.module.ModuleDescriptor;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Predicate;
+import org.apache.poi.Version;
 
 /** Describes one private Apache POI contract that GridGrind currently depends on. */
 @SuppressWarnings("PMD.CommentRequired")
@@ -47,7 +45,7 @@ public record PrivateContract(
         + " required for "
         + affectedSurface
         + ". GridGrind currently targets Apache POI "
-        + poiRuntimeVersion(owner)
+        + Version.getVersion()
         + "; update the private POI seam or replace it with a supported POI API.";
   }
 
@@ -60,21 +58,5 @@ public record PrivateContract(
       builder.append(methodType.parameterType(index).getSimpleName());
     }
     return builder.append(')').toString();
-  }
-
-  private static String poiRuntimeVersion(Class<?> owner) {
-    String implementationVersion =
-        Optional.ofNullable(owner.getPackage())
-            .map(Package::getImplementationVersion)
-            .filter(Predicate.not(String::isBlank))
-            .orElse(null);
-    if (implementationVersion != null) {
-      return implementationVersion;
-    }
-    ModuleDescriptor descriptor = owner.getModule().getDescriptor();
-    if (descriptor == null) {
-      return "unknown";
-    }
-    return descriptor.rawVersion().orElse("unknown");
   }
 }

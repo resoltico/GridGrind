@@ -272,9 +272,9 @@ Enforcement: [FormulaLimits](../engine/src/main/java/dev/erst/gridgrind/engine/f
 | Message template | Product-owned `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected structure and sheet |
 | Applies to | INSERT_ROWS, DELETE_ROWS, SHIFT_ROWS, INSERT_COLUMNS, DELETE_COLUMNS, SHIFT_COLUMNS |
 
-Apache POI 5.5.1 does not reliably normalize table refs or sheet autofilter refs when rows or
+Apache POI 6.0.0 does not reliably normalize table refs or sheet autofilter refs when rows or
 columns are structurally inserted, deleted, or shifted, and it still leaves data-validation
-coverage unsafe for delete and shift flows. GridGrind now rebuilds data validations across row and
+coverage unsafe for delete and shift flows. GridGrind rebuilds data validations across row and
 column inserts, but it still rejects the remaining unsafe structural edits instead of persisting
 stale workbook XML or silently moving only part of the owned structure.
 
@@ -289,17 +289,17 @@ The rejection is precise and structure-owned. Example messages include:
 | Category | GridGrind |
 | Limit | Column structural edits are rejected when the workbook contains any formula cells or formula-defined named ranges |
 | Problems | INVALID_REQUEST |
-| Message template | `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` product-owned message explaining that Apache POI leaves some column references stale |
+| Message template | `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` product-owned message identifying unsupported formula-bearing column edits |
 | Applies to | INSERT_COLUMNS, DELETE_COLUMNS, SHIFT_COLUMNS |
 
-Apache POI 5.5.1 updates some column references during `shiftColumns(...)`, but not all of them.
-In direct probes against formula-bearing workbooks, formulas such as `A2&B2` were rewritten while
-others such as `SUM(B2:B4)` remained stale after the same column move. Formula-defined names have
-the same risk surface. GridGrind therefore rejects column structural edits whenever formulas or
-formula-defined names are present instead of persisting mixed-reference drift.
+GridGrind does not admit column structural edits when formula cells or formula-defined names are present.
+Perform column layout edits before authoring formulas. Static validation rejects ordered conflicts
+that are provable from the request, and runtime preflight checks the existing workbook's formula
+state before execution. This is the product's supported execution boundary; it is not a claim
+that every direct Apache POI column shift fails.
 
 Example message:
-- `SHIFT_COLUMNS cannot run while workbook formulas are present; Apache POI leaves some column references stale during column structural edits`
+- `SHIFT_COLUMNS cannot run while workbook formulas are present; formula-bearing column structural edits are unsupported`
 
 ## LIM-018 — Destructive Structural Edits Against Range-Backed Named Ranges
 

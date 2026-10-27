@@ -26,7 +26,7 @@ public final class XlsxRoundTripHarness {
     } catch (IllegalArgumentException expected) {
       return;
     }
-    Path directory = Files.createTempDirectory("gridgrind-jazzer-roundtrip-");
+    Path directory = Files.createTempDirectory("gridgrind-fuzz-roundtrip-");
     Path workbookPath = directory.resolve("workbook.xlsx");
 
     try {

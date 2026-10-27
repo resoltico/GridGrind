@@ -67,6 +67,14 @@ fun localCoverageExecutionData() =
     }
 
 dependencies {
+    constraints {
+        for (configuration in listOf("implementation", "testFixturesImplementation")) {
+            add(configuration, libs.commons.lang3)
+            add(configuration, libs.woodstox.core)
+            add(configuration, libs.stax2.api)
+            add(configuration, libs.slf4j.api)
+        }
+    }
     api(project(":core"))
     implementation(libs.jakarta.activation)
     implementation(libs.jakarta.xml.bind)

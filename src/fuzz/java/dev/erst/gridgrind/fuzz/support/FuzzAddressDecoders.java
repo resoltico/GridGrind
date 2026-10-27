@@ -3,7 +3,7 @@ package dev.erst.gridgrind.fuzz.support;
 import java.util.List;
 import java.util.Objects;
 
-/** Owns bounded sheet-name, address, range, and free-text decoding for Jazzer inputs. */
+/** Owns bounded sheet-name, address, range, and free-text decoding for fuzz inputs. */
 final class FuzzAddressDecoders {
   static final List<String> VALID_COLUMNS = List.of("A", "B", "C", "D", "E", "F", "G", "H");
 

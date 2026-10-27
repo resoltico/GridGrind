@@ -17,7 +17,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Regression coverage for the extracted Jazzer value-factory seam. */
+/** Regression coverage for the extracted value-factory seam. */
 class OperationSequenceValueFactoryTest {
   /** Parameter kinds used to synthesize representative inputs for factory coverage. */
   private enum CoverageParameterKind {

@@ -20,6 +20,7 @@ val architectureSourceSet = sourceSets.create("architectureTest") {
 }
 
 dependencies {
+    implementation(platform(libs.junit.bom))
     implementation(libs.archunit.junit6)
     productProjects.forEach { implementation(project(it.path)) }
     testImplementation(testFixtures(project(":engine")))

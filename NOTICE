@@ -15,7 +15,7 @@ This notice describes third-party software and artifacts distributed with
 GridGrind and identifies whether they belong to the executable JAR, source
 tree, or container. The standalone GitHub release JAR contains these legal
 files in META-INF. Gradle-generated ZIP and TAR launcher distributions contain
-the same files at their root and inside the JAR. `gridgrind --license` prints
+the same files at their root and inside the JAR. `gridgrind license` prints
 the GridGrind license, this notice, and the applicable third-party license
 texts.
 
@@ -34,11 +34,11 @@ PATENTS.md describes the patent posture and the limits of that description. It
 is informational and is not an additional license or patent grant.
 
 ================================================================================
-Apache POI 5.5.1 (poi, poi-ooxml, poi-ooxml-lite, poi-ooxml-full)
+Apache POI 6.0.0 (poi, poi-ooxml, poi-ooxml-lite, poi-ooxml-full)
 ================================================================================
 
 Apache POI
-Copyright 2003-2025 The Apache Software Foundation
+Copyright 2003-2026 The Apache Software Foundation
 https://poi.apache.org/
 
 Licensed under the Apache License, Version 2.0.
@@ -76,7 +76,7 @@ Scala includes software developed at LAMP/EPFL (https://lamp.epfl.ch/) and
 Lightbend, Inc. (https://www.lightbend.com/).
 
 ================================================================================
-Apache XMLBeans 5.3.0
+Apache XMLBeans 5.4.1
 ================================================================================
 
 Apache XMLBeans
@@ -155,24 +155,24 @@ Apache Commons
 
 Licensed under the Apache License, Version 2.0.
 
-Apache Commons Codec 1.20.0
-Copyright 2002-2025 The Apache Software Foundation
+Apache Commons Codec 1.23.0
+Copyright 2002-2026 The Apache Software Foundation
 https://commons.apache.org/proper/commons-codec/
 
-Apache Commons Collections 4.5.0
-Copyright 2001-2025 The Apache Software Foundation
+Apache Commons Collections 4.6.0
+Copyright 2001-2026 The Apache Software Foundation
 https://commons.apache.org/proper/commons-collections/
 
 Apache Commons Compress 1.28.0
 Copyright 2002-2025 The Apache Software Foundation
 https://commons.apache.org/proper/commons-compress/
 
-Apache Commons IO 2.21.0
-Copyright 2002-2025 The Apache Software Foundation
+Apache Commons IO 2.22.0
+Copyright 2002-2026 The Apache Software Foundation
 https://commons.apache.org/proper/commons-io/
 
-Apache Commons Lang 3.18.0
-Copyright 2001-2025 The Apache Software Foundation
+Apache Commons Lang 3.21.0
+Copyright 2001-2026 The Apache Software Foundation
 https://commons.apache.org/proper/commons-lang/
 
 Apache Commons Math 3.6.1
@@ -190,7 +190,7 @@ Copyright 2010-2012 CS Systèmes d'Information
 Other Apache License 2.0 Components
 ================================================================================
 
-Jackson Databind 3.2.2, Jackson Core 3.2.2, and Jackson Annotations 2.22
+Jackson Databind 3.2.4, Jackson Core 3.2.4, and Jackson Annotations 2.22
 Copyright 2007- Tatu Saloranta, tatu.saloranta@iki.fi
 https://github.com/FasterXML/jackson
 
@@ -201,7 +201,7 @@ SparseBitSet 1.3
 Copyright 2014- Bruce Litchfield (Zaxxer)
 https://github.com/brettwooldridge/SparseBitSet
 
-Woodstox Core 7.1.0
+Woodstox Core 7.3.0
 Copyright 2004- Tatu Saloranta, tatu.saloranta@iki.fi
 https://github.com/FasterXML/woodstox
 
@@ -355,7 +355,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ================================================================================
-Bouncy Castle (bcpkix-jdk18on 1.85, bcprov-jdk18on 1.85.2, bcutil-jdk18on 1.85)
+Bouncy Castle (bcpkix-jdk18on 1.86, bcprov-jdk18on 1.86, bcutil-jdk18on 1.86)
 ================================================================================
 
 Copyright (c) 2000-2026 The Legion of the Bouncy Castle Inc.
@@ -382,10 +382,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ================================================================================
-SLF4J API 2.0.17 (slf4j-api)
+SLF4J API 2.0.20 (slf4j-api)
 ================================================================================
 
-Copyright (c) 2004-2022 QOS.ch Sarl (Switzerland)
+Copyright (c) 2004-2023 QOS.ch
 All rights reserved.
 https://www.slf4j.org/
 
@@ -410,7 +410,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ================================================================================
-Stax2 API 4.2.2
+Stax2 API 4.3.2
 ================================================================================
 
 Copyright 2010- FasterXML.com
@@ -462,7 +462,7 @@ Additional Distributed Build and Recipe Artifacts
 The following third-party build or recipe artifacts have distribution scopes
 that differ from ordinary runtime libraries.
 
-Gradle Wrapper 9.7.1 (gradlew, gradlew.bat, gradle/wrapper/gradle-wrapper.jar)
+Gradle Wrapper 9.8.2 (gradlew, gradlew.bat, gradle/wrapper/gradle-wrapper.jar)
 Copyright © 2015 the original authors.
 https://github.com/gradle/gradle
 

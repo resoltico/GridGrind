@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
-/** Explicit-root workbook IO helpers shared across Jazzer replay and round-trip support. */
+/** Explicit-root workbook IO helpers shared across seed replay and round-trip support. */
 public final class FuzzWorkbookIo {
   private static final Path MANAGED_TEMP_SEGMENT = Path.of(".gridgrind", "tmp");
 

@@ -1,79 +1,78 @@
 # Fuzzing
 
-The root Gradle build uses Java 26 and the pinned Jazzer driver. Generators and workbook
-invariants live in src/fuzz/java; the 94 committed raw inputs live in src/fuzz/resources/seeds.
+The root Gradle build uses JQF 3 on Java 27. The JUnit-free core and published instrumentation
+agent provide coverage feedback for GridGrind core, JSON and engine classes. The active driver
+and deterministic replay share the same raw byte cursor, generators and behavioral invariants
+under src/fuzz/java. Committed raw inputs live in src/fuzz/resources/seeds.
 
 ## Deterministic replay
 
-```bash
-./gradlew fuzzReplay
-```
+    ./gradlew fuzzReplay
 
-The same replay runs in ./gradlew check. It discovers every committed seed for all four
+The same replay runs in ./gradlew check. It discovers all 94 committed inputs across four
 harnesses and fails if any harness has no inputs. Ordinary JUnit also exercises generators,
-invariants and cleanup regressions. Replay uses the pure Java input cursor and does not
-start the native driver. Its temporary files belong to build/tmp/fuzzReplay; each actual
-execution resets that task-owned scratch.
+invariants and cleanup regressions. Replay does not start active coverage-guided fuzzing.
+Its temporary files belong to build/tmp/fuzzReplay; actual execution resets that owned scratch.
 
 ## Active runs
 
-```bash
-./gradlew fuzz -Pharness=protocol-request -PfuzzSeconds=10 -PfuzzRuns=1000
-```
+    ./gradlew fuzz -Pharness=protocol-request -PfuzzSeconds=10 -PfuzzRuns=1000
 
 Harnesses are protocol-request, protocol-workflow, engine-command-sequence and xlsx-roundtrip.
-The standalone driver mutates bytes through FuzzTarget using the same cursor and invariants
-as replay. A run stops at the first finding, the native execution budget or the time budget,
-whichever comes first. Defaults are 60 seconds, 10,000 executions and 32,768 input bytes;
-configure them with fuzzSeconds, fuzzRuns and fuzzMaxInputBytes respectively. A native
-10-second per-input timeout reports slow or stuck cases for investigation instead of allowing
-one input to block for the driver's much longer default. A timeout alone does not establish a
-semantic defect. Overall time is checked between inputs, so startup and a
-final in-flight input can extend wall time beyond fuzzSeconds. A smaller input
-budget that excludes a committed seed is rejected, as is an execution budget too small to
-admit every seed. No seed is silently skipped.
+Defaults are 60 seconds, 10,000 trials and 32,768 input bytes. Set fuzzSeconds, fuzzRuns and
+fuzzMaxInputBytes to select explicit budgets. An input limit smaller than a committed seed or
+a trial budget too small to admit the seed corpus is rejected.
 
-The 32 KiB input ceiling covers the largest committed seed (28,841 bytes), adding 3,927 bytes
-of mutation headroom. A limit below 28,841 bytes excludes that seed; a smaller rounded budget
-is possible with less exploration headroom. The 10,000-execution default roughly covers the
-observed one-minute protocol-workflow run (9,290 executions), while shortening faster harnesses;
-it is an exploration budget, not a coverage guarantee. Smaller explicit budgets are useful
-for smoke checks. Changing either limit changes the reachable mutations or their number.
+Raw seeds enter Harness.check without framing or padding. Generated inputs use bounded byte
+replacement, insertion and deletion. Every unexpected exception or invariant failure is a
+finding, including IOException; a declared exception is not silently accepted. Runs stop at
+the first finding or budget boundary. The seed queue is processed before duration-limited
+mutation; a finding or the outer deadline can stop it. Deterministic replay remains the check
+that exercises the entire committed corpus.
+
+JQF's per-input timeout is checked through instrumented callbacks. Blocked IO or native calls
+may not reach those callbacks, so the Gradle task also imposes an outer process deadline of
+the requested duration plus ten seconds for initialization and shutdown. Gradle configuration,
+prerequisite compilation and process termination can add command wall time. The input watchdog
+is operational evidence: a timeout alone does not establish a semantic defect. Interrupted
+runs preserve their in-flight input on a best-effort shutdown path.
+
+The 32 KiB limit covers the largest committed seed, 28,841 bytes, with 3,927 bytes of mutation
+room. A lower limit can reduce exploration headroom; below 28,841 it excludes an existing
+seed. The 10,000-trial default bounds faster harnesses while leaving substantial exploration
+for workbook-heavy inputs. Smaller explicit budgets are suitable for smoke checks. These
+budgets limit work; they do not guarantee a coverage level.
 
 ## Disk ownership and limits
 
-One checkout retains only its latest mutable corpus under build/fuzz/corpus/<harness>.
-Every admitted run resets the corpus from its committed seeds, including when changing
-harnesses. Promote useful inputs before starting another run; learned corpus inputs do not
-accumulate across runs. A file lock rejects concurrent active runs in one checkout. Use isolated
+One checkout retains its latest mutable corpus under build/fuzz/corpus/<harness>, including
+JQF results. Admitted runs reset the corpus from committed seeds, including when changing
+harnesses. Learned inputs do not accumulate across runs; promote useful raw inputs before
+starting another run. A lock rejects concurrent active runs in the same checkout. Use isolated
 checkouts for parallel runs; dependency download caches can still be shared.
 
-The maximum newly written corpus data is bounded conservatively by
-(fuzzRuns + seed count + 1) × fuzzMaxInputBytes, plus the initial seed bytes. The seed-count
-and one-run allowances cover native initialization and the observed iteration-boundary
-overshoot. Defaults give about 314 MiB plus seed bytes for the largest 48-seed harness and
-the single retained corpus; no space is preallocated. This conservative ceiling assumes every
-execution adds a distinct maximum-sized input. This bounds corpus payload bytes, not allocated disk
-blocks or directory metadata; filesystem overhead adds space. Observed corpora are much smaller.
-Lowering fuzzRuns lowers that ceiling linearly and trades away executions; 32 KiB is already close to the
-largest existing seed, so reducing execution count is the simpler way to tighten disk use.
+The task reports a conservative corpus-payload ceiling based on the seed bytes, trial count
+and maximum input size. It does not preallocate that space. Filesystem block/inode overhead,
+statistics, finding metadata, in-flight workbooks, JVM memory and caches are separate from
+that payload bound. Lowering the trial budget reduces potential corpus growth and executions.
 
-Native temporary files, generated workbooks and extracted libraries belong to build/fuzz/tmp.
-Successful runs remove this scratch; failed or killed runs retain it for diagnosis until the
-next admitted run. Generator failure paths and per-input harness cleanup delete their owned
-files; cleanup errors fail instead of silently accumulating leaked files. The corpus formula
-is not a hard quota on in-flight workbooks, unpacked native data, JVM memory, reports or caches.
-Those resources have separate lifetimes and require free filesystem space.
+Active scratch belongs to build/fuzz/tmp and is removed after success. Failed or interrupted
+runs retain scratch for diagnosis. Per-input cleanup and workflow construction failures clear
+their owned files. Cleanup attempts every root and suppresses secondary errors onto the
+original finding, preserving its identity.
 
-Finding inputs and Java reproducers go to build/fuzz/findings/<harness>. Unreviewed files in
-any findings directory block another run before existing scratch or corpora are reset. Move
-useful evidence out before resuming, and copy exact regression inputs into the matching
-committed seed directory. Java reproducers encode inputs and can be larger than the raw-input
-limit. Findings are preserved rather than pruned by age or size. Do not commit generated
-workbooks, Java reproducers or mutable working corpora.
+Findings belong to build/fuzz/findings/<harness>. Unreviewed files there block a later run
+before existing corpora or scratch are reset. Move useful evidence out before resuming; copy
+only exact raw input bytes into the matching committed seed directory for regression replay.
+Do not commit generated workbooks or mutable corpora.
 
-Expected malformed-request and invalid-sequence classifications are normal outcomes.
-Unexpected exceptions and invariant violations fail replay or active runs. Generated workflow
-grants authorize exact operations, owned sources and publication; authority failures cannot
-count as successful execution. Active fuzzing and advisory mutation campaigns are opt-in and
-are separate from ordinary deterministic checks.
+## Scope
+
+The driver checks explicit GridGrind invariants with branch/call coverage feedback. It does
+not provide generic security-sink sanitizers or comparison/value-profile guidance. Path,
+authority, XML and secret-handling contracts also have independent deterministic tests.
+Malformed-request and invalid-sequence classifications are expected outcomes; unexpected
+errors remain findings. Generated workflow grants authorize exact operations, owned sources
+and publication, so authority failures cannot count as successful workflow execution.
+
+Active fuzzing and mutation reporting are opt-in and separate from ordinary deterministic checks.

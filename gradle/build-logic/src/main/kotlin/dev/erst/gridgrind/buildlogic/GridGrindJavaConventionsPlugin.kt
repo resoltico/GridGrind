@@ -38,6 +38,8 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             val repositoryLayout = GridGrindRepositoryLayout.locate(this)
             val gridgrindJavaVersion =
                 providers.gradleProperty("gridgrindJavaVersion").map(String::toInt).get()
+            val gridgrindJavaTargetVersion =
+                providers.gradleProperty("gridgrindJavaTargetVersion").map(String::toInt).get()
             val pruneJarOutputs =
                 tasks.register("pruneJarOutputs", PruneJarOutputsTask::class.java) { pruneTask ->
                     pruneTask.outputs.upToDateWhen { false }
@@ -90,10 +92,9 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             extensions.configure<SpotlessExtension> {
                 java { formatExtension ->
                     formatExtension.target("src/*/java/**/*.java")
-                    formatExtension.googleJavaFormat(
+                    formatExtension.addStep(GridGrindGoogleJavaFormatStep.create(
                         libs.findVersion("google-java-format").get().requiredVersion,
-                    )
-                    formatExtension.removeUnusedImports()
+                    ))
                     formatExtension.formatAnnotations()
                 }
             }
@@ -138,7 +139,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 object : Action<JavaCompile> {
                     override fun execute(javaCompile: JavaCompile) {
                         javaCompile.options.isIncremental = false
-                        javaCompile.options.release.set(gridgrindJavaVersion)
+                        javaCompile.options.release.set(gridgrindJavaTargetVersion)
                         javaCompile.doFirst {
                             cleanDirectoryContents(javaCompile.destinationDirectory.get().asFile)
                         }

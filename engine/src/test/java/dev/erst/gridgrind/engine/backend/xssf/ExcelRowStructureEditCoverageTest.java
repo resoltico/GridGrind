@@ -261,4 +261,33 @@ class ExcelRowStructureEditCoverageTest extends ExcelRowColumnStructureTestSuppo
       assertEquals(0, StructuralEdits.lastColumnIndex(appendColumnsSheet));
     }
   }
+
+  @Test
+  void insertingRowsAndColumnsMovesPictureAnchorsWithTheirCells() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Drawing");
+      sheet.createRow(6).createCell(5).setCellValue("tail");
+      var anchor = new org.apache.poi.xssf.usermodel.XSSFClientAnchor(0, 0, 0, 0, 1, 2, 3, 4);
+      anchor.setAnchorType(org.apache.poi.ss.usermodel.ClientAnchor.AnchorType.MOVE_AND_RESIZE);
+      byte[] png =
+          java.util.Base64.getDecoder()
+              .decode(
+                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC");
+      var drawing = sheet.createDrawingPatriarch();
+      drawing.createPicture(
+          anchor, workbook.addPicture(png, org.apache.poi.ss.usermodel.Workbook.PICTURE_TYPE_PNG));
+      StructuralEdits.insertRows(sheet, 2, 2);
+      StructuralEdits.insertColumns(sheet, 1, 2);
+      var bytes = new java.io.ByteArrayOutputStream();
+      workbook.write(bytes);
+      try (var reopened = new XSSFWorkbook(new java.io.ByteArrayInputStream(bytes.toByteArray()))) {
+        var picture = reopened.getSheetAt(0).getDrawingPatriarch().getShapes().getFirst();
+        var persisted = (org.apache.poi.xssf.usermodel.XSSFClientAnchor) picture.getAnchor();
+        assertEquals(4, persisted.getRow1());
+        assertEquals(6, persisted.getRow2());
+        assertEquals(3, persisted.getCol1());
+        assertEquals(5, persisted.getCol2());
+      }
+    }
+  }
 }

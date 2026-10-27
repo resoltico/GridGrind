@@ -29,7 +29,7 @@ class ReplayGridGrindFuzzDataTest {
   }
 
   @Test
-  void replayAppliesJazzerStyleModuloForOutOfRangeInts() {
+  void replayUsesModuloForOutOfRangeInts() {
     GridGrindFuzzData data = GridGrindFuzzData.replay(new byte[] {(byte) 0xFF});
 
     assertEquals(12, data.consumeInt(10, 20));

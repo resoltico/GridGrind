@@ -32,7 +32,7 @@ import dev.erst.gridgrind.engine.backend.xssf.*;
 import java.util.List;
 import java.util.Optional;
 
-/** Builds bounded workbook-core command sequences for Jazzer generation. */
+/** Builds bounded workbook-core command sequences for fuzz generation. */
 final class OperationSequenceCommandFactory {
   private OperationSequenceCommandFactory() {}
 

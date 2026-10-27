@@ -143,4 +143,55 @@ class ExcelWorkbookFormulasTest {
           workbook.formulas().assessAllCapabilities());
     }
   }
+
+  @Test
+  void negationPrecedesExponentiationAsInExcel() throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      var cells = workbook.getOrCreateSheet("Arithmetic").cells();
+      cells.setCell("A1", new ResolvedFormula("-2^2"));
+      cells.setCell("A2", new ResolvedFormula("-(2^2)"));
+      assertEquals(4.0d, cells.number("A1"));
+      assertEquals(-4.0d, cells.number("A2"));
+    }
+  }
+
+  @Test
+  void multiplyAndDividePreserveBinaryPrecisionThroughWorkbookRoundtrip() throws Exception {
+    // IEEE-754 binary64 results, independent of decimal display rounding or evaluator code.
+    long multiplyBits = 0x4105aae2d70a3d70L;
+    long divideBits = 0x3f9eb851eb851ebaL;
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      var cells = workbook.getOrCreateSheet("Precision").cells();
+      cells.setCell("B2", new CellValue.NumberValue(125000.25));
+      cells.setCell("B3", new CellValue.NumberValue(0.42));
+      cells.setCell("B4", new ResolvedFormula("B2*(1+B3)"));
+      cells.setCell("B5", new ResolvedFormula("(0.1+0.2)/10"));
+      workbook.formulas().evaluateAll();
+      assertEquals(multiplyBits, Double.doubleToRawLongBits(cells.number("B4")));
+      assertEquals(divideBits, Double.doubleToRawLongBits(cells.number("B5")));
+      var bytes = new java.io.ByteArrayOutputStream();
+      workbook.xssfWorkbook().write(bytes);
+      try (XssfWorkbook reopened =
+          XssfWorkbooks.wrap(
+              new XSSFWorkbook(new java.io.ByteArrayInputStream(bytes.toByteArray())))) {
+        var persisted = reopened.xssfWorkbook().getSheetAt(0);
+        assertEquals(
+            multiplyBits,
+            Double.doubleToRawLongBits(persisted.getRow(3).getCell(1).getNumericCellValue()));
+        assertEquals(
+            divideBits,
+            Double.doubleToRawLongBits(persisted.getRow(4).getCell(1).getNumericCellValue()));
+        var displayed =
+            (CellReport.FormulaReport)
+                reopened
+                    .sheet("Precision")
+                    .cells()
+                    .snapshotCell(
+                        "B4",
+                        dev.erst.gridgrind.core.plan.CellReadProjection.of(
+                            dev.erst.gridgrind.core.plan.CellReadFacet.FORMAT));
+        assertEquals("177500.355", displayed.displayValue().orElseThrow());
+      }
+    }
+  }
 }

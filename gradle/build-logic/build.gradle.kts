@@ -21,6 +21,7 @@ repositories {
 dependencies {
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
+    implementation("com.google.googlejavaformat:google-java-format:${libs.versions.google.java.format.get()}")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:${libs.versions.spotless.get()}")
     implementation(
         "net.ltgt.gradle:gradle-errorprone-plugin:${libs.versions.errorprone.plugin.get()}",
@@ -56,17 +57,18 @@ gradlePlugin {
     }
 }
 
-val javaRelease =
+val javaPins =
     providers.fileContents(layout.projectDirectory.file("../../gradle.properties")).asText.map { text ->
-        val properties = Properties()
-        text.reader().use(properties::load)
-        properties.getProperty("gridgrindJavaVersion")?.toIntOrNull()
-            ?: error("Root gradle.properties must declare an integer gridgrindJavaVersion")
+        Properties().apply { text.reader().use(::load) }
     }.get()
+val javaVersion = javaPins.getProperty("gridgrindJavaVersion")?.toIntOrNull()
+    ?: error("Root gradle.properties must declare an integer gridgrindJavaVersion")
+val javaTargetVersion = javaPins.getProperty("gridgrindJavaTargetVersion")?.toIntOrNull()
+    ?: error("Root gradle.properties must declare an integer gridgrindJavaTargetVersion")
 
 // The included build derives its compiler target from the same pin as the product modules.
 kotlin {
-    jvmToolchain(javaRelease)
+    jvmToolchain(javaVersion)
 }
 
 fun cleanDestinationTaskName(taskName: String): String =
@@ -95,18 +97,21 @@ val cleanCompileTestJavaDestination =
 
 tasks.named<KotlinCompile>("compileKotlin") {
     incremental = false
-    compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaRelease.toString()))
+    compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaTargetVersion.toString()))
     dependsOn(cleanCompileKotlinDestination)
 }
 
 tasks.named<KotlinCompile>("compileTestKotlin") {
     incremental = false
-    compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaRelease.toString()))
+    compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaTargetVersion.toString()))
     dependsOn(cleanCompileTestKotlinDestination)
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    options.release = javaTargetVersion
+}
+
 tasks.named<JavaCompile>("compileTestJava") {
-    options.release = javaRelease
     dependsOn(cleanCompileTestJavaDestination)
 }
 

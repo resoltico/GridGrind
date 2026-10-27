@@ -595,12 +595,12 @@ public final class StructuralEdits {
     if (workbookContainsFormulas(workbook)) {
       throw new IllegalArgumentException(
           operationType
-              + " cannot run while workbook formulas are present; Apache POI leaves some column references stale during column structural edits");
+              + " cannot run while workbook formulas are present; formula-bearing column structural edits are unsupported");
     }
     if (workbookContainsFormulaDefinedNames(workbook)) {
       throw new IllegalArgumentException(
           operationType
-              + " cannot run while formula-defined names are present; Apache POI leaves some column references stale during column structural edits");
+              + " cannot run while formula-defined names are present; formula-bearing column structural edits are unsupported");
     }
   }
 

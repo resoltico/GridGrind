@@ -1,7 +1,7 @@
 # Development
 
-GridGrind requires a Java 26 JDK. Use the checked-in Gradle wrapper; gradle.properties owns
-the Java pin and local version, and gradle/libs.versions.toml owns dependency versions.
+GridGrind requires a Java 27 JDK. Use the checked-in Gradle wrapper; gradle.properties owns
+the compiler/runtime pin, source target, active-fuzz tool runtime and local version, and gradle/libs.versions.toml owns dependency versions.
 Gradle dependency locks retain the resolved build inputs.
 
 ## Checks
@@ -104,18 +104,24 @@ them. Generated workbooks belong in build or test-owned temporary directories.
 
 | Component | Version |
 |:----------|:--------|
-| Contributor devcontainer | pinned glibc base image plus Azul Zulu 26 JDK; see [contributor configuration](../.devcontainer/devcontainer.json) |
-| Java | 26 |
+| Contributor devcontainer | pinned glibc base image plus Azul Zulu 27 JDK; see [contributor configuration](../.devcontainer/devcontainer.json) |
+| Java compiler/runtime | 27 |
+| Java source/bytecode target | 26 |
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
-| Architecture tests | ArchUnit 1.5.0 with its JUnit 6 integration in `architecture-tests:architectureTest` |
-| Apache POI | 5.5.1 |
-| Jackson Databind | 3.2.2 |
+| Architecture tests | ArchUnit 1.5.1 with its JUnit 6 integration in `architecture-tests:architectureTest` |
+| Apache POI | 6.0.0 |
+| Jackson Databind | 3.2.4 |
 | JUnit Jupiter | 6.1.3 |
 | Log4j Core | 2.26.1 |
 
-Product modules and shared build logic target Java 26. Kotlin `2.4.20` implements build tasks
-and convention plugins; their regression tests use Java. The included build reads its Java
-target from the root gradle.properties pin.
+Product modules, ordinary tests and deterministic replay use Java 27. The source/bytecode
+target is Java 26, matching stable Kotlin/PMD language support. Active JQF fuzzing also runs
+on Java 27. The compiler/runtime and source target are declared in gradle.properties. Kotlin `2.4.21` implements build tasks and
+convention plugins; their regression tests use Java.
+
+Java formatting uses google-java-format's current public API through a Spotless step. The
+build JVM's documented javac exports are declared in org.gradle.jvmargs in gradle.properties;
+product runtime flags do not need those formatter-only exports.
 
 Jackson dependency note: Jackson 3.x databind intentionally still uses the
 `com.fasterxml.jackson.core:jackson-annotations` artifact and package namespace. That is upstream

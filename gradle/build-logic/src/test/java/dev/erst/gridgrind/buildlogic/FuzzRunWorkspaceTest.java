@@ -24,7 +24,7 @@ class FuzzRunWorkspaceTest {
     FuzzRunWorkspace.run(workspace, seeds, "protocol-request", 100, 32, files -> {
       first.set(files.getCorpus());
       assertTrue(Files.isRegularFile(files.getCorpus().resolve("one")));
-      assertEquals(3266L, files.getCorpusByteCeiling());
+      assertEquals(3202L, files.getCorpusByteCeiling());
       assertTrue(Files.isDirectory(files.getTemporary()));
     });
     assertFalse(Files.exists(workspace.resolve("tmp")));

@@ -136,16 +136,18 @@ class ExcelSheetTestSupport {
       implements FormulaRuntime {
     @Override
     public CellValue evaluate(Cell cell) {
-      if (evaluateFailure != null) {
-        throw evaluateFailure;
+      RuntimeException failure = evaluateFailure();
+      if (failure != null) {
+        throw failure;
       }
       return null;
     }
 
     @Override
     public CellType evaluateFormulaCell(Cell cell) {
-      if (evaluateFailure != null) {
-        throw evaluateFailure;
+      RuntimeException failure = evaluateFailure();
+      if (failure != null) {
+        throw failure;
       }
       return CellType._NONE;
     }
@@ -155,8 +157,9 @@ class ExcelSheetTestSupport {
 
     @Override
     public String displayValue(DataFormatter formatter, Cell cell) {
-      if (displayFailure != null) {
-        throw displayFailure;
+      RuntimeException failure = displayFailure();
+      if (failure != null) {
+        throw failure;
       }
       return "";
     }

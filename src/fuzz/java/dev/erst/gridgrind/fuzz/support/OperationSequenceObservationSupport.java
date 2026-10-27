@@ -21,7 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
 
-/** Shared selector and assertion generation support for observation-side Jazzer workflows. */
+/** Shared selector and assertion generation support for observation-side workflows. */
 final class OperationSequenceObservationSupport {
   private OperationSequenceObservationSupport() {}
 

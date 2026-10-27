@@ -230,7 +230,7 @@ final class OperationSequenceLayoutValues {
 
   static OperationSequenceValueFactory.WorkflowStorage nextWorkflowStorage(
       String primarySheet, String secondarySheet, GridGrindFuzzData data) throws IOException {
-    Path directory = Files.createTempDirectory("gridgrind-jazzer-workflow-");
+    Path directory = Files.createTempDirectory("gridgrind-fuzz-workflow-");
     Path sourcePath = directory.resolve("source.xlsx");
     Path saveAsPath = directory.resolve("output.xlsx");
 
