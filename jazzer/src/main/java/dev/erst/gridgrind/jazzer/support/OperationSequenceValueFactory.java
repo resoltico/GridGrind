@@ -31,7 +31,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
-import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.engine.backend.xssf.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;

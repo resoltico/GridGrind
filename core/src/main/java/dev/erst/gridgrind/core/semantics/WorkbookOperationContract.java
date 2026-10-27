@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.semantics;
 
-import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
@@ -19,10 +18,10 @@ import java.util.Optional;
  * analysis can retain independently bound sibling fragments.
  */
 final class WorkbookOperationContract {
-  private static final GridGrindExecutionModeMetadata.EventReadMode EVENT_READ =
-      GridGrindExecutionModeMetadata.eventRead();
-  private static final GridGrindExecutionModeMetadata.StreamingWriteMode STREAMING_WRITE =
-      GridGrindExecutionModeMetadata.streamingWrite();
+  private static final BackendCapabilities.EventReadMode EVENT_READ =
+      BackendCapabilities.eventRead();
+  private static final BackendCapabilities.StreamingWriteMode STREAMING_WRITE =
+      BackendCapabilities.streamingWrite();
 
   private final Class<? extends Record> operationType;
   private final WorkbookOperationTargetContract targetSelectorContract;

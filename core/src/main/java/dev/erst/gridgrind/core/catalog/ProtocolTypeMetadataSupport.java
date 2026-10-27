@@ -37,7 +37,7 @@ public final class ProtocolTypeMetadataSupport {
       throw new IllegalStateException(
           "Contract subtype " + type.getName() + " must declare a non-blank metadata id");
     }
-    if (metadata.summary().isBlank()) {
+    if (summary(type, metadata).isBlank()) {
       throw new IllegalStateException(
           "Contract subtype " + type.getName() + " must declare a non-blank metadata summary");
     }
@@ -52,6 +52,17 @@ public final class ProtocolTypeMetadataSupport {
               + metadata.id());
     }
     return metadata;
+  }
+
+  /** Returns the colocated summary or the mode's derived capability summary. */
+  public static String summary(Class<?> type) {
+    return summary(type, requiredMetadata(type));
+  }
+
+  private static String summary(Class<?> type, Variant metadata) {
+    return dev.erst.gridgrind.core.semantics.BackendCapabilities.forModeClass(type)
+        .map(dev.erst.gridgrind.core.semantics.BackendCapabilities.Mode::catalogSummary)
+        .orElseGet(metadata::summary);
   }
 
   /**

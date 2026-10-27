@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
+import static dev.erst.gridgrind.engine.runtime.ResolutionIdentity.sameReference;
 
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.Selector;

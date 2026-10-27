@@ -19,9 +19,9 @@ import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +33,7 @@ class ExecutionModeRequestExecutorTest {
   @Test
   void eventReadModeMatchesFullXssfForExistingWorkbookSummaries() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-event-mode-existing-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.getOrCreateSheet("Archive");
       workbook.sheets().setSheetVisibility("Archive", ExcelSheetVisibility.HIDDEN);
@@ -214,9 +214,10 @@ class ExecutionModeRequestExecutorTest {
         new DefaultGridGrindRequestExecutor(
             new DefaultGridGrindRequestExecutorDependencies(
                 new WorkbookExecutionEngine(),
-                ExcelWorkbook::close,
-                dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                XssfWorkbook::close,
+                dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.MaterializedWorkbook
+                    ::close,
+                dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
     WorkbookResult.Success success =
@@ -251,7 +252,7 @@ class ExecutionModeRequestExecutorTest {
     Path sourcePath = Files.createTempFile("gridgrind-event-read-saveas-source-", ".xlsx");
     Path persistedCopy = Files.createTempFile("gridgrind-event-read-saveas-copy-", ".xlsx");
     Files.deleteIfExists(persistedCopy);
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Header"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, sourcePath);
@@ -484,7 +485,7 @@ class ExecutionModeRequestExecutorTest {
   @Test
   void validatesUnsupportedExecutionModeCombinationsUpFront() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-execution-mode-validation-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }

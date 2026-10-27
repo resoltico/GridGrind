@@ -25,6 +25,10 @@ public enum ProductArchitectureRules {
       ProductDependencyArchitectureRules.workbookImplementationDoesNotDependOnExecutionRuntime();
 
   @ArchTest
+  static final ArchRule POI_DEPENDENCIES_STAY_IN_NATIVE_ADAPTERS =
+      ProductDependencyArchitectureRules.poiDependenciesStayInNativeAdapters();
+
+  @ArchTest
   static final ArchRule ENGINE_API_RUNTIME_DEPENDENCIES_STAY_IN_OWNED_BRIDGES =
       ProductDependencyArchitectureRules.engineApiRuntimeDependenciesStayInOwnedBridges();
 

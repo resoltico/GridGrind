@@ -88,8 +88,8 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.formulas.ComparisonFormulas;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -495,8 +495,8 @@ class SequenceIntrospectionTest {
                     new ResolvedDataValidation(
                         new DataValidationRuleSpec.WholeNumber(
                             ExcelComparisonOperator.GREATER_OR_EQUAL,
-                            ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
-                            ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                            ComparisonFormulas.normalizeFormula("1", "formula1"),
+                            ComparisonFormulas.normalizeOptionalFormula(
                                 Optional.empty(), "formula2")),
                         false,
                         false,

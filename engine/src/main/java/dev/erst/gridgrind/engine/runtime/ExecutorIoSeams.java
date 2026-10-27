@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
+import dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -27,16 +27,16 @@ interface PathDeleteOperation {
   void deleteIfExists(Path path) throws IOException;
 }
 
-/** Functional interface for closing an ExcelWorkbook after request execution. */
+/** Functional interface for closing an XssfWorkbook after request execution. */
 @FunctionalInterface
 interface WorkbookCloser {
   /** Closes the workbook, releasing any held resources. */
-  void close(ExcelWorkbook workbook) throws IOException;
+  void close(XssfWorkbook workbook) throws IOException;
 }
 
 /** Applies the streaming-mode calculation side effect at the execution boundary. */
 @FunctionalInterface
 interface StreamingCalculationApplier {
   /** Applies streaming-mode calculation state to the low-memory workbook writer. */
-  void apply(ExcelStreamingWorkbookWriter writer);
+  void apply(StreamingWorkbookWriter writer);
 }

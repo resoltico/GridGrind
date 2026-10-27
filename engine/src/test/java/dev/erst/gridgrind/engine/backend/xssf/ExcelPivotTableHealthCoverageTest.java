@@ -1,0 +1,220 @@
+package dev.erst.gridgrind.engine.backend.xssf;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import java.util.List;
+import java.util.Optional;
+import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
+import org.apache.poi.xssf.usermodel.XSSFPivotCacheRecords;
+import org.apache.poi.xssf.usermodel.XSSFPivotTable;
+import org.junit.jupiter.api.Test;
+
+/** Pivot-table health and malformed-state coverage. */
+class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSupport {
+  @Test
+  @SuppressWarnings("PMD.NcssCount")
+  void pivotTableHealthCoversMalformedNamesLocationsAndCacheRelations() throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      populatePivotSource(workbook, "Data");
+      workbook.getOrCreateSheet("Report");
+      workbook.getOrCreateSheet("OtherReport");
+      controller.setPivotTable(
+          workbook,
+          definition(
+              "Alpha Pivot",
+              "Report",
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
+              "C5",
+              List.of(),
+              List.of("Region"),
+              List.of()));
+      controller.setPivotTable(
+          workbook,
+          definition(
+              "Beta Pivot",
+              "OtherReport",
+              new PivotTableSpec.PivotSourceSpec.Range(
+                  new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5")),
+              "C5",
+              List.of(),
+              List.of("Stage"),
+              List.of()));
+
+      XSSFPivotTable firstPivot = workbook.xssfWorkbook().getPivotTables().getFirst();
+      XSSFPivotTable secondPivot = workbook.xssfWorkbook().getPivotTables().get(1);
+      secondPivot.getCTPivotTableDefinition().setName("Alpha Pivot");
+
+      List<AnalysisFindingCode> duplicateCodes =
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
+              .map(AnalysisFindingReport::code)
+              .toList();
+      assertTrue(duplicateCodes.contains(AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME));
+
+      firstPivot.getCTPivotTableDefinition().setName(null);
+      PivotTableReport syntheticNameSnapshot =
+          controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst();
+      assertTrue(syntheticNameSnapshot.name().startsWith("_GG_PIVOT_"));
+
+      Object firstHandle = allPivotHandles(workbook).getFirst();
+      firstPivot.getCTPivotTableDefinition().getLocation().setRef(null);
+      assertEquals(
+          Optional.empty(), invoke(controller, "rawLocationRange", Object.class, firstHandle));
+      assertEquals(Optional.empty(), invoke(controller, "safeLocation", Object.class, firstHandle));
+
+      AnalysisFindingReport sheetFinding =
+          invoke(
+              controller,
+              "finding",
+              AnalysisFindingReport.class,
+              AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
+              AnalysisSeverity.ERROR,
+              firstHandle,
+              "Broken Pivot",
+              "Location missing",
+              List.of("evidence"));
+      assertInstanceOf(AnalysisLocationReport.Sheet.class, sheetFinding.location());
+      assertTrue(
+          invoke(controller, "resolvedName", String.class, firstHandle)
+              .startsWith("_GG_PIVOT_Report_"));
+    }
+
+    try (XssfWorkbook workbook = pivotWorkbook()) {
+      XSSFPivotTable pivot = workbook.xssfWorkbook().getPivotTables().getFirst();
+      XSSFPivotCacheDefinition cacheDefinition = pivot.getPivotCacheDefinition();
+      XSSFPivotCacheRecords cacheRecords =
+          cacheDefinition.getRelations().stream()
+              .filter(XSSFPivotCacheRecords.class::isInstance)
+              .map(XSSFPivotCacheRecords.class::cast)
+              .findFirst()
+              .orElseThrow();
+
+      assertTrue(PoiRelationRemoval.defaultRemover().test(cacheDefinition, cacheRecords));
+      List<AnalysisFindingCode> codes =
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
+              .map(AnalysisFindingReport::code)
+              .toList();
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_RECORDS));
+    }
+
+    try (XssfWorkbook workbook = pivotWorkbook()) {
+      XSSFPivotTable pivot = workbook.xssfWorkbook().getPivotTables().getFirst();
+      XSSFPivotCacheDefinition cacheDefinition = pivot.getPivotCacheDefinition();
+      invokeVoid(
+          controller,
+          "removeWorkbookPivotCacheRegistration",
+          workbook.xssfWorkbook(),
+          pivot.getCTPivotTableDefinition().getCacheId(),
+          workbook.xssfWorkbook().getRelationId(cacheDefinition));
+
+      List<AnalysisFindingCode> codes =
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
+              .map(AnalysisFindingReport::code)
+              .toList();
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_WORKBOOK_CACHE));
+    }
+
+    try (XssfWorkbook workbook = pivotWorkbook()) {
+      ThrowingPivotTable pivot =
+          new ThrowingPivotTable(pivotTableDefinition("Broken Cache Pivot", "C5:F9", 99L));
+      Object handle =
+          newPivotHandle(
+              workbook.xssfWorkbook().getSheetIndex("Report"),
+              0,
+              "Report",
+              workbook.xssfWorkbook().getSheet("Report"),
+              pivot);
+
+      IllegalStateException cacheDefinitionFailure =
+          assertInvocationFailure(
+              IllegalStateException.class,
+              () -> invoke(controller, "cacheDefinition", Optional.class, pivot));
+      assertTrue(cacheDefinitionFailure.getMessage().contains("broken cache relation"));
+      IllegalStateException failure =
+          assertInvocationFailure(
+              IllegalStateException.class,
+              () ->
+                  invoke(
+                      controller,
+                      "requiredCacheDefinition",
+                      XSSFPivotCacheDefinition.class,
+                      pivot));
+      assertTrue(failure.getMessage().contains("broken cache relation"));
+
+      IllegalStateException healthFailure =
+          assertInvocationFailure(
+              IllegalStateException.class,
+              () ->
+                  invoke(
+                      controller,
+                      "pivotTableHealthFindings",
+                      List.class,
+                      workbook.xssfWorkbook(),
+                      handle));
+      assertTrue(healthFailure.getMessage().contains("broken cache relation"));
+    }
+
+    try (XssfWorkbook workbook = pivotWorkbook()) {
+      XSSFPivotTable pivot = workbook.xssfWorkbook().getPivotTables().getFirst();
+      pivot.getCTPivotTableDefinition().unsetDataFields();
+
+      PivotTableReport.Unsupported snapshot =
+          assertInstanceOf(
+              PivotTableReport.Unsupported.class,
+              controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst());
+      assertTrue(snapshot.detail().contains("does not contain any data fields"));
+    }
+
+    try (XssfWorkbook workbook = pivotWorkbook()) {
+      XSSFPivotTable pivot = workbook.xssfWorkbook().getPivotTables().getFirst();
+      pivot.getCTPivotTableDefinition().getLocation().setRef("not-a-range");
+
+      PivotTableReport.Unsupported snapshot =
+          assertInstanceOf(
+              PivotTableReport.Unsupported.class,
+              controller.pivotTables(workbook, new PivotTableSelector.All()).getFirst());
+      assertTrue(snapshot.detail().contains("location range"));
+      List<AnalysisFindingCode> codes =
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
+              .map(AnalysisFindingReport::code)
+              .toList();
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL));
+    }
+
+    try (XssfWorkbook workbook = pivotWorkbook()) {
+      XSSFPivotTable pivot = workbook.xssfWorkbook().getPivotTables().getFirst();
+      pivot
+          .getPivotCacheDefinition()
+          .getCTPivotCacheDefinition()
+          .getCacheSource()
+          .unsetWorksheetSource();
+
+      IllegalArgumentException failure =
+          assertInvocationFailure(
+              IllegalArgumentException.class,
+              () ->
+                  invoke(
+                      controller,
+                      "snapshotSource",
+                      PivotTableReport.PivotSourceReport.class,
+                      workbook.xssfWorkbook(),
+                      pivot));
+      assertTrue(failure.getMessage().contains("worksheetSource"));
+
+      List<AnalysisFindingCode> codes =
+          controller.pivotTableHealthFindings(workbook, new PivotTableSelector.All()).stream()
+              .map(AnalysisFindingReport::code)
+              .toList();
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE));
+    }
+  }
+}

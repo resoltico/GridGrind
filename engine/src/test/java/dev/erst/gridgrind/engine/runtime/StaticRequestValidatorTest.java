@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -20,6 +19,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -51,7 +51,7 @@ class StaticRequestValidatorTest {
     List<String> messages =
         validator.validate(request).stream().map(GridGrindProblemDetail.Problem::message).toList();
     String unsupportedSetCell =
-        GridGrindExecutionModeMetadata.streamingWrite().unsupportedActionMessage("SET_CELL");
+        BackendCapabilities.streamingWrite().unsupportedActionMessage("SET_CELL");
 
     assertEquals(List.of(unsupportedSetCell, unsupportedSetCell), messages);
   }

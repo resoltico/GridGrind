@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
+import dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.Objects;
 
 /** Owned executor seams for one DefaultGridGrindRequestExecutor instance. */
@@ -24,8 +24,8 @@ record DefaultGridGrindRequestExecutorDependencies(
   static DefaultGridGrindRequestExecutorDependencies production() {
     return new DefaultGridGrindRequestExecutorDependencies(
         new WorkbookExecutionEngine(),
-        ExcelWorkbook::close,
+        XssfWorkbook::close,
         WorkbookArtifactIo.MaterializedWorkbook::close,
-        ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
+        StreamingWorkbookWriter::markRecalculateOnOpen);
   }
 }

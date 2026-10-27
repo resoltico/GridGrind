@@ -1,0 +1,908 @@
+package dev.erst.gridgrind.engine.backend.xssf;
+
+import static dev.erst.gridgrind.engine.backend.xssf.WorkbookSampleFixtures.deleteNamedRangeStep;
+import static dev.erst.gridgrind.engine.backend.xssf.WorkbookSampleFixtures.setNamedRangeStep;
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.microsoft.schemas.office.excel.CTClientData;
+import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
+import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.source.BinaryContent;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.engine.cells.CellsAdapter;
+import dev.erst.gridgrind.engine.charts.ChartAdapter;
+import dev.erst.gridgrind.engine.charts.ChartAdapter.AxisRegistry;
+import dev.erst.gridgrind.engine.charts.ChartAdapter.ResolvedChartSource;
+import dev.erst.gridgrind.engine.comments.CommentAdapter;
+import dev.erst.gridgrind.engine.customxml.CustomXmlAdapter;
+import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
+import dev.erst.gridgrind.engine.drawing.SignatureAdapter;
+import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
+import dev.erst.gridgrind.engine.layout.LayoutAdapter;
+import dev.erst.gridgrind.engine.styles.ColorAdapter;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.usermodel.Name;
+import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xddf.usermodel.chart.AxisPosition;
+import org.apache.poi.xddf.usermodel.chart.ChartTypes;
+import org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
+import org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFPieChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
+import org.apache.poi.xssf.usermodel.XSSFChart;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFSimpleShape;
+import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.xmlbeans.XmlCursor;
+import org.apache.xmlbeans.XmlObject;
+import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.drawingml.x2006.chart.CTMarker;
+import org.openxmlformats.schemas.drawingml.x2006.chart.CTUnsignedInt;
+import org.openxmlformats.schemas.drawingml.x2006.chart.STMarkerStyle;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTLegacyDrawing;
+
+/** Residual helper and private-seam coverage for rebuilt XLSX engine surfaces. */
+class ExcelResidualHelperCoverageTest {
+  @Test
+  @SuppressWarnings("PMD.NcssCount")
+  void chartHelperSeamsCoverResidualBranches() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Charts");
+      seedChartData(sheet);
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+
+      XSSFChart emptyChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 1, 7, 10));
+      assertFalse(ChartAdapter.barVaryColors(emptyChart));
+      assertFalse(ChartAdapter.lineVaryColors(emptyChart));
+      XSSFChart varyingBarChart =
+          drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 11, 7, 20));
+      varyingBarChart.getCTChart().getPlotArea().addNewBarChart().addNewVaryColors().setVal(true);
+      assertTrue(ChartAdapter.barVaryColors(varyingBarChart));
+      XSSFChart varyingLineChart =
+          drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 8, 11, 14, 20));
+      varyingLineChart.getCTChart().getPlotArea().addNewLineChart().addNewVaryColors().setVal(true);
+      assertTrue(ChartAdapter.lineVaryColors(varyingLineChart));
+
+      List<?> emptyPlots = ChartAdapter.snapshotPlots(emptyChart, List.of());
+      assertInstanceOf(ChartReport.Unsupported.class, emptyPlots.getFirst());
+
+      XDDFBarChartData unplottedBarData =
+          (XDDFBarChartData)
+              emptyChart.createData(
+                  ChartTypes.BAR,
+                  emptyChart.createCategoryAxis(AxisPosition.BOTTOM),
+                  emptyChart.createValueAxis(AxisPosition.LEFT));
+      List<?> unsupportedPlots =
+          ChartAdapter.snapshotPlots(
+              emptyChart, List.of(unplottedBarData, new UnsupportedChartData()));
+      assertEquals(2, unsupportedPlots.size());
+      assertTrue(unsupportedPlots.stream().allMatch(ChartReport.Unsupported.class::isInstance));
+
+      XSSFChart lineChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 8, 1, 14, 10));
+      XDDFLineChartData lineData =
+          (XDDFLineChartData)
+              lineChart.createData(
+                  ChartTypes.LINE,
+                  lineChart.createCategoryAxis(AxisPosition.BOTTOM),
+                  lineChart.createValueAxis(AxisPosition.LEFT));
+      XDDFLineChartData.Series lineSeries =
+          (XDDFLineChartData.Series)
+              lineData.addSeries(
+                  XDDFDataSourcesFactory.fromArray(new String[] {"Jan", "Feb"}),
+                  XDDFDataSourcesFactory.fromArray(new Double[] {10d, 12d}));
+      for (ExcelChartMarkerStyle markerStyle : ExcelChartMarkerStyle.values()) {
+        lineSeries.setMarkerStyle(ChartAdapter.toPoi(markerStyle));
+        assertEquals(markerStyle, invokeMarkerStyle(lineSeries.getCTLineSer().getMarker()));
+      }
+      lineSeries.setMarkerSize((short) 11);
+      assertEquals(
+          Short.valueOf((short) 11), invokeMarkerSize(lineSeries.getCTLineSer().getMarker()));
+      assertNull(invokeMarkerStyle(CTMarker.Factory.newInstance()));
+      CTMarker autoMarker = CTMarker.Factory.newInstance();
+      autoMarker.addNewSymbol().setVal(STMarkerStyle.AUTO);
+      assertNull(invokeMarkerStyle(autoMarker));
+      assertNull(invokeMarkerSize(CTMarker.Factory.newInstance()));
+      CTMarker unsupportedMarker =
+          CTMarker.Factory.parse(
+              "<c:marker xmlns:c='http://schemas.openxmlformats.org/drawingml/2006/chart'>"
+                  + "<c:symbol val='hexagon'/></c:marker>");
+      assertNull(invokeMarkerStyle(unsupportedMarker));
+
+      AxisRegistry registry =
+          new AxisRegistry(drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 15, 1, 22, 10)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> registry.categoryValueAxes(List.of(axis(ExcelChartAxisKind.SERIES))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> registry.categoryValueAxes(List.of(axis(ExcelChartAxisKind.CATEGORY))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> registry.categoryValueAxes(List.of(axis(ExcelChartAxisKind.VALUE))));
+      AxisRegistry.CategoryValueAxes dateAxes =
+          registry.categoryValueAxes(
+              List.of(axis(ExcelChartAxisKind.DATE), axis(ExcelChartAxisKind.VALUE)));
+      assertNotNull(dateAxes.categoryAxis());
+      assertNotNull(dateAxes.valueAxis());
+      AxisRegistry.SurfaceAxes surfaceAxes =
+          registry.surfaceAxes(
+              List.of(
+                  axis(ExcelChartAxisKind.DATE),
+                  axis(ExcelChartAxisKind.VALUE),
+                  axis(ExcelChartAxisKind.SERIES)));
+      assertNotNull(surfaceAxes.categoryAxis());
+      assertNotNull(surfaceAxes.valueAxis());
+      assertNotNull(surfaceAxes.seriesAxis());
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              registry.surfaceAxes(
+                  List.of(axis(ExcelChartAxisKind.DATE), axis(ExcelChartAxisKind.VALUE))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              registry.surfaceAxes(
+                  List.of(axis(ExcelChartAxisKind.DATE), axis(ExcelChartAxisKind.SERIES))));
+
+      Name localNumbers = workbook.createName();
+      localNumbers.setNameName("LocalNums");
+      localNumbers.setSheetIndex(workbook.getSheetIndex(sheet));
+      localNumbers.setRefersToFormula("B2:B3");
+      Name workbookScopedNumbers = workbook.createName();
+      workbookScopedNumbers.setNameName("WorkbookNums");
+      workbookScopedNumbers.setRefersToFormula("B2:B3");
+      Name sparseNumbers = workbook.createName();
+      sparseNumbers.setNameName("SparseNums");
+      sparseNumbers.setRefersToFormula("B20:B21");
+      XDDFValueAxis scratchAxis = lineChart.createValueAxis(AxisPosition.RIGHT);
+      assertEquals(
+          2,
+          ChartAdapter.toValueDataSource(sheet, new ChartDataSourceSpec.Reference("LocalNums"))
+              .getPointCount());
+      assertTrue(ChartAdapter.resolveChartSource(sheet, "LocalNums").numeric());
+      assertTrue(ChartAdapter.resolveChartSource(sheet, "WorkbookNums").numeric());
+      ResolvedChartSource sparseResolved = ChartAdapter.resolveChartSource(sheet, "SparseNums");
+      assertFalse(sparseResolved.numeric());
+      assertEquals(List.of("", ""), sparseResolved.stringValues());
+      assertEquals(
+          2,
+          ChartAdapter.toValueDataSource(
+                  sheet, new ChartDataSourceSpec.NumericLiteral(List.of(3d, 4d)))
+              .getPointCount());
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              ChartAdapter.toValueDataSource(
+                  sheet, new ChartDataSourceSpec.StringLiteral(List.of("Jan"))));
+
+      CTUnsignedInt knownAxisId = CTUnsignedInt.Factory.newInstance();
+      knownAxisId.setVal(scratchAxis.getId());
+      CTUnsignedInt missingAxisId = CTUnsignedInt.Factory.newInstance();
+      missingAxisId.setVal(Long.MAX_VALUE);
+      List<?> snapshotAxes =
+          ChartAdapter.snapshotAxes(
+              java.util.Map.of(scratchAxis.getId(), (XDDFChartAxis) scratchAxis),
+              List.of(knownAxisId, missingAxisId));
+      assertEquals(1, snapshotAxes.size());
+
+      assertThrows(
+          IllegalStateException.class, () -> ChartAdapter.snapshotDataSource(sheet, null, null));
+      assertInstanceOf(
+          ChartReport.DataSource.NumericLiteral.class,
+          ChartAdapter.snapshotDataSource(
+              sheet, XDDFDataSourcesFactory.fromArray(new Double[] {1d, 2d}), null));
+
+      ChartAdapter.createChart(
+          sheet,
+          new ResolvedChart(
+              "Bar3DNoShape",
+              ExcelChartTestSupport.anchor(23, 1, 29, 10),
+              new ResolvedChartTitle.Text("Bar 3D"),
+              new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              List.of(
+                  new ResolvedChart.Bar3D(
+                      false,
+                      ExcelChartBarDirection.COLUMN,
+                      ExcelChartBarGrouping.CLUSTERED,
+                      Optional.of(100),
+                      Optional.of(50),
+                      Optional.empty(),
+                      List.of(axis(ExcelChartAxisKind.CATEGORY), axis(ExcelChartAxisKind.VALUE)),
+                      List.of(
+                          new ResolvedChart.Series(
+                              null,
+                              new ChartDataSourceSpec.Reference("A2:A4"),
+                              new ChartDataSourceSpec.Reference("B2:B4")))))));
+
+      XSSFChart mutationChart =
+          drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 30, 1, 36, 10));
+      applySeriesOptionBranches(mutationChart);
+      applyChartTitleBranches(mutationChart, sheet);
+      snapshotPlotDefaultsForUnsetGroupingAndShape(
+          drawing,
+          XDDFDataSourcesFactory.fromArray(new String[] {"Jan", "Feb"}),
+          XDDFDataSourcesFactory.fromArray(new Double[] {10d, 12d}));
+    }
+  }
+
+  @Test
+  @SuppressWarnings("PMD.NcssCount")
+  void drawingSignatureAndSheetHelpersCoverResidualBranches() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      DrawingAdapter controller = new DrawingAdapter();
+      SignatureAdapter signatureLineController = new SignatureAdapter();
+      DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
+
+      controller.setSignatureLine(sheet, signatureDefinition("OpsSignature", anchor));
+      assertFalse(signatureLineController.hasNamedSignatureLine(sheet, "Missing"));
+      CTShape signatureShape = signatureShapes(sheet.getVMLDrawing(false)).getFirst();
+      CTClientData clientData = signatureShape.getClientDataArray(0);
+      String originalAnchor = clientData.getAnchorArray(0);
+      DrawingAnchorSpec.TwoCell movedAnchor = ExcelChartTestSupport.anchor(2, 2, 5, 7);
+      assertTrue(signatureLineController.updateAnchorIfPresent(sheet, "OpsSignature", movedAnchor));
+      assertEquals(1, clientData.sizeOfAnchorArray());
+      assertNotEquals(originalAnchor, clientData.getAnchorArray(0));
+
+      org.apache.poi.openxml4j.opc.PackagePart previewPart =
+          DrawingAdapter.relatedInternalPart(
+                  sheet.getVMLDrawing(false).getPackagePart(),
+                  signatureShape.getImagedataArray(0).getRelid())
+              .orElseThrow();
+      assertTrue(DrawingAdapter.imagePartUsed(workbook, previewPart.getPartName()));
+      sheet.createDrawingPatriarch();
+      assertTrue(DrawingAdapter.imagePartUsed(workbook, previewPart.getPartName()));
+
+      signatureShape.removeImagedata(0);
+      DrawingObjectReport.SignatureLine snapshot =
+          signatureLineController.signatureLines(sheet).getFirst();
+      assertTrue(snapshot.preview().isEmpty());
+      assertTrue(signatureLineController.deleteIfPresent(sheet, "OpsSignature"));
+      assertFalse(signatureLineController.deleteIfPresent(sheet, "OpsSignature"));
+      assertFalse(signatureLineController.hasNamedSignatureLine(sheet, "OpsSignature"));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> signatureLineController.deleteIfPresent(sheet, " "));
+
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      XSSFSimpleShape groupChild =
+          drawing.createSimpleShape(drawing.createAnchor(0, 0, 0, 0, 1, 8, 4, 11));
+      groupChild.getCTShape().getNvSpPr().getCNvPr().setName("Mover");
+      controller.setDrawingObjectAnchor(sheet, "Mover", ExcelChartTestSupport.anchor(2, 8, 5, 11));
+      controller.deleteDrawingObject(sheet, "Mover");
+      assertThrows(
+          DrawingObjectNotFoundException.class,
+          () -> controller.deleteDrawingObject(sheet, "Missing"));
+
+      var group = drawing.createGroup(drawing.createAnchor(0, 0, 0, 0, 6, 8, 9, 12));
+      group.getCTGroupShape().getNvGrpSpPr().getCNvPr().setName("Grouped");
+      IllegalArgumentException readOnlyGroup =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  controller.setDrawingObjectAnchor(
+                      sheet, "Grouped", ExcelChartTestSupport.anchor(10, 8, 12, 12)));
+      assertTrue(readOnlyGroup.getMessage().contains("read-only"));
+
+      assertInstanceOf(
+          DrawingObjectNotFoundException.class,
+          assertThrows(
+              DrawingObjectNotFoundException.class,
+              () -> controller.requiredLocatedShape(sheet, "Missing")));
+
+      XSSFChart chart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 13, 7, 20));
+      XSSFGraphicFrame graphicFrame = chart.getGraphicFrame();
+      DrawingAdapter.LocatedShape locatedChart =
+          new DrawingAdapter.LocatedShape(
+              drawing,
+              graphicFrame,
+              DrawingAdapter.shapeXml(graphicFrame),
+              DrawingAdapter.parentAnchor(DrawingAdapter.shapeXml(graphicFrame)).orElse(null));
+      IllegalStateException chartRemovalFailure =
+          assertThrows(
+              IllegalStateException.class,
+              () -> DrawingAdapter.deleteLocatedShape(sheet, locatedChart, (left, right) -> false));
+      assertTrue(chartRemovalFailure.getMessage().contains("Failed to remove chart relation"));
+
+      DrawingObjectReport.Shape graphicFrameSnapshot =
+          (DrawingObjectReport.Shape) DrawingAdapter.snapshotGraphicFrame(graphicFrame);
+      assertEquals(ExcelDrawingShapeKind.GRAPHIC_FRAME, graphicFrameSnapshot.kind());
+
+      XSSFSheet chartSheet = workbook.createSheet("ChartTarget");
+      seedChartData(chartSheet);
+      IllegalArgumentException invalidSurfaceFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  controller.setChart(
+                      chartSheet,
+                      new ResolvedChart(
+                          "BrokenSurface",
+                          ExcelChartTestSupport.anchor(1, 1, 7, 10),
+                          new ResolvedChartTitle.Text("Broken"),
+                          new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
+                          ExcelChartDisplayBlanksAs.GAP,
+                          true,
+                          List.of(
+                              new ResolvedChart.Surface(
+                                  true,
+                                  true,
+                                  List.of(
+                                      axis(ExcelChartAxisKind.CATEGORY),
+                                      axis(ExcelChartAxisKind.VALUE)),
+                                  List.of(
+                                      new ResolvedChart.Series(
+                                          null,
+                                          new ChartDataSourceSpec.Reference("A2:A4"),
+                                          new ChartDataSourceSpec.Reference("B2:B4"))))))));
+      assertTrue(invalidSurfaceFailure.getMessage().contains("Surface plots must declare"));
+      assertTrue(chartSheet.createDrawingPatriarch().getCharts().isEmpty());
+
+      XSSFSheet annotationSheet = workbook.createSheet("Annotations");
+      CommentAdapter annotationSupport = new CommentAdapter(annotationSheet);
+      annotationSupport.setComment("A1", new ResolvedComment("Review", "GridGrind", false));
+      String vmlRelationId = CommentAdapter.vmlDrawingRelationId(annotationSheet).orElseThrow();
+      assertEquals(
+          java.util.Optional.of(vmlRelationId),
+          CommentAdapter.legacyDrawingRelationId(annotationSheet));
+      CTLegacyDrawing legacyDrawing = annotationSheet.getCTWorksheet().getLegacyDrawing();
+      legacyDrawing.setId("rIdMissing");
+      CommentAdapter.repairBrokenLegacyDrawingReference(annotationSheet);
+      assertFalse(annotationSheet.getCTWorksheet().isSetLegacyDrawing());
+      CommentAdapter.ensureLegacyDrawingReference(annotationSheet);
+      assertEquals(
+          java.util.Optional.of(vmlRelationId),
+          CommentAdapter.legacyDrawingRelationId(annotationSheet));
+      annotationSupport.clearComment("A1");
+      annotationSheet.createRow(5).createCell(5);
+      CommentAdapter.clearCellComment(annotationSheet.getRow(5).getCell(5));
+      try (HSSFWorkbook legacyWorkbook = new HSSFWorkbook()) {
+        CommentAdapter.clearCellComment(
+            legacyWorkbook.createSheet("Legacy").createRow(0).createCell(0));
+      }
+      XSSFSheet blankAnnotationSheet = workbook.createSheet("Blank");
+      assertTrue(CommentAdapter.vmlDrawingRelationId(blankAnnotationSheet).isEmpty());
+      assertTrue(CommentAdapter.legacyDrawingRelationId(blankAnnotationSheet).isEmpty());
+      CommentAdapter.ensureLegacyDrawingReference(blankAnnotationSheet);
+      assertFalse(blankAnnotationSheet.getCTWorksheet().isSetLegacyDrawing());
+      CommentAdapter.removeCommentFromTable(
+          blankAnnotationSheet, new org.apache.poi.ss.util.CellAddress("A1"));
+      CommentAdapter.removeCommentShapeIfPresent(
+          annotationSheet, new org.apache.poi.ss.util.CellAddress("A1"));
+
+      LayoutAdapter.clearTabColor(workbook.createSheet("NoSheetPr"));
+      XSSFSheet colorSheet = workbook.createSheet("Color");
+      colorSheet.setTabColor(
+          ColorAdapter.toXssfColor(workbook, ColorSpec.rgb(new RgbHex("#FF0000"))));
+      LayoutAdapter.clearTabColor(colorSheet);
+      assertNull(colorSheet.getTabColor());
+
+      XSSFSheet paneSheet = workbook.createSheet("Pane");
+      LayoutAdapter.setPane(paneSheet, new PaneSpec.None());
+      assertInstanceOf(
+          dev.erst.gridgrind.core.model.layout.PaneReport.None.class,
+          LayoutAdapter.pane(paneSheet));
+    }
+  }
+
+  @Test
+  void workbookCommandsArrayFormulaAndTempHelpersCoverResidualBranches() throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet
+          .cells()
+          .setRange(
+              "B2:C4",
+              List.of(
+                  List.of(new CellValue.NumberValue(2d), new CellValue.NumberValue(3d)),
+                  List.of(new CellValue.NumberValue(4d), new CellValue.NumberValue(5d)),
+                  List.of(new CellValue.NumberValue(6d), new CellValue.NumberValue(7d))));
+      sheet.cells().setCell("A1", new ResolvedFormula("1+1"));
+      assertEquals(List.of(), sheet.cells().arrayFormulas());
+
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D2:D4")),
+              new ResolvedMutationAction.SetArrayFormula(new ResolvedArrayFormula("B2:B4*C2:C4"))));
+      assertEquals(1, sheet.cells().arrayFormulas().size());
+
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("D2")),
+              new CellMutationAction.ClearArrayFormula()));
+      assertEquals(List.of(), sheet.cells().arrayFormulas());
+
+      assertThrows(
+          InvalidFormulaException.class,
+          () -> sheet.cells().setArrayFormula("E2:E4", new ResolvedArrayFormula("SUM(")));
+      assertThrows(CellNotFoundException.class, () -> sheet.cells().clearArrayFormula("Z99"));
+      sheet.xssfSheet().createRow(0);
+      assertThrows(CellNotFoundException.class, () -> sheet.cells().clearArrayFormula("B1"));
+      assertThrows(
+          InvalidCellAddressException.class, () -> sheet.cells().clearArrayFormula("XFE1048577"));
+      assertThrows(
+          InvalidCellAddressException.class,
+          () -> CellsAdapter.requireValidCellReference("A0", new CellReference(-1, 0)));
+      assertThrows(
+          InvalidCellAddressException.class,
+          () -> CellsAdapter.requireValidCellReference("A0", new CellReference(0, -1)));
+      assertThrows(
+          InvalidCellAddressException.class,
+          () ->
+              CellsAdapter.requireValidCellReference(
+                  "A0",
+                  new CellReference(0, SpreadsheetVersion.EXCEL2007.getLastColumnIndex() + 1)));
+      assertThrows(
+          InvalidCellAddressException.class,
+          () ->
+              CellsAdapter.requireValidCellReference(
+                  "A1048577",
+                  new CellReference(SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1, 0)));
+
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.SetSignatureLine(
+                  signatureDefinition("OpsSignature", ExcelChartTestSupport.anchor(1, 8, 4, 12)))));
+      ResolvedMutationExecutor.apply(
+          workbook,
+          setNamedRangeStep(
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Ops"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B2")))));
+      ResolvedMutationExecutor.apply(
+          workbook, deleteNamedRangeStep("BudgetTotal", new NamedRangeScopeReport.Workbook()));
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.SetShape(
+                  new ResolvedShape.SimpleShape(
+                      "Mover",
+                      ExcelChartTestSupport.anchor(5, 8, 8, 12),
+                      "rect",
+                      Optional.of("text")))));
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new DrawingObjectSelector.ByName(new SheetName("Ops"), "Mover"),
+              new DrawingMutationAction.SetDrawingObjectAnchor(
+                  ExcelChartTestSupport.anchor(9, 8, 12, 12))));
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new DrawingObjectSelector.ByName(new SheetName("Ops"), "Mover"),
+              new DrawingMutationAction.DeleteDrawingObject()));
+    }
+
+    try (XssfWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new WorkbookSelector.Current(),
+              new ResolvedMutationAction.ImportCustomXmlMapping(
+                  new ResolvedCustomXmlImport(
+                      new CustomXmlMappingLocator(
+                          java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+                      "<CORSO><NOME>Ops</NOME><DOCENTE>Agent</DOCENTE><TUTOR>Grid</TUTOR><CDL>QA</CDL>"
+                          + "<DURATA>4</DURATA><ARGOMENTO>Coverage</ARGOMENTO>"
+                          + "<PROGETTO>Parity</PROGETTO><CREDITI>8</CREDITI></CORSO>"))));
+      assertEquals(
+          "Ops",
+          workbook
+              .sheet("Foglio1")
+              .cells()
+              .window("A1", 1, 1)
+              .rows()
+              .getFirst()
+              .cells()
+              .getFirst()
+              .displayValue()
+              .orElseThrow());
+    }
+
+    String originalSystemTemp = System.getProperty("java.io.tmpdir");
+    String originalUserHome = System.getProperty("user.home");
+    System.clearProperty("java.io.tmpdir");
+    try {
+      assertNull(ManagedTempFiles.systemTempRoot());
+      assertThrows(
+          java.io.IOException.class,
+          () -> ManagedTempFiles.createManagedTempFile("gridgrind-home-only-", ".tmp"));
+    } finally {
+      restoreProperty("java.io.tmpdir", originalSystemTemp);
+      restoreProperty("user.home", originalUserHome);
+    }
+
+    System.clearProperty("user.home");
+    try {
+      Path tempFile = ManagedTempFiles.createManagedTempFile("gridgrind-system-only-", ".tmp");
+      assertEquals("gridgrind", tempFile.getParent().getFileName().toString());
+      java.nio.file.Files.deleteIfExists(tempFile);
+    } finally {
+      restoreProperty("user.home", originalUserHome);
+    }
+  }
+
+  @Test
+  void customXmlAndSheetCopyResidualHelpersCoverBranches() throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Source");
+      workbook.getOrCreateSheet("Target");
+      workbook.sheet("Target").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook
+          .names()
+          .setNamedRange(
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("LocalName"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Target")),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Target"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))));
+      workbook
+          .names()
+          .setNamedRange(
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("WorkbookName"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Target"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))));
+
+      SheetCopyAdapter.deleteLocalNamedRanges(workbook, "Target");
+      assertEquals(
+          List.of("WorkbookName"),
+          workbook.names().namedRanges().stream()
+              .map(namedRange -> namedRange.name().value())
+              .toList());
+      assertTrue(SheetCopyAdapter.mayReferenceCopiedSheet("Source!A1", "Source"));
+      assertTrue(SheetCopyAdapter.mayReferenceCopiedSheet("'Source Name'!A1", "Source Name"));
+      assertTrue(SheetCopyAdapter.mayReferenceCopiedSheet("SUM(Source:Target!A1)", "Source"));
+      assertTrue(
+          SheetCopyAdapter.mayReferenceCopiedSheet(
+              "SUM('Source Name':'Target'!A1)", "Source Name"));
+      assertFalse(SheetCopyAdapter.mayReferenceCopiedSheet("Other!A1", "Source"));
+      workbook
+          .sheet("Target")
+          .xssfSheet()
+          .getRow(0)
+          .createCell(1)
+          .setCellFormula("\"Source:note\"");
+      SheetCopyAdapter.retargetCopiedSheetFormulas(
+          workbook, "Source", "Target Copy", workbook.sheet("Target").xssfSheet());
+      assertEquals(
+          "1+1", workbook.sheet("Target").xssfSheet().getRow(0).getCell(0).getCellFormula());
+      assertEquals(
+          "\"Source:note\"",
+          workbook.sheet("Target").xssfSheet().getRow(0).getCell(1).getCellFormula());
+    }
+
+    try (XssfWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
+      var mapping = workbook.xssfWorkbook().getCustomXMLMappings().iterator().next();
+      assertNotNull(CustomXmlAdapter.schemaXml(mapping));
+      assertNotNull(
+          CustomXmlAdapter.schemaXml(mapping, org.apache.poi.util.XMLHelper.newTransformer()));
+      assertThrows(NullPointerException.class, () -> CustomXmlAdapter.schemaXml(mapping, null));
+
+      org.openxmlformats.schemas.spreadsheetml.x2006.main.CTMap ctMap =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTMap.Factory.newInstance();
+      ctMap.setID(9L);
+      ctMap.setName("FakeMap");
+      ctMap.setRootElement("Root");
+      ctMap.setSchemaID("Schema9");
+      org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSchema ctSchema =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSchema.Factory.newInstance();
+      var fakeMap =
+          CustomXmlAdapterTestSupport.fakeMap(ctMap, ctSchema, null, List.of(), List.of());
+      CustomXmlMappingReport snapshot = CustomXmlAdapter.snapshot(fakeMap);
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().namespace());
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().language());
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().reference());
+      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().xml());
+    }
+  }
+
+  @SuppressWarnings("PMD.SignatureDeclareThrowsException")
+  private static void applySeriesOptionBranches(XSSFChart chart) throws Exception {
+    var categories = XDDFDataSourcesFactory.fromArray(new String[] {"Jan", "Feb"});
+    var values = XDDFDataSourcesFactory.fromArray(new Double[] {10d, 12d});
+    ResolvedChart.Series markerSeries =
+        new ResolvedChart.Series(
+            null,
+            new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+            new ChartDataSourceSpec.NumericLiteral(List.of(10d, 12d)),
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.SQUARE),
+            Optional.of((short) 9),
+            Optional.of(20L));
+    ResolvedChart.Series noOptionsSeries =
+        new ResolvedChart.Series(
+            null,
+            new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+            new ChartDataSourceSpec.NumericLiteral(List.of(10d, 12d)),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+    XDDFLineChartData lineData =
+        (XDDFLineChartData)
+            chart.createData(
+                ChartTypes.LINE,
+                chart.createCategoryAxis(AxisPosition.BOTTOM),
+                chart.createValueAxis(AxisPosition.LEFT));
+    XDDFLineChartData.Series lineSeries =
+        (XDDFLineChartData.Series) lineData.addSeries(categories, values);
+    ChartAdapter.applySeriesOptions(lineSeries, markerSeries);
+    assertEquals("square", lineSeries.getCTLineSer().getMarker().getSymbol().getVal().toString());
+    assertEquals(9L, lineSeries.getCTLineSer().getMarker().getSize().getVal());
+    ChartAdapter.applySeriesOptions(lineSeries, noOptionsSeries);
+
+    XDDFLine3DChartData line3DData =
+        (XDDFLine3DChartData)
+            chart.createData(
+                ChartTypes.LINE3D,
+                chart.createCategoryAxis(AxisPosition.TOP),
+                chart.createValueAxis(AxisPosition.RIGHT));
+    XDDFLine3DChartData.Series line3DSeries =
+        (XDDFLine3DChartData.Series) line3DData.addSeries(categories, values);
+    ChartAdapter.applySeriesOptions(line3DSeries, markerSeries);
+    ChartAdapter.applySeriesOptions(line3DSeries, noOptionsSeries);
+
+    XDDFScatterChartData scatterData =
+        (XDDFScatterChartData)
+            chart.createData(
+                ChartTypes.SCATTER,
+                chart.createValueAxis(AxisPosition.BOTTOM),
+                chart.createValueAxis(AxisPosition.LEFT));
+    XDDFScatterChartData.Series scatterSeries =
+        (XDDFScatterChartData.Series) scatterData.addSeries(values, values);
+    ChartAdapter.applySeriesOptions(scatterSeries, markerSeries);
+    ChartAdapter.applySeriesOptions(scatterSeries, noOptionsSeries);
+
+    ResolvedChart.Series explodedSeries =
+        new ResolvedChart.Series(
+            null,
+            new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+            new ChartDataSourceSpec.NumericLiteral(List.of(10d, 12d)),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(25L));
+    XDDFPieChartData pieData = (XDDFPieChartData) chart.createData(ChartTypes.PIE, null, null);
+    XDDFPieChartData.Series pieSeries =
+        (XDDFPieChartData.Series) pieData.addSeries(categories, values);
+    ChartAdapter.applySeriesOptions(pieSeries, explodedSeries);
+    assertTrue(pieSeries.getCTPieSer().isSetExplosion());
+    ChartAdapter.applySeriesOptions(pieSeries, noOptionsSeries);
+
+    XDDFPie3DChartData pie3DData =
+        (XDDFPie3DChartData) chart.createData(ChartTypes.PIE3D, null, null);
+    XDDFPie3DChartData.Series pie3DSeries =
+        (XDDFPie3DChartData.Series) pie3DData.addSeries(categories, values);
+    ChartAdapter.applySeriesOptions(pie3DSeries, explodedSeries);
+    assertTrue(pie3DSeries.getCTPieSer().isSetExplosion());
+    ChartAdapter.applySeriesOptions(pie3DSeries, noOptionsSeries);
+
+    var doughnutData =
+        (org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData)
+            chart.createData(ChartTypes.DOUGHNUT, null, null);
+    var doughnutSeries =
+        (org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData.Series)
+            doughnutData.addSeries(categories, values);
+    ChartAdapter.applySeriesOptions(doughnutSeries, explodedSeries);
+    assertTrue(doughnutSeries.getCTPieSer().isSetExplosion());
+    ChartAdapter.applySeriesOptions(doughnutSeries, noOptionsSeries);
+  }
+
+  @SuppressWarnings("PMD.SignatureDeclareThrowsException")
+  private static void applyChartTitleBranches(XSSFChart chart, XSSFSheet sheet) throws Exception {
+    CellReference titleCell = new CellReference(sheet.getSheetName(), 1, 1, true, true);
+
+    chart.setTitleText("Old title");
+    ChartAdapter.applyChartTitleFormula(chart, "Budget", titleCell);
+    ChartAdapter.applyChartTitleFormula(chart, "Budget 2", titleCell);
+    assertFalse(chart.getCTChart().getTitle().getTx().isSetRich());
+    assertEquals(
+        "Budget 2",
+        chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
+  }
+
+  private static ResolvedSignatureLine signatureDefinition(
+      String name, DrawingAnchorSpec.TwoCell anchor) {
+    return new ResolvedSignatureLine(
+        name,
+        anchor,
+        false,
+        Optional.ofNullable("Review before signing."),
+        Optional.ofNullable("Ada Lovelace"),
+        Optional.ofNullable("Finance"),
+        Optional.ofNullable("ada@example.com"),
+        Optional.empty(),
+        Optional.ofNullable("invalid"),
+        Optional.of(ExcelPictureFormat.PNG),
+        Optional.of(new BinaryContent(new byte[] {1})));
+  }
+
+  private static ChartAxisSpec axis(ExcelChartAxisKind kind) {
+    ExcelChartAxisPosition position =
+        switch (kind) {
+          case CATEGORY -> ExcelChartAxisPosition.BOTTOM;
+          case DATE -> ExcelChartAxisPosition.TOP;
+          case SERIES -> ExcelChartAxisPosition.RIGHT;
+          case VALUE -> ExcelChartAxisPosition.LEFT;
+        };
+    return new ChartAxisSpec(kind, position, ExcelChartAxisCrosses.AUTO_ZERO, true);
+  }
+
+  private static void seedChartData(XSSFSheet sheet) {
+    sheet.createRow(0).createCell(0).setCellValue("Month");
+    sheet.getRow(0).createCell(1).setCellValue("Plan");
+    sheet.createRow(1).createCell(0).setCellValue("Jan");
+    sheet.getRow(1).createCell(1).setCellValue(10d);
+    sheet.createRow(2).createCell(0).setCellValue("Feb");
+    sheet.getRow(2).createCell(1).setCellValue(12d);
+    sheet.createRow(3).createCell(0).setCellValue("Mar");
+    sheet.getRow(3).createCell(1).setCellValue(15d);
+  }
+
+  private static void snapshotPlotDefaultsForUnsetGroupingAndShape(
+      XSSFDrawing drawing,
+      org.apache.poi.xddf.usermodel.chart.XDDFCategoryDataSource categories,
+      org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> values) {
+    XSSFChart area3DChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 37, 1, 43, 10));
+    XDDFArea3DChartData area3DData =
+        (XDDFArea3DChartData)
+            area3DChart.createData(
+                ChartTypes.AREA3D,
+                area3DChart.createCategoryAxis(AxisPosition.BOTTOM),
+                area3DChart.createValueAxis(AxisPosition.LEFT));
+    area3DData.addSeries(categories, values);
+    area3DChart.plot(area3DData);
+    assertInstanceOf(
+        ChartReport.Area3D.class,
+        ChartAdapter.snapshotChart(area3DChart, area3DChart.getGraphicFrame()).plots().getFirst());
+
+    XSSFChart bar3DChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 44, 1, 50, 10));
+    XDDFBar3DChartData bar3DData =
+        (XDDFBar3DChartData)
+            bar3DChart.createData(
+                ChartTypes.BAR3D,
+                bar3DChart.createCategoryAxis(AxisPosition.BOTTOM),
+                bar3DChart.createValueAxis(AxisPosition.LEFT));
+    bar3DData.addSeries(categories, values);
+    bar3DChart.plot(bar3DData);
+    assertInstanceOf(
+        ChartReport.Bar3D.class,
+        ChartAdapter.snapshotChart(bar3DChart, bar3DChart.getGraphicFrame()).plots().getFirst());
+
+    XSSFChart line3DChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 51, 1, 57, 10));
+    XDDFLine3DChartData line3DData =
+        (XDDFLine3DChartData)
+            line3DChart.createData(
+                ChartTypes.LINE3D,
+                line3DChart.createCategoryAxis(AxisPosition.BOTTOM),
+                line3DChart.createValueAxis(AxisPosition.LEFT));
+    line3DData.addSeries(categories, values);
+    line3DChart.plot(line3DData);
+    assertInstanceOf(
+        ChartReport.Line3D.class,
+        ChartAdapter.snapshotChart(line3DChart, line3DChart.getGraphicFrame()).plots().getFirst());
+  }
+
+  private static List<CTShape> signatureShapes(XSSFVMLDrawing vmlDrawing) {
+    List<CTShape> shapes = new java.util.ArrayList<>();
+    try (XmlCursor cursor = vmlDrawing.getDocument().getXml().newCursor()) {
+      for (boolean found = cursor.toFirstChild(); found; found = cursor.toNextSibling()) {
+        XmlObject object = cursor.getObject();
+        if (object instanceof CTShape shape && shape.sizeOfSignaturelineArray() > 0) {
+          shapes.add(shape);
+        }
+      }
+    }
+    return List.copyOf(shapes);
+  }
+
+  private static ExcelChartMarkerStyle invokeMarkerStyle(CTMarker marker) {
+    return ChartAdapter.markerStyle(marker).orElse(null);
+  }
+
+  private static Short invokeMarkerSize(CTMarker marker) {
+    return ChartAdapter.markerSize(marker);
+  }
+
+  private static void restoreProperty(String name, String value) {
+    if (value == null) {
+      System.clearProperty(name);
+    } else {
+      System.setProperty(name, value);
+    }
+  }
+
+  /** Minimal unsupported chart-data stub for residual unsupported-plot coverage. */
+  private static final class UnsupportedChartData extends XDDFChartData {
+    private UnsupportedChartData() {
+      super(null);
+    }
+
+    @Override
+    protected void removeCTSeries(int index) {}
+
+    @Override
+    public void setVaryColors(Boolean varyColors) {}
+
+    @Override
+    public Series addSeries(
+        org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> category,
+        org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<? extends Number> values) {
+      return null;
+    }
+  }
+}

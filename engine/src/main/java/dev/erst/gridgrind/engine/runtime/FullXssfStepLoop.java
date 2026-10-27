@@ -91,7 +91,7 @@ final class FullXssfStepLoop {
     }
     AssertionFailedException failure = collectedFailure.orElseThrow();
     GridGrindProblemDetail.Problem problem =
-        ExecutionResponseSupport.problemFor(
+        GridGrindProblems.fromException(
             failure,
             ExecutionStepContextFactory.contextFor(
                 state.executionContext().request(), stepIndex, step, failure));

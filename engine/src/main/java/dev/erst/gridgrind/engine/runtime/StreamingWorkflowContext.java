@@ -11,7 +11,7 @@ import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.Nullable;

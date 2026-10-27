@@ -25,8 +25,8 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -73,7 +73,7 @@ class CalculationPolicyExecutorTest {
 
   @Test
   void preflightAndExecutionSucceedForSupportedPolicies() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       CalculationPolicyExecutor.PreflightOutcome notRequested =
           CalculationPolicyExecutor.preflight(workbook, null);
       CalculationPolicyExecutor.PreflightOutcome clearCachesOnly =
@@ -84,7 +84,7 @@ class CalculationPolicyExecutorTest {
       assertTrue(clearCachesOnly.report().isEmpty());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       CalculationPolicyExecutor.ExecutionOutcome doNotCalculate =
           CalculationPolicyExecutor.execute(workbook, CalculationPolicySpec.defaults(), 0, false);
 
@@ -92,7 +92,7 @@ class CalculationPolicyExecutorTest {
       assertFalse(doNotCalculate.report().markRecalculateOnOpenApplied());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
       workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
@@ -117,7 +117,7 @@ class CalculationPolicyExecutorTest {
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(5.0d));
       workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
@@ -141,7 +141,7 @@ class CalculationPolicyExecutorTest {
       assertFalse(execution.report().markRecalculateOnOpenApplied());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
       workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
@@ -162,7 +162,7 @@ class CalculationPolicyExecutorTest {
       assertTrue(markOnly.report().markRecalculateOnOpenApplied());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(5.0d));
       workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
@@ -184,7 +184,7 @@ class CalculationPolicyExecutorTest {
 
   @Test
   void preflightAndExecutionFailuresCarryClassificationAndValidation() throws Exception {
-    try (ExcelWorkbook workbook =
+    try (XssfWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createMixedFailureWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
@@ -195,7 +195,7 @@ class CalculationPolicyExecutorTest {
       assertEquals(1, preflight.report().orElseThrow().summary().unparseableByPoiCount());
     }
 
-    try (ExcelWorkbook workbook =
+    try (XssfWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createInvalidFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
@@ -221,7 +221,7 @@ class CalculationPolicyExecutorTest {
           targetedExecution.failure().orElseThrow().phase());
     }
 
-    try (ExcelWorkbook workbook =
+    try (XssfWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createMissingExternalWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
@@ -231,7 +231,7 @@ class CalculationPolicyExecutorTest {
       assertEquals(1, preflight.report().orElseThrow().summary().unevaluableNowCount());
     }
 
-    try (ExcelWorkbook workbook =
+    try (XssfWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUdfFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
@@ -242,7 +242,7 @@ class CalculationPolicyExecutorTest {
       assertTrue(preflight.failure().orElseThrow().message().contains("DOUBLE"));
     }
 
-    try (ExcelWorkbook workbook =
+    try (XssfWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
@@ -258,7 +258,7 @@ class CalculationPolicyExecutorTest {
       assertTrue(execution.report().message().orElseThrow().contains("APP.TITLE"));
     }
 
-    try (ExcelWorkbook workbook = failingClearCachesWorkbook()) {
+    try (XssfWorkbook workbook = failingClearCachesWorkbook()) {
       CalculationPolicyExecutor.ExecutionOutcome clearCachesFailure =
           CalculationPolicyExecutor.execute(workbook, clearFormulaCaches(), 0, false);
 
@@ -333,7 +333,7 @@ class CalculationPolicyExecutorTest {
 
   @Test
   void lenientEvaluationLeavesUnevaluableFormulasUntouchedAndReportsPartial() throws Exception {
-    try (ExcelWorkbook workbook =
+    try (XssfWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
       CalculationPolicySpec lenientAndMarked =
           new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), true);
@@ -357,7 +357,7 @@ class CalculationPolicyExecutorTest {
 
   @Test
   void deferredCalculationReportsCapabilitiesWithoutEvaluating() throws Exception {
-    try (ExcelWorkbook workbook =
+    try (XssfWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, deferCalculation());
@@ -386,7 +386,7 @@ class CalculationPolicyExecutorTest {
 
   @Test
   void lenientTargetedEvaluationLeavesUnevaluableTargetsUntouched() throws Exception {
-    try (ExcelWorkbook workbook =
+    try (XssfWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
       CalculationPolicySpec targeted =
           calculateTargets(
@@ -411,7 +411,7 @@ class CalculationPolicyExecutorTest {
   @Test
   void circularReferencesBlockRequiredEvaluationAndRemainLenientForOtherStrategies()
       throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       var sheet = workbook.getOrCreateSheet("Budget");
       sheet.cells().setCell("A1", new ResolvedFormula("A1+1"));
       sheet.cells().setCell("B1", new ResolvedFormula("C1+1"));
@@ -595,12 +595,12 @@ class CalculationPolicyExecutorTest {
     return workbookPath;
   }
 
-  private static ExcelWorkbook failingClearCachesWorkbook() {
+  private static XssfWorkbook failingClearCachesWorkbook() {
     return instantiateWorkbook(new IteratorFailingWorkbook());
   }
 
-  private static ExcelWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
-    return ExcelWorkbooks.wrap(workbook);
+  private static XssfWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
+    return XssfWorkbooks.wrap(workbook);
   }
 
   /** Workbook whose sheet iteration path fails so cache clearing can surface execution errors. */

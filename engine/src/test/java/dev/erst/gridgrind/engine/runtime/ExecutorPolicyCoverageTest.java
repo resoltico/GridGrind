@@ -54,15 +54,15 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.CellNotFoundException;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.InvalidCellAddressException;
-import dev.erst.gridgrind.excel.MissingExternalWorkbookException;
-import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
-import dev.erst.gridgrind.excel.SheetNotFoundException;
-import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
-import dev.erst.gridgrind.excel.WorkbookArtifactIo;
+import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.formulas.MissingExternalWorkbookException;
+import dev.erst.gridgrind.engine.formulas.UnregisteredUserDefinedFunctionException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -325,7 +325,7 @@ class ExecutorPolicyCoverageTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             List.of(),
             List.of());
-    ExecutionModeSpec defaults = DefaultGridGrindRequestExecutor.executionMode(defaultModesRequest);
+    ExecutionModeSpec defaults = defaultModesRequest.effectiveExecutionMode();
     assertInstanceOf(ExecutionModeSpec.FullXssf.class, defaults);
 
     WorkbookPlan eventReadRequest =
@@ -340,9 +340,9 @@ class ExecutorPolicyCoverageTest {
                     "workbook",
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
-    ExecutionModeSpec eventModes = DefaultGridGrindRequestExecutor.executionMode(eventReadRequest);
     assertTrue(
-        DefaultGridGrindRequestExecutor.directEventReadEligible(eventReadRequest, eventModes));
+        dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+            .accepts(eventReadRequest));
 
     WorkbookPlan streamingInspectionBeforeEnsure =
         request(
@@ -365,18 +365,18 @@ class ExecutorPolicyCoverageTest {
   private static void assertDeleteAndSourceHelpers() throws IOException {
     Path workingDirectory = Path.of("/tmp/gridgrind-policy");
     Path deleteTarget = Files.createTempFile("gridgrind-delete-", ".tmp");
-    ExecutionWorkbookSupport.deleteIfExists(deleteTarget);
+    WorkbookLifecycle.deleteIfExists(deleteTarget);
     assertFalse(Files.exists(deleteTarget));
 
     Path retained = Files.createTempFile("gridgrind-delete-retained-", ".tmp");
-    ExecutionWorkbookSupport.deleteIfExists(
+    WorkbookLifecycle.deleteIfExists(
         retained,
         ignored -> {
           throw new IOException("best effort");
         });
     assertTrue(Files.exists(retained));
-    ExecutionWorkbookSupport.deleteIfExists(retained);
-    ExecutionWorkbookSupport.deleteIfExists(
+    WorkbookLifecycle.deleteIfExists(retained);
+    WorkbookLifecycle.deleteIfExists(
         null,
         ignored -> {
           throw new AssertionError("null paths must not invoke the deleter");
@@ -452,7 +452,7 @@ class ExecutorPolicyCoverageTest {
 
   private static void assertStreamingPersistenceBehaviors() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-streaming-policy-");
-    ExecutionWorkbookSupport workbookSupport =
+    WorkbookLifecycle workbookSupport =
         ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
     Path materialized = createWorkbookFile("gridgrind-streaming-source-");
     try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(workingDirectory)) {
@@ -474,7 +474,7 @@ class ExecutorPolicyCoverageTest {
           .prepareOutput(
               saveAsPath.toString(),
               "persistence",
-              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.CREATE_NEW);
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition.CREATE_NEW);
       WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
           assertInstanceOf(
               WorkbookResultPersistence.PersistenceOutcome.SavedAs.class,
@@ -503,7 +503,8 @@ class ExecutorPolicyCoverageTest {
           .prepareOutput(
               overwriteSourcePath.toString(),
               "persistence",
-              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING);
       WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
           assertInstanceOf(
               WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
@@ -537,9 +538,8 @@ class ExecutorPolicyCoverageTest {
   }
 
   private static void assertRuntimeGuardBehaviors() throws IOException {
-    ExecutionResponseSupport responseSupport =
-        new ExecutionResponseSupport(
-            ExcelWorkbook::close, WorkbookArtifactIo.MaterializedWorkbook::close);
+    ExecutionResults responseSupport =
+        new ExecutionResults(XssfWorkbook::close, WorkbookArtifactIo.MaterializedWorkbook::close);
     WorkbookPlan request =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -558,7 +558,7 @@ class ExecutorPolicyCoverageTest {
                 }));
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, runtimeFailure.problem().code());
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       WorkbookResult.Failure workbookRuntimeFailure =
           assertInstanceOf(
               WorkbookResult.Failure.class,
@@ -573,9 +573,9 @@ class ExecutorPolicyCoverageTest {
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, workbookRuntimeFailure.problem().code());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      ExecutionResponseSupport closeFailingResponseSupport =
-          new ExecutionResponseSupport(
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      ExecutionResults closeFailingResponseSupport =
+          new ExecutionResults(
               ignored -> {
                 throw new IOException("close failed");
               },

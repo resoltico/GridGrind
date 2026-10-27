@@ -12,9 +12,9 @@ import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookFactAssertion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -35,7 +35,7 @@ final class AssertionExecutor {
   }
 
   AssertionResult execute(
-      AssertionStep step, ExcelWorkbook workbook, WorkbookLocation workbookLocation)
+      AssertionStep step, XssfWorkbook workbook, WorkbookLocation workbookLocation)
       throws AssertionFailedException {
     return switch (executeCollecting(step, workbook, workbookLocation)) {
       case AssertionStepExecution.Passed passed -> passed.result();
@@ -44,7 +44,7 @@ final class AssertionExecutor {
   }
 
   AssertionStepExecution executeCollecting(
-      AssertionStep step, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
+      AssertionStep step, XssfWorkbook workbook, WorkbookLocation workbookLocation) {
     Objects.requireNonNull(step, "step must not be null");
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
@@ -72,7 +72,7 @@ final class AssertionExecutor {
       StepId stepId,
       Selector target,
       Assertion assertion,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     return switch (assertion) {
       case PresenceAssertion.SheetPresent sheetPresent ->
@@ -178,7 +178,7 @@ final class AssertionExecutor {
       StepId stepId,
       Selector target,
       List<Assertion> assertions,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     List<InspectionResult> observations = new ArrayList<>();
     List<String> failures = new ArrayList<>();
@@ -200,7 +200,7 @@ final class AssertionExecutor {
       StepId stepId,
       Selector target,
       List<Assertion> assertions,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     List<InspectionResult> observations = new ArrayList<>();
     List<String> failures = new ArrayList<>();
@@ -221,7 +221,7 @@ final class AssertionExecutor {
       StepId stepId,
       Selector target,
       Assertion nestedAssertion,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     AssertionEvaluation evaluation =
         evaluate(stepId, target, nestedAssertion, workbook, workbookLocation);

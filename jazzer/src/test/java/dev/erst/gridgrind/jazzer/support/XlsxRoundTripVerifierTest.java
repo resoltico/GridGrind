@@ -50,11 +50,11 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.formulas.ComparisonFormulas;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -200,9 +200,8 @@ class XlsxRoundTripVerifierTest {
                             new ResolvedDataValidation(
                                 new DataValidationRuleSpec.TextLength(
                                     ExcelComparisonOperator.LESS_OR_EQUAL,
-                                    ExcelComparisonFormulaSupport.normalizeFormula(
-                                        "20", "formula1"),
-                                    ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                                    ComparisonFormulas.normalizeFormula("20", "formula1"),
+                                    ComparisonFormulas.normalizeOptionalFormula(
                                         Optional.empty(), "formula2")),
                                 true,
                                 false,
@@ -417,7 +416,7 @@ class XlsxRoundTripVerifierTest {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       new WorkbookExecutionEngine().apply(workbook, commands);
       JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
       XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);

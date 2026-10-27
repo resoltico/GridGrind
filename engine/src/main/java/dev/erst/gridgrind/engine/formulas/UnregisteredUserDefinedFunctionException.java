@@ -1,0 +1,49 @@
+package dev.erst.gridgrind.engine.formulas;
+
+import org.jspecify.annotations.Nullable;
+
+/** Signals that formula evaluation required a user-defined function that was not registered. */
+public final class UnregisteredUserDefinedFunctionException extends java.util.NoSuchElementException
+    implements FormulaException {
+  private static final long serialVersionUID = 1L;
+
+  private final String sheetName;
+  private final String address;
+  private final String formula;
+  private final @Nullable String functionName;
+
+  /** Creates the exception for one missing user-defined function registration. */
+  public UnregisteredUserDefinedFunctionException(
+      String sheetName,
+      String address,
+      String formula,
+      @Nullable String functionName,
+      String message,
+      Throwable cause) {
+    super(message, cause);
+    this.sheetName = sheetName;
+    this.address = address;
+    this.formula = formula;
+    this.functionName = functionName;
+  }
+
+  @Override
+  public String sheetName() {
+    return sheetName;
+  }
+
+  @Override
+  public String address() {
+    return address;
+  }
+
+  @Override
+  public String formula() {
+    return formula;
+  }
+
+  /** Returns the missing user-defined function name. */
+  public @Nullable String functionName() {
+    return functionName;
+  }
+}

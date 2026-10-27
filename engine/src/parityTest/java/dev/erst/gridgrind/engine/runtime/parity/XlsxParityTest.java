@@ -20,10 +20,10 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -179,8 +179,8 @@ final class XlsxParityTest {
           XlsxParityScenarios.materialize(XlsxParityScenarios.EXTERNAL_FORMULA, temporaryRoot);
       assertDoesNotThrow(
           () -> {
-            try (ExcelWorkbook workbook =
-                ExcelWorkbooks.open(
+            try (XssfWorkbook workbook =
+                XssfWorkbooks.open(
                     scenario.workbookPath(),
                     new ResolvedFormulaEnvironment(
                         List.of(

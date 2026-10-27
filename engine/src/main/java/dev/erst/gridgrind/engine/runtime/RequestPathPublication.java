@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -49,13 +49,13 @@ public final class RequestPathPublication {
       binding.reverifyPublicationTarget();
       before = targetSnapshot(binding, disposition);
       WorkbookArtifactWriteDisposition atomicDisposition = atomicDisposition(disposition, before);
-      RequestPathPublicationFileSupport.ArtifactDigest stagedDigest =
-          RequestPathPublicationFileSupport.digest(stagedArtifact);
+      PublicationFileOperations.ArtifactDigest stagedDigest =
+          PublicationFileOperations.digest(stagedArtifact);
       Path createdSibling = nextSiblingName();
       siblingName = Optional.of(createdSibling);
       siblingWriter.write(stagedArtifact, binding, createdSibling);
-      RequestPathPublicationFileSupport.ArtifactDigest siblingDigest =
-          RequestPathPublicationFileSupport.digest(binding.openSiblingReadChannel(createdSibling));
+      PublicationFileOperations.ArtifactDigest siblingDigest =
+          PublicationFileOperations.digest(binding.openSiblingReadChannel(createdSibling));
       if (!siblingDigest.equals(stagedDigest)) {
         return failedAttempt(
             binding,
@@ -89,11 +89,10 @@ public final class RequestPathPublication {
       }
       case PublicationMoveAttempted attempted -> {
         try {
-          RequestPathPublicationFileSupport.ArtifactDigest stagedDigest =
-              RequestPathPublicationFileSupport.digest(
+          PublicationFileOperations.ArtifactDigest stagedDigest =
+              PublicationFileOperations.digest(
                   binding.openSiblingReadChannel(attempted.siblingName()));
-          Optional<RequestPathPublicationFileSupport.ArtifactDigest> current =
-              currentDigest(binding);
+          Optional<PublicationFileOperations.ArtifactDigest> current = currentDigest(binding);
           if (current.isPresent() && current.orElseThrow().equals(stagedDigest)) {
             return publishedAttempt(binding, stagedDigest, stagedArtifactVerification);
           }
@@ -114,18 +113,18 @@ public final class RequestPathPublication {
 
   private static PublishedPublicationAttempt publishedAttempt(
       RequestPathBinding binding,
-      RequestPathPublicationFileSupport.ArtifactDigest stagedDigest,
+      PublicationFileOperations.ArtifactDigest stagedDigest,
       PublicationOutcome.StagedArtifactVerification stagedArtifactVerification)
       throws IOException {
-    RequestPathPublicationFileSupport.ArtifactDigest publishedDigest =
-        RequestPathPublicationFileSupport.digest(binding.openPublishedReadChannel());
+    PublicationFileOperations.ArtifactDigest publishedDigest =
+        PublicationFileOperations.digest(binding.openPublishedReadChannel());
     if (!publishedDigest.equals(stagedDigest)) {
       throw new IOException(
           "published workbook digest differs from the verified staged artifact: "
               + binding.resolvedPath());
     }
     PublicationOutcome.DurabilityEvidence durability =
-        RequestPathPublicationFileSupport.forcePublishedArtifact(binding);
+        PublicationFileOperations.forcePublishedArtifact(binding);
     return new PublishedPublicationAttempt(
         new PublicationOutcome.Published(
             binding.resolvedPath().toString(),
@@ -157,7 +156,7 @@ public final class RequestPathPublication {
 
   private static PublicationOutcome.DestinationState destinationState(
       RequestPathBinding binding, PublicationTargetState before) throws IOException {
-    Optional<RequestPathPublicationFileSupport.ArtifactDigest> current = currentDigest(binding);
+    Optional<PublicationFileOperations.ArtifactDigest> current = currentDigest(binding);
     return switch (before) {
       case PublicationTargetUnknown _ ->
           throw new IOException(
@@ -193,11 +192,10 @@ public final class RequestPathPublication {
     return requestedDisposition;
   }
 
-  private static Optional<RequestPathPublicationFileSupport.ArtifactDigest> currentDigest(
+  private static Optional<PublicationFileOperations.ArtifactDigest> currentDigest(
       RequestPathBinding binding) throws IOException {
     try {
-      return Optional.of(
-          RequestPathPublicationFileSupport.digest(binding.openPublishedReadChannel()));
+      return Optional.of(PublicationFileOperations.digest(binding.openPublishedReadChannel()));
     } catch (NoSuchFileException ignored) {
       return Optional.empty();
     }
@@ -209,7 +207,7 @@ public final class RequestPathPublication {
 
   private static void copySibling(Path stagedArtifact, RequestPathBinding binding, Path siblingName)
       throws IOException {
-    RequestPathPublicationFileSupport.copyAndForce(
+    PublicationFileOperations.copyAndForce(
         stagedArtifact,
         binding.openSiblingChannel(
             siblingName,
@@ -298,7 +296,7 @@ record PublicationTargetUnknown() implements PublicationTargetState {}
 record PublicationTargetAbsent() implements PublicationTargetState {}
 
 /** The pre-publication destination was established with these exact bytes. */
-record PublicationTargetExisting(RequestPathPublicationFileSupport.ArtifactDigest digest)
+record PublicationTargetExisting(PublicationFileOperations.ArtifactDigest digest)
     implements PublicationTargetState {
   PublicationTargetExisting {
     Objects.requireNonNull(digest, "digest must not be null");

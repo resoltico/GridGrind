@@ -45,7 +45,7 @@ class ExecutionPathCoverageTest {
   @Test
   void workbookOpenUsesTheProvidedWorkingDirectoryForNewSources() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-open-workdir-");
-    ExecutionWorkbookSupport workbookSupport =
+    WorkbookLifecycle workbookSupport =
         ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
@@ -264,7 +264,7 @@ class ExecutionPathCoverageTest {
             List.of());
 
     WorkbookResult.Failure failure =
-        ExecutionResponseSupport.failureResponse(
+        ExecutionResults.failureResponse(
             ProtocolVersion.CURRENT, journal, request, problem, 1, new StepId("step-1"));
 
     assertEquals(CalculationReport.notRequested(), failure.calculation());

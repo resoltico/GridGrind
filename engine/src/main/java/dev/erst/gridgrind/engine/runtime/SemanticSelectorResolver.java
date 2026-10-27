@@ -21,9 +21,9 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelSheet;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfSheet;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -58,7 +58,7 @@ final class SemanticSelectorResolver {
     this.workbookEngine = Objects.requireNonNull(workbookEngine, "workbookEngine must not be null");
   }
 
-  Selector resolveMutationTarget(ExcelWorkbook workbook, Selector target, MutationAction action) {
+  Selector resolveMutationTarget(XssfWorkbook workbook, Selector target, MutationAction action) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(target, "target must not be null");
     Objects.requireNonNull(action, "action must not be null");
@@ -68,7 +68,7 @@ final class SemanticSelectorResolver {
   }
 
   ResolvedInspectionTarget resolveInspectionTarget(
-      StepId stepId, ExcelWorkbook workbook, Selector target, InspectionQuery query) {
+      StepId stepId, XssfWorkbook workbook, Selector target, InspectionQuery query) {
     Objects.requireNonNull(stepId, "stepId must not be null");
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(target, "target must not be null");
@@ -78,7 +78,7 @@ final class SemanticSelectorResolver {
         : ResolvedInspectionTarget.direct(target);
   }
 
-  Selector resolveAssertionTarget(ExcelWorkbook workbook, Selector target, Assertion assertion) {
+  Selector resolveAssertionTarget(XssfWorkbook workbook, Selector target, Assertion assertion) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(target, "target must not be null");
     Objects.requireNonNull(assertion, "assertion must not be null");
@@ -87,7 +87,7 @@ final class SemanticSelectorResolver {
         : target;
   }
 
-  private Selector resolveExactCellTarget(ExcelWorkbook workbook, Selector target) {
+  private Selector resolveExactCellTarget(XssfWorkbook workbook, Selector target) {
     if (target instanceof TableCellSelector.ByColumnName tableCell) {
       ResolvedTableCell resolvedCell = resolveTableCell(workbook, tableCell, false);
       return new CellSelector.ByAddress(
@@ -100,7 +100,7 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedInspectionTarget resolveExactCellInspectionTarget(
-      StepId stepId, ExcelWorkbook workbook, Selector target, InspectionQuery query) {
+      StepId stepId, XssfWorkbook workbook, Selector target, InspectionQuery query) {
     if (!(target instanceof TableCellSelector.ByColumnName tableCell)) {
       return ResolvedInspectionTarget.direct(target);
     }
@@ -118,7 +118,7 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedTableCell resolveTableCell(
-      ExcelWorkbook workbook, TableCellSelector.ByColumnName selector, boolean allowZeroMatch) {
+      XssfWorkbook workbook, TableCellSelector.ByColumnName selector, boolean allowZeroMatch) {
     ResolvedTableRow resolvedRow = resolveTableRow(workbook, selector.row(), allowZeroMatch);
     int columnOffset = tableColumnOffset(resolvedRow.table(), selector.columnName());
     if (!resolvedRow.matched()) {
@@ -139,7 +139,7 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedTableRow resolveTableRow(
-      ExcelWorkbook workbook, TableRowSelector selector, boolean allowZeroMatch) {
+      XssfWorkbook workbook, TableRowSelector selector, boolean allowZeroMatch) {
     ResolvedTable table = resolveExactTable(workbook, tableSelectorFor(selector));
     int dataRowCount = table.dataRowCount();
     if (selector instanceof TableRowSelector.ByIndex byIndex) {
@@ -163,12 +163,12 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedTableRow resolveKeyedTableRow(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       ResolvedTable table,
       TableRowSelector.ByKeyCell selector,
       boolean allowZeroMatch) {
     int keyColumnOffset = tableColumnOffset(table.table(), selector.columnName());
-    ExcelSheet sheet = workbook.sheet(table.table().sheetName().value());
+    XssfSheet sheet = workbook.sheet(table.table().sheetName().value());
     Integer matchedRowIndex = null;
     for (int rowIndex = table.dataFirstRowIndex();
         rowIndex <= table.dataLastRowIndex();
@@ -182,8 +182,7 @@ final class SemanticSelectorResolver {
                   dev.erst.gridgrind.core.plan.CellReadProjection.of(
                       dev.erst.gridgrind.core.plan.CellReadFacet.VALUE,
                       dev.erst.gridgrind.core.plan.CellReadFacet.FORMULA));
-      if (matchesKeyCell(
-          snapshot, selector.expectedValue(), workbook.xssfWorkbook().isDate1904())) {
+      if (matchesKeyCell(snapshot, selector.expectedValue())) {
         if (matchedRowIndex != null) {
           throw new IllegalArgumentException(
               "table row selector matched more than one row for table "
@@ -207,12 +206,57 @@ final class SemanticSelectorResolver {
     return new ResolvedTableRow(table.table(), matchedRowIndex, table.firstColumnIndex());
   }
 
-  static boolean matchesKeyCell(
-      CellReport snapshot, CellValueSpec expectedValue, boolean date1904) {
-    return SemanticSelectorKeyMatchSupport.matchesKeyCell(snapshot, expectedValue, date1904);
+  static boolean matchesKeyCell(CellReport snapshot, CellValueSpec expectedValue) {
+    var report = snapshot;
+    return switch (expectedValue) {
+      case CellValueSpec.Blank _ ->
+          report instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport;
+      case CellValueSpec.Text text ->
+          report instanceof dev.erst.gridgrind.core.model.value.CellReport.TextReport textReport
+              && textReport
+                  .value()
+                  .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+                  .orElseThrow()
+                  .equals(inlineText(text.value(), "table row key TEXT"));
+      case CellValueSpec.NumberValue numberValue ->
+          report instanceof dev.erst.gridgrind.core.model.value.CellReport.NumberReport numberReport
+              && Double.compare(
+                      numberReport
+                          .value()
+                          .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
+                          .orElseThrow(),
+                      numberValue.value())
+                  == 0;
+      case CellValueSpec.BooleanValue booleanValue ->
+          report
+                  instanceof
+                  dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanReport
+              && booleanReport
+                  .value()
+                  .map(dev.erst.gridgrind.core.model.value.CellValue.BooleanValue::value)
+                  .orElseThrow()
+                  .equals(booleanValue.value());
+      case CellValueSpec.Formula formula ->
+          report
+                  instanceof
+                  dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaReport
+              && formulaReport
+                  .formula()
+                  .orElseThrow()
+                  .equals(inlineText(formula.value(), "table row key FORMULA"));
+      default -> false;
+    };
   }
 
-  private ResolvedTable resolveExactTable(ExcelWorkbook workbook, TableSelector selector) {
+  private static String inlineText(
+      dev.erst.gridgrind.core.source.TextSourceSpec source, String context) {
+    if (source instanceof dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline) {
+      return inline.text();
+    }
+    throw new IllegalStateException(context + " must be resolved to INLINE text before execution");
+  }
+
+  private ResolvedTable resolveExactTable(XssfWorkbook workbook, TableSelector selector) {
     dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult result =
         (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
             workbookEngine

@@ -7,8 +7,8 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSigningMaterialSupport;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.security.SecurityAdapter;
 import java.io.IOException;
 import java.util.List;
 
@@ -89,7 +89,7 @@ final class RequestPreflightPaths {
 
   static void verifySigningMaterial(ResolvedPersistenceSignature signature) {
     if (signature instanceof ResolvedPersistenceSignature.Sign sign) {
-      ExcelOoxmlSigningMaterialSupport.signingMaterial(sign.options());
+      SecurityAdapter.signingMaterial(sign.options());
     }
   }
 

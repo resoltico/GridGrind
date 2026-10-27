@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
 import dev.erst.gridgrind.core.problem.RequestWarningLocation;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;

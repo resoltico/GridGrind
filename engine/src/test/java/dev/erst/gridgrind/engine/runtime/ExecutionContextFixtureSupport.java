@@ -2,9 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -32,16 +32,16 @@ final class ExecutionContextFixtureSupport {
     return tempFileFactory(parent == null ? normalized : parent);
   }
 
-  static ExecutionWorkbookSupport workbookSupport(Path workingDirectory) {
-    return new ExecutionWorkbookSupport(tempFileFactory(workingDirectory)::createTempFile);
+  static WorkbookLifecycle workbookSupport(Path workingDirectory) {
+    return new WorkbookLifecycle(tempFileFactory(workingDirectory)::createTempFile);
   }
 
-  static ExecutionWorkbookSupport defaultWorkbookSupport() {
+  static WorkbookLifecycle defaultWorkbookSupport() {
     return workbookSupport(defaultWorkingDirectory());
   }
 
-  static ExcelWorkbook openWorkbook(Path workbookPath) throws IOException {
-    return ExcelWorkbooks.open(workbookPath, tempFileFactoryFor(workbookPath));
+  static XssfWorkbook openWorkbook(Path workbookPath) throws IOException {
+    return XssfWorkbooks.open(workbookPath, tempFileFactoryFor(workbookPath));
   }
 
   static ExecutionJournalRecorder startJournal(WorkbookPlan request, ExecutionProgressSink sink) {
@@ -70,12 +70,13 @@ final class ExecutionContextFixtureSupport {
         request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
   }
 
-  static void saveWorkbook(ExcelWorkbook workbook, Path workbookPath) throws IOException {
+  static void saveWorkbook(XssfWorkbook workbook, Path workbookPath) throws IOException {
     workbook
         .persistence()
         .save(
             workbookPath,
-            dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+            dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                .REPLACE_EXISTING,
             tempFileFactoryFor(workbookPath));
   }
 }

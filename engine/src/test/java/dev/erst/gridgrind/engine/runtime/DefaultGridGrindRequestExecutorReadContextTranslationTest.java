@@ -11,9 +11,9 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.InvalidCellAddressException;
-import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

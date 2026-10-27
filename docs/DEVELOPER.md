@@ -62,10 +62,10 @@ ArchUnit checks the boundaries that JPMS cannot express. Java authors use the co
 API and model without pulling in POI. Execution crosses the exported
 `dev.erst.gridgrind.engine.api` seam with an explicit grant.
 
-Within `engine`, the workbook runtime no longer treats `dev.erst.gridgrind.excel` as one flat
-catch-all namespace. High-churn workbook subdomains now sit in dedicated `event`, `stream`,
-`pivot`, `customxml`, `ooxml`, `drawing`, and `validation` subpackages so package names carry the
-same theory boundaries as the code they own.
+Within `engine`, native workbook operations live in feature packages such as `cells`, `formulas`,
+`styles`, `charts`, and `validation`. XSSF, streaming-write and event-read integration lives in
+`engine.backend.xssf`, `engine.backend.streaming`, and `engine.backend.eventread`; OOXML security
+lives in `engine.security`. The exported execution seam remains `engine.api`.
 
 The highest-churn architecture seams are intentionally split too:
 - `GridGrindProtocolCatalog` owns the top-level catalog assembly, `CatalogFieldMetadataSupport` derives nested/plain field-shape metadata from the canonical descriptor groups, and `GridGrindProtocolCatalogLookupSupport` owns exact lookup plus grouped operation-centered search behavior.

@@ -19,7 +19,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -1025,7 +1024,8 @@ final class XlsxParityOracle {
         "verify parity workbook signature",
         () -> {
           try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ)) {
-            var signatureInfo = WorkbookSignatureSupport.newSignatureInfo();
+            var signatureInfo =
+                dev.erst.gridgrind.engine.security.SecurityAdapter.newSignatureInfo();
             signatureInfo.setSignatureConfig(new SignatureConfig());
             signatureInfo.setOpcPackage(pkg);
             return signatureInfo.verifySignature();

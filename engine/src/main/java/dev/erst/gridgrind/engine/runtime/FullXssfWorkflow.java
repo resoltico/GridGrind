@@ -5,28 +5,30 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.engine.backend.ExecutionBackend;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Orchestrates the one admitted full-XSSF execution path. */
-final class FullXssfWorkflow {
-  private final ExecutionCalculationSupport calculationSupport;
+final class FullXssfWorkflow implements ExecutionBackend<FullXssfWorkflow.Call> {
+  private final CalculationWorkflow calculationSupport;
   private final FullXssfStepLoop stepLoop;
   private final FullXssfPersistence persistence;
   private final FullXssfHostAcceptance hostAcceptance;
-  private final ExecutionResponseSupport responseSupport;
+  private final ExecutionResults responseSupport;
 
   FullXssfWorkflow(
-      ExecutionCalculationSupport calculationSupport,
+      CalculationWorkflow calculationSupport,
       FullXssfStepExecution stepExecution,
       FullXssfCalculationCheckpoint calculationCheckpoint,
       FullXssfPersistence persistence,
       HostAcceptanceExecutor hostAcceptanceExecutor,
-      ExecutionResponseSupport responseSupport) {
+      ExecutionResults responseSupport) {
     this.calculationSupport =
         Objects.requireNonNull(calculationSupport, "calculationSupport must not be null");
     this.stepLoop =
@@ -45,11 +47,11 @@ final class FullXssfWorkflow {
   }
 
   FullXssfWorkflow(
-      ExecutionCalculationSupport calculationSupport,
+      CalculationWorkflow calculationSupport,
       FullXssfStepLoop stepLoop,
       FullXssfPersistence persistence,
       FullXssfHostAcceptance hostAcceptance,
-      ExecutionResponseSupport responseSupport) {
+      ExecutionResults responseSupport) {
     this.calculationSupport =
         Objects.requireNonNull(calculationSupport, "calculationSupport must not be null");
     this.stepLoop = Objects.requireNonNull(stepLoop, "stepLoop must not be null");
@@ -59,23 +61,38 @@ final class FullXssfWorkflow {
         Objects.requireNonNull(responseSupport, "responseSupport must not be null");
   }
 
-  WorkbookResult execute(
+  record Call(
       ProtocolVersion protocolVersion,
       ResolvedPlan plan,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      ExecutionInputBindings bindings) {
+      ExecutionInputBindings bindings) {}
+
+  @Override
+  public BackendCapabilities.Mode capabilities() {
+    return BackendCapabilities.fullXssf();
+  }
+
+  @Override
+  public WorkbookResult execute(Call call) {
+
     FullXssfWorkflowState state =
-        new FullXssfWorkflowState(protocolVersion, plan, workbook, warnings, journal, bindings);
+        new FullXssfWorkflowState(
+            call.protocolVersion(),
+            call.plan(),
+            call.workbook(),
+            call.warnings(),
+            call.journal(),
+            call.bindings());
     FullXssfHostAcceptance.Context acceptance;
     try {
-      acceptance = hostAcceptance.capture(state, bindings);
+      acceptance = hostAcceptance.capture(state, call.bindings());
     } catch (IOException exception) {
       return closeHostFailure(state, exception);
     }
-    Optional<WorkbookResult> earlyOutcome = stepLoop.execute(state, executionMode);
+    Optional<WorkbookResult> earlyOutcome = stepLoop.execute(state, call.executionMode());
     if (earlyOutcome.isPresent()) {
       return earlyOutcome.orElseThrow();
     }
@@ -95,14 +112,14 @@ final class FullXssfWorkflow {
     if (earlyOutcome.isPresent()) {
       return earlyOutcome.orElseThrow();
     }
-    return persistAndClose(state, bindings, acceptance);
+    return persistAndClose(state, call.bindings(), acceptance);
   }
 
   private Optional<WorkbookResult> completePlanCalculation(FullXssfWorkflowState state) {
     if (state.calculationExecuted()) {
       return Optional.empty();
     }
-    ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
+    CalculationWorkflow.CalculationExecutionOutcome outcome =
         calculationSupport.executeCalculationPolicy(
             state.executionContext().workbook(),
             state.executionContext().request(),
@@ -122,7 +139,7 @@ final class FullXssfWorkflow {
     return Optional.of(
         responseSupport.closeWorkbook(
             state.executionContext().workbook(),
-            ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+            ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
                 state
                     .executionContext()
                     .failure(
@@ -204,7 +221,7 @@ final class FullXssfWorkflow {
       FullXssfWorkflowState state, GridGrindProblemDetail.Problem problem) {
     return responseSupport.closeWorkbook(
         state.executionContext().workbook(),
-        ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+        ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
             state.executionContext().failure(state.calculation(), problem)),
         state.executionContext().request(),
         state.executionContext().journal(),
@@ -215,7 +232,7 @@ final class FullXssfWorkflow {
 
   private WorkbookResult closeHostFailure(FullXssfWorkflowState state, Exception exception) {
     GridGrindProblemDetail.Problem problem =
-        ExecutionResponseSupport.problemFor(
+        GridGrindProblems.fromException(
             exception,
             new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                 ExecutionRequestPaths.requestShape(state.executionContext().request())));

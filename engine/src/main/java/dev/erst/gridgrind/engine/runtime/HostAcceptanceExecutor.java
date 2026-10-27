@@ -5,8 +5,8 @@ import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -16,15 +16,15 @@ import org.jspecify.annotations.Nullable;
 
 /** Evaluates host-owned terminal acceptance after mutations and before final publication. */
 final class HostAcceptanceExecutor {
-  private final ExecutionStepSupport stepSupport;
+  private final StepExecution stepSupport;
 
-  HostAcceptanceExecutor(ExecutionStepSupport stepSupport) {
+  HostAcceptanceExecutor(StepExecution stepSupport) {
     this.stepSupport = Objects.requireNonNull(stepSupport, "stepSupport must not be null");
   }
 
   HostAcceptanceSnapshot captureBeforeMutation(
       AcceptancePolicy policy,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       @Nullable Path materializedSourceArtifact)
       throws IOException {
@@ -40,7 +40,7 @@ final class HostAcceptanceExecutor {
   HostAcceptanceVerification verifyWorkbook(
       AcceptancePolicy policy,
       HostAcceptanceSnapshot snapshot,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation)
       throws IOException, AssertionFailedException, PreservationFailedException {
     return switch (Objects.requireNonNull(policy, "policy must not be null")) {
@@ -66,7 +66,7 @@ final class HostAcceptanceExecutor {
   HostAcceptanceVerification verifyWorkbook(
       AcceptancePolicy.RequireAll requireAll,
       HostAcceptanceSnapshot snapshot,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation)
       throws IOException, AssertionFailedException, PreservationFailedException {
     List<AssertionResult> assertions = new ArrayList<>();
@@ -123,7 +123,7 @@ final class HostAcceptanceExecutor {
 
   private HostAcceptanceSnapshot captureWorkbookRequirements(
       AcceptancePolicy.RequireAll requireAll,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       @Nullable Path materializedSourceArtifact)
       throws IOException {
@@ -167,7 +167,7 @@ final class HostAcceptanceExecutor {
   private void verifyWorkbookSemanticPreservation(
       AcceptancePolicy.Requirement.PreserveInspectionFacts facts,
       HostAcceptanceSnapshot snapshot,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       List<WorkbookExecutionEvidence.Preservation> preservation)
       throws IOException, PreservationFailedException {
@@ -194,7 +194,7 @@ final class HostAcceptanceExecutor {
 
   private List<InspectionResult> captureWorkbookInspections(
       List<dev.erst.gridgrind.core.plan.InspectionStep> inspections,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation)
       throws IOException {
     List<InspectionResult> results = new ArrayList<>(inspections.size());

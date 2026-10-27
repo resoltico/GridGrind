@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -50,11 +50,11 @@ class XlsxCommentPackageInvariantSupportTest {
   private static Path workbookWithComment(String prefix) throws IOException {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook
           .sheet("Budget")
-          .annotations()
+          .comments()
           .setComment("A1", new ResolvedComment("Review", "GridGrind", true));
       JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }

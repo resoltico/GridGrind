@@ -14,9 +14,11 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.pivots.PivotAdapter;
+import dev.erst.gridgrind.engine.tables.TableAdapter;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +26,7 @@ import org.junit.jupiter.api.Test;
 class ScopedTableInspectionTest {
   @Test
   void tableInspectionHonorsRequestedSheet() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook
           .getOrCreateSheet("Ops")
@@ -34,9 +36,9 @@ class ScopedTableInspectionTest {
               List.of(
                   List.of(new CellValue.Text("Item"), new CellValue.Text("Value")),
                   List.of(new CellValue.Text("A"), new CellValue.NumberValue(3))));
-      workbook
-          .tables()
+      new TableAdapter()
           .setTable(
+              workbook,
               new ResolvedTable(
                   new TableName("Queue"),
                   new SheetName("Ops"),
@@ -123,7 +125,7 @@ class ScopedTableInspectionTest {
 
   @Test
   void pivotInspectionHonorsRequestedSheet() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook.getOrCreateSheet("Report");
       workbook
@@ -134,9 +136,9 @@ class ScopedTableInspectionTest {
               List.of(
                   List.of(new CellValue.Text("Item"), new CellValue.Text("Value")),
                   List.of(new CellValue.Text("A"), new CellValue.NumberValue(3))));
-      workbook
-          .pivots()
+      new PivotAdapter()
           .setPivotTable(
+              workbook,
               new dev.erst.gridgrind.core.model.pivot.PivotTableSpec(
                   "Totals",
                   new SheetName("Report"),

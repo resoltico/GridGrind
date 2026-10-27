@@ -17,7 +17,7 @@ configure<PitestPluginExtension> {
         setOf(
             "dev.erst.gridgrind.engine.runtime.FormulaOriginTracker*",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightPaths*",
-            "dev.erst.gridgrind.excel.validation.ExcelDataValidationComparisonOperatorPoiBridge*",
+            "dev.erst.gridgrind.engine.validation.DataValidationAdapter*",
         ),
     )
     targetTests.set(
@@ -25,7 +25,7 @@ configure<PitestPluginExtension> {
             "dev.erst.gridgrind.engine.runtime.FormulaOriginTrackerTest",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightTest",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightFormulaEnvironmentTest",
-            "dev.erst.gridgrind.excel.validation.ExcelDataValidationComparisonOperatorPoiBridgeTest",
+            "dev.erst.gridgrind.engine.validation.ValidationComparisonOperatorsTest",
         ),
     )
 }

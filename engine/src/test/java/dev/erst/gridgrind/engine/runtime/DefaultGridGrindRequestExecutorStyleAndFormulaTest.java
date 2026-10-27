@@ -35,10 +35,10 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.XlsxRoundTrip;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XlsxRoundTrip;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -529,9 +529,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
   @Test
   void persistWorkbookRejectsOverwriteForNewSources() throws Exception {
     Path workingDirectory = Files.createTempDirectory("gridgrind-overwrite-reject-");
-    ExecutionWorkbookSupport workbookSupport = workbookSupport(workingDirectory);
+    WorkbookLifecycle workbookSupport = workbookSupport(workingDirectory);
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       IllegalArgumentException exception =
           assertThrows(
               IllegalArgumentException.class,
@@ -568,18 +568,18 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
   @Test
   void persistWorkbookSaveAsReportsNormalizedExecutionPath() throws Exception {
     Path tempDir = Files.createTempDirectory("gridgrind-normalize-test-");
-    ExecutionWorkbookSupport workbookSupport = workbookSupport(tempDir);
+    WorkbookLifecycle workbookSupport = workbookSupport(tempDir);
     Path subDir = Files.createDirectory(tempDir.resolve("subdir"));
     String pathWithDotDot = subDir + "/../out.xlsx";
 
     try (var preparedBindings = ExecutionInputBindingsFixtureSupport.preparedBindings(tempDir);
-        ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
       preparedBindings
           .access()
           .prepareOutput(
               pathWithDotDot,
               "persistence",
-              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.CREATE_NEW);
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition.CREATE_NEW);
       WorkbookResultPersistence.PersistenceOutcome outcome =
           workbookSupport.persistWorkbook(
               workbook,
@@ -616,8 +616,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     throw new IllegalStateException("catastrophic close failure");
                   }
                 },
-                dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.MaterializedWorkbook
+                    ::close,
+                dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
     WorkbookResult.Failure failure =

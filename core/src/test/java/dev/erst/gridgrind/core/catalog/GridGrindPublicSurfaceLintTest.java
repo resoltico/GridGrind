@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.catalog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,37 +47,37 @@ class GridGrindPublicSurfaceLintTest {
     collectUnknown(
         unknownBySurface,
         "EVENT_READ calculation failure",
-        GridGrindExecutionModeMetadata.eventRead().calculationFailureMessage(),
+        BackendCapabilities.eventRead().calculationFailureMessage(),
         registeredIds,
         candidatePattern);
     collectUnknown(
         unknownBySurface,
         "EVENT_READ unsupported step",
-        GridGrindExecutionModeMetadata.eventRead().unsupportedStepMessage("MUTATION"),
+        BackendCapabilities.eventRead().unsupportedStepMessage("MUTATION"),
         registeredIds,
         candidatePattern);
     collectUnknown(
         unknownBySurface,
         "EVENT_READ unsupported query",
-        GridGrindExecutionModeMetadata.eventRead().unsupportedQueryMessage("GET_WINDOW"),
+        BackendCapabilities.eventRead().unsupportedQueryMessage("GET_WINDOW"),
         registeredIds,
         candidatePattern);
     collectUnknown(
         unknownBySurface,
         "STREAMING_WRITE calculation failure",
-        GridGrindExecutionModeMetadata.streamingWrite().calculationFailureMessage(),
+        BackendCapabilities.streamingWrite().calculationFailureMessage(),
         registeredIds,
         candidatePattern);
     collectUnknown(
         unknownBySurface,
         "STREAMING_WRITE source failure",
-        GridGrindExecutionModeMetadata.streamingWrite().invalidSourceMessage(),
+        BackendCapabilities.streamingWrite().invalidSourceMessage(),
         registeredIds,
         candidatePattern);
     collectUnknown(
         unknownBySurface,
         "STREAMING_WRITE unsupported action",
-        GridGrindExecutionModeMetadata.streamingWrite().unsupportedActionMessage("SET_CELL"),
+        BackendCapabilities.streamingWrite().unsupportedActionMessage("SET_CELL"),
         registeredIds,
         candidatePattern);
 

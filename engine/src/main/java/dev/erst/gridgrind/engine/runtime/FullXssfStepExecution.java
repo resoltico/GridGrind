@@ -11,26 +11,25 @@ import dev.erst.gridgrind.core.plan.PreparedMutationStep;
 import dev.erst.gridgrind.core.plan.PreparedStep;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
 /** Executes one full-XSSF step and shapes its truthful terminal failure response. */
 final class FullXssfStepExecution {
-  private final ExecutionStepSupport stepSupport;
-  private final ExecutionResponseSupport responseSupport;
+  private final StepExecution stepSupport;
+  private final ExecutionResults responseSupport;
 
-  FullXssfStepExecution(
-      ExecutionStepSupport stepSupport, ExecutionResponseSupport responseSupport) {
+  FullXssfStepExecution(StepExecution stepSupport, ExecutionResults responseSupport) {
     this.stepSupport = Objects.requireNonNull(stepSupport, "stepSupport must not be null");
     this.responseSupport =
         Objects.requireNonNull(responseSupport, "responseSupport must not be null");
   }
 
   java.util.Optional<AssertionFailedException> execute(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       ExecutionModeSpec executionMode,
       AssertionModeSpec assertionMode,
@@ -90,7 +89,7 @@ final class FullXssfStepExecution {
     java.util.Optional<dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference>
         formulaAuthor = formulaOrigins.originFor(exception);
     GridGrindProblemDetail.Problem problem =
-        ExecutionResponseSupport.problemFor(
+        GridGrindProblems.fromException(
             exception,
             formulaAuthor
                 .map(
@@ -114,7 +113,7 @@ final class FullXssfStepExecution {
     }
     return responseSupport.closeWorkbook(
         executionContext.workbook(),
-        ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+        ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
             executionContext.failure(calculation, problem, stepIndex, step.stepId())),
         executionContext.request(),
         executionContext.journal(),

@@ -21,7 +21,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.*;
-import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.engine.backend.xssf.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;

@@ -29,8 +29,8 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
-import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidSigningConfigurationException;
+import dev.erst.gridgrind.engine.backend.xssf.OoxmlSecurityTestSupport;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -550,7 +550,7 @@ class RequestPreflightTest {
         RequestPreflightPaths.persistenceTarget(existingOverwrite).orElseThrow();
     assertEquals("source.xlsx", target.path());
     assertEquals(
-        dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+        dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
         target.disposition());
     assertTrue(RequestPreflightPaths.persistenceTarget(newOverwrite).isEmpty());
   }

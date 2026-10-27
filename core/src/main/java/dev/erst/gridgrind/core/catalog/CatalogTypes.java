@@ -95,7 +95,7 @@ final class CatalogTypes {
     return new CatalogTypeDescriptor(
         recordType.asSubclass(Record.class),
         metadata.id(),
-        metadata.summary(),
+        ProtocolTypeMetadataSupport.summary(recordType),
         List.of(metadata.noteRefs()),
         projections(recordType));
   }

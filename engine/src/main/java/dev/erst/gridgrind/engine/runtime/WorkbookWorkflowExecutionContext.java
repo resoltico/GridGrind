@@ -8,7 +8,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -16,7 +16,7 @@ import org.jspecify.annotations.Nullable;
 record WorkbookWorkflowExecutionContext(
     ProtocolVersion protocolVersion,
     WorkbookPlan request,
-    ExcelWorkbook workbook,
+    XssfWorkbook workbook,
     ExecutionJournalRecorder journal,
     List<RequestWarning> warnings,
     List<AssertionResult> planAssertions,

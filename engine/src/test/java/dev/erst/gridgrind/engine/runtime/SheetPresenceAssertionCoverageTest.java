@@ -10,10 +10,10 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class SheetPresenceAssertionCoverageTest {
     AssertionExecutor executor = new AssertionExecutor(workbookEngine, selectorResolver);
     WorkbookLocation location = new WorkbookLocation.UnsavedWorkbook();
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       assertDoesNotThrow(
@@ -113,7 +113,7 @@ class SheetPresenceAssertionCoverageTest {
     AssertionExecutor executor = new AssertionExecutor(workbookEngine, selectorResolver);
     WorkbookLocation location = new WorkbookLocation.UnsavedWorkbook();
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       assertDoesNotThrow(

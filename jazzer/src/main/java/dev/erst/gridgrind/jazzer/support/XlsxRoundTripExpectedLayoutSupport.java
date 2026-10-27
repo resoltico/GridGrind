@@ -4,8 +4,8 @@ import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -15,7 +15,7 @@ final class XlsxRoundTripExpectedLayoutSupport {
   private XlsxRoundTripExpectedLayoutSupport() {}
 
   static Map<String, XlsxRoundTripExpectedStateSupport.ExpectedSheetLayoutState>
-      expectedSheetLayouts(ExcelWorkbook workbook) {
+      expectedSheetLayouts(XssfWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
 
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();

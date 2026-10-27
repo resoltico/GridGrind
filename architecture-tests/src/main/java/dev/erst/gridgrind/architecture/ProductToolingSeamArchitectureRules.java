@@ -15,12 +15,9 @@ import java.util.function.Predicate;
 /** Defines bytecode access-site rules for GridGrind's centralized Apache POI tooling seams. */
 enum ProductToolingSeamArchitectureRules {
   ;
-  private static final String ENGINE_RUNTIME_PACKAGE = "dev.erst.gridgrind.engine.runtime..";
-  private static final String EXCEL_PACKAGE = "dev.erst.gridgrind.excel..";
-  private static final String FORMULA_WRITE_SUPPORT =
-      "dev.erst.gridgrind.excel.ExcelFormulaWriteSupport";
-  private static final String PRIVATE_ACCESS_SUPPORT =
-      "dev.erst.gridgrind.excel.PoiPrivateAccessSupport";
+  private static final String ENGINE_PACKAGE = "dev.erst.gridgrind.engine..";
+  private static final String FORMULA_WRITE_SUPPORT = "dev.erst.gridgrind.engine.poi.FormulaWrites";
+  private static final String PRIVATE_ACCESS_SUPPORT = "dev.erst.gridgrind.engine.poi.PoiAccess";
 
   private static final ArchCondition<JavaClass> NOT_CALL_POI_FORMULA_WRITES =
       notAccessMethodsMatching(
@@ -40,7 +37,7 @@ enum ProductToolingSeamArchitectureRules {
   static ArchRule formulaWritesStayCentralized() {
     return classes()
         .that()
-        .resideInAnyPackage(ENGINE_RUNTIME_PACKAGE, EXCEL_PACKAGE)
+        .resideInAPackage(ENGINE_PACKAGE)
         .and()
         .doNotHaveFullyQualifiedName(FORMULA_WRITE_SUPPORT)
         .should(NOT_CALL_POI_FORMULA_WRITES)
@@ -50,7 +47,7 @@ enum ProductToolingSeamArchitectureRules {
   static ArchRule privateReflectionStaysCentralized() {
     return classes()
         .that()
-        .resideInAnyPackage(ENGINE_RUNTIME_PACKAGE, EXCEL_PACKAGE)
+        .resideInAPackage(ENGINE_PACKAGE)
         .and()
         .doNotHaveFullyQualifiedName(PRIVATE_ACCESS_SUPPORT)
         .should(NOT_USE_PRIVATE_REFLECTION)

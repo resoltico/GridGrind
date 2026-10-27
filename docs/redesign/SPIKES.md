@@ -2879,3 +2879,60 @@ CLI588, zero failures/errors/skips. All143 goldens unchanged, no snapshots re-re
 campaigns. Engine/shaded JARs contain none of the7 retired model families. Baseline diff empty.
 Inventories: main112246→112089, test150723→150612, blank279→273, snapshots2→1; converters0,
 definitions0 and Support194 unchanged. Remaining chart scaffolding/enum audit and WP-41/42 still follow.
+
+### WP-40–42 feature adapters, POI confinement and backend contract
+
+The remaining engine model/converter families and chart scaffolding are gone. Native feature
+fragments now live in cohesive adapters with core inputs/results. Workbook, sheet, stream and event
+resource owners have explicit names and packages; no `dev.erst.gridgrind.excel` package or engine
+`Support`/`Controller`/`PoiBridge` source type remains. Relative custom-XML test resources moved with
+their fixture reader, and the XML-security provider's qualified module opening follows its new
+package. Golden snapshots were not re-recorded.
+
+Each execution workflow implements `ExecutionBackend<C>` with an explicit resource-specific call.
+One pure `BackendCapabilities` declaration per mode drives calculation compatibility, static
+validation, routing and catalog/schema/help text. The declarations live in core because validation
+and catalog cannot depend on engine; backends expose that same declaration. This is the documented
+layering correction to WP-42, rather than a second metadata registry. Pre-cutover routing and the
+materialized EVENT_READ fallback are recorded in `docs/EXECUTION_MODEL.md`.
+
+The new ArchUnit rule confines both POI and raw SpreadsheetML dependencies to native packages. It
+caught an indirect `isDate1904()` call passed to an unused selector-matching parameter; both the
+call and parameter were removed, preserving the matching body. Its negative control and all 13
+product architecture rules pass. Existing private-reflection/formula-write rules now inspect all
+engine packages after the moves. Narrow visibility replaced unneeded public helper methods;
+three cohesive unexported adapters retain explicit public-count exceptions, without changing the
+other PMD rules. ZIP security limits now initialize with the native workbook factory rather than
+a separate open helper, retaining the same values.
+
+Remaining snapshot types are runtime state, not parallel wire models: `HostAcceptanceSnapshot`
+is pre-mutation preservation evidence; `CommentRewriteSnapshot` carries comment/VML repair state;
+`PictureCopySnapshot`, `EmbeddedObjectCopySnapshot` and `InternalRelationSnapshot` carry native
+package identities/bytes between clone and repair. Conditional-formatting `FillSnapshot`,
+`BorderSnapshot` and `FontSnapshot` are partial native-subtree parse results, including unsupported
+XML evidence and empty intermediate states that a complete core differential-style report cannot
+represent. They are assembled into the canonical core report and never serialized independently.
+
+Verification: core 390, JSON 353, engine 1,359 plus 14 parity tests, CLI 588 including all 143 golden
+cases, architecture negative controls 15 and product rules 13; all pass with zero skips/errors.
+The nested Jazzer check passes its 106 support tests and all four committed-seed replay tasks.
+No active fuzzing or mutation campaign ran. Earlier failures are retained in external WP-42 logs:
+missing routing import/Javadocs; consolidated-adapter static findings; the real indirect POI leak;
+one old test argument; and nested-build formatting. Each was corrected with focused checks.
+
+The coverage-reuse fix was brought forward from WP-61 in response to the user's repeated gating
+concern: reports consume tracked test execution-data outputs, and data is cleared only when the
+corresponding test actually executes. A subsequent unchanged root quality stage reused tests and
+passed in 16 seconds versus 5m17s, without another full suite.
+
+The phase wrapper reached its shell stage, which then redundantly launched the entire root quality
+gate again. That duplicate was stopped under the user's minimal-gating instruction. Shell/container
+verification is deferred to the planned gate simplification and final clean-clone verification.
+The canceled wrapper exited 143 despite printing a misleading success summary; this is not a
+six-stage pass. Its status/reporting machinery is among the WP-61 deletions.
+
+Inventories after the cutover: main Java 108,045 (112,089 before this batch); test Java 150,182
+(150,612); Support types 73 (194), with zero engine entries; engine Excel/converter/runtime-POI
+inventories empty; top-level snapshots one, definitions zero. Blank-check occurrences remain 273;
+WP-21 and the optional-component follow-through in several core reports remain open.
+`git diff main -- AGENTS.md` is empty; no supplement exists yet.

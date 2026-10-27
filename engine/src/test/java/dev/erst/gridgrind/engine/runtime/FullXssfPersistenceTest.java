@@ -13,7 +13,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ class FullXssfPersistenceTest {
             },
             responseSupport());
 
-    try (var workbook = ExcelWorkbooks.create()) {
+    try (var workbook = XssfWorkbooks.create()) {
       FullXssfPersistence.Result result =
           persistence.persist(
               context(workbook), bindings(), CalculationReport.notRequested(), ignored -> {});
@@ -63,7 +63,7 @@ class FullXssfPersistenceTest {
             },
             responseSupport());
 
-    try (var workbook = ExcelWorkbooks.create()) {
+    try (var workbook = XssfWorkbooks.create()) {
       FullXssfPersistence.Result result =
           persistence.persist(
               context(workbook), bindings(), CalculationReport.notRequested(), ignored -> {});
@@ -75,7 +75,7 @@ class FullXssfPersistenceTest {
   }
 
   private WorkbookWorkflowExecutionContext context(
-      dev.erst.gridgrind.excel.ExcelWorkbook workbook) {
+      dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook workbook) {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -110,8 +110,9 @@ class FullXssfPersistenceTest {
             AcceptancePolicy.minimum()));
   }
 
-  private static ExecutionResponseSupport responseSupport() {
-    return new ExecutionResponseSupport(
-        dev.erst.gridgrind.excel.ExcelWorkbook::close, materialized -> materialized.close());
+  private static ExecutionResults responseSupport() {
+    return new ExecutionResults(
+        dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook::close,
+        materialized -> materialized.close());
   }
 }

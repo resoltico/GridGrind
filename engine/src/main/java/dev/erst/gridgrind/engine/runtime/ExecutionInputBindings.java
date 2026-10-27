@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.engine.api.GridGrindSecretResolver;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;

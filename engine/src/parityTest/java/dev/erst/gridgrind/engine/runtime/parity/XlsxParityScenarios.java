@@ -81,7 +81,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
-import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
@@ -806,7 +805,8 @@ public final class XlsxParityScenarios {
             signatureConfig.setKey(keyMaterial.keyPair().getPrivate());
             signatureConfig.setSigningCertificateChain(List.of(keyMaterial.certificate()));
 
-            var signatureInfo = WorkbookSignatureSupport.newSignatureInfo();
+            var signatureInfo =
+                dev.erst.gridgrind.engine.security.SecurityAdapter.newSignatureInfo();
             signatureInfo.setSignatureConfig(signatureConfig);
             signatureInfo.setOpcPackage(pkg);
             signatureInfo.confirmSignature();
@@ -849,7 +849,8 @@ public final class XlsxParityScenarios {
             signatureConfig.setKey(keyMaterial.keyPair().getPrivate());
             signatureConfig.setSigningCertificateChain(List.of(keyMaterial.certificate()));
 
-            var signatureInfo = WorkbookSignatureSupport.newSignatureInfo();
+            var signatureInfo =
+                dev.erst.gridgrind.engine.security.SecurityAdapter.newSignatureInfo();
             signatureInfo.setSignatureConfig(signatureConfig);
             signatureInfo.setOpcPackage(pkg);
             signatureInfo.confirmSignature();

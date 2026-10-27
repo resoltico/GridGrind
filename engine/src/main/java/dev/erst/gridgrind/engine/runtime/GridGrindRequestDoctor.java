@@ -116,7 +116,7 @@ public final class GridGrindRequestDoctor {
 
   private static RequestDoctorReport.Summary summaryFor(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
-    ExecutionModeSpec executionMode = ExecutionWorkflowRouting.executionMode(request);
+    ExecutionModeSpec executionMode = request.effectiveExecutionMode();
     WorkbookPlan.StepPartition stepPartition = request.stepPartition();
     int mutationStepCount = stepPartition.mutations().size();
     int assertionStepCount = stepPartition.assertions().size();

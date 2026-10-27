@@ -12,7 +12,7 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
+import dev.erst.gridgrind.engine.formulas.ComparisonFormulas;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the top-level data-validation transport model. */
@@ -36,8 +36,8 @@ class DataValidationSpecTest {
         new ResolvedDataValidation(
             new DataValidationRuleSpec.DateRule(
                 ExcelComparisonOperator.GREATER_OR_EQUAL,
-                ExcelComparisonFormulaSupport.normalizeFormula("TODAY()", "formula1"),
-                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                ComparisonFormulas.normalizeFormula("TODAY()", "formula1"),
+                ComparisonFormulas.normalizeOptionalFormula(
                     java.util.Optional.empty(), "formula2")),
             false,
             false,

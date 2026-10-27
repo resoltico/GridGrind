@@ -9,23 +9,26 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.excel.WorkbookArtifactIo;
+import dev.erst.gridgrind.engine.backend.ExecutionBackend;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /** Direct event-read workflow for inspection-only execution against an existing workbook file. */
-final class ExecutionDirectEventReadWorkflow {
-  private final ExecutionStepSupport stepSupport;
+final class ExecutionDirectEventReadWorkflow
+    implements ExecutionBackend<ExecutionDirectEventReadWorkflow.Call> {
+  private final StepExecution stepSupport;
   private final MaterializedTerminalAcceptance terminalAcceptance;
-  private final ExecutionResponseSupport responseSupport;
+  private final ExecutionResults responseSupport;
   private final TempFileFactory tempFileFactory;
 
   ExecutionDirectEventReadWorkflow(
-      ExecutionStepSupport stepSupport,
-      ExecutionResponseSupport responseSupport,
+      StepExecution stepSupport,
+      ExecutionResults responseSupport,
       TempFileFactory tempFileFactory) {
     this(
         stepSupport,
@@ -37,9 +40,9 @@ final class ExecutionDirectEventReadWorkflow {
   }
 
   ExecutionDirectEventReadWorkflow(
-      ExecutionStepSupport stepSupport,
+      StepExecution stepSupport,
       MaterializedTerminalAcceptance terminalAcceptance,
-      ExecutionResponseSupport responseSupport,
+      ExecutionResults responseSupport,
       TempFileFactory tempFileFactory) {
     this.stepSupport = Objects.requireNonNull(stepSupport, "stepSupport must not be null");
     this.terminalAcceptance =
@@ -50,12 +53,26 @@ final class ExecutionDirectEventReadWorkflow {
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
   }
 
-  WorkbookResult execute(
+  record Call(
       ProtocolVersion protocolVersion,
       ResolvedPlan plan,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      ExecutionInputBindings bindings) {
+      ExecutionInputBindings bindings) {}
+
+  @Override
+  public BackendCapabilities.Mode capabilities() {
+    return BackendCapabilities.eventRead();
+  }
+
+  @Override
+  public WorkbookResult execute(Call call) {
+    ProtocolVersion protocolVersion = call.protocolVersion();
+    ResolvedPlan plan = call.plan();
+    List<RequestWarning> warnings = call.warnings();
+    ExecutionJournalRecorder journal = call.journal();
+    ExecutionInputBindings bindings = call.bindings();
+
     WorkbookPlan request = plan.request();
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
@@ -88,7 +105,7 @@ final class ExecutionDirectEventReadWorkflow {
               tempFileFactory::createTempFile);
     } catch (Exception exception) {
       GridGrindProblemDetail.Problem problem =
-          ExecutionResponseSupport.problemFor(
+          GridGrindProblems.fromException(
               exception,
               new dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook(
                   ExecutionRequestPaths.requestShape(request),
@@ -96,7 +113,7 @@ final class ExecutionDirectEventReadWorkflow {
       openPhase.fail(problem.code());
       return responseSupport.closeReadableWorkbook(
           null,
-          ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+          ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
               executionContext.failure(problem)),
           request,
           journal,
@@ -116,7 +133,7 @@ final class ExecutionDirectEventReadWorkflow {
         stepHandle.succeed();
       } catch (Exception exception) {
         GridGrindProblemDetail.Problem problem =
-            ExecutionResponseSupport.problemFor(
+            GridGrindProblems.fromException(
                 exception,
                 ExecutionStepContextFactory.contextFor(
                     request, stepIndex, inspectionStep, exception));
@@ -124,7 +141,7 @@ final class ExecutionDirectEventReadWorkflow {
             problem.code(), problem.category(), problem.context().type(), problem.message());
         return responseSupport.closeReadableWorkbook(
             materialized,
-            ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+            ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
                 executionContext.failure(problem, stepIndex, inspectionStep.stepId())),
             request,
             journal,
@@ -169,14 +186,13 @@ final class ExecutionDirectEventReadWorkflow {
       DirectEventReadContext executionContext,
       Exception exception) {
     GridGrindProblemDetail.Problem problem =
-        ExecutionResponseSupport.problemFor(
+        GridGrindProblems.fromException(
             exception,
             new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                 ExecutionRequestPaths.requestShape(executionContext.request())));
     return responseSupport.closeReadableWorkbook(
         materialized,
-        ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-            executionContext.failure(problem)),
+        ExecutionResults.failureResponseWithoutPlanOutcomeEvent(executionContext.failure(problem)),
         executionContext.request(),
         executionContext.journal(),
         problem.code(),
@@ -191,7 +207,7 @@ final class ExecutionDirectEventReadWorkflow {
     HostAcceptanceVerification verify(
         dev.erst.gridgrind.core.grant.AcceptancePolicy policy,
         java.nio.file.Path workbookPath,
-        dev.erst.gridgrind.excel.WorkbookLocation workbookLocation)
+        dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation workbookLocation)
         throws IOException, AssertionFailedException;
   }
 }

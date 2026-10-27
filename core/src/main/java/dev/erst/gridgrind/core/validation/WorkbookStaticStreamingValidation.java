@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.validation;
 
-import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
@@ -9,13 +8,14 @@ import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import java.util.List;
 
 /** Validates the cross-step sequencing facts unique to STREAMING_WRITE. */
 final class WorkbookStaticStreamingValidation {
-  private static final GridGrindExecutionModeMetadata.StreamingWriteMode STREAMING_WRITE =
-      GridGrindExecutionModeMetadata.streamingWrite();
+  private static final BackendCapabilities.StreamingWriteMode STREAMING_WRITE =
+      BackendCapabilities.streamingWrite();
 
   private WorkbookStaticStreamingValidation() {}
 

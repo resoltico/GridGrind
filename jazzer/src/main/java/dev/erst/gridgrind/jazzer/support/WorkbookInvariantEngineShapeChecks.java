@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.engine.backend.xssf.*;
 import java.util.HashSet;
 
 /** Owns invariant checks for engine-native workbook, drawing, chart, and pivot-table snapshots. */

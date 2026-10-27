@@ -8,8 +8,8 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
 import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackagePersistenceSupport;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.security.SecurityAdapter;
 import java.util.List;
 
 /**
@@ -26,9 +26,8 @@ final class RequestPreflightWorkbookSource {
       return;
     }
     var context = RequestPreflight.openWorkbookContext(request, bindings);
-    ExecutionWorkbookSupport workbookSupport =
-        new ExecutionWorkbookSupport(bindings.tempFileFactory());
-    try (ExcelWorkbook workbook = workbookSupport.openWorkbook(request.source(), null, bindings)) {
+    WorkbookLifecycle workbookSupport = new WorkbookLifecycle(bindings.tempFileFactory());
+    try (XssfWorkbook workbook = workbookSupport.openWorkbook(request.source(), null, bindings)) {
       validateSourcePersistencePolicy(request, workbook);
       addFormulaColumnViolations(request, bindings, workbook, problems);
     } catch (Exception exception) {
@@ -39,11 +38,11 @@ final class RequestPreflightWorkbookSource {
   private static void addFormulaColumnViolations(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       List<GridGrindProblemDetail.Problem> problems) {
     for (WorkbookStaticViolation violation :
         WorkbookStaticRequestContract.validateKnownFormulaPresence(
-            request, containsFormula(workbook))) {
+            request, workbook.formulas().containsFormula())) {
       problems.add(
           GridGrindProblems.problem(
               dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST,
@@ -53,21 +52,7 @@ final class RequestPreflightWorkbookSource {
     }
   }
 
-  private static boolean containsFormula(ExcelWorkbook workbook) {
-    for (org.apache.poi.ss.usermodel.Sheet sheet : workbook.xssfWorkbook()) {
-      for (org.apache.poi.ss.usermodel.Row row : sheet) {
-        for (org.apache.poi.ss.usermodel.Cell cell : row) {
-          if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.FORMULA) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  private static void validateSourcePersistencePolicy(
-      WorkbookPlan request, ExcelWorkbook workbook) {
+  private static void validateSourcePersistencePolicy(WorkbookPlan request, XssfWorkbook workbook) {
     java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
         security =
             switch (request.persistence()) {
@@ -87,7 +72,7 @@ final class RequestPreflightWorkbookSource {
         && security.orElseThrow().encryption()
             instanceof
             dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.PreserveSource) {
-      ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+      SecurityAdapter.effectiveOptions(
           workbook.persistence().loadedPackageSecurity(),
           workbook.persistence().sourceEncryptionPassword(),
           new ResolvedPersistenceSecurity(

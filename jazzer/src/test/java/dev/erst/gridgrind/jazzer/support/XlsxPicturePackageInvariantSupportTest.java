@@ -11,8 +11,8 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -68,7 +68,7 @@ class XlsxPicturePackageInvariantSupportTest {
       throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-picture-package-embedded-copy-", ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")
@@ -100,7 +100,7 @@ class XlsxPicturePackageInvariantSupportTest {
       throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-picture-package-sheet-preview-", ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")
@@ -142,7 +142,7 @@ class XlsxPicturePackageInvariantSupportTest {
   private static Path workbookWithPicture(String prefix) throws IOException {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")

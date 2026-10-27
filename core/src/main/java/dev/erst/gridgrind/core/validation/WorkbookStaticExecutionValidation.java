@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.core.validation;
 
-import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +14,8 @@ import java.util.Optional;
 
 /** Validates static execution-policy compatibility without interpreting workbook state. */
 final class WorkbookStaticExecutionValidation {
-  private static final GridGrindExecutionModeMetadata.EventReadMode EVENT_READ =
-      GridGrindExecutionModeMetadata.eventRead();
+  private static final BackendCapabilities.EventReadMode EVENT_READ =
+      BackendCapabilities.eventRead();
 
   private WorkbookStaticExecutionValidation() {}
 

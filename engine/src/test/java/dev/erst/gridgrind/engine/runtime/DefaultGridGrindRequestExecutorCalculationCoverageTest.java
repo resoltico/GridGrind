@@ -38,10 +38,10 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
+import dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.util.Iterator;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -95,9 +95,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
 
-    assertFalse(
-        DefaultGridGrindRequestExecutor.directEventReadEligible(
-            request, DefaultGridGrindRequestExecutor.executionMode(request)));
+    assertFalse(dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead().accepts(request));
   }
 
   @Test
@@ -207,7 +205,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
         new DefaultGridGrindRequestExecutor(
             new DefaultGridGrindRequestExecutorDependencies(
                 new WorkbookExecutionEngine(),
-                ExcelWorkbook::close,
+                XssfWorkbook::close,
                 ignored -> {},
                 writer -> {
                   throw new IllegalStateException("streaming calculation failed");
@@ -242,8 +240,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
 
   @Test
   void calculationHelpersMapPreflightExecutionAndContextDetails() throws Exception {
-    ExecutionCalculationSupport calculationSupport =
-        new ExecutionCalculationSupport(ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
+    CalculationWorkflow calculationSupport =
+        new CalculationWorkflow(StreamingWorkbookWriter::markRecalculateOnOpen);
     WorkbookPlan preflightRequest =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -251,11 +249,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(requireEvaluation()),
             null,
             java.util.List.of());
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.sheet("Ops").cells().setCell("A1", new ResolvedFormula("TEXTAFTER(\"a,b\",\",\")"));
 
-      ExecutionCalculationSupport.CalculationExecutionOutcome preflightOutcome =
+      CalculationWorkflow.CalculationExecutionOutcome preflightOutcome =
           calculationSupport.executeCalculationPolicy(
               workbook,
               preflightRequest,
@@ -290,8 +288,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(clearFormulaCaches()),
             null,
             java.util.List.of());
-    try (ExcelWorkbook workbook = instantiateWorkbook(new IteratorFailingWorkbook())) {
-      ExecutionCalculationSupport.CalculationExecutionOutcome executionOutcome =
+    try (XssfWorkbook workbook = instantiateWorkbook(new IteratorFailingWorkbook())) {
+      CalculationWorkflow.CalculationExecutionOutcome executionOutcome =
           calculationSupport.executeCalculationPolicy(
               workbook,
               clearCachesRequest,
@@ -324,8 +322,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(markRecalculateOnOpen()),
             null,
             java.util.List.of());
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      ExecutionCalculationSupport.CalculationExecutionOutcome markOnlyOutcome =
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      CalculationWorkflow.CalculationExecutionOutcome markOnlyOutcome =
           calculationSupport.executeCalculationPolicy(
               workbook,
               markOnlyRequest,
@@ -400,8 +398,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
 
   @Test
   void lenientCalculationReturnsPartialWithFormulaCellWarning() throws Exception {
-    ExecutionCalculationSupport calculationSupport =
-        new ExecutionCalculationSupport(ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
+    CalculationWorkflow calculationSupport =
+        new CalculationWorkflow(StreamingWorkbookWriter::markRecalculateOnOpen);
     WorkbookPlan lenientRequest =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -409,11 +407,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(calculateAll()),
             null,
             java.util.List.of());
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.sheet("Ops").cells().setCell("A1", new ResolvedFormula("TEXTAFTER(\"a,b\",\",\")"));
 
-      ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
+      CalculationWorkflow.CalculationExecutionOutcome outcome =
           calculationSupport.executeCalculationPolicy(
               workbook,
               lenientRequest,
@@ -435,8 +433,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     return assertInstanceOf(WorkbookResult.Failure.class, response);
   }
 
-  private static ExcelWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
-    return ExcelWorkbooks.wrap(workbook);
+  private static XssfWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
+    return XssfWorkbooks.wrap(workbook);
   }
 
   /**

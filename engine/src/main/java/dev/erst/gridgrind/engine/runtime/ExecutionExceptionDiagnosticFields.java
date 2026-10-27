@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
-import dev.erst.gridgrind.excel.CellNotFoundException;
-import dev.erst.gridgrind.excel.FormulaException;
-import dev.erst.gridgrind.excel.InvalidCellAddressException;
-import dev.erst.gridgrind.excel.InvalidRangeAddressException;
-import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
-import dev.erst.gridgrind.excel.SheetNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
+import dev.erst.gridgrind.engine.formulas.FormulaException;
 import java.util.Optional;
 
 /** Exception diagnostic field extraction for execution journal contexts. */

@@ -68,10 +68,10 @@ import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -1188,9 +1188,10 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   }
 
   @Test
-  void streamingAssertionsAndPrivateExecutionModeBranchesAreCovered() throws Exception {
+  void streamingAssertionsAndPrivateExecutionModeBranchesAreCovered(
+      @org.junit.jupiter.api.io.TempDir Path executionRoot) throws Exception {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionStepSupport stepSupport = executionStepSupport();
+    StepExecution stepSupport = executionStepSupport(executionRoot);
 
     WorkbookResult.Success success =
         success(
@@ -1303,7 +1304,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         collectingAssertionModeFailure.getMessage().contains("does not support assertion steps"));
 
     Path workbookPath = Files.createTempFile("gridgrind-private-event-read-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Owner"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
@@ -1322,73 +1323,85 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     assertEquals("event-summary", eventSummary.stepId().value());
 
     assertTrue(
-        DefaultGridGrindRequestExecutor.directEventReadEligible(
-            request(
-                new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                List.of(),
-                List.of(
-                    inspect(
-                        "workbook",
-                        new WorkbookSelector.Current(),
-                        new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            ExecutionModeSpec.eventRead()));
+        dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+            .accepts(
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeSpec.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
     assertFalse(
-        DefaultGridGrindRequestExecutor.directEventReadEligible(
-            request(
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                List.of(),
-                List.of()),
-            ExecutionModeSpec.eventRead()));
+        dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+            .accepts(
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeSpec.eventRead(),
+                    null,
+                    List.of(),
+                    List.of())));
     assertFalse(
-        DefaultGridGrindRequestExecutor.directEventReadEligible(
-            request(
-                new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(
-                    "copy.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-                List.of(),
-                List.of(
-                    inspect(
-                        "workbook",
-                        new WorkbookSelector.Current(),
-                        new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            ExecutionModeSpec.eventRead()));
+        dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+            .accepts(
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        "copy.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                    ExecutionModeSpec.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
     assertFalse(
-        DefaultGridGrindRequestExecutor.directEventReadEligible(
-            request(
-                new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                List.of(
-                    mutate(
-                        new SheetSelector.ByName(new SheetName("Ops")),
-                        new WorkbookMutationAction.EnsureSheet())),
-                List.of()),
-            ExecutionModeSpec.eventRead()));
+        dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+            .accepts(
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeSpec.eventRead(),
+                    null,
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Ops")),
+                            new WorkbookMutationAction.EnsureSheet())),
+                    List.of())));
     assertFalse(
-        DefaultGridGrindRequestExecutor.directEventReadEligible(
-            request(
-                new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                List.of(),
-                List.of(
-                    inspect(
-                        "workbook",
-                        new WorkbookSelector.Current(),
-                        new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            ExecutionModeSpec.fullXssf()));
+        dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+            .accepts(
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeSpec.fullXssf(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
     assertFalse(
-        DefaultGridGrindRequestExecutor.directEventReadEligible(
-            request(
-                new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                List.of(),
-                List.of(
-                    inspect(
-                        "workbook",
-                        new WorkbookSelector.Current(),
-                        new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            ExecutionModeSpec.streamingWrite()));
+        dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+            .accepts(
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeSpec.streamingWrite(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(
         java.util.Optional.of("2+3"),
@@ -1517,7 +1530,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     AssertionObservationExecutor observationExecutor =
         new AssertionObservationExecutor(readExecutor, selectorResolver);
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       InspectionResult presence =
@@ -1542,14 +1555,20 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     }
   }
 
-  private static ExecutionStepSupport executionStepSupport() {
+  private static StepExecution executionStepSupport(Path executionRoot) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(readExecutor);
-    return new ExecutionStepSupport(
+    return new StepExecution(
         readExecutor,
         selectorResolver,
         new AssertionExecutor(readExecutor, selectorResolver),
-        Files::createTempFile);
+        dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory.rooted(
+                executionRoot.resolve("scratch"))
+            ::createTempFile,
+        new ExecutionInputBindings(
+            executionRoot,
+            executionRoot.resolve("private"),
+            ExecutionGrantTestSupport.noPublication()));
   }
 
   private static WorkbookResult.Failure assertionFailure(

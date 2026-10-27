@@ -15,11 +15,11 @@ import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
-import dev.erst.gridgrind.excel.SheetNotFoundException;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import java.util.Objects;
 
@@ -39,7 +39,7 @@ final class AssertionObservationExecutor {
       StepId stepId,
       Selector target,
       InspectionQuery query,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     SemanticSelectorResolver.ResolvedInspectionTarget resolvedTarget =
         selectorResolver.resolveInspectionTarget(stepId, workbook, target, query);
@@ -62,7 +62,7 @@ final class AssertionObservationExecutor {
   }
 
   InspectionResult presenceObservation(
-      StepId stepId, Selector target, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
+      StepId stepId, Selector target, XssfWorkbook workbook, WorkbookLocation workbookLocation) {
     try {
       return switch (target) {
         case SheetSelector.All _ ->

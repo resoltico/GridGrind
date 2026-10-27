@@ -16,7 +16,19 @@ enum ProductDependencyArchitectureRules {
   ;
   private static final String ENGINE_API_PACKAGE = "dev.erst.gridgrind.engine.api";
   private static final String ENGINE_RUNTIME_PACKAGE = "dev.erst.gridgrind.engine.runtime..";
-  private static final String EXCEL_PACKAGE = "dev.erst.gridgrind.excel..";
+  private static final String[] NATIVE_PACKAGES = {
+    "dev.erst.gridgrind.engine.backend..", "dev.erst.gridgrind.engine.poi..",
+    "dev.erst.gridgrind.engine.cells..", "dev.erst.gridgrind.engine.styles..",
+    "dev.erst.gridgrind.engine.formulas..", "dev.erst.gridgrind.engine.tables..",
+    "dev.erst.gridgrind.engine.autofilter..", "dev.erst.gridgrind.engine.validation..",
+    "dev.erst.gridgrind.engine.conditionalformatting..", "dev.erst.gridgrind.engine.charts..",
+    "dev.erst.gridgrind.engine.pivots..", "dev.erst.gridgrind.engine.drawing..",
+    "dev.erst.gridgrind.engine.comments..", "dev.erst.gridgrind.engine.links..",
+    "dev.erst.gridgrind.engine.names..", "dev.erst.gridgrind.engine.print..",
+    "dev.erst.gridgrind.engine.layout..", "dev.erst.gridgrind.engine.protection..",
+    "dev.erst.gridgrind.engine.security..", "dev.erst.gridgrind.engine.customxml..",
+    "dev.erst.gridgrind.engine.packaging.."
+  };
   private static final String ENGINE_API_RUNTIME_BRIDGE_PATTERN =
       "^dev\\.erst\\.gridgrind\\.engine\\.api\\."
           + "(GridGrindEngine(\\$.*)?|GridGrindProblems|GridGrindRequestRequirements)$";
@@ -59,11 +71,24 @@ enum ProductDependencyArchitectureRules {
   static ArchRule workbookImplementationDoesNotDependOnExecutionRuntime() {
     return noClasses()
         .that()
-        .resideInAPackage(EXCEL_PACKAGE)
+        .resideInAnyPackage(NATIVE_PACKAGES)
         .should()
         .dependOnClassesThat()
         .resideInAPackage(ENGINE_RUNTIME_PACKAGE)
         .because("workbook mechanics sit below request execution and orchestration");
+  }
+
+  static ArchRule poiDependenciesStayInNativeAdapters() {
+    return noClasses()
+        .that()
+        .resideInAPackage("dev.erst.gridgrind.engine..")
+        .and()
+        .resideOutsideOfPackages(NATIVE_PACKAGES)
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage("org.apache.poi..", "org.openxmlformats..")
+        .because(
+            "runtime, publication and API use native operations without depending on POI types");
   }
 
   static ArchRule engineApiRuntimeDependenciesStayInOwnedBridges() {

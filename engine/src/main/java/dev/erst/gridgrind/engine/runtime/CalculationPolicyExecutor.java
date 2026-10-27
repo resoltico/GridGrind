@@ -7,7 +7,7 @@ import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -41,7 +41,7 @@ final class CalculationPolicyExecutor {
         new CalculationReport.Execution(CalculationExecutionStatus.NOT_REQUESTED, 0, false, false));
   }
 
-  static PreflightOutcome preflight(ExcelWorkbook workbook, CalculationPolicySpec policy) {
+  static PreflightOutcome preflight(XssfWorkbook workbook, CalculationPolicySpec policy) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     CalculationPolicySpec effective = normalize(policy);
     return switch (effective.effectiveStrategy()) {
@@ -58,7 +58,7 @@ final class CalculationPolicyExecutor {
   }
 
   static ExecutionOutcome execute(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       CalculationPolicySpec policy,
       int evaluationTargetCount,
       boolean hasUnevaluableFormula) {
@@ -88,18 +88,18 @@ final class CalculationPolicyExecutor {
     return new CalculationReport(normalize(policy), preflight, execution);
   }
 
-  private static PreflightOutcome preflightAll(ExcelWorkbook workbook) {
+  private static PreflightOutcome preflightAll(XssfWorkbook workbook) {
     List<CalculationReport.FormulaCapability> assessments =
         workbook.formulas().assessAllCapabilities();
     return buildPreflightOutcome(CalculationReport.Scope.WORKBOOK, assessments);
   }
 
-  private static PreflightOutcome preflightLenientAll(ExcelWorkbook workbook) {
+  private static PreflightOutcome preflightLenientAll(XssfWorkbook workbook) {
     return withoutBlockingFailure(preflightAll(workbook));
   }
 
   private static PreflightOutcome preflightTargets(
-      ExcelWorkbook workbook, CalculationStrategySpec.EvaluateTargets strategy) {
+      XssfWorkbook workbook, CalculationStrategySpec.EvaluateTargets strategy) {
     List<FormulaCellTarget> targets = strategy.cells();
     List<CalculationReport.FormulaCapability> assessments =
         workbook.formulas().assessCapabilities(targets);
@@ -107,7 +107,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static PreflightOutcome preflightLenientTargets(
-      ExcelWorkbook workbook, CalculationStrategySpec.EvaluateTargets strategy) {
+      XssfWorkbook workbook, CalculationStrategySpec.EvaluateTargets strategy) {
     return withoutBlockingFailure(preflightTargets(workbook, strategy));
   }
 
@@ -149,7 +149,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeDoNotCalculate(
-      ExcelWorkbook workbook, CalculationPolicySpec policy) {
+      XssfWorkbook workbook, CalculationPolicySpec policy) {
     boolean marked = false;
     if (policy.markRecalculateOnOpen()) {
       workbook.formulas().markRecalculateOnOpen();
@@ -162,7 +162,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeDeferred(
-      ExcelWorkbook workbook, CalculationPolicySpec policy) {
+      XssfWorkbook workbook, CalculationPolicySpec policy) {
     boolean marked = false;
     if (policy.markRecalculateOnOpen()) {
       workbook.formulas().markRecalculateOnOpen();
@@ -175,7 +175,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeClearCachesOnly(
-      ExcelWorkbook workbook, CalculationPolicySpec policy) {
+      XssfWorkbook workbook, CalculationPolicySpec policy) {
     try {
       workbook.formulas().clearCaches();
       boolean marked = false;
@@ -199,7 +199,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeEvaluateAll(
-      ExcelWorkbook workbook, CalculationPolicySpec policy, int evaluationTargetCount) {
+      XssfWorkbook workbook, CalculationPolicySpec policy, int evaluationTargetCount) {
     try {
       workbook.formulas().evaluateAll();
       boolean marked = false;
@@ -224,7 +224,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeEvaluateTargets(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       CalculationPolicySpec policy,
       CalculationStrategySpec.EvaluateTargets strategy,
       int evaluationTargetCount) {
@@ -253,7 +253,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executePartial(
-      ExcelWorkbook workbook, CalculationPolicySpec policy) {
+      XssfWorkbook workbook, CalculationPolicySpec policy) {
     boolean marked = false;
     if (policy.markRecalculateOnOpen()) {
       workbook.formulas().markRecalculateOnOpen();

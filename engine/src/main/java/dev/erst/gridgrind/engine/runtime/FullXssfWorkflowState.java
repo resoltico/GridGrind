@@ -8,8 +8,8 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +31,7 @@ final class FullXssfWorkflowState {
   FullXssfWorkflowState(
       ProtocolVersion protocolVersion,
       ResolvedPlan plan,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {

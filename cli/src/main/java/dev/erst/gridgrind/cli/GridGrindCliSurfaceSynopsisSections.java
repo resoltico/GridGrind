@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.core.catalog.GridGrindInspectionContractText;
 import dev.erst.gridgrind.core.catalog.GridGrindOoxmlWriteEncryptionContractText;
 import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import java.util.List;
 
 /** Synopsis-first CLI help sections. */
@@ -142,10 +142,9 @@ final class GridGrindCliSurfaceSynopsisSections {
                     + " bytes); authored text and binary payloads may instead use"
                     + " UTF8_FILE, FILE, or STANDARD_INPUT sources."),
             new CliSurface.DefinitionEntry(
-                "EVENT_READ mode", GridGrindExecutionModeMetadata.eventRead().catalogSummary()),
+                "EVENT_READ mode", BackendCapabilities.eventRead().catalogSummary()),
             new CliSurface.DefinitionEntry(
-                "STREAMING_WRITE mode",
-                GridGrindExecutionModeMetadata.streamingWrite().catalogSummary()),
+                "STREAMING_WRITE mode", BackendCapabilities.streamingWrite().catalogSummary()),
             new CliSurface.DefinitionEntry(
                 "OOXML write encryption", GridGrindOoxmlWriteEncryptionContractText.limitSummary()),
             new CliSurface.DefinitionEntry(

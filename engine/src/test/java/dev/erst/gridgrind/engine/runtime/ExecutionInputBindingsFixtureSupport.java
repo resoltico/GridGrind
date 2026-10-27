@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.engine.backend.xssf.OoxmlSecurityTestSupport;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.IOException;
 import java.nio.file.Path;

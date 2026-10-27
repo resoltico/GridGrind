@@ -3,7 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -25,7 +25,7 @@ public final class WorkbookInvariantChecks {
   }
 
   /** Requires the open workbook to satisfy the structural invariants the fuzzers rely on. */
-  public static void requireWorkbookShape(ExcelWorkbook workbook) {
+  public static void requireWorkbookShape(XssfWorkbook workbook) {
     WorkbookInvariantWorkbookChecks.requireWorkbookShape(workbook);
   }
 

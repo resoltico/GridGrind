@@ -15,10 +15,10 @@ import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.names.NamedRangeAdapter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -203,7 +203,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedDataValidations.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
+    try (XssfWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       for (Map.Entry<String, List<DataValidationEntryReport>> entry :
           expectedDataValidations.entrySet()) {
         List<DataValidationEntryReport> actual =
@@ -225,7 +225,7 @@ final class XlsxRoundTripExpectationVerification {
       XlsxRoundTripExpectedStateSupport.ExpectedWorkbookState expectedWorkbookState,
       Path workbookPath)
       throws IOException {
-    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
+    try (XssfWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       var actualWorkbookSummary =
           XlsxRoundTripExpectedStateSupport.expectedWorkbookSummary(workbook);
       if (!expectedWorkbookState.expectedWorkbookSummary().equals(actualWorkbookSummary)) {
@@ -444,7 +444,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedConditionalFormatting.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
+    try (XssfWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<ConditionalFormattingEntryReport>> entry :
           expectedConditionalFormatting.entrySet()) {
@@ -481,7 +481,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedAutofilters.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
+    try (XssfWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<AutofilterEntryReport>> entry : expectedAutofilters.entrySet()) {
         var actual =
@@ -516,7 +516,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedTables.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
+    try (XssfWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       var actual =
           ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
@@ -611,7 +611,7 @@ final class XlsxRoundTripExpectationVerification {
           new XlsxRoundTripExpectedStateSupport.ExpectedNamedRange(
               scope,
               refersToFormula,
-              ExcelNamedRangeTargets.resolveTarget(refersToFormula, scope).orElse(null)));
+              NamedRangeAdapter.resolveTarget(refersToFormula, scope).orElse(null)));
     }
     return Map.copyOf(actualNamedRanges);
   }

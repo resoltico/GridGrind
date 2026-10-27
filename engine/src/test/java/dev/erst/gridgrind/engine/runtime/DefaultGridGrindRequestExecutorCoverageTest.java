@@ -31,11 +31,11 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.InvalidFormulaException;
-import dev.erst.gridgrind.excel.InvalidRangeAddressException;
-import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
-import dev.erst.gridgrind.excel.WorkbookNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookNotFoundException;
+import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
@@ -48,8 +48,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
   void classifiesExceptionsAndEnrichesExecuteStepContexts() {
     assertEquals(
         GridGrindProblemCode.WORKBOOK_NOT_FOUND,
-        ExecutionResponseSupport.problemCodeFor(
-            new WorkbookNotFoundException(Path.of("/tmp/missing.xlsx"))));
+        GridGrindProblems.codeFor(new WorkbookNotFoundException(Path.of("/tmp/missing.xlsx"))));
 
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep context =
         new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
@@ -65,7 +64,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep enrichedFormula =
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
-            ExecutionResponseSupport.enrichContext(context, invalidFormula));
+            GridGrindProblems.enrichContext(context, invalidFormula));
     assertEquals(
         java.util.Optional.of("Budget"),
         enrichedFormula.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
@@ -75,14 +74,14 @@ class DefaultGridGrindRequestExecutorCoverageTest
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep enrichedRange =
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
-            ExecutionResponseSupport.enrichContext(
+            GridGrindProblems.enrichContext(
                 context, new InvalidRangeAddressException("A1:B2", null)));
     assertEquals(java.util.Optional.of("A1:B2"), enrichedRange.range());
 
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep enrichedNamedRange =
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
-            ExecutionResponseSupport.enrichContext(
+            GridGrindProblems.enrichContext(
                 context,
                 new NamedRangeNotFoundException(
                     "BudgetTotal", new NamedRangeScopeReport.Workbook())));

@@ -45,8 +45,8 @@ import dev.erst.gridgrind.core.source.BinarySourceSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -511,7 +511,7 @@ final class ExecutorTestPlanSupport {
 
   static Path createWorkbookFile(String prefix) throws IOException {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook.sheet("Budget").cells().setCell("A1", new CellValue.Text("Header"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);

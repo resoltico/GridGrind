@@ -14,10 +14,10 @@ import org.jspecify.annotations.Nullable;
 /** Applies the host-owned conditions that a full-XSSF plan cannot weaken or bypass. */
 final class FullXssfHostAcceptance {
   private final HostAcceptanceExecutor acceptanceExecutor;
-  private final ExecutionCalculationSupport calculationSupport;
+  private final CalculationWorkflow calculationSupport;
 
   FullXssfHostAcceptance(
-      HostAcceptanceExecutor acceptanceExecutor, ExecutionCalculationSupport calculationSupport) {
+      HostAcceptanceExecutor acceptanceExecutor, CalculationWorkflow calculationSupport) {
     this.acceptanceExecutor = acceptanceExecutor;
     this.calculationSupport = calculationSupport;
   }
@@ -42,7 +42,7 @@ final class FullXssfHostAcceptance {
         new CalculationPolicySpec(
             new CalculationStrategySpec.RequireEvaluation(),
             state.executionContext().request().calculationPolicy().markRecalculateOnOpen());
-    ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
+    CalculationWorkflow.CalculationExecutionOutcome outcome =
         calculationSupport.executeCalculationPolicy(
             state.executionContext().workbook(),
             state.executionContext().request(),

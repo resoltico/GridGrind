@@ -158,10 +158,10 @@ import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableLabel;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -510,7 +510,7 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithNamedRanges() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("B4", new CellValue.NumberValue(61.0));
       workbook
           .names()
@@ -528,13 +528,13 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithB1SheetState() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
       workbook.sheets().setActiveSheet("Beta");
       workbook.sheets().setSelectedSheets(List.of("Alpha", "Beta"));
       workbook.sheets().setSheetVisibility("Alpha", ExcelSheetVisibility.HIDDEN);
-      workbook.sheets().setSheetProtection("Beta", protectionSettings());
+      workbook.protection().setSheetProtection("Beta", protectionSettings());
 
       assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
     }
@@ -1136,7 +1136,7 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithCharts() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops").cells().setCell("A1", new CellValue.Text("Month"));
       workbook.getOrCreateSheet("Ops").cells().setCell("B1", new CellValue.Text("Actual"));
       workbook.getOrCreateSheet("Ops").cells().setCell("A2", new CellValue.Text("Jan"));
@@ -1187,7 +1187,7 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithPivots() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Month"));
       workbook.getOrCreateSheet("Budget").cells().setCell("B1", new CellValue.Text("Actual"));
       workbook.getOrCreateSheet("Budget").cells().setCell("A2", new CellValue.Text("Jan"));

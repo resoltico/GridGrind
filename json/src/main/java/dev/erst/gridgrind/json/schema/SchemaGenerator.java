@@ -156,7 +156,7 @@ final class SchemaGenerator {
     }
     Variant variant = type.getAnnotation(Variant.class);
     if (variant != null) {
-      schema.put("description", variant.summary());
+      schema.put("description", ProtocolTypeMetadataSupport.summary(type));
       String discriminator = discriminator(type);
       if (!discriminator.isEmpty()) {
         properties.putObject(discriminator).put("const", variant.id());

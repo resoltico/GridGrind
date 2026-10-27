@@ -26,7 +26,7 @@ final class ProductAssuranceArchitectureRules {
   private static final String REQUEST_PATH_PUBLICATION =
       "dev.erst.gridgrind.engine.runtime.RequestPathPublication";
   private static final String PUBLICATION_FILE_SUPPORT =
-      "dev.erst.gridgrind.engine.runtime.RequestPathPublicationFileSupport";
+      "dev.erst.gridgrind.engine.runtime.PublicationFileOperations";
 
   private static final ArchCondition<JavaClass> USE_CANONICAL_OPERATION_CONTRACTS =
       ArchConditions.dependOnClassesThat(

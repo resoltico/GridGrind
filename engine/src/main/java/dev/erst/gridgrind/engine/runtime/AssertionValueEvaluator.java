@@ -9,8 +9,8 @@ import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,7 +27,7 @@ final class AssertionValueEvaluator {
       Selector target,
       String assertionType,
       boolean shouldExist,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     List<InspectionResult> observationList =
         List.of(observations.presenceObservation(stepId, target, workbook, workbookLocation));
@@ -50,7 +50,7 @@ final class AssertionValueEvaluator {
       StepId stepId,
       Selector target,
       CellValue expectedValue,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     SheetInspectionResult.CellsResult cellsResult =
         (SheetInspectionResult.CellsResult)
@@ -81,7 +81,7 @@ final class AssertionValueEvaluator {
       StepId stepId,
       Selector target,
       String expectedDisplayValue,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     SheetInspectionResult.CellsResult cellsResult =
         (SheetInspectionResult.CellsResult)
@@ -112,7 +112,7 @@ final class AssertionValueEvaluator {
       StepId stepId,
       Selector target,
       String expectedFormula,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     SheetInspectionResult.CellsResult cellsResult =
         (SheetInspectionResult.CellsResult)
@@ -149,7 +149,7 @@ final class AssertionValueEvaluator {
       StepId stepId,
       Selector target,
       CellStyleReport expectedStyle,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     SheetInspectionResult.CellsResult cellsResult =
         (SheetInspectionResult.CellsResult)

@@ -41,7 +41,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.source.*;
-import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.engine.backend.xssf.*;
 import java.nio.file.*;
 import java.util.*;
 

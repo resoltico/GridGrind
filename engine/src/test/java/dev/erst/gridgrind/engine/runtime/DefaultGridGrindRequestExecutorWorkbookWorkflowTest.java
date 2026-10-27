@@ -88,11 +88,11 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.XlsxRoundTrip;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XlsxRoundTrip;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -570,7 +570,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void opensExistingWorkbookAndOverwritesSource() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-existing-", ".xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Before"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
@@ -901,7 +901,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   @Test
   void returnsFactualMalformedPositiveLayoutValuesWithoutClampingReadback() throws IOException {
     Path sourceWorkbook = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-factual-source-");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Layout");
       workbook.sheet("Layout").cells().setCell("A1", new CellValue.Text("Header"));
       workbook.sheet("Layout").columns().setWidth(0, 0, 16.0d);
@@ -909,7 +909,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     }
 
     Path malformedWorkbook =
-        dev.erst.gridgrind.excel.OoxmlPartMutator.rewriteEntries(
+        dev.erst.gridgrind.engine.backend.xssf.OoxmlPartMutator.rewriteEntries(
             sourceWorkbook,
             Map.of(
                 "xl/worksheets/sheet1.xml",
@@ -1054,7 +1054,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
 
-    try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
+    try (XssfWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       assertEquals("Spacer", workbook.sheet("Moves").cells().text("A2"));
       assertEquals("Pad", workbook.sheet("Moves").cells().text("B1"));
       assertEquals("Hosting", workbook.sheet("Moves").cells().text("A3"));
@@ -1427,7 +1427,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(1, health.analysis().checkedConditionalFormattingBlockCount());
     assertEquals(List.of(), health.analysis().findings());
 
-    try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
+    try (XssfWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult reopened =
           (dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult)
@@ -1567,7 +1567,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(1, tableHealth.analysis().checkedTableCount());
     assertEquals(List.of(), tableHealth.analysis().findings());
 
-    try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
+    try (XssfWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult reopenedFilters =
           (dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult)

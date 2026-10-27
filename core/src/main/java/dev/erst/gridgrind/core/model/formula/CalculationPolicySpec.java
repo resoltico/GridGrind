@@ -36,7 +36,8 @@ public record CalculationPolicySpec(
 
   /** Returns whether this policy normalizes to the default do-not-calculate behavior. */
   public boolean isDefault() {
-    return strategy instanceof CalculationStrategySpec.DoNotCalculate && !markRecalculateOnOpen;
+    return dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+        .allowsCalculation(this);
   }
 
   /** Returns the normalized strategy after applying GridGrind defaults. */
@@ -46,12 +47,14 @@ public record CalculationPolicySpec(
 
   /** Returns whether this policy permits the constrained EVENT_READ execution family. */
   public boolean allowsEventRead() {
-    return strategy instanceof CalculationStrategySpec.DoNotCalculate && !markRecalculateOnOpen;
+    return dev.erst.gridgrind.core.semantics.BackendCapabilities.eventRead()
+        .allowsCalculation(this);
   }
 
   /** Returns whether this policy permits the constrained STREAMING_WRITE execution family. */
   public boolean allowsStreamingWrite() {
-    return strategy instanceof CalculationStrategySpec.DoNotCalculate;
+    return dev.erst.gridgrind.core.semantics.BackendCapabilities.streamingWrite()
+        .allowsCalculation(this);
   }
 
   /** Returns whether this policy needs all mutation steps before observation steps. */

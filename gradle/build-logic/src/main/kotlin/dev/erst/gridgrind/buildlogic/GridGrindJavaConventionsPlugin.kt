@@ -12,7 +12,6 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.gradle.api.plugins.quality.Pmd
 import org.gradle.api.plugins.quality.PmdExtension
-import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
@@ -179,27 +178,14 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     },
                 )
 
-            val jacocoExecutionData = objects.fileCollection()
-            val cleanJacocoExecutionData =
-                tasks.register("cleanJacocoExecutionData", Delete::class.java) { cleanTask: Delete ->
-                    cleanTask.group = LifecycleBasePlugin.VERIFICATION_GROUP
-                    cleanTask.description =
-                        "Removes stale JaCoCo execution data before generating fresh coverage evidence."
-                    cleanTask.outputs.upToDateWhen { false }
-                    cleanTask.delete(jacocoExecutionData)
-                }
             tasks.withType(Test::class.java).configureEach(
                 object : Action<Test> {
                     override fun execute(test: Test) {
                         val jacocoDestinationFile = jacocoExecutionDataFile(test)
                         val jacoco = test.extensions.getByType(JacocoTaskExtension::class.java)
                         jacoco.destinationFile = jacocoDestinationFile
-                        jacocoExecutionData.from(jacocoDestinationFile)
                         test.outputs.file(jacocoDestinationFile)
-                        test.outputs.doNotCacheIf(
-                            "JaCoCo verification requires fresh execution data after it is cleared.",
-                        ) { true }
-                        test.mustRunAfter(cleanJacocoExecutionData)
+                        // Reuse execution data only with the test task's unchanged inputs/output.
                         test.doFirst {
                             jacocoDestinationFile.parentFile.mkdirs()
                             if (jacocoDestinationFile.exists()) {
@@ -243,7 +229,6 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.named("jacocoTestReport", JacocoReport::class.java).configure(
                 object : Action<JacocoReport> {
                     override fun execute(report: JacocoReport) {
-                        report.dependsOn(cleanJacocoExecutionData)
                         report.dependsOn(tasks.withType(Test::class.java))
                         report.executionData.from(
                             tasks.withType(Test::class.java).map { testTask ->

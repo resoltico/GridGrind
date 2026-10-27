@@ -11,8 +11,8 @@ import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,7 +28,7 @@ final class AssertionFactEvaluator {
       StepId stepId,
       Selector target,
       dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport expectedProtection,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookInspectionResult.WorkbookProtectionResult result =
         (WorkbookInspectionResult.WorkbookProtectionResult)
@@ -48,7 +48,7 @@ final class AssertionFactEvaluator {
       StepId stepId,
       Selector target,
       SheetSummaryReport expectedSheet,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     SheetInspectionResult.SheetSummaryResult result =
         (SheetInspectionResult.SheetSummaryResult)
@@ -68,7 +68,7 @@ final class AssertionFactEvaluator {
       StepId stepId,
       Selector target,
       List<NamedRangeReport> expectedNamedRanges,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookInspectionResult.NamedRangesResult result =
         (WorkbookInspectionResult.NamedRangesResult)
@@ -88,7 +88,7 @@ final class AssertionFactEvaluator {
       StepId stepId,
       Selector target,
       List<dev.erst.gridgrind.core.model.table.TableEntryReport> expectedTables,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAssetInspectionResult.TablesResult result =
         (WorkbookAssetInspectionResult.TablesResult)
@@ -108,7 +108,7 @@ final class AssertionFactEvaluator {
       StepId stepId,
       Selector target,
       List<dev.erst.gridgrind.core.model.pivot.PivotTableReport> expectedPivotTables,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAssetInspectionResult.PivotTablesResult result =
         (WorkbookAssetInspectionResult.PivotTablesResult)
@@ -128,7 +128,7 @@ final class AssertionFactEvaluator {
       StepId stepId,
       Selector target,
       List<ChartReport> expectedCharts,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAssetInspectionResult.ChartsResult result =
         (WorkbookAssetInspectionResult.ChartsResult)

@@ -7,10 +7,10 @@ import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.JazzerFilesystemSupport;
@@ -228,7 +228,7 @@ public final class JazzerReplaySupport {
     List<ResolvedStep> commands = List.of();
     try {
       commands = OperationSequenceModel.nextWorkbookCommands(data);
-      try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      try (XssfWorkbook workbook = XssfWorkbooks.create()) {
         new WorkbookExecutionEngine().apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
       }
@@ -258,7 +258,7 @@ public final class JazzerReplaySupport {
       commands = OperationSequenceModel.nextWorkbookCommands(data);
       directory = Files.createTempDirectory("gridgrind-jazzer-replay-");
       Path workbookPath = directory.resolve("workbook.xlsx");
-      try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      try (XssfWorkbook workbook = XssfWorkbooks.create()) {
         new WorkbookExecutionEngine().apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
         JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);

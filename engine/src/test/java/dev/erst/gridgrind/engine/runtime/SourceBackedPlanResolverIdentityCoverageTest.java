@@ -54,12 +54,8 @@ import org.junit.jupiter.api.Test;
 class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResolverTestSupport {
   @Test
   void sameOptionalReferenceDistinguishesPresenceMismatches() throws Exception {
-    assertTrue(
-        SourceBackedResolutionIdentitySupport.sameOptionalReference(
-            Optional.empty(), Optional.empty()));
-    assertFalse(
-        SourceBackedResolutionIdentitySupport.sameOptionalReference(
-            Optional.of("left"), Optional.empty()));
+    assertTrue(ResolutionIdentity.sameOptionalReference(Optional.empty(), Optional.empty()));
+    assertFalse(ResolutionIdentity.sameOptionalReference(Optional.of("left"), Optional.empty()));
   }
 
   @Test

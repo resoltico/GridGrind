@@ -13,9 +13,9 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +36,8 @@ class FullXssfWorkflowTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of());
-    ExecutionCalculationSupport calculationSupport = new ExecutionCalculationSupport(writer -> {});
-    ExecutionResponseSupport responseSupport = responseSupport();
+    CalculationWorkflow calculationSupport = new CalculationWorkflow(writer -> {});
+    ExecutionResults responseSupport = responseSupport();
     FullXssfWorkflow workflow =
         new FullXssfWorkflow(
             calculationSupport,
@@ -65,18 +65,19 @@ class FullXssfWorkflowTest {
                         new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
                             List.of("/customXml/item1.xml"))))));
 
-    try (var workbook = ExcelWorkbooks.create()) {
+    try (var workbook = XssfWorkbooks.create()) {
       WorkbookResult.Failure failure =
           assertInstanceOf(
               WorkbookResult.Failure.class,
               workflow.execute(
-                  ProtocolVersion.CURRENT,
-                  MutationResolution.preparePlan(request),
-                  workbook,
-                  new ExecutionModeSpec.FullXssf(),
-                  new ArrayList<>(),
-                  ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                  bindings));
+                  new FullXssfWorkflow.Call(
+                      ProtocolVersion.CURRENT,
+                      MutationResolution.preparePlan(request),
+                      workbook,
+                      new ExecutionModeSpec.FullXssf(),
+                      new ArrayList<>(),
+                      ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
+                      bindings)));
 
       assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     }
@@ -94,8 +95,8 @@ class FullXssfWorkflowTest {
     AcceptancePolicy policy =
         new AcceptancePolicy.RequireAll(
             List.of(new AcceptancePolicy.Requirement.RequireCalculation()));
-    ExecutionCalculationSupport calculationSupport = new ExecutionCalculationSupport(writer -> {});
-    ExecutionResponseSupport responseSupport = responseSupport();
+    CalculationWorkflow calculationSupport = new CalculationWorkflow(writer -> {});
+    ExecutionResults responseSupport = responseSupport();
     FullXssfWorkflow workflow =
         new FullXssfWorkflow(
             calculationSupport,
@@ -121,19 +122,20 @@ class FullXssfWorkflowTest {
                 List.of(),
                 policy));
 
-    try (var workbook = ExcelWorkbooks.create()) {
+    try (var workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("A1+1"));
 
       assertInstanceOf(
           WorkbookResult.Failure.class,
           workflow.execute(
-              ProtocolVersion.CURRENT,
-              MutationResolution.preparePlan(request),
-              workbook,
-              new ExecutionModeSpec.FullXssf(),
-              new ArrayList<>(),
-              ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-              bindings));
+              new FullXssfWorkflow.Call(
+                  ProtocolVersion.CURRENT,
+                  MutationResolution.preparePlan(request),
+                  workbook,
+                  new ExecutionModeSpec.FullXssf(),
+                  new ArrayList<>(),
+                  ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
+                  bindings)));
     }
   }
 
@@ -151,10 +153,9 @@ class FullXssfWorkflowTest {
             root, root.resolve("scratch"), ExecutionGrantTestSupport.noPublication());
     FullXssfHostAcceptance acceptance =
         new FullXssfHostAcceptance(
-            new HostAcceptanceExecutor(stepSupport()),
-            new ExecutionCalculationSupport(writer -> {}));
+            new HostAcceptanceExecutor(stepSupport()), new CalculationWorkflow(writer -> {}));
 
-    try (var workbook = ExcelWorkbooks.create()) {
+    try (var workbook = XssfWorkbooks.create()) {
       FullXssfWorkflowState state =
           new FullXssfWorkflowState(
               ProtocolVersion.CURRENT,
@@ -171,10 +172,10 @@ class FullXssfWorkflowTest {
     }
   }
 
-  private ExecutionStepSupport stepSupport() {
+  private StepExecution stepSupport() {
     WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
-    return new ExecutionStepSupport(
+    return new StepExecution(
         workbookEngine,
         selectorResolver,
         new AssertionExecutor(workbookEngine, selectorResolver),
@@ -183,8 +184,9 @@ class FullXssfWorkflowTest {
             root, root.resolve("scratch"), ExecutionGrantTestSupport.noPublication()));
   }
 
-  private static ExecutionResponseSupport responseSupport() {
-    return new ExecutionResponseSupport(
-        dev.erst.gridgrind.excel.ExcelWorkbook::close, materialized -> materialized.close());
+  private static ExecutionResults responseSupport() {
+    return new ExecutionResults(
+        dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook::close,
+        materialized -> materialized.close());
   }
 }

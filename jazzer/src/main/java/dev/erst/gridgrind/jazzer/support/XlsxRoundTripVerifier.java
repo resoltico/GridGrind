@@ -20,8 +20,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -51,7 +51,7 @@ public final class XlsxRoundTripVerifier {
 
   /** Requires the saved workbook to reopen and preserve bounded structural and style invariants. */
   public static void requireRoundTripReadable(
-      ExcelWorkbook workbook, Path workbookPath, List<ResolvedStep> commands) throws IOException {
+      XssfWorkbook workbook, Path workbookPath, List<ResolvedStep> commands) throws IOException {
     if (workbook == null) {
       throw new IllegalArgumentException("workbook must not be null");
     }
@@ -163,7 +163,7 @@ public final class XlsxRoundTripVerifier {
   }
 
   static CellStyleReport defaultStyleSnapshot() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Default");
       return workbook.sheet("Default").cells().snapshotCell("A1").style().orElseThrow();
     }

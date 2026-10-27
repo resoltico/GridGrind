@@ -3,9 +3,9 @@ package dev.erst.gridgrind.jazzer.engine;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import dev.erst.gridgrind.core.plan.ResolvedStep;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;
 import dev.erst.gridgrind.jazzer.support.JazzerFilesystemSupport;
@@ -42,7 +42,7 @@ class XlsxRoundTripFuzzTest {
     Path workbookPath = directory.resolve("workbook.xlsx");
 
     try {
-      try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      try (XssfWorkbook workbook = XssfWorkbooks.create()) {
         WorkbookExecutionEngine executor = new WorkbookExecutionEngine();
         try {
           executor.apply(workbook, commands);

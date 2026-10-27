@@ -14,8 +14,8 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,7 +47,7 @@ class ExecutionStreamingWorkflowTest {
               throw new WorkbookPublicationException(
                   publication, new IOException("publication failed"));
             },
-            new ExecutionCalculationSupport(writer -> {}),
+            new CalculationWorkflow(writer -> {}),
             stepSupport(),
             WorkbookTempFileFactory.rooted(root.resolve("scratch"))::createTempFile);
     ExecutionInputBindings bindings =
@@ -66,12 +66,13 @@ class ExecutionStreamingWorkflowTest {
         assertInstanceOf(
             WorkbookResult.Failure.class,
             workflow.execute(
-                ProtocolVersion.CURRENT,
-                MutationResolution.preparePlan(request),
-                new ExecutionModeSpec.StreamingWrite(),
-                List.of(),
-                ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                bindings));
+                new ExecutionStreamingWorkflow.Call(
+                    ProtocolVersion.CURRENT,
+                    MutationResolution.preparePlan(request),
+                    new ExecutionModeSpec.StreamingWrite(),
+                    List.of(),
+                    ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
+                    bindings)));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals(
@@ -92,7 +93,7 @@ class ExecutionStreamingWorkflowTest {
             (staged, persistence, source, bindings, acceptance) -> {
               throw new IOException("storage unavailable");
             },
-            new ExecutionCalculationSupport(writer -> {}),
+            new CalculationWorkflow(writer -> {}),
             stepSupport(),
             WorkbookTempFileFactory.rooted(root.resolve("scratch"))::createTempFile);
 
@@ -100,12 +101,13 @@ class ExecutionStreamingWorkflowTest {
         assertInstanceOf(
             WorkbookResult.Failure.class,
             workflow.execute(
-                ProtocolVersion.CURRENT,
-                MutationResolution.preparePlan(request),
-                new ExecutionModeSpec.StreamingWrite(),
-                List.of(),
-                ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                bindings()));
+                new ExecutionStreamingWorkflow.Call(
+                    ProtocolVersion.CURRENT,
+                    MutationResolution.preparePlan(request),
+                    new ExecutionModeSpec.StreamingWrite(),
+                    List.of(),
+                    ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
+                    bindings())));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertTrue(Files.notExists(output));
@@ -134,10 +136,10 @@ class ExecutionStreamingWorkflowTest {
             AcceptancePolicy.minimum()));
   }
 
-  private ExecutionStepSupport stepSupport() {
+  private StepExecution stepSupport() {
     WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
-    return new ExecutionStepSupport(
+    return new StepExecution(
         workbookEngine,
         selectorResolver,
         new AssertionExecutor(workbookEngine, selectorResolver),

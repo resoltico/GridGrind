@@ -16,7 +16,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.ResolvedStep;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ final class XlsxRoundTripExpectedStateSupport {
   private XlsxRoundTripExpectedStateSupport() {}
 
   static ExpectedWorkbookState expectedWorkbookState(
-      ExcelWorkbook workbook, List<ResolvedStep> commands) throws IOException {
+      XssfWorkbook workbook, List<ResolvedStep> commands) throws IOException {
     ExpectedWorkbookFootprint footprint =
         XlsxRoundTripExpectedFootprintSupport.expectedWorkbookFootprint(commands);
     Map<String, List<CellReport>> candidateSnapshots =
@@ -53,7 +53,7 @@ final class XlsxRoundTripExpectedStateSupport {
   }
 
   static dev.erst.gridgrind.core.result.WorkbookSummary expectedWorkbookSummary(
-      ExcelWorkbook workbook) {
+      XssfWorkbook workbook) {
     return XlsxRoundTripExpectedWorkbookSurfaceSupport.expectedWorkbookSummary(workbook);
   }
 

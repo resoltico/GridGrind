@@ -8,8 +8,6 @@ final class EngineImplementationTypeClassifier {
     String packageName = javaClass.getPackageName();
     return (isInOrBelow(packageName, "dev.erst.gridgrind.engine")
             && !isInOrBelow(packageName, "dev.erst.gridgrind.engine.api"))
-        || (isInOrBelow(packageName, "dev.erst.gridgrind.excel")
-            && !isInOrBelow(packageName, "dev.erst.gridgrind.core.vocabulary"))
         || isInOrBelow(packageName, "org.apache.poi")
         || isInOrBelow(packageName, "org.openxmlformats");
   }

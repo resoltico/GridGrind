@@ -14,8 +14,8 @@ import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
 import dev.erst.gridgrind.core.model.security.ResolvedSignature;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -252,7 +252,7 @@ final class ExecutionRequestPaths {
           input.digestAlgorithm(),
           input.description());
     } catch (java.nio.file.NoSuchFileException exception) {
-      throw new dev.erst.gridgrind.excel.InvalidSigningConfigurationException(
+      throw new dev.erst.gridgrind.engine.backend.xssf.InvalidSigningConfigurationException(
           "Signing material does not exist: " + input.pkcs12Path(), exception);
     }
   }

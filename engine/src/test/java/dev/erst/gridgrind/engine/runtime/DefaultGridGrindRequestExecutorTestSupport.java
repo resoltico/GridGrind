@@ -16,8 +16,8 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -255,7 +255,7 @@ class DefaultGridGrindRequestExecutorTestSupport
     return ExecutionContextFixtureSupport.tempFileFactoryFor(anchoredPath);
   }
 
-  static ExecutionWorkbookSupport workbookSupport(Path workingDirectory) {
+  static WorkbookLifecycle workbookSupport(Path workingDirectory) {
     return ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
   }
 
@@ -277,7 +277,7 @@ class DefaultGridGrindRequestExecutorTestSupport
     return ExecutionContextFixtureSupport.execute(executor, request, workingDirectory);
   }
 
-  static void saveWorkbook(ExcelWorkbook workbook, Path workbookPath) throws IOException {
+  static void saveWorkbook(XssfWorkbook workbook, Path workbookPath) throws IOException {
     ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
   }
 

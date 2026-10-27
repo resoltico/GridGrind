@@ -31,19 +31,21 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.tables.TableAdapter;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for semantic selector resolution beyond end-to-end executor workflows. */
 class SemanticSelectorResolverTest {
   private final SemanticSelectorResolver resolver =
-      new SemanticSelectorResolver(new dev.erst.gridgrind.excel.WorkbookExecutionEngine());
+      new SemanticSelectorResolver(
+          new dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine());
 
   @Test
   void resolvesSemanticExactCellTargetsAcrossSupportedKeyKinds() throws IOException {
-    try (ExcelWorkbook workbook = workbookWithSemanticTables()) {
+    try (XssfWorkbook workbook = workbookWithSemanticTables()) {
       assertResolvedAddress(textAmountCellTarget(), workbook, "Texts", "B2");
       assertResolvedAddress(textAmountCellTargetOnSheet(), workbook, "Texts", "B2");
       assertResolvedAddress(blankAmountCellTarget(), workbook, "Blanks", "B2");
@@ -69,7 +71,7 @@ class SemanticSelectorResolverTest {
 
   @Test
   void returnsDirectTargetsWhenResolutionIsNotRequired() throws IOException {
-    try (ExcelWorkbook workbook = workbookWithSemanticTables()) {
+    try (XssfWorkbook workbook = workbookWithSemanticTables()) {
       CellSelector.ByAddress directCell =
           new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"));
       assertSame(
@@ -103,7 +105,7 @@ class SemanticSelectorResolverTest {
 
   @Test
   void shortCircuitsZeroMatchExactCellInspectionsAcrossSupportedQueries() throws IOException {
-    try (ExcelWorkbook workbook = workbookWithSemanticTables()) {
+    try (XssfWorkbook workbook = workbookWithSemanticTables()) {
       TableCellSelector.ByColumnName missingTarget =
           new TableCellSelector.ByColumnName(
               new TableRowSelector.ByKeyCell(
@@ -159,7 +161,7 @@ class SemanticSelectorResolverTest {
 
   @Test
   void keyedResolutionTreatsNonMatchingSupportedScalarKeysAsZeroMatch() throws IOException {
-    try (ExcelWorkbook workbook = workbookWithSemanticTables()) {
+    try (XssfWorkbook workbook = workbookWithSemanticTables()) {
       assertTrue(
           resolver
               .resolveInspectionTarget(
@@ -269,7 +271,7 @@ class SemanticSelectorResolverTest {
 
   @Test
   void rejectsInvalidSemanticResolutionCasesInsteadOfGuessing() throws IOException {
-    try (ExcelWorkbook workbook = workbookWithSemanticTables()) {
+    try (XssfWorkbook workbook = workbookWithSemanticTables()) {
       IllegalArgumentException missingRow =
           assertThrows(
               IllegalArgumentException.class,
@@ -399,7 +401,7 @@ class SemanticSelectorResolverTest {
 
   private void assertResolvedAddress(
       TableCellSelector.ByColumnName target,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       String expectedSheet,
       String expectedAddress) {
     CellSelector.ByAddress mutationTarget =
@@ -589,8 +591,8 @@ class SemanticSelectorResolverTest {
         "Amount");
   }
 
-  private static ExcelWorkbook workbookWithSemanticTables() throws IOException {
-    ExcelWorkbook workbook = ExcelWorkbooks.create();
+  private static XssfWorkbook workbookWithSemanticTables() throws IOException {
+    XssfWorkbook workbook = XssfWorkbooks.create();
     addTable(
         workbook,
         "Texts",
@@ -624,7 +626,7 @@ class SemanticSelectorResolverTest {
   }
 
   private static void addTable(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       String sheetName,
       String tableName,
       ResolvedCellWrite keyValue,
@@ -634,9 +636,9 @@ class SemanticSelectorResolverTest {
     workbook.sheet(sheetName).cells().setCell("B1", new CellValue.Text("Amount"));
     workbook.sheet(sheetName).cells().setCell("A2", keyValue);
     workbook.sheet(sheetName).cells().setCell("B2", amountValue);
-    workbook
-        .tables()
+    new TableAdapter()
         .setTable(
+            workbook,
             new ResolvedTable(
                 new TableName(tableName),
                 new SheetName(sheetName),
@@ -645,15 +647,15 @@ class SemanticSelectorResolverTest {
                 new TableStyleSpec.None()));
   }
 
-  private static void addWideTable(ExcelWorkbook workbook) {
+  private static void addWideTable(XssfWorkbook workbook) {
     workbook.getOrCreateSheet("Wide");
     workbook.sheet("Wide").cells().setCell("AA1", new CellValue.Text("Item"));
     workbook.sheet("Wide").cells().setCell("AB1", new CellValue.Text("Amount"));
     workbook.sheet("Wide").cells().setCell("AA2", new CellValue.Text("Hosting"));
     workbook.sheet("Wide").cells().setCell("AB2", new CellValue.NumberValue(500.0d));
-    workbook
-        .tables()
+    new TableAdapter()
         .setTable(
+            workbook,
             new ResolvedTable(
                 new TableName("WideTable"),
                 new SheetName("Wide"),

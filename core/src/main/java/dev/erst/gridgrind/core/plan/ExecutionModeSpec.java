@@ -36,10 +36,7 @@ public sealed interface ExecutionModeSpec {
   }
 
   /** Standard full-memory read/write execution mode with no special restrictions. */
-  @Variant(
-      id = "FULL_XSSF",
-      summary =
-          "Standard full workbook read and write execution with no special low-memory restrictions.")
+  @Variant(id = "FULL_XSSF")
   record FullXssf() implements ExecutionModeSpec {
     @Override
     public String modeType() {
@@ -48,10 +45,7 @@ public sealed interface ExecutionModeSpec {
   }
 
   /** Low-memory summary-read execution mode with inspection-only constraints. */
-  @Variant(
-      id = "EVENT_READ",
-      summary =
-          "GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false.")
+  @Variant(id = "EVENT_READ")
   record EventRead() implements ExecutionModeSpec {
     @Override
     public String modeType() {
@@ -60,10 +54,7 @@ public sealed interface ExecutionModeSpec {
   }
 
   /** Low-memory append-write execution mode with streaming mutation constraints. */
-  @Variant(
-      id = "STREAMING_WRITE",
-      summary =
-          "source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true.")
+  @Variant(id = "STREAMING_WRITE")
   record StreamingWrite() implements ExecutionModeSpec {
     @Override
     public String modeType() {

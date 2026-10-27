@@ -8,8 +8,8 @@ import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,7 +27,7 @@ final class AssertionAnalysisEvaluator {
       Selector target,
       InspectionQuery query,
       AnalysisSeverity maximumSeverity,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAnalysisResult result =
         (WorkbookAnalysisResult)
@@ -51,7 +51,7 @@ final class AssertionAnalysisEvaluator {
       Optional<AnalysisSeverity> severity,
       Optional<String> messageContains,
       boolean shouldExist,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAnalysisResult result =
         (WorkbookAnalysisResult)

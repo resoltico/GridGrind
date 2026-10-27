@@ -14,8 +14,8 @@ public @interface Variant {
   /** Stable SCREAMING_SNAKE_CASE discriminator id for the protocol leaf. */
   String id();
 
-  /** Public catalog/help summary for the protocol leaf. */
-  String summary();
+  /** Public catalog/help summary; execution modes derive it from backend capabilities. */
+  String summary() default "";
 
   /** Shared static effects and footprint selected for this operation. */
   dev.erst.gridgrind.core.semantics.OperationProfile profile() default

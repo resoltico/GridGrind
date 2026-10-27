@@ -11,8 +11,8 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -381,7 +381,7 @@ class GridGrindRequestDoctorTest {
   void diagnoseWithBindingsAcceptsExistingWorkbookSourcesWhenOpenSucceeds() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-existing-success-");
     Path workbookPath = workingDirectory.resolve("existing.xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
     WorkbookPlan request =

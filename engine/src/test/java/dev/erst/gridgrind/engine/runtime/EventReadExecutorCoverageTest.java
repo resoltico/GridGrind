@@ -12,8 +12,8 @@ import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -87,11 +87,11 @@ class EventReadExecutorCoverageTest {
                 new DefaultGridGrindRequestExecutor(
                     new DefaultGridGrindRequestExecutorDependencies(
                         new WorkbookExecutionEngine(),
-                        ExcelWorkbook::close,
+                        XssfWorkbook::close,
                         ignored -> {
                           throw new IOException("close failed");
                         },
-                        dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                        dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
                             ::markRecalculateOnOpen)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
@@ -120,11 +120,11 @@ class EventReadExecutorCoverageTest {
                 new DefaultGridGrindRequestExecutor(
                     new DefaultGridGrindRequestExecutorDependencies(
                         new WorkbookExecutionEngine(),
-                        ExcelWorkbook::close,
+                        XssfWorkbook::close,
                         ignored -> {
                           throw new IOException("close failed");
                         },
-                        dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                        dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
                             ::markRecalculateOnOpen)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),

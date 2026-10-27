@@ -42,15 +42,15 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.InvalidCellAddressException;
-import dev.erst.gridgrind.excel.InvalidFormulaException;
-import dev.erst.gridgrind.excel.InvalidRangeAddressException;
-import dev.erst.gridgrind.excel.SheetNotFoundException;
-import dev.erst.gridgrind.excel.UnsupportedFormulaException;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.WorkbookNotFoundException;
-import dev.erst.gridgrind.excel.XlsxRoundTrip;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.XlsxRoundTrip;
+import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
+import dev.erst.gridgrind.engine.formulas.UnsupportedFormulaException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1221,8 +1221,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 workbook -> {
                   throw new IOException("close failed");
                 },
-                dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.MaterializedWorkbook
+                    ::close,
+                dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
     WorkbookResult.Failure failure =
@@ -1252,8 +1253,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 workbook -> {
                   throw new IOException("close failed");
                 },
-                dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.MaterializedWorkbook
+                    ::close,
+                dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
     WorkbookResult.Failure failure =
@@ -1294,20 +1296,20 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   void classifiesProblemCodesAndMessagesDeterministically() {
     assertEquals(
         GridGrindProblemCode.INVALID_CELL_ADDRESS,
-        ExecutionResponseSupport.problemCodeFor(
+        GridGrindProblems.codeFor(
             new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.INVALID_RANGE_ADDRESS,
-        ExecutionResponseSupport.problemCodeFor(
+        GridGrindProblems.codeFor(
             new InvalidRangeAddressException("A1:", new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.INVALID_FORMULA,
-        ExecutionResponseSupport.problemCodeFor(
+        GridGrindProblems.codeFor(
             new InvalidFormulaException(
                 "Budget", "B4", "SUM(", "bad formula", new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.UNSUPPORTED_FORMULA,
-        ExecutionResponseSupport.problemCodeFor(
+        GridGrindProblems.codeFor(
             new UnsupportedFormulaException(
                 "Budget",
                 "C1",
@@ -1316,20 +1318,17 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.WORKBOOK_NOT_FOUND,
-        ExecutionResponseSupport.problemCodeFor(
-            new WorkbookNotFoundException(Path.of("missing.xlsx"))));
+        GridGrindProblems.codeFor(new WorkbookNotFoundException(Path.of("missing.xlsx"))));
     assertEquals(
         GridGrindProblemCode.SHEET_NOT_FOUND,
-        ExecutionResponseSupport.problemCodeFor(new SheetNotFoundException("Budget")));
-    assertEquals(
-        GridGrindProblemCode.IO_ERROR,
-        ExecutionResponseSupport.problemCodeFor(new IOException("disk")));
+        GridGrindProblems.codeFor(new SheetNotFoundException("Budget")));
+    assertEquals(GridGrindProblemCode.IO_ERROR, GridGrindProblems.codeFor(new IOException("disk")));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
-        ExecutionResponseSupport.problemCodeFor(new IllegalArgumentException("bad request")));
+        GridGrindProblems.codeFor(new IllegalArgumentException("bad request")));
     assertEquals(
         GridGrindProblemCode.INTERNAL_ERROR,
-        ExecutionResponseSupport.problemCodeFor(new UnsupportedOperationException()));
+        GridGrindProblems.codeFor(new UnsupportedOperationException()));
     assertEquals(
         "bad request", GridGrindProblems.messageFor(new IllegalArgumentException("bad request")));
     assertEquals(

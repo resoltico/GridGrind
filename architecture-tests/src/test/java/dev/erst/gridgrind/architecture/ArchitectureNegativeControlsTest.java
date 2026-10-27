@@ -68,6 +68,25 @@ class ArchitectureNegativeControlsTest {
   }
 
   @Test
+  void runtimeRejectsPoiAndRawSpreadsheetXmlDependencies() {
+    AssertionError failure =
+        assertThrows(
+            AssertionError.class,
+            () ->
+                ProductDependencyArchitectureRules.poiDependenciesStayInNativeAdapters()
+                    .check(
+                        new ClassFileImporter()
+                            .importClasses(
+                                dev.erst.gridgrind.engine.runtime.fixture
+                                    .ArchitectureNativeLibraryLeak.class)));
+    assertTrue(failure.getMessage().contains("org.apache.poi.ss.usermodel.Workbook"));
+    assertTrue(
+        failure
+            .getMessage()
+            .contains("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCell"));
+  }
+
+  @Test
   void workbookMechanicsRejectRuntimeDependencies() {
     AssertionError failure =
         assertThrows(
@@ -75,7 +94,9 @@ class ArchitectureNegativeControlsTest {
             () ->
                 ProductDependencyArchitectureRules
                     .workbookImplementationDoesNotDependOnExecutionRuntime()
-                    .check(new ClassFileImporter().importPackages("dev.erst.gridgrind.excel")));
+                    .check(
+                        new ClassFileImporter()
+                            .importPackages("dev.erst.gridgrind.engine.backend.xssf")));
     assertTrue(failure.getMessage().contains("ArchitectureRuntimeDependencyFixture"));
   }
 

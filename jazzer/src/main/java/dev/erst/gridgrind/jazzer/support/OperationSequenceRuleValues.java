@@ -23,8 +23,8 @@ import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.formulas.ComparisonFormulas;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -66,9 +66,8 @@ final class OperationSequenceRuleValues {
             ? new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done"))
             : new DataValidationRuleSpec.WholeNumber(
                 ExcelComparisonOperator.GREATER_OR_EQUAL,
-                ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
-                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
-                    Optional.empty(), "formula2")),
+                ComparisonFormulas.normalizeFormula("1", "formula1"),
+                ComparisonFormulas.normalizeOptionalFormula(Optional.empty(), "formula2")),
         data.consumeBoolean(),
         data.consumeBoolean(),
         data.consumeBoolean()

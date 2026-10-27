@@ -25,10 +25,10 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.InvalidFormulaException;
-import dev.erst.gridgrind.excel.ResolvedMutationExecutor;
+import dev.erst.gridgrind.engine.backend.xssf.ResolvedMutationExecutor;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -39,7 +39,7 @@ class FormulaOriginTrackerTest {
   @Test
   void plansEveryCoordinateForOffsetSetAndClearRanges() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       FormulaOriginTracker.FormulaWrites setWrites =
           tracker.plannedWrites(
               workbook,
@@ -81,7 +81,7 @@ class FormulaOriginTrackerTest {
   void tracksEveryNormalFormulaAuthoringFamilyAndExcludesRawFormulas() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
     StepReference author = new StepReference(3, new StepId("author"), "MUTATION", "SET_CELL");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       ResolvedMutationExecutor.apply(
           workbook,
           new ResolvedStep(
@@ -156,7 +156,7 @@ class FormulaOriginTrackerTest {
   void removesOriginsWhenLaterMutationsReplaceOrClearFormulaCells() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
     StepReference author = new StepReference(0, new StepId("author"), "MUTATION", "SET_CELL");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       ResolvedMutationExecutor.apply(
           workbook,
           new ResolvedStep(
@@ -222,7 +222,7 @@ class FormulaOriginTrackerTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of());
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       ResolvedMutationExecutor.apply(
           workbook,
           new ResolvedStep(
@@ -237,7 +237,7 @@ class FormulaOriginTrackerTest {
           author);
 
       dev.erst.gridgrind.core.problem.GridGrindProblemDetail.Problem problem =
-          new ExecutionCalculationSupport(ignored -> {})
+          new CalculationWorkflow(ignored -> {})
               .calculationProblemFor(
                   request,
                   new CalculationPolicyExecutor.FailureDetail(
@@ -258,7 +258,7 @@ class FormulaOriginTrackerTest {
 
       assertInstanceOf(
           ProblemContext.ExecuteCalculation.Execution.class,
-          new ExecutionCalculationSupport(ignored -> {})
+          new CalculationWorkflow(ignored -> {})
               .calculationProblemFor(
                   request,
                   new CalculationPolicyExecutor.FailureDetail(
@@ -274,7 +274,7 @@ class FormulaOriginTrackerTest {
               .context());
       assertInstanceOf(
           ProblemContext.ExecuteCalculation.Execution.class,
-          new ExecutionCalculationSupport(ignored -> {})
+          new CalculationWorkflow(ignored -> {})
               .calculationProblemFor(
                   request,
                   new CalculationPolicyExecutor.FailureDetail(
@@ -295,7 +295,7 @@ class FormulaOriginTrackerTest {
   void prunesEveryChangedFormulaTopologyBeforeRecordingTheNextMutation() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
     StepReference author = new StepReference(0, new StepId("author"), "MUTATION", "SET_CELL");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       ResolvedMutationExecutor.apply(
           workbook,
           new ResolvedStep(
@@ -367,7 +367,7 @@ class FormulaOriginTrackerTest {
 
   private static void applyAndRecord(
       FormulaOriginTracker tracker,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       ResolvedStep command,
       StepReference author) {
     FormulaOriginTracker.FormulaWrites writes = tracker.plannedWrites(workbook, command);

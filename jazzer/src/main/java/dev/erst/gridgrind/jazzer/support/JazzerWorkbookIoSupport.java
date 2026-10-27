@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import dev.erst.gridgrind.engine.runtime.ExecutionInputBindings;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -33,12 +33,12 @@ public final class JazzerWorkbookIoSupport {
   }
 
   /** Opens one workbook using a temp factory rooted next to the workbook path. */
-  public static ExcelWorkbook openWorkbook(Path workbookPath) throws IOException {
-    return ExcelWorkbooks.open(workbookPath, tempFileFactoryFor(workbookPath));
+  public static XssfWorkbook openWorkbook(Path workbookPath) throws IOException {
+    return XssfWorkbooks.open(workbookPath, tempFileFactoryFor(workbookPath));
   }
 
   /** Saves one workbook using a temp factory rooted next to the workbook path. */
-  public static void saveWorkbook(ExcelWorkbook workbook, Path workbookPath) throws IOException {
+  public static void saveWorkbook(XssfWorkbook workbook, Path workbookPath) throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
     workbook
         .persistence()

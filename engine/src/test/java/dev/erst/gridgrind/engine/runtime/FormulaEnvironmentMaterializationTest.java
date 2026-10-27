@@ -30,7 +30,7 @@ class FormulaEnvironmentMaterializationTest {
         ExecutionInputBindingsFixtureSupport.preparedBindings(
             temporaryDirectory, List.of(externalWorkbook))) {
       Path materialized =
-          ExecutionWorkbookSupport.materializeFormulaEnvironment(input, prepared.bindings())
+          WorkbookLifecycle.materializeFormulaEnvironment(input, prepared.bindings())
               .externalWorkbooks()
               .getFirst()
               .path();

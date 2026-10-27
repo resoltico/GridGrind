@@ -15,8 +15,8 @@ import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +105,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   static Map<
           XlsxRoundTripExpectedStateSupport.NamedRangeKey,
           XlsxRoundTripExpectedStateSupport.ExpectedNamedRange>
-      expectedNamedRanges(ExcelWorkbook workbook) {
+      expectedNamedRanges(XssfWorkbook workbook) {
     LinkedHashMap<
             XlsxRoundTripExpectedStateSupport.NamedRangeKey,
             XlsxRoundTripExpectedStateSupport.ExpectedNamedRange>
@@ -126,7 +126,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   }
 
   static dev.erst.gridgrind.core.result.WorkbookSummary expectedWorkbookSummary(
-      ExcelWorkbook workbook) {
+      XssfWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     return ((dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult)
             readExecutor
@@ -142,7 +142,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   }
 
   static Map<String, dev.erst.gridgrind.core.result.SheetSummaryReport> expectedSheetSummaries(
-      ExcelWorkbook workbook) {
+      XssfWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, dev.erst.gridgrind.core.result.SheetSummaryReport> expected =
         new LinkedHashMap<>();
@@ -166,7 +166,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   }
 
   static Map<String, List<DataValidationEntryReport>> expectedDataValidations(
-      ExcelWorkbook workbook) {
+      XssfWorkbook workbook) {
     LinkedHashMap<String, List<DataValidationEntryReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       List<DataValidationEntryReport> validations =
@@ -179,7 +179,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   }
 
   static Map<String, List<ConditionalFormattingEntryReport>> expectedConditionalFormatting(
-      ExcelWorkbook workbook) {
+      XssfWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, List<ConditionalFormattingEntryReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
@@ -202,7 +202,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expected);
   }
 
-  static Map<String, List<AutofilterEntryReport>> expectedAutofilters(ExcelWorkbook workbook) {
+  static Map<String, List<AutofilterEntryReport>> expectedAutofilters(XssfWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, List<AutofilterEntryReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
@@ -225,7 +225,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expected);
   }
 
-  static Map<String, List<DrawingObjectReport>> expectedDrawingObjects(ExcelWorkbook workbook) {
+  static Map<String, List<DrawingObjectReport>> expectedDrawingObjects(XssfWorkbook workbook) {
     LinkedHashMap<String, List<DrawingObjectReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).drawings().drawingObjects()));
@@ -233,7 +233,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expected);
   }
 
-  static Map<String, List<ChartReport>> expectedCharts(ExcelWorkbook workbook) {
+  static Map<String, List<ChartReport>> expectedCharts(XssfWorkbook workbook) {
     LinkedHashMap<String, List<ChartReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).drawings().charts()));
@@ -241,7 +241,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expected);
   }
 
-  static List<PivotTableReport> expectedPivots(ExcelWorkbook workbook) {
+  static List<PivotTableReport> expectedPivots(XssfWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var result =
         (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult)
@@ -257,7 +257,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return List.copyOf(result.pivotTables());
   }
 
-  static List<TableEntryReport> expectedTables(ExcelWorkbook workbook) {
+  static List<TableEntryReport> expectedTables(XssfWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var result =
         (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)

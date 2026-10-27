@@ -24,8 +24,8 @@ import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -150,13 +150,12 @@ class RuntimeResidualCoverageSupplementTest {
 
   @Test
   void semanticSelectorResolverTreatsUnsupportedKeyCellKindsAsNonMatches() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Ada"));
       CellReport snapshot = workbook.sheet("Budget").cells().snapshotCell("A1");
 
       boolean matched =
-          SemanticSelectorResolver.matchesKeyCell(
-              snapshot, new CellValueSpec.ErrorValue("#REF!"), false);
+          SemanticSelectorResolver.matchesKeyCell(snapshot, new CellValueSpec.ErrorValue("#REF!"));
 
       assertFalse(matched);
     }

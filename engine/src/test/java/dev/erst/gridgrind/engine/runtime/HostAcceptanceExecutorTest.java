@@ -13,11 +13,11 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +42,7 @@ class HostAcceptanceExecutorTest {
                 preserveSheetSummary(),
                 new AcceptancePolicy.Requirement.RequireCalculation()));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       HostAcceptanceSnapshot snapshot =
           executor.captureBeforeMutation(
@@ -98,7 +98,7 @@ class HostAcceptanceExecutorTest {
                 new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
                     List.of("/customXml/item1.xml"))));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       assertThrows(
           IOException.class,
           () ->
@@ -166,10 +166,10 @@ class HostAcceptanceExecutorTest {
                 new SheetIntrospectionQuery.GetSheetSummary())));
   }
 
-  private ExecutionStepSupport stepSupport() throws IOException {
+  private StepExecution stepSupport() throws IOException {
     WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
-    return new ExecutionStepSupport(
+    return new StepExecution(
         workbookEngine,
         selectorResolver,
         new AssertionExecutor(workbookEngine, selectorResolver),

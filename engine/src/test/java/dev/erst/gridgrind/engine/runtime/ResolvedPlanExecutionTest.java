@@ -24,9 +24,9 @@ import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -98,7 +98,7 @@ class ResolvedPlanExecutionTest {
               new SemanticSelectorResolver(new WorkbookExecutionEngine()),
               preflight.preparedBindings());
       Path saved = root.resolve("prepared.xlsx");
-      try (var workbook = ExcelWorkbooks.create()) {
+      try (var workbook = XssfWorkbooks.create()) {
         workbook.getOrCreateSheet("Budget");
         var origins = new FormulaOriginTracker();
         executor.execute(

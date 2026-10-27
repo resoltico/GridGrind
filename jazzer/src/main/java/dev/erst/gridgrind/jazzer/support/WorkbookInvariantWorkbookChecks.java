@@ -3,8 +3,8 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
 import java.nio.file.*;
 import java.util.*;
 
@@ -12,7 +12,7 @@ import java.util.*;
 final class WorkbookInvariantWorkbookChecks {
   private WorkbookInvariantWorkbookChecks() {}
 
-  static void requireWorkbookShape(ExcelWorkbook workbook) {
+  static void requireWorkbookShape(XssfWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var workbookSummary =

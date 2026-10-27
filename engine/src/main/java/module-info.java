@@ -10,6 +10,6 @@ module dev.erst.gridgrind.engine {
 
   exports dev.erst.gridgrind.engine.api;
 
-  opens dev.erst.gridgrind.excel.spi to
+  opens dev.erst.gridgrind.engine.security.spi to
       java.xml.crypto;
 }

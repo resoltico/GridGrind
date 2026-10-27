@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

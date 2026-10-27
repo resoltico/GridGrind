@@ -5,9 +5,9 @@ import dev.erst.gridgrind.core.plan.PreparedMutationStep;
 import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.ResolvedTarget;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ResolvedMutationExecutor;
-import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
+import dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter;
+import dev.erst.gridgrind.engine.backend.xssf.ResolvedMutationExecutor;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -26,7 +26,7 @@ final class FormulaAwareMutationStepExecutor {
   }
 
   void execute(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       PreparedMutationStep prepared,
       FormulaOriginTracker formulaOrigins,
       StepReference authoringStep)
@@ -43,7 +43,7 @@ final class FormulaAwareMutationStepExecutor {
     formulaOrigins.record(workbook, writes, authoringStep);
   }
 
-  void executeStreaming(ExcelStreamingWorkbookWriter writer, PreparedMutationStep prepared)
+  void executeStreaming(StreamingWorkbookWriter writer, PreparedMutationStep prepared)
       throws IOException {
     MutationStep mutationStep = prepared.authoredStep();
     writer.apply(

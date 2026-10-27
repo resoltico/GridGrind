@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.plan.MutationAction;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,22 +39,19 @@ public final class GridGrindContractText {
 
   /** Human-readable mutation-action id list accepted by `STREAMING_WRITE`. */
   public static String streamingWriteMutationActionTypePhrase() {
-    return GridGrindExecutionModeMetadata.streamingWrite().allowedActionPhrase();
+    return BackendCapabilities.streamingWrite().allowedActionPhrase();
   }
 
   /** Human-readable inspection-query id list accepted by `EVENT_READ`. */
   public static String eventReadInspectionQueryTypePhrase() {
-    return GridGrindExecutionModeMetadata.eventRead().allowedQueryPhrase();
+    return BackendCapabilities.eventRead().allowedQueryPhrase();
   }
 
   /** One stable catalog summary for `ExecutionModeSpec`. */
   public static String executionModeInputSummary() {
-    GridGrindExecutionModeMetadata.FullXssfMode fullXssf =
-        GridGrindExecutionModeMetadata.fullXssf();
-    GridGrindExecutionModeMetadata.EventReadMode eventRead =
-        GridGrindExecutionModeMetadata.eventRead();
-    GridGrindExecutionModeMetadata.StreamingWriteMode streamingWrite =
-        GridGrindExecutionModeMetadata.streamingWrite();
+    BackendCapabilities.FullXssfMode fullXssf = BackendCapabilities.fullXssf();
+    BackendCapabilities.EventReadMode eventRead = BackendCapabilities.eventRead();
+    BackendCapabilities.StreamingWriteMode streamingWrite = BackendCapabilities.streamingWrite();
     return "Execution-mode settings that select one runtime family by discriminator."
         + " "
         + fullXssf.modeId()
@@ -144,7 +142,8 @@ public final class GridGrindContractText {
     return GridGrindProtocolTypeNames.typeNamesByClass(rootType);
   }
 
-  static String humanJoin(List<String> values) {
+  /** Formats the shared readable list used in capability and contract descriptions. */
+  public static String humanJoin(List<String> values) {
     List<String> parts = values.stream().filter(value -> !value.isBlank()).toList();
     if (parts.isEmpty()) {
       throw new IllegalArgumentException("values must not be empty");

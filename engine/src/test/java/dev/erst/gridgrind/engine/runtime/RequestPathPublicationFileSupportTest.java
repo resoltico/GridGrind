@@ -34,16 +34,16 @@ class RequestPathPublicationFileSupportTest {
             StandardOpenOption.CREATE_NEW,
             StandardOpenOption.WRITE,
             StandardOpenOption.READ)) {
-      RequestPathPublicationFileSupport.copyAndForce(staged, target);
+      PublicationFileOperations.copyAndForce(staged, target);
     }
     try (RequestPathBinding binding = RequestPathBinding.bindWriteTarget("published.xlsx", root);
         SeekableByteChannel channel = Files.newByteChannel(destination, StandardOpenOption.READ)) {
-      RequestPathPublicationFileSupport.ArtifactDigest pathDigest =
-          RequestPathPublicationFileSupport.digest(destination);
-      RequestPathPublicationFileSupport.ArtifactDigest channelDigest =
-          RequestPathPublicationFileSupport.digest(channel);
+      PublicationFileOperations.ArtifactDigest pathDigest =
+          PublicationFileOperations.digest(destination);
+      PublicationFileOperations.ArtifactDigest channelDigest =
+          PublicationFileOperations.digest(channel);
       PublicationOutcome.DurabilityEvidence durability =
-          RequestPathPublicationFileSupport.forcePublishedArtifact(binding);
+          PublicationFileOperations.forcePublishedArtifact(binding);
 
       assertEquals(pathDigest, channelDigest);
       assertEquals(4, pathDigest.byteSize());
@@ -60,27 +60,26 @@ class RequestPathPublicationFileSupportTest {
   void rejectsAChannelThatCannotProvideFileForceSemanticsAndClosesIt() throws Exception {
     Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {1});
     assertThrows(
-        NullPointerException.class,
-        () -> RequestPathPublicationFileSupport.copyAndForce(staged, null));
+        NullPointerException.class, () -> PublicationFileOperations.copyAndForce(staged, null));
     AtomicBoolean closed = new AtomicBoolean();
     assertInstanceOf(
         java.nio.file.AtomicMoveNotSupportedException.class,
         assertThrows(
             IOException.class,
             () ->
-                RequestPathPublicationFileSupport.copyAndForce(
+                PublicationFileOperations.copyAndForce(
                     staged, new NonFileSeekableByteChannel(closed, false))));
     assertTrue(closed.get());
     IOException failure =
         assertThrows(
             IOException.class,
             () ->
-                RequestPathPublicationFileSupport.copyAndForce(
+                PublicationFileOperations.copyAndForce(
                     staged, new NonFileSeekableByteChannel(new AtomicBoolean(), true)));
     assertEquals(1, failure.getSuppressed().length);
     assertThrows(
         IllegalArgumentException.class,
-        () -> new RequestPathPublicationFileSupport.ArtifactDigest("digest", -1));
+        () -> new PublicationFileOperations.ArtifactDigest("digest", -1));
   }
 
   @Test
@@ -88,15 +87,14 @@ class RequestPathPublicationFileSupportTest {
     Path staged = Files.write(root.resolve("descriptor-source.xlsx"), new byte[] {1});
     try (FileChannel fileChannel = FileChannel.open(staged, StandardOpenOption.READ)) {
       assertEquals(
-          fileChannel,
-          RequestPathPublicationFileSupport.requireFileChannel(fileChannel, staged, staged));
+          fileChannel, PublicationFileOperations.requireFileChannel(fileChannel, staged, staged));
     }
 
     AtomicBoolean closed = new AtomicBoolean();
     assertThrows(
         java.nio.file.AtomicMoveNotSupportedException.class,
         () ->
-            RequestPathPublicationFileSupport.requireFileChannel(
+            PublicationFileOperations.requireFileChannel(
                 new NonFileSeekableByteChannel(closed, false), staged, staged));
     assertTrue(closed.get());
   }
@@ -115,7 +113,7 @@ class RequestPathPublicationFileSupportTest {
                 StandardOpenOption.READ,
                 StandardOpenOption.WRITE);
         ZeroProgressWritableByteChannel target = new ZeroProgressWritableByteChannel(delegate)) {
-      RequestPathPublicationFileSupport.transfer(source, target);
+      PublicationFileOperations.transfer(source, target);
     }
 
     assertArrayEquals(bytes, Files.readAllBytes(destination));
@@ -128,7 +126,7 @@ class RequestPathPublicationFileSupportTest {
     try (RequestPathBinding binding = RequestPathBinding.bindWriteTarget("published.xlsx", root)) {
       assertInstanceOf(
           PublicationOutcome.DurabilityEvidence.FileSyncedDirectoryUnestablished.class,
-          RequestPathPublicationFileSupport.forcePublishedArtifact(
+          PublicationFileOperations.forcePublishedArtifact(
               binding,
               ignored -> {
                 throw new IOException("directory fsync unavailable");
@@ -151,9 +149,7 @@ class RequestPathPublicationFileSupportTest {
       IOException failure =
           assertThrows(
               IOException.class,
-              () ->
-                  RequestPathPublicationFileSupport.transfer(
-                      new PrematureEofTransferSource(), target));
+              () -> PublicationFileOperations.transfer(new PrematureEofTransferSource(), target));
 
       assertEquals(
           "could not copy the complete staged workbook into publication sibling",
@@ -168,7 +164,7 @@ class RequestPathPublicationFileSupportTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                RequestPathPublicationFileSupport.digest(
+                PublicationFileOperations.digest(
                     new ByteArrayInputStream(new byte[0]),
                     algorithm -> {
                       throw new java.security.NoSuchAlgorithmException(algorithm);

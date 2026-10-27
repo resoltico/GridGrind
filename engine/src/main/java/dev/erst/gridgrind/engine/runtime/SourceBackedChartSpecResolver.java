@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
+import static dev.erst.gridgrind.engine.runtime.ResolutionIdentity.sameReference;
 
 import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;

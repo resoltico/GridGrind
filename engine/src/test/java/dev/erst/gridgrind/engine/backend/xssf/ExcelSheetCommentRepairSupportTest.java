@@ -1,0 +1,547 @@
+package dev.erst.gridgrind.engine.backend.xssf;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
+import dev.erst.gridgrind.engine.comments.CommentAdapter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.zip.ZipFile;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.xssf.model.CommentsTable;
+import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFFactory;
+import org.apache.poi.xssf.usermodel.XSSFRelation;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTComments;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+/** Verifies authoritative comment repair after column structure mutations and sheet copies. */
+@SuppressWarnings("StringConcatToTextBlock")
+class ExcelSheetCommentRepairSupportTest {
+  @Test
+  void commentsAfterShiftColumnsKeepsMovedCommentWhenTargetsCollide() {
+    List<CellCommentReport> shifted =
+        CommentAdapter.commentsAfterShiftColumns(
+            List.of(
+                new CellCommentReport(
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+                    new CommentReport(
+                        "stationary", "GridGrind", true, Optional.empty(), Optional.empty())),
+                new CellCommentReport(
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+                    new CommentReport(
+                        "moving", "GridGrind", true, Optional.empty(), Optional.empty()))),
+            new ExcelColumnSpan(1, 1),
+            -1);
+
+    assertEquals(
+        List.of(
+            new CellCommentReport(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+                new CommentReport(
+                    "moving", "GridGrind", true, Optional.empty(), Optional.empty()))),
+        shifted);
+  }
+
+  @Test
+  void hasPersistedCommentsAndRawCommentAddressesHandleEmptyState() throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Ops");
+
+      CommentAdapter support = new CommentAdapter(workbook.sheet("Ops").xssfSheet());
+
+      assertFalse(support.hasPersistedComments());
+      support.replaceComments(List.of());
+      assertFalse(support.hasPersistedComments());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("RawOnly");
+      CommentsTable rawOnlyTable =
+          (CommentsTable)
+              sheet.createRelationship(XSSFRelation.SHEET_COMMENTS, XSSFFactory.getInstance());
+      rawOnlyTable.setSheet(sheet);
+      rawOnlyTable.newComment(new CellAddress("A1"));
+
+      CommentAdapter support = new CommentAdapter(sheet);
+
+      assertTrue(sheet.getCellComments().isEmpty());
+      assertTrue(support.hasPersistedComments());
+    }
+
+    CommentsTable commentsTable =
+        new CommentsTable() {
+          @Override
+          public CTComments getCTComments() {
+            return CTComments.Factory.newInstance();
+          }
+        };
+
+    assertEquals(List.of(), invokeRawCommentAddresses(commentsTable));
+  }
+
+  @Test
+  void insertDeleteAndShiftColumnHelpersRewriteReadComments() {
+    List<CellCommentReport> inserted =
+        CommentAdapter.commentsAfterInsertColumns(
+            List.of(comment("A2", "Stationary"), comment("C2", "Shifted")), 1, 1);
+
+    assertEquals(List.of(comment("A2", "Stationary"), comment("D2", "Shifted")), inserted);
+
+    List<CellCommentReport> deleted =
+        CommentAdapter.commentsAfterDeleteColumns(
+            List.of(comment("A2", "Stationary"), comment("D2", "Shifted")),
+            new ExcelColumnSpan(1, 2));
+
+    assertEquals(List.of(comment("A2", "Stationary"), comment("B2", "Shifted")), deleted);
+
+    List<CellCommentReport> shiftedRight =
+        CommentAdapter.commentsAfterShiftColumns(
+            List.of(
+                comment("A2", "Stationary"),
+                comment("B2", "Moving"),
+                comment("C2", "Overwritten"),
+                comment("E2", "Far")),
+            new ExcelColumnSpan(1, 1),
+            1);
+
+    assertEquals(
+        List.of(comment("A2", "Stationary"), comment("C2", "Moving"), comment("E2", "Far")),
+        shiftedRight);
+
+    List<CellCommentReport> unchanged =
+        CommentAdapter.commentsAfterShiftColumns(
+            List.of(comment("A2", "Stationary"), comment("B2", "Moving")),
+            new ExcelColumnSpan(1, 1),
+            0);
+
+    assertEquals(List.of(comment("A2", "Stationary"), comment("B2", "Moving")), unchanged);
+
+    List<CellCommentReport> shiftedLeft =
+        CommentAdapter.commentsAfterShiftColumns(
+            List.of(comment("B2", "Moving"), comment("D2", "Stationary")),
+            new ExcelColumnSpan(1, 1),
+            -1);
+
+    assertEquals(List.of(comment("A2", "Moving"), comment("D2", "Stationary")), shiftedLeft);
+
+    List<CellCommentReport> shiftedLeftOutsideWindow =
+        CommentAdapter.commentsAfterShiftColumns(
+            List.of(comment("C2", "Stationary"), comment("F2", "Moving")),
+            new ExcelColumnSpan(5, 5),
+            -2);
+
+    assertEquals(
+        List.of(comment("C2", "Stationary"), comment("D2", "Moving")), shiftedLeftOutsideWindow);
+  }
+
+  @Test
+  void replaceCommentsSupportsRawPlainAndRichComments() throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Ops");
+      workbook.sheet("Ops").cells().setCell("C3", new CellValue.Text("Existing"));
+
+      CommentAdapter support = new CommentAdapter(workbook.sheet("Ops").xssfSheet());
+      List<RichTextRunReport> richText =
+          List.copyOf(List.of(new RichTextRunReport("Raw rich", baseFontWithoutColor())));
+      List<RichTextRunReport> readbackRichText =
+          List.copyOf(
+              List.of(
+                  new RichTextRunReport(
+                      "Raw rich",
+                      new CellFontReport(
+                          false,
+                          false,
+                          "Aptos",
+                          FontHeightReport.fromTwips(220),
+                          CellColorReport.indexed(8),
+                          false,
+                          false))));
+      CommentAnchorReport explicitAnchor = new CommentAnchorReport(2, 2, 6, 7);
+
+      support.replaceComments(
+          List.of(
+              new CommentAdapter.CommentRewriteSnapshot(
+                  "B4", "Plain raw", "", true, Optional.empty(), Optional.empty()),
+              new CommentAdapter.CommentRewriteSnapshot(
+                  "C3", null, "", false, Optional.of(richText), Optional.of(explicitAnchor))));
+
+      assertEquals(
+          Map.of(
+              "B4",
+                  new CommentAdapter.CommentRewriteSnapshot(
+                      "B4",
+                      "Plain raw",
+                      "",
+                      true,
+                      Optional.empty(),
+                      Optional.of(new CommentAnchorReport(1, 3, 4, 6))),
+              "C3",
+                  new CommentAdapter.CommentRewriteSnapshot(
+                      "C3",
+                      "Raw rich",
+                      "",
+                      false,
+                      Optional.of(readbackRichText),
+                      Optional.of(explicitAnchor))),
+          rawCommentSnapshots(workbook, "Ops"));
+    }
+  }
+
+  @Test
+  void commentRewriteSnapshotHandlesAnchorlessPoiCommentsAndNormalization() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      CommentsTable commentsTable = new CommentsTable();
+      commentsTable.setSheet(sheet);
+
+      XSSFComment anchorless =
+          new XSSFComment(commentsTable, commentsTable.newComment(new CellAddress("A1")), null);
+      anchorless.setAuthor("GridGrind");
+      anchorless.setVisible(false);
+
+      CommentAdapter.CommentRewriteSnapshot snapshot =
+          CommentAdapter.CommentRewriteSnapshot.from(new CellAddress("A1"), anchorless, workbook);
+
+      assertEquals("A1", snapshot.address());
+      assertEquals("", snapshot.text());
+      assertEquals("GridGrind", snapshot.author());
+      assertFalse(snapshot.visible());
+      assertEquals(Optional.empty(), snapshot.runs());
+      assertEquals(Optional.empty(), snapshot.anchor());
+    }
+
+    CommentAdapter.CommentRewriteSnapshot normalized =
+        new CommentAdapter.CommentRewriteSnapshot(
+            "B2", null, null, true, Optional.empty(), Optional.empty());
+    CommentAdapter.CommentRewriteSnapshot missingAuthor =
+        new CommentAdapter.CommentRewriteSnapshot(
+            "B2", "Text", "", true, Optional.empty(), Optional.empty());
+    CommentAdapter.CommentRewriteSnapshot compatible =
+        new CommentAdapter.CommentRewriteSnapshot(
+            "B2", "Text", "GridGrind", true, Optional.empty(), Optional.empty());
+
+    assertEquals("", normalized.text());
+    assertEquals("", normalized.author());
+    assertFalse(normalized.isAuthoringCompatible());
+    assertFalse(missingAuthor.isAuthoringCompatible());
+    assertTrue(compatible.isAuthoringCompatible());
+    assertEquals(
+        new ResolvedComment("Text", "GridGrind", true, Optional.empty(), Optional.empty()),
+        compatible.toAuthoringComment());
+  }
+
+  @Test
+  void deleteColumnsRoundTripKeepsShiftedCommentAndCanonicalCommentParts() throws Exception {
+    Path workbookPath = Files.createTempFile("gridgrind-comment-delete-columns-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("LL");
+      workbook
+          .sheet("LL")
+          .comments()
+          .setComment("E2", new ResolvedComment("Note BudgetTotal", "GridGrind", true));
+      workbook
+          .sheet("LL")
+          .comments()
+          .setComment("A2", new ResolvedComment("Note Report_Value", "GridGrind", true));
+      workbook.getOrCreateSheet("LL");
+      workbook.sheet("LL").columns().delete(new ExcelColumnSpan(1, 3));
+      workbook.sheet("LL").columns().delete(new ExcelColumnSpan(0, 0));
+
+      assertVisibleComments(
+          workbook, "LL", Map.of("A2", new ResolvedComment("Note BudgetTotal", "GridGrind", true)));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    assertCanonicalCommentParts(workbookPath, Map.of("A2", "Note BudgetTotal"), Map.of("1:0", 1));
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      assertVisibleComments(
+          reopened, "LL", Map.of("A2", new ResolvedComment("Note BudgetTotal", "GridGrind", true)));
+    }
+  }
+
+  @Test
+  void insertColumnsRoundTripKeepsShiftedCommentsAndCanonicalCommentParts() throws Exception {
+    Path workbookPath = Files.createTempFile("gridgrind-comment-insert-columns-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Ops");
+      workbook
+          .sheet("Ops")
+          .comments()
+          .setComment("A2", new ResolvedComment("Stationary", "GridGrind", true));
+      workbook
+          .sheet("Ops")
+          .comments()
+          .setComment("C2", new ResolvedComment("Shifted", "GridGrind", true));
+      workbook.sheet("Ops").columns().insert(1, 1);
+
+      assertVisibleComments(
+          workbook,
+          "Ops",
+          Map.of(
+              "A2", new ResolvedComment("Stationary", "GridGrind", true),
+              "D2", new ResolvedComment("Shifted", "GridGrind", true)));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    assertCanonicalCommentParts(
+        workbookPath, Map.of("A2", "Stationary", "D2", "Shifted"), Map.of("1:0", 1, "1:3", 1));
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      assertVisibleComments(
+          reopened,
+          "Ops",
+          Map.of(
+              "A2", new ResolvedComment("Stationary", "GridGrind", true),
+              "D2", new ResolvedComment("Shifted", "GridGrind", true)));
+    }
+  }
+
+  @Test
+  void shiftColumnsLeftRoundTripKeepsShiftedCommentAndCanonicalCommentParts() throws Exception {
+    Path workbookPath = Files.createTempFile("gridgrind-comment-shift-columns-left-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Ops");
+      workbook
+          .sheet("Ops")
+          .comments()
+          .setComment("A2", new ResolvedComment("Stationary", "GridGrind", true));
+      workbook
+          .sheet("Ops")
+          .comments()
+          .setComment("B2", new ResolvedComment("Moving", "GridGrind", true));
+      workbook.sheet("Ops").columns().shift(new ExcelColumnSpan(1, 1), -1);
+
+      assertVisibleComments(
+          workbook, "Ops", Map.of("A2", new ResolvedComment("Moving", "GridGrind", true)));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    assertCanonicalCommentParts(workbookPath, Map.of("A2", "Moving"), Map.of("1:0", 1));
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      assertVisibleComments(
+          reopened, "Ops", Map.of("A2", new ResolvedComment("Moving", "GridGrind", true)));
+    }
+  }
+
+  @Test
+  void shiftColumnsRightRoundTripKeepsShiftedCommentAndCanonicalCommentParts() throws Exception {
+    Path workbookPath = Files.createTempFile("gridgrind-comment-shift-columns-right-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Ops");
+      workbook
+          .sheet("Ops")
+          .comments()
+          .setComment("A2", new ResolvedComment("Moving", "GridGrind", true));
+      workbook
+          .sheet("Ops")
+          .comments()
+          .setComment("B2", new ResolvedComment("Stationary", "GridGrind", true));
+      workbook.sheet("Ops").columns().shift(new ExcelColumnSpan(0, 0), 1);
+
+      assertVisibleComments(
+          workbook, "Ops", Map.of("B2", new ResolvedComment("Moving", "GridGrind", true)));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    assertCanonicalCommentParts(workbookPath, Map.of("B2", "Moving"), Map.of("1:1", 1));
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      assertVisibleComments(
+          reopened, "Ops", Map.of("B2", new ResolvedComment("Moving", "GridGrind", true)));
+    }
+  }
+
+  private static void assertVisibleComments(
+      XssfWorkbook workbook, String sheetName, Map<String, ResolvedComment> expected) {
+    var actual = workbook.sheet(sheetName).comments().comments();
+    assertEquals(
+        expected.keySet(),
+        actual.stream()
+            .map(cell -> cell.address().value())
+            .collect(java.util.stream.Collectors.toSet()));
+    assertEquals(expected.size(), actual.size());
+    for (var cell : actual) {
+      var wanted = expected.get(cell.address().value());
+      assertEquals(wanted.text(), cell.comment().text());
+      assertEquals(wanted.author(), cell.comment().author());
+      assertEquals(wanted.visible(), cell.comment().visible());
+    }
+  }
+
+  private static void assertCanonicalCommentParts(
+      Path workbookPath, Map<String, String> expectedComments, Map<String, Integer> expectedNotes)
+      throws IOException {
+    try (ZipFile zipFile = new ZipFile(workbookPath.toFile())) {
+      CommentParts commentParts = commentParts(zipFile);
+      assertEquals(expectedComments.size(), commentParts.totalComments());
+      assertEquals(expectedComments, commentParts.commentsByRef());
+      assertEquals(expectedNotes, noteShapeCountsByCell(zipFile));
+    }
+  }
+
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  private static CommentParts commentParts(ZipFile zipFile) throws IOException {
+    Map<String, String> comments = new java.util.LinkedHashMap<>();
+    int totalComments = 0;
+    for (var entry : zipFile.stream().toList()) {
+      if (!entry.getName().startsWith("xl/comments")) {
+        continue;
+      }
+      try (InputStream inputStream = zipFile.getInputStream(entry)) {
+        Document document = parseXml(inputStream);
+        NodeList commentNodes =
+            document.getElementsByTagNameNS(
+                "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "comment");
+        for (int index = 0; index < commentNodes.getLength(); index++) {
+          totalComments++;
+          Element comment = (Element) commentNodes.item(index);
+          Element textNode =
+              (Element)
+                  comment
+                      .getElementsByTagNameNS(
+                          "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "t")
+                      .item(0);
+          comments.put(comment.getAttribute("ref"), textNode.getTextContent());
+        }
+      }
+    }
+    return new CommentParts(Map.copyOf(comments), totalComments);
+  }
+
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  private static Map<String, Integer> noteShapeCountsByCell(ZipFile zipFile) throws IOException {
+    Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+    for (var entry : zipFile.stream().toList()) {
+      if (!entry.getName().startsWith("xl/drawings/vmlDrawing")) {
+        continue;
+      }
+      try (InputStream inputStream = zipFile.getInputStream(entry)) {
+        Document document = parseXml(inputStream);
+        NodeList clientDataNodes =
+            document.getElementsByTagNameNS("urn:schemas-microsoft-com:office:excel", "ClientData");
+        for (int index = 0; index < clientDataNodes.getLength(); index++) {
+          Element clientData = (Element) clientDataNodes.item(index);
+          if (!"Note".equals(clientData.getAttribute("ObjectType"))) {
+            continue;
+          }
+          String row =
+              clientData
+                  .getElementsByTagNameNS("urn:schemas-microsoft-com:office:excel", "Row")
+                  .item(0)
+                  .getTextContent();
+          String column =
+              clientData
+                  .getElementsByTagNameNS("urn:schemas-microsoft-com:office:excel", "Column")
+                  .item(0)
+                  .getTextContent();
+          counts.merge(row + ":" + column, 1, Integer::sum);
+        }
+      }
+    }
+    return Map.copyOf(counts);
+  }
+
+  private static CellCommentReport comment(String address, String text) {
+    return new CellCommentReport(
+        new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
+        new CommentReport(text, "GridGrind", true, Optional.empty(), Optional.empty()));
+  }
+
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  private static Map<String, CommentAdapter.CommentRewriteSnapshot> rawCommentSnapshots(
+      XssfWorkbook workbook, String sheetName) {
+    Map<String, CommentAdapter.CommentRewriteSnapshot> snapshots = new java.util.LinkedHashMap<>();
+    for (var entry : workbook.sheet(sheetName).xssfSheet().getCellComments().entrySet()) {
+      snapshots.put(
+          entry.getKey().formatAsString(),
+          CommentAdapter.CommentRewriteSnapshot.from(
+              entry.getKey(), entry.getValue(), workbook.xssfWorkbook()));
+    }
+    return Map.copyOf(snapshots);
+  }
+
+  private static List<CellAddress> invokeRawCommentAddresses(CommentsTable commentsTable)
+      throws ReflectiveOperationException {
+    return CommentAdapter.rawCommentAddresses(commentsTable);
+  }
+
+  private static CellFontReport baseFontWithoutColor() {
+    return new CellFontReport(
+        false, false, "Aptos", FontHeightReport.fromTwips(220), null, false, false);
+  }
+
+  private static Document parseXml(InputStream inputStream) throws IOException {
+    try {
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      factory.setNamespaceAware(true);
+      return factory.newDocumentBuilder().parse(inputStream);
+    } catch (ParserConfigurationException | SAXException exception) {
+      throw new IOException("failed to parse OOXML test fixture", exception);
+    }
+  }
+
+  private record CommentParts(Map<String, String> commentsByRef, int totalComments) {}
+}

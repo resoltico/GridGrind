@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

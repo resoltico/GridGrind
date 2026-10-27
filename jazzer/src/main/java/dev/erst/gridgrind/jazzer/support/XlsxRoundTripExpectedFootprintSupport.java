@@ -16,7 +16,7 @@ import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -368,7 +368,7 @@ final class XlsxRoundTripExpectedFootprintSupport {
   }
 
   static Map<String, List<CellReport>> expectedCellSnapshots(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       XlsxRoundTripExpectedStateSupport.ExpectedWorkbookFootprint footprint) {
     LinkedHashMap<String, List<CellReport>> snapshotsBySheet = new LinkedHashMap<>();
     for (Map.Entry<String, List<XlsxRoundTripExpectedStateSupport.CellCoordinate>> entry :

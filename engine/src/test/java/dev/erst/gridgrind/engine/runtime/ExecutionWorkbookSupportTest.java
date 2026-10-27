@@ -23,7 +23,7 @@ class ExecutionWorkbookSupportTest {
         assertThrows(
             IOException.class,
             () ->
-                ExecutionWorkbookSupport.requireRegularFile(
+                WorkbookLifecycle.requireRegularFile(
                     Files.createDirectory(root.resolve("staged"))));
 
     assertEquals(
@@ -47,7 +47,7 @@ class ExecutionWorkbookSupportTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                ExecutionWorkbookSupport.stagedArtifactOpenOptions(
+                WorkbookLifecycle.stagedArtifactOpenOptions(
                     ExecutionRequestPaths.persistenceOptions(persistence, bindings),
                     new WorkbookPlan.WorkbookSource.New(),
                     bindings));

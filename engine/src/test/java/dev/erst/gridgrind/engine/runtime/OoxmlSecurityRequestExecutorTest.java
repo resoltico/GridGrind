@@ -29,9 +29,9 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.engine.backend.xssf.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -638,7 +638,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
   @Test
   void eventReadModeRejectsPackageSecurityReadsUpFront() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-protocol-event-security-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
