@@ -217,9 +217,14 @@ class ExcelConditionalFormattingControllerTest {
                                   Optional.empty(),
                                   Optional.empty(),
                                   List.of())))))),
-          sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
+          sheet.metadata().conditionalFormatting());
 
-      sheet.metadata().clearConditionalFormatting(new ExcelRangeSelection.Selected(List.of("A2")));
+      sheet
+          .metadata()
+          .clearConditionalFormatting(
+              List.of("A2").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList());
 
       assertEquals(
           List.of(
@@ -246,7 +251,7 @@ class ExcelConditionalFormattingControllerTest {
                                   Optional.empty(),
                                   Optional.empty(),
                                   List.of())))))),
-          sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
+          sheet.metadata().conditionalFormatting());
 
       workbook
           .persistence()
@@ -283,7 +288,7 @@ class ExcelConditionalFormattingControllerTest {
                                   Optional.empty(),
                                   Optional.empty(),
                                   List.of())))))),
-          reopened.sheet("Ops").metadata().conditionalFormatting(new ExcelRangeSelection.All()));
+          reopened.sheet("Ops").metadata().conditionalFormatting());
     }
   }
 
@@ -326,7 +331,7 @@ class ExcelConditionalFormattingControllerTest {
                           Optional.empty()),
                       new ConditionalFormattingRuleReport.Top10Rule(
                           3, true, 10, false, false, Optional.empty())))),
-          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+          controller.conditionalFormatting(sheet));
     }
   }
 
@@ -392,7 +397,7 @@ class ExcelConditionalFormattingControllerTest {
                               ExcelConditionalFormattingThresholdType.MIN, null, null),
                           new ConditionalFormattingThresholdReport(
                               ExcelConditionalFormattingThresholdType.MAX, null, null))))),
-          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+          controller.conditionalFormatting(sheet));
     }
   }
 
@@ -437,7 +442,7 @@ class ExcelConditionalFormattingControllerTest {
                                   ExcelConditionalFormattingThresholdType.NUMBER, null, 40.0d),
                               new ConditionalFormattingThresholdReport(
                                   ExcelConditionalFormattingThresholdType.MAX, null, null)))))),
-          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+          controller.conditionalFormatting(sheet));
     }
   }
 
@@ -496,7 +501,7 @@ class ExcelConditionalFormattingControllerTest {
                                   Optional.empty(),
                                   Optional.empty(),
                                   List.of())))))),
-          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+          controller.conditionalFormatting(sheet));
     }
   }
 
@@ -536,10 +541,18 @@ class ExcelConditionalFormattingControllerTest {
           List.of(),
           sheet
               .metadata()
-              .conditionalFormatting(new ExcelRangeSelection.Selected(List.of("C1:C2"))));
+              .conditionalFormatting(
+                  List.of("C1:C2").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                      .toList()));
 
       List<ConditionalFormattingEntryReport> selected =
-          sheet.metadata().conditionalFormatting(new ExcelRangeSelection.Selected(List.of("A2")));
+          sheet
+              .metadata()
+              .conditionalFormatting(
+                  List.of("A2").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                      .toList());
       assertEquals(1, selected.size());
       ConditionalFormattingRuleReport.CellValueRule rule =
           assertInstanceOf(
@@ -555,10 +568,9 @@ class ExcelConditionalFormattingControllerTest {
                       finding.code()
                           == AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION));
 
-      sheet.metadata().clearConditionalFormatting(new ExcelRangeSelection.All());
+      sheet.metadata().clearConditionalFormatting();
       assertEquals(0, sheet.diagnostics().conditionalFormattingBlockCount());
-      assertEquals(
-          List.of(), sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
+      assertEquals(List.of(), sheet.metadata().conditionalFormatting());
     }
   }
 
@@ -626,8 +638,7 @@ class ExcelConditionalFormattingControllerTest {
         unsupportedCtRule.removeFormula(0);
       }
 
-      List<ConditionalFormattingEntryReport> blocks =
-          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All());
+      List<ConditionalFormattingEntryReport> blocks = controller.conditionalFormatting(sheet);
 
       assertEquals(4, blocks.size());
       assertInstanceOf(
@@ -1132,7 +1143,10 @@ class ExcelConditionalFormattingControllerTest {
       assertEquals(
           List.of(),
           controller.conditionalFormatting(
-              sheet, new ExcelRangeSelection.Selected(List.of("A1:A3"))));
+              sheet,
+              List.of("A1:A3").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList()));
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .map(AnalysisFindingReport::code)

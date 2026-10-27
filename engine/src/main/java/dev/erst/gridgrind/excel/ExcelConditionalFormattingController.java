@@ -31,21 +31,6 @@ final class ExcelConditionalFormattingController {
     authoring.setConditionalFormatting(sheet, ranges, formatting);
   }
 
-  /** Removes conditional-formatting blocks on one sheet according to the provided selection. */
-  void clearConditionalFormatting(XSSFSheet sheet, ExcelRangeSelection selection) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(selection, "selection must not be null");
-    authoring.clearConditionalFormatting(sheet, selection);
-  }
-
-  /** Returns factual conditional-formatting blocks for one sheet and range selection. */
-  List<ConditionalFormattingEntryReport> conditionalFormatting(
-      XSSFSheet sheet, ExcelRangeSelection selection) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(selection, "selection must not be null");
-    return snapshots.conditionalFormatting(sheet, selection);
-  }
-
   /** Returns the number of conditional-formatting blocks currently present on one sheet. */
   int conditionalFormattingBlockCount(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
@@ -58,7 +43,7 @@ final class ExcelConditionalFormattingController {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(sheet, "sheet must not be null");
     return health.conditionalFormattingHealthFindings(
-        sheetName, sheet, conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+        sheetName, sheet, conditionalFormatting(sheet));
   }
 
   /** Converts one loaded POI conditional-formatting rule into the matching GridGrind snapshot. */
@@ -92,5 +77,31 @@ final class ExcelConditionalFormattingController {
   /** Returns the stable label used in priority-collision evidence for one snapshot rule family. */
   static String ruleLabel(ConditionalFormattingRuleReport rule) {
     return ExcelConditionalFormattingSnapshotSupport.ruleLabel(rule);
+  }
+
+  /** Applies the explicit bound-sheet range operation. */
+  void clearConditionalFormatting(XSSFSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    authoring.clearConditionalFormatting(sheet);
+  }
+
+  /** Applies the explicit bound-sheet range operation. */
+  void clearConditionalFormatting(
+      XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    authoring.clearConditionalFormatting(sheet, ranges);
+  }
+
+  /** Applies the explicit bound-sheet range operation. */
+  List<ConditionalFormattingEntryReport> conditionalFormatting(XSSFSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return snapshots.conditionalFormatting(sheet);
+  }
+
+  /** Applies the explicit bound-sheet range operation. */
+  List<ConditionalFormattingEntryReport> conditionalFormatting(
+      XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return snapshots.conditionalFormatting(sheet, ranges);
   }
 }

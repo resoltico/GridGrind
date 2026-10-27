@@ -7,7 +7,6 @@ import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,21 +33,6 @@ public final class ExcelDataValidationController {
     authoring.setDataValidation(sheet, range, validationDefinition);
   }
 
-  /** Removes data-validation structures on the sheet that match the provided range selection. */
-  public void clearDataValidations(XSSFSheet sheet, ExcelRangeSelection selection) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(selection, "selection must not be null");
-    authoring.clearDataValidations(sheet, selection);
-  }
-
-  /** Returns data-validation metadata for the selected ranges on one sheet. */
-  public List<DataValidationEntryReport> dataValidations(
-      XSSFSheet sheet, ExcelRangeSelection selection) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(selection, "selection must not be null");
-    return snapshots.dataValidations(sheet, selection);
-  }
-
   /** Returns the number of raw data-validation structures currently present on the sheet. */
   public int dataValidationCount(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
@@ -61,8 +45,7 @@ public final class ExcelDataValidationController {
       String sheetName, XSSFSheet sheet) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(sheet, "sheet must not be null");
-    return health.dataValidationHealthFindings(
-        sheetName, dataValidations(sheet, new ExcelRangeSelection.All()));
+    return health.dataValidationHealthFindings(sheetName, dataValidations(sheet));
   }
 
   public static DataValidationEntryReport toSnapshot(
@@ -101,5 +84,31 @@ public final class ExcelDataValidationController {
 
   public static String operatorLabel(ExcelComparisonOperator operator) {
     return ExcelDataValidationSnapshotSupport.operatorLabel(operator);
+  }
+
+  /** Applies the explicit bound-sheet range operation. */
+  public void clearDataValidations(XSSFSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    authoring.clearDataValidations(sheet);
+  }
+
+  /** Applies the explicit bound-sheet range operation. */
+  public void clearDataValidations(
+      XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    authoring.clearDataValidations(sheet, ranges);
+  }
+
+  /** Applies the explicit bound-sheet range operation. */
+  public List<DataValidationEntryReport> dataValidations(XSSFSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return snapshots.dataValidations(sheet);
+  }
+
+  /** Applies the explicit bound-sheet range operation. */
+  public List<DataValidationEntryReport> dataValidations(
+      XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return snapshots.dataValidations(sheet, ranges);
   }
 }

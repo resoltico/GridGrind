@@ -859,22 +859,27 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1048577, 1));
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1, 16385));
 
-      List<CellHyperlinkReport> allHyperlinks =
-          sheet.annotations().hyperlinks(new ExcelCellSelection.AllUsedCells());
+      List<CellHyperlinkReport> allHyperlinks = sheet.annotations().hyperlinks();
       assertEquals(1, allHyperlinks.size());
       assertEquals("A1", allHyperlinks.getFirst().address().value());
 
       List<CellHyperlinkReport> selectedHyperlinks =
           sheet
               .annotations()
-              .hyperlinks(new ExcelCellSelection.Selected(List.of("A1", "B2", "B9", "D3")));
+              .hyperlinks(
+                  List.of("A1", "B2", "B9", "D3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                      .toList());
       assertEquals(1, selectedHyperlinks.size());
       assertEquals("A1", selectedHyperlinks.getFirst().address().value());
 
       List<CellCommentReport> selectedComments =
           sheet
               .annotations()
-              .comments(new ExcelCellSelection.Selected(List.of("C3", "B2", "A9", "D3")));
+              .comments(
+                  List.of("C3", "B2", "A9", "D3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                      .toList());
       assertEquals(1, selectedComments.size());
       assertEquals("C3", selectedComments.getFirst().address().value());
 

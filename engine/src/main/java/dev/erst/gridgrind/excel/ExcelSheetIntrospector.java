@@ -1,10 +1,8 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
-import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import java.util.List;
@@ -36,20 +34,6 @@ final class ExcelSheetIntrospector {
   List<MergedRegionReport> mergedRegions(ExcelSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return sheet.layout().mergedRegions();
-  }
-
-  /** Returns hyperlink metadata for the selected cells on one sheet. */
-  List<CellHyperlinkReport> hyperlinks(ExcelSheet sheet, ExcelCellSelection selection) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(selection, "selection must not be null");
-    return sheet.annotations().hyperlinks(selection);
-  }
-
-  /** Returns comment metadata for the selected cells on one sheet. */
-  List<CellCommentReport> comments(ExcelSheet sheet, ExcelCellSelection selection) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(selection, "selection must not be null");
-    return sheet.annotations().comments(selection);
   }
 
   /** Returns layout metadata such as pane state, zoom, and visible sizing. */

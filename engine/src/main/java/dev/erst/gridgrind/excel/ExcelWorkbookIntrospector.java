@@ -13,8 +13,6 @@ import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
-import dev.erst.gridgrind.core.plan.InspectionIntrospectionResult;
-import dev.erst.gridgrind.core.plan.InspectionSurfaceResult;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.result.TypeCountReport;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
@@ -47,136 +45,211 @@ final class ExcelWorkbookIntrospector {
   }
 
   /** Executes one fact-only read command against the workbook. */
-  InspectionIntrospectionResult execute(
-      ExcelWorkbook workbook, WorkbookReadCommand.Introspection command) {
+  dev.erst.gridgrind.core.plan.InspectionResult execute(
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedInspectionStep command) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(command, "command must not be null");
 
-    return switch (command) {
-      case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
+    return switch (command.query()) {
+      case dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookSummary _ ->
           new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
-              getWorkbookSummary.stepId(), workbook.workbookSummary());
-      case WorkbookReadCommand.GetPackageSecurity getPackageSecurity ->
+              command.stepId(), workbook.workbookSummary());
+      case dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetPackageSecurity _ ->
           new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult(
-              getPackageSecurity.stepId(), workbook.packageSecurity());
-      case WorkbookReadCommand.GetWorkbookProtection getWorkbookProtection ->
+              command.stepId(), workbook.packageSecurity());
+      case dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookProtection _ ->
           new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookProtectionResult(
-              getWorkbookProtection.stepId(), workbook.workbookProtection());
-      case WorkbookReadCommand.GetCustomXmlMappings getCustomXmlMappings ->
+              command.stepId(), workbook.workbookProtection());
+      case dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetCustomXmlMappings _ ->
           new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlMappingsResult(
-              getCustomXmlMappings.stepId(), workbook.customXml().customXmlMappings());
-      case WorkbookReadCommand.ExportCustomXmlMapping exportCustomXmlMapping ->
+              command.stepId(), workbook.customXml().customXmlMappings());
+      case dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.ExportCustomXmlMapping
+              exportCustomXmlMapping ->
           new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlExportResult(
-              exportCustomXmlMapping.stepId(),
+              command.stepId(),
               workbook
                   .customXml()
                   .exportCustomXmlMapping(
                       exportCustomXmlMapping.mapping(),
                       exportCustomXmlMapping.validateSchema(),
                       exportCustomXmlMapping.encoding()));
-      case WorkbookReadCommand.GetNamedRanges getNamedRanges ->
+      case dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetNamedRanges _ ->
           new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.NamedRangesResult(
-              getNamedRanges.stepId(), selectNamedRanges(workbook, getNamedRanges.selection()));
-      case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
+              command.stepId(),
+              selectNamedRanges(
+                  workbook, (dev.erst.gridgrind.core.plan.NamedRangeSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult(
-              getSheetSummary.stepId(), workbook.sheetSummary(getSheetSummary.sheetName()));
-      case WorkbookReadCommand.GetArrayFormulas getArrayFormulas ->
+              command.stepId(),
+              workbook.sheetSummary(
+                  ((dev.erst.gridgrind.core.plan.SheetSelector.ByName) command.target())
+                      .name()
+                      .value()));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetArrayFormulas _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.ArrayFormulasResult(
-              getArrayFormulas.stepId(), arrayFormulas(workbook, getArrayFormulas.selection()));
-      case WorkbookReadCommand.GetCells getCells ->
+              command.stepId(),
+              arrayFormulas(
+                  workbook, (dev.erst.gridgrind.core.plan.SheetSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetCells getCells ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult(
-              getCells.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(getCells.sheetName()),
+              command.stepId(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(cellSheet(command.target())),
               sheetIntrospector.cells(
-                  workbook.sheet(getCells.sheetName()),
-                  getCells.addresses(),
-                  getCells.projection()));
-      case WorkbookReadCommand.GetWindow getWindow ->
+                  workbook.sheet(cellSheet(command.target())),
+                  cellAddresses(command.target()),
+                  getCells.resolvedProjection()));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetWindow _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.WindowResult(
-              getWindow.stepId(), readWindow(workbook, getWindow));
-      case WorkbookReadCommand.GetMergedRegions getMergedRegions ->
+              command.stepId(), readWindow(workbook, command));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetMergedRegions _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.MergedRegionsResult(
-              getMergedRegions.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(getMergedRegions.sheetName()),
-              sheetIntrospector.mergedRegions(workbook.sheet(getMergedRegions.sheetName())));
-      case WorkbookReadCommand.GetHyperlinks getHyperlinks ->
+              command.stepId(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+                  ((dev.erst.gridgrind.core.plan.SheetSelector.ByName) command.target())
+                      .name()
+                      .value()),
+              sheetIntrospector.mergedRegions(
+                  workbook.sheet(
+                      ((dev.erst.gridgrind.core.plan.SheetSelector.ByName) command.target())
+                          .name()
+                          .value())));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetHyperlinks _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.HyperlinksResult(
-              getHyperlinks.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(getHyperlinks.sheetName()),
-              sheetIntrospector.hyperlinks(
-                  workbook.sheet(getHyperlinks.sheetName()), getHyperlinks.selection()));
-      case WorkbookReadCommand.GetComments getComments ->
+              command.stepId(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(cellSheet(command.target())),
+              readHyperlinks(workbook, command.target()));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetComments _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.CommentsResult(
-              getComments.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(getComments.sheetName()),
-              sheetIntrospector.comments(
-                  workbook.sheet(getComments.sheetName()), getComments.selection()));
-      case WorkbookReadCommand.GetDrawingObjects getDrawingObjects ->
+              command.stepId(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(cellSheet(command.target())),
+              readComments(workbook, command.target()));
+      case dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetDrawingObjects _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.DrawingObjectsResult(
-              getDrawingObjects.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(getDrawingObjects.sheetName()),
-              documentIntrospector.drawingObjects(workbook, getDrawingObjects.sheetName()));
-      case WorkbookReadCommand.GetCharts getCharts ->
+              command.stepId(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+                  ((dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet) command.target())
+                      .sheetName()
+                      .value()),
+              documentIntrospector.drawingObjects(
+                  workbook,
+                  ((dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet) command.target())
+                      .sheetName()
+                      .value()));
+      case dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetCharts _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult(
-              getCharts.stepId(),
+              command.stepId(),
               new dev.erst.gridgrind.core.vocabulary.SheetLabel(
-                  getCharts.selection().sheetName().value()),
-              documentIntrospector.charts(workbook, getCharts.selection()));
-      case WorkbookReadCommand.GetPivotTables getPivotTables ->
+                  ((dev.erst.gridgrind.core.plan.ChartSelector) command.target())
+                      .sheetName()
+                      .value()),
+              documentIntrospector.charts(
+                  workbook, (dev.erst.gridgrind.core.plan.ChartSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetPivotTables _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult(
-              getPivotTables.stepId(),
-              documentIntrospector.pivotTables(workbook, getPivotTables.selection()));
-      case WorkbookReadCommand.GetDrawingObjectPayload getDrawingObjectPayload ->
+              command.stepId(),
+              documentIntrospector.pivotTables(
+                  workbook, (dev.erst.gridgrind.core.plan.PivotTableSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.DrawingObjectPayloadResult(
-              getDrawingObjectPayload.stepId(),
+              command.stepId(),
               new dev.erst.gridgrind.core.vocabulary.SheetLabel(
-                  getDrawingObjectPayload.sheetName()),
+                  ((dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName) command.target())
+                      .sheetName()
+                      .value()),
               documentIntrospector.drawingObjectPayload(
                   workbook,
-                  getDrawingObjectPayload.sheetName(),
-                  getDrawingObjectPayload.objectName()));
-      case WorkbookReadCommand.GetSheetLayout getSheetLayout ->
+                  ((dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName) command.target())
+                      .sheetName()
+                      .value(),
+                  ((dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName) command.target())
+                      .objectName()));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetLayout _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetLayoutResult(
-              getSheetLayout.stepId(),
-              sheetIntrospector.layout(workbook.sheet(getSheetLayout.sheetName())));
-      case WorkbookReadCommand.GetPrintLayout getPrintLayout ->
+              command.stepId(),
+              sheetIntrospector.layout(
+                  workbook.sheet(
+                      ((dev.erst.gridgrind.core.plan.SheetSelector.ByName) command.target())
+                          .name()
+                          .value())));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetPrintLayout _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.PrintLayoutResult(
-              getPrintLayout.stepId(),
-              sheetIntrospector.printLayout(workbook.sheet(getPrintLayout.sheetName())));
-      case WorkbookReadCommand.GetDataValidations getDataValidations ->
+              command.stepId(),
+              sheetIntrospector.printLayout(
+                  workbook.sheet(
+                      ((dev.erst.gridgrind.core.plan.SheetSelector.ByName) command.target())
+                          .name()
+                          .value())));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetDataValidations _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult(
-              getDataValidations.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(getDataValidations.sheetName()),
-              documentIntrospector.dataValidations(
-                  workbook.sheet(getDataValidations.sheetName()), getDataValidations.selection()));
-      case WorkbookReadCommand.GetConditionalFormatting getConditionalFormatting ->
+              command.stepId(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(rangeSheet(command.target())),
+              readDataValidations(workbook, command.target()));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetConditionalFormatting _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult(
-              getConditionalFormatting.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(
-                  getConditionalFormatting.sheetName()),
-              documentIntrospector.conditionalFormatting(
-                  workbook.sheet(getConditionalFormatting.sheetName()),
-                  getConditionalFormatting.selection()));
-      case WorkbookReadCommand.GetAutofilters getAutofilters ->
+              command.stepId(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(rangeSheet(command.target())),
+              readConditionalFormatting(workbook, command.target()));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetAutofilters _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult(
-              getAutofilters.stepId(),
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(getAutofilters.sheetName()),
-              documentIntrospector.autofilters(workbook, getAutofilters.sheetName()));
-      case WorkbookReadCommand.GetTables getTables ->
+              command.stepId(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+                  ((dev.erst.gridgrind.core.plan.SheetSelector.ByName) command.target())
+                      .name()
+                      .value()),
+              documentIntrospector.autofilters(
+                  workbook,
+                  ((dev.erst.gridgrind.core.plan.SheetSelector.ByName) command.target())
+                      .name()
+                      .value()));
+      case dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetTables _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult(
-              getTables.stepId(), documentIntrospector.tables(workbook, getTables.selection()));
+              command.stepId(),
+              documentIntrospector.tables(
+                  workbook, (dev.erst.gridgrind.core.plan.TableSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionSurfaceQuery.GetFormulaSurface _ ->
+          new dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.FormulaSurfaceResult(
+              command.stepId(),
+              formulaSurface(
+                  workbook, (dev.erst.gridgrind.core.plan.SheetSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionSurfaceQuery.GetSheetSchema getSheetSchema ->
+          new dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult(
+              command.stepId(),
+              sheetSchema(
+                  workbook,
+                  ((dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow) command.target())
+                      .sheetName()
+                      .value(),
+                  ((dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow) command.target())
+                      .topLeftAddress()
+                      .value(),
+                  ((dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow) command.target())
+                      .rowCount(),
+                  ((dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow) command.target())
+                      .columnCount(),
+                  getSheetSchema.resolvedProjection(),
+                  workbook.xssfWorkbook().isDate1904()));
+      case dev.erst.gridgrind.core.plan.InspectionSurfaceQuery.GetNamedRangeSurface _ ->
+          new dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult(
+              command.stepId(),
+              namedRangeSurface(
+                  workbook, (dev.erst.gridgrind.core.plan.NamedRangeSelector) command.target()));
+      default ->
+          throw new IllegalArgumentException(
+              "Unsupported query group: " + command.query().queryType());
     };
   }
 
   private dev.erst.gridgrind.core.model.layout.WindowReport readWindow(
-      ExcelWorkbook workbook, WorkbookReadCommand.GetWindow query) {
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedInspectionStep command) {
+    var query = (dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetWindow) command.query();
+    var window = (dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow) command.target();
     var dense =
         sheetIntrospector.window(
-            workbook.sheet(query.sheetName()),
-            query.window().topLeftAddress(),
-            query.window().rowCount(),
-            query.window().columnCount(),
-            query.projection());
+            workbook.sheet(window.sheetName().value()),
+            window.topLeftAddress().value(),
+            window.rowCount(),
+            window.columnCount(),
+            query.resolvedProjection());
     if (query.includeBlanks()) return dense;
     return new dev.erst.gridgrind.core.model.layout.WindowReport.Sparse(
         dense.sheetName(),
@@ -188,33 +261,6 @@ final class ExcelWorkbookIntrospector {
                 cell ->
                     !(cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport))
             .toList());
-  }
-
-  /** Executes one derived factual surface-summary read command against the workbook. */
-  InspectionSurfaceResult execute(ExcelWorkbook workbook, WorkbookReadCommand.Surface command) {
-    Objects.requireNonNull(workbook, "workbook must not be null");
-    Objects.requireNonNull(command, "command must not be null");
-
-    return switch (command) {
-      case WorkbookReadCommand.GetFormulaSurface getFormulaSurface ->
-          new dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.FormulaSurfaceResult(
-              getFormulaSurface.stepId(), formulaSurface(workbook, getFormulaSurface.selection()));
-      case WorkbookReadCommand.GetSheetSchema getSheetSchema ->
-          new dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult(
-              getSheetSchema.stepId(),
-              sheetSchema(
-                  workbook,
-                  getSheetSchema.sheetName(),
-                  getSheetSchema.window().topLeftAddress(),
-                  getSheetSchema.window().rowCount(),
-                  getSheetSchema.window().columnCount(),
-                  getSheetSchema.projection(),
-                  workbook.xssfWorkbook().isDate1904()));
-      case WorkbookReadCommand.GetNamedRangeSurface getNamedRangeSurface ->
-          new dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult(
-              getNamedRangeSurface.stepId(),
-              namedRangeSurface(workbook, getNamedRangeSurface.selection()));
-    };
   }
 
   /** Returns the named ranges selected by the provided workbook-core named-range selection. */
@@ -566,5 +612,98 @@ final class ExcelWorkbookIntrospector {
     facets.add(CellReadFacet.VALUE);
     facets.add(CellReadFacet.FORMAT);
     return new CellReadProjection(List.copyOf(facets));
+  }
+
+  private static String cellSheet(dev.erst.gridgrind.core.plan.ResolvedTarget target) {
+    return switch (target) {
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddress cell -> cell.sheetName().value();
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddresses cells -> cells.sheetName().value();
+      case dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet cells ->
+          cells.sheetName().value();
+      default -> throw new IllegalArgumentException("Expected resolved cell target");
+    };
+  }
+
+  private static java.util.List<String> cellAddresses(
+      dev.erst.gridgrind.core.plan.ResolvedTarget target) {
+    return switch (target) {
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddress cell ->
+          java.util.List.of(cell.address().value());
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddresses cells ->
+          cells.addresses().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.CellAddress::value)
+              .toList();
+      default -> throw new IllegalArgumentException("Expected exact cell addresses");
+    };
+  }
+
+  private static String rangeSheet(dev.erst.gridgrind.core.plan.ResolvedTarget target) {
+    return switch (target) {
+      case dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet range -> range.sheetName().value();
+      case dev.erst.gridgrind.core.plan.RangeSelector.ByRange range -> range.sheetName().value();
+      case dev.erst.gridgrind.core.plan.RangeSelector.ByRanges range -> range.sheetName().value();
+      case dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow range ->
+          range.sheetName().value();
+      default -> throw new IllegalArgumentException("Expected resolved range target");
+    };
+  }
+
+  private static List<dev.erst.gridgrind.core.model.value.CellHyperlinkReport> readHyperlinks(
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedTarget target) {
+    var annotations = workbook.sheet(cellSheet(target)).annotations();
+    return switch (target) {
+      case dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet _ -> annotations.hyperlinks();
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddress cell ->
+          annotations.hyperlinks(List.of(cell.address()));
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddresses cells ->
+          annotations.hyperlinks(cells.addresses());
+      default -> throw new IllegalArgumentException("Expected resolved cell selection");
+    };
+  }
+
+  private static List<dev.erst.gridgrind.core.model.drawing.CellCommentReport> readComments(
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedTarget target) {
+    var annotations = workbook.sheet(cellSheet(target)).annotations();
+    return switch (target) {
+      case dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet _ -> annotations.comments();
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddress cell ->
+          annotations.comments(List.of(cell.address()));
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddresses cells ->
+          annotations.comments(cells.addresses());
+      default -> throw new IllegalArgumentException("Expected resolved cell selection");
+    };
+  }
+
+  private static List<dev.erst.gridgrind.core.model.validation.DataValidationEntryReport>
+      readDataValidations(
+          ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedTarget target) {
+    var metadata = workbook.sheet(rangeSheet(target)).metadata();
+    return switch (target) {
+      case dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet _ -> metadata.dataValidations();
+      case dev.erst.gridgrind.core.plan.RangeSelector.ByRange range ->
+          metadata.dataValidations(List.of(range.range()));
+      case dev.erst.gridgrind.core.plan.RangeSelector.ByRanges ranges ->
+          metadata.dataValidations(ranges.ranges());
+      case dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow window ->
+          metadata.dataValidations(List.of(window.range()));
+      default -> throw new IllegalArgumentException("Expected resolved range target");
+    };
+  }
+
+  private static List<dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport>
+      readConditionalFormatting(
+          ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedTarget target) {
+    var metadata = workbook.sheet(rangeSheet(target)).metadata();
+    return switch (target) {
+      case dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet _ ->
+          metadata.conditionalFormatting();
+      case dev.erst.gridgrind.core.plan.RangeSelector.ByRange range ->
+          metadata.conditionalFormatting(List.of(range.range()));
+      case dev.erst.gridgrind.core.plan.RangeSelector.ByRanges ranges ->
+          metadata.conditionalFormatting(ranges.ranges());
+      case dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow window ->
+          metadata.conditionalFormatting(List.of(window.range()));
+      default -> throw new IllegalArgumentException("Expected resolved range target");
+    };
   }
 }

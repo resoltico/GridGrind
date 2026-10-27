@@ -209,15 +209,14 @@ public final class ResolvedMutationExecutor {
               .sheet(sheet(target))
               .metadata()
               .setDataValidation(range(target), action.validation());
-      case StructuredMutationAction.ClearDataValidations _ ->
-          workbook.sheet(sheet(target)).metadata().clearDataValidations(selection(target));
+      case StructuredMutationAction.ClearDataValidations _ -> clearRanges(workbook, target, true);
       case StructuredMutationAction.SetConditionalFormatting action ->
           workbook
               .sheet(sheet(target))
               .metadata()
               .setConditionalFormatting(ranges(target), action.conditionalFormatting());
       case StructuredMutationAction.ClearConditionalFormatting _ ->
-          workbook.sheet(sheet(target)).metadata().clearConditionalFormatting(selection(target));
+          clearRanges(workbook, target, false);
       case StructuredMutationAction.SetAutofilter action ->
           workbook
               .sheet(sheet(target))
@@ -288,19 +287,22 @@ public final class ResolvedMutationExecutor {
     };
   }
 
-  private static ExcelRangeSelection selection(ResolvedTarget target) {
-    return switch (target) {
-      case RangeSelector.AllOnSheet _ -> new ExcelRangeSelection.All();
-      case RangeSelector.ByRange range ->
-          new ExcelRangeSelection.Selected(List.of(range.range().value()));
-      case RangeSelector.ByRanges ranges ->
-          new ExcelRangeSelection.Selected(
-              ranges.ranges().stream()
-                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::value)
-                  .toList());
-      case RangeSelector.RectangularWindow window ->
-          new ExcelRangeSelection.Selected(List.of(window.range().value()));
-      default -> throw new IllegalArgumentException("Clear operation requires a range target");
-    };
+  private static void clearRanges(
+      ExcelWorkbook workbook, ResolvedTarget target, boolean validation) {
+    var metadata = workbook.sheet(sheet(target)).metadata();
+    if (target instanceof RangeSelector.AllOnSheet) {
+      if (validation) metadata.clearDataValidations();
+      else metadata.clearConditionalFormatting();
+      return;
+    }
+    var selected =
+        switch (target) {
+          case RangeSelector.ByRange range -> List.of(range.range());
+          case RangeSelector.ByRanges ranges -> ranges.ranges();
+          case RangeSelector.RectangularWindow window -> List.of(window.range());
+          default -> throw new IllegalArgumentException("Clear operation requires range targets");
+        };
+    if (validation) metadata.clearDataValidations(selected);
+    else metadata.clearConditionalFormatting(selected);
   }
 }

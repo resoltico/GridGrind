@@ -85,13 +85,15 @@ final class ExcelConditionalFormattingAuthoringSupport {
     normalizePriorities(sheet);
   }
 
-  void clearConditionalFormatting(XSSFSheet sheet, ExcelRangeSelection selection) {
-    switch (selection) {
-      case ExcelRangeSelection.All _ -> clearAll(sheet);
-      case ExcelRangeSelection.Selected selected ->
-          removeIntersectingBlocks(
-              sheet, selected.ranges().stream().map(ExcelRange::parse).toList());
-    }
+  void clearConditionalFormatting(XSSFSheet sheet) {
+    clearAll(sheet);
+    normalizePriorities(sheet);
+  }
+
+  void clearConditionalFormatting(
+      XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    removeIntersectingBlocks(
+        sheet, ranges.stream().map(range -> ExcelRange.parse(range.value())).toList());
     normalizePriorities(sheet);
   }
 

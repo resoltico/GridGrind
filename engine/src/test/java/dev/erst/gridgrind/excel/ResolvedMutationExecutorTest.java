@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.excel;
 
-import static dev.erst.gridgrind.excel.WorkbookSampleFixtures.clearRangesStep;
 import static dev.erst.gridgrind.excel.WorkbookSampleFixtures.deleteNamedRangeStep;
 import static dev.erst.gridgrind.excel.WorkbookSampleFixtures.setNamedRangeStep;
 import static dev.erst.gridgrind.excel.WorkbookSampleFixtures.setPivotTableStep;
@@ -166,9 +165,12 @@ class ResolvedMutationExecutorTest {
               new ResolvedStep(
                   new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("C1:C3")),
                   new ResolvedMutationAction.SetDataValidation(validationDefinition())),
-              clearRangesStep(
-                  new SheetName("Budget"),
-                  new ExcelRangeSelection.Selected(List.of("C2")),
+              new dev.erst.gridgrind.core.plan.ResolvedStep(
+                  new dev.erst.gridgrind.core.plan.RangeSelector.ByRanges(
+                      new SheetName("Budget"),
+                      List.of("C2").stream()
+                          .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                          .toList()),
                   new StructuredMutationAction.ClearDataValidations()),
               new ResolvedStep(
                   new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B3")),
@@ -297,15 +299,23 @@ class ResolvedMutationExecutorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Ops")));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("autofilters"),
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetAutofilters())));
       dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult tables =
           assertInstanceOf(
               dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetTables(
-                          new StepId("tables"), new TableSelector.All())));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("tables"),
+                          new TableSelector.All(),
+                          new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                              .GetTables())));
       assertEquals(
           List.of(
               new AutofilterEntryReport.SheetOwned(
@@ -360,15 +370,23 @@ class ResolvedMutationExecutorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       reopened,
-                      new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Ops")));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("autofilters"),
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetAutofilters())));
       dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult tables =
           assertInstanceOf(
               dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       reopened,
-                      new WorkbookReadCommand.GetTables(
-                          new StepId("tables"), new TableSelector.All())));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("tables"),
+                          new TableSelector.All(),
+                          new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                              .GetTables())));
       assertEquals(
           List.of(
               new AutofilterEntryReport.SheetOwned(
@@ -484,18 +502,18 @@ class ResolvedMutationExecutorTest {
           () ->
               executor.apply(
                   workbook,
-                  clearRangesStep(
-                      new SheetName("Missing"),
-                      new ExcelRangeSelection.All(),
+                  new dev.erst.gridgrind.core.plan.ResolvedStep(
+                      new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                          new SheetName("Missing")),
                       new StructuredMutationAction.ClearDataValidations())));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  clearRangesStep(
-                      new SheetName("Missing"),
-                      new ExcelRangeSelection.All(),
+                  new dev.erst.gridgrind.core.plan.ResolvedStep(
+                      new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                          new SheetName("Missing")),
                       new StructuredMutationAction.ClearConditionalFormatting())));
       assertThrows(
           SheetNotFoundException.class,
@@ -659,8 +677,11 @@ class ResolvedMutationExecutorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetPivotTables(
-                          new StepId("pivots"), new PivotTableSelector.All())));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("pivots"),
+                          new PivotTableSelector.All(),
+                          new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                              .GetPivotTables())));
       PivotTableReport.Supported pivot =
           assertInstanceOf(PivotTableReport.Supported.class, pivotTables.pivotTables().getFirst());
 
@@ -679,8 +700,11 @@ class ResolvedMutationExecutorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetPivotTables(
-                          new StepId("pivots"), new PivotTableSelector.All())));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("pivots"),
+                          new PivotTableSelector.All(),
+                          new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                              .GetPivotTables())));
       assertEquals(List.of(), afterDelete.pivotTables());
     }
   }
@@ -860,15 +884,18 @@ class ResolvedMutationExecutorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetConditionalFormatting(
-                          new StepId("cf"), "Ops", new ExcelRangeSelection.All())));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("cf"),
+                          new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetConditionalFormatting())));
       assertEquals(1, initial.conditionalFormattingBlocks().size());
 
       executor.apply(
           workbook,
-          clearRangesStep(
-              new SheetName("Ops"),
-              new ExcelRangeSelection.All(),
+          new dev.erst.gridgrind.core.plan.ResolvedStep(
+              new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(new SheetName("Ops")),
               new StructuredMutationAction.ClearConditionalFormatting()));
 
       dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult cleared =
@@ -877,8 +904,12 @@ class ResolvedMutationExecutorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetConditionalFormatting(
-                          new StepId("cf"), "Ops", new ExcelRangeSelection.All())));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("cf"),
+                          new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetConditionalFormatting())));
       assertEquals(List.of(), cleared.conditionalFormattingBlocks());
     }
   }
@@ -1309,7 +1340,12 @@ class ResolvedMutationExecutorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget")));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("autofilters"),
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetAutofilters())));
       assertEquals(
           List.of(
               new AutofilterEntryReport.SheetOwned(

@@ -51,24 +51,12 @@ final class ExcelSheetMetadataSupport {
     return owner;
   }
 
-  ExcelSheet clearDataValidations(ExcelRangeSelection selection, ExcelSheet owner) {
-    Objects.requireNonNull(selection, "selection must not be null");
-    dataValidationController.clearDataValidations(xssfSheet(), selection);
-    return owner;
-  }
-
   ExcelSheet setConditionalFormatting(
       List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges,
       dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec formatting,
       ExcelSheet owner) {
     Objects.requireNonNull(formatting, "formatting must not be null");
     conditionalFormattingController.setConditionalFormatting(xssfSheet(), ranges, formatting);
-    return owner;
-  }
-
-  ExcelSheet clearConditionalFormatting(ExcelRangeSelection selection, ExcelSheet owner) {
-    Objects.requireNonNull(selection, "selection must not be null");
-    conditionalFormattingController.clearConditionalFormatting(xssfSheet(), selection);
     return owner;
   }
 
@@ -93,16 +81,6 @@ final class ExcelSheetMetadataSupport {
     return owner;
   }
 
-  List<DataValidationEntryReport> dataValidations(ExcelRangeSelection selection) {
-    Objects.requireNonNull(selection, "selection must not be null");
-    return dataValidationController.dataValidations(xssfSheet(), selection);
-  }
-
-  List<ConditionalFormattingEntryReport> conditionalFormatting(ExcelRangeSelection selection) {
-    Objects.requireNonNull(selection, "selection must not be null");
-    return conditionalFormattingController.conditionalFormatting(xssfSheet(), selection);
-  }
-
   int conditionalFormattingBlockCount() {
     return conditionalFormattingController.conditionalFormattingBlockCount(xssfSheet());
   }
@@ -121,5 +99,45 @@ final class ExcelSheetMetadataSupport {
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
+  }
+
+  ExcelSheet clearDataValidations(ExcelSheet owner) {
+    dataValidationController.clearDataValidations(xssfSheet());
+    return owner;
+  }
+
+  ExcelSheet clearDataValidations(
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges, ExcelSheet owner) {
+    dataValidationController.clearDataValidations(xssfSheet(), ranges);
+    return owner;
+  }
+
+  ExcelSheet clearConditionalFormatting(ExcelSheet owner) {
+    conditionalFormattingController.clearConditionalFormatting(xssfSheet());
+    return owner;
+  }
+
+  ExcelSheet clearConditionalFormatting(
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges, ExcelSheet owner) {
+    conditionalFormattingController.clearConditionalFormatting(xssfSheet(), ranges);
+    return owner;
+  }
+
+  List<DataValidationEntryReport> dataValidations() {
+    return dataValidationController.dataValidations(xssfSheet());
+  }
+
+  List<DataValidationEntryReport> dataValidations(
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    return dataValidationController.dataValidations(xssfSheet(), ranges);
+  }
+
+  List<ConditionalFormattingEntryReport> conditionalFormatting() {
+    return conditionalFormattingController.conditionalFormatting(xssfSheet());
+  }
+
+  List<ConditionalFormattingEntryReport> conditionalFormatting(
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    return conditionalFormattingController.conditionalFormatting(xssfSheet(), ranges);
   }
 }

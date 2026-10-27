@@ -92,7 +92,7 @@ exception.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `addresses must not exceed 250000 but was {n}` / `rowCount * columnCount must not exceed 250000 but was {n}` |
 | **Applies to** | `GET_CELLS`, `GET_WINDOW`, `GET_SHEET_SCHEMA` |
-| **Code** | `ExcelReadLimits.MAX_READ_CELLS`; `SelectorNumberValidation.requireReadCellCount // LIM-001`; `SelectorValueValidation.requireWindowSize // LIM-001`; `ExcelAddressLists.copyNonEmptyDistinctAddresses // LIM-001`; `WorkbookReadCommand.MAX_READ_CELLS // LIM-001` |
+| **Code** | `ExcelReadLimits.MAX_READ_CELLS`; `SelectorNumberValidation.requireReadCellCount // LIM-001`; `SelectorValueValidation.requireWindowSize // LIM-001`; `ExcelAddressLists.copyNonEmptyDistinctAddresses // LIM-001`; `InspectionQuery.MAX_READ_CELLS // LIM-001` |
 | **UX** | `--help` Limits section; `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` docs |
 
 Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily

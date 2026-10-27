@@ -52,17 +52,26 @@ class ExcelDataValidationWorkflowTest {
               dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
-                  new WorkbookReadCommand.GetDataValidations(
-                      new StepId("all"), "Budget", new ExcelRangeSelection.All())));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("all"),
+                      new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                          .GetDataValidations())));
       dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult selected =
           cast(
               dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
-                  new WorkbookReadCommand.GetDataValidations(
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                       new StepId("selected"),
-                      "Budget",
-                      new ExcelRangeSelection.Selected(List.of("B2")))));
+                      new dev.erst.gridgrind.core.plan.RangeSelector.ByRanges(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                          List.of("B2").stream()
+                              .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                              .toList()),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                          .GetDataValidations())));
 
       assertEquals(1, beforeClear.validations().size());
       DataValidationEntryReport.Supported supported =
@@ -78,15 +87,24 @@ class ExcelDataValidationWorkflowTest {
           supported.validation());
       assertEquals(beforeClear.validations(), selected.validations());
 
-      budget.metadata().clearDataValidations(new ExcelRangeSelection.Selected(List.of("B2")));
+      budget
+          .metadata()
+          .clearDataValidations(
+              List.of("B2").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList());
 
       dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult afterClear =
           cast(
               dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
-                  new WorkbookReadCommand.GetDataValidations(
-                      new StepId("afterClear"), "Budget", new ExcelRangeSelection.All())));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("afterClear"),
+                      new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                          .GetDataValidations())));
 
       assertEquals(1, afterClear.validations().size());
       DataValidationEntryReport.Supported retained =
@@ -137,8 +155,11 @@ class ExcelDataValidationWorkflowTest {
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeDataValidationHealth(
-                      new StepId("validationHealth"), new SheetSelector.All())));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("validationHealth"),
+                      new SheetSelector.All(),
+                      new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                          .AnalyzeDataValidationHealth())));
       WorkbookFindingsReport workbookFindings = analyzer.workbookFindings(workbook);
 
       assertEquals(2, health.checkedValidationCount());

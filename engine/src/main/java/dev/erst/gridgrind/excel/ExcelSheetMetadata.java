@@ -26,23 +26,11 @@ public final class ExcelSheetMetadata {
     return this;
   }
 
-  /** Removes data-validation structures on the sheet that match the provided range selection. */
-  public ExcelSheetMetadata clearDataValidations(ExcelRangeSelection selection) {
-    metadataSupport.clearDataValidations(selection, sheet);
-    return this;
-  }
-
   /** Creates or replaces one logical conditional-formatting block on this sheet. */
   public ExcelSheetMetadata setConditionalFormatting(
       List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges,
       dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec formatting) {
     metadataSupport.setConditionalFormatting(ranges, formatting, sheet);
-    return this;
-  }
-
-  /** Removes conditional-formatting blocks on this sheet matching the provided selection. */
-  public ExcelSheetMetadata clearConditionalFormatting(ExcelRangeSelection selection) {
-    metadataSupport.clearConditionalFormatting(selection, sheet);
     return this;
   }
 
@@ -67,14 +55,51 @@ public final class ExcelSheetMetadata {
     return this;
   }
 
-  /** Returns data-validation metadata for the selected ranges on this sheet. */
-  public List<DataValidationEntryReport> dataValidations(ExcelRangeSelection selection) {
-    return metadataSupport.dataValidations(selection);
+  /** Clears matching metadata on this bound sheet. */
+  public ExcelSheetMetadata clearDataValidations() {
+    metadataSupport.clearDataValidations(sheet);
+    return this;
   }
 
-  /** Returns factual conditional-formatting blocks for the selected ranges on this sheet. */
+  /** Clears matching metadata on this bound sheet. */
+  public ExcelSheetMetadata clearDataValidations(
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    metadataSupport.clearDataValidations(ranges, sheet);
+    return this;
+  }
+
+  /** Clears matching metadata on this bound sheet. */
+  public ExcelSheetMetadata clearConditionalFormatting() {
+    metadataSupport.clearConditionalFormatting(sheet);
+    return this;
+  }
+
+  /** Clears matching metadata on this bound sheet. */
+  public ExcelSheetMetadata clearConditionalFormatting(
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    metadataSupport.clearConditionalFormatting(ranges, sheet);
+    return this;
+  }
+
+  /** Reads matching metadata on this bound sheet. */
+  public List<DataValidationEntryReport> dataValidations() {
+    return metadataSupport.dataValidations();
+  }
+
+  /** Reads matching metadata on this bound sheet. */
+  public List<DataValidationEntryReport> dataValidations(
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    return metadataSupport.dataValidations(ranges);
+  }
+
+  /** Reads matching metadata on this bound sheet. */
+  public List<ConditionalFormattingEntryReport> conditionalFormatting() {
+    return metadataSupport.conditionalFormatting();
+  }
+
+  /** Reads matching metadata on this bound sheet. */
   public List<ConditionalFormattingEntryReport> conditionalFormatting(
-      ExcelRangeSelection selection) {
-    return metadataSupport.conditionalFormatting(selection);
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    return metadataSupport.conditionalFormatting(ranges);
   }
 }

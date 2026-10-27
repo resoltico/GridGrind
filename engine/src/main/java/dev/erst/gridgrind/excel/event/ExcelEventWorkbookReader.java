@@ -4,7 +4,6 @@ import dev.erst.gridgrind.core.plan.InspectionIntrospectionResult;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -28,7 +27,8 @@ import org.xml.sax.XMLReader;
 public final class ExcelEventWorkbookReader {
   /** Executes supported introspection commands against one workbook path using the event model. */
   public List<InspectionIntrospectionResult> apply(
-      Path workbookPath, Iterable<WorkbookReadCommand.Introspection> commands) throws IOException {
+      Path workbookPath, Iterable<dev.erst.gridgrind.core.plan.ResolvedInspectionStep> commands)
+      throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(commands, "commands must not be null");
 
@@ -37,7 +37,7 @@ public final class ExcelEventWorkbookReader {
       EventWorkbookMetadata metadata = EventWorkbookMetadata.workbookMetadata(reader);
       Map<String, EventSheetSummary> sheetSummaries = new ConcurrentHashMap<>();
       List<InspectionIntrospectionResult> results = new ArrayList<>();
-      for (WorkbookReadCommand.Introspection command : commands) {
+      for (dev.erst.gridgrind.core.plan.ResolvedInspectionStep command : commands) {
         Objects.requireNonNull(command, "command must not contain nulls");
         results.add(applyOne(reader, metadata, sheetSummaries, command));
       }
@@ -54,21 +54,27 @@ public final class ExcelEventWorkbookReader {
       XSSFReader reader,
       EventWorkbookMetadata metadata,
       Map<String, EventSheetSummary> sheetSummaries,
-      WorkbookReadCommand.Introspection command)
+      dev.erst.gridgrind.core.plan.ResolvedInspectionStep command)
       throws IOException {
-    return switch (command) {
-      case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
+    return switch (command.query()) {
+      case dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookSummary _ ->
           new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
-              getWorkbookSummary.stepId(), workbookSummary(reader, metadata, sheetSummaries));
-      case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
+              command.stepId(), workbookSummary(reader, metadata, sheetSummaries));
+      case dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary _ ->
           new dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult(
-              getSheetSummary.stepId(),
-              sheetSummary(reader, metadata, sheetSummaries, getSheetSummary.sheetName()));
+              command.stepId(),
+              sheetSummary(
+                  reader,
+                  metadata,
+                  sheetSummaries,
+                  ((dev.erst.gridgrind.core.plan.SheetSelector.ByName) command.target())
+                      .name()
+                      .value()));
       default ->
           throw new IllegalArgumentException(
               "execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and"
                   + " GET_SHEET_SUMMARY only; unsupported read type: "
-                  + EventReadCommandTypes.commandType(command));
+                  + command.query().queryType());
     };
   }
 

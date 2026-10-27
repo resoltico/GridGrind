@@ -38,7 +38,7 @@ class ResolvedRangeClearTest {
               new RangeSelector.RectangularWindow(
                   new SheetName("Rules"), new CellAddress("A1"), 3, 2),
               new StructuredMutationAction.ClearDataValidations()));
-      assertEquals(0, sheet.metadata().dataValidations(new ExcelRangeSelection.All()).size());
+      assertEquals(0, sheet.metadata().dataValidations().size());
     }
   }
 
@@ -60,7 +60,7 @@ class ResolvedRangeClearTest {
               new RangeSelector.RectangularWindow(
                   new SheetName("Rules"), new CellAddress("A1"), 3, 2),
               new StructuredMutationAction.ClearConditionalFormatting()));
-      assertEquals(0, sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()).size());
+      assertEquals(0, sheet.metadata().conditionalFormatting().size());
     }
   }
 }

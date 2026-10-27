@@ -217,12 +217,18 @@ final class OperationSequenceRuleValues {
     };
   }
 
-  static ExcelRangeSelection nextExcelRangeSelection(GridGrindFuzzData data, boolean validRange) {
+  static dev.erst.gridgrind.core.plan.RangeSelector nextClearRangeTarget(
+      GridGrindFuzzData data, boolean validRange, String sheetName) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new ExcelRangeSelection.All();
+      case 0 ->
+          new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+              new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName));
       default ->
-          new ExcelRangeSelection.Selected(
-              List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)));
+          new dev.erst.gridgrind.core.plan.RangeSelector.ByRanges(
+              new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName),
+              List.of(
+                  new dev.erst.gridgrind.core.vocabulary.RangeRef(
+                      validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false))));
     };
   }
 

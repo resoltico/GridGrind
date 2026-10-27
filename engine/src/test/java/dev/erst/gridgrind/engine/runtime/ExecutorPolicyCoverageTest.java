@@ -82,20 +82,6 @@ class ExecutorPolicyCoverageTest {
   }
 
   @Test
-  void inspectionCommandConverterRejectsUnsupportedChartTargets() {
-    IllegalArgumentException failure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                InspectionCommandConverter.toReadCommand(
-                    new StepId("charts"),
-                    new WorkbookSelector.Current(),
-                    new WorkbookAssetIntrospectionQuery.GetCharts()));
-
-    assertEquals("Unsupported chart inspection target", failure.getMessage());
-  }
-
-  @Test
   void workbookCommandConverterRejectsIdentityMismatchesAndBroadNamedRangeDeletes() {
     IllegalArgumentException tableMismatch =
         assertThrows(

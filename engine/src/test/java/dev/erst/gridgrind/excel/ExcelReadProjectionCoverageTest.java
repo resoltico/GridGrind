@@ -34,13 +34,4 @@ class ExcelReadProjectionCoverageTest {
             new CellReadProjection(
                 new java.util.ArrayList<>(java.util.Arrays.asList((CellReadFacet) null))));
   }
-
-  @Test
-  void readWindowRejectsNullTopLeftAddress() {
-    ExcelReadWindow window = new ExcelReadWindow("B3", 2, 3);
-
-    assertEquals("B3", window.topLeftAddress());
-    assertThrows(NullPointerException.class, () -> new ExcelReadWindow(null, 1, 1));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelReadWindow(" ", 1, 1));
-  }
 }

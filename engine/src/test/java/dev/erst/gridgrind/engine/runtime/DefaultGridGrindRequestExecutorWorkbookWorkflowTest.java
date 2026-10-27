@@ -92,7 +92,6 @@ import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -1435,10 +1434,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
               readExecutor
                   .read(
                       workbook,
-                      new WorkbookReadCommand.GetConditionalFormatting(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("conditional-formatting"),
-                          "Budget",
-                          new dev.erst.gridgrind.excel.ExcelRangeSelection.All()))
+                          new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetConditionalFormatting()))
                   .getFirst();
 
       assertEquals(1, reopened.conditionalFormattingBlocks().size());
@@ -1573,15 +1574,23 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
               readExecutor
                   .read(
                       workbook,
-                      new WorkbookReadCommand.GetAutofilters(new StepId("filters"), "Budget"))
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("filters"),
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetAutofilters()))
                   .getFirst();
       dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult reopenedTables =
           (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
               readExecutor
                   .read(
                       workbook,
-                      new WorkbookReadCommand.GetTables(
-                          new StepId("tables"), new TableSelector.All()))
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("tables"),
+                          new TableSelector.All(),
+                          new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                              .GetTables()))
                   .getFirst();
 
       assertEquals(

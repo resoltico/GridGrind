@@ -41,13 +41,25 @@ public final class ExcelSheetAnnotations {
     return this;
   }
 
-  /** Returns hyperlink metadata for the selected cells on this sheet. */
-  public List<CellHyperlinkReport> hyperlinks(ExcelCellSelection selection) {
-    return annotationSupport.hyperlinks(selection);
+  /** Returns metadata for every physically present cell on this bound sheet. */
+  public List<CellHyperlinkReport> hyperlinks() {
+    return annotationSupport.hyperlinks();
   }
 
-  /** Returns comment metadata for the selected cells on this sheet. */
-  public List<CellCommentReport> comments(ExcelCellSelection selection) {
-    return annotationSupport.comments(selection);
+  /** Returns metadata for the supplied ordered cell addresses. */
+  public List<CellHyperlinkReport> hyperlinks(
+      List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
+    return annotationSupport.hyperlinks(addresses);
+  }
+
+  /** Returns metadata for every physically present cell on this bound sheet. */
+  public List<CellCommentReport> comments() {
+    return annotationSupport.comments();
+  }
+
+  /** Returns metadata for the supplied ordered cell addresses. */
+  public List<CellCommentReport> comments(
+      List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
+    return annotationSupport.comments(addresses);
   }
 }

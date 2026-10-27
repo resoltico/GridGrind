@@ -56,48 +56,57 @@ final class WorkbookAnalyzer {
   InspectionAnalysisResult execute(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      WorkbookReadCommand.Analysis command) {
+      dev.erst.gridgrind.core.plan.ResolvedInspectionStep command) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     Objects.requireNonNull(command, "command must not be null");
 
-    return switch (command) {
-      case WorkbookReadCommand.AnalyzeFormulaHealth analyzeFormulaHealth ->
+    return switch ((dev.erst.gridgrind.core.plan.InspectionAnalysisQuery) command.query()) {
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeFormulaHealth _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult(
-              analyzeFormulaHealth.stepId(),
-              formulaHealth(workbook, analyzeFormulaHealth.selection()));
-      case WorkbookReadCommand.AnalyzeDataValidationHealth analyzeDataValidationHealth ->
+              command.stepId(),
+              formulaHealth(
+                  workbook, (dev.erst.gridgrind.core.plan.SheetSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeDataValidationHealth _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult(
-              analyzeDataValidationHealth.stepId(),
-              dataValidationHealth(workbook, analyzeDataValidationHealth.selection()));
-      case WorkbookReadCommand.AnalyzeConditionalFormattingHealth
-              analyzeConditionalFormattingHealth ->
+              command.stepId(),
+              dataValidationHealth(
+                  workbook, (dev.erst.gridgrind.core.plan.SheetSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth
+              _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult(
-              analyzeConditionalFormattingHealth.stepId(),
+              command.stepId(),
               conditionalFormattingHealth(
-                  workbook, analyzeConditionalFormattingHealth.selection()));
-      case WorkbookReadCommand.AnalyzeAutofilterHealth analyzeAutofilterHealth ->
+                  workbook, (dev.erst.gridgrind.core.plan.SheetSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeAutofilterHealth _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult(
-              analyzeAutofilterHealth.stepId(),
-              autofilterHealth(workbook, analyzeAutofilterHealth.selection()));
-      case WorkbookReadCommand.AnalyzeTableHealth analyzeTableHealth ->
+              command.stepId(),
+              autofilterHealth(
+                  workbook, (dev.erst.gridgrind.core.plan.SheetSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeTableHealth _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult(
-              analyzeTableHealth.stepId(), tableHealth(workbook, analyzeTableHealth.selection()));
-      case WorkbookReadCommand.AnalyzePivotTableHealth analyzePivotTableHealth ->
+              command.stepId(),
+              tableHealth(workbook, (dev.erst.gridgrind.core.plan.TableSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzePivotTableHealth _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult(
-              analyzePivotTableHealth.stepId(),
-              pivotTableHealth(workbook, analyzePivotTableHealth.selection()));
-      case WorkbookReadCommand.AnalyzeHyperlinkHealth analyzeHyperlinkHealth ->
+              command.stepId(),
+              pivotTableHealth(
+                  workbook, (dev.erst.gridgrind.core.plan.PivotTableSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeHyperlinkHealth _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult(
-              analyzeHyperlinkHealth.stepId(),
-              hyperlinkHealth(workbook, workbookLocation, analyzeHyperlinkHealth.selection()));
-      case WorkbookReadCommand.AnalyzeNamedRangeHealth analyzeNamedRangeHealth ->
+              command.stepId(),
+              hyperlinkHealth(
+                  workbook,
+                  workbookLocation,
+                  (dev.erst.gridgrind.core.plan.SheetSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeNamedRangeHealth _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult(
-              analyzeNamedRangeHealth.stepId(),
-              namedRangeHealth(workbook, analyzeNamedRangeHealth.selection()));
-      case WorkbookReadCommand.AnalyzeWorkbookFindings analyzeWorkbookFindings ->
+              command.stepId(),
+              namedRangeHealth(
+                  workbook, (dev.erst.gridgrind.core.plan.NamedRangeSelector) command.target()));
+      case dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeWorkbookFindings _ ->
           new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult(
-              analyzeWorkbookFindings.stepId(), workbookFindings(workbook, workbookLocation));
+              command.stepId(), workbookFindings(workbook, workbookLocation));
     };
   }
 

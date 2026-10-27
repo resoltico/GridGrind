@@ -43,9 +43,7 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
       DataValidationEntryReport.Supported supported =
           assertInstanceOf(
               DataValidationEntryReport.Supported.class,
-              new ExcelDataValidationController()
-                  .dataValidations(formulaSheet, new ExcelRangeSelection.All())
-                  .getFirst());
+              new ExcelDataValidationController().dataValidations(formulaSheet).getFirst());
       assertEquals(
           List.of("A3:A5"),
           supported.ranges().stream()
@@ -86,9 +84,7 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
       DataValidationEntryReport.Supported supported =
           assertInstanceOf(
               DataValidationEntryReport.Supported.class,
-              new ExcelDataValidationController()
-                  .dataValidations(formulaSheet, new ExcelRangeSelection.All())
-                  .getFirst());
+              new ExcelDataValidationController().dataValidations(formulaSheet).getFirst());
       assertEquals(
           List.of("B1:B3"),
           supported.ranges().stream()

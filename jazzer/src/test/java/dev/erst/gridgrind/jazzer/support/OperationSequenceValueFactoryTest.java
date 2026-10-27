@@ -362,12 +362,12 @@ class OperationSequenceValueFactoryTest {
                 OperationSequenceValueFactory.nextRangeSelector(
                     (GridGrindFuzzData) args[0], (String) args[1], (boolean) args[2])),
         new CoverageCase(
-            "nextExcelRangeSelection",
+            "nextClearRangeTarget",
             List.of(CoverageParameterKind.DATA, CoverageParameterKind.BOOLEAN),
             false,
             args ->
-                OperationSequenceValueFactory.nextExcelRangeSelection(
-                    (GridGrindFuzzData) args[0], (boolean) args[1])),
+                OperationSequenceValueFactory.nextClearRangeTarget(
+                    (GridGrindFuzzData) args[0], (boolean) args[1], "Budget")),
         new CoverageCase(
             "nextAutofilterRange",
             List.of(CoverageParameterKind.BOOLEAN),
@@ -610,7 +610,7 @@ class OperationSequenceValueFactoryTest {
       case "nextAutofilterRange",
           "nextPivotTableSpec",
           "nextPivotSource",
-          "nextExcelRangeSelection",
+          "nextClearRangeTarget",
           "nextExcelTableDefinition",
           "nextPivotTableInput",
           "nextPivotTableSelector",

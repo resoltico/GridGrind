@@ -44,14 +44,6 @@ final class ExcelSheetAnnotationSupport {
     commentSupport.clearComment(address);
   }
 
-  List<CellHyperlinkReport> hyperlinks(ExcelCellSelection selection) {
-    return hyperlinkSupport.hyperlinks(selection);
-  }
-
-  List<CellCommentReport> comments(ExcelCellSelection selection) {
-    return commentSupport.comments(selection);
-  }
-
   static void clearCellComment(Cell cell) {
     ExcelSheetCommentSupport.clearCellComment(cell);
   }
@@ -118,5 +110,26 @@ final class ExcelSheetAnnotationSupport {
 
   static Optional<String> vmlDrawingRelationId(XSSFSheet sheet) {
     return ExcelSheetCommentSupport.vmlDrawingRelationId(sheet);
+  }
+
+  /** Returns metadata for every physically present cell on this bound sheet. */
+  List<CellHyperlinkReport> hyperlinks() {
+    return hyperlinkSupport.hyperlinks();
+  }
+
+  /** Returns metadata for the supplied ordered cell addresses. */
+  List<CellHyperlinkReport> hyperlinks(
+      List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
+    return hyperlinkSupport.hyperlinks(addresses);
+  }
+
+  /** Returns metadata for every physically present cell on this bound sheet. */
+  List<CellCommentReport> comments() {
+    return commentSupport.comments();
+  }
+
+  /** Returns metadata for the supplied ordered cell addresses. */
+  List<CellCommentReport> comments(List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
+    return commentSupport.comments(addresses);
   }
 }

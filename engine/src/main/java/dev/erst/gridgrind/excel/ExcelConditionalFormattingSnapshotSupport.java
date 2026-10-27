@@ -24,8 +24,18 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatti
 
 /** Reads conditional-formatting XML into canonical GridGrind snapshot values. */
 final class ExcelConditionalFormattingSnapshotSupport {
+  List<ConditionalFormattingEntryReport> conditionalFormatting(XSSFSheet sheet) {
+    return readConditionalFormatting(sheet, ranges -> true);
+  }
+
   List<ConditionalFormattingEntryReport> conditionalFormatting(
-      XSSFSheet sheet, ExcelRangeSelection selection) {
+      XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> targets) {
+    var copied = List.copyOf(targets);
+    return readConditionalFormatting(sheet, ranges -> matchesSelection(ranges, copied));
+  }
+
+  private List<ConditionalFormattingEntryReport> readConditionalFormatting(
+      XSSFSheet sheet, java.util.function.Predicate<List<String>> matches) {
     List<ConditionalFormattingEntryReport> snapshots = new ArrayList<>();
     for (int blockIndex = 0;
         blockIndex < sheet.getSheetConditionalFormatting().getNumConditionalFormattings();
@@ -34,7 +44,7 @@ final class ExcelConditionalFormattingSnapshotSupport {
           sheet.getSheetConditionalFormatting().getConditionalFormattingAt(blockIndex);
       CTConditionalFormatting ctBlock = ctBlock(sheet, blockIndex);
       List<String> ranges = formattingRanges(ctBlock);
-      if (!matchesSelection(ranges, selection)) {
+      if (!matches.test(ranges)) {
         continue;
       }
       snapshots.add(
@@ -53,12 +63,10 @@ final class ExcelConditionalFormattingSnapshotSupport {
     return sheet.getCTWorksheet().getConditionalFormattingArray(blockIndex);
   }
 
-  static boolean matchesSelection(List<String> ranges, ExcelRangeSelection selection) {
-    return switch (selection) {
-      case ExcelRangeSelection.All _ -> true;
-      case ExcelRangeSelection.Selected selected ->
-          intersectsAny(ranges, selected.ranges().stream().map(ExcelRange::parse).toList());
-    };
+  static boolean matchesSelection(
+      List<String> ranges, List<dev.erst.gridgrind.core.vocabulary.RangeRef> targets) {
+    return intersectsAny(
+        ranges, targets.stream().map(target -> ExcelRange.parse(target.value())).toList());
   }
 
   static boolean intersectsAny(List<String> rawRanges, List<ExcelRange> targetRanges) {

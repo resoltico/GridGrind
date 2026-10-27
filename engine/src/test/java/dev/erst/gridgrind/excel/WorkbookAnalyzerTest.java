@@ -127,33 +127,44 @@ class WorkbookAnalyzerTest {
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeFormulaHealth(
-                      new StepId("formulaHealth"), new SheetSelector.All())));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("formulaHealth"),
+                      new SheetSelector.All(),
+                      new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                          .AnalyzeFormulaHealth())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeHyperlinkHealth(
-                      new StepId("hyperlinkHealth"), new SheetSelector.All())));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("hyperlinkHealth"),
+                      new SheetSelector.All(),
+                      new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                          .AnalyzeHyperlinkHealth())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult namedRangeHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeNamedRangeHealth(
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                       new StepId("namedRangeHealth"),
-                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.All())));
+                      new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
+                      new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                          .AnalyzeNamedRangeHealth())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult autofilterHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeAutofilterHealth(
-                      new StepId("autofilterHealth"), new SheetSelector.All())));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("autofilterHealth"),
+                      new SheetSelector.All(),
+                      new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                          .AnalyzeAutofilterHealth())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
           conditionalFormattingHealth =
               cast(
@@ -162,31 +173,44 @@ class WorkbookAnalyzerTest {
                   analyzer.execute(
                       workbook,
                       new WorkbookLocation.StoredWorkbook(workbookPath),
-                      new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
-                          new StepId("conditionalFormattingHealth"), new SheetSelector.All())));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("conditionalFormattingHealth"),
+                          new SheetSelector.All(),
+                          new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                              .AnalyzeConditionalFormattingHealth())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult tableHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeTableHealth(
-                      new StepId("tableHealth"), new TableSelector.All())));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("tableHealth"),
+                      new TableSelector.All(),
+                      new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                          .AnalyzeTableHealth())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzePivotTableHealth(
-                      new StepId("pivotTableHealth"), new PivotTableSelector.All())));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("pivotTableHealth"),
+                      new PivotTableSelector.All(),
+                      new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                          .AnalyzePivotTableHealth())));
       dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult workbookFindings =
           cast(
               dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeWorkbookFindings(new StepId("workbookFindings"))));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("workbookFindings"),
+                      new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                      new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                          .AnalyzeWorkbookFindings())));
 
       assertEquals(2, formulaHealth.analysis().checkedFormulaCellCount());
       assertTrue(
@@ -339,8 +363,11 @@ class WorkbookAnalyzerTest {
             analyzer.execute(
                 null,
                 new WorkbookLocation.UnsavedWorkbook(),
-                new WorkbookReadCommand.AnalyzeFormulaHealth(
-                    new StepId("formulaHealth"), new SheetSelector.All())));
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("formulaHealth"),
+                    new SheetSelector.All(),
+                    new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                        .AnalyzeFormulaHealth())));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -352,8 +379,11 @@ class WorkbookAnalyzerTest {
             analyzer.execute(
                 ExcelWorkbooks.create(),
                 null,
-                new WorkbookReadCommand.AnalyzeFormulaHealth(
-                    new StepId("formulaHealth"), new SheetSelector.All())));
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("formulaHealth"),
+                    new SheetSelector.All(),
+                    new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                        .AnalyzeFormulaHealth())));
     assertThrows(
         NullPointerException.class, () -> analyzer.formulaHealth(null, new SheetSelector.All()));
     assertThrows(

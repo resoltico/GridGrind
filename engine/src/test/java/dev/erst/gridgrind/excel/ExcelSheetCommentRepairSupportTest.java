@@ -414,8 +414,7 @@ class ExcelSheetCommentRepairSupportTest {
 
   private static void assertVisibleComments(
       ExcelWorkbook workbook, String sheetName, Map<String, ResolvedComment> expected) {
-    var actual =
-        workbook.sheet(sheetName).annotations().comments(new ExcelCellSelection.AllUsedCells());
+    var actual = workbook.sheet(sheetName).annotations().comments();
     assertEquals(
         expected.keySet(),
         actual.stream()

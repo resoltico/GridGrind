@@ -7,7 +7,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
-import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSqrefSupport;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +23,19 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
 
 /** Reads workbook data-validation XML into canonical GridGrind snapshot values. */
 public final class ExcelDataValidationSnapshotSupport {
-  List<DataValidationEntryReport> dataValidations(XSSFSheet sheet, ExcelRangeSelection selection) {
+  List<DataValidationEntryReport> dataValidations(XSSFSheet sheet) {
+    return readDataValidations(sheet, ranges -> true);
+  }
+
+  List<DataValidationEntryReport> dataValidations(
+      XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> targets) {
+    var copied = List.copyOf(targets);
+    return readDataValidations(
+        sheet, ranges -> ExcelDataValidationRangeSupport.matchesSelection(ranges, copied));
+  }
+
+  private List<DataValidationEntryReport> readDataValidations(
+      XSSFSheet sheet, java.util.function.Predicate<List<String>> matches) {
     CTDataValidations dataValidations = sheet.getCTWorksheet().getDataValidations();
     if (dataValidations == null) {
       return List.of();
@@ -32,7 +43,7 @@ public final class ExcelDataValidationSnapshotSupport {
     List<DataValidationEntryReport> snapshots = new ArrayList<>();
     for (CTDataValidation validation : dataValidations.getDataValidationArray()) {
       List<String> ranges = ExcelSqrefSupport.normalizedSqref(validation.getSqref());
-      if (!ExcelDataValidationRangeSupport.matchesSelection(ranges, selection)) {
+      if (!matches.test(ranges)) {
         continue;
       }
       snapshots.add(toSnapshot(validation, ranges));

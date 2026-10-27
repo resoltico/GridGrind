@@ -52,7 +52,7 @@ final class AssertionObservationExecutor {
             .read(
                 workbook,
                 workbookLocation,
-                InspectionCommandConverter.toReadCommand(
+                resolvedInspection(
                     stepId,
                     Objects.requireNonNull(
                         resolvedTarget.selector(), "resolved selector must be present"),
@@ -151,5 +151,13 @@ final class AssertionObservationExecutor {
           throw new IllegalArgumentException(
               "Unsupported presence observation result: " + observation.getClass().getSimpleName());
     };
+  }
+
+  private static dev.erst.gridgrind.core.plan.ResolvedInspectionStep resolvedInspection(
+      dev.erst.gridgrind.core.vocabulary.StepId id,
+      dev.erst.gridgrind.core.plan.Selector target,
+      dev.erst.gridgrind.core.plan.InspectionQuery query) {
+    return new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+        id, (dev.erst.gridgrind.core.plan.ResolvedTarget) target, query);
   }
 }

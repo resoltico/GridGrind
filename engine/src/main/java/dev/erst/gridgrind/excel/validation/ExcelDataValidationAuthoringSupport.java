@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import dev.erst.gridgrind.excel.ExcelRange;
-import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import java.util.List;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
@@ -50,17 +49,15 @@ public final class ExcelDataValidationAuthoringSupport {
     ExcelDataValidationRangeSupport.syncValidationCount(sheet);
   }
 
-  void clearDataValidations(XSSFSheet sheet, ExcelRangeSelection selection) {
-    switch (selection) {
-      case ExcelRangeSelection.All _ -> {
-        if (sheet.getCTWorksheet().isSetDataValidations()) {
-          sheet.getCTWorksheet().unsetDataValidations();
-        }
-      }
-      case ExcelRangeSelection.Selected selected ->
-          ExcelDataValidationRangeSupport.normalizeOverlappingSqref(
-              sheet, selected.ranges().stream().map(ExcelRange::parse).toList());
-    }
+  void clearDataValidations(XSSFSheet sheet) {
+    if (sheet.getCTWorksheet().isSetDataValidations())
+      sheet.getCTWorksheet().unsetDataValidations();
+  }
+
+  void clearDataValidations(
+      XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
+    ExcelDataValidationRangeSupport.normalizeOverlappingSqref(
+        sheet, ranges.stream().map(range -> ExcelRange.parse(range.value())).toList());
   }
 
   static DataValidationConstraint toConstraint(

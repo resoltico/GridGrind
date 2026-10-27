@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +27,12 @@ final class XlsxRoundTripExpectedLayoutSupport {
               readExecutor
                   .read(
                       workbook,
-                      new WorkbookReadCommand.GetSheetLayout(new StepId("layout"), sheetName))
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("layout"),
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName)),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetSheetLayout()))
                   .getFirst();
       expectedLayouts.put(sheetName, expectedSheetLayout(layoutResult.layout()));
     }

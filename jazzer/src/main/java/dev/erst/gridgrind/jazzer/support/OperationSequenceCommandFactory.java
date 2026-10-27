@@ -257,15 +257,15 @@ final class OperationSequenceCommandFactory {
                     new ResolvedMutationAction.SetDataValidation(
                         nextExcelDataValidationDefinition(data)));
             case 0x1 ->
-                clearRangesStep(
-                    new SheetName(targetSheet),
-                    nextExcelRangeSelection(data, validRange),
+                new ResolvedStep(
+                    (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                        nextClearRangeTarget(data, validRange, targetSheet),
                     new StructuredMutationAction.ClearDataValidations());
             case 0x2 -> nextConditionalFormattingCommand(data, validRange, targetSheet);
             default ->
-                clearRangesStep(
-                    new SheetName(targetSheet),
-                    nextExcelRangeSelection(data, validRange),
+                new ResolvedStep(
+                    (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                        nextClearRangeTarget(data, validRange, targetSheet),
                     new StructuredMutationAction.ClearConditionalFormatting());
           };
       case 0x5 ->
@@ -460,20 +460,5 @@ final class OperationSequenceCommandFactory {
                   new SheetName(sheet.sheetName().value()));
         };
     return new ResolvedStep(target, new StructuredMutationAction.DeleteNamedRange());
-  }
-
-  static ResolvedStep clearRangesStep(
-      SheetName sheet,
-      dev.erst.gridgrind.excel.ExcelRangeSelection selection,
-      ResolvedMutationAction action) {
-    ResolvedTarget target =
-        switch (selection) {
-          case dev.erst.gridgrind.excel.ExcelRangeSelection.All _ ->
-              new RangeSelector.AllOnSheet(sheet);
-          case dev.erst.gridgrind.excel.ExcelRangeSelection.Selected selected ->
-              new RangeSelector.ByRanges(
-                  sheet, selected.ranges().stream().map(RangeRef::new).toList());
-        };
-    return new ResolvedStep(target, action);
   }
 }

@@ -17,10 +17,8 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
-import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -209,10 +207,7 @@ final class XlsxRoundTripExpectationVerification {
       for (Map.Entry<String, List<DataValidationEntryReport>> entry :
           expectedDataValidations.entrySet()) {
         List<DataValidationEntryReport> actual =
-            workbook
-                .sheet(entry.getKey())
-                .metadata()
-                .dataValidations(new ExcelRangeSelection.All());
+            workbook.sheet(entry.getKey()).metadata().dataValidations();
         if (!entry.getValue().equals(actual)) {
           throw new IllegalStateException(
               "data validations changed across round-trip for sheet "
@@ -247,8 +242,13 @@ final class XlsxRoundTripExpectationVerification {
                     new WorkbookExecutionEngine()
                         .read(
                             workbook,
-                            new WorkbookReadCommand.GetSheetSummary(
-                                new StepId("sheet-summary"), entry.getKey()))
+                            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                                new StepId("sheet-summary"),
+                                new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetName(
+                                        entry.getKey())),
+                                new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                                    .GetSheetSummary()))
                         .getFirst())
                 .sheet();
         if (!entry.getValue().equals(actualSheetSummary)) {
@@ -324,8 +324,11 @@ final class XlsxRoundTripExpectationVerification {
                   new WorkbookExecutionEngine()
                       .read(
                           workbook,
-                          new WorkbookReadCommand.GetPivotTables(
-                              new StepId("pivots"), new PivotTableSelector.All()))
+                          new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                              new StepId("pivots"),
+                              new PivotTableSelector.All(),
+                              new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                                  .GetPivotTables()))
                       .getFirst())
               .pivotTables();
       if (!expectedWorkbookState.expectedPivots().equals(actualPivots)) {
@@ -450,10 +453,13 @@ final class XlsxRoundTripExpectationVerification {
                     readExecutor
                         .read(
                             workbook,
-                            new WorkbookReadCommand.GetConditionalFormatting(
+                            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                                 new StepId("conditionalFormatting"),
-                                entry.getKey(),
-                                new ExcelRangeSelection.All()))
+                                new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetName(
+                                        entry.getKey())),
+                                new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                                    .GetConditionalFormatting()))
                         .getFirst())
                 .conditionalFormattingBlocks();
         if (!entry.getValue().equals(actual)) {
@@ -483,8 +489,13 @@ final class XlsxRoundTripExpectationVerification {
                     readExecutor
                         .read(
                             workbook,
-                            new WorkbookReadCommand.GetAutofilters(
-                                new StepId("autofilters"), entry.getKey()))
+                            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                                new StepId("autofilters"),
+                                new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetName(
+                                        entry.getKey())),
+                                new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                                    .GetAutofilters()))
                         .getFirst())
                 .autofilters();
         if (!entry.getValue().equals(actual)) {
@@ -512,8 +523,11 @@ final class XlsxRoundTripExpectationVerification {
                   readExecutor
                       .read(
                           workbook,
-                          new WorkbookReadCommand.GetTables(
-                              new StepId("tables"), new TableSelector.All()))
+                          new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                              new StepId("tables"),
+                              new TableSelector.All(),
+                              new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                                  .GetTables()))
                       .getFirst())
               .tables();
       if (!expectedTables.equals(actual)) {

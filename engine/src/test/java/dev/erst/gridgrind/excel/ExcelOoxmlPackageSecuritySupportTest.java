@@ -89,7 +89,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
-                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("security"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetPackageSecurity()))
                   .getFirst());
       OoxmlEncryptionReport.Encrypted encryption =
           assertInstanceOf(
@@ -121,7 +126,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
-                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("security"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetPackageSecurity()))
                   .getFirst());
       OoxmlEncryptionReport.Encrypted encryption =
           assertInstanceOf(
@@ -148,7 +158,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
-                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("security"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetPackageSecurity()))
                   .getFirst());
       OoxmlEncryptionReport.Encrypted encryption =
           assertInstanceOf(
@@ -233,7 +248,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
-                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("security"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetPackageSecurity()))
                   .getFirst());
       assertEquals(1, beforeMutation.security().signatures().size());
       assertEquals(
@@ -252,7 +272,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
-                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("security"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetPackageSecurity()))
                   .getFirst());
       assertEquals(
           ExcelOoxmlSignatureState.INVALIDATED_BY_MUTATION,
@@ -297,7 +322,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
-                      reopened, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
+                      reopened,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("security"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetPackageSecurity()))
                   .getFirst());
       assertEquals(
           ExcelOoxmlSignatureState.VALID,
@@ -323,7 +353,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
-                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("security"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetPackageSecurity()))
                   .getFirst());
       assertEquals(
           ExcelOoxmlSignatureState.INVALID,

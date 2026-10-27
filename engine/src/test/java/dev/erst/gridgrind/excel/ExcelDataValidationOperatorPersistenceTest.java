@@ -52,8 +52,7 @@ class ExcelDataValidationOperatorPersistenceTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
       XSSFSheet sheet = workbook.getSheet("Validations");
       ExcelDataValidationController controller = new ExcelDataValidationController();
-      List<DataValidationEntryReport> snapshots =
-          controller.dataValidations(sheet, new ExcelRangeSelection.All());
+      List<DataValidationEntryReport> snapshots = controller.dataValidations(sheet);
       assertEquals(Family.values().length * operators.size(), snapshots.size());
 
       int validationIndex = 0;

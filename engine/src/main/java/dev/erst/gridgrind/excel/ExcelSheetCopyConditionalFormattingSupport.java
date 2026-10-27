@@ -12,9 +12,7 @@ final class ExcelSheetCopyConditionalFormattingSupport {
   private ExcelSheetCopyConditionalFormattingSupport() {}
 
   static List<CTConditionalFormatting> snapshot(XSSFSheet sheet, String sheetName) {
-    var blocks =
-        new ExcelConditionalFormattingController()
-            .conditionalFormatting(sheet, new ExcelRangeSelection.All());
+    var blocks = new ExcelConditionalFormattingController().conditionalFormatting(sheet);
     for (var block : blocks) {
       for (var rule : block.rules()) {
         switch (rule) {

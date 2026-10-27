@@ -209,8 +209,9 @@ final class OperationSequenceValueFactory {
     return OperationSequenceRuleValues.nextRangeSelector(data, sheetName, validRange);
   }
 
-  static ExcelRangeSelection nextExcelRangeSelection(GridGrindFuzzData data, boolean validRange) {
-    return OperationSequenceRuleValues.nextExcelRangeSelection(data, validRange);
+  static dev.erst.gridgrind.core.plan.RangeSelector nextClearRangeTarget(
+      GridGrindFuzzData data, boolean validRange, String sheetName) {
+    return OperationSequenceRuleValues.nextClearRangeTarget(data, validRange, sheetName);
   }
 
   static String nextAutofilterRange(boolean validRange) {

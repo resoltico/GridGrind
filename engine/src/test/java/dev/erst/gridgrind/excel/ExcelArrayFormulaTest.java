@@ -92,12 +92,14 @@ class ExcelArrayFormulaTest {
               dev.erst.gridgrind.core.plan.SheetInspectionResult.ArrayFormulasResult.class,
               introspector.execute(
                   workbook,
-                  new WorkbookReadCommand.GetArrayFormulas(
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                       new StepId("array-formulas"),
                       new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
                           List.of("Calc").stream()
                               .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
-                              .toList()))));
+                              .toList()),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                          .GetArrayFormulas())));
       assertEquals("array-formulas", result.stepId().value());
       assertEquals(1, result.arrayFormulas().size());
       assertEquals("Calc", result.arrayFormulas().getFirst().sheetName().value());

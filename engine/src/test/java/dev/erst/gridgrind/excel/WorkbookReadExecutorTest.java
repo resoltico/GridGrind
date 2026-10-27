@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.ResolvedInspectionStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -34,18 +35,24 @@ class WorkbookReadExecutorTest {
           new WorkbookExecutionEngine()
               .read(
                   workbook,
-                  new WorkbookReadCommand.GetWindow(
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                       new StepId("sparse"),
-                      "Grid",
-                      new ExcelReadWindow("A1", 3, 2),
-                      projection,
-                      false),
-                  new WorkbookReadCommand.GetWindow(
+                      new dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Grid"),
+                          new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                          3,
+                          2),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetWindow(
+                          java.util.Optional.of(projection), false)),
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                       new StepId("dense"),
-                      "Grid",
-                      new ExcelReadWindow("A1", 3, 2),
-                      projection,
-                      true));
+                      new dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Grid"),
+                          new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                          3,
+                          2),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetWindow(
+                          java.util.Optional.of(projection), true)));
       var sparseResult =
           assertInstanceOf(
               dev.erst.gridgrind.core.plan.SheetInspectionResult.WindowResult.class,
@@ -100,16 +107,30 @@ class WorkbookReadExecutorTest {
       List<InspectionResult> varargsResults =
           executor.apply(
               workbook,
-              new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
+              new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                  new StepId("workbook"),
+                  new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                  new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookSummary()),
               WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1")),
-              new WorkbookReadCommand.GetNamedRangeSurface(
-                  new StepId("ranges"), new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()));
+              new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                  new StepId("ranges"),
+                  new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
+                  new dev.erst.gridgrind.core.plan.InspectionSurfaceQuery.GetNamedRangeSurface()));
       List<InspectionResult> iterableResults =
           executor.apply(
               workbook,
               List.of(
-                  new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget"),
-                  new WorkbookReadCommand.GetMergedRegions(new StepId("merged"), "Budget")));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("sheet"),
+                      new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary()),
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("merged"),
+                      new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                          .GetMergedRegions())));
       List<InspectionResult> explicitLocationResults =
           executor.apply(
               workbook,
@@ -147,36 +168,57 @@ class WorkbookReadExecutorTest {
       WorkbookReadExecutor executor = new WorkbookReadExecutor();
 
       assertThrows(
-          NullPointerException.class, () -> executor.apply(workbook, (WorkbookReadCommand[]) null));
+          NullPointerException.class,
+          () -> executor.apply(workbook, (ResolvedInspectionStep[]) null));
       assertThrows(
           NullPointerException.class,
           () ->
               executor.apply(
-                  null, new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))));
+                  null,
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("workbook"),
+                      new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                      new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                          .GetWorkbookSummary())));
       assertThrows(
           NullPointerException.class,
-          () -> executor.apply(workbook, (Iterable<WorkbookReadCommand>) null));
+          () -> executor.apply(workbook, (Iterable<ResolvedInspectionStep>) null));
       assertThrows(
           NullPointerException.class,
           () ->
               executor.apply(
                   workbook,
                   Arrays.asList(
-                      new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")), null)));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("workbook"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetWorkbookSummary()),
+                      null)));
       assertThrows(
           NullPointerException.class,
           () ->
               executor.apply(
                   workbook,
                   (WorkbookLocation) null,
-                  new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))));
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("workbook"),
+                      new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                      new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                          .GetWorkbookSummary())));
 
       List<InspectionResult> analysisResults =
           executor.apply(
               workbook,
-              new WorkbookReadCommand.AnalyzeFormulaHealth(
-                  new StepId("formulaHealth"), new SheetSelector.All()),
-              new WorkbookReadCommand.AnalyzeWorkbookFindings(new StepId("workbookFindings")));
+              new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                  new StepId("formulaHealth"),
+                  new SheetSelector.All(),
+                  new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery.AnalyzeFormulaHealth()),
+              new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                  new StepId("workbookFindings"),
+                  new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                  new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
+                      .AnalyzeWorkbookFindings()));
       assertInstanceOf(
           dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult.class,
           analysisResults.get(0));

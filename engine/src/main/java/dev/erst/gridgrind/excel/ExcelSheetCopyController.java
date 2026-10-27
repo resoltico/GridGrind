@@ -116,7 +116,7 @@ final class ExcelSheetCopyController {
     return new ExcelSheetCopySnapshot(
         ExcelSheetCopySupport.copyableLocalNames(workbook.names().namedRanges(), sheetName),
         sourceSheet.layout().printLayout(),
-        sourceSheet.annotations().comments(new ExcelCellSelection.AllUsedCells()),
+        sourceSheet.annotations().comments(),
         ExcelSheetCopySupport.copiedDataValidations(sourcePoiSheet),
         ExcelSheetCopyConditionalFormattingSupport.snapshot(sourcePoiSheet, sheetName),
         ExcelSheetCopySupport.sheetOwnedAutofilter(

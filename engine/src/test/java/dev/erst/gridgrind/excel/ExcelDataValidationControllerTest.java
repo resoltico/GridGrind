@@ -163,7 +163,11 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
 
       List<DataValidationEntryReport> selected =
-          controller.dataValidations(sheet, new ExcelRangeSelection.Selected(List.of("C2")));
+          controller.dataValidations(
+              sheet,
+              List.of("C2").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList());
 
       assertEquals(
           List.of(
@@ -194,7 +198,7 @@ class ExcelDataValidationControllerTest {
       controller.setDataValidation(sheet, "A1:A3", explicitListValidation());
       controller.setDataValidation(sheet, "B1:B3", explicitListValidation());
 
-      controller.clearDataValidations(sheet, new ExcelRangeSelection.All());
+      controller.clearDataValidations(sheet);
 
       assertEquals(0, controller.dataValidationCount(sheet));
       assertFalse(sheet.getCTWorksheet().isSetDataValidations());
@@ -206,7 +210,7 @@ class ExcelDataValidationControllerTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
 
-      controller.clearDataValidations(sheet, new ExcelRangeSelection.All());
+      controller.clearDataValidations(sheet);
 
       assertEquals(0, controller.dataValidationCount(sheet));
       assertFalse(sheet.getCTWorksheet().isSetDataValidations());
@@ -218,7 +222,9 @@ class ExcelDataValidationControllerTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
 
-      controller.clearDataValidations(sheet, new ExcelRangeSelection.Selected(List.of("A1")));
+      controller.clearDataValidations(
+          sheet,
+          List.of("A1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList());
 
       assertEquals(0, controller.dataValidationCount(sheet));
       assertFalse(sheet.getCTWorksheet().isSetDataValidations());
@@ -231,7 +237,9 @@ class ExcelDataValidationControllerTest {
       XSSFSheet sheet = workbook.createSheet("Budget");
       controller.setDataValidation(sheet, "A1:A3", explicitListValidation());
 
-      controller.clearDataValidations(sheet, new ExcelRangeSelection.Selected(List.of("A1:A3")));
+      controller.clearDataValidations(
+          sheet,
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList());
 
       assertEquals(0, controller.dataValidationCount(sheet));
       assertFalse(sheet.getCTWorksheet().isSetDataValidations());
@@ -249,7 +257,9 @@ class ExcelDataValidationControllerTest {
           .getDataValidationArray(0)
           .setSqref(List.of(" ", "A1:A10"));
 
-      controller.clearDataValidations(sheet, new ExcelRangeSelection.Selected(List.of("A3:A4")));
+      controller.clearDataValidations(
+          sheet,
+          List.of("A3:A4").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList());
 
       assertEquals(
           List.of(
@@ -259,7 +269,7 @@ class ExcelDataValidationControllerTest {
                       .toList(),
                   dev.erst.gridgrind.excel.DataValidationFixtures.report(
                       expectedRoundTripDefinition(explicitListValidation())))),
-          controller.dataValidations(sheet, new ExcelRangeSelection.All()));
+          controller.dataValidations(sheet));
     }
   }
 
@@ -273,7 +283,9 @@ class ExcelDataValidationControllerTest {
 
       controller.clearDataValidations(
           sheet,
-          new ExcelRangeSelection.Selected(List.of("B20:B20", "A30:A31", "A1:B3", "D20:D20")));
+          List.of("B20:B20", "A30:A31", "A1:B3", "D20:D20").stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+              .toList());
 
       assertEquals(
           List.of(
@@ -289,7 +301,7 @@ class ExcelDataValidationControllerTest {
                       .toList(),
                   dev.erst.gridgrind.excel.DataValidationFixtures.report(
                       expectedRoundTripDefinition(explicitListValidation())))),
-          controller.dataValidations(sheet, new ExcelRangeSelection.All()));
+          controller.dataValidations(sheet));
     }
   }
 
@@ -1339,8 +1351,7 @@ class ExcelDataValidationControllerTest {
       addRawValidation(sheet, "G2", STDataValidationType.TEXT_LENGTH, "20");
 
       assertEquals(3, controller.dataValidationCount(sheet));
-      List<DataValidationEntryReport> snapshots =
-          controller.dataValidations(sheet, new ExcelRangeSelection.All());
+      List<DataValidationEntryReport> snapshots = controller.dataValidations(sheet);
       assertEquals(3, snapshots.size());
       DataValidationEntryReport.Supported emptyExplicitList =
           assertInstanceOf(DataValidationEntryReport.Supported.class, snapshots.get(0));
@@ -1414,8 +1425,7 @@ class ExcelDataValidationControllerTest {
 
       controller.setDataValidation(sheet, "E2:E4", definition);
 
-      List<DataValidationEntryReport> snapshots =
-          controller.dataValidations(sheet, new ExcelRangeSelection.All());
+      List<DataValidationEntryReport> snapshots = controller.dataValidations(sheet);
 
       assertEquals(
           List.of(
@@ -1524,8 +1534,7 @@ class ExcelDataValidationControllerTest {
       XSSFSheet sheet = workbook.createSheet("Budget");
       controller.setDataValidation(sheet, range, definition);
 
-      List<DataValidationEntryReport> snapshots =
-          controller.dataValidations(sheet, new ExcelRangeSelection.All());
+      List<DataValidationEntryReport> snapshots = controller.dataValidations(sheet);
 
       assertEquals(
           List.of(

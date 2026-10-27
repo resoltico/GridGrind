@@ -30,21 +30,25 @@ public final class WorkbookExecutionEngine {
   }
 
   /** Executes one or more read commands against one workbook instance. */
-  public List<InspectionResult> read(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
+  public List<InspectionResult> read(
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedInspectionStep... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return read(workbook, new WorkbookLocation.UnsavedWorkbook(), Arrays.asList(commands));
   }
 
   /** Executes read commands with explicit workbook-location context. */
   public List<InspectionResult> read(
-      ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand... commands) {
+      ExcelWorkbook workbook,
+      WorkbookLocation workbookLocation,
+      dev.erst.gridgrind.core.plan.ResolvedInspectionStep... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return read(workbook, workbookLocation, Arrays.asList(commands));
   }
 
   /** Executes read commands from any iterable source using an unsaved workbook location. */
   public List<InspectionResult> read(
-      ExcelWorkbook workbook, Iterable<WorkbookReadCommand> commands) {
+      ExcelWorkbook workbook,
+      Iterable<dev.erst.gridgrind.core.plan.ResolvedInspectionStep> commands) {
     return read(workbook, new WorkbookLocation.UnsavedWorkbook(), commands);
   }
 
@@ -52,7 +56,7 @@ public final class WorkbookExecutionEngine {
   public List<InspectionResult> read(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      Iterable<WorkbookReadCommand> commands) {
+      Iterable<dev.erst.gridgrind.core.plan.ResolvedInspectionStep> commands) {
     return readExecutor.apply(workbook, workbookLocation, commands);
   }
 }

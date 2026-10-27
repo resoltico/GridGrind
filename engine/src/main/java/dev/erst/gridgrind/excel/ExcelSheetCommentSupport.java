@@ -61,14 +61,6 @@ final class ExcelSheetCommentSupport {
     drawingController.cleanupEmptyDrawingPatriarch((XSSFSheet) sheet);
   }
 
-  List<CellCommentReport> comments(ExcelCellSelection selection) {
-    Objects.requireNonNull(selection, "selection must not be null");
-    return switch (selection) {
-      case ExcelCellSelection.AllUsedCells _ -> allUsedComments();
-      case ExcelCellSelection.Selected selected -> selectedComments(selected.addresses());
-    };
-  }
-
   static void clearCellComment(Cell cell) {
     Objects.requireNonNull(cell, "cell must not be null");
     if (!(cell.getSheet() instanceof XSSFSheet xssfSheet)
@@ -208,19 +200,25 @@ final class ExcelSheetCommentSupport {
     return List.copyOf(comments);
   }
 
-  private List<CellCommentReport> selectedComments(List<String> addresses) {
+  List<CellCommentReport> comments() {
+    return allUsedComments();
+  }
+
+  List<CellCommentReport> comments(List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
+    return selectedComments(List.copyOf(addresses));
+  }
+
+  private List<CellCommentReport> selectedComments(
+      List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
     List<CellCommentReport> comments = new ArrayList<>();
-    for (String address : addresses) {
-      Cell cell = ExcelSheetAddressSupport.cellOrNull(sheet, address).orElse(null);
+    for (dev.erst.gridgrind.core.vocabulary.CellAddress address : addresses) {
+      Cell cell = ExcelSheetAddressSupport.cellOrNull(sheet, address.value()).orElse(null);
       if (cell == null) {
         continue;
       }
       Optional<CommentReport> comment = commentSnapshot(cell);
       if (comment.isPresent()) {
-        comments.add(
-            new CellCommentReport(
-                new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
-                comment.orElseThrow()));
+        comments.add(new CellCommentReport(address, comment.orElseThrow()));
       }
     }
     return List.copyOf(comments);

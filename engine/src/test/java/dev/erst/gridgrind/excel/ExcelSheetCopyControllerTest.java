@@ -214,14 +214,7 @@ class ExcelSheetCopyControllerTest {
                   .sheets()
                   .copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd()));
       assertEquals(
-          "Review",
-          workbook
-              .sheet("Replica")
-              .annotations()
-              .comments(new ExcelCellSelection.AllUsedCells())
-              .getFirst()
-              .comment()
-              .text());
+          "Review", workbook.sheet("Replica").annotations().comments().getFirst().comment().text());
     }
   }
 
@@ -528,7 +521,12 @@ class ExcelSheetCopyControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = seedAdvancedCopySource(workbook);
       List<CellCommentReport> sourceComments =
-          source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
+          source
+              .annotations()
+              .comments(
+                  List.of("E2").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                      .toList());
 
       workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
@@ -536,7 +534,12 @@ class ExcelSheetCopyControllerTest {
       assertEquals("SUM(Replica!B2:B3)", replica.cells().formula("C2"));
       assertEquals(
           sourceComments,
-          replica.annotations().comments(new ExcelCellSelection.Selected(List.of("E2"))));
+          replica
+              .annotations()
+              .comments(
+                  List.of("E2").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                      .toList()));
       assertEquals(
           List.of(
               new AutofilterEntryReport.SheetOwned(
@@ -590,8 +593,7 @@ class ExcelSheetCopyControllerTest {
                                   false,
                                   4)))))),
           autofilterController.sheetOwnedAutofilters(replica.xssfSheet()));
-      List<DataValidationEntryReport> replicaValidations =
-          replica.metadata().dataValidations(new ExcelRangeSelection.All());
+      List<DataValidationEntryReport> replicaValidations = replica.metadata().dataValidations();
       assertEquals(2, replicaValidations.size());
       DataValidationEntryReport.Supported formulaList =
           assertInstanceOf(DataValidationEntryReport.Supported.class, replicaValidations.get(0));
@@ -641,7 +643,7 @@ class ExcelSheetCopyControllerTest {
                           && formulaSnapshot.refersToFormula().contains("Replica")
                           && formulaSnapshot.refersToFormula().contains("$B$2:$B$3")));
       ConditionalFormattingEntryReport copiedFormatting =
-          replica.metadata().conditionalFormatting(new ExcelRangeSelection.All()).getFirst();
+          replica.metadata().conditionalFormatting().getFirst();
       assertEquals(
           "SUM(Replica!$B$2:$B$3)>0",
           assertInstanceOf(
@@ -679,7 +681,12 @@ class ExcelSheetCopyControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = seedAdvancedCopySource(workbook);
       sourceComments =
-          source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
+          source
+              .annotations()
+              .comments(
+                  List.of("E2").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                      .toList());
 
       workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
       workbook
@@ -697,7 +704,10 @@ class ExcelSheetCopyControllerTest {
           reopened
               .sheet("Replica")
               .annotations()
-              .comments(new ExcelCellSelection.Selected(List.of("E2"))));
+              .comments(
+                  List.of("E2").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                      .toList()));
     }
   }
 
@@ -824,11 +834,7 @@ class ExcelSheetCopyControllerTest {
               .getFormula1());
 
       ConditionalFormattingEntryReport copiedFormatting =
-          workbook
-              .sheet("Replica")
-              .metadata()
-              .conditionalFormatting(new ExcelRangeSelection.All())
-              .getFirst();
+          workbook.sheet("Replica").metadata().conditionalFormatting().getFirst();
       assertEquals(
           "SUM(Replica!$B$2:$B$3)>0",
           assertInstanceOf(
@@ -946,7 +952,7 @@ class ExcelSheetCopyControllerTest {
       workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       List<DataValidationEntryReport> replicaValidations =
-          workbook.sheet("Replica").metadata().dataValidations(new ExcelRangeSelection.All());
+          workbook.sheet("Replica").metadata().dataValidations();
       assertEquals(3, replicaValidations.size());
       DataValidationEntryReport.Supported formulaList =
           assertInstanceOf(DataValidationEntryReport.Supported.class, replicaValidations.get(0));

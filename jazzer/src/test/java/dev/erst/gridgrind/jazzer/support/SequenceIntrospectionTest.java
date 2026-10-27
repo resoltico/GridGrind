@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.clearRangesStep;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.deleteNamedRangeStep;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.setNamedRangeStep;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceCommandFactory.setPivotTableStep;
@@ -506,9 +505,8 @@ class SequenceIntrospectionTest {
     assertEquals(
         "CLEAR_DATA_VALIDATIONS",
         SequenceIntrospection.commandKind(
-            clearRangesStep(
-                new SheetName("Budget"),
-                new dev.erst.gridgrind.excel.ExcelRangeSelection.All(),
+            new dev.erst.gridgrind.core.plan.ResolvedStep(
+                new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(new SheetName("Budget")),
                 new StructuredMutationAction.ClearDataValidations())));
     assertEquals(
         "SET_CONDITIONAL_FORMATTING",
@@ -540,9 +538,8 @@ class SequenceIntrospectionTest {
     assertEquals(
         "CLEAR_CONDITIONAL_FORMATTING",
         SequenceIntrospection.commandKind(
-            clearRangesStep(
-                new SheetName("Budget"),
-                new dev.erst.gridgrind.excel.ExcelRangeSelection.All(),
+            new dev.erst.gridgrind.core.plan.ResolvedStep(
+                new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(new SheetName("Budget")),
                 new StructuredMutationAction.ClearConditionalFormatting())));
     assertEquals(
         "SET_AUTOFILTER",

@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel.validation;
 
 import dev.erst.gridgrind.excel.ExcelRange;
-import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSqrefSupport;
 import java.util.ArrayList;
 import java.util.List;
@@ -117,17 +116,14 @@ public final class ExcelDataValidationRangeSupport {
     dataValidations.setCount(count);
   }
 
-  static boolean matchesSelection(List<String> ranges, ExcelRangeSelection selection) {
-    return switch (selection) {
-      case ExcelRangeSelection.All _ -> true;
-      case ExcelRangeSelection.Selected selected ->
-          ranges.stream()
-              .map(ExcelRange::parse)
-              .anyMatch(
-                  existing ->
-                      selected.ranges().stream()
-                          .map(ExcelRange::parse)
-                          .anyMatch(selectedRange -> intersects(existing, selectedRange)));
-    };
+  static boolean matchesSelection(
+      List<String> ranges, List<dev.erst.gridgrind.core.vocabulary.RangeRef> targets) {
+    return ranges.stream()
+        .map(ExcelRange::parse)
+        .anyMatch(
+            existing ->
+                targets.stream()
+                    .map(target -> ExcelRange.parse(target.value()))
+                    .anyMatch(target -> intersects(existing, target)));
   }
 }

@@ -10,7 +10,6 @@ import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.event.EventReadCommandTypes;
 import dev.erst.gridgrind.excel.event.EventSheetSummary;
 import dev.erst.gridgrind.excel.event.EventSheetSummaryHandler;
 import dev.erst.gridgrind.excel.event.EventWorkbookMetadata;
@@ -70,9 +69,22 @@ class ExcelEventWorkbookReaderTest {
             .apply(
                 workbookPath,
                 List.of(
-                    new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
-                    new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Ops"),
-                    new WorkbookReadCommand.GetSheetSummary(new StepId("sheet-again"), "Ops")));
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("workbook"),
+                        new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                        new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                            .GetWorkbookSummary()),
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("sheet"),
+                        new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                        new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary()),
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("sheet-again"),
+                        new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                        new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                            .GetSheetSummary())));
 
     assertEquals(
         new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
@@ -103,11 +115,13 @@ class ExcelEventWorkbookReaderTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    List<WorkbookReadCommand.Introspection> singleCommand = new ArrayList<>(1);
-    for (WorkbookReadCommand.Introspection command :
+    List<dev.erst.gridgrind.core.plan.ResolvedInspectionStep> singleCommand = new ArrayList<>(1);
+    for (dev.erst.gridgrind.core.plan.ResolvedInspectionStep command :
         WorkbookSampleFixtures.introspectionCommands()) {
-      if (command instanceof WorkbookReadCommand.GetWorkbookSummary
-          || command instanceof WorkbookReadCommand.GetSheetSummary) {
+      if (command.query()
+              instanceof dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookSummary
+          || command.query()
+              instanceof dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary) {
         continue;
       }
 
@@ -147,7 +161,12 @@ class ExcelEventWorkbookReaderTest {
         new ExcelEventWorkbookReader()
             .apply(
                 emptyWorkbook,
-                List.of(new WorkbookReadCommand.GetWorkbookSummary(new StepId("empty"))));
+                List.of(
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("empty"),
+                        new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                        new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                            .GetWorkbookSummary())));
 
     assertEquals(
         List.of(
@@ -192,10 +211,22 @@ class ExcelEventWorkbookReaderTest {
             .apply(
                 mutatedWorkbook,
                 List.of(
-                    new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
-                    new WorkbookReadCommand.GetSheetSummary(new StepId("hidden"), "Hidden"),
-                    new WorkbookReadCommand.GetSheetSummary(
-                        new StepId("veryHidden"), "VeryHidden")));
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("workbook"),
+                        new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                        new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                            .GetWorkbookSummary()),
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("hidden"),
+                        new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Hidden")),
+                        new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary()),
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("veryHidden"),
+                        new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("VeryHidden")),
+                        new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                            .GetSheetSummary())));
 
     assertEquals(
         new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
@@ -271,7 +302,11 @@ class ExcelEventWorkbookReaderTest {
                         .apply(
                             mutatedWorkbook,
                             List.of(
-                                new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))))
+                                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                                    new StepId("workbook"),
+                                    new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                                    new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                                        .GetWorkbookSummary())))
                         .getFirst())
                 .workbook());
 
@@ -320,7 +355,13 @@ class ExcelEventWorkbookReaderTest {
         new ExcelEventWorkbookReader()
             .apply(
                 sparseWorkbook,
-                List.of(new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Sparse")));
+                List.of(
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("sheet"),
+                        new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Sparse")),
+                        new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                            .GetSheetSummary())));
 
     assertEquals(
         List.of(
@@ -358,8 +399,12 @@ class ExcelEventWorkbookReaderTest {
                     .apply(
                         workbookPath,
                         List.of(
-                            new WorkbookReadCommand.GetSheetSummary(
-                                new StepId("missing"), "Absent"))));
+                            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                                new StepId("missing"),
+                                new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetName("Absent")),
+                                new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                                    .GetSheetSummary()))));
 
     assertEquals("Sheet does not exist: Absent", failure.getMessage());
   }
@@ -378,7 +423,11 @@ class ExcelEventWorkbookReaderTest {
                     .apply(
                         invalidWorkbook,
                         List.of(
-                            new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")))));
+                            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                                new StepId("workbook"),
+                                new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                                new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                                    .GetWorkbookSummary()))));
     assertEquals("Only .xlsx workbooks are supported", workbookFailure.getMessage());
 
     Path sourceWorkbook =
@@ -402,7 +451,11 @@ class ExcelEventWorkbookReaderTest {
                     .apply(
                         malformedWorkbook,
                         List.of(
-                            new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")))));
+                            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                                new StepId("workbook"),
+                                new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                                new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                                    .GetWorkbookSummary()))));
     assertTrue(
         metadataFailure
             .getMessage()
@@ -430,7 +483,12 @@ class ExcelEventWorkbookReaderTest {
                     .apply(
                         malformedSheetWorkbook,
                         List.of(
-                            new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Ops"))));
+                            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                                new StepId("sheet"),
+                                new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                                new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                                    .GetSheetSummary()))));
 
     assertTrue(sheetFailure.getMessage().contains("Failed to parse sheet Ops"));
   }
@@ -471,25 +529,18 @@ class ExcelEventWorkbookReaderTest {
                     .apply(
                         malformedSheetWorkbook,
                         List.of(
-                            new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Ops"))));
+                            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                                new StepId("sheet"),
+                                new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                                new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                                    .GetSheetSummary()))));
 
     assertTrue(failure.getMessage().contains("Failed to parse sheet Ops"));
   }
 
   @Test
   void helperSeamsCoverSupportedSummaryCommandTypesAndEmptyMetadataGuard() {
-    assertEquals(
-        "GET_WORKBOOK_SUMMARY",
-        EventReadCommandTypes.commandType(
-            new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))));
-    assertEquals(
-        "GET_SHEET_SUMMARY",
-        EventReadCommandTypes.commandType(
-            new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Ops")));
-    assertEquals(
-        "GET_PACKAGE_SECURITY",
-        EventReadCommandTypes.commandType(
-            new WorkbookReadCommand.GetPackageSecurity(new StepId("security"))));
     assertEquals(7, invokeActiveSheetIndexWithExplicitActiveTab());
     assertEquals(0, invokeActiveSheetIndexWithoutActiveTab());
     assertEquals(0, invokeActiveSheetIndexWithEmptyBookViews());
@@ -533,32 +584,9 @@ class ExcelEventWorkbookReaderTest {
     assertInstanceOf(SheetProtectionReport.Protected.class, summary.protection());
   }
 
-  private static String expectedReadType(WorkbookReadCommand.Introspection command) {
-    return switch (command) {
-      case WorkbookReadCommand.GetWorkbookSummary _ -> "GET_WORKBOOK_SUMMARY";
-      case WorkbookReadCommand.GetWorkbookProtection _ -> "GET_WORKBOOK_PROTECTION";
-      case WorkbookReadCommand.GetCustomXmlMappings _ -> "GET_CUSTOM_XML_MAPPINGS";
-      case WorkbookReadCommand.ExportCustomXmlMapping _ -> "EXPORT_CUSTOM_XML_MAPPING";
-      case WorkbookReadCommand.GetNamedRanges _ -> "GET_NAMED_RANGES";
-      case WorkbookReadCommand.GetSheetSummary _ -> "GET_SHEET_SUMMARY";
-      case WorkbookReadCommand.GetCells _ -> "GET_CELLS";
-      case WorkbookReadCommand.GetWindow _ -> "GET_WINDOW";
-      case WorkbookReadCommand.GetMergedRegions _ -> "GET_MERGED_REGIONS";
-      case WorkbookReadCommand.GetHyperlinks _ -> "GET_HYPERLINKS";
-      case WorkbookReadCommand.GetComments _ -> "GET_COMMENTS";
-      case WorkbookReadCommand.GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
-      case WorkbookReadCommand.GetCharts _ -> "GET_CHARTS";
-      case WorkbookReadCommand.GetPivotTables _ -> "GET_PIVOT_TABLES";
-      case WorkbookReadCommand.GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
-      case WorkbookReadCommand.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
-      case WorkbookReadCommand.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
-      case WorkbookReadCommand.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
-      case WorkbookReadCommand.GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
-      case WorkbookReadCommand.GetAutofilters _ -> "GET_AUTOFILTERS";
-      case WorkbookReadCommand.GetTables _ -> "GET_TABLES";
-      case WorkbookReadCommand.GetArrayFormulas _ -> "GET_ARRAY_FORMULAS";
-      case WorkbookReadCommand.GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
-    };
+  private static String expectedReadType(
+      dev.erst.gridgrind.core.plan.ResolvedInspectionStep command) {
+    return command.query().queryType();
   }
 
   private static Path rewriteEntry(
@@ -633,8 +661,17 @@ class ExcelEventWorkbookReaderTest {
             .apply(
                 edgeCaseWorkbook,
                 List.of(
-                    new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
-                    new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Visible")));
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("workbook"),
+                        new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                        new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                            .GetWorkbookSummary()),
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("sheet"),
+                        new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Visible")),
+                        new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                            .GetSheetSummary())));
 
     WorkbookSummary.WithSheets summary =
         assertInstanceOf(

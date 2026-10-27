@@ -15,10 +15,8 @@ import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,7 +132,11 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
             readExecutor
                 .read(
                     workbook,
-                    new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook-summary")))
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("workbook-summary"),
+                        new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                        new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                            .GetWorkbookSummary()))
                 .getFirst())
         .workbook();
   }
@@ -151,8 +153,12 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
                   readExecutor
                       .read(
                           workbook,
-                          new WorkbookReadCommand.GetSheetSummary(
-                              new StepId("sheet-summary"), sheetName))
+                          new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                              new StepId("sheet-summary"),
+                              new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                                  new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName)),
+                              new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                                  .GetSheetSummary()))
                       .getFirst())
               .sheet());
     }
@@ -164,7 +170,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     LinkedHashMap<String, List<DataValidationEntryReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       List<DataValidationEntryReport> validations =
-          workbook.sheet(sheetName).metadata().dataValidations(new ExcelRangeSelection.All());
+          workbook.sheet(sheetName).metadata().dataValidations();
       if (!validations.isEmpty()) {
         expected.put(sheetName, validations);
       }
@@ -182,10 +188,12 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
               readExecutor
                   .read(
                       workbook,
-                      new WorkbookReadCommand.GetConditionalFormatting(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("conditionalFormatting"),
-                          sheetName,
-                          new ExcelRangeSelection.All()))
+                          new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName)),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetConditionalFormatting()))
                   .getFirst();
       if (!result.conditionalFormattingBlocks().isEmpty()) {
         expected.put(sheetName, result.conditionalFormattingBlocks());
@@ -203,7 +211,12 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
               readExecutor
                   .read(
                       workbook,
-                      new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), sheetName))
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("autofilters"),
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName)),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetAutofilters()))
                   .getFirst();
       if (!result.autofilters().isEmpty()) {
         expected.put(sheetName, result.autofilters());
@@ -235,8 +248,11 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
             readExecutor
                 .read(
                     workbook,
-                    new WorkbookReadCommand.GetPivotTables(
-                        new StepId("pivots"), new PivotTableSelector.All()))
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("pivots"),
+                        new PivotTableSelector.All(),
+                        new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                            .GetPivotTables()))
                 .getFirst();
     return List.copyOf(result.pivotTables());
   }
@@ -248,8 +264,11 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
             readExecutor
                 .read(
                     workbook,
-                    new WorkbookReadCommand.GetTables(
-                        new StepId("tables"), new TableSelector.All()))
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId("tables"),
+                        new TableSelector.All(),
+                        new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                            .GetTables()))
                 .getFirst();
     return List.copyOf(result.tables());
   }

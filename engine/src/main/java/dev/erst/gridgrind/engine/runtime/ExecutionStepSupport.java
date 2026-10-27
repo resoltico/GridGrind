@@ -13,7 +13,6 @@ import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.event.ExcelEventWorkbookReader;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
@@ -137,7 +136,7 @@ final class ExecutionStepSupport {
             .read(
                 workbook,
                 workbookLocation,
-                InspectionCommandConverter.toReadCommand(
+                resolvedInspection(
                     inspectionStep.stepId(),
                     Objects.requireNonNull(
                         resolvedTarget.selector(), "resolved selector must be present"),
@@ -259,14 +258,28 @@ final class ExecutionStepSupport {
   InspectionResult executeEventInspection(Path workbookPath, InspectionStep inspectionStep)
       throws IOException {
     ExcelEventWorkbookReader eventWorkbookReader = new ExcelEventWorkbookReader();
-    WorkbookReadCommand command = InspectionCommandConverter.toReadCommand(inspectionStep);
-    if (!(command instanceof WorkbookReadCommand.Introspection introspection)) {
+    dev.erst.gridgrind.core.plan.ResolvedInspectionStep command =
+        resolvedInspection(inspectionStep);
+    if (!(command.query() instanceof dev.erst.gridgrind.core.plan.InspectionQuery.Introspection)) {
       throw new IllegalArgumentException(
           GridGrindExecutionModeMetadata.eventRead()
               .unsupportedQueryMessage(inspectionStep.query().queryType()));
     }
     dev.erst.gridgrind.core.plan.InspectionResult result =
-        eventWorkbookReader.apply(workbookPath, List.of(introspection)).getFirst();
+        eventWorkbookReader.apply(workbookPath, List.of(command)).getFirst();
     return result;
+  }
+
+  private static dev.erst.gridgrind.core.plan.ResolvedInspectionStep resolvedInspection(
+      dev.erst.gridgrind.core.vocabulary.StepId id,
+      dev.erst.gridgrind.core.plan.Selector target,
+      dev.erst.gridgrind.core.plan.InspectionQuery query) {
+    return new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+        id, (dev.erst.gridgrind.core.plan.ResolvedTarget) target, query);
+  }
+
+  private static dev.erst.gridgrind.core.plan.ResolvedInspectionStep resolvedInspection(
+      dev.erst.gridgrind.core.plan.InspectionStep step) {
+    return resolvedInspection(step.stepId(), step.target(), step.query());
   }
 }

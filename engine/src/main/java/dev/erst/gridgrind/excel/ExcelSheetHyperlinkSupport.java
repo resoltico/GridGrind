@@ -41,14 +41,6 @@ final class ExcelSheetHyperlinkSupport {
     ExcelSheetAddressSupport.optionalCell(sheet, address).ifPresent(Cell::removeHyperlink);
   }
 
-  List<CellHyperlinkReport> hyperlinks(ExcelCellSelection selection) {
-    Objects.requireNonNull(selection, "selection must not be null");
-    return switch (selection) {
-      case ExcelCellSelection.AllUsedCells _ -> allUsedHyperlinks();
-      case ExcelCellSelection.Selected selected -> selectedHyperlinks(selected.addresses());
-    };
-  }
-
   static Optional<HyperlinkTarget> hyperlink(Cell cell) {
     return cell == null ? Optional.empty() : hyperlink(cell.getHyperlink());
   }
@@ -108,19 +100,26 @@ final class ExcelSheetHyperlinkSupport {
     return List.copyOf(hyperlinks);
   }
 
-  private List<CellHyperlinkReport> selectedHyperlinks(List<String> addresses) {
+  List<CellHyperlinkReport> hyperlinks() {
+    return allUsedHyperlinks();
+  }
+
+  List<CellHyperlinkReport> hyperlinks(
+      List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
+    return selectedHyperlinks(List.copyOf(addresses));
+  }
+
+  private List<CellHyperlinkReport> selectedHyperlinks(
+      List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
     List<CellHyperlinkReport> hyperlinks = new ArrayList<>();
-    for (String address : addresses) {
-      Cell cell = ExcelSheetAddressSupport.cellOrNull(sheet, address).orElse(null);
+    for (dev.erst.gridgrind.core.vocabulary.CellAddress address : addresses) {
+      Cell cell = ExcelSheetAddressSupport.cellOrNull(sheet, address.value()).orElse(null);
       if (cell == null) {
         continue;
       }
       Optional<HyperlinkTarget> hyperlink = hyperlink(cell);
       if (hyperlink.isPresent()) {
-        hyperlinks.add(
-            new CellHyperlinkReport(
-                new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
-                hyperlink.orElseThrow()));
+        hyperlinks.add(new CellHyperlinkReport(address, hyperlink.orElseThrow()));
       }
     }
     return List.copyOf(hyperlinks);

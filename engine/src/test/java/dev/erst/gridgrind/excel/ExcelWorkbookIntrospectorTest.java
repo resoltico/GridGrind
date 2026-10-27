@@ -68,32 +68,46 @@ class ExcelWorkbookIntrospectorTest {
                       .class,
                   introspector.execute(
                       workbook,
-                      new WorkbookReadCommand.GetFormulaSurface(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("formula-surface"),
                           new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
                               List.of("Raw").stream()
                                   .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
-                                  .toList()))));
+                                  .toList()),
+                          new dev.erst.gridgrind.core.plan.InspectionSurfaceQuery
+                              .GetFormulaSurface())));
       dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult cells =
           assertInstanceOf(
               dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult.class,
               introspector.execute(
                   workbook,
-                  new WorkbookReadCommand.GetCells(
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                       new StepId("formula-cell"),
-                      "Raw",
-                      List.of("A1"),
-                      new CellReadProjection(List.copyOf(Set.of(CellReadFacet.FORMULA))))));
+                      new dev.erst.gridgrind.core.plan.CellSelector.ByAddresses(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Raw"),
+                          List.of("A1").stream()
+                              .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                              .toList()),
+                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetCells(
+                          java.util.Optional.of(
+                              new CellReadProjection(
+                                  List.copyOf(Set.of(CellReadFacet.FORMULA))))))));
       dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult schema =
           assertInstanceOf(
               dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult.class,
               introspector.execute(
                   workbook,
-                  new WorkbookReadCommand.GetSheetSchema(
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                       new StepId("formula-schema"),
-                      "Schema",
-                      new ExcelReadWindow("A1", 2, 1),
-                      new CellReadProjection(List.copyOf(Set.of(CellReadFacet.FORMULA))))));
+                      new dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Schema"),
+                          new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                          2,
+                          1),
+                      new dev.erst.gridgrind.core.plan.InspectionSurfaceQuery.GetSheetSchema(
+                          java.util.Optional.of(
+                              new CellReadProjection(
+                                  List.copyOf(Set.of(CellReadFacet.FORMULA))))))));
 
       assertEquals(1, formulaSurface.surface().totalFormulaCellCount());
       assertEquals(
@@ -335,8 +349,11 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetWorkbookProtection(
-                          new StepId("workbook-protection"))));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("workbook-protection"),
+                          new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                          new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                              .GetWorkbookProtection())));
 
       assertEquals("workbook-protection", result.stepId().value());
       assertTrue(result.protection().structureLocked());
@@ -391,7 +408,12 @@ class ExcelWorkbookIntrospectorTest {
                       .class,
                   introspector.execute(
                       workbook,
-                      new WorkbookReadCommand.GetDrawingObjects(new StepId("drawing"), "Ops")));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("drawing"),
+                          new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                          new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                              .GetDrawingObjects())));
       dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.DrawingObjectPayloadResult
           drawingPayload =
               assertInstanceOf(
@@ -399,8 +421,12 @@ class ExcelWorkbookIntrospectorTest {
                       .DrawingObjectPayloadResult.class,
                   introspector.execute(
                       workbook,
-                      new WorkbookReadCommand.GetDrawingObjectPayload(
-                          new StepId("payload"), "Ops", "OpsEmbed")));
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("payload"),
+                          new dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Ops"), "OpsEmbed"),
+                          new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                              .GetDrawingObjectPayload())));
 
       assertEquals(2, drawingObjects.drawingObjects().size());
       assertEquals("OpsPicture", drawingObjects.drawingObjects().getFirst().name());
@@ -416,12 +442,18 @@ class ExcelWorkbookIntrospectorTest {
         NullPointerException.class,
         () ->
             introspector.execute(
-                null, new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))));
+                null,
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("workbook"),
+                    new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                    new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                        .GetWorkbookSummary())));
     assertThrows(
         NullPointerException.class,
         () ->
             introspector.execute(
-                ExcelWorkbooks.create(), (WorkbookReadCommand.Introspection) null));
+                ExcelWorkbooks.create(),
+                (dev.erst.gridgrind.core.plan.ResolvedInspectionStep) null));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -474,12 +506,14 @@ class ExcelWorkbookIntrospectorTest {
                       .class,
                   introspector.execute(
                       workbook,
-                      new WorkbookReadCommand.GetFormulaSurface(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("formula"),
                           new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
                               List.of("Forecast").stream()
                                   .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
-                                  .toList()))));
+                                  .toList()),
+                          new dev.erst.gridgrind.core.plan.InspectionSurfaceQuery
+                              .GetFormulaSurface())));
       assertEquals(1, formulaSurface.surface().totalFormulaCellCount());
       assertEquals(
           List.of("Forecast"),
@@ -494,7 +528,7 @@ class ExcelWorkbookIntrospectorTest {
                       .NamedRangeSurfaceResult.class,
                   introspector.execute(
                       workbook,
-                      new WorkbookReadCommand.GetNamedRangeSurface(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("namedRangeSurface"),
                           new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                               List.of(
@@ -504,8 +538,9 @@ class ExcelWorkbookIntrospectorTest {
                                   new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
                                       new dev.erst.gridgrind.core.vocabulary.DefinedName(
                                           "LocalItem"),
-                                      new dev.erst.gridgrind.core.vocabulary.SheetName(
-                                          "Budget")))))));
+                                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")))),
+                          new dev.erst.gridgrind.core.plan.InspectionSurfaceQuery
+                              .GetNamedRangeSurface())));
       assertEquals(1, namedRangeSurface.surface().workbookScopedCount());
       assertEquals(1, namedRangeSurface.surface().sheetScopedCount());
       assertEquals(1, namedRangeSurface.surface().formulaBackedCount());
@@ -729,18 +764,29 @@ class ExcelWorkbookIntrospectorTest {
         cast(
             dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")))),
+                workbook,
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("workbook"),
+                    new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                    new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                        .GetWorkbookSummary()))),
         cast(
             dev.erst.gridgrind.core.plan.WorkbookInspectionResult.NamedRangesResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetNamedRanges(
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                     new StepId("ranges"),
-                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()))),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetNamedRanges()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget"))),
+                workbook,
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("sheet"),
+                    new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult.class,
             introspector.execute(
@@ -754,36 +800,58 @@ class ExcelWorkbookIntrospectorTest {
             dev.erst.gridgrind.core.plan.SheetInspectionResult.MergedRegionsResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetMergedRegions(new StepId("merged"), "Budget"))),
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("merged"),
+                    new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetMergedRegions()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.HyperlinksResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetHyperlinks(
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                     new StepId("hyperlinks"),
-                    "Budget",
-                    new ExcelCellSelection.Selected(List.of("A1"))))),
+                    new dev.erst.gridgrind.core.plan.CellSelector.ByAddresses(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                        List.of("A1").stream()
+                            .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                            .toList()),
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetHyperlinks()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.CommentsResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetComments(
-                    new StepId("comments"), "Budget", new ExcelCellSelection.AllUsedCells()))),
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("comments"),
+                    new dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetComments()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetLayoutResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetSheetLayout(new StepId("layout"), "Budget"))),
+                workbook,
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("layout"),
+                    new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetLayout()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.PrintLayoutResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetPrintLayout(new StepId("printLayout"), "Budget"))),
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("printLayout"),
+                    new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetPrintLayout()))),
         cast(
             dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.FormulaSurfaceResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetFormulaSurface(
-                    new StepId("formula"), new SheetSelector.All()))),
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("formula"),
+                    new SheetSelector.All(),
+                    new dev.erst.gridgrind.core.plan.InspectionSurfaceQuery.GetFormulaSurface()))),
         cast(
             dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult.class,
             introspector.execute(
@@ -793,19 +861,29 @@ class ExcelWorkbookIntrospectorTest {
                 .class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetNamedRangeSurface(
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                     new StepId("namedRangeSurface"),
-                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()))),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.InspectionSurfaceQuery
+                        .GetNamedRangeSurface()))),
         cast(
             dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Ops"))),
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("autofilters"),
+                    new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Ops")),
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetAutofilters()))),
         cast(
             dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetTables(new StepId("tables"), new TableSelector.All()))));
+                new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                    new StepId("tables"),
+                    new TableSelector.All(),
+                    new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                        .GetTables()))));
   }
 
   private static <T> T cast(Class<T> type, Object value) {

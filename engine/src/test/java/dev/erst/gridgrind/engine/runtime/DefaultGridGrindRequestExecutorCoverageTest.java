@@ -21,7 +21,6 @@ import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
-import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
@@ -37,7 +36,6 @@ import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
@@ -152,30 +150,6 @@ class DefaultGridGrindRequestExecutorCoverageTest
                     new SheetName("Budget"), new CellAddress("A1"), 9, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()),
             invalidFormula));
-  }
-
-  @Test
-  void convertsStepNativeMutationsAndInspectionsIntoWorkbookCoreCommands() {
-    InspectionStep getNamedRanges =
-        new InspectionStep(
-            new StepId("step-03-get-named-ranges"),
-            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetExpr")),
-            new WorkbookIntrospectionQuery.GetNamedRanges());
-    InspectionStep workbookFindings =
-        new InspectionStep(
-            new StepId("step-04-workbook-findings"),
-            new WorkbookSelector.Current(),
-            new InspectionAnalysisQuery.AnalyzeWorkbookFindings());
-
-    WorkbookReadCommand.GetNamedRanges namedRangesCommand =
-        assertInstanceOf(
-            WorkbookReadCommand.GetNamedRanges.class,
-            InspectionCommandConverter.toReadCommand(getNamedRanges));
-    assertInstanceOf(
-        WorkbookReadCommand.AnalyzeWorkbookFindings.class,
-        InspectionCommandConverter.toReadCommand(workbookFindings));
-
-    assertEquals("step-03-get-named-ranges", namedRangesCommand.stepId().value());
   }
 
   static CellStyleReport defaultStyle() {

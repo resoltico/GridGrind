@@ -46,7 +46,7 @@ final class GridGrindRequestWarnings {
       switch (step.action()) {
         case WorkbookMutationAction.EnsureSheet _ -> {
           if (step.target() instanceof dev.erst.gridgrind.core.plan.SheetSelector.ByName sheet) {
-            addIfSpaced(sheetNames, SelectorConverter.toSheetName(sheet));
+            addIfSpaced(sheetNames, sheet.name().value());
           }
         }
         case WorkbookMutationAction.RenameSheet renameSheet ->

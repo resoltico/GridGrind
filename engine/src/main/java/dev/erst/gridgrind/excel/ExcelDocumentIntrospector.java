@@ -6,66 +6,36 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
-import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
 import java.util.List;
 import java.util.Objects;
 
 /** Reads document-intelligence facts from one sheet wrapper. */
 final class ExcelDocumentIntrospector {
-  private final ExcelDataValidationController dataValidationController;
-  private final ExcelConditionalFormattingController conditionalFormattingController;
   private final ExcelAutofilterController autofilterController;
   private final ExcelTableController tableController;
   private final ExcelPivotTableController pivotTableController;
 
   ExcelDocumentIntrospector() {
     this(
-        new ExcelDataValidationController(),
-        new ExcelConditionalFormattingController(),
         new ExcelAutofilterController(),
         new ExcelTableController(),
         new ExcelPivotTableController());
   }
 
   ExcelDocumentIntrospector(
-      ExcelDataValidationController dataValidationController,
-      ExcelConditionalFormattingController conditionalFormattingController,
       ExcelAutofilterController autofilterController,
       ExcelTableController tableController,
       ExcelPivotTableController pivotTableController) {
-    this.dataValidationController =
-        Objects.requireNonNull(
-            dataValidationController, "dataValidationController must not be null");
-    this.conditionalFormattingController =
-        Objects.requireNonNull(
-            conditionalFormattingController, "conditionalFormattingController must not be null");
     this.autofilterController =
         Objects.requireNonNull(autofilterController, "autofilterController must not be null");
     this.tableController =
         Objects.requireNonNull(tableController, "tableController must not be null");
     this.pivotTableController =
         Objects.requireNonNull(pivotTableController, "pivotTableController must not be null");
-  }
-
-  /** Returns data-validation metadata for the selected ranges on one sheet. */
-  List<DataValidationEntryReport> dataValidations(ExcelSheet sheet, ExcelRangeSelection selection) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(selection, "selection must not be null");
-    return dataValidationController.dataValidations(sheet.xssfSheet(), selection);
-  }
-
-  /** Returns conditional-formatting metadata for the selected ranges on one sheet. */
-  List<ConditionalFormattingEntryReport> conditionalFormatting(
-      ExcelSheet sheet, ExcelRangeSelection selection) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(selection, "selection must not be null");
-    return conditionalFormattingController.conditionalFormatting(sheet.xssfSheet(), selection);
   }
 
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */

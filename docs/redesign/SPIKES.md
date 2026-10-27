@@ -2742,3 +2742,37 @@ passes4m3s: core385, JSON353, engine1387 plus14 parity, CLI588, zero failures/er
 cases unchanged. No active campaigns. Inventories: main112818→112826, tests151011→151077;
 converters505, blank284, Support194, definitions0, snapshots2(runtime) unchanged. Baseline diff empty.
 The new controls will remain while cell/range/read-command translation is removed next.
+
+## WP-40 canonical executable inspections and bound metadata APIs
+
+Deleted WorkbookReadCommand's35 copied variants, InspectionCommandConverter, SelectorConverter,
+ExcelReadWindow and EventReadCommandTypes. Core ResolvedInspectionStep carries the stable id, resolved
+target and existing core query, validating target kinds from metadata; a core regression proves query/
+target identity and wrong-kind rejection. Native full-XSSF, analysis and event readers consume that
+tuple directly. Event rejection ids derive from query metadata. Runtime semantic selectors still
+resolve per step before tuple construction; assertions and inspection flows use the same seam.
+
+Deleted ExcelCellSelection/ExcelRangeSelection. Bound metadata APIs distinguish no-argument ALL reads/
+clears from typed CellAddress/RangeRef lists; no replacement selection model or empty-list ALL sentinel
+was added. Cell ordering and missing-cell omission remain. Range readers keep one private predicate
+implementation, preserving ALL malformed-reference tolerance and selected-range parsing/intersection
+behavior. Clear subtraction/block removal and the new rectangular-window controls remain unchanged.
+Retargeted the generator to core range selectors with the same selector-byte/range-byte consumption;
+all94 retained seeds pass without metadata or byte changes. Removed only deleted command/selector/
+label/window DTO tests, while keeping real native/event/assertion/persistence and public workflows.
+
+Intermediate compile failures located tuple fixture assumptions, obsolete accessor/name references and
+unused injections. The first behavior run exposed a real dispatch gap for direct surface queries;
+combined fact/surface routing fixed it. Invalid chart targets remain rejected under the tuple's owned
+message. PMD cleanup replaced unused query bindings with unnamed patterns; an initial XML cleanup
+missed its namespace and was corrected before success. Earlier failure logs/JSONs remain externally.
+Focused core/engine/parity/PMD passes40s; nested check/all94 seeds passes24s. Initial full gate passes
+3m52s; after final helper casing and the stale limits reference were corrected, delivered-state
+./gradlew check passes3m38s: core386, JSON353, engine1367 plus14 parity, CLI588, zero failures/errors/
+skips; all143 golden cases unchanged. Four JARs independently contain none of the7 deleted main-type
+families or nested variants. No active campaigns. Baseline diff empty.
+
+Inventories: converters505→177, blank284→282, main112826→112246, tests151077→150613; Support194,
+definitions0, snapshots2(runtime) unchanged. Remaining converter inventory is FormulaEnvironmentConverter
+and OoxmlPackageSecurityConverter, not the removed command/result/selection seams. WP-40 remains open
+for ResolvedPlan and those final converter contracts; Phase4 feature packaging/backends still follow.

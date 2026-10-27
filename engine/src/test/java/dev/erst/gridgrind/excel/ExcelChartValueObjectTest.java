@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.ResolvedInspectionStep;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -96,26 +97,28 @@ class ExcelChartValueObjectTest {
                 false,
                 List.of()));
 
-    WorkbookReadCommand.GetCharts getCharts =
-        new WorkbookReadCommand.GetCharts(
+    ResolvedInspectionStep getCharts =
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
             new StepId("charts"),
             new ChartSelector.AllOnSheet(
-                new dev.erst.gridgrind.core.vocabulary.SheetName("Charts")));
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Charts")),
+            new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetCharts());
     assertEquals("charts", getCharts.stepId().value());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadCommand.GetCharts(
+            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                 new StepId(" "),
                 new ChartSelector.AllOnSheet(
-                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"))));
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts")),
+                new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetCharts()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadCommand.GetCharts(
+            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                 new StepId("charts"),
-                new ChartSelector.AllOnSheet(
-                    new dev.erst.gridgrind.core.vocabulary.SheetName(" "))));
+                new ChartSelector.AllOnSheet(new dev.erst.gridgrind.core.vocabulary.SheetName(" ")),
+                new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetCharts()));
   }
 
   @Test

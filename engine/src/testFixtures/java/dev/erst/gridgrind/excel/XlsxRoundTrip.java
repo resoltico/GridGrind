@@ -323,7 +323,7 @@ public final class XlsxRoundTrip {
     requireNonBlank(sheetName, "sheetName");
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath, TEMP_FILE_FACTORY)) {
-      return workbook.sheet(sheetName).metadata().dataValidations(new ExcelRangeSelection.All());
+      return workbook.sheet(sheetName).metadata().dataValidations();
     }
   }
 

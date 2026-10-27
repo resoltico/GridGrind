@@ -23,20 +23,25 @@ final class WorkbookReadExecutor {
   }
 
   /** Executes one or more read commands in order and returns their immutable results. */
-  List<InspectionResult> apply(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
+  List<InspectionResult> apply(
+      ExcelWorkbook workbook, dev.erst.gridgrind.core.plan.ResolvedInspectionStep... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return apply(workbook, new WorkbookLocation.UnsavedWorkbook(), Arrays.asList(commands));
   }
 
   /** Executes one or more read commands using the workbook filesystem location for analysis. */
   List<InspectionResult> apply(
-      ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand... commands) {
+      ExcelWorkbook workbook,
+      WorkbookLocation workbookLocation,
+      dev.erst.gridgrind.core.plan.ResolvedInspectionStep... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return apply(workbook, workbookLocation, Arrays.asList(commands));
   }
 
   /** Executes read commands from any iterable source in order. */
-  List<InspectionResult> apply(ExcelWorkbook workbook, Iterable<WorkbookReadCommand> commands) {
+  List<InspectionResult> apply(
+      ExcelWorkbook workbook,
+      Iterable<dev.erst.gridgrind.core.plan.ResolvedInspectionStep> commands) {
     return apply(workbook, new WorkbookLocation.UnsavedWorkbook(), commands);
   }
 
@@ -44,13 +49,13 @@ final class WorkbookReadExecutor {
   List<InspectionResult> apply(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      Iterable<WorkbookReadCommand> commands) {
+      Iterable<dev.erst.gridgrind.core.plan.ResolvedInspectionStep> commands) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     Objects.requireNonNull(commands, "commands must not be null");
 
     List<InspectionResult> results = new ArrayList<>();
-    for (WorkbookReadCommand command : commands) {
+    for (dev.erst.gridgrind.core.plan.ResolvedInspectionStep command : commands) {
       Objects.requireNonNull(command, "command must not be null");
       results.add(applyOne(workbook, workbookLocation, command));
     }
@@ -58,13 +63,16 @@ final class WorkbookReadExecutor {
   }
 
   private InspectionResult applyOne(
-      ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand command) {
-    return switch (command) {
-      case WorkbookReadCommand.Introspection introspection ->
-          workbookIntrospector.execute(workbook, introspection);
-      case WorkbookReadCommand.Surface surface -> workbookIntrospector.execute(workbook, surface);
-      case WorkbookReadCommand.Analysis analysis ->
-          analyzer.execute(workbook, workbookLocation, analysis);
+      ExcelWorkbook workbook,
+      WorkbookLocation workbookLocation,
+      dev.erst.gridgrind.core.plan.ResolvedInspectionStep command) {
+    return switch (command.query()) {
+      case dev.erst.gridgrind.core.plan.InspectionQuery.Introspection _ ->
+          workbookIntrospector.execute(workbook, command);
+      case dev.erst.gridgrind.core.plan.InspectionQuery.Surface _ ->
+          workbookIntrospector.execute(workbook, command);
+      case dev.erst.gridgrind.core.plan.InspectionQuery.Analysis _ ->
+          analyzer.execute(workbook, workbookLocation, command);
     };
   }
 }

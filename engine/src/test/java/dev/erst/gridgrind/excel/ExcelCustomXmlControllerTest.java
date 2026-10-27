@@ -94,18 +94,26 @@ class ExcelCustomXmlControllerTest {
           assertInstanceOf(
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlMappingsResult.class,
               introspector.execute(
-                  workbook, new WorkbookReadCommand.GetCustomXmlMappings(new StepId("maps"))));
+                  workbook,
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                      new StepId("maps"),
+                      new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                      new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                          .GetCustomXmlMappings())));
       dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlExportResult exported =
           assertInstanceOf(
               dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlExportResult.class,
               introspector.execute(
                   workbook,
-                  new WorkbookReadCommand.ExportCustomXmlMapping(
+                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                       new StepId("export"),
-                      new CustomXmlMappingLocator(
-                          java.util.Optional.of(1L), java.util.Optional.empty()),
-                      false,
-                      "UTF-8")));
+                      new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                      new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                          .ExportCustomXmlMapping(
+                          new CustomXmlMappingLocator(
+                              java.util.Optional.of(1L), java.util.Optional.empty()),
+                          false,
+                          "UTF-8"))));
 
       assertEquals("maps", mappings.stepId().value());
       assertEquals(1, mappings.mappings().size());

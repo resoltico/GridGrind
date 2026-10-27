@@ -24,7 +24,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelSheet;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -32,8 +31,6 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /** Resolves semantic selectors into exact executable targets without inventing new semantics. */
-@SuppressWarnings(
-    "PMD.ExcessiveImports") // Selector variants and backend facts define this resolver.
 final class SemanticSelectorResolver {
   private static final String RESOLUTION_STEP_ID = "__semantic-selector-resolution__";
   private static final Set<Class<? extends MutationAction>> EXACT_CELL_MUTATION_ACTIONS =
@@ -221,7 +218,11 @@ final class SemanticSelectorResolver {
             workbookEngine
                 .read(
                     workbook,
-                    new WorkbookReadCommand.GetTables(new StepId(RESOLUTION_STEP_ID), selector))
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId(RESOLUTION_STEP_ID),
+                        (dev.erst.gridgrind.core.plan.ResolvedTarget) selector,
+                        new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                            .GetTables()))
                 .getFirst();
     List<TableEntryReport> tables = result.tables();
     if (tables.isEmpty()) {

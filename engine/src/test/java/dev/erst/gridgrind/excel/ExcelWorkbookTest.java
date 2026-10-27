@@ -555,13 +555,7 @@ class ExcelWorkbookTest {
               .toList());
       assertEquals(
           List.of("B2:B4"),
-          workbook
-              .sheet("Replica")
-              .metadata()
-              .conditionalFormatting(new ExcelRangeSelection.All())
-              .getFirst()
-              .ranges()
-              .stream()
+          workbook.sheet("Replica").metadata().conditionalFormatting().getFirst().ranges().stream()
               .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
               .toList());
     }

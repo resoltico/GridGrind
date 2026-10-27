@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.ResolvedInspectionStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -16,7 +17,6 @@ import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -292,8 +292,9 @@ class DefaultGridGrindRequestExecutorTestSupport
             action, ExecutionInputBindingsFixtureSupport.bindings(Path.of("."))));
   }
 
-  static WorkbookReadCommand readCommand(InspectionStep step) {
-    return InspectionCommandConverter.toReadCommand(step);
+  static ResolvedInspectionStep readCommand(InspectionStep step) {
+    return new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+        step.stepId(), (dev.erst.gridgrind.core.plan.ResolvedTarget) step.target(), step.query());
   }
 
   static String readType(InspectionStep step) {

@@ -50,10 +50,11 @@ class ScopedTableInspectionTest {
               engine
                   .read(
                       workbook,
-                      InspectionCommandConverter.toReadCommand(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("wrong"),
-                          new TableSelector.ByNameOnSheet(
-                              new TableName("Queue"), new SheetName("Budget")),
+                          (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                              new TableSelector.ByNameOnSheet(
+                                  new TableName("Queue"), new SheetName("Budget")),
                           new WorkbookAssetIntrospectionQuery.GetTables()))
                   .getFirst());
       assertTrue(wrongSheet.tables().isEmpty());
@@ -63,10 +64,11 @@ class ScopedTableInspectionTest {
               engine
                   .read(
                       workbook,
-                      InspectionCommandConverter.toReadCommand(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("matching"),
-                          new TableSelector.ByNameOnSheet(
-                              new TableName("Queue"), new SheetName("Ops")),
+                          (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                              new TableSelector.ByNameOnSheet(
+                                  new TableName("Queue"), new SheetName("Ops")),
                           new WorkbookAssetIntrospectionQuery.GetTables()))
                   .getFirst());
       assertEquals(1, matching.tables().size());
@@ -77,10 +79,11 @@ class ScopedTableInspectionTest {
               engine
                   .read(
                       workbook,
-                      InspectionCommandConverter.toReadCommand(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("insensitive"),
-                          new TableSelector.ByNameOnSheet(
-                              new TableName("queue"), new SheetName("ops")),
+                          (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                              new TableSelector.ByNameOnSheet(
+                                  new TableName("queue"), new SheetName("ops")),
                           new WorkbookAssetIntrospectionQuery.GetTables()))
                   .getFirst());
       assertEquals(1, insensitive.tables().size());
@@ -90,10 +93,11 @@ class ScopedTableInspectionTest {
               engine
                   .read(
                       workbook,
-                      InspectionCommandConverter.toReadCommand(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("wrong-health"),
-                          new TableSelector.ByNameOnSheet(
-                              new TableName("Queue"), new SheetName("Budget")),
+                          (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                              new TableSelector.ByNameOnSheet(
+                                  new TableName("Queue"), new SheetName("Budget")),
                           new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
                               .AnalyzeTableHealth()))
                   .getFirst());
@@ -156,10 +160,11 @@ class ScopedTableInspectionTest {
               engine
                   .read(
                       workbook,
-                      InspectionCommandConverter.toReadCommand(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("wrong-pivot"),
-                          new dev.erst.gridgrind.core.plan.PivotTableSelector.ByNameOnSheet(
-                              "Totals", new SheetName("Budget")),
+                          (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                              new dev.erst.gridgrind.core.plan.PivotTableSelector.ByNameOnSheet(
+                                  "Totals", new SheetName("Budget")),
                           new WorkbookAssetIntrospectionQuery.GetPivotTables()))
                   .getFirst());
       assertTrue(wrong.pivotTables().isEmpty());
@@ -169,10 +174,11 @@ class ScopedTableInspectionTest {
               engine
                   .read(
                       workbook,
-                      InspectionCommandConverter.toReadCommand(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("matching-pivot"),
-                          new dev.erst.gridgrind.core.plan.PivotTableSelector.ByNameOnSheet(
-                              "Totals", new SheetName("Report")),
+                          (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                              new dev.erst.gridgrind.core.plan.PivotTableSelector.ByNameOnSheet(
+                                  "Totals", new SheetName("Report")),
                           new WorkbookAssetIntrospectionQuery.GetPivotTables()))
                   .getFirst());
       assertEquals(1, matching.pivotTables().size());
@@ -182,10 +188,11 @@ class ScopedTableInspectionTest {
               engine
                   .read(
                       workbook,
-                      InspectionCommandConverter.toReadCommand(
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
                           new StepId("wrong-pivot-health"),
-                          new dev.erst.gridgrind.core.plan.PivotTableSelector.ByNameOnSheet(
-                              "Totals", new SheetName("Budget")),
+                          (dev.erst.gridgrind.core.plan.ResolvedTarget)
+                              new dev.erst.gridgrind.core.plan.PivotTableSelector.ByNameOnSheet(
+                                  "Totals", new SheetName("Budget")),
                           new dev.erst.gridgrind.core.plan.InspectionAnalysisQuery
                               .AnalyzePivotTableHealth()))
                   .getFirst());

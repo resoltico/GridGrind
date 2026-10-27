@@ -96,51 +96,116 @@ final class WorkbookSampleFixtures {
 
   private WorkbookSampleFixtures() {}
 
-  static List<WorkbookReadCommand.Introspection> introspectionCommands() {
+  static List<dev.erst.gridgrind.core.plan.ResolvedInspectionStep> introspectionCommands() {
     return List.of(
-        new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
-        new WorkbookReadCommand.GetWorkbookProtection(new StepId("protection")),
-        new WorkbookReadCommand.GetCustomXmlMappings(new StepId("customXmlMappings")),
-        new WorkbookReadCommand.ExportCustomXmlMapping(
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("workbook"),
+            new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+            new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookSummary()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("protection"),
+            new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+            new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookProtection()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("customXmlMappings"),
+            new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+            new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetCustomXmlMappings()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
             new StepId("customXmlExport"),
-            new CustomXmlMappingLocator(
-                java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
-            false,
-            StandardCharsets.UTF_8.name()),
-        new WorkbookReadCommand.GetNamedRanges(
-            new StepId("ranges"), new dev.erst.gridgrind.core.plan.NamedRangeSelector.All()),
-        new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget"),
+            new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+            new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.ExportCustomXmlMapping(
+                new CustomXmlMappingLocator(
+                    java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping")),
+                false,
+                StandardCharsets.UTF_8.name())),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("ranges"),
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
+            new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetNamedRanges()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("sheet"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary()),
         WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1")),
         WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 1, 1),
-        new WorkbookReadCommand.GetMergedRegions(new StepId("merged"), "Budget"),
-        new WorkbookReadCommand.GetHyperlinks(
-            new StepId("hyperlinks"), "Budget", new ExcelCellSelection.AllUsedCells()),
-        new WorkbookReadCommand.GetComments(
-            new StepId("comments"), "Budget", new ExcelCellSelection.Selected(List.of("A1"))),
-        new WorkbookReadCommand.GetDrawingObjects(new StepId("drawings"), "Budget"),
-        new WorkbookReadCommand.GetCharts(
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("merged"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetMergedRegions()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("hyperlinks"),
+            new dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetHyperlinks()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("comments"),
+            new dev.erst.gridgrind.core.plan.CellSelector.ByAddresses(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                List.of("A1").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+                    .toList()),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetComments()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("drawings"),
+            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
             new StepId("charts"),
             new ChartSelector.AllOnSheet(
-                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"))),
-        new WorkbookReadCommand.GetPivotTables(new StepId("pivots"), new PivotTableSelector.All()),
-        new WorkbookReadCommand.GetDrawingObjectPayload(
-            new StepId("payload"), "Budget", "Object 1"),
-        new WorkbookReadCommand.GetSheetLayout(new StepId("layout"), "Budget"),
-        new WorkbookReadCommand.GetPrintLayout(new StepId("print"), "Budget"),
-        new WorkbookReadCommand.GetDataValidations(
-            new StepId("validations"), "Budget", new ExcelRangeSelection.All()),
-        new WorkbookReadCommand.GetConditionalFormatting(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetCharts()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("pivots"),
+            new PivotTableSelector.All(),
+            new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetPivotTables()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("payload"),
+            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"), "Object 1"),
+            new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                .GetDrawingObjectPayload()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("layout"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetLayout()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("print"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetPrintLayout()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("validations"),
+            new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetDataValidations()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
             new StepId("conditional"),
-            "Budget",
-            new ExcelRangeSelection.Selected(List.of("A1:B2"))),
-        new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget"),
-        new WorkbookReadCommand.GetTables(new StepId("tables"), new TableSelector.All()),
-        new WorkbookReadCommand.GetArrayFormulas(
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRanges(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                List.of("A1:B2").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                    .toList()),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetConditionalFormatting()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("autofilters"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetAutofilters()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("tables"),
+            new TableSelector.All(),
+            new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery.GetTables()),
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
             new StepId("arrayFormulas"),
             new dev.erst.gridgrind.core.plan.SheetSelector.ByNames(
                 List.of("Budget").stream()
                     .map(dev.erst.gridgrind.core.vocabulary.SheetName::new)
-                    .toList())));
+                    .toList()),
+            new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetArrayFormulas()));
   }
 
   static List<ResolvedStep> workbookCommands() {
@@ -363,9 +428,12 @@ final class WorkbookSampleFixtures {
         new ResolvedStep(
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
             new ResolvedMutationAction.SetDataValidation(validationDefinition())),
-        clearRangesStep(
-            new SheetName("Budget"),
-            new ExcelRangeSelection.Selected(List.of("C2:D4")),
+        new dev.erst.gridgrind.core.plan.ResolvedStep(
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRanges(
+                new SheetName("Budget"),
+                List.of("C2:D4").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                    .toList()),
             new StructuredMutationAction.ClearDataValidations()),
         new ResolvedStep(
             new RangeSelector.ByRanges(
@@ -390,9 +458,12 @@ final class WorkbookSampleFixtures {
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty()))))))),
-        clearRangesStep(
-            new SheetName("Budget"),
-            new ExcelRangeSelection.Selected(List.of("A2:A5")),
+        new dev.erst.gridgrind.core.plan.ResolvedStep(
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRanges(
+                new SheetName("Budget"),
+                List.of("A2:A5").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                    .toList()),
             new StructuredMutationAction.ClearConditionalFormatting()),
         new ResolvedStep(
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:C4")),
@@ -560,20 +631,5 @@ final class WorkbookSampleFixtures {
                   new SheetName(sheet.sheetName().value()));
         };
     return new ResolvedStep(target, new StructuredMutationAction.DeleteNamedRange());
-  }
-
-  static ResolvedStep clearRangesStep(
-      SheetName sheet,
-      dev.erst.gridgrind.excel.ExcelRangeSelection selection,
-      ResolvedMutationAction action) {
-    ResolvedTarget target =
-        switch (selection) {
-          case dev.erst.gridgrind.excel.ExcelRangeSelection.All _ ->
-              new RangeSelector.AllOnSheet(sheet);
-          case dev.erst.gridgrind.excel.ExcelRangeSelection.Selected selected ->
-              new RangeSelector.ByRanges(
-                  sheet, selected.ranges().stream().map(RangeRef::new).toList());
-        };
-    return new ResolvedStep(target, action);
   }
 }

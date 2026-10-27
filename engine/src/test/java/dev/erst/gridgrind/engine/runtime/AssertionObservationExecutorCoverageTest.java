@@ -65,7 +65,7 @@ class AssertionObservationExecutorCoverageTest {
                       new WorkbookAssetIntrospectionQuery.GetCharts(),
                       workbook,
                       new WorkbookLocation.UnsavedWorkbook()));
-      assertEquals("Unsupported chart inspection target", unsupportedCharts.getMessage());
+      assertEquals("Inspection target does not match GET_CHARTS", unsupportedCharts.getMessage());
     }
 
     IllegalArgumentException unsupportedObservedCount =

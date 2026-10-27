@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.model.table.TableColumnReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.plan.ResolvedInspectionStep;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -287,8 +288,11 @@ class AdvancedReadEngineTypesTest {
 
     WorkbookProtectionReport protection =
         new WorkbookProtectionReport(true, false, true, true, false);
-    WorkbookReadCommand.GetWorkbookProtection read =
-        new WorkbookReadCommand.GetWorkbookProtection(new StepId("workbook-protection"));
+    ResolvedInspectionStep read =
+        new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+            new StepId("workbook-protection"),
+            new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+            new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookProtection());
     dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookProtectionResult result =
         new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookProtectionResult(
             new StepId("workbook-protection"), protection);
@@ -297,10 +301,21 @@ class AdvancedReadEngineTypesTest {
     assertEquals("workbook-protection", read.stepId().value());
     assertTrue(result.protection().workbookPasswordHashPresent());
     assertThrows(
-        NullPointerException.class, () -> new WorkbookReadCommand.GetWorkbookProtection(null));
+        NullPointerException.class,
+        () ->
+            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                null,
+                new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                    .GetWorkbookProtection()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetWorkbookProtection(new StepId(" ")));
+        () ->
+            new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                new StepId(" "),
+                new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+                new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
+                    .GetWorkbookProtection()));
     assertThrows(
         NullPointerException.class,
         () ->
