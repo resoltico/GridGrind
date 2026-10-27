@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
-import dev.erst.gridgrind.core.model.formula.FormulaPatternReport;
 import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
@@ -353,7 +352,6 @@ final class ExcelWorkbookIntrospector {
   }
 
   /** Groups formulas by exact expression across the selected sheets. */
-  @SuppressWarnings({"PMD.AvoidInstantiatingObjectsInLoops", "PMD.UseConcurrentHashMap"})
   FormulaSurfaceReport formulaSurface(ExcelWorkbook workbook, SheetSelector selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
@@ -363,30 +361,9 @@ final class ExcelWorkbookIntrospector {
     int totalFormulaCellCount = 0;
     for (String sheetName : sheetNames) {
       ExcelSheet sheet = workbook.sheet(sheetName);
-      List<ExcelFormulaCell> formulaCells = ExcelFormulaFactReader.formulaCells(sheet.xssfSheet());
-      Map<String, List<String>> formulas = new LinkedHashMap<>();
-      for (ExcelFormulaCell formulaCell : formulaCells) {
-        formulas
-            .computeIfAbsent(formulaCell.formula(), _ -> new ArrayList<>())
-            .add(formulaCell.address());
-      }
-      List<FormulaPatternReport> patterns = new ArrayList<>(formulas.size());
-      for (Map.Entry<String, List<String>> entry : formulas.entrySet()) {
-        patterns.add(
-            new FormulaPatternReport(
-                entry.getKey(),
-                entry.getValue().size(),
-                List.copyOf(entry.getValue()).stream()
-                    .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
-                    .toList()));
-      }
-      totalFormulaCellCount += formulaCells.size();
-      sheets.add(
-          new SheetFormulaSurfaceReport(
-              new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
-              formulaCells.size(),
-              patterns.size(),
-              List.copyOf(patterns)));
+      SheetFormulaSurfaceReport surface = ExcelFormulaFactReader.surface(sheet.xssfSheet());
+      totalFormulaCellCount += surface.formulaCellCount();
+      sheets.add(surface);
     }
     return new FormulaSurfaceReport(totalFormulaCellCount, List.copyOf(sheets));
   }

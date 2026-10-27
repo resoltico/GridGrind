@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
@@ -121,7 +122,7 @@ final class ExcelSheetCellReadSupport {
     return List.copyOf(cells);
   }
 
-  List<ExcelPreviewRow> preview(int maxRows, int maxColumns, int lastRowIndex) {
+  List<WindowRowReport> preview(int maxRows, int maxColumns, int lastRowIndex) {
     if (maxRows <= 0) {
       throw new IllegalArgumentException("maxRows must be greater than 0");
     }
@@ -129,10 +130,10 @@ final class ExcelSheetCellReadSupport {
       throw new IllegalArgumentException("maxColumns must be greater than 0");
     }
 
-    List<ExcelPreviewRow> previewRows = new ArrayList<>();
+    List<WindowRowReport> previewRows = new ArrayList<>();
     int endingRowIndex = Math.min(lastRowIndex, maxRows - 1);
     for (int rowIndex = 0; rowIndex <= endingRowIndex; rowIndex++) {
-      previewRows.add(new ExcelPreviewRow(rowIndex, previewRow(rowIndex, maxColumns)));
+      previewRows.add(new WindowRowReport(rowIndex, previewRow(rowIndex, maxColumns)));
     }
     return List.copyOf(previewRows);
   }

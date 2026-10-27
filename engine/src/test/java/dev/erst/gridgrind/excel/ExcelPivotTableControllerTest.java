@@ -51,6 +51,17 @@ class ExcelPivotTableControllerTest {
               List.of("Region"),
               List.of("Stage")));
 
+      // The values pseudo-field is read from loaded OOXML alongside the ordinary column labels.
+      workbook
+          .xssfWorkbook()
+          .getSheet("Report")
+          .getPivotTables()
+          .getFirst()
+          .getCTPivotTableDefinition()
+          .getColFields()
+          .addNewField()
+          .setX(-2);
+
       PivotTableReport.Supported snapshot =
           assertInstanceOf(
               PivotTableReport.Supported.class,
@@ -68,6 +79,7 @@ class ExcelPivotTableControllerTest {
       assertEquals("A1:D5", source.range().value());
       assertEquals(List.of("Region"), fieldNames(snapshot.rowLabels()));
       assertEquals(List.of("Stage"), fieldNames(snapshot.columnLabels()));
+      assertTrue(snapshot.valuesAxisOnColumns());
       assertEquals(List.of(), fieldNames(snapshot.reportFilters()));
       assertEquals("Amount", snapshot.dataFields().getFirst().sourceColumnName());
       assertEquals(
@@ -94,6 +106,8 @@ class ExcelPivotTableControllerTest {
 
       assertEquals("Sales Pivot 2026", snapshot.name());
       assertEquals("C5", snapshot.anchor().topLeftAddress().value());
+      assertEquals(List.of("Stage"), fieldNames(snapshot.columnLabels()));
+      assertTrue(snapshot.valuesAxisOnColumns());
       assertTrue(
           controller.pivotTableHealthFindings(reopened, new PivotTableSelector.All()).isEmpty());
     }

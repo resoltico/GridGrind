@@ -6,9 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -57,14 +63,23 @@ class ExcelWorkbookFormulasTest {
               .value());
       assertEquals(
           List.of(
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")),
+                  "A1*2",
+                  FormulaCapabilityKind.EVALUABLE_NOW,
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty())),
           formulas.assessAllCapabilities());
       assertEquals(
           List.of(
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
-          formulas.assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")),
+                  "A1*2",
+                  FormulaCapabilityKind.EVALUABLE_NOW,
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty())),
+          formulas.assessCapabilities(
+              List.of(new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")))));
       assertSame(workbook, formulas.clearCaches());
     }
   }
@@ -79,34 +94,35 @@ class ExcelWorkbookFormulasTest {
       sheet.cells().setCell("C1", new ResolvedFormula("B1+1"));
       sheet.cells().setCell("D1", new ResolvedFormula("1/0"));
 
-      List<ExcelFormulaCapabilityAssessment> assessments =
+      List<CalculationReport.FormulaCapability> assessments =
           workbook.formulas().assessAllCapabilities();
 
       assertEquals(
           List.of(
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget",
-                  "A1",
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("A1")),
                   "A1+1",
-                  ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-                  ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
-                  "Formula evaluation detected a circular reference."),
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget",
-                  "B1",
+                  FormulaCapabilityKind.UNEVALUABLE_NOW,
+                  java.util.Optional.of(GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE),
+                  java.util.Optional.of("Formula evaluation detected a circular reference.")),
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")),
                   "C1+1",
-                  ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-                  ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
-                  "Formula evaluation detected a circular reference."),
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget",
-                  "C1",
+                  FormulaCapabilityKind.UNEVALUABLE_NOW,
+                  java.util.Optional.of(GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE),
+                  java.util.Optional.of("Formula evaluation detected a circular reference.")),
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("C1")),
                   "B1+1",
-                  ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-                  ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
-                  "Formula evaluation detected a circular reference."),
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget", "D1", "1/0", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+                  FormulaCapabilityKind.UNEVALUABLE_NOW,
+                  java.util.Optional.of(GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE),
+                  java.util.Optional.of("Formula evaluation detected a circular reference.")),
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("D1")),
+                  "1/0",
+                  FormulaCapabilityKind.EVALUABLE_NOW,
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty())),
           assessments);
     }
   }
@@ -123,8 +139,12 @@ class ExcelWorkbookFormulasTest {
 
       assertEquals(
           List.of(
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget", "A1", "1+1", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("A1")),
+                  "1+1",
+                  FormulaCapabilityKind.EVALUABLE_NOW,
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty())),
           workbook.formulas().assessAllCapabilities());
     }
   }

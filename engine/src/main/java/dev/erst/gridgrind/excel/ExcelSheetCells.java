@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
@@ -110,7 +111,7 @@ public final class ExcelSheetCells {
   }
 
   /** Returns a compact preview of the top-left portion of the sheet. */
-  public List<ExcelPreviewRow> preview(int maxRows, int maxColumns) {
+  public List<WindowRowReport> preview(int maxRows, int maxColumns) {
     return readSupport.preview(maxRows, maxColumns, sheet.rows().lastIndex());
   }
 

@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
@@ -152,7 +153,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                   circularFormulaSnapshot.value().orElseThrow())
               .value());
 
-      List<ExcelPreviewRow> preview = sheet.cells().preview(4, 6);
+      List<WindowRowReport> preview = sheet.cells().preview(4, 6);
       assertEquals(4, preview.size());
       assertEquals("A1", preview.get(0).cells().get(0).address().value());
       assertTrue(
@@ -533,7 +534,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(
           ExcelBorderStyle.NONE, borderStyle(styledValue.style().orElseThrow().border().left()));
 
-      List<ExcelPreviewRow> preview = sheet.cells().preview(2, 3);
+      List<WindowRowReport> preview = sheet.cells().preview(2, 3);
       assertTrue(
           preview.getFirst().cells().stream()
               .anyMatch(cell -> "C1".equals(cell.address().value())));
@@ -715,7 +716,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           () -> assertEquals("GridGrind", snapshot.comment().orElseThrow().author()),
           () -> assertTrue(snapshot.comment().orElseThrow().visible()));
 
-      List<ExcelPreviewRow> preview = sheet.cells().preview(1, 1);
+      List<WindowRowReport> preview = sheet.cells().preview(1, 1);
       assertEquals(1, preview.size());
       assertEquals("A1", preview.getFirst().cells().getFirst().address().value());
 

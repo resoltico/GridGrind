@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,18 +19,18 @@ public final class ExcelWorkbookFormulas {
   }
 
   /** Classifies every formula cell currently present in the workbook under the current runtime. */
-  public List<ExcelFormulaCapabilityAssessment> assessAllCapabilities() {
+  public List<CalculationReport.FormulaCapability> assessAllCapabilities() {
     return ExcelWorkbookFormulaSupport.assessAllFormulaCapabilities(workbook);
   }
 
   /** Evaluates one or more explicit formula-cell targets and stores their cached results. */
-  public ExcelWorkbook evaluate(List<ExcelFormulaCellTarget> cells) {
+  public ExcelWorkbook evaluate(List<FormulaCellTarget> cells) {
     return ExcelWorkbookFormulaSupport.evaluateFormulaCells(workbook, cells);
   }
 
   /** Classifies one explicit set of formula-cell targets under the current runtime. */
-  public List<ExcelFormulaCapabilityAssessment> assessCapabilities(
-      List<ExcelFormulaCellTarget> cells) {
+  public List<CalculationReport.FormulaCapability> assessCapabilities(
+      List<FormulaCellTarget> cells) {
     return ExcelWorkbookFormulaSupport.assessFormulaCellCapabilities(workbook, cells);
   }
 

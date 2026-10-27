@@ -1,5 +1,11 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,10 +39,10 @@ final class ExcelWorkbookFormulaSupport {
     return workbook;
   }
 
-  static List<ExcelFormulaCapabilityAssessment> assessAllFormulaCapabilities(
+  static List<CalculationReport.FormulaCapability> assessAllFormulaCapabilities(
       ExcelWorkbook workbook) {
     workbook.context().formulaRuntime().clearCachedResults();
-    List<ExcelFormulaCapabilityAssessment> assessments = new ArrayList<>();
+    List<CalculationReport.FormulaCapability> assessments = new ArrayList<>();
     for (Sheet sheet : workbook.context().workbook()) {
       for (Row row : sheet) {
         for (Cell cell : row) {
@@ -50,36 +56,43 @@ final class ExcelWorkbookFormulaSupport {
     return List.copyOf(assessments);
   }
 
-  static ExcelWorkbook evaluateFormulaCells(
-      ExcelWorkbook workbook, List<ExcelFormulaCellTarget> cells) {
+  static ExcelWorkbook evaluateFormulaCells(ExcelWorkbook workbook, List<FormulaCellTarget> cells) {
     Objects.requireNonNull(cells, "cells must not be null");
     workbook.context().formulaRuntime().clearCachedResults();
-    for (ExcelFormulaCellTarget target : cells) {
+    for (FormulaCellTarget target : cells) {
       Objects.requireNonNull(target, "cells must not contain nulls");
-      Cell cell = workbook.requiredCell(target.sheetName(), target.address());
+      Cell cell = workbook.requiredCell(target.sheetName().value(), target.address().value());
       if (cell.getCellType() != CellType.FORMULA) {
         throw new IllegalArgumentException(
-            "Cell " + target.sheetName() + "!" + target.address() + " is not a formula cell");
+            "Cell "
+                + target.sheetName().value()
+                + "!"
+                + target.address().value()
+                + " is not a formula cell");
       }
-      evaluateFormulaCell(workbook, target.sheetName(), cell);
+      evaluateFormulaCell(workbook, target.sheetName().value(), cell);
     }
     workbook.markPackageMutated();
     return workbook;
   }
 
-  static List<ExcelFormulaCapabilityAssessment> assessFormulaCellCapabilities(
-      ExcelWorkbook workbook, List<ExcelFormulaCellTarget> cells) {
+  static List<CalculationReport.FormulaCapability> assessFormulaCellCapabilities(
+      ExcelWorkbook workbook, List<FormulaCellTarget> cells) {
     Objects.requireNonNull(cells, "cells must not be null");
     workbook.context().formulaRuntime().clearCachedResults();
-    List<ExcelFormulaCapabilityAssessment> assessments = new ArrayList<>(cells.size());
-    for (ExcelFormulaCellTarget target : cells) {
+    List<CalculationReport.FormulaCapability> assessments = new ArrayList<>(cells.size());
+    for (FormulaCellTarget target : cells) {
       Objects.requireNonNull(target, "cells must not contain nulls");
-      Cell cell = workbook.requiredCell(target.sheetName(), target.address());
+      Cell cell = workbook.requiredCell(target.sheetName().value(), target.address().value());
       if (cell.getCellType() != CellType.FORMULA) {
         throw new IllegalArgumentException(
-            "Cell " + target.sheetName() + "!" + target.address() + " is not a formula cell");
+            "Cell "
+                + target.sheetName().value()
+                + "!"
+                + target.address().value()
+                + " is not a formula cell");
       }
-      assessments.add(assessFormulaCell(workbook, target.sheetName(), cell));
+      assessments.add(assessFormulaCell(workbook, target.sheetName().value(), cell));
     }
     workbook.context().formulaRuntime().clearCachedResults();
     return List.copyOf(assessments);
@@ -111,60 +124,64 @@ final class ExcelWorkbookFormulaSupport {
     }
   }
 
-  private static ExcelFormulaCapabilityAssessment assessFormulaCell(
+  private static CalculationReport.FormulaCapability assessFormulaCell(
       ExcelWorkbook workbook, String sheetName, Cell cell) {
     String address = new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString();
     String formula = cell.getCellFormula();
     try {
       CellValue evaluated = workbook.context().formulaRuntime().evaluate(cell);
       if (isCircularReference(evaluated)) {
-        return new ExcelFormulaCapabilityAssessment(
-            sheetName,
-            address,
+        return new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName(sheetName), new CellAddress(address)),
             formula,
-            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-            ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
-            "Formula evaluation detected a circular reference.");
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE),
+            java.util.Optional.of("Formula evaluation detected a circular reference."));
       }
-      return new ExcelFormulaCapabilityAssessment(
-          sheetName, address, formula, ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null);
+      return new CalculationReport.FormulaCapability(
+          new FormulaCellTarget(new SheetName(sheetName), new CellAddress(address)),
+          formula,
+          FormulaCapabilityKind.EVALUABLE_NOW,
+          java.util.Optional.empty(),
+          java.util.Optional.empty());
     } catch (RuntimeException exception) {
       RuntimeException wrapped =
           FormulaExceptions.wrap(
               workbook.context().formulaRuntime(), sheetName, address, formula, exception);
       return switch (wrapped) {
         case InvalidFormulaException invalid ->
-            new ExcelFormulaCapabilityAssessment(
-                invalid.sheetName(),
-                invalid.address(),
+            new CalculationReport.FormulaCapability(
+                new FormulaCellTarget(
+                    new SheetName(invalid.sheetName()), new CellAddress(invalid.address())),
                 invalid.formula(),
-                ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI,
-                ExcelFormulaCapabilityIssue.INVALID_FORMULA,
-                invalid.getMessage());
+                FormulaCapabilityKind.UNPARSEABLE_BY_POI,
+                java.util.Optional.of(GridGrindProblemCode.INVALID_FORMULA),
+                java.util.Optional.ofNullable(invalid.getMessage()));
         case MissingExternalWorkbookException missing ->
-            new ExcelFormulaCapabilityAssessment(
-                missing.sheetName(),
-                missing.address(),
+            new CalculationReport.FormulaCapability(
+                new FormulaCellTarget(
+                    new SheetName(missing.sheetName()), new CellAddress(missing.address())),
                 missing.formula(),
-                ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-                ExcelFormulaCapabilityIssue.MISSING_EXTERNAL_WORKBOOK,
-                missing.getMessage());
+                FormulaCapabilityKind.UNEVALUABLE_NOW,
+                java.util.Optional.of(GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK),
+                java.util.Optional.ofNullable(missing.getMessage()));
         case UnregisteredUserDefinedFunctionException unregistered ->
-            new ExcelFormulaCapabilityAssessment(
-                unregistered.sheetName(),
-                unregistered.address(),
+            new CalculationReport.FormulaCapability(
+                new FormulaCellTarget(
+                    new SheetName(unregistered.sheetName()),
+                    new CellAddress(unregistered.address())),
                 unregistered.formula(),
-                ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-                ExcelFormulaCapabilityIssue.UNREGISTERED_USER_DEFINED_FUNCTION,
-                unregistered.getMessage());
+                FormulaCapabilityKind.UNEVALUABLE_NOW,
+                java.util.Optional.of(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION),
+                java.util.Optional.ofNullable(unregistered.getMessage()));
         case UnsupportedFormulaException unsupported ->
-            new ExcelFormulaCapabilityAssessment(
-                unsupported.sheetName(),
-                unsupported.address(),
+            new CalculationReport.FormulaCapability(
+                new FormulaCellTarget(
+                    new SheetName(unsupported.sheetName()), new CellAddress(unsupported.address())),
                 unsupported.formula(),
-                ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-                ExcelFormulaCapabilityIssue.UNSUPPORTED_FORMULA,
-                unsupported.getMessage());
+                FormulaCapabilityKind.UNEVALUABLE_NOW,
+                java.util.Optional.of(GridGrindProblemCode.UNSUPPORTED_FORMULA),
+                java.util.Optional.ofNullable(unsupported.getMessage()));
         default -> throw wrapped;
       };
     }

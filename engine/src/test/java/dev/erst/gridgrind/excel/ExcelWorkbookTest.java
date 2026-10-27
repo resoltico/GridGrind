@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
@@ -14,6 +15,7 @@ import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
@@ -141,8 +143,11 @@ class ExcelWorkbookTest {
                   totalSnapshot.value().orElseThrow())
               .value());
 
-      List<ExcelPreviewRow> preview = sheet.cells().preview(4, 2);
+      List<WindowRowReport> preview = sheet.cells().preview(4, 2);
       assertEquals(4, preview.size());
+      assertThrows(
+          UnsupportedOperationException.class,
+          () -> preview.getFirst().cells().add(preview.getFirst().cells().getFirst()));
       assertEquals("A1", preview.get(0).cells().get(0).address().value());
       assertEquals(
           "Hosting",
@@ -218,13 +223,28 @@ class ExcelWorkbookTest {
 
       assertThrows(
           IllegalArgumentException.class,
-          () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "A1"))));
+          () ->
+              workbook
+                  .formulas()
+                  .evaluate(
+                      List.of(
+                          new FormulaCellTarget(new SheetName("Budget"), new CellAddress("A1")))));
       assertThrows(
-          InvalidCellAddressException.class,
-          () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", ":"))));
+          dev.erst.gridgrind.core.problem.InvalidRequestException.class,
+          () ->
+              workbook
+                  .formulas()
+                  .evaluate(
+                      List.of(
+                          new FormulaCellTarget(new SheetName("Budget"), new CellAddress(":")))));
       assertThrows(
           CellNotFoundException.class,
-          () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
+          () ->
+              workbook
+                  .formulas()
+                  .evaluate(
+                      List.of(
+                          new FormulaCellTarget(new SheetName("Budget"), new CellAddress("Z99")))));
     }
 
     try (ExcelWorkbook reopened =
@@ -888,7 +908,12 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Header"));
       assertThrows(
           CellNotFoundException.class,
-          () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
+          () ->
+              workbook
+                  .formulas()
+                  .evaluate(
+                      List.of(
+                          new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")))));
     }
 
     ThrowingCloseWorkbook workbookDelegate = new ThrowingCloseWorkbook("workbook close failure");

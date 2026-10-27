@@ -47,7 +47,17 @@ public final class ExcelPivotTableSnapshotSupport {
     try {
       CTPivotTableDefinition definition = handle.table().getCTPivotTableDefinition();
       List<String> sourceColumnNames = cacheFieldNames(handle.table());
-      ColumnAxisSnapshot columns = snapshotColumnLabels(definition, sourceColumnNames);
+      boolean valuesAxisOnColumns = false;
+      List<PivotTableReport.Field> columnLabels = new ArrayList<>();
+      if (definition.getColFields() != null) {
+        for (CTField field : definition.getColFields().getFieldArray()) {
+          if (field.getX() == -2) {
+            valuesAxisOnColumns = true;
+            continue;
+          }
+          columnLabels.add(sourceField(sourceColumnNames, field.getX()));
+        }
+      }
       List<PivotTableReport.DataField> dataFields =
           snapshotDataFields(workbook, definition, sourceColumnNames);
       if (dataFields.isEmpty()) {
@@ -76,10 +86,10 @@ public final class ExcelPivotTableSnapshotSupport {
           anchor,
           snapshotSource(workbook, handle.table()),
           rowFields,
-          columns.columnLabels(),
+          columnLabels,
           pageFields,
           dataFields,
-          columns.valuesAxisOnColumns());
+          valuesAxisOnColumns);
     } catch (IllegalArgumentException exception) {
       return unsupportedSnapshot(
           handle,
@@ -89,22 +99,6 @@ public final class ExcelPivotTableSnapshotSupport {
               exception.getMessage(),
               "The pivot table could not be normalized into the modeled contract."));
     }
-  }
-
-  public static ColumnAxisSnapshot snapshotColumnLabels(
-      CTPivotTableDefinition definition, List<String> sourceColumnNames) {
-    boolean valuesAxisOnColumns = false;
-    List<PivotTableReport.Field> columnLabels = new ArrayList<>();
-    if (definition.getColFields() != null) {
-      for (CTField field : definition.getColFields().getFieldArray()) {
-        if (field.getX() == -2) {
-          valuesAxisOnColumns = true;
-          continue;
-        }
-        columnLabels.add(sourceField(sourceColumnNames, field.getX()));
-      }
-    }
-    return new ColumnAxisSnapshot(List.copyOf(columnLabels), valuesAxisOnColumns);
   }
 
   public static List<PivotTableReport.Field> snapshotFields(

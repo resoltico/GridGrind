@@ -7,11 +7,6 @@ import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
-import dev.erst.gridgrind.core.vocabulary.CellAddress;
-import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
-import dev.erst.gridgrind.excel.ExcelFormulaCapabilityKind;
-import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.Comparator;
 import java.util.List;
@@ -94,7 +89,7 @@ final class CalculationPolicyExecutor {
   }
 
   private static PreflightOutcome preflightAll(ExcelWorkbook workbook) {
-    List<ExcelFormulaCapabilityAssessment> assessments =
+    List<CalculationReport.FormulaCapability> assessments =
         workbook.formulas().assessAllCapabilities();
     return buildPreflightOutcome(CalculationReport.Scope.WORKBOOK, assessments);
   }
@@ -105,8 +100,8 @@ final class CalculationPolicyExecutor {
 
   private static PreflightOutcome preflightTargets(
       ExcelWorkbook workbook, CalculationStrategySpec.EvaluateTargets strategy) {
-    List<ExcelFormulaCellTarget> targets = toExcelFormulaTargets(strategy.cells());
-    List<ExcelFormulaCapabilityAssessment> assessments =
+    List<FormulaCellTarget> targets = strategy.cells();
+    List<CalculationReport.FormulaCapability> assessments =
         workbook.formulas().assessCapabilities(targets);
     return buildPreflightOutcome(CalculationReport.Scope.TARGETS, assessments);
   }
@@ -125,14 +120,15 @@ final class CalculationPolicyExecutor {
   }
 
   private static PreflightOutcome buildPreflightOutcome(
-      CalculationReport.Scope scope, List<ExcelFormulaCapabilityAssessment> assessments) {
+      CalculationReport.Scope scope, List<CalculationReport.FormulaCapability> assessments) {
     CalculationReport.Preflight report =
         new CalculationReport.Preflight(
             scope,
             assessments.size(),
-            CalculationCapabilityMappings.summaryFor(assessments),
-            toCapabilityReports(assessments));
-    Optional<ExcelFormulaCapabilityAssessment> blocking = mostSevereBlockingAssessment(assessments);
+            CalculationCapabilities.summaryFor(assessments),
+            assessments);
+    Optional<CalculationReport.FormulaCapability> blocking =
+        mostSevereBlockingAssessment(assessments);
     return new PreflightOutcome(
         Optional.of(report),
         assessments.size(),
@@ -140,14 +136,15 @@ final class CalculationPolicyExecutor {
         blocking.map(
             assessment ->
                 new FailureDetail(
-                    CalculationCapabilityMappings.problemCodeFor(assessment).orElse(null),
+                    assessment.problemCode().orElse(null),
                     Phase.PREFLIGHT,
-                    assessment.sheetName(),
-                    assessment.address(),
+                    assessment.cell().sheetName().value(),
+                    assessment.cell().address().value(),
                     assessment.formula(),
-                    Objects.requireNonNullElse(
-                        assessment.message(),
-                        "Calculation preflight found formulas that are not immediately evaluable."),
+                    assessment
+                        .message()
+                        .orElse(
+                            "Calculation preflight found formulas that are not immediately evaluable."),
                     null)));
   }
 
@@ -231,7 +228,7 @@ final class CalculationPolicyExecutor {
       CalculationPolicySpec policy,
       CalculationStrategySpec.EvaluateTargets strategy,
       int evaluationTargetCount) {
-    List<ExcelFormulaCellTarget> targets = toExcelFormulaTargets(strategy.cells());
+    List<FormulaCellTarget> targets = strategy.cells();
     try {
       workbook.formulas().evaluate(targets);
       boolean marked = false;
@@ -267,39 +264,11 @@ final class CalculationPolicyExecutor {
         Optional.empty());
   }
 
-  private static List<ExcelFormulaCellTarget> toExcelFormulaTargets(List<FormulaCellTarget> cells) {
-    return cells.stream()
-        .map(cell -> new ExcelFormulaCellTarget(cell.sheetName().value(), cell.address().value()))
-        .toList();
-  }
-
-  private static List<CalculationReport.FormulaCapability> toCapabilityReports(
-      List<ExcelFormulaCapabilityAssessment> assessments) {
+  private static Optional<CalculationReport.FormulaCapability> mostSevereBlockingAssessment(
+      List<CalculationReport.FormulaCapability> assessments) {
     return assessments.stream()
-        .map(
-            assessment -> {
-              FormulaCapabilityKind capability =
-                  CalculationCapabilityMappings.capabilityKindFor(assessment.capability());
-              Optional<String> message =
-                  capability == FormulaCapabilityKind.EVALUABLE_NOW
-                      ? Optional.empty()
-                      : Optional.ofNullable(assessment.message());
-              return new CalculationReport.FormulaCapability(
-                  new FormulaCellTarget(
-                      new SheetName(assessment.sheetName()), new CellAddress(assessment.address())),
-                  assessment.formula(),
-                  capability,
-                  CalculationCapabilityMappings.problemCodeFor(assessment),
-                  message);
-            })
-        .toList();
-  }
-
-  private static Optional<ExcelFormulaCapabilityAssessment> mostSevereBlockingAssessment(
-      List<ExcelFormulaCapabilityAssessment> assessments) {
-    return assessments.stream()
-        .filter(assessment -> assessment.capability() != ExcelFormulaCapabilityKind.EVALUABLE_NOW)
-        .min(Comparator.comparingInt(CalculationCapabilityMappings::severityRank));
+        .filter(assessment -> assessment.capability() != FormulaCapabilityKind.EVALUABLE_NOW)
+        .min(Comparator.comparingInt(CalculationCapabilities::severityRank));
   }
 
   record PreflightOutcome(

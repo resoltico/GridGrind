@@ -2846,3 +2846,36 @@ WP-61 must remove forced rerun wiring while preserving valid coverage evidence.
 Inventories: main112123→112246, test150534→150723; converters0/blank279/Support194/definitions0/runtime
 snapshots2 unchanged. WP-40 still has formula capability/target and preview-row mirrors to drain, and
 engine-excel-types remains nonempty until the WP-41 adapter package reorganization. No completion claim.
+
+### WP-40 canonical formula capabilities, preview rows and report construction
+
+Native formula evaluation/assessment now consumes core FormulaCellTarget and returns core
+CalculationReport.FormulaCapability with the shared capability enum/problem codes. Deleted native
+assessment/kind/issue/target mirrors, both target/result translations and their conversion-only
+assertions. CalculationCapabilities now only aggregates counts and preserves the five blocking-error
+priorities. Nullable exception messages remain Optional.empty; NullAway caught four initial of()
+wrappings, corrected to ofNullable() before success. Invalid targeted addresses are now rejected by the
+canonical CellAddress constructor; native tests check that owner, while real missing/nonformula-cell
+and evaluation behavior remain. No broader loaded-invalid-sheet-name capability support was verified.
+
+Native preview uses core WindowRowReport, including empty cells for gap rows; deleted ExcelPreviewRow
+and its constructor-only tests. Retained all real preview/formula tests and checked returned cells
+are immutable. Formula-surface reading now groups stored expressions directly into core sheet reports,
+removing ExcelFormulaCell and the intermediate list without invoking evaluation. Physical formula,
+address and insertion order remain. Existing local ordered-map/allocation PMD suppressions moved with
+the actual grouping code; an initial PMD failure exposed the stale suppression location and was fixed.
+
+Removed ColumnAxisSnapshot and its single-use helper by constructing pivot reports from the same
+column loop directly. Transferred its values pseudo-field check into the real pivot workflow, including
+column labels, save/reopen and the values-axis flag. This corrects earlier descriptions here and in
+commit bodies: the two top-level snapshots were HostAcceptanceSnapshot and ColumnAxisSnapshot, not
+opened-package/sheet-copy snapshots. The latter was a report intermediate, not necessary runtime state.
+The sole remaining HostAcceptanceSnapshot retains before-mutation semantic facts and source artifacts
+for host-required preservation comparison; it is not a public report mirror.
+
+Focused formula/preview/PMD passes1m; pivot passes44s; formula-surface/PMD passes35s. All94 retained
+seeds pass27s. One full ./gradlew check passes5m55s: core390, JSON353, engine1361 plus14 parity,
+CLI588, zero failures/errors/skips. All143 goldens unchanged, no snapshots re-recorded or active
+campaigns. Engine/shaded JARs contain none of the7 retired model families. Baseline diff empty.
+Inventories: main112246→112089, test150723→150612, blank279→273, snapshots2→1; converters0,
+definitions0 and Support194 unchanged. Remaining chart scaffolding/enum audit and WP-41/42 still follow.

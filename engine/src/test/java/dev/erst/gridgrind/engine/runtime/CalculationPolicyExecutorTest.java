@@ -19,14 +19,12 @@ import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
-import dev.erst.gridgrind.excel.ExcelFormulaCapabilityIssue;
-import dev.erst.gridgrind.excel.ExcelFormulaCapabilityKind;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.IOException;
@@ -38,7 +36,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -490,94 +487,60 @@ class CalculationPolicyExecutorTest {
   }
 
   @Test
-  void helperMappingsCoverAllCapabilityKindsAndProblemCodes() {
-    ExcelFormulaCapabilityAssessment evaluable =
-        new ExcelFormulaCapabilityAssessment(
-            "Budget", "A1", "1+1", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null);
-    ExcelFormulaCapabilityAssessment missingExternal =
-        new ExcelFormulaCapabilityAssessment(
-            "Budget",
-            "B1",
+  void aggregatesCapabilityCountsAndPreservesFailureSeverityOrder() {
+    CalculationReport.FormulaCapability evaluable =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("A1")),
+            "1+1",
+            FormulaCapabilityKind.EVALUABLE_NOW,
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
+    CalculationReport.FormulaCapability missingExternal =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")),
             "[Rates.xlsx]Sheet1!A1",
-            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-            ExcelFormulaCapabilityIssue.MISSING_EXTERNAL_WORKBOOK,
-            "missing");
-    ExcelFormulaCapabilityAssessment circular =
-        new ExcelFormulaCapabilityAssessment(
-            "Budget",
-            "B2",
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK),
+            java.util.Optional.of("missing"));
+    CalculationReport.FormulaCapability circular =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B2")),
             "B2+1",
-            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-            ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
-            "circular");
-    ExcelFormulaCapabilityAssessment unregistered =
-        new ExcelFormulaCapabilityAssessment(
-            "Budget",
-            "C1",
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE),
+            java.util.Optional.of("circular"));
+    CalculationReport.FormulaCapability unregistered =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("C1")),
             "DOUBLE(A1)",
-            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-            ExcelFormulaCapabilityIssue.UNREGISTERED_USER_DEFINED_FUNCTION,
-            "unregistered");
-    ExcelFormulaCapabilityAssessment unsupported =
-        new ExcelFormulaCapabilityAssessment(
-            "Budget",
-            "D1",
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION),
+            java.util.Optional.of("unregistered"));
+    CalculationReport.FormulaCapability unsupported =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("D1")),
             "APP.TITLE()",
-            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
-            ExcelFormulaCapabilityIssue.UNSUPPORTED_FORMULA,
-            "unsupported");
-    ExcelFormulaCapabilityAssessment invalid =
-        new ExcelFormulaCapabilityAssessment(
-            "Budget",
-            "E1",
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.UNSUPPORTED_FORMULA),
+            java.util.Optional.of("unsupported"));
+    CalculationReport.FormulaCapability invalid =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("E1")),
             "SUM(",
-            ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI,
-            ExcelFormulaCapabilityIssue.INVALID_FORMULA,
-            "invalid");
+            FormulaCapabilityKind.UNPARSEABLE_BY_POI,
+            java.util.Optional.of(GridGrindProblemCode.INVALID_FORMULA),
+            java.util.Optional.of("invalid"));
 
     CalculationReport.Summary summary =
-        CalculationCapabilityMappings.summaryFor(List.of(evaluable, circular, invalid));
+        CalculationCapabilities.summaryFor(List.of(evaluable, circular, invalid));
     assertEquals(1, summary.evaluableNowCount());
     assertEquals(1, summary.unevaluableNowCount());
     assertEquals(1, summary.unparseableByPoiCount());
-    assertEquals(Optional.empty(), CalculationCapabilityMappings.problemCodeFor(evaluable));
-    assertEquals(
-        Optional.of(GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK),
-        CalculationCapabilityMappings.problemCodeFor(missingExternal));
-    assertEquals(
-        Optional.of(GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE),
-        CalculationCapabilityMappings.problemCodeFor(circular));
-    assertEquals(
-        Optional.of(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION),
-        CalculationCapabilityMappings.problemCodeFor(unregistered));
-    assertEquals(
-        Optional.of(GridGrindProblemCode.UNSUPPORTED_FORMULA),
-        CalculationCapabilityMappings.problemCodeFor(unsupported));
-    assertEquals(
-        Optional.of(GridGrindProblemCode.INVALID_FORMULA),
-        CalculationCapabilityMappings.problemCodeFor(invalid));
-    assertEquals(
-        FormulaCapabilityKind.EVALUABLE_NOW,
-        CalculationCapabilityMappings.capabilityKindFor(ExcelFormulaCapabilityKind.EVALUABLE_NOW));
-    assertEquals(
-        FormulaCapabilityKind.UNEVALUABLE_NOW,
-        CalculationCapabilityMappings.capabilityKindFor(
-            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW));
-    assertEquals(
-        FormulaCapabilityKind.UNPARSEABLE_BY_POI,
-        CalculationCapabilityMappings.capabilityKindFor(
-            ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI));
-    assertEquals(0, CalculationCapabilityMappings.severityRank(invalid));
-    assertEquals(1, CalculationCapabilityMappings.severityRank(circular));
-    assertEquals(2, CalculationCapabilityMappings.severityRank(missingExternal));
-    assertEquals(3, CalculationCapabilityMappings.severityRank(unregistered));
-    assertEquals(4, CalculationCapabilityMappings.severityRank(unsupported));
-    assertEquals(
-        "assessment.issue must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () -> CalculationCapabilityMappings.severityRank(evaluable))
-            .getMessage());
+    assertEquals(0, CalculationCapabilities.severityRank(invalid));
+    assertEquals(1, CalculationCapabilities.severityRank(circular));
+    assertEquals(2, CalculationCapabilities.severityRank(missingExternal));
+    assertEquals(3, CalculationCapabilities.severityRank(unregistered));
+    assertEquals(4, CalculationCapabilities.severityRank(unsupported));
   }
 
   private static Path createMissingExternalWorkbook() throws IOException {

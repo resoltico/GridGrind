@@ -333,8 +333,6 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
                   "TableDataC"));
 
       CTPivotTableDefinition syntheticDefinition = CTPivotTableDefinition.Factory.newInstance();
-      syntheticDefinition.addNewColFields().addNewField().setX(-2);
-      syntheticDefinition.getColFields().addNewField().setX(1);
       var syntheticDataFields = syntheticDefinition.addNewDataFields();
       var syntheticDataField = syntheticDataFields.addNewDataField();
       syntheticDataField.setFld(1);
@@ -344,18 +342,6 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
               .newValue("max"));
       assertTrue(syntheticDataField.isSetSubtotal());
       syntheticDataField.setNumFmtId(Long.MAX_VALUE);
-      Object columnAxisSnapshot =
-          invoke(
-              controller,
-              "snapshotColumnLabels",
-              Object.class,
-              syntheticDefinition,
-              List.of("Region", "Amount"));
-      @SuppressWarnings("unchecked")
-      List<PivotTableReport.Field> columnLabels =
-          (List<PivotTableReport.Field>) invoke(columnAxisSnapshot, "columnLabels", List.class);
-      assertEquals(List.of("Amount"), fieldNames(columnLabels));
-      assertTrue(invoke(columnAxisSnapshot, "valuesAxisOnColumns", Boolean.class));
 
       assertEquals(
           List.of(),

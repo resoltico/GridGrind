@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
+import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
@@ -114,7 +115,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       sheet.cells().setCell("A1", new CellValue.Text("first"));
       sheet.cells().setCell("A3", new CellValue.Text("third"));
 
-      List<ExcelPreviewRow> preview = sheet.cells().preview(3, 1);
+      List<WindowRowReport> preview = sheet.cells().preview(3, 1);
       assertEquals(3, preview.size());
       assertEquals(1, preview.get(0).cells().size());
       assertEquals(0, preview.get(1).cells().size());

@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
@@ -9,6 +12,9 @@ import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -116,7 +122,9 @@ class ExcelFormulaEnvironmentTest {
       workbook.sheet("Budget").cells().setCell("C1", new ResolvedFormula("A1*3"));
       workbook.formulas().evaluateAll();
       workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(4.0d));
-      workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1")));
+      workbook
+          .formulas()
+          .evaluate(List.of(new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1"))));
       workbook
           .persistence()
           .save(
@@ -165,42 +173,48 @@ class ExcelFormulaEnvironmentTest {
 
       assertEquals(
           List.of(
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")),
+                  "A1*2",
+                  FormulaCapabilityKind.EVALUABLE_NOW,
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty())),
           workbook.formulas().assessAllCapabilities());
     }
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             externalScenario.workbookPath(), ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelFormulaCapabilityAssessment assessment =
+      CalculationReport.FormulaCapability assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
-      assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
-      assertEquals(ExcelFormulaCapabilityIssue.MISSING_EXTERNAL_WORKBOOK, assessment.issue());
-      assertTrue(assessment.message().contains("Missing external workbook"));
+      assertEquals(FormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
+      assertEquals(
+          GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK, assessment.problemCode().orElse(null));
+      assertTrue(assessment.message().orElseThrow().contains("Missing external workbook"));
     }
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(udfWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelFormulaCapabilityAssessment assessment =
+      CalculationReport.FormulaCapability assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
-      assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
+      assertEquals(FormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
       assertEquals(
-          ExcelFormulaCapabilityIssue.UNREGISTERED_USER_DEFINED_FUNCTION, assessment.issue());
-      assertTrue(assessment.message().contains("DOUBLE"));
+          GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION,
+          assessment.problemCode().orElse(null));
+      assertTrue(assessment.message().orElseThrow().contains("DOUBLE"));
     }
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             unsupportedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelFormulaCapabilityAssessment assessment =
+      CalculationReport.FormulaCapability assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
-      assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
-      assertEquals(ExcelFormulaCapabilityIssue.UNSUPPORTED_FORMULA, assessment.issue());
-      assertTrue(assessment.message().contains("APP.TITLE"));
+      assertEquals(FormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
+      assertEquals(GridGrindProblemCode.UNSUPPORTED_FORMULA, assessment.problemCode().orElse(null));
+      assertTrue(assessment.message().orElseThrow().contains("APP.TITLE"));
     }
   }
 
@@ -214,51 +228,63 @@ class ExcelFormulaEnvironmentTest {
 
       assertEquals(
           List.of(
-              new ExcelFormulaCapabilityAssessment(
-                  "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+              new CalculationReport.FormulaCapability(
+                  new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")),
+                  "A1*2",
+                  FormulaCapabilityKind.EVALUABLE_NOW,
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty())),
           workbook
               .formulas()
-              .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
+              .assessCapabilities(
+                  List.of(new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")))));
       assertThrows(NullPointerException.class, () -> workbook.formulas().assessCapabilities(null));
       assertThrows(
           NullPointerException.class,
-          () -> workbook.formulas().assessCapabilities(List.of((ExcelFormulaCellTarget) null)));
+          () -> workbook.formulas().assessCapabilities(List.of((FormulaCellTarget) null)));
       assertThrows(
           IllegalArgumentException.class,
           () ->
               workbook
                   .formulas()
-                  .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "A1"))));
+                  .assessCapabilities(
+                      List.of(
+                          new FormulaCellTarget(new SheetName("Budget"), new CellAddress("A1")))));
       assertThrows(
-          InvalidCellAddressException.class,
+          dev.erst.gridgrind.core.problem.InvalidRequestException.class,
           () ->
               workbook
                   .formulas()
-                  .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", ":"))));
+                  .assessCapabilities(
+                      List.of(
+                          new FormulaCellTarget(new SheetName("Budget"), new CellAddress(":")))));
       assertThrows(
           CellNotFoundException.class,
           () ->
               workbook
                   .formulas()
-                  .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
+                  .assessCapabilities(
+                      List.of(
+                          new FormulaCellTarget(new SheetName("Budget"), new CellAddress("Z99")))));
     }
 
     Path invalidWorkbookPath = createInvalidFormulaWorkbook();
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             invalidWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelFormulaCapabilityAssessment assessment =
+      CalculationReport.FormulaCapability assessment =
           workbook
               .formulas()
-              .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "B1")))
+              .assessCapabilities(
+                  List.of(new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1"))))
               .getFirst();
 
-      assertEquals(ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI, assessment.capability());
-      assertEquals(ExcelFormulaCapabilityIssue.INVALID_FORMULA, assessment.issue());
-      assertEquals("Budget", assessment.sheetName());
-      assertEquals("B1", assessment.address());
+      assertEquals(FormulaCapabilityKind.UNPARSEABLE_BY_POI, assessment.capability());
+      assertEquals(GridGrindProblemCode.INVALID_FORMULA, assessment.problemCode().orElse(null));
+      assertEquals("Budget", assessment.cell().sheetName().value());
+      assertEquals("B1", assessment.cell().address().value());
       assertEquals("SUM(", assessment.formula());
-      assertTrue(assessment.message().contains("Invalid formula at Budget!B1"));
+      assertTrue(assessment.message().orElseThrow().contains("Invalid formula at Budget!B1"));
     }
   }
 

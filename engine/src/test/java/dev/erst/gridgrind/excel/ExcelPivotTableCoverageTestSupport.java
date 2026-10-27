@@ -8,7 +8,6 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
-import dev.erst.gridgrind.excel.pivot.ColumnAxisSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableAnalysisSupport;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableIdentitySupport;
@@ -276,9 +275,6 @@ class ExcelPivotTableCoverageTestSupport {
                 listArg(args, 0, PivotHandle.class), listArg(args, 1, String.class));
         case "snapshot" ->
             ExcelPivotTableSnapshotSupport.snapshot((XSSFWorkbook) args[0], (PivotHandle) args[1]);
-        case "snapshotColumnLabels" ->
-            ExcelPivotTableSnapshotSupport.snapshotColumnLabels(
-                arg(args, 0, CTPivotTableDefinition.class), listArg(args, 1, String.class));
         case "snapshotDataFields" ->
             ExcelPivotTableSnapshotSupport.snapshotDataFields(
                 arg(args, 0, XSSFWorkbook.class),
@@ -331,15 +327,6 @@ class ExcelPivotTableCoverageTestSupport {
     if (target instanceof SourceColumns sourceColumns) {
       if ("relativeIndex".equals(name)) {
         return sourceColumns.relativeIndex((String) args[0]);
-      }
-      throw new IllegalArgumentException("Unsupported helper invocation: " + name);
-    }
-    if (target instanceof ColumnAxisSnapshot columnAxisSnapshot) {
-      if ("columnLabels".equals(name)) {
-        return columnAxisSnapshot.columnLabels();
-      }
-      if ("valuesAxisOnColumns".equals(name)) {
-        return columnAxisSnapshot.valuesAxisOnColumns();
       }
       throw new IllegalArgumentException("Unsupported helper invocation: " + name);
     }
