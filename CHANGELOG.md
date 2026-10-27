@@ -5,6 +5,19 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+### Breaking foundations redesign
+
+- Java 26 modules are core, json, engine and cli, with executable architecture verification.
+- One canonical spec/patch/report/resolved model and typed wire scalars replace engine mirrors.
+- Protocol version is integer 1; variant identity uses type/status, omission defaults come from metadata,
+  and explicit null is rejected rather than treated as omission.
+- Explicit run/doctor/catalog/schema/recipe/template/help/version/license commands replace flat flags.
+- Execution uses one host-owned grant with exact inputs, operations, targets, secrets and publication.
+- Root Gradle owns deterministic fuzz replay, delivery checks and advisory coverage/mutation reports.
+- Limits, schemas, operation references and problem documentation derive from canonical metadata.
+- Local builds use 0.0.0-dev; versioned tags drive verified GitHub and multi-architecture releases.
+
+
 ### Added
 
 - Added behaviour snapshots for every shipped example and recipe, discovery and diagnostic commands, and persisted workbook facts, checked through both the Java CLI entry point and packaged JAR.

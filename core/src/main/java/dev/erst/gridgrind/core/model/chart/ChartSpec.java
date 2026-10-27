@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +38,7 @@ public record ChartSpec(
   }
 
   public ChartSpec {
-    name = requireNonBlank(name, "name");
+    name = TextValidation.requireNonBlank(name, "name");
     Objects.requireNonNull(anchor, "anchor must not be null");
     Objects.requireNonNull(title, "title must not be null");
     Objects.requireNonNull(legend, "legend must not be null");
@@ -60,13 +61,5 @@ public record ChartSpec(
       copiedValues.add(Objects.requireNonNull(value, fieldName + " must not contain null values"));
     }
     return List.copyOf(copiedValues);
-  }
-
-  static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

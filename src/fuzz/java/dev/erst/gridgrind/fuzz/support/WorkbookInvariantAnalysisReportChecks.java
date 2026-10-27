@@ -107,10 +107,11 @@ final class WorkbookInvariantAnalysisReportChecks {
               WorkbookInvariantChecks.require(
                   observedTypeCountTotal == column.populatedCellCount(),
                   "schema observedTypes counts must sum to populatedCellCount");
-              if (column.dominantType() != null) {
-                TypeCountReport.requireSupportedType(column.dominantType(), "dominantType");
+              if (column.dominantType().isPresent()) {
+                TypeCountReport.requireSupportedType(
+                    column.dominantType().orElseThrow(), "dominantType");
                 WorkbookInvariantChecks.require(
-                    observedTypes.contains(column.dominantType()),
+                    observedTypes.contains(column.dominantType().orElseThrow()),
                     "schema dominantType must match one observedTypes entry");
               }
             });

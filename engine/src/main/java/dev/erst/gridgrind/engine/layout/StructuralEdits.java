@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.layout;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
@@ -33,6 +34,10 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
 
 /** Owns structural row/column edits, safety guards and inserted formatting propagation. */
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CommentRequired"})
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit
+      .ID_DESTRUCTIVE_STRUCTURAL_EDITS_AGAINST_RANGE_BACKED_NAMED_RANGES
+})
 public final class StructuralEdits {
   private StructuralEdits() {}
 
@@ -138,12 +143,12 @@ public final class StructuralEdits {
               + " must be less than or equal to last existing row + 1: "
               + ExcelIndexDisplay.rowValue(lastRowIndex + 1));
     }
-    if (rowIndex + rowCount - 1 > ExcelRowSpan.MAX_ROW_INDEX) {
+    if (rowIndex + rowCount - 1 > Limit.MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
           "INSERT_ROWS would exceed the maximum row index: destination last row would be "
               + ExcelIndexDisplay.rowValue(rowIndex + rowCount - 1)
               + "; maximum is "
-              + ExcelIndexDisplay.rowValue(ExcelRowSpan.MAX_ROW_INDEX));
+              + ExcelIndexDisplay.rowValue(Limit.MAX_ROW_INDEX));
     }
   }
 
@@ -158,14 +163,14 @@ public final class StructuralEdits {
               + ExcelIndexDisplay.excelRow(0)
               + ")");
     }
-    if (rows.lastRowIndex() + delta > ExcelRowSpan.MAX_ROW_INDEX) {
+    if (rows.lastRowIndex() + delta > Limit.MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
           "SHIFT_ROWS would move "
               + ExcelIndexDisplay.describe("lastRowIndex", rows.lastRowIndex())
               + " by delta "
               + delta
               + " beyond the maximum row "
-              + ExcelIndexDisplay.rowValue(ExcelRowSpan.MAX_ROW_INDEX));
+              + ExcelIndexDisplay.rowValue(Limit.MAX_ROW_INDEX));
     }
   }
 
@@ -312,12 +317,12 @@ public final class StructuralEdits {
               + " must be less than or equal to last existing column + 1: "
               + ExcelIndexDisplay.columnValue(lastColumnIndex + 1));
     }
-    if (columnIndex + columnCount - 1 > ExcelColumnSpan.MAX_COLUMN_INDEX) {
+    if (columnIndex + columnCount - 1 > Limit.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
           "INSERT_COLUMNS would exceed the maximum column index: destination last column would be "
               + ExcelIndexDisplay.columnValue(columnIndex + columnCount - 1)
               + "; maximum is "
-              + ExcelIndexDisplay.columnValue(ExcelColumnSpan.MAX_COLUMN_INDEX));
+              + ExcelIndexDisplay.columnValue(Limit.MAX_COLUMN_INDEX));
     }
   }
 
@@ -332,14 +337,14 @@ public final class StructuralEdits {
               + ExcelIndexDisplay.excelColumn(0)
               + ")");
     }
-    if (columns.lastColumnIndex() + delta > ExcelColumnSpan.MAX_COLUMN_INDEX) {
+    if (columns.lastColumnIndex() + delta > Limit.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
           "SHIFT_COLUMNS would move "
               + ExcelIndexDisplay.describe("lastColumnIndex", columns.lastColumnIndex())
               + " by delta "
               + delta
               + " beyond the maximum column "
-              + ExcelIndexDisplay.columnValue(ExcelColumnSpan.MAX_COLUMN_INDEX));
+              + ExcelIndexDisplay.columnValue(Limit.MAX_COLUMN_INDEX));
     }
   }
 
@@ -517,7 +522,7 @@ public final class StructuralEdits {
     rejectDestructiveNamedRangesForColumnShift(sheet.getWorkbook(), sheet, columns, delta);
   }
 
-  public static void rejectDestructiveNamedRangesForRowDelete( // LIM-018
+  public static void rejectDestructiveNamedRangesForRowDelete(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -534,7 +539,7 @@ public final class StructuralEdits {
     }
   }
 
-  public static void rejectDestructiveNamedRangesForRowShift( // LIM-018
+  public static void rejectDestructiveNamedRangesForRowShift(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows, int delta) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -551,7 +556,7 @@ public final class StructuralEdits {
     }
   }
 
-  public static void rejectDestructiveNamedRangesForColumnDelete( // LIM-018
+  public static void rejectDestructiveNamedRangesForColumnDelete(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -568,7 +573,7 @@ public final class StructuralEdits {
     }
   }
 
-  public static void rejectDestructiveNamedRangesForColumnShift( // LIM-018
+  public static void rejectDestructiveNamedRangesForColumnShift(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns, int delta) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {

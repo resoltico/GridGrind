@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -16,6 +17,9 @@ import java.util.Optional;
 
 /** Protocol-facing authored conditional-formatting rule families. */
 @Union(discriminator = "type", catalog = true, displayOrder = 64)
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_DDE_REJECTION_IN_ALL_FORMULA_INPUTS
+})
 public sealed interface ConditionalFormattingRuleSpec
     permits dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec.FormulaRule,
         dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec.CellValueRule,
@@ -39,11 +43,9 @@ public sealed interface ConditionalFormattingRuleSpec
     public FormulaRule {
       Objects.requireNonNull(formula, "formula must not be null");
       Objects.requireNonNull(style, "style must not be null");
-      if (formula.isBlank()) {
-        throw new IllegalArgumentException("formula must not be blank");
-      }
+      TextValidation.requireNonBlank(formula, "formula");
       requireStyleOrStopBarrier(style, stopIfTrue);
-      FormulaInputSecurity.rejectDde(formula); // LIM-027
+      FormulaInputSecurity.rejectDde(formula);
     }
   }
 
@@ -64,11 +66,9 @@ public sealed interface ConditionalFormattingRuleSpec
       Objects.requireNonNull(formula1, "formula1 must not be null");
       Objects.requireNonNull(formula2, "formula2 must not be null");
       Objects.requireNonNull(style, "style must not be null");
-      if (formula1.isBlank()) {
-        throw new IllegalArgumentException("formula1 must not be blank");
-      }
+      TextValidation.requireNonBlank(formula1, "formula1");
       requireStyleOrStopBarrier(style, stopIfTrue);
-      FormulaInputSecurity.rejectDde(formula1); // LIM-027
+      FormulaInputSecurity.rejectDde(formula1);
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -216,7 +216,7 @@ public sealed interface ConditionalFormattingRuleSpec
         throw new IllegalArgumentException(
             "formula2 must not be blank for " + operator.name().toLowerCase(Locale.ROOT));
       }
-      FormulaInputSecurity.rejectDde(upperBound); // LIM-027
+      FormulaInputSecurity.rejectDde(upperBound);
       return Optional.of(upperBound);
     }
     if (formula2.isPresent()) {

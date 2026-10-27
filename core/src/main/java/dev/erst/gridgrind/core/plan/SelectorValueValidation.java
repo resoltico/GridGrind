@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.core.plan;
 
 /** Shared scalar validation for selector families. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_CELL_RETURNING_READ_COUNT
+})
 final class SelectorValueValidation {
   private SelectorValueValidation() {}
 
@@ -37,7 +40,7 @@ final class SelectorValueValidation {
     return SelectorNumberValidation.requireColumnIndexWithinBounds(value, fieldName);
   }
 
-  static void requireWindowSize(int rowCount, int columnCount) { // LIM-001
+  static void requireWindowSize(int rowCount, int columnCount) {
     SelectorNumberValidation.requireWindowSize(rowCount, columnCount);
   }
 

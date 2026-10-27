@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -229,7 +230,7 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         List.of(
             new FieldConstraint.NonBlank(),
-            new FieldConstraint.StringPattern(ProtocolConstraintValues.STEP_ID_PATTERN)),
+            new FieldConstraint.StringPattern(Limit.STEP_ID_PATTERN)),
         stepId.constraints());
 
     FieldShape.Scalar rgb =

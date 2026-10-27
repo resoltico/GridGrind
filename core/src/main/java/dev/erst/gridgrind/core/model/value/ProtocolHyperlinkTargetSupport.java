@@ -1,21 +1,13 @@
 package dev.erst.gridgrind.core.model.value;
 
-import java.util.Objects;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 
 /** Protocol-owned scalar hyperlink target validation helpers. */
 final class ProtocolHyperlinkTargetSupport {
   private ProtocolHyperlinkTargetSupport() {}
 
   static String normalizeDocumentTarget(String target) {
-    return requireNonBlank(target, "target");
-  }
-
-  static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
+    return TextValidation.requireNonBlank(target, "target");
   }
 
   static String stripMailtoPrefix(String email) {

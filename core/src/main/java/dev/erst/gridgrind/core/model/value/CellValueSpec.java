@@ -13,6 +13,10 @@ import java.util.List;
 
 /** JSON-friendly typed cell input used at the agent protocol boundary. */
 @Union(discriminator = "type", catalog = true, displayOrder = 16)
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_DDE_FORMULA_INJECTION,
+  dev.erst.gridgrind.core.limits.Limit.ID_WEBSERVICE_FORMULA_REJECTION
+})
 public sealed interface CellValueSpec
     permits dev.erst.gridgrind.core.model.value.CellValueSpec.Blank,
         dev.erst.gridgrind.core.model.value.CellValueSpec.Text,
@@ -165,7 +169,7 @@ public sealed interface CellValueSpec
 
     static String normalizeInlineFormula(String value, String fieldName) {
       String normalized = FormulaTextValidation.requireNormalFormulaBody(value, fieldName);
-      FormulaInputSecurity.rejectDde(normalized); // LIM-023, LIM-031
+      FormulaInputSecurity.rejectDde(normalized);
       return normalized;
     }
 

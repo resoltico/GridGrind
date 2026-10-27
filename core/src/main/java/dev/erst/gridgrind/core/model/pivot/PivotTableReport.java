@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -61,7 +62,7 @@ public sealed interface PivotTableReport
       implements PivotTableReport {
     public Unsupported {
       validateCommon(name, sheetName, anchor);
-      detail = requireNonBlank(detail, "detail");
+      detail = TextValidation.requireNonBlank(detail, "detail");
     }
   }
 
@@ -126,7 +127,7 @@ public sealed interface PivotTableReport
       if (sourceColumnIndex < 0) {
         throw new IllegalArgumentException("sourceColumnIndex must not be negative");
       }
-      sourceColumnName = requireNonBlank(sourceColumnName, "sourceColumnName");
+      sourceColumnName = TextValidation.requireNonBlank(sourceColumnName, "sourceColumnName");
     }
   }
 
@@ -145,9 +146,9 @@ public sealed interface PivotTableReport
       if (sourceColumnIndex < 0) {
         throw new IllegalArgumentException("sourceColumnIndex must not be negative");
       }
-      sourceColumnName = requireNonBlank(sourceColumnName, "sourceColumnName");
+      sourceColumnName = TextValidation.requireNonBlank(sourceColumnName, "sourceColumnName");
       Objects.requireNonNull(function, "function must not be null");
-      displayName = requireNonBlank(displayName, "displayName");
+      displayName = TextValidation.requireNonBlank(displayName, "displayName");
       Objects.requireNonNull(valueFormat, "valueFormat must not be null");
       if (valueFormat.isPresent() && valueFormat.orElseThrow().isBlank()) {
         throw new IllegalArgumentException("valueFormat must not be blank");
@@ -168,13 +169,5 @@ public sealed interface PivotTableReport
       copy.add(Objects.requireNonNull(value, fieldName + " must not contain null values"));
     }
     return List.copyOf(copy);
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

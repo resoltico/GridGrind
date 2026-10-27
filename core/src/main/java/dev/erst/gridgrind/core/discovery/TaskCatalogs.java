@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.discovery;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,9 +19,7 @@ public final class TaskCatalogs {
   public static Optional<TaskEntry> entryFor(String id) {
     java.util.Objects.requireNonNull(id, "id must not be null");
     String lookup = id.trim();
-    if (lookup.isBlank()) {
-      throw new IllegalArgumentException("id must not be blank");
-    }
+    TextValidation.requireNonBlank(lookup, "id");
     return RecipeRegistry.taskEntryFor(lookup);
   }
 

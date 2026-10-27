@@ -87,7 +87,7 @@ class ExcelRichTextSupportTest {
     CellReport.TextReport snapshot =
         new CellReport.TextReport(
             new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
-            Optional.ofNullable("Quarterly Report"),
+            Optional.of("Quarterly Report"),
             Optional.ofNullable(defaultStyle()),
             Optional.empty(),
             Optional.empty(),
@@ -103,7 +103,7 @@ class ExcelRichTextSupportTest {
             () ->
                 new CellReport.TextReport(
                     new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
-                    Optional.ofNullable("Quarterly Report"),
+                    Optional.of("Quarterly Report"),
                     Optional.ofNullable(defaultStyle()),
                     Optional.empty(),
                     Optional.empty(),
@@ -209,11 +209,12 @@ class ExcelRichTextSupportTest {
       List<RichTextRunReport> snapshot =
           StyleAdapter.snapshot(workbook, richText, baseFont()).orElseThrow();
 
-      assertEquals(CellColorReport.theme(4, -0.20d), snapshot.get(0).font().fontColor());
+      assertEquals(
+          CellColorReport.theme(4, -0.20d), snapshot.get(0).font().fontColor().orElseThrow());
       assertEquals(baseFont().fontColor(), snapshot.get(1).font().fontColor());
       assertEquals(
           CellColorReport.indexed(Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex())),
-          snapshot.get(2).font().fontColor());
+          snapshot.get(2).font().fontColor().orElseThrow());
     }
   }
 
@@ -277,7 +278,8 @@ class ExcelRichTextSupportTest {
       assertFalse(alpha.font().italic());
       assertEquals("Courier New", alpha.font().fontName());
       assertEquals(FontHeightReport.fromPoints(new BigDecimal("14")), alpha.font().fontHeight());
-      assertEquals(CellColorReport.rgb(new RgbHex("#123456")), alpha.font().fontColor());
+      assertEquals(
+          CellColorReport.rgb(new RgbHex("#123456")), alpha.font().fontColor().orElseThrow());
       assertFalse(alpha.font().underline());
       assertTrue(alpha.font().strikeout());
 
@@ -287,7 +289,8 @@ class ExcelRichTextSupportTest {
       assertTrue(beta.font().italic());
       assertEquals(baseFont().fontName(), beta.font().fontName());
       assertEquals(baseFont().fontHeight(), beta.font().fontHeight());
-      assertEquals(CellColorReport.rgb(new RgbHex("#ABCDEF")), beta.font().fontColor());
+      assertEquals(
+          CellColorReport.rgb(new RgbHex("#ABCDEF")), beta.font().fontColor().orElseThrow());
       assertTrue(beta.font().underline());
       assertFalse(beta.font().strikeout());
 
@@ -344,7 +347,7 @@ class ExcelRichTextSupportTest {
       assertTrue(font.italic());
       assertEquals("Fira Code", font.fontName());
       assertEquals(FontHeightReport.fromPoints(new BigDecimal("18")), font.fontHeight());
-      assertEquals(CellColorReport.rgb(new RgbHex("#00AA11")), font.fontColor());
+      assertEquals(CellColorReport.rgb(new RgbHex("#00AA11")), font.fontColor().orElseThrow());
       assertTrue(font.underline());
       assertTrue(font.strikeout());
     }
@@ -422,7 +425,9 @@ class ExcelRichTextSupportTest {
       assertEquals("Courier New", snapshot.get(0).font().fontName());
       assertEquals(
           FontHeightReport.fromPoints(new BigDecimal("13")), snapshot.get(1).font().fontHeight());
-      assertEquals(CellColorReport.rgb(new RgbHex("#ABCDEF")), snapshot.get(2).font().fontColor());
+      assertEquals(
+          CellColorReport.rgb(new RgbHex("#ABCDEF")),
+          snapshot.get(2).font().fontColor().orElseThrow());
       assertFalse(snapshot.get(3).font().underline());
       assertTrue(snapshot.get(4).font().strikeout());
     }
@@ -434,7 +439,7 @@ class ExcelRichTextSupportTest {
         true,
         "Aptos",
         FontHeightReport.fromPoints(new BigDecimal("11")),
-        CellColorReport.rgb(new RgbHex("#654321")),
+        Optional.ofNullable(CellColorReport.rgb(new RgbHex("#654321"))),
         true,
         false);
   }

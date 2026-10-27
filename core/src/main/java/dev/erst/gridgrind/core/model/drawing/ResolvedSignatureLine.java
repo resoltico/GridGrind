@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.core.model.drawing.SignatureLineSpec.normalizeO
 
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -21,10 +22,7 @@ public record ResolvedSignatureLine(
     Optional<ExcelPictureFormat> plainSignatureFormat,
     Optional<BinaryContent> plainSignature) {
   public ResolvedSignatureLine {
-    Objects.requireNonNull(name, "name must not be null");
-    if (name.isBlank()) {
-      throw new IllegalArgumentException("name must not be blank");
-    }
+    name = TextValidation.requireNonBlank(name, "name");
     Objects.requireNonNull(anchor, "anchor must not be null");
     Objects.requireNonNull(plainSignatureFormat, "plainSignatureFormat must not be null");
     Objects.requireNonNull(plainSignature, "plainSignature must not be null");

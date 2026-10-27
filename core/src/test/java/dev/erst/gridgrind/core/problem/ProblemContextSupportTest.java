@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for location-merging helpers behind the typed problem-context model. */
@@ -176,14 +177,12 @@ class ProblemContextSupportTest {
     assertEquals(
         "field must not be blank",
         assertThrows(
-                IllegalArgumentException.class,
-                () -> ProblemContextSupport.requireNonBlank(" ", "field"))
+                IllegalArgumentException.class, () -> TextValidation.requireNonBlank(" ", "field"))
             .getMessage());
     assertEquals(
         "field must not be null",
         assertThrows(
-                NullPointerException.class,
-                () -> ProblemContextSupport.requireNonBlank(null, "field"))
+                NullPointerException.class, () -> TextValidation.requireNonBlank(null, "field"))
             .getMessage());
   }
 }

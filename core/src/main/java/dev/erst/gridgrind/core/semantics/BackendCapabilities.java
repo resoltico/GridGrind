@@ -20,6 +20,10 @@ import java.util.Objects;
  * Structured execution-mode contract metadata shared by help, catalog summaries, validation, and
  * runtime error messages.
  */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_EVENT_READ_EXECUTION_MODE_SCOPE,
+  dev.erst.gridgrind.core.limits.Limit.ID_STREAMING_WRITE_EXECUTION_MODE_SCOPE
+})
 public final class BackendCapabilities {
   private static final FullXssfMode FULL_XSSF = new FullXssfMode(ExecutionModeSpec.FullXssf.class);
   private static final EventReadMode EVENT_READ =

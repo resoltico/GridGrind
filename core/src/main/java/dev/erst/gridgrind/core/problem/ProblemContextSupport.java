@@ -42,14 +42,6 @@ final class ProblemContextSupport {
         (ProblemContextWorkbookSurfaces.ProblemLocation.Cell) current, discovered);
   }
 
-  static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   private static ProblemContextWorkbookSurfaces.ProblemLocation mergeSheetLocation(
       ProblemContextWorkbookSurfaces.ProblemLocation.Sheet current,
       ProblemContextWorkbookSurfaces.ProblemLocation discovered) {

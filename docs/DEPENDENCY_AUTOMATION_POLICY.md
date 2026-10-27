@@ -1,12 +1,3 @@
----
-afad: "5.0.1"
-domain: DEPENDENCY_AUTOMATION_POLICY
-updated: "2026-08-28"
-route:
-  keywords: [gridgrind, dependabot, dependency, dependency-update, approval, gate, release-hygiene]
-  questions: ["how are GridGrind dependency updates approved", "what should happen to open Dependabot PRs before a release", "can GridGrind auto-merge Dependabot PRs"]
----
-
 # Dependency Automation Policy
 
 GridGrind requires an explicit human decision for every Dependabot update. Automation may prepare a pull request, but it never authorizes a merge.

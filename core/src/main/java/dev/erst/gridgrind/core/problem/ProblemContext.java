@@ -2,7 +2,6 @@ package dev.erst.gridgrind.core.problem;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.HostArgument;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
@@ -14,6 +13,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepRefere
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -357,7 +357,7 @@ public sealed interface ProblemContext
       if (normalized.isEmpty()) {
         return Optional.empty();
       }
-      return Optional.of(WorkbookPlan.requireNonBlank(normalized.orElseThrow(), fieldName));
+      return Optional.of(TextValidation.requireNonBlank(normalized.orElseThrow(), fieldName));
     }
 
     private static ProblemContextWorkbookSurfaces.PersistenceReference requiredPersistence(

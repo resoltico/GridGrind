@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
 import dev.erst.gridgrind.engine.packaging.PackageRelations;
 import java.io.ByteArrayInputStream;
@@ -267,8 +268,7 @@ abstract class ExcelDrawingCoverageTestSupport {
           yield null;
         }
         case "requireNonBlank" ->
-            dev.erst.gridgrind.engine.drawing.DrawingAdapter.requireNonBlank(
-                (String) args[0], (String) args[1]);
+            TextValidation.requireNonBlank((String) args[0], (String) args[1]);
         case "resolvedName" -> DrawingAdapter.resolvedName((XSSFShape) args[0]);
         case "sha256" -> DrawingAdapter.sha256((byte[]) args[0]);
         case "shapeType" -> DrawingAdapter.shapeType((String) args[0]);

@@ -47,6 +47,9 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTComment;
 
 /** Owns comment read/write, VML relationships and before-mutation structural repair state. */
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CommentRequired"})
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_TEXT_CHARACTERS_PER_CELL
+})
 public final class CommentAdapter {
   private final XSSFSheet sheet;
 
@@ -173,7 +176,7 @@ public final class CommentAdapter {
   }
 
   private Comment newComment(int rowIndex, int columnIndex, ResolvedComment comment) {
-    CellTextLimits.requireSupportedLength(comment.text(), "comment.text"); // LIM-010
+    CellTextLimits.requireSupportedLength(comment.text(), "comment.text");
     ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
     Optional<CommentAnchorSpec> authoredAnchor = comment.anchor();
     anchor.setRow1(authoredAnchor.map(CommentAnchorSpec::firstRow).orElse(rowIndex));
@@ -560,7 +563,7 @@ public final class CommentAdapter {
         Optional.of(font.italic()),
         Optional.of(font.fontName()),
         Optional.of(font.fontHeight()).map(height -> new FontHeightSpec.Twips(height.twips())),
-        Optional.ofNullable(ColorAdapter.copyOf(font.fontColor())),
+        font.fontColor().map(ColorAdapter::copyOf),
         Optional.of(font.underline()),
         Optional.of(font.strikeout()));
   }

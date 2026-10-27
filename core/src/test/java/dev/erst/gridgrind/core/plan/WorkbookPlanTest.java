@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
@@ -338,7 +339,7 @@ class WorkbookPlanTest {
   @Test
   void rejectsStepCountExceedingMaximum() {
     List<WorkbookStep> manySteps = new ArrayList<>();
-    for (int i = 0; i <= WorkbookPlan.MAX_STEPS; i++) {
+    for (int i = 0; i <= Limit.MAX_STEPS; i++) {
       manySteps.add(
           new MutationStep(
               new StepId("step-" + i),
@@ -356,7 +357,7 @@ class WorkbookPlanTest {
                     ExecutionPolicySpec.defaults(),
                     FormulaEnvironmentSpec.empty(),
                     manySteps));
-    assertTrue(failure.getMessage().contains(String.valueOf(WorkbookPlan.MAX_STEPS)));
+    assertTrue(failure.getMessage().contains(String.valueOf(Limit.MAX_STEPS)));
   }
 
   private static TextSourceSpec text(String value) {

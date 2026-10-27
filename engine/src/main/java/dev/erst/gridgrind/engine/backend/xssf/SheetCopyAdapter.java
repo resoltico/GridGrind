@@ -26,6 +26,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.autofilter.AutofilterAdapter;
 import dev.erst.gridgrind.engine.charts.ChartAdapter;
 import dev.erst.gridgrind.engine.charts.ChartAdapter.ResolvedAreaReference;
@@ -374,9 +375,7 @@ final class SheetCopyAdapter {
                   .toList());
       case AutofilterFilterCriterionReport.Dynamic dynamic ->
           new AutofilterFilterCriterionSpec.Dynamic(
-              dynamic.dynamicType(),
-              Optional.ofNullable(dynamic.value()),
-              Optional.ofNullable(dynamic.maxValue()));
+              dynamic.dynamicType(), dynamic.value(), dynamic.maxValue());
       case AutofilterFilterCriterionReport.Top10 top10 ->
           new AutofilterFilterCriterionSpec.Top10(
               (int) Math.round(top10.value()), top10.top(), top10.percent());
@@ -384,7 +383,14 @@ final class SheetCopyAdapter {
           new AutofilterFilterCriterionSpec.Color(
               color.cellColor(),
               Objects.requireNonNull(
-                  ColorAdapter.copyOf(color.color()), "autofilter color must not be null"));
+                  ColorAdapter.copyOf(
+                      color
+                          .color()
+                          .orElseThrow(
+                              () ->
+                                  new IllegalArgumentException(
+                                      "autofilter color must not be absent"))),
+                  "autofilter color must not be null"));
       case AutofilterFilterCriterionReport.Icon icon ->
           new AutofilterFilterCriterionSpec.Icon(icon.iconSet(), icon.iconId());
     };
@@ -852,14 +858,8 @@ final class SheetCopyAdapter {
       String sourcePartName,
       dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat format) {
     PictureCopyPlan {
-      Objects.requireNonNull(objectName, "objectName must not be null");
-      if (objectName.isBlank()) {
-        throw new IllegalArgumentException("objectName must not be blank");
-      }
-      Objects.requireNonNull(sourcePartName, "sourcePartName must not be null");
-      if (sourcePartName.isBlank()) {
-        throw new IllegalArgumentException("sourcePartName must not be blank");
-      }
+      objectName = TextValidation.requireNonBlank(objectName, "objectName");
+      sourcePartName = TextValidation.requireNonBlank(sourcePartName, "sourcePartName");
       Objects.requireNonNull(format, "format must not be null");
     }
   }
@@ -1387,19 +1387,11 @@ final class SheetCopyAdapter {
   record InternalRelationSnapshot(
       String relationshipType, String contentType, String sourcePartName, BinaryContent bytes) {
     InternalRelationSnapshot {
-      relationshipType = requireNonBlank(relationshipType, "relationshipType");
-      contentType = requireNonBlank(contentType, "contentType");
-      sourcePartName = requireNonBlank(sourcePartName, "sourcePartName");
+      relationshipType = TextValidation.requireNonBlank(relationshipType, "relationshipType");
+      contentType = TextValidation.requireNonBlank(contentType, "contentType");
+      sourcePartName = TextValidation.requireNonBlank(sourcePartName, "sourcePartName");
       Objects.requireNonNull(bytes, "bytes must not be null");
     }
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   /**

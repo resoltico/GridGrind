@@ -233,7 +233,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
             false,
             "Aptos",
             FontHeightReport.fromPoints(new BigDecimal("11")),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.NONE),

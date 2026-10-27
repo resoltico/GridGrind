@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.problem.FieldValidationAddressRule;
 import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.GridGrindRequestProblemSupport;
@@ -9,7 +10,6 @@ import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
-import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
@@ -116,7 +116,7 @@ class SelectorValidationSupportTest {
                 IllegalArgumentException.class,
                 () ->
                     SelectorListValidation.copyDistinctAddresses(
-                        exactAddresses(ExcelReadLimits.MAX_READ_CELLS + 1).stream()
+                        exactAddresses(Limit.MAX_READ_CELLS + 1).stream()
                             .map(CellAddress::new)
                             .toList(),
                         "addresses"))

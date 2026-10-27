@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.layout;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
@@ -55,6 +56,9 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetView;
 
 /** Owns sheet layout, panes, display/defaults, merged regions and row/column outline facts. */
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CommentRequired"})
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_SHEET_ZOOM_PERCENTAGE
+})
 public final class LayoutAdapter {
   private final Sheet sheet;
   private final PrintAdapter printAdapter;
@@ -349,7 +353,7 @@ public final class LayoutAdapter {
   }
 
   /** Validates one requested zoom percentage. */
-  public static void requireZoomPercent(int zoomPercent) { // LIM-022
+  public static void requireZoomPercent(int zoomPercent) {
     ExcelSheetLayoutLimits.requireZoomPercent(zoomPercent, "zoomPercent");
   }
 
@@ -411,7 +415,7 @@ public final class LayoutAdapter {
   }
 
   public static boolean isRowGroupCollapsed(XSSFSheet sheet, ExcelRowSpan rows) {
-    if (rows.lastRowIndex() >= ExcelRowSpan.MAX_ROW_INDEX) {
+    if (rows.lastRowIndex() >= Limit.MAX_ROW_INDEX) {
       return false;
     }
     Row controlRow = sheet.getRow(rows.lastRowIndex() + 1);
@@ -419,7 +423,7 @@ public final class LayoutAdapter {
   }
 
   public static void clearExpandedGroupControlRow(XSSFSheet sheet, ExcelRowSpan rows) {
-    if (rows.lastRowIndex() < ExcelRowSpan.MAX_ROW_INDEX) {
+    if (rows.lastRowIndex() < Limit.MAX_ROW_INDEX) {
       Row controlRow = sheet.getRow(rows.lastRowIndex() + 1);
       if (controlRow instanceof XSSFRow xssfRow) {
         xssfRow.getCTRow().setCollapsed(false);
@@ -429,7 +433,7 @@ public final class LayoutAdapter {
 
   public static void collapseRows(XSSFSheet sheet, ExcelRowSpan rows) {
     XSSFRow controlRow = null;
-    if (rows.lastRowIndex() < ExcelRowSpan.MAX_ROW_INDEX) {
+    if (rows.lastRowIndex() < Limit.MAX_ROW_INDEX) {
       Row existingControlRow = sheet.getRow(rows.lastRowIndex() + 1);
       controlRow =
           existingControlRow instanceof XSSFRow xssfRow
@@ -457,7 +461,7 @@ public final class LayoutAdapter {
   }
 
   public static void clearExpandedGroupControlColumn(XSSFSheet sheet, ExcelColumnSpan columns) {
-    if (columns.lastColumnIndex() < ExcelColumnSpan.MAX_COLUMN_INDEX) {
+    if (columns.lastColumnIndex() < Limit.MAX_COLUMN_INDEX) {
       setColumnCollapsed(sheet, columns.lastColumnIndex() + 1, false);
     }
   }
@@ -647,7 +651,7 @@ public final class LayoutAdapter {
     if (sheet.getCTWorksheet().sizeOfColsArray() != 1) {
       return true;
     }
-    boolean[] seenColumns = new boolean[ExcelColumnSpan.MAX_COLUMN_INDEX + 1];
+    boolean[] seenColumns = new boolean[Limit.MAX_COLUMN_INDEX + 1];
     for (CTCol col : sheet.getCTWorksheet().getColsArray(0).getColList()) {
       if (col.getMin() != col.getMax()) {
         return true;

@@ -10,6 +10,11 @@ import java.util.Objects;
 
 /** One validated mutation action expressed in protocol form. */
 @Union(discriminator = "type")
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_COLUMN_WIDTH,
+  dev.erst.gridgrind.core.limits.Limit.ID_ROW_HEIGHT,
+  dev.erst.gridgrind.core.limits.Limit.ID_SHEET_ZOOM_PERCENTAGE
+})
 public sealed interface MutationAction
     permits WorkbookMutationAction,
         CellMutationAction,
@@ -87,11 +92,11 @@ public sealed interface MutationAction
           firstValue, lastValue, firstFieldName, lastFieldName);
     }
 
-    static void requireColumnWidthCharacters(double widthCharacters) { // LIM-004
+    static void requireColumnWidthCharacters(double widthCharacters) {
       MutationActionNumericValidation.requireColumnWidthCharacters(widthCharacters);
     }
 
-    static void requireRowHeightPoints(double heightPoints) { // LIM-005
+    static void requireRowHeightPoints(double heightPoints) {
       MutationActionNumericValidation.requireRowHeightPoints(heightPoints);
     }
 
@@ -99,7 +104,7 @@ public sealed interface MutationAction
       MutationActionNameValidation.requirePivotTableName(name);
     }
 
-    static void requireZoomPercent(int zoomPercent) { // LIM-022
+    static void requireZoomPercent(int zoomPercent) {
       MutationActionNumericValidation.requireZoomPercent(zoomPercent);
     }
 

@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -110,9 +111,9 @@ public record PivotTableSpec(
       Optional<String> valueFormat) {
 
     public DataField {
-      sourceColumnName = requireNonBlank(sourceColumnName, "sourceColumnName");
+      sourceColumnName = TextValidation.requireNonBlank(sourceColumnName, "sourceColumnName");
       Objects.requireNonNull(function, "function must not be null");
-      displayName = requireNonBlank(displayName, "displayName");
+      displayName = TextValidation.requireNonBlank(displayName, "displayName");
       Objects.requireNonNull(valueFormat, "valueFormat must not be null");
       if (valueFormat.isPresent() && valueFormat.orElseThrow().isBlank()) {
         throw new IllegalArgumentException("valueFormat must not be blank");
@@ -125,7 +126,7 @@ public record PivotTableSpec(
     List<String> copy = new ArrayList<>(names.size());
     Set<String> unique = new LinkedHashSet<>();
     for (String name : names) {
-      String normalized = requireNonBlank(name, fieldName + " value");
+      String normalized = TextValidation.requireNonBlank(name, fieldName + " value");
       String key = normalized.toUpperCase(Locale.ROOT);
       if (!unique.add(key)) {
         throw new IllegalArgumentException(fieldName + " must not contain duplicates");
@@ -179,13 +180,5 @@ public record PivotTableSpec(
           "pivot source column assignments must be disjoint across rowLabels, columnLabels, and reportFilters: "
               + name);
     }
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

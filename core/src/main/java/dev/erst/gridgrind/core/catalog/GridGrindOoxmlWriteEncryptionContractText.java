@@ -5,11 +5,14 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import java.util.Arrays;
 
 /** Stable public wording for the OOXML write-encryption contract and operator-facing limit. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_OOXML_WRITE_ENCRYPTION_IS_AGILE_ONLY_AND_STRONG_ONLY
+})
 public final class GridGrindOoxmlWriteEncryptionContractText {
   private GridGrindOoxmlWriteEncryptionContractText() {}
 
   /** One stable catalog summary for `OoxmlEncryptionSpec`. */
-  public static String inputSummary() { // LIM-038
+  public static String inputSummary() {
     return "OOXML package-encryption settings for workbook persistence."
         + " GridGrind writes AGILE packages only."
         + " cipher defaults to "
@@ -21,11 +24,14 @@ public final class GridGrindOoxmlWriteEncryptionContractText {
         + enumValuePhrase(ExcelOoxmlWriteCipher.values())
         + ". Supported hashes: "
         + enumValuePhrase(ExcelOoxmlWriteHash.values())
-        + " (LIM-038).";
+        + " ("
+        + dev.erst.gridgrind.core.limits.Limit
+            .ID_OOXML_WRITE_ENCRYPTION_IS_AGILE_ONLY_AND_STRONG_ONLY
+        + ").";
   }
 
   /** One stable operator-facing summary of the OOXML write-encryption limitation. */
-  public static String limitSummary() { // LIM-038
+  public static String limitSummary() {
     return "writes AGILE packages only; cipher defaults to "
         + ExcelOoxmlWriteCipher.AES_256
         + ", hash defaults to "

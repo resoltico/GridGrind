@@ -2,8 +2,8 @@ package dev.erst.gridgrind.core.source;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Base64;
-import java.util.Objects;
 
 /** Contract-owned authored binary source used by source-backed payloads. */
 @Union(discriminator = "type", catalog = true, displayOrder = 5)
@@ -44,7 +44,7 @@ public sealed interface BinarySourceSpec
       noteRefs = {"requestOwnedPathRule"})
   record File(String path) implements BinarySourceSpec {
     public File {
-      path = requireNonBlank(path, "path");
+      path = TextValidation.requireNonBlank(path, "path");
     }
   }
 
@@ -54,16 +54,8 @@ public sealed interface BinarySourceSpec
       summary = "Load binary content from the execution transport's bound standard input bytes.")
   record Stdin() implements BinarySourceSpec {}
 
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   private static String requireBase64(String value, String fieldName) {
-    String validatedValue = requireNonBlank(value, fieldName);
+    String validatedValue = TextValidation.requireNonBlank(value, fieldName);
     try {
       Base64.getDecoder().decode(validatedValue);
     } catch (IllegalArgumentException exception) {

@@ -2,7 +2,7 @@ package dev.erst.gridgrind.core.model.table;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
-import java.util.Objects;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 
 /** Supported table-style definition for GridGrind-authored tables. */
 @Union(discriminator = "type", catalog = true, displayOrder = 70)
@@ -26,10 +26,7 @@ public sealed interface TableStyleSpec
       boolean showColumnStripes)
       implements TableStyleSpec {
     public Named {
-      Objects.requireNonNull(name, "name must not be null");
-      if (name.isBlank()) {
-        throw new IllegalArgumentException("name must not be blank");
-      }
+      name = TextValidation.requireNonBlank(name, "name");
     }
   }
 }

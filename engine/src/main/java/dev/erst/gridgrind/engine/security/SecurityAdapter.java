@@ -75,6 +75,9 @@ import org.jspecify.annotations.Nullable;
 
 /** Owns OOXML open/save encryption, signature verification/signing and security metadata. */
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CommentRequired"})
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_OOXML_WRITE_ENCRYPTION_IS_AGILE_ONLY_AND_STRONG_ONLY
+})
 public final class SecurityAdapter {
   private SecurityAdapter() {}
 
@@ -405,7 +408,7 @@ public final class SecurityAdapter {
 
   private static ResolvedEncryption preservedSourceEncryption(
       OoxmlPackageSecurityReport sourceSecurity,
-      java.util.Optional<String> sourceEncryptionPassword) { // LIM-038
+      java.util.Optional<String> sourceEncryptionPassword) {
     if (!(sourceSecurity.encryption()
         instanceof OoxmlEncryptionReport.Encrypted sourceEncryption)) {
       throw new IllegalArgumentException(

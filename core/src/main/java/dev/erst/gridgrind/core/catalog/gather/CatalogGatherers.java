@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.catalog.gather;
 import dev.erst.gridgrind.core.catalog.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.core.catalog.FieldEntry;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.lang.reflect.RecordComponent;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,10 +30,7 @@ public final class CatalogGatherers {
       String label) {
     Objects.requireNonNull(keyFunction, "keyFunction must not be null");
     Objects.requireNonNull(duplicateValueFunction, "duplicateValueFunction must not be null");
-    Objects.requireNonNull(label, "label must not be null");
-    if (label.isBlank()) {
-      throw new IllegalArgumentException("label must not be blank");
-    }
+    TextValidation.requireNonBlank(label, "label");
     return Gatherer.ofSequential(
         LinkedHashMap<K, T>::new,
         (state, item, downstream) -> {

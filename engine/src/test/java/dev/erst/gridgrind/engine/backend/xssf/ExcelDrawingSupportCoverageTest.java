@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.charts.ChartAdapter;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -16,7 +17,7 @@ class ExcelDrawingSupportCoverageTest {
 
     IllegalArgumentException blankFailure =
         assertThrows(
-            IllegalArgumentException.class, () -> ChartAdapter.requireNonBlank(" ", "formula"));
+            IllegalArgumentException.class, () -> TextValidation.requireNonBlank(" ", "formula"));
     assertEquals("formula must not be blank", blankFailure.getMessage());
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {

@@ -3,7 +3,6 @@ package dev.erst.gridgrind.core.model.drawing;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -137,9 +136,9 @@ class DtoEdgeCoverageTest {
                         "image/png",
                         -1L,
                         "sha",
-                        10,
-                        10,
-                        null))
+                        Optional.of(10),
+                        Optional.of(10),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "description must not be blank",
@@ -153,13 +152,22 @@ class DtoEdgeCoverageTest {
                         "image/png",
                         1L,
                         "sha",
-                        10,
-                        10,
-                        " "))
+                        Optional.of(10),
+                        Optional.of(10),
+                        Optional.of(" ")))
             .getMessage());
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         new DrawingObjectReport.Picture(
-                "Pic", twoCell, ExcelPictureFormat.PNG, "image/png", 1L, "sha", 10, 10, null)
+                "Pic",
+                twoCell,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                1L,
+                "sha",
+                Optional.of(10),
+                Optional.of(10),
+                Optional.empty())
             .description());
     assertEquals(
         "heightPixels must not be negative",
@@ -173,9 +181,9 @@ class DtoEdgeCoverageTest {
                         "image/png",
                         1L,
                         "sha",
-                        10,
-                        -1,
-                        null))
+                        Optional.of(10),
+                        Optional.of(-1),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "plotTypeTokens value must not be blank",
@@ -189,7 +197,12 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new DrawingObjectReport.Shape(
-                        "Shape", twoCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, " ", null, 0))
+                        "Shape",
+                        twoCell,
+                        ExcelDrawingShapeKind.SIMPLE_SHAPE,
+                        Optional.of(" "),
+                        Optional.empty(),
+                        0))
             .getMessage());
     assertEquals(
         "text must not be blank",
@@ -197,7 +210,12 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new DrawingObjectReport.Shape(
-                        "Shape", twoCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, null, " ", 0))
+                        "Shape",
+                        twoCell,
+                        ExcelDrawingShapeKind.SIMPLE_SHAPE,
+                        Optional.empty(),
+                        Optional.of(" "),
+                        0))
             .getMessage());
     assertEquals(
         "label must not be blank",
@@ -208,15 +226,15 @@ class DtoEdgeCoverageTest {
                         "Object",
                         twoCell,
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-                        " ",
-                        "file.bin",
-                        null,
+                        Optional.of(" "),
+                        Optional.of("file.bin"),
+                        Optional.empty(),
                         "application/octet-stream",
                         1L,
                         "sha",
-                        null,
-                        null,
-                        null))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "fileName must not be blank",
@@ -227,15 +245,15 @@ class DtoEdgeCoverageTest {
                         "Object",
                         twoCell,
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-                        null,
-                        " ",
-                        null,
+                        Optional.empty(),
+                        Optional.of(" "),
+                        Optional.empty(),
                         "application/octet-stream",
                         1L,
                         "sha",
-                        null,
-                        null,
-                        null))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "command must not be blank",
@@ -246,15 +264,15 @@ class DtoEdgeCoverageTest {
                         "Object",
                         twoCell,
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-                        null,
-                        null,
-                        " ",
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(" "),
                         "application/octet-stream",
                         1L,
                         "sha",
-                        null,
-                        null,
-                        null))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "previewSha256 must not be blank",
@@ -265,15 +283,15 @@ class DtoEdgeCoverageTest {
                         "Object",
                         twoCell,
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-                        null,
-                        null,
-                        null,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
                         "application/octet-stream",
                         1L,
                         "sha",
-                        ExcelPictureFormat.PNG,
-                        1L,
-                        " "))
+                        Optional.ofNullable(ExcelPictureFormat.PNG),
+                        Optional.of(1L),
+                        Optional.of(" ")))
             .getMessage());
     assertEquals(
         "previewSha256 requires previewFormat",
@@ -284,15 +302,15 @@ class DtoEdgeCoverageTest {
                         "Object",
                         twoCell,
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-                        null,
-                        null,
-                        null,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
                         "application/octet-stream",
                         1L,
                         "sha",
-                        null,
-                        null,
-                        "preview"))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of("preview")))
             .getMessage());
     assertEquals(
         "previewByteSize must not be negative",
@@ -303,15 +321,15 @@ class DtoEdgeCoverageTest {
                         "Object",
                         twoCell,
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-                        null,
-                        null,
-                        null,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
                         "application/octet-stream",
                         1L,
                         "sha",
-                        ExcelPictureFormat.PNG,
-                        -1L,
-                        null))
+                        Optional.ofNullable(ExcelPictureFormat.PNG),
+                        Optional.of(-1L),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "byteSize must not be negative",
@@ -322,15 +340,15 @@ class DtoEdgeCoverageTest {
                         "Object",
                         twoCell,
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-                        null,
-                        null,
-                        null,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
                         "application/octet-stream",
                         -1L,
                         "sha",
-                        null,
-                        null,
-                        null))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "previewContentType requires previewFormat",
@@ -362,7 +380,13 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new DrawingObjectPayloadReport.Picture(
-                        "Pic", ExcelPictureFormat.PNG, "image/png", "pic.png", "sha", base64, " "))
+                        "Pic",
+                        ExcelPictureFormat.PNG,
+                        "image/png",
+                        "pic.png",
+                        "sha",
+                        base64,
+                        Optional.of(" ")))
             .getMessage());
     assertEquals(
         "label must not be blank",
@@ -373,11 +397,11 @@ class DtoEdgeCoverageTest {
                         "Object",
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
                         "application/octet-stream",
-                        "file.bin",
+                        Optional.of("file.bin"),
                         "sha",
                         base64,
-                        " ",
-                        null))
+                        Optional.of(" "),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "command must not be blank",
@@ -388,11 +412,11 @@ class DtoEdgeCoverageTest {
                         "Object",
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
                         "application/octet-stream",
-                        "file.bin",
+                        Optional.of("file.bin"),
                         "sha",
                         base64,
-                        null,
-                        " "))
+                        Optional.empty(),
+                        Optional.of(" ")))
             .getMessage());
     assertEquals(
         "name must not be blank",
@@ -403,11 +427,11 @@ class DtoEdgeCoverageTest {
                         " ",
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
                         "application/octet-stream",
-                        "file.bin",
+                        Optional.of("file.bin"),
                         "sha",
                         base64,
-                        null,
-                        null))
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "fileName must not be null",
@@ -415,7 +439,13 @@ class DtoEdgeCoverageTest {
                 NullPointerException.class,
                 () ->
                     new DrawingObjectPayloadReport.Picture(
-                        "Pic", ExcelPictureFormat.PNG, "image/png", null, "sha", base64, null))
+                        "Pic",
+                        ExcelPictureFormat.PNG,
+                        "image/png",
+                        null,
+                        "sha",
+                        base64,
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "lastRow must not be negative",
@@ -481,7 +511,9 @@ class DtoEdgeCoverageTest {
         "filterValue must be finite when provided",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AutofilterFilterCriterionReport.Top10(true, false, 1.0d, Double.NaN))
+                () ->
+                    new AutofilterFilterCriterionReport.Top10(
+                        true, false, 1.0d, Optional.of(Double.NaN)))
             .getMessage());
     assertEquals(
         "iconSet must not be blank",
@@ -581,7 +613,7 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     CellGradientFillReport.linear(
-                        Double.POSITIVE_INFINITY,
+                        Optional.of(Double.POSITIVE_INFINITY),
                         List.of(
                             new CellGradientStopReport(
                                 0.0d, CellColorReport.rgb(new RgbHex("#AABBCC"))))))
@@ -921,7 +953,7 @@ class DtoEdgeCoverageTest {
         false,
         "Aptos",
         new FontHeightReport(220, BigDecimal.valueOf(11)),
-        null,
+        Optional.empty(),
         false,
         false);
   }

@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
 import dev.erst.gridgrind.engine.formulas.FormulaRuntime;
 import java.util.List;
@@ -79,7 +80,7 @@ public final class SheetDrawings {
 
   /** Changes the anchor of the selected drawing object. */
   public SheetDrawings setDrawingObjectAnchor(String objectName, DrawingAnchorSpec.TwoCell anchor) {
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");
     drawingController.setDrawingObjectAnchor(xssfSheet(), objectName, anchor);
     return this;
@@ -87,7 +88,7 @@ public final class SheetDrawings {
 
   /** Deletes the selected drawing object and unused package relationships. */
   public SheetDrawings deleteDrawingObject(String objectName) {
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
     drawingController.deleteDrawingObject(xssfSheet(), objectName);
     return this;
   }
@@ -104,18 +105,11 @@ public final class SheetDrawings {
 
   /** Reads the selected drawing object payload. */
   public DrawingObjectPayloadReport drawingObjectPayload(String objectName) {
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
     return drawingController.drawingObjectPayload(xssfSheet(), objectName);
   }
 
   private XSSFSheet xssfSheet() {
     return (XSSFSheet) sheet;
-  }
-
-  private static void requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
   }
 }

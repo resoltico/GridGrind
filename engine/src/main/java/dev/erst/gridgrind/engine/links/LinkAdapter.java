@@ -1,11 +1,13 @@
 package dev.erst.gridgrind.engine.links;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import dev.erst.gridgrind.engine.cells.CellAccess;
 import dev.erst.gridgrind.engine.poi.CellBounds;
@@ -28,6 +30,9 @@ import org.apache.poi.ss.util.CellReference;
 
 /** Owns hyperlink mutation/readback and local-file URI normalization/resolution. */
 @SuppressWarnings("PMD.CommentRequired")
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_HYPERLINKS_PER_WORKSHEET
+})
 public final class LinkAdapter {
   private final Sheet sheet;
 
@@ -153,7 +158,7 @@ public final class LinkAdapter {
         }
       }
     }
-    requireWorksheetHyperlinkCapacity(hyperlinkCount); // LIM-012
+    requireWorksheetHyperlinkCapacity(hyperlinkCount);
   }
 
   private static Optional<HyperlinkTarget> urlHyperlink(String target) {
@@ -181,10 +186,7 @@ public final class LinkAdapter {
    * Normalizes one request or workbook file hyperlink value to the canonical stored path string.
    */
   public static String normalizePath(String path) {
-    Objects.requireNonNull(path, "path must not be null");
-    if (path.isBlank()) {
-      throw new IllegalArgumentException("path must not be blank");
-    }
+    TextValidation.requireNonBlank(path, "path");
     if (looksLikeFileUri(path)) {
       return normalizeFileUri(path);
     }
@@ -421,13 +423,11 @@ public final class LinkAdapter {
     return email;
   }
 
-  public static final int MAX_HYPERLINKS_PER_SHEET = 65530; // LIM-012
-
   public static void requireWorksheetHyperlinkCapacity(int existingHyperlinkCount) {
-    if (existingHyperlinkCount >= MAX_HYPERLINKS_PER_SHEET) {
+    if (existingHyperlinkCount >= Limit.MAX_HYPERLINKS) {
       throw new IllegalArgumentException(
           "sheet cannot contain more than "
-              + MAX_HYPERLINKS_PER_SHEET
+              + Limit.MAX_HYPERLINKS
               + " hyperlinks (Excel worksheet hyperlink limit)");
     }
   }

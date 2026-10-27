@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -25,7 +26,7 @@ public record OoxmlSignatureSpec(
     Optional<String> description) {
 
   public OoxmlSignatureSpec {
-    pkcs12Path = normalizeRequired(pkcs12Path, "pkcs12Path");
+    pkcs12Path = TextValidation.requireNonBlank(pkcs12Path, "pkcs12Path");
     Objects.requireNonNull(keystorePasswordRef, "keystorePasswordRef must not be null");
     Objects.requireNonNull(keyPasswordRef, "keyPasswordRef must not be null");
     alias = normalizeOptional(alias, "alias");
@@ -42,14 +43,6 @@ public record OoxmlSignatureSpec(
       Optional<String> description) {
     return new OoxmlSignatureSpec(
         pkcs12Path, keystorePasswordRef, Optional.empty(), alias, digestAlgorithm, description);
-  }
-
-  private static String normalizeRequired(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {

@@ -89,11 +89,11 @@ final class HelpGuidance {
         List.of(
             new HelpSurfaceReport.ReferenceEntry(
                 "Quick reference",
-                "docs/QUICK_REFERENCE.md",
+                "docs/CLI.md",
                 "Synopsis-first command cheat sheet for first-contact lookup."),
             new HelpSurfaceReport.ReferenceEntry(
                 "Operations reference",
-                "docs/OPERATIONS.md",
+                "docs/EXECUTION_MODEL.md",
                 "Longer operator workflows, artifact handling, and runtime/container use."),
             new HelpSurfaceReport.ReferenceEntry(
                 "Error reference",

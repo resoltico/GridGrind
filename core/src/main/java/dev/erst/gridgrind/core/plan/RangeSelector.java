@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -91,9 +92,9 @@ public sealed interface RangeSelector extends Selector
       columnCount = SelectorValueValidation.requirePositive(columnCount, "columnCount");
       SelectorValueValidation.requireWindowSize(rowCount, columnCount);
       if (SelectorAddressSupport.rowIndex(topLeftAddress.value()) + rowCount - 1
-              > dev.erst.gridgrind.core.vocabulary.ExcelRowSpan.MAX_ROW_INDEX
+              > Limit.MAX_ROW_INDEX
           || SelectorAddressSupport.columnIndex(topLeftAddress.value()) + columnCount - 1
-              > dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan.MAX_COLUMN_INDEX) {
+              > Limit.MAX_COLUMN_INDEX) {
         throw new dev.erst.gridgrind.core.problem.InvalidRequestException(
             new dev.erst.gridgrind.core.problem.ActionableInvariantMessage(
                 "window must end within Excel .xlsx bounds",

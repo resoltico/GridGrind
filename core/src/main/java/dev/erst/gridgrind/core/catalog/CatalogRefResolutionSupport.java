@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -78,8 +79,7 @@ final class CatalogRefResolutionSupport {
   }
 
   static List<CatalogEntryRef> matchingEntryRefs(Catalog catalog, String idOrQualifiedId) {
-    String lookup =
-        CatalogRecordValidation.requireNonBlank(idOrQualifiedId, "idOrQualifiedId").trim();
+    String lookup = TextValidation.requireNonBlank(idOrQualifiedId, "idOrQualifiedId").trim();
     int separator = lookup.indexOf(':');
     if (separator >= 0) {
       String group = lookup.substring(0, separator).trim();
@@ -97,8 +97,7 @@ final class CatalogRefResolutionSupport {
   }
 
   static List<CatalogLookupRef> matchingLookupRefs(Catalog catalog, String idOrQualifiedId) {
-    String lookup =
-        CatalogRecordValidation.requireNonBlank(idOrQualifiedId, "idOrQualifiedId").trim();
+    String lookup = TextValidation.requireNonBlank(idOrQualifiedId, "idOrQualifiedId").trim();
     int separator = lookup.indexOf(':');
     if (separator >= 0) {
       String group = lookup.substring(0, separator).trim();
@@ -124,7 +123,7 @@ final class CatalogRefResolutionSupport {
   /** Internal typed carrier for one catalog entry in one group. */
   record CatalogEntryRef(String group, TypeEntry entry) {
     CatalogEntryRef {
-      group = CatalogRecordValidation.requireNonBlank(group, "group");
+      group = TextValidation.requireNonBlank(group, "group");
       Objects.requireNonNull(entry, "entry must not be null");
     }
 

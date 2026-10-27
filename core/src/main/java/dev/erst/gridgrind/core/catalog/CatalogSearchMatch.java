@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.metadata.WireDefault;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 
 /** One protocol-catalog search hit suitable for CLI and agent-facing discovery. */
@@ -47,11 +48,11 @@ public record CatalogSearchMatch(
   }
 
   public CatalogSearchMatch {
-    catalogGroup = CatalogRecordValidation.requireNonBlank(catalogGroup, "catalogGroup");
-    lookupId = CatalogRecordValidation.requireNonBlank(lookupId, "lookupId");
-    qualifiedId = CatalogRecordValidation.requireNonBlank(qualifiedId, "qualifiedId");
-    kind = CatalogRecordValidation.requireNonBlank(kind, "kind");
-    summary = CatalogRecordValidation.requireNonBlank(summary, "summary");
+    catalogGroup = TextValidation.requireNonBlank(catalogGroup, "catalogGroup");
+    lookupId = TextValidation.requireNonBlank(lookupId, "lookupId");
+    qualifiedId = TextValidation.requireNonBlank(qualifiedId, "qualifiedId");
+    kind = TextValidation.requireNonBlank(kind, "kind");
+    summary = TextValidation.requireNonBlank(summary, "summary");
     java.util.Objects.requireNonNull(stepTemplate, "stepTemplate must not be null");
     relatedEntryIds = List.copyOf(relatedEntryIds);
     java.util.Objects.requireNonNull(supportingMatches, "supportingMatches must not be null");

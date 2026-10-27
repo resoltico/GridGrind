@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.discovery;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,8 +13,8 @@ public record TaskPhase(
     List<String> notes) {
   public TaskPhase {
     Objects.requireNonNull(purpose, "purpose must not be null");
-    label = DiscoveryValidation.requireNonBlank(label, "label");
-    objective = DiscoveryValidation.requireNonBlank(objective, "objective");
+    label = TextValidation.requireNonBlank(label, "label");
+    objective = TextValidation.requireNonBlank(objective, "objective");
     capabilityRefs = DiscoveryValidation.copyTaskCapabilityRefs(capabilityRefs, "capabilityRefs");
     notes = DiscoveryValidation.copyStrings(notes, "notes");
     if (capabilityRefs.isEmpty()) {

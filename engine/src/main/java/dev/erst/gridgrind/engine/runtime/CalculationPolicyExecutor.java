@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.Comparator;
 import java.util.List;
@@ -310,7 +311,7 @@ final class CalculationPolicyExecutor {
       @Nullable RuntimeException exception) {
     FailureDetail {
       Objects.requireNonNull(phase, "phase must not be null");
-      requireNonBlank(message, "message");
+      TextValidation.requireNonBlank(message, "message");
       if (code == null && exception == null) {
         throw new IllegalArgumentException("code or exception must be present");
       }
@@ -318,13 +319,6 @@ final class CalculationPolicyExecutor {
 
     FailureDetail(Phase phase, RuntimeException exception) {
       this(null, phase, null, null, null, GridGrindProblems.messageFor(exception), exception);
-    }
-  }
-
-  private static void requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
     }
   }
 }

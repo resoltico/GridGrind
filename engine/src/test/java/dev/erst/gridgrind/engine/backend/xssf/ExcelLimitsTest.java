@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.engine.cells.CellTextLimits;
 import dev.erst.gridgrind.engine.formulas.FormulaLimits;
 import dev.erst.gridgrind.engine.links.LinkAdapter;
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Test;
 class ExcelLimitsTest {
   @Test
   void rejectsCellTextPastTheExcelCellLimit() {
-    String oversizedText = "x".repeat(CellTextLimits.MAX_CELL_TEXT_LENGTH + 1);
+    String oversizedText = "x".repeat(Limit.MAX_CELL_TEXT_LENGTH + 1);
 
     IllegalArgumentException failure =
         assertThrows(
@@ -47,16 +48,12 @@ class ExcelLimitsTest {
   @Test
   void rejectsNewHyperlinksOnceTheWorksheetCapIsReached() {
     assertDoesNotThrow(
-        () ->
-            LinkAdapter.requireWorksheetHyperlinkCapacity(
-                LinkAdapter.MAX_HYPERLINKS_PER_SHEET - 1));
+        () -> LinkAdapter.requireWorksheetHyperlinkCapacity(Limit.MAX_HYPERLINKS - 1));
 
     IllegalArgumentException failure =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                LinkAdapter.requireWorksheetHyperlinkCapacity(
-                    LinkAdapter.MAX_HYPERLINKS_PER_SHEET));
+            () -> LinkAdapter.requireWorksheetHyperlinkCapacity(Limit.MAX_HYPERLINKS));
 
     org.junit.jupiter.api.Assertions.assertTrue(
         failure.getMessage().contains("worksheet hyperlink limit"));
@@ -66,7 +63,7 @@ class ExcelLimitsTest {
   void rejectsFormulasPastTheExcelLengthCeiling() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
-      String oversizedFormula = "A".repeat(FormulaLimits.MAX_FORMULA_LENGTH + 1);
+      String oversizedFormula = "A".repeat(Limit.MAX_FORMULA_LENGTH + 1);
 
       IllegalArgumentException failure =
           assertThrows(
@@ -85,7 +82,7 @@ class ExcelLimitsTest {
   void rejectsFormulasPastTheNestedFunctionLimit() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Budget");
-      String formula = nestedAbsFormula(FormulaLimits.MAX_NESTED_FUNCTION_LEVELS + 1);
+      String formula = nestedAbsFormula(Limit.MAX_NESTED_FUNCTION_LEVELS + 1);
 
       IllegalArgumentException failure =
           assertThrows(
@@ -103,7 +100,7 @@ class ExcelLimitsTest {
   void rejectsFormulasPastTheFunctionArgumentLimit() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Budget");
-      String formula = "SUM(" + "1,".repeat(FormulaLimits.MAX_FUNCTION_ARGUMENTS) + "1)";
+      String formula = "SUM(" + "1,".repeat(Limit.MAX_FUNCTION_ARGUMENTS) + "1)";
 
       IllegalArgumentException failure =
           assertThrows(

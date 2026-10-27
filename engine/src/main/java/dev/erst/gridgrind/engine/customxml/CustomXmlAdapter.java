@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -70,10 +71,7 @@ public final class CustomXmlAdapter {
   public CustomXmlExportReport exportMapping(
       CustomXmlMappingLocator locator, boolean validateSchema, String encoding) {
     Objects.requireNonNull(locator, "locator must not be null");
-    Objects.requireNonNull(encoding, "encoding must not be null");
-    if (encoding.isBlank()) {
-      throw new IllegalArgumentException("encoding must not be blank");
-    }
+    TextValidation.requireNonBlank(encoding, "encoding");
 
     Charset charset = Charset.forName(encoding);
     XSSFMap mapping = requireMapping(workbook, locator);
@@ -163,17 +161,20 @@ public final class CustomXmlAdapter {
             ctMap.getPreserveSortAFLayout(),
             ctMap.getPreserveFormat()),
         new CustomXmlMappingReport.Schema(
-            schema != null && schema.isSetNamespace()
-                ? blankAsOptional(schema.getNamespace()).orElse(null)
-                : null,
-            schema != null && schema.isSetSchemaLanguage()
-                ? blankAsOptional(schema.getSchemaLanguage()).orElse(null)
-                : null,
-            schema != null && schema.isSetSchemaRef()
-                ? blankAsOptional(schema.getSchemaRef()).orElse(null)
-                : null,
-            schemaXml(mapping).orElse(null)),
-        dataBinding(ctMap).orElse(null),
+            Optional.ofNullable(
+                schema != null && schema.isSetNamespace()
+                    ? blankAsOptional(schema.getNamespace()).orElse(null)
+                    : null),
+            Optional.ofNullable(
+                schema != null && schema.isSetSchemaLanguage()
+                    ? blankAsOptional(schema.getSchemaLanguage()).orElse(null)
+                    : null),
+            Optional.ofNullable(
+                schema != null && schema.isSetSchemaRef()
+                    ? blankAsOptional(schema.getSchemaRef()).orElse(null)
+                    : null),
+            schemaXml(mapping)),
+        dataBinding(ctMap),
         linkedCells(mapping),
         linkedTables(mapping));
   }
@@ -183,14 +184,16 @@ public final class CustomXmlAdapter {
     CTDataBinding binding = ctMap.getDataBinding();
     return Optional.of(
         new CustomXmlDataBindingReport(
-            binding.isSetDataBindingName()
-                ? blankAsOptional(binding.getDataBindingName()).orElse(null)
-                : null,
-            binding.isSetFileBinding() ? binding.getFileBinding() : null,
-            binding.isSetConnectionID() ? binding.getConnectionID() : null,
-            binding.isSetFileBindingName()
-                ? blankAsOptional(binding.getFileBindingName()).orElse(null)
-                : null,
+            Optional.ofNullable(
+                binding.isSetDataBindingName()
+                    ? blankAsOptional(binding.getDataBindingName()).orElse(null)
+                    : null),
+            Optional.ofNullable(binding.isSetFileBinding() ? binding.getFileBinding() : null),
+            Optional.ofNullable(binding.isSetConnectionID() ? binding.getConnectionID() : null),
+            Optional.ofNullable(
+                binding.isSetFileBindingName()
+                    ? blankAsOptional(binding.getFileBindingName()).orElse(null)
+                    : null),
             binding.getDataBindingLoadMode()));
   }
 

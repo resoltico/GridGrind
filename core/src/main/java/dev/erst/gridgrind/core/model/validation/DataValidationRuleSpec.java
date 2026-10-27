@@ -1,15 +1,21 @@
 package dev.erst.gridgrind.core.model.validation;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing data-validation rule families. */
 @Union(discriminator = "type", catalog = true, displayOrder = 62)
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_DDE_REJECTION_IN_ALL_FORMULA_INPUTS,
+  dev.erst.gridgrind.core.limits.Limit.ID_EXPLICIT_DATA_VALIDATION_LIST_FORMULA_LENGTH
+})
 public sealed interface DataValidationRuleSpec
     permits dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.ExplicitList,
         dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.FormulaList,
@@ -19,8 +25,6 @@ public sealed interface DataValidationRuleSpec
         dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.TimeRule,
         dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.TextLength,
         dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec.CustomFormula {
-
-  int MAX_EXPLICIT_LIST_FORMULA_LENGTH = 255; // LIM-040
 
   /** Explicit-list validation rule. */
   @Variant(
@@ -41,8 +45,8 @@ public sealed interface DataValidationRuleSpec
           String formula)
       implements DataValidationRuleSpec {
     public FormulaList {
-      formula = requireNonBlank(formula, "formula");
-      FormulaInputSecurity.rejectDde(formula); // LIM-027
+      formula = TextValidation.requireNonBlank(formula, "formula");
+      FormulaInputSecurity.rejectDde(formula);
     }
   }
 
@@ -62,8 +66,8 @@ public sealed interface DataValidationRuleSpec
       implements DataValidationRuleSpec {
     public WholeNumber {
       Objects.requireNonNull(operator, "operator must not be null");
-      formula1 = requireNonBlank(formula1, "formula1");
-      FormulaInputSecurity.rejectDde(formula1); // LIM-027
+      formula1 = TextValidation.requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1);
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -84,8 +88,8 @@ public sealed interface DataValidationRuleSpec
       implements DataValidationRuleSpec {
     public DecimalNumber {
       Objects.requireNonNull(operator, "operator must not be null");
-      formula1 = requireNonBlank(formula1, "formula1");
-      FormulaInputSecurity.rejectDde(formula1); // LIM-027
+      formula1 = TextValidation.requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1);
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -105,8 +109,8 @@ public sealed interface DataValidationRuleSpec
       implements DataValidationRuleSpec {
     public DateRule {
       Objects.requireNonNull(operator, "operator must not be null");
-      formula1 = requireNonBlank(formula1, "formula1");
-      FormulaInputSecurity.rejectDde(formula1); // LIM-027
+      formula1 = TextValidation.requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1);
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -126,8 +130,8 @@ public sealed interface DataValidationRuleSpec
       implements DataValidationRuleSpec {
     public TimeRule {
       Objects.requireNonNull(operator, "operator must not be null");
-      formula1 = requireNonBlank(formula1, "formula1");
-      FormulaInputSecurity.rejectDde(formula1); // LIM-027
+      formula1 = TextValidation.requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1);
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -148,8 +152,8 @@ public sealed interface DataValidationRuleSpec
       implements DataValidationRuleSpec {
     public TextLength {
       Objects.requireNonNull(operator, "operator must not be null");
-      formula1 = requireNonBlank(formula1, "formula1");
-      FormulaInputSecurity.rejectDde(formula1); // LIM-027
+      formula1 = TextValidation.requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1);
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -162,8 +166,8 @@ public sealed interface DataValidationRuleSpec
           String formula)
       implements DataValidationRuleSpec {
     public CustomFormula {
-      formula = requireNonBlank(formula, "formula");
-      FormulaInputSecurity.rejectDde(formula); // LIM-027
+      formula = TextValidation.requireNonBlank(formula, "formula");
+      FormulaInputSecurity.rejectDde(formula);
     }
   }
 
@@ -171,7 +175,7 @@ public sealed interface DataValidationRuleSpec
     Objects.requireNonNull(values, "values must not be null");
     List<String> copy = List.copyOf(values);
     for (String value : copy) {
-      requireNonBlank(value, "values");
+      TextValidation.requireNonBlank(value, "values");
       if (value.indexOf(',') >= 0 || value.indexOf('"') >= 0) {
         throw new IllegalArgumentException(
             "values must not contain ',' or '\"' in an explicit list; use FORMULA_LIST for"
@@ -179,10 +183,10 @@ public sealed interface DataValidationRuleSpec
       }
     }
     int serializedLength = explicitListFormula(copy).length();
-    if (serializedLength > MAX_EXPLICIT_LIST_FORMULA_LENGTH) {
+    if (serializedLength > Limit.MAX_EXPLICIT_LIST_FORMULA_LENGTH) {
       throw new IllegalArgumentException(
           "values must serialize to at most "
-              + MAX_EXPLICIT_LIST_FORMULA_LENGTH
+              + Limit.MAX_EXPLICIT_LIST_FORMULA_LENGTH
               + " characters for Excel data validation; got "
               + serializedLength);
     }
@@ -193,28 +197,20 @@ public sealed interface DataValidationRuleSpec
     return "\"" + String.join(",", values) + "\"";
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   private static Optional<String> normalizeOptionalComparisonUpperBound(
       ExcelComparisonOperator operator, Optional<String> formula2) {
     Objects.requireNonNull(formula2, "formula2 must not be null");
     if (operator == ExcelComparisonOperator.BETWEEN
         || operator == ExcelComparisonOperator.NOT_BETWEEN) {
       String upperBound =
-          requireNonBlank(
+          TextValidation.requireNonBlank(
               formula2.orElseThrow(
                   () ->
                       new IllegalArgumentException(
                           "formula2 must not be blank for "
                               + operator.name().toLowerCase(java.util.Locale.ROOT))),
               "formula2");
-      FormulaInputSecurity.rejectDde(upperBound); // LIM-027
+      FormulaInputSecurity.rejectDde(upperBound);
       return Optional.of(upperBound);
     }
     if (formula2.isPresent()) {

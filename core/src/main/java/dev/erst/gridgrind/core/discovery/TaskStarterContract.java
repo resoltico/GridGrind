@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.discovery;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -7,7 +8,7 @@ import java.util.Objects;
 public record TaskStarterContract(
     String requestFileName, RecipeAdvisory advisory, List<String> requiredWorkspacePaths) {
   public TaskStarterContract {
-    requestFileName = DiscoveryValidation.requireNonBlank(requestFileName, "requestFileName");
+    requestFileName = TextValidation.requireNonBlank(requestFileName, "requestFileName");
     Objects.requireNonNull(advisory, "advisory must not be null");
     requiredWorkspacePaths =
         DiscoveryValidation.copyStringsAllowEmpty(requiredWorkspacePaths, "requiredWorkspacePaths");

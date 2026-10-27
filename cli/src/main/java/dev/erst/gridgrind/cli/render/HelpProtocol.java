@@ -13,6 +13,15 @@ final class HelpProtocol {
         "Request",
         List.of(
             "protocolVersion is required.",
+            "Chart mutations author AREA, AREA_3D, BAR, BAR_3D, DOUGHNUT, LINE, LINE_3D, PIE, PIE_3D, RADAR, SCATTER, SURFACE and SURFACE_3D; unsupported loaded plots remain preserved on unrelated edits.",
+            "Chart title formulas and formula-backed series titles resolve to one cell, directly or through a defined name.",
+            "SET_ARRAY_FORMULA authors one contiguous single-cell or multi-cell array formula group; CLEAR_ARRAY_FORMULA targets any member and removes the entire group.",
+            "Failed SET_SHAPE / SET_CHART validation leaves existing drawing state unchanged and creates no partial artifacts.",
+            "DATE / DATE_TIME inputs are stored as numeric serials; default VALUE readback keeps NUMBER, while the TEMPORAL facet exposes DATE / TIME / DATE_TIME semantics.",
+            dev.erst.gridgrind.core.catalog.GridGrindInspectionContractText
+                .formulaAuthoringLimitSummary(),
+            dev.erst.gridgrind.core.catalog.GridGrindInspectionContractText
+                .loadedFormulaSupportSummary(),
             "source.type is required. NEW creates a blank workbook."
                 + " EXISTING requires source.path.",
             "persistence is required. NONE keeps the workbook in memory only.",

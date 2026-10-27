@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -9,9 +10,8 @@ record CatalogNestedTypeDescriptor(
     Class<?> sealedType,
     List<CatalogTypeDescriptor> typeDescriptors) {
   CatalogNestedTypeDescriptor {
-    group = CatalogRecordValidation.requireNonBlank(group, "group");
-    discriminatorField =
-        CatalogRecordValidation.requireNonBlank(discriminatorField, "discriminatorField");
+    group = TextValidation.requireNonBlank(group, "group");
+    discriminatorField = TextValidation.requireNonBlank(discriminatorField, "discriminatorField");
     Objects.requireNonNull(sealedType, "sealedType must not be null");
     typeDescriptors = List.copyOf(typeDescriptors);
     for (CatalogTypeDescriptor typeDescriptor : typeDescriptors) {

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 
 /** Tagged machine-readable validation constraint published for one scalar catalog field. */
 @Union(discriminator = "type")
@@ -22,7 +23,7 @@ public sealed interface FieldConstraint
       summary = "Requires a string to match one regular-expression pattern.")
   record StringPattern(String pattern) implements FieldConstraint {
     public StringPattern {
-      pattern = CatalogRecordValidation.requireNonBlank(pattern, "pattern");
+      pattern = TextValidation.requireNonBlank(pattern, "pattern");
     }
   }
 
@@ -54,7 +55,7 @@ public sealed interface FieldConstraint
   @Variant(id = "PATH_SUFFIX", summary = "Requires one path to end in a literal suffix.")
   record PathSuffix(String suffix) implements FieldConstraint {
     public PathSuffix {
-      suffix = CatalogRecordValidation.requireNonBlank(suffix, "suffix");
+      suffix = TextValidation.requireNonBlank(suffix, "suffix");
       if (!suffix.startsWith(".")) {
         throw new IllegalArgumentException("suffix must begin with .");
       }

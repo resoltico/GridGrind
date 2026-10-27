@@ -299,7 +299,7 @@ class AssertionCoverageTest {
             false,
             "Aptos",
             new FontHeightReport(220, BigDecimal.valueOf(11)),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),

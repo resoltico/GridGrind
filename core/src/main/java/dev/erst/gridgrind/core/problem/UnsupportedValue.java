@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,7 +9,7 @@ public record UnsupportedValue(
     String value, Optional<String> jsonPathValue, List<String> allowedValues)
     implements RequestProblemDescriptor.Shape {
   public UnsupportedValue {
-    value = RequestProblemDescriptorSupport.requireNonBlank(value, "value");
+    value = TextValidation.requireNonBlank(value, "value");
     jsonPathValue = RequestProblemDescriptorSupport.copyJsonPath(jsonPathValue);
     allowedValues = RequestProblemDescriptorSupport.copyStrings(allowedValues, "allowedValues");
   }

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.source;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** Contract-owned authored text source used by source-backed mutation payloads. */
@@ -45,7 +46,7 @@ public sealed interface TextSourceSpec
       noteRefs = {"requestOwnedPathRule"})
   record Utf8File(String path) implements TextSourceSpec {
     public Utf8File {
-      path = requireNonBlank(path, "path");
+      path = TextValidation.requireNonBlank(path, "path");
     }
   }
 
@@ -54,12 +55,4 @@ public sealed interface TextSourceSpec
       id = "STANDARD_INPUT",
       summary = "Load UTF-8 text from the execution transport's bound standard input bytes.")
   record Stdin() implements TextSourceSpec {}
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
 }

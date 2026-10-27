@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
@@ -277,19 +278,16 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
   void groupingAtWorkbookLimitsSkipsControlArtifacts() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet rowLimitSheet = workbook.createSheet("RowLimit");
-      rowLimitSheet.createRow(ExcelRowSpan.MAX_ROW_INDEX).createCell(0).setCellValue("Edge");
+      rowLimitSheet.createRow(Limit.MAX_ROW_INDEX).createCell(0).setCellValue("Edge");
 
       assertDoesNotThrow(
           () ->
               StructuralEdits.groupRows(
-                  rowLimitSheet,
-                  new ExcelRowSpan(ExcelRowSpan.MAX_ROW_INDEX, ExcelRowSpan.MAX_ROW_INDEX),
-                  true));
+                  rowLimitSheet, new ExcelRowSpan(Limit.MAX_ROW_INDEX, Limit.MAX_ROW_INDEX), true));
       assertDoesNotThrow(
           () ->
               StructuralEdits.ungroupRows(
-                  rowLimitSheet,
-                  new ExcelRowSpan(ExcelRowSpan.MAX_ROW_INDEX, ExcelRowSpan.MAX_ROW_INDEX)));
+                  rowLimitSheet, new ExcelRowSpan(Limit.MAX_ROW_INDEX, Limit.MAX_ROW_INDEX)));
 
       XSSFSheet columnLimitSheet = workbook.createSheet("ColumnLimit");
       setString(columnLimitSheet, "XFD1", "Edge");
@@ -298,15 +296,13 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
           () ->
               StructuralEdits.groupColumns(
                   columnLimitSheet,
-                  new ExcelColumnSpan(
-                      ExcelColumnSpan.MAX_COLUMN_INDEX, ExcelColumnSpan.MAX_COLUMN_INDEX),
+                  new ExcelColumnSpan(Limit.MAX_COLUMN_INDEX, Limit.MAX_COLUMN_INDEX),
                   false));
       assertDoesNotThrow(
           () ->
               StructuralEdits.ungroupColumns(
                   columnLimitSheet,
-                  new ExcelColumnSpan(
-                      ExcelColumnSpan.MAX_COLUMN_INDEX, ExcelColumnSpan.MAX_COLUMN_INDEX)));
+                  new ExcelColumnSpan(Limit.MAX_COLUMN_INDEX, Limit.MAX_COLUMN_INDEX)));
     }
   }
 

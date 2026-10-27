@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
 import dev.erst.gridgrind.engine.formulas.FormulaRuntime;
 import dev.erst.gridgrind.engine.names.NamedRangeAdapter;
@@ -1930,16 +1931,8 @@ public final class ChartAdapter {
   }
 
   public static String normalizeFormula(String formula) {
-    String normalized = requireNonBlank(formula, "formula");
+    String normalized = TextValidation.requireNonBlank(formula, "formula");
     return normalized.startsWith("=") ? normalized.substring(1) : normalized;
-  }
-
-  public static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   public static Optional<String> blankAsOptional(String value) {

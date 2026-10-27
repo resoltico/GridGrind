@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -391,6 +392,6 @@ public interface ProblemContextRequestSurfaces {
   }
 
   private static String requireNonBlank(String value, String fieldName) {
-    return ProblemContextSupport.requireNonBlank(value, fieldName);
+    return TextValidation.requireNonBlank(value, fieldName);
   }
 }

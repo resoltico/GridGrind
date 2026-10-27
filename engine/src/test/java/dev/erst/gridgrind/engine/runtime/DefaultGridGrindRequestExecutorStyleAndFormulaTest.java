@@ -232,7 +232,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertEquals("Aptos", style.font().fontName());
     assertEquals(230, style.font().fontHeight().twips());
     assertEquals(new BigDecimal("11.5"), style.font().fontHeight().points());
-    assertEquals(rgb("#1F4E78"), style.font().fontColor());
+    assertEquals(rgb("#1F4E78"), style.font().fontColor().orElseThrow());
     assertTrue(style.font().underline());
     assertTrue(style.font().strikeout());
     assertEquals(
@@ -344,7 +344,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     CellStyleReport gradientStyle = style(cells.cells().get(1));
 
     assertTrue(Files.exists(workbookPath));
-    assertEquals(CellColorReport.theme(6, -0.35d), themedStyle.font().fontColor());
+    assertEquals(CellColorReport.theme(6, -0.35d), themedStyle.font().fontColor().orElseThrow());
     assertEquals(CellColorReport.theme(3, 0.30d), fillForegroundColor(themedStyle.fill()));
     assertEquals(
         CellColorReport.indexed(Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())),
@@ -352,7 +352,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             .color());
     CellGradientFillReport.Linear gradient =
         assertInstanceOf(CellGradientFillReport.Linear.class, fillGradient(gradientStyle.fill()));
-    assertEquals(45.0d, gradient.degree());
+    assertEquals(45.0d, gradient.degree().orElseThrow());
     assertEquals(CellColorReport.rgb(new RgbHex("#1F497D")), gradient.stops().get(0).color());
     assertEquals(CellColorReport.theme(4, 0.45d), gradient.stops().get(1).color());
     assertTrue(gradientStyle.protection().locked());
@@ -440,15 +440,15 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     CellGradientFillReport.Linear linearGradient =
         assertInstanceOf(
             CellGradientFillReport.Linear.class, fillGradient(linearGradientStyle.fill()));
-    assertEquals(45.0d, linearGradient.degree());
+    assertEquals(45.0d, linearGradient.degree().orElseThrow());
     assertTrue(linearGradientStyle.protection().locked());
     assertTrue(linearGradientStyle.protection().hiddenFormula());
     CellGradientFillReport.Path pathGradient =
         assertInstanceOf(CellGradientFillReport.Path.class, fillGradient(pathGradientStyle.fill()));
-    assertEquals(0.1d, pathGradient.left());
-    assertEquals(0.2d, pathGradient.right());
-    assertEquals(0.3d, pathGradient.top());
-    assertEquals(0.4d, pathGradient.bottom());
+    assertEquals(0.1d, pathGradient.left().orElseThrow());
+    assertEquals(0.2d, pathGradient.right().orElseThrow());
+    assertEquals(0.3d, pathGradient.top().orElseThrow());
+    assertEquals(0.4d, pathGradient.bottom().orElseThrow());
     assertFalse(pathGradientStyle.protection().locked());
     assertTrue(pathGradientStyle.protection().hiddenFormula());
   }

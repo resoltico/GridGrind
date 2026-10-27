@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,7 +12,7 @@ public record UnknownTypeValue(
     Optional<String> specificGuidance)
     implements RequestProblemDescriptor.Shape {
   public UnknownTypeValue {
-    typeId = RequestProblemDescriptorSupport.requireNonBlank(typeId, "typeId");
+    typeId = TextValidation.requireNonBlank(typeId, "typeId");
     jsonPathValue = RequestProblemDescriptorSupport.copyJsonPath(jsonPathValue);
     similarValues = RequestProblemDescriptorSupport.copyStrings(similarValues, "similarValues");
     specificGuidance =

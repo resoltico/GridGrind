@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,7 +11,7 @@ public record FieldValidationProblem(
     String fieldName, Optional<String> jsonPath, FieldValidationRule rule, List<String> operands)
     implements RequestProblemDescriptor.Invariant {
   public FieldValidationProblem {
-    fieldName = RequestProblemDescriptorSupport.requireNonBlank(fieldName, "fieldName");
+    fieldName = TextValidation.requireNonBlank(fieldName, "fieldName");
     jsonPath = RequestProblemDescriptorSupport.copyJsonPath(jsonPath);
     java.util.Objects.requireNonNull(rule, "rule must not be null");
     operands = RequestProblemDescriptorSupport.copyStrings(operands, "operands");

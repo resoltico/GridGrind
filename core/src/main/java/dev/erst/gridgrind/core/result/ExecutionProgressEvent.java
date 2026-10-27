@@ -2,9 +2,9 @@ package dev.erst.gridgrind.core.result;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -136,7 +136,7 @@ public sealed interface ExecutionProgressEvent
 
   private static void validateCommon(
       String timestamp, Category category, Optional<Integer> stepIndex, Optional<StepId> stepId) {
-    WorkbookPlan.requireNonBlank(timestamp, "timestamp");
+    TextValidation.requireNonBlank(timestamp, "timestamp");
     Objects.requireNonNull(category, "category must not be null");
     Optional<Integer> normalizedIndex = normalizeStepIndex(stepIndex);
     Optional<StepId> normalizedId = normalizeStepId(stepId);

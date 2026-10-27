@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.limits.Limit;
+
 /** Public wording for Excel sheet-layout validation failures. */
 final class ExcelSheetLayoutViolationMessages {
   private ExcelSheetLayoutViolationMessages() {}
@@ -12,7 +14,7 @@ final class ExcelSheetLayoutViolationMessages {
       case TOO_LARGE ->
           fieldName
               + " must not exceed "
-              + ExcelSheetLayoutLimits.MAX_COLUMN_WIDTH_CHARACTERS
+              + Limit.MAX_COLUMN_WIDTH_CHARACTERS
               + " (Excel column width limit): got "
               + widthCharacters;
       case NOT_VISIBLE ->
@@ -30,7 +32,7 @@ final class ExcelSheetLayoutViolationMessages {
       case TOO_LARGE ->
           fieldName
               + " must not exceed "
-              + ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS
+              + Limit.MAX_ROW_HEIGHT_POINTS
               + " (Excel row height limit): got "
               + heightPoints;
       case NOT_VISIBLE ->
@@ -41,9 +43,9 @@ final class ExcelSheetLayoutViolationMessages {
   static String zoom(String fieldName, int zoomPercent) {
     return fieldName
         + " must be between "
-        + ExcelSheetLayoutLimits.MIN_ZOOM_PERCENT
+        + Limit.MIN_ZOOM_PERCENT
         + " and "
-        + ExcelSheetLayoutLimits.MAX_ZOOM_PERCENT
+        + Limit.MAX_ZOOM_PERCENT
         + " inclusive: "
         + zoomPercent;
   }

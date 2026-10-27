@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,8 +11,8 @@ import java.util.Objects;
 public record ProtocolStepTemplate(
     String stepKind, String bodyField, Map<String, Object> template, List<String> notes) {
   public ProtocolStepTemplate {
-    stepKind = CatalogRecordValidation.requireNonBlank(stepKind, "stepKind");
-    bodyField = CatalogRecordValidation.requireNonBlank(bodyField, "bodyField");
+    stepKind = TextValidation.requireNonBlank(stepKind, "stepKind");
+    bodyField = TextValidation.requireNonBlank(bodyField, "bodyField");
     template = copyObject(Objects.requireNonNull(template, "template must not be null"));
     notes = CatalogRecordValidation.copyStrings(notes, "notes");
   }

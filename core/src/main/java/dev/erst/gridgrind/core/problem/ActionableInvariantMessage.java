@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Optional;
 
 /** Public request-invariant message whose throw site also owns one specific repair sentence. */
@@ -7,9 +8,8 @@ public record ActionableInvariantMessage(
     String message, String resolutionValue, Optional<String> jsonPathValue)
     implements RequestProblemDescriptor.Invariant {
   public ActionableInvariantMessage {
-    message = RequestProblemDescriptorSupport.requireNonBlank(message, "message");
-    resolutionValue =
-        RequestProblemDescriptorSupport.requireNonBlank(resolutionValue, "resolutionValue");
+    message = TextValidation.requireNonBlank(message, "message");
+    resolutionValue = TextValidation.requireNonBlank(resolutionValue, "resolutionValue");
     jsonPathValue = RequestProblemDescriptorSupport.copyJsonPath(jsonPathValue);
   }
 

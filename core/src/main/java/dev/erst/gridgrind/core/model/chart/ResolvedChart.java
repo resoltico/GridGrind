@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.model.chart;
 
 import static dev.erst.gridgrind.core.model.chart.ChartSpec.copyNonEmptyValues;
-import static dev.erst.gridgrind.core.model.chart.ChartSpec.requireNonBlank;
+import static dev.erst.gridgrind.core.vocabulary.TextValidation.requireNonBlank;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;

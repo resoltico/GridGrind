@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.discovery;
 
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,9 +26,9 @@ public record TaskStarterRecipeCatalogDetail(
     RecipeRequestProfile requestProfile)
     implements RecipeCatalogDetail {
   public TaskStarterRecipeCatalogDetail {
-    id = DiscoveryValidation.requireNonBlank(id, "id");
+    id = TextValidation.requireNonBlank(id, "id");
     requestFileName = RecipeCatalogValidation.requirePortableRequestFileName(requestFileName);
-    summary = DiscoveryValidation.requireNonBlank(summary, "summary");
+    summary = TextValidation.requireNonBlank(summary, "summary");
     Objects.requireNonNull(advisory, "advisory must not be null");
     requiredWorkspacePaths =
         RecipeCatalogValidation.copyWorkspacePaths(

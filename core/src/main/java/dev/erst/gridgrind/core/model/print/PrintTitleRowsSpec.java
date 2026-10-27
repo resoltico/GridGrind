@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.print;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
@@ -9,7 +10,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 public sealed interface PrintTitleRowsSpec
     permits dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec.None,
         dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec.Band {
-  int MAX_ROW_INDEX = 1_048_575;
 
   /** Sheet has no repeating print-title rows. */
   @Variant(id = "NONE", summary = "Sheet has no repeating print-title rows.")
@@ -22,9 +22,9 @@ public sealed interface PrintTitleRowsSpec
   record Band(int firstRowIndex, int lastRowIndex) implements PrintTitleRowsSpec {
     public Band {
       requireBand(firstRowIndex, lastRowIndex, "firstRowIndex", "lastRowIndex");
-      if (lastRowIndex > MAX_ROW_INDEX) {
+      if (lastRowIndex > Limit.MAX_ROW_INDEX) {
         throw new IllegalArgumentException(
-            ExcelIndexDisplay.mustNotExceed("lastRowIndex", lastRowIndex, MAX_ROW_INDEX));
+            ExcelIndexDisplay.mustNotExceed("lastRowIndex", lastRowIndex, Limit.MAX_ROW_INDEX));
       }
     }
   }

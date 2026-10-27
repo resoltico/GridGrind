@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.result;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,7 +28,7 @@ public interface WorkbookResultPersistence {
     record SavedAs(String requestedPath, PublicationOutcome publication)
         implements PersistenceOutcome {
       public SavedAs {
-        requestedPath = requireNonBlank(requestedPath, "requestedPath");
+        requestedPath = TextValidation.requireNonBlank(requestedPath, "requestedPath");
         Objects.requireNonNull(publication, "publication must not be null");
       }
     }
@@ -53,7 +54,7 @@ public interface WorkbookResultPersistence {
         if (normalized.isEmpty()) {
           return Optional.empty();
         }
-        return Optional.of(requireNonBlank(normalized.orElseThrow(), "sourcePath"));
+        return Optional.of(TextValidation.requireNonBlank(normalized.orElseThrow(), "sourcePath"));
       }
     }
   }
@@ -95,7 +96,7 @@ public interface WorkbookResultPersistence {
         DurabilityEvidence durability)
         implements PublicationOutcome {
       public Published {
-        executionPath = requireNonBlank(executionPath, "executionPath");
+        executionPath = TextValidation.requireNonBlank(executionPath, "executionPath");
         sha256 = requireSha256(sha256);
         if (byteSize < 0) {
           throw new IllegalArgumentException("byteSize must be >= 0");
@@ -113,7 +114,7 @@ public interface WorkbookResultPersistence {
             "Final destination may have changed, so automated retry is unsafe without inspection.")
     record Uncertain(String executionPath, Recovery recovery) implements PublicationOutcome {
       public Uncertain {
-        executionPath = requireNonBlank(executionPath, "executionPath");
+        executionPath = TextValidation.requireNonBlank(executionPath, "executionPath");
         Objects.requireNonNull(recovery, "recovery must not be null");
       }
     }
@@ -151,19 +152,11 @@ public interface WorkbookResultPersistence {
     }
 
     private static String requireSha256(String value) {
-      String normalized = requireNonBlank(value, "sha256");
+      String normalized = TextValidation.requireNonBlank(value, "sha256");
       if (!normalized.matches("[0-9a-f]{64}")) {
         throw new IllegalArgumentException("sha256 must be 64 lowercase hexadecimal characters");
       }
       return normalized;
     }
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

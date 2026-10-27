@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.catalog;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 import java.util.List;
@@ -45,9 +46,7 @@ final class RequestCreatorContractSupport {
 
   static GridGrindProtocolContractSupport.EffectiveObjectContract discriminatorContract(
       String discriminator) {
-    if (discriminator.isBlank()) {
-      throw new IllegalArgumentException("discriminator must not be blank");
-    }
+    TextValidation.requireNonBlank(discriminator, "discriminator");
     return new GridGrindProtocolContractSupport.EffectiveObjectContract(
         List.of(discriminator), List.of());
   }

@@ -3,7 +3,6 @@ package dev.erst.gridgrind.core.vocabulary;
 /** Stable scalar bounds and patterns shared by protocol validation and catalog publication. */
 public final class ProtocolConstraintValues {
   /** Pattern accepted for every authored workbook step identifier. */
-  public static final String STEP_ID_PATTERN = "[A-Za-z0-9._-]+";
 
   /** Pattern accepted for one protocol RGB color literal. */
   public static final String RGB_HEX_PATTERN = "^#[0-9A-Fa-f]{6}$";
@@ -21,7 +20,5 @@ public final class ProtocolConstraintValues {
   public static final int DATA_BAR_WIDTH_MAX = 100;
 
   /** Required suffix for source and persisted workbook paths. */
-  public static final String WORKBOOK_PATH_SUFFIX = ".xlsx";
-
   private ProtocolConstraintValues() {}
 }

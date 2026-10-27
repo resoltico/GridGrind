@@ -1,10 +1,13 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.limits.Limit;
+
 /** Inclusive zero-based row band used by workbook-core structural row commands. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_ROWS_PER_WORKSHEET
+})
 public record ExcelRowSpan(int firstRowIndex, int lastRowIndex) {
   /** Maximum row index addressable in one `.xlsx` worksheet. */
-  public static final int MAX_ROW_INDEX = 1_048_575; // LIM-008
-
   public ExcelRowSpan {
     if (firstRowIndex < 0) {
       throw new IllegalArgumentException(
@@ -19,13 +22,13 @@ public record ExcelRowSpan(int firstRowIndex, int lastRowIndex) {
           ExcelIndexDisplay.mustNotBeLessThan(
               "lastRowIndex", lastRowIndex, "firstRowIndex", firstRowIndex));
     }
-    if (firstRowIndex > MAX_ROW_INDEX) {
+    if (firstRowIndex > Limit.MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
-          ExcelIndexDisplay.mustNotExceed("firstRowIndex", firstRowIndex, MAX_ROW_INDEX));
+          ExcelIndexDisplay.mustNotExceed("firstRowIndex", firstRowIndex, Limit.MAX_ROW_INDEX));
     }
-    if (lastRowIndex > MAX_ROW_INDEX) {
+    if (lastRowIndex > Limit.MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
-          ExcelIndexDisplay.mustNotExceed("lastRowIndex", lastRowIndex, MAX_ROW_INDEX));
+          ExcelIndexDisplay.mustNotExceed("lastRowIndex", lastRowIndex, Limit.MAX_ROW_INDEX));
     }
   }
 

@@ -23,6 +23,9 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /** Request path, source, and persistence facts shared across executor workflows. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_REQUEST_OWNED_PATH_CONTAINMENT
+})
 final class ExecutionRequestPaths {
   private ExecutionRequestPaths() {}
 
@@ -166,7 +169,7 @@ final class ExecutionRequestPaths {
         candidate.isAbsolute()
             ? candidate.toAbsolutePath().normalize()
             : base.resolve(candidate).normalize();
-    if (!normalized.startsWith(base)) { // LIM-025
+    if (!normalized.startsWith(base)) {
       throw new RequestPathEscapeException("path must not escape the execution root: " + path);
     }
     return normalized;

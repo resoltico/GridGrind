@@ -2,8 +2,8 @@ package dev.erst.gridgrind.core.model.formula;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.FormulaEnvironmentSupport;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
-import java.util.Objects;
 
 /** One named UDF toolpack registered for workbook formula evaluation. */
 @CatalogType(
@@ -12,10 +12,7 @@ import java.util.Objects;
     displayOrder = 27)
 public record FormulaUdfToolpackSpec(String name, List<FormulaUdfFunctionSpec> functions) {
   public FormulaUdfToolpackSpec {
-    Objects.requireNonNull(name, "name must not be null");
-    if (name.isBlank()) {
-      throw new IllegalArgumentException("name must not be blank");
-    }
+    name = TextValidation.requireNonBlank(name, "name");
     functions =
         FormulaEnvironmentSupport.copyRequiredDistinctNamedValues(
             functions,

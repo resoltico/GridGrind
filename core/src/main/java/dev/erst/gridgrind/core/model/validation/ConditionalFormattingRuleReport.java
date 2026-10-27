@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,9 +39,7 @@ public sealed interface ConditionalFormattingRuleReport
       requirePriority(priority);
       Objects.requireNonNull(formula, "formula must not be null");
       Objects.requireNonNull(style, "style must not be null");
-      if (formula.isBlank()) {
-        throw new IllegalArgumentException("formula must not be blank");
-      }
+      TextValidation.requireNonBlank(formula, "formula");
     }
   }
 
@@ -63,9 +62,7 @@ public sealed interface ConditionalFormattingRuleReport
       Objects.requireNonNull(formula1, "formula1 must not be null");
       Objects.requireNonNull(formula2, "formula2 must not be null");
       Objects.requireNonNull(style, "style must not be null");
-      if (formula1.isBlank()) {
-        throw new IllegalArgumentException("formula1 must not be blank");
-      }
+      TextValidation.requireNonBlank(formula1, "formula1");
       if (formula2.isPresent() && formula2.orElseThrow().isBlank()) {
         throw new IllegalArgumentException("formula2 must not be blank when provided");
       }
@@ -169,12 +166,8 @@ public sealed interface ConditionalFormattingRuleReport
       requirePriority(priority);
       Objects.requireNonNull(kind, "kind must not be null");
       Objects.requireNonNull(detail, "detail must not be null");
-      if (kind.isBlank()) {
-        throw new IllegalArgumentException("kind must not be blank");
-      }
-      if (detail.isBlank()) {
-        throw new IllegalArgumentException("detail must not be blank");
-      }
+      TextValidation.requireNonBlank(kind, "kind");
+      TextValidation.requireNonBlank(detail, "detail");
     }
   }
 

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.security;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,7 +25,7 @@ public record OoxmlSignatureReport(
   }
 
   public OoxmlSignatureReport {
-    packagePartName = requireNonBlank(packagePartName, "packagePartName");
+    packagePartName = TextValidation.requireNonBlank(packagePartName, "packagePartName");
     signer = Objects.requireNonNullElseGet(signer, Optional::empty);
     Objects.requireNonNull(state, "state must not be null");
   }
@@ -36,18 +37,10 @@ public record OoxmlSignatureReport(
       displayOrder = 25)
   public record SignerIdentity(String subject, String issuer, String serialNumberHex) {
     public SignerIdentity {
-      subject = requireNonBlank(subject, "subject");
-      issuer = requireNonBlank(issuer, "issuer");
-      serialNumberHex = requireNonBlank(serialNumberHex, "serialNumberHex");
+      subject = TextValidation.requireNonBlank(subject, "subject");
+      issuer = TextValidation.requireNonBlank(issuer, "issuer");
+      serialNumberHex = TextValidation.requireNonBlank(serialNumberHex, "serialNumberHex");
     }
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   private static Optional<SignerIdentity> collapseSigner(

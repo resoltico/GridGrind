@@ -16,6 +16,10 @@ import java.util.stream.Collectors;
  * Core-owned public contract wording shared by thin downstream surfaces such as the host help,
  * protocol catalog summaries, and request-validation messages.
  */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_EVENT_READ_EXECUTION_MODE_SCOPE,
+  dev.erst.gridgrind.core.limits.Limit.ID_STREAMING_WRITE_EXECUTION_MODE_SCOPE
+})
 public final class GridGrindContractText {
   private static final List<Class<? extends MutationAction>>
       STREAMING_WRITE_MUTATION_ACTION_CLASSES =
@@ -72,7 +76,9 @@ public final class GridGrindContractText {
         + eventRead.requiredCalculationStrategyId()
         + " with markRecalculateOnOpen="
         + eventRead.markRecalculateOnOpenAllowed()
-        + " (LIM-019)."
+        + " ("
+        + dev.erst.gridgrind.core.limits.Limit.ID_EVENT_READ_EXECUTION_MODE_SCOPE
+        + ")."
         + " "
         + streamingWrite.modeId()
         + " supports "
@@ -84,7 +90,9 @@ public final class GridGrindContractText {
         + streamingWrite.requiredCalculationStrategyId()
         + " and optionally set markRecalculateOnOpen="
         + streamingWrite.markRecalculateOnOpenAllowed()
-        + " (LIM-020).";
+        + " ("
+        + dev.erst.gridgrind.core.limits.Limit.ID_STREAMING_WRITE_EXECUTION_MODE_SCOPE
+        + ").";
   }
 
   /** One stable catalog summary for `ExecutionPolicySpec`. */

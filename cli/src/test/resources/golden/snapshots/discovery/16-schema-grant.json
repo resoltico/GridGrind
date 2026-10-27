@@ -1835,7 +1835,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "bold", "italic", "fontName", "fontHeight", "fontColor", "underline", "strikeout" ],
+        "required" : [ "bold", "italic", "fontName", "fontHeight", "underline", "strikeout" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.style.CellGradientFillReport" : {
@@ -1862,7 +1862,7 @@
             "const" : "LINEAR"
           }
         },
-        "required" : [ "degree", "stops", "type" ],
+        "required" : [ "stops", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.style.CellGradientFillReport$Path" : {
@@ -1891,7 +1891,7 @@
             "const" : "PATH"
           }
         },
-        "required" : [ "left", "right", "top", "bottom", "stops", "type" ],
+        "required" : [ "stops", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.style.CellGradientStopReport" : {

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.validation;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptReport;
@@ -11,10 +12,8 @@ import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
-import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.engine.formulas.ComparisonFormulas;
 import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
@@ -1085,14 +1084,14 @@ public final class DataValidationAdapter {
       int lastRow,
       int firstColumn,
       int lastColumn) {
-    if (lastRow > ExcelRowSpan.MAX_ROW_INDEX) {
+    if (lastRow > Limit.MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
           "INSERT_ROWS cannot move data validation "
               + rawRange
               + " on sheet '"
               + sheet.getSheetName()
               + "' beyond the maximum row "
-              + (ExcelRowSpan.MAX_ROW_INDEX + 1));
+              + (Limit.MAX_ROW_INDEX + 1));
     }
     return SheetStructure.formatRange(new CellBounds(firstRow, lastRow, firstColumn, lastColumn));
   }
@@ -1104,7 +1103,7 @@ public final class DataValidationAdapter {
       int lastRow,
       int firstColumn,
       int lastColumn) {
-    if (lastColumn > ExcelColumnSpan.MAX_COLUMN_INDEX) {
+    if (lastColumn > Limit.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
           "INSERT_COLUMNS cannot move data validation "
               + rawRange

@@ -55,7 +55,12 @@ class AdvancedReadEngineTypesTest {
     CellGradientStopReport secondStop =
         new CellGradientStopReport(1.0d, CellColorReport.theme(4, 0.45d));
     CellGradientFillReport gradient =
-        CellGradientFillReport.path(0.1d, 0.2d, 0.3d, 0.4d, List.of(firstStop, secondStop));
+        CellGradientFillReport.path(
+            Optional.of(0.1d),
+            Optional.of(0.2d),
+            Optional.of(0.3d),
+            Optional.of(0.4d),
+            List.of(firstStop, secondStop));
 
     assertEquals(2, gradient.stops().size());
     assertEquals(0.2d, gradientRight(gradient));
@@ -74,8 +79,8 @@ class AdvancedReadEngineTypesTest {
     CellGradientFillReport.Linear implicitLinearGradient =
         assertInstanceOf(
             CellGradientFillReport.Linear.class,
-            CellGradientFillReport.linear(null, List.of(firstStop, secondStop)));
-    assertNull(implicitLinearGradient.degree());
+            CellGradientFillReport.linear(Optional.empty(), List.of(firstStop, secondStop)));
+    assertEquals(Optional.empty(), implicitLinearGradient.degree());
     assertThrows(
         IllegalArgumentException.class, () -> new CellGradientStopReport(1.5d, rgb("#112233")));
     assertThrows(
@@ -87,15 +92,22 @@ class AdvancedReadEngineTypesTest {
         IllegalArgumentException.class,
         () ->
             CellGradientFillReport.path(
-                Double.NaN, null, null, null, List.of(firstStop, secondStop)));
+                Optional.of(Double.NaN),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                List.of(firstStop, secondStop)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> CellGradientFillReport.linear(Double.POSITIVE_INFINITY, List.of(firstStop)));
+        () ->
+            CellGradientFillReport.linear(
+                Optional.of(Double.POSITIVE_INFINITY), List.of(firstStop)));
     assertThrows(
-        IllegalArgumentException.class, () -> CellGradientFillReport.linear(45.0d, List.of()));
+        IllegalArgumentException.class,
+        () -> CellGradientFillReport.linear(Optional.of(45.0d), List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> CellGradientFillReport.linear(45.0d, Arrays.asList(firstStop, null)));
+        () -> CellGradientFillReport.linear(Optional.of(45.0d), Arrays.asList(firstStop, null)));
 
     assertEquals(gradient, CellFillReport.gradient(gradient).gradient());
     assertThrows(
@@ -331,11 +343,12 @@ class AdvancedReadEngineTypesTest {
             true,
             List.of(new AutofilterFilterCriterionReport.CustomConditionReport("equal", "Ada")));
     AutofilterFilterCriterionReport.Dynamic dynamic =
-        new AutofilterFilterCriterionReport.Dynamic("TODAY", 1.0d, 2.0d);
+        new AutofilterFilterCriterionReport.Dynamic("TODAY", Optional.of(1.0d), Optional.of(2.0d));
     AutofilterFilterCriterionReport.Top10 top10 =
-        new AutofilterFilterCriterionReport.Top10(true, false, 10.0d, 8.0d);
+        new AutofilterFilterCriterionReport.Top10(true, false, 10.0d, Optional.of(8.0d));
     AutofilterFilterCriterionReport.Color color =
-        new AutofilterFilterCriterionReport.Color(false, CellColorReport.theme(4, 0.45d));
+        new AutofilterFilterCriterionReport.Color(
+            false, Optional.ofNullable(CellColorReport.theme(4, 0.45d)));
     AutofilterFilterCriterionReport.Icon icon =
         new AutofilterFilterCriterionReport.Icon("3TrafficLights1", 2);
     AutofilterSortConditionReport sortCondition =
@@ -400,24 +413,29 @@ class AdvancedReadEngineTypesTest {
         () -> new AutofilterFilterCriterionReport.CustomConditionReport("equal", " "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionReport.Dynamic(" ", 1.0d, null));
+        () ->
+            new AutofilterFilterCriterionReport.Dynamic(" ", Optional.of(1.0d), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionReport.Dynamic("TODAY", Double.POSITIVE_INFINITY, null));
+        () ->
+            new AutofilterFilterCriterionReport.Dynamic(
+                "TODAY", Optional.of(Double.POSITIVE_INFINITY), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionReport.Dynamic("TODAY", 1.0d, Double.NaN));
+        () ->
+            new AutofilterFilterCriterionReport.Dynamic(
+                "TODAY", Optional.of(1.0d), Optional.of(Double.NaN)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionReport.Top10(true, false, -1.0d, null));
+        () -> new AutofilterFilterCriterionReport.Top10(true, false, -1.0d, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterFilterCriterionReport.Top10(true, false, Double.NaN, null));
+        () -> new AutofilterFilterCriterionReport.Top10(true, false, Double.NaN, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new AutofilterFilterCriterionReport.Top10(
-                true, false, 10.0d, Double.NEGATIVE_INFINITY));
+                true, false, 10.0d, Optional.of(Double.NEGATIVE_INFINITY)));
     assertThrows(
         IllegalArgumentException.class, () -> new AutofilterFilterCriterionReport.Icon(" ", 0));
     assertThrows(
@@ -487,10 +505,10 @@ class AdvancedReadEngineTypesTest {
                     new TableColumnReport(
                         2L,
                         "Amount",
-                        Optional.ofNullable("UniqueAmount"),
-                        Optional.ofNullable("Total"),
-                        Optional.ofNullable("sum"),
-                        Optional.ofNullable("[@Amount]*2")))),
+                        Optional.of("UniqueAmount"),
+                        Optional.of("Total"),
+                        Optional.of("sum"),
+                        Optional.of("[@Amount]*2")))),
             new TableStyleReport.Named("TableStyleMedium2", false, false, true, false),
             new TableEntryReport.Behavior(true, true, true, false),
             new TableEntryReport.Presentation(
@@ -504,15 +522,15 @@ class AdvancedReadEngineTypesTest {
             false,
             Optional.ofNullable(
                 new DifferentialStyleReport(
-                    "0.00",
-                    true,
-                    null,
-                    null,
+                    Optional.of("0.00"),
+                    Optional.of(true),
+                    Optional.empty(),
+                    Optional.empty(),
                     Optional.ofNullable(
                         dev.erst.gridgrind.engine.backend.xssf.DifferentialStyleFixtures.color(
                             ColorSpec.rgb(new RgbHex("#AABBCC")))),
-                    null,
-                    null,
+                    Optional.empty(),
+                    Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
                     List.of())));

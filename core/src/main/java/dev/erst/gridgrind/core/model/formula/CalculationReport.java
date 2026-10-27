@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.model.formula;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -99,7 +99,7 @@ public record CalculationReport(
       Optional<String> message) {
     public FormulaCapability {
       Objects.requireNonNull(cell, "cell must not be null");
-      WorkbookPlan.requireNonBlank(formula, "formula");
+      TextValidation.requireNonBlank(formula, "formula");
       Objects.requireNonNull(capability, "capability must not be null");
       problemCode = Objects.requireNonNullElseGet(problemCode, Optional::empty);
       message = normalizeOptional(message, "message");
@@ -163,7 +163,7 @@ public record CalculationReport(
   private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
     Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
     if (normalized.isPresent()) {
-      normalized = Optional.of(WorkbookPlan.requireNonBlank(normalized.orElseThrow(), fieldName));
+      normalized = Optional.of(TextValidation.requireNonBlank(normalized.orElseThrow(), fieldName));
     }
     return normalized;
   }

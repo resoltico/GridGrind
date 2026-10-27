@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.poi;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
-import java.util.Objects;
 import org.apache.poi.ss.util.CellReference;
 
 /** Normalized rectangular cell range expressed with zero-based row and column bounds. */
@@ -23,10 +23,7 @@ public record CellBounds(int firstRow, int lastRow, int firstColumn, int lastCol
   }
 
   public static CellBounds parse(String range) {
-    Objects.requireNonNull(range, "range must not be null");
-    if (range.isBlank()) {
-      throw new IllegalArgumentException("range must not be blank");
-    }
+    TextValidation.requireNonBlank(range, "range");
 
     String[] parts = range.split(":", -1);
     if (parts.length == 1) {

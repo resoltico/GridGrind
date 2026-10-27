@@ -120,7 +120,7 @@ final class ExcelStyleTestAccess {
 
   static Double gradientDegree(CellGradientFillReport gradient) {
     return switch (gradient) {
-      case CellGradientFillReport.Linear linear -> linear.degree();
+      case CellGradientFillReport.Linear linear -> linear.degree().orElse(null);
       case CellGradientFillReport.Path ignored -> null;
     };
   }
@@ -134,7 +134,7 @@ final class ExcelStyleTestAccess {
 
   static Double gradientLeft(CellGradientFillReport gradient) {
     return switch (gradient) {
-      case CellGradientFillReport.Path path -> path.left();
+      case CellGradientFillReport.Path path -> path.left().orElse(null);
       case CellGradientFillReport.Linear ignored -> null;
     };
   }
@@ -148,7 +148,7 @@ final class ExcelStyleTestAccess {
 
   static Double gradientRight(CellGradientFillReport gradient) {
     return switch (gradient) {
-      case CellGradientFillReport.Path path -> path.right();
+      case CellGradientFillReport.Path path -> path.right().orElse(null);
       case CellGradientFillReport.Linear ignored -> null;
     };
   }
@@ -162,7 +162,7 @@ final class ExcelStyleTestAccess {
 
   static Double gradientTop(CellGradientFillReport gradient) {
     return switch (gradient) {
-      case CellGradientFillReport.Path path -> path.top();
+      case CellGradientFillReport.Path path -> path.top().orElse(null);
       case CellGradientFillReport.Linear ignored -> null;
     };
   }
@@ -176,7 +176,7 @@ final class ExcelStyleTestAccess {
 
   static Double gradientBottom(CellGradientFillReport gradient) {
     return switch (gradient) {
-      case CellGradientFillReport.Path path -> path.bottom();
+      case CellGradientFillReport.Path path -> path.bottom().orElse(null);
       case CellGradientFillReport.Linear ignored -> null;
     };
   }

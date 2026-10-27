@@ -51,11 +51,11 @@
         "entries" : [ {
           "description" : "Synopsis-first command cheat sheet for first-contact lookup.",
           "label" : "Quick reference",
-          "relativePath" : "docs/QUICK_REFERENCE.md"
+          "relativePath" : "docs/CLI.md"
         }, {
           "description" : "Longer operator workflows, artifact handling, and runtime/container use.",
           "label" : "Operations reference",
-          "relativePath" : "docs/OPERATIONS.md"
+          "relativePath" : "docs/EXECUTION_MODEL.md"
         }, {
           "description" : "Problem codes, failure interpretation, and recovery guidance.",
           "label" : "Error reference",
@@ -146,74 +146,128 @@
       },
       "limits" : {
         "entries" : [ {
-          "label" : "File format",
-          "value" : ".xlsx only; .xls, .xlsm, and .xlsb are rejected."
+          "label" : "LIM-001 Cell-Returning Read Count",
+          "value" : "250000 cells"
         }, {
-          "label" : "Sheet names",
-          "value" : "1 to 31 characters; reject : \\ / ? * [ ] and leading/trailing apostrophes."
+          "label" : "LIM-002 File Format",
+          "value" : ".xlsx"
         }, {
-          "label" : "GET_CELLS addresses",
-          "value" : "addresses must not exceed 250,000; the cap keys off the exact returned cell count."
+          "label" : "LIM-003 Sheet Name Contract",
+          "value" : "1..31 characters, with Excel sheet-name syntax"
         }, {
-          "label" : "GET_WINDOW cell count",
-          "value" : "rowCount * columnCount must not exceed 250,000; sparse output lowers blank-heavy payloads but the request cap still keys off the full rectangle."
+          "label" : "LIM-004 Column Width",
+          "value" : "0 < width <= 255.0"
         }, {
-          "label" : "GET_SHEET_SCHEMA cells",
-          "value" : "rowCount * columnCount must not exceed 250,000 because schema inference still examines the full rectangular sample."
+          "label" : "LIM-005 Row Height",
+          "value" : "0 < height <= 409.0 points"
         }, {
-          "label" : "Worksheet materialization",
-          "value" : "cell-range and row-materializing actions together must not materialize more than 250,000 worksheet items per plan."
+          "label" : "LIM-006 Duplicate Step IDs",
+          "value" : "`stepId` values in the `steps` array must be unique"
         }, {
-          "label" : "Request JSON size",
-          "value" : "request JSON must not exceed 16 MiB (16777216 bytes); authored text and binary payloads may instead use UTF8_FILE, FILE, or STANDARD_INPUT sources."
+          "label" : "LIM-006A Step ID Token Shape",
+          "value" : "[A-Za-z0-9._-]+"
         }, {
-          "label" : "EVENT_READ mode",
-          "value" : "GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false."
+          "label" : "LIM-007 GET_CELLS Address List",
+          "value" : "`addresses` must be non-empty and contain no duplicates"
         }, {
-          "label" : "STREAMING_WRITE mode",
-          "value" : "source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true."
+          "label" : "LIM-008 Maximum Rows per Worksheet",
+          "value" : "1048576 rows"
         }, {
-          "label" : "OOXML write encryption",
-          "value" : "writes AGILE packages only; cipher defaults to AES_256, hash defaults to SHA_512, supported ciphers are AES_256 and AES_192, supported hashes are SHA_512, SHA_384, and SHA_256, and STANDARD remains readable on inspection but is not authorable."
+          "label" : "LIM-009 Maximum Columns per Worksheet",
+          "value" : "16384 columns"
         }, {
-          "label" : "Column widthCharacters",
-          "value" : "authored widthCharacters > 0 and <= 255 (Excel limit)."
+          "label" : "LIM-010 Maximum Text Characters per Cell",
+          "value" : "32767 characters"
         }, {
-          "label" : "Default sheet sizing",
-          "value" : "authored defaultColumnWidth must be > 0 and <= 255; authored defaultRowHeightPoints must be > 0 and <= 409.0 (Excel limits)."
+          "label" : "LIM-011 Maximum Cell Styles per Workbook",
+          "value" : "64000 styles (POI ceiling)"
         }, {
-          "label" : "Row heightPoints",
-          "value" : "authored heightPoints > 0 and <= 409.0 (Excel row height limit)."
+          "label" : "LIM-012 Maximum Hyperlinks per Worksheet",
+          "value" : "65530 hyperlinks"
         }, {
-          "label" : "Zoom percent",
-          "value" : "10 to 400 inclusive (Excel zoom limit)."
+          "label" : "LIM-013 Maximum Formula Length",
+          "value" : "8192 characters"
         }, {
-          "label" : "Row structural edits",
-          "value" : "rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges."
+          "label" : "LIM-014 Maximum Nested Function Levels",
+          "value" : "64"
         }, {
-          "label" : "Column structural edits",
-          "value" : "rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges; all column edits reject any workbook formulas or formula-defined names."
+          "label" : "LIM-015 Maximum Function Arguments",
+          "value" : "255"
         }, {
-          "label" : "Chart mutations",
-          "value" : "SET_CHART authors AREA, AREA_3D, BAR, BAR_3D, DOUGHNUT, LINE, LINE_3D, PIE, PIE_3D, RADAR, SCATTER, SURFACE, and SURFACE_3D; unsupported loaded chart detail is preserved on unrelated edits and rejected for authoritative mutation."
+          "label" : "LIM-016 Structural Edits That Would Move Unsupported Owned Structures",
+          "value" : "Structural inserts are rejected when they would move a table or sheet-owned autofilter; structural deletes and shifts are also rejected when they would move or truncate a data validation"
         }, {
-          "label" : "Chart title formulas",
-          "value" : "SET_CHART title FORMULA and series.title FORMULA must resolve to one cell, directly or through one defined name."
+          "label" : "LIM-017 Column Structural Edits While Formulas Are Present",
+          "value" : "Column structural edits are rejected when the workbook contains any formula cells or formula-defined named ranges"
         }, {
-          "label" : "Array formulas",
-          "value" : "SET_ARRAY_FORMULA authors one contiguous single-cell or multi-cell array formula group; CLEAR_ARRAY_FORMULA may target any member cell and removes the whole stored group."
+          "label" : "LIM-018 Destructive Structural Edits Against Range-Backed Named Ranges",
+          "value" : "`DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, and `SHIFT_COLUMNS` are rejected when they would truncate a range-backed named range or partially move / overwrite one outside the moved band"
         }, {
-          "label" : "Drawing validation",
-          "value" : "failed SET_SHAPE / SET_CHART validation leaves existing drawing state unchanged and creates no partial artifacts."
+          "label" : "LIM-019 Event-Read Execution Mode Scope",
+          "value" : "`execution.mode.type=EVENT_READ` supports only inspection steps, and only `GET_WORKBOOK_SUMMARY` plus `GET_SHEET_SUMMARY` queries"
         }, {
-          "label" : "DATE / DATE_TIME inputs",
-          "value" : "stored as numeric serial; default VALUE readback keeps type=NUMBER, and the TEMPORAL facet reveals DATE / TIME / DATE_TIME semantics when that distinction matters."
+          "label" : "LIM-020 Streaming-Write Execution Mode Scope",
+          "value" : "`execution.mode.type=STREAMING_WRITE` requires `source.type=NEW`, limits mutation actions to `ENSURE_SHEET` and `APPEND_ROW`, requires `execution.calculation.strategy=DO_NOT_CALCULATE`, allows `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any append/assertion/inspection work, and requires at least one `ENSURE_SHEET` mutation"
         }, {
-          "label" : "Formula authoring",
-          "value" : "request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and authored LAMBDA/LET currently surface as UNSUPPORTED_FORMULA_CONSTRUCT because Apache POI cannot parse them on the write path."
+          "label" : "LIM-021 Request JSON Size",
+          "value" : "16777216 bytes"
         }, {
-          "label" : "Loaded formula support",
-          "value" : "formulas that Apache POI parses but cannot evaluate surface as UNSUPPORTED_FORMULA."
+          "label" : "LIM-022 Sheet Zoom Percentage",
+          "value" : "10..400 percent"
+        }, {
+          "label" : "LIM-023 DDE Formula Injection",
+          "value" : "`CellValueSpec.Formula` must not use the Excel DDE function"
+        }, {
+          "label" : "LIM-024 Step Count",
+          "value" : "10000 steps"
+        }, {
+          "label" : "LIM-025 Request-Owned Path Containment",
+          "value" : "Every request-owned path, whether relative or absolute, must resolve beneath the execution root"
+        }, {
+          "label" : "LIM-026 ZIP Decompression Limits",
+          "value" : "104857600 decompressed bytes per entry; minimum inflate ratio 0.01"
+        }, {
+          "label" : "LIM-027 DDE Rejection in All Formula Inputs",
+          "value" : "DDE function forbidden in all formula-bearing inputs"
+        }, {
+          "label" : "LIM-028 URL Scheme Allowlist",
+          "value" : "Only `http`, `https`, `ftp`, and `ftps` schemes accepted for URL hyperlinks"
+        }, {
+          "label" : "LIM-029 No-Follow Request Path Binding",
+          "value" : "Request-owned reads and writes never follow a symbolic link and use descriptor-relative access below a verified execution root"
+        }, {
+          "label" : "LIM-030 File-Backed Authored Input Isolation",
+          "value" : "File-backed text and binary authored inputs are read only through the request-owned no-follow binding and are resolved before workbook mutation"
+        }, {
+          "label" : "LIM-031 WEBSERVICE Formula Rejection",
+          "value" : "Formula inputs must not use the `WEBSERVICE` function"
+        }, {
+          "label" : "LIM-032 Named-Range Formula Injection",
+          "value" : "Named-range formula targets must not use the `DDE` or `WEBSERVICE` functions"
+        }, {
+          "label" : "LIM-033 Chart Title Formula Injection",
+          "value" : "Chart title formula inputs must not use the `DDE` or `WEBSERVICE` functions"
+        }, {
+          "label" : "LIM-034 UDF Formula Template Injection (Defense-in-Depth)",
+          "value" : "UDF formula templates must not use the `DDE` or `WEBSERVICE` functions"
+        }, {
+          "label" : "LIM-035 HYPERLINK() Formula Content Not Validated Against URL Allowlist",
+          "value" : "`HYPERLINK()` payloads inside formula strings are not inspected for URL scheme"
+        }, {
+          "label" : "LIM-036 RTD() Function Not Blocked",
+          "value" : "`RTD()` (Real-Time Data) in formula strings is not blocked"
+        }, {
+          "label" : "LIM-037 Workbook Source Content Format",
+          "value" : "Binary XLS content is rejected even when its filename ends in .xlsx"
+        }, {
+          "label" : "LIM-038 OOXML Write Encryption Is AGILE-Only And Strong-Only",
+          "value" : "Write-side OOXML package encryption authors AGILE only, defaults to `AES_256` / `SHA_512`, and allows only `AES_256` or `AES_192` plus `SHA_512`, `SHA_384`, or `SHA_256`"
+        }, {
+          "label" : "LIM-039 Materialized Worksheet Work per Plan",
+          "value" : "250000 materialized worksheet items per plan"
+        }, {
+          "label" : "LIM-040 Explicit Data-Validation List Formula Length",
+          "value" : "255 characters in the stored explicit-list formula"
         } ],
         "label" : "Limits"
       },
@@ -222,7 +276,7 @@
       },
       "request" : {
         "label" : "Request",
-        "lines" : [ "protocolVersion is required.", "source.type is required. NEW creates a blank workbook. EXISTING requires source.path.", "persistence is required. NONE keeps the workbook in memory only.", "planId is optional. When omitted, the response journal omits it.", "execution is optional. When omitted, GridGrind uses FULL_XSSF with SUMMARY journaling and DO_NOT_CALCULATE without markRecalculateOnOpen. When supplied, execution may include any subset of execution.mode, execution.journal, execution.calculation, and execution.assertionMode. execution.mode is a typed discriminator when present; choose type=FULL_XSSF, EVENT_READ, or STREAMING_WRITE under the limits above. Any omitted nested execution field keeps that same default.", "execution.journal.level controls journal detail; SUMMARY is the default and keeps the response stable by omitting timing telemetry. VERBOSE streams compact JSONL progress events to stderr while the primary response retains only its execution journal.", "execution.calculation controls server-side evaluation, cache clearing, and open-time recalc flags. strategy.type accepts DO_NOT_CALCULATE, EVALUATE_ALL, EVALUATE_TARGETS, and CLEAR_CACHES_ONLY. EVALUATE_TARGETS also requires strategy.cells[]. Omit execution.calculation entirely, or supply execution.calculation with neither strategy nor markRecalculateOnOpen, to keep the default DO_NOT_CALCULATE / false behavior. markRecalculateOnOpen is otherwise independent.", "execution.assertionMode defaults to FAIL_FAST. COLLECT evaluates every assertion after the terminal assertion phase begins; no later MUTATION step is legal, while INSPECTION steps may still interleave.", "Response telemetry is split intentionally: journal.* captures execution-phase timing and event chronology, while root persistence/calculation/warnings/assertions/inspections carry the authoritative outcome payloads.", "NORMAL and VERBOSE journal timings are observational runtime telemetry and vary between runs; assert status/category/detail, not literal timings.", "Source-backed text and binary fields support INLINE, UTF8_FILE or FILE, and STANDARD_INPUT sources.", "STANDARD_INPUT-authored values require --request so stdin is available for input content instead of the request JSON because stdin cannot carry both the request JSON and authored input content in one CLI invocation.", "formulaEnvironment is optional. When omitted, GridGrind uses the empty evaluator environment: externalWorkbooks=[], missingWorkbookPolicy=ERROR, udfToolpacks=[]. When supplied, omitted nested fields keep those same defaults. missingWorkbookPolicy accepts ERROR or USE_CACHED_VALUE; udfToolpacks[] registers named UDF packs for formula evaluation.", "persistence.security.encryption writes OOXML AGILE packages only. encryption.password is required; encryption.cipher defaults to AES_256 and encryption.hash defaults to SHA_512 when omitted. Supported ciphers are AES_256 and AES_192; supported hashes are SHA_512, SHA_384, and SHA_256. Legacy STANDARD packages remain readable on inspection but are not authorable.", "array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA.", "steps is required. [] represents an empty no-op plan.", "Every authored step requires a non-blank caller-defined stepId. stepId values must be unique within steps[] and must match [A-Za-z0-9._-]+. Use MUTATION steps for workbook changes, ASSERTION steps for first-class verification, and INSPECTION steps for factual or analytical reads. Step kind is inferred from exactly one of action, assertion, or query; do not send step.type. target is a sibling field on each step; it is not nested inside action, assertion, or query.", "Step order is authoritative. Mutations, assertions, and inspections may be interleaved unless the chosen execution mode or calculation strategy tightens the ordering contract (for example, EVALUATE_ALL/EVALUATE_TARGETS require every MUTATION step to finish before observation begins)." ]
+        "lines" : [ "protocolVersion is required.", "Chart mutations author AREA, AREA_3D, BAR, BAR_3D, DOUGHNUT, LINE, LINE_3D, PIE, PIE_3D, RADAR, SCATTER, SURFACE and SURFACE_3D; unsupported loaded plots remain preserved on unrelated edits.", "Chart title formulas and formula-backed series titles resolve to one cell, directly or through a defined name.", "SET_ARRAY_FORMULA authors one contiguous single-cell or multi-cell array formula group; CLEAR_ARRAY_FORMULA targets any member and removes the entire group.", "Failed SET_SHAPE / SET_CHART validation leaves existing drawing state unchanged and creates no partial artifacts.", "DATE / DATE_TIME inputs are stored as numeric serials; default VALUE readback keeps NUMBER, while the TEMPORAL facet exposes DATE / TIME / DATE_TIME semantics.", "request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and authored LAMBDA/LET currently surface as UNSUPPORTED_FORMULA_CONSTRUCT because Apache POI cannot parse them on the write path.", "formulas that Apache POI parses but cannot evaluate surface as UNSUPPORTED_FORMULA.", "source.type is required. NEW creates a blank workbook. EXISTING requires source.path.", "persistence is required. NONE keeps the workbook in memory only.", "planId is optional. When omitted, the response journal omits it.", "execution is optional. When omitted, GridGrind uses FULL_XSSF with SUMMARY journaling and DO_NOT_CALCULATE without markRecalculateOnOpen. When supplied, execution may include any subset of execution.mode, execution.journal, execution.calculation, and execution.assertionMode. execution.mode is a typed discriminator when present; choose type=FULL_XSSF, EVENT_READ, or STREAMING_WRITE under the limits above. Any omitted nested execution field keeps that same default.", "execution.journal.level controls journal detail; SUMMARY is the default and keeps the response stable by omitting timing telemetry. VERBOSE streams compact JSONL progress events to stderr while the primary response retains only its execution journal.", "execution.calculation controls server-side evaluation, cache clearing, and open-time recalc flags. strategy.type accepts DO_NOT_CALCULATE, EVALUATE_ALL, EVALUATE_TARGETS, and CLEAR_CACHES_ONLY. EVALUATE_TARGETS also requires strategy.cells[]. Omit execution.calculation entirely, or supply execution.calculation with neither strategy nor markRecalculateOnOpen, to keep the default DO_NOT_CALCULATE / false behavior. markRecalculateOnOpen is otherwise independent.", "execution.assertionMode defaults to FAIL_FAST. COLLECT evaluates every assertion after the terminal assertion phase begins; no later MUTATION step is legal, while INSPECTION steps may still interleave.", "Response telemetry is split intentionally: journal.* captures execution-phase timing and event chronology, while root persistence/calculation/warnings/assertions/inspections carry the authoritative outcome payloads.", "NORMAL and VERBOSE journal timings are observational runtime telemetry and vary between runs; assert status/category/detail, not literal timings.", "Source-backed text and binary fields support INLINE, UTF8_FILE or FILE, and STANDARD_INPUT sources.", "STANDARD_INPUT-authored values require --request so stdin is available for input content instead of the request JSON because stdin cannot carry both the request JSON and authored input content in one CLI invocation.", "formulaEnvironment is optional. When omitted, GridGrind uses the empty evaluator environment: externalWorkbooks=[], missingWorkbookPolicy=ERROR, udfToolpacks=[]. When supplied, omitted nested fields keep those same defaults. missingWorkbookPolicy accepts ERROR or USE_CACHED_VALUE; udfToolpacks[] registers named UDF packs for formula evaluation.", "persistence.security.encryption writes OOXML AGILE packages only. encryption.password is required; encryption.cipher defaults to AES_256 and encryption.hash defaults to SHA_512 when omitted. Supported ciphers are AES_256 and AES_192; supported hashes are SHA_512, SHA_384, and SHA_256. Legacy STANDARD packages remain readable on inspection but are not authorable.", "array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA.", "steps is required. [] represents an empty no-op plan.", "Every authored step requires a non-blank caller-defined stepId. stepId values must be unique within steps[] and must match [A-Za-z0-9._-]+. Use MUTATION steps for workbook changes, ASSERTION steps for first-class verification, and INSPECTION steps for factual or analytical reads. Step kind is inferred from exactly one of action, assertion, or query; do not send step.type. target is a sibling field on each step; it is not nested inside action, assertion, or query.", "Step order is authoritative. Mutations, assertions, and inspections may be interleaved unless the chosen execution mode or calculation strategy tightens the ordering contract (for example, EVALUATE_ALL/EVALUATE_TARGETS require every MUTATION step to finish before observation begins)." ]
       },
       "standardInputRequiresRequestMessage" : "STANDARD_INPUT-authored values require --request so stdin is available for input content instead of the request JSON",
       "stdinExample" : {

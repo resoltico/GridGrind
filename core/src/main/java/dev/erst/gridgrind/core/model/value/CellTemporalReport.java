@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.model.value;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,9 +18,7 @@ public record CellTemporalReport(
     isoValue = Objects.requireNonNullElseGet(isoValue, Optional::empty);
     isoValue.ifPresent(
         value -> {
-          if (value.isBlank()) {
-            throw new IllegalArgumentException("isoValue must not be blank");
-          }
+          TextValidation.requireNonBlank(value, "isoValue");
         });
     if (isDate) {
       if (kind.isEmpty()) {

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.model.security;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,21 +16,15 @@ public record ResolvedSignature(
     Optional<String> description) {
   public ResolvedSignature {
     Objects.requireNonNull(pkcs12Path, "pkcs12Path must not be null");
-    keystorePassword = normalizeRequired(keystorePassword, "keystorePassword");
+    keystorePassword = TextValidation.requireNonBlank(keystorePassword, "keystorePassword");
     keyPassword =
-        keyPassword == null ? keystorePassword : normalizeRequired(keyPassword, "keyPassword");
+        keyPassword == null
+            ? keystorePassword
+            : TextValidation.requireNonBlank(keyPassword, "keyPassword");
     alias = normalizeOptional(alias, "alias");
     digestAlgorithm =
         Objects.requireNonNullElse(digestAlgorithm, ExcelOoxmlSignatureDigestAlgorithm.SHA256);
     description = normalizeOptional(description, "description");
-  }
-
-  private static String normalizeRequired(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {

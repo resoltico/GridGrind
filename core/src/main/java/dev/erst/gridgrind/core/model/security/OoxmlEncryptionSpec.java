@@ -12,8 +12,14 @@ import java.util.Objects;
 @CatalogType(
     id = "OoxmlEncryptionSpec",
     summary =
-        "OOXML package-encryption settings for workbook persistence. GridGrind writes AGILE packages only. cipher defaults to AES_256 and hash defaults to SHA_512 when omitted. Supported ciphers: AES_256 and AES_192. Supported hashes: SHA_512, SHA_384, and SHA_256 (LIM-038).",
+        "OOXML package-encryption settings for workbook persistence. GridGrind writes AGILE packages only. cipher defaults to AES_256 and hash defaults to SHA_512 when omitted. Supported ciphers: AES_256 and AES_192. Supported hashes: SHA_512, SHA_384, and SHA_256 ("
+            + dev.erst.gridgrind.core.limits.Limit
+                .ID_OOXML_WRITE_ENCRYPTION_IS_AGILE_ONLY_AND_STRONG_ONLY
+            + ").",
     displayOrder = 21)
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_OOXML_WRITE_ENCRYPTION_IS_AGILE_ONLY_AND_STRONG_ONLY
+})
 public record OoxmlEncryptionSpec(
     SecretReference passwordRef,
     @ProtocolField(optional = true) @WireDefault("AES_256") ExcelOoxmlWriteCipher cipher,

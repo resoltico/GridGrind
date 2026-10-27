@@ -96,7 +96,8 @@ final class CliCatalogCommandSupport {
                 "Resolve one plain record group such as plainTypes:sheetSummaryReport."),
             new ProtocolCatalogLookupNamespace(
                 "<id>",
-                "Resolve one unqualified top-level type id only when it is globally unique.")));
+                "Resolve one unqualified top-level type id only when it is globally unique.")),
+        catalog.limits());
   }
 
   static ProtocolCatalogSearchReport summarizedSearchReport(String query) {

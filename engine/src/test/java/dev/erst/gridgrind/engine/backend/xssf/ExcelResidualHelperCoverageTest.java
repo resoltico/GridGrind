@@ -662,10 +662,14 @@ class ExcelResidualHelperCoverageTest {
       var fakeMap =
           CustomXmlAdapterTestSupport.fakeMap(ctMap, ctSchema, null, List.of(), List.of());
       CustomXmlMappingReport snapshot = CustomXmlAdapter.snapshot(fakeMap);
-      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().namespace());
-      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().language());
-      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().reference());
-      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().xml());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.schema().namespace());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.schema().language());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.schema().reference());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.schema().xml());
     }
   }
 
@@ -781,12 +785,12 @@ class ExcelResidualHelperCoverageTest {
         name,
         anchor,
         false,
-        Optional.ofNullable("Review before signing."),
-        Optional.ofNullable("Ada Lovelace"),
-        Optional.ofNullable("Finance"),
-        Optional.ofNullable("ada@example.com"),
+        Optional.of("Review before signing."),
+        Optional.of("Ada Lovelace"),
+        Optional.of("Finance"),
+        Optional.of("ada@example.com"),
         Optional.empty(),
-        Optional.ofNullable("invalid"),
+        Optional.of("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new BinaryContent(new byte[] {1})));
   }

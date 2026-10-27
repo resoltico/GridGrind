@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.discovery;
 
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -12,12 +13,12 @@ public final class ShippedExamples {
   public record ShippedExample(
       String id, String requestFileName, String summary, WorkbookPlan plan) {
     public ShippedExample {
-      id = requireNonBlank(id, "id");
+      id = TextValidation.requireNonBlank(id, "id");
       if (!id.equals(id.toUpperCase(Locale.ROOT))) {
         throw new IllegalArgumentException("id must use upper-case discovery tokens");
       }
-      requestFileName = requireNonBlank(requestFileName, "requestFileName");
-      summary = requireNonBlank(summary, "summary");
+      requestFileName = TextValidation.requireNonBlank(requestFileName, "requestFileName");
+      summary = TextValidation.requireNonBlank(summary, "summary");
       Objects.requireNonNull(plan, "plan must not be null");
       if (!requestFileName.endsWith(".json")) {
         throw new IllegalArgumentException("requestFileName must end with .json");
@@ -113,13 +114,5 @@ public final class ShippedExamples {
   private static ShippedExample toShippedExample(Recipe recipe) {
     return new ShippedExample(
         recipe.id(), recipe.requestFileName(), recipe.summary(), recipe.plan());
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

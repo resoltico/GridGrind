@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,7 +14,7 @@ public record RequestUnknownTypeDiscriminator(
     long tokenByteOffset)
     implements RequestShapeStructuralProblem {
   public RequestUnknownTypeDiscriminator {
-    path = RequestStructuralProblemSupport.requireText(path, "path");
+    path = TextValidation.requireNonBlank(path, "path");
     Objects.requireNonNull(value, "value must not be null");
     similarValues = RequestStructuralProblemSupport.copyStrings(similarValues, "similarValues");
     specificGuidance =

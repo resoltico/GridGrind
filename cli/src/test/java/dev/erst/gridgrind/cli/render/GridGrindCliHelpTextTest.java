@@ -258,7 +258,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--execution-root"));
     assertTrue(normalized.contains("payload there unchanged"));
     assertTrue(normalized.contains("never moves a primary payload to stderr"));
-    assertTrue(overview.contains("docs/QUICK_REFERENCE.md"));
+    assertTrue(overview.contains("docs/CLI.md"));
     assertFalse(overview.contains("--print-"));
   }
 
@@ -300,20 +300,20 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   @Test
   void helpSurfacesUseVersionedAndFallbackReferencesCorrectly() {
     String unknownOverview = ProductInfo.helpText(CliCommand.HelpTopic.OVERVIEW, "unknown");
-    assertTrue(unknownOverview.contains("blob/main/docs/QUICK_REFERENCE.md"));
+    assertTrue(unknownOverview.contains("blob/main/docs/CLI.md"));
 
     String overview = ProductInfo.helpText(CliCommand.HelpTopic.OVERVIEW, "0.9.0");
     String protocol = ProductInfo.helpText(CliCommand.HelpTopic.PROTOCOL, "0.9.0");
     String guidance = ProductInfo.helpText(CliCommand.HelpTopic.GUIDANCE, "0.9.0");
 
-    assertTrue(overview.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
-    assertTrue(overview.contains("blob/v0.9.0/docs/OPERATIONS.md"));
+    assertTrue(overview.contains("blob/v0.9.0/docs/CLI.md"));
+    assertTrue(overview.contains("blob/v0.9.0/docs/EXECUTION_MODEL.md"));
     assertTrue(overview.contains("blob/v0.9.0/docs/ERRORS.md"));
     assertTrue(protocol.contains("GridGrind 0.9.0"));
-    assertFalse(protocol.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
+    assertFalse(protocol.contains("blob/v0.9.0/docs/CLI.md"));
     assertTrue(guidance.contains("ghcr.io/resoltico/gridgrind:0.9.0"));
-    assertTrue(guidance.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
-    assertTrue(guidance.contains("blob/v0.9.0/docs/OPERATIONS.md"));
+    assertTrue(guidance.contains("blob/v0.9.0/docs/CLI.md"));
+    assertTrue(guidance.contains("blob/v0.9.0/docs/EXECUTION_MODEL.md"));
     assertTrue(guidance.contains("blob/v0.9.0/docs/ERRORS.md"));
   }
 

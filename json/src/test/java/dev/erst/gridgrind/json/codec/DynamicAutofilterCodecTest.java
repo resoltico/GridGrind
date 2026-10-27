@@ -26,7 +26,9 @@ class DynamicAutofilterCodecTest {
   @Test
   void observedDynamicFilterRoundTripsItsDomainType() {
     var mapper = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER;
-    var value = new AutofilterFilterCriterionReport.Dynamic("today", 45_200d, null);
+    var value =
+        new AutofilterFilterCriterionReport.Dynamic(
+            "today", Optional.of(45_200d), Optional.empty());
     var wire = mapper.writerFor(AutofilterFilterCriterionReport.class).writeValueAsString(value);
     var tree = mapper.readTree(wire);
     assertEquals("DYNAMIC", tree.path("type").asText());

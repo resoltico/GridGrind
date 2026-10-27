@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 
 /** Internal descriptor for one field whose presence is gated by projected read facets. */
@@ -9,7 +10,7 @@ record CatalogProjectedField(String name, List<String> projectedByFacets) {
   }
 
   CatalogProjectedField {
-    name = CatalogRecordValidation.requireNonBlank(name, "name");
+    name = TextValidation.requireNonBlank(name, "name");
     projectedByFacets =
         CatalogRecordValidation.copyUniqueStrings(projectedByFacets, "projectedByFacets");
     if (projectedByFacets.isEmpty()) {

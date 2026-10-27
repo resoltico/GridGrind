@@ -178,7 +178,7 @@ class ExcelSheetCommentRepairSupportTest {
                           false,
                           "Aptos",
                           FontHeightReport.fromTwips(220),
-                          CellColorReport.indexed(8),
+                          Optional.ofNullable(CellColorReport.indexed(8)),
                           false,
                           false))));
       CommentAnchorReport explicitAnchor = new CommentAnchorReport(2, 2, 6, 7);
@@ -530,7 +530,7 @@ class ExcelSheetCommentRepairSupportTest {
 
   private static CellFontReport baseFontWithoutColor() {
     return new CellFontReport(
-        false, false, "Aptos", FontHeightReport.fromTwips(220), null, false, false);
+        false, false, "Aptos", FontHeightReport.fromTwips(220), Optional.empty(), false, false);
   }
 
   private static Document parseXml(InputStream inputStream) throws IOException {

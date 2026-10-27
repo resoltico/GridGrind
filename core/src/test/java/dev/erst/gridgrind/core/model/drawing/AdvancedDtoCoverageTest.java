@@ -93,10 +93,10 @@ class AdvancedDtoCoverageTest {
             "image/png",
             10L,
             "abc123",
-            32,
-            16,
-            "Preview");
-    assertEquals(32, picture.widthPixels());
+            Optional.of(32),
+            Optional.of(16),
+            Optional.of("Preview"));
+    assertEquals(Optional.of(32), picture.widthPixels());
     assertEquals(
         "widthPixels must not be negative",
         assertThrows(
@@ -109,22 +109,32 @@ class AdvancedDtoCoverageTest {
                         "image/png",
                         10L,
                         "abc123",
-                        -1,
-                        16,
-                        null))
+                        Optional.of(-1),
+                        Optional.of(16),
+                        Optional.empty()))
             .getMessage());
 
     DrawingObjectReport.Shape shape =
         new DrawingObjectReport.Shape(
-            "Shape 1", oneCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, "rect", "Hello", 0);
-    assertEquals("Hello", shape.text());
+            "Shape 1",
+            oneCell,
+            ExcelDrawingShapeKind.SIMPLE_SHAPE,
+            Optional.of("rect"),
+            Optional.of("Hello"),
+            0);
+    assertEquals(Optional.of("Hello"), shape.text());
     assertEquals(
         "childCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new DrawingObjectReport.Shape(
-                        "Shape 1", oneCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, null, null, -1))
+                        "Shape 1",
+                        oneCell,
+                        ExcelDrawingShapeKind.SIMPLE_SHAPE,
+                        Optional.empty(),
+                        Optional.empty(),
+                        -1))
             .getMessage());
 
     DrawingObjectReport.EmbeddedObject embedded =
@@ -132,16 +142,16 @@ class AdvancedDtoCoverageTest {
             "Object 1",
             absolute,
             ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-            "Label",
-            "object.bin",
-            null,
+            Optional.of("Label"),
+            Optional.of("object.bin"),
+            Optional.empty(),
             "application/octet-stream",
             12L,
             "def456",
-            null,
-            null,
-            null);
-    assertEquals("object.bin", embedded.fileName());
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    assertEquals(Optional.of("object.bin"), embedded.fileName());
     assertEquals(
         "previewByteSize requires previewFormat",
         assertThrows(
@@ -151,15 +161,15 @@ class AdvancedDtoCoverageTest {
                         "Object 1",
                         absolute,
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
-                        null,
-                        null,
-                        null,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
                         "application/octet-stream",
                         12L,
                         "def456",
-                        null,
-                        4L,
-                        null))
+                        Optional.empty(),
+                        Optional.of(4L),
+                        Optional.empty()))
             .getMessage());
 
     DrawingObjectReport.SignatureLine signatureLine =
@@ -198,35 +208,41 @@ class AdvancedDtoCoverageTest {
             "picture.png",
             "abc123",
             base64,
-            null);
+            Optional.empty());
     assertEquals(base64, picturePayload.base64Data());
     assertEquals(
         "",
         new DrawingObjectPayloadReport.Picture(
-                "Picture 2", ExcelPictureFormat.PNG, "image/png", "empty.png", "sha", "", null)
+                "Picture 2",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                "empty.png",
+                "sha",
+                "",
+                Optional.empty())
             .base64Data());
     DrawingObjectPayloadReport.EmbeddedObject embeddedPayload =
         new DrawingObjectPayloadReport.EmbeddedObject(
             "Object 1",
             ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
             "application/octet-stream",
-            null,
+            Optional.empty(),
             "sha",
             base64,
-            "Label",
-            "open");
-    assertEquals("open", embeddedPayload.command());
+            Optional.of("Label"),
+            Optional.of("open"));
+    assertEquals(Optional.of("open"), embeddedPayload.command());
     assertEquals(
-        null,
+        java.util.Optional.empty(),
         new DrawingObjectPayloadReport.EmbeddedObject(
                 "Object 2",
                 ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
                 "application/octet-stream",
-                "payload.bin",
+                Optional.of("payload.bin"),
                 "sha",
                 base64,
-                "Label",
-                null)
+                Optional.of("Label"),
+                Optional.empty())
             .command());
     assertEquals(
         "base64Data must be valid base64",
@@ -240,7 +256,7 @@ class AdvancedDtoCoverageTest {
                         "picture.png",
                         "abc123",
                         "%%%notbase64%%%",
-                        null))
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "fileName must not be blank",
@@ -251,11 +267,11 @@ class AdvancedDtoCoverageTest {
                         "Object 1",
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
                         "application/octet-stream",
-                        " ",
+                        Optional.of(" "),
                         "sha",
                         base64,
-                        null,
-                        null))
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
   }
 
@@ -338,7 +354,7 @@ class AdvancedDtoCoverageTest {
 
     CellGradientFillReport gradient =
         CellGradientFillReport.linear(
-            45.0d,
+            Optional.of(45.0d),
             List.of(
                 new CellGradientStopReport(0.0d, rgb),
                 new CellGradientStopReport(1.0d, CellColorReport.theme(1))));
@@ -347,7 +363,7 @@ class AdvancedDtoCoverageTest {
         "stops must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> CellGradientFillReport.linear(null, List.of()))
+                () -> CellGradientFillReport.linear(Optional.empty(), List.of()))
             .getMessage());
     assertEquals(
         "position must be finite and between 0.0 and 1.0",
@@ -392,7 +408,8 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     CellGradientFillReport.linear(
-                        Double.POSITIVE_INFINITY, List.of(new CellGradientStopReport(0.0d, rgb))))
+                        Optional.of(Double.POSITIVE_INFINITY),
+                        List.of(new CellGradientStopReport(0.0d, rgb))))
             .getMessage());
     assertEquals(
         "position must be finite and between 0.0 and 1.0",
@@ -433,7 +450,12 @@ class AdvancedDtoCoverageTest {
   @Test
   void customXmlReportsValidateRequiredFields() {
     CustomXmlDataBindingReport dataBinding =
-        new CustomXmlDataBindingReport("binding", true, 7L, "binding.xml", 2L);
+        new CustomXmlDataBindingReport(
+            Optional.of("binding"),
+            Optional.of(true),
+            Optional.of(7L),
+            Optional.of("binding.xml"),
+            2L);
     CustomXmlLinkedCellReport linkedCell =
         new CustomXmlLinkedCellReport(
             new SheetLabel("Foglio1"), new CellAddress("A1"), "/CORSO/NOME", "string");
@@ -457,7 +479,13 @@ class AdvancedDtoCoverageTest {
         "loadMode must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new CustomXmlDataBindingReport(null, null, null, null, -1L))
+                () ->
+                    new CustomXmlDataBindingReport(
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        -1L))
             .getMessage());
     assertEquals(
         "xml must not be blank",
@@ -482,13 +510,16 @@ class AdvancedDtoCoverageTest {
         "dynamicType must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AutofilterFilterCriterionReport.Dynamic(" ", null, null))
+                () ->
+                    new AutofilterFilterCriterionReport.Dynamic(
+                        " ", Optional.empty(), Optional.empty()))
             .getMessage());
     assertEquals(
         "value must be finite and non-negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AutofilterFilterCriterionReport.Top10(true, false, -1.0d, null))
+                () ->
+                    new AutofilterFilterCriterionReport.Top10(true, false, -1.0d, Optional.empty()))
             .getMessage());
     assertEquals(
         "value must be finite and non-negative",
@@ -496,7 +527,7 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new AutofilterFilterCriterionReport.Top10(
-                        true, false, Double.POSITIVE_INFINITY, null))
+                        true, false, Double.POSITIVE_INFINITY, Optional.empty()))
             .getMessage());
     assertEquals(
         "value must be finite when provided",
@@ -504,7 +535,7 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new AutofilterFilterCriterionReport.Dynamic(
-                        "ABOVE_AVERAGE", Double.POSITIVE_INFINITY, null))
+                        "ABOVE_AVERAGE", Optional.of(Double.POSITIVE_INFINITY), Optional.empty()))
             .getMessage());
     assertEquals(
         "maxValue must be finite when provided",
@@ -512,7 +543,7 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new AutofilterFilterCriterionReport.Dynamic(
-                        "ABOVE_AVERAGE", null, Double.POSITIVE_INFINITY))
+                        "ABOVE_AVERAGE", Optional.empty(), Optional.of(Double.POSITIVE_INFINITY)))
             .getMessage());
     assertEquals(
         "iconId must not be negative",
@@ -736,8 +767,12 @@ class AdvancedDtoCoverageTest {
         "CORSO",
         "Schema1",
         new CustomXmlMappingReport.Settings(false, true, false, true, true),
-        new CustomXmlMappingReport.Schema(namespace, language, reference, xml),
-        dataBinding,
+        new CustomXmlMappingReport.Schema(
+            Optional.ofNullable(namespace),
+            Optional.ofNullable(language),
+            Optional.ofNullable(reference),
+            Optional.ofNullable(xml)),
+        Optional.ofNullable(dataBinding),
         linkedCells,
         linkedTables);
   }

@@ -1,8 +1,9 @@
 package dev.erst.gridgrind.core.model.customxml;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import java.util.Optional;
 
 /** Factual workbook custom-XML data-binding metadata returned by inspection. */
 @CatalogType(
@@ -10,31 +11,25 @@ import org.jspecify.annotations.Nullable;
     summary = "Optional custom-XML data-binding metadata attached to one workbook mapping.",
     displayOrder = 104)
 public record CustomXmlDataBindingReport(
-    @Nullable String dataBindingName,
-    @Nullable Boolean fileBinding,
-    @Nullable Long connectionId,
-    @Nullable String fileBindingName,
+    Optional<String> dataBindingName,
+    Optional<Boolean> fileBinding,
+    Optional<Long> connectionId,
+    Optional<String> fileBindingName,
     long loadMode) {
   public CustomXmlDataBindingReport {
-    if (dataBindingName != null) {
-      dataBindingName = requireNonBlank(dataBindingName, "dataBindingName");
-    }
-    if (connectionId != null && connectionId < 0L) {
+    dataBindingName =
+        Objects.requireNonNull(dataBindingName, "dataBindingName must not be null")
+            .map(value -> TextValidation.requireNonBlank(value, "dataBindingName"));
+    Objects.requireNonNull(fileBinding, "fileBinding must not be null");
+    Objects.requireNonNull(connectionId, "connectionId must not be null");
+    if (connectionId.filter(value -> value < 0L).isPresent()) {
       throw new IllegalArgumentException("connectionId must not be negative");
     }
-    if (fileBindingName != null) {
-      fileBindingName = requireNonBlank(fileBindingName, "fileBindingName");
-    }
+    fileBindingName =
+        Objects.requireNonNull(fileBindingName, "fileBindingName must not be null")
+            .map(value -> TextValidation.requireNonBlank(value, "fileBindingName"));
     if (loadMode < 0L) {
       throw new IllegalArgumentException("loadMode must not be negative");
     }
-  }
-
-  private static String requireNonBlank(@Nullable String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

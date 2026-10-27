@@ -27,6 +27,9 @@ import tools.jackson.databind.module.SimpleModule;
 import tools.jackson.databind.type.LogicalType;
 
 /** Owns JSON mapper construction and request-size policy for the protocol seam. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_REQUEST_JSON_SIZE
+})
 public final class GridGrindJsonMapperSupport {
   public static final JsonMapper JSON_MAPPER = buildMapper(unlimitedJsonFactory());
   public static final JsonMapper WIRE_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), false);
@@ -42,7 +45,6 @@ public final class GridGrindJsonMapperSupport {
 
   /** Rejects a document size outside the request transport limit. */
   public static void requireSupportedRequestLength(long lengthBytes) {
-    // LIM-021
     if (lengthBytes > maxRequestDocumentBytes()) {
       throw requestTooLarge(null);
     }

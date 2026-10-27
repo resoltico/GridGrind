@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnWidthViolation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowHeightViolation;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetNameProblem;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetNameRule;
 import dev.erst.gridgrind.core.vocabulary.ExcelZoomViolation;
@@ -91,13 +91,13 @@ public final class FieldValidationProblemMappers {
       return FieldValidationProblem.atField(
           fieldName,
           FieldValidationLayoutRule.COLUMN_WIDTH_TOO_LARGE,
-          Double.toString(ExcelSheetLayoutLimits.MAX_COLUMN_WIDTH_CHARACTERS),
+          Double.toString(Limit.MAX_COLUMN_WIDTH_CHARACTERS),
           Double.toString(widthCharacters));
     }
     return FieldValidationProblem.atField(
         fieldName,
         FieldValidationLayoutRule.COLUMN_WIDTH_NOT_VISIBLE,
-        Double.toString(ExcelSheetLayoutLimits.MAX_COLUMN_WIDTH_CHARACTERS),
+        Double.toString(Limit.MAX_COLUMN_WIDTH_CHARACTERS),
         Double.toString(widthCharacters));
   }
 
@@ -115,13 +115,13 @@ public final class FieldValidationProblemMappers {
       return FieldValidationProblem.atField(
           fieldName,
           FieldValidationLayoutRule.ROW_HEIGHT_TOO_LARGE,
-          Double.toString(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS),
+          Double.toString(Limit.MAX_ROW_HEIGHT_POINTS),
           Double.toString(heightPoints));
     }
     return FieldValidationProblem.atField(
         fieldName,
         FieldValidationLayoutRule.ROW_HEIGHT_NOT_VISIBLE,
-        Double.toString(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS),
+        Double.toString(Limit.MAX_ROW_HEIGHT_POINTS),
         Double.toString(heightPoints));
   }
 
@@ -134,8 +134,8 @@ public final class FieldValidationProblemMappers {
     return FieldValidationProblem.atField(
         fieldName,
         FieldValidationLayoutRule.ZOOM_PERCENT_RANGE,
-        Integer.toString(ExcelSheetLayoutLimits.MIN_ZOOM_PERCENT),
-        Integer.toString(ExcelSheetLayoutLimits.MAX_ZOOM_PERCENT),
+        Integer.toString(Limit.MIN_ZOOM_PERCENT),
+        Integer.toString(Limit.MAX_ZOOM_PERCENT),
         Integer.toString(zoomPercent));
   }
 }

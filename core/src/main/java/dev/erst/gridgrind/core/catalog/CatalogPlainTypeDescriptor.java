@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,10 +16,10 @@ record CatalogPlainTypeDescriptor(
   }
 
   CatalogPlainTypeDescriptor {
-    group = CatalogRecordValidation.requireNonBlank(group, "group");
+    group = TextValidation.requireNonBlank(group, "group");
     Objects.requireNonNull(recordType, "recordType must not be null");
-    id = CatalogRecordValidation.requireNonBlank(id, "id");
-    summary = CatalogRecordValidation.requireNonBlank(summary, "summary");
+    id = TextValidation.requireNonBlank(id, "id");
+    summary = TextValidation.requireNonBlank(summary, "summary");
     noteRefs = CatalogRecordValidation.copyUniqueStrings(noteRefs, "noteRefs");
   }
 

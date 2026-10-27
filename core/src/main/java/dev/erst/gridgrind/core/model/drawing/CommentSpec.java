@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -32,7 +33,7 @@ public record CommentSpec(
 
   public CommentSpec {
     text = requireNonBlankSource(text, "text");
-    author = requireNonBlank(author, "author");
+    author = TextValidation.requireNonBlank(author, "author");
     Objects.requireNonNull(runs, "runs must not be null");
     Objects.requireNonNull(anchor, "anchor must not be null");
     if (runs.isPresent()) {
@@ -70,14 +71,6 @@ public record CommentSpec(
   private static TextSourceSpec requireNonBlankSource(TextSourceSpec value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value instanceof TextSourceSpec.Inline inline && inline.text().isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
     return value;

@@ -3,10 +3,14 @@ package dev.erst.gridgrind.core.model.chart;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 
 /** Authored chart data source. */
 @Union(discriminator = "type", catalog = true, displayOrder = 52)
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_DDE_REJECTION_IN_ALL_FORMULA_INPUTS
+})
 public sealed interface ChartDataSourceSpec
     permits dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec.Reference,
         dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec.StringLiteral,
@@ -15,8 +19,8 @@ public sealed interface ChartDataSourceSpec
   @Variant(id = "REFERENCE", summary = "Workbook-backed chart source formula or defined name.")
   record Reference(String formula) implements ChartDataSourceSpec {
     public Reference {
-      formula = ChartSpec.requireNonBlank(formula, "formula");
-      FormulaInputSecurity.rejectDde(formula); // LIM-027
+      formula = TextValidation.requireNonBlank(formula, "formula");
+      FormulaInputSecurity.rejectDde(formula);
     }
   }
 

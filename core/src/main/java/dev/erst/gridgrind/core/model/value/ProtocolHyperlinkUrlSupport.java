@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.value;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
@@ -8,16 +9,19 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /** Protocol-owned URL and email hyperlink normalization helpers. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_URL_SCHEME_ALLOWLIST
+})
 final class ProtocolHyperlinkUrlSupport {
   private static final Pattern ABSOLUTE_URI_PATTERN =
       Pattern.compile("^[A-Za-z][A-Za-z0-9+.-]*:\\S+$");
   private static final Set<String> ALLOWED_URL_SCHEMES =
-      Set.of("http", "https", "ftp", "ftps"); // LIM-028
+      dev.erst.gridgrind.core.limits.Limit.URL_SCHEMES;
 
   private ProtocolHyperlinkUrlSupport() {}
 
   static String normalizeUrlTarget(String target) {
-    String normalized = ProtocolHyperlinkTargetSupport.requireNonBlank(target, "target");
+    String normalized = TextValidation.requireNonBlank(target, "target");
     if (isValidUrlTarget(normalized)) {
       return normalized;
     }
@@ -41,7 +45,7 @@ final class ProtocolHyperlinkUrlSupport {
   static String normalizeEmailTarget(String email) {
     String normalized =
         ProtocolHyperlinkTargetSupport.stripMailtoPrefix(
-            ProtocolHyperlinkTargetSupport.requireNonBlank(email, "target"));
+            TextValidation.requireNonBlank(email, "target"));
     if (!isValidEmailTarget(normalized)) {
       throw new IllegalArgumentException("target must be an email address");
     }

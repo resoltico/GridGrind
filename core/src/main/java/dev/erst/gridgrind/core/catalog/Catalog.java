@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,8 +21,7 @@ public record Catalog(
     List<CatalogNote> notes) {
   public Catalog {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-    discriminatorField =
-        CatalogRecordValidation.requireNonBlank(discriminatorField, "discriminatorField");
+    discriminatorField = TextValidation.requireNonBlank(discriminatorField, "discriminatorField");
     Objects.requireNonNull(requestType, "requestType must not be null");
     sourceTypes = CatalogRecordValidation.copyEntries(sourceTypes, "sourceTypes");
     persistenceTypes = CatalogRecordValidation.copyEntries(persistenceTypes, "persistenceTypes");
@@ -61,6 +61,11 @@ public record Catalog(
         new TopLevelTypeGroup("mutationActionTypes", mutationActionTypes),
         new TopLevelTypeGroup("assertionTypes", assertionTypes),
         new TopLevelTypeGroup("inspectionQueryTypes", inspectionQueryTypes));
+  }
+
+  /** Returns the canonical operational and format limits published with this catalog. */
+  public List<dev.erst.gridgrind.core.limits.Limit> limits() {
+    return dev.erst.gridgrind.core.limits.Limit.all();
   }
 
   /** Returns one published shared note by its stable id, or empty when unknown. */

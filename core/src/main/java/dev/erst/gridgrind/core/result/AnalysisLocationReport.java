@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** Precise workbook location attached to one derived analysis finding. */
@@ -31,10 +32,7 @@ public sealed interface AnalysisLocationReport
   record Cell(SheetLabel sheetName, String address) implements AnalysisLocationReport {
     public Cell {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
-      Objects.requireNonNull(address, "address must not be null");
-      if (address.isBlank()) {
-        throw new IllegalArgumentException("address must not be blank");
-      }
+      address = TextValidation.requireNonBlank(address, "address");
     }
   }
 
@@ -43,10 +41,7 @@ public sealed interface AnalysisLocationReport
   record Range(SheetLabel sheetName, String range) implements AnalysisLocationReport {
     public Range {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
-      Objects.requireNonNull(range, "range must not be null");
-      if (range.isBlank()) {
-        throw new IllegalArgumentException("range must not be blank");
-      }
+      range = TextValidation.requireNonBlank(range, "range");
     }
   }
 
@@ -56,9 +51,7 @@ public sealed interface AnalysisLocationReport
     public NamedRange {
       Objects.requireNonNull(name, "name must not be null");
       Objects.requireNonNull(scope, "scope must not be null");
-      if (name.isBlank()) {
-        throw new IllegalArgumentException("name must not be blank");
-      }
+      TextValidation.requireNonBlank(name, "name");
     }
   }
 }

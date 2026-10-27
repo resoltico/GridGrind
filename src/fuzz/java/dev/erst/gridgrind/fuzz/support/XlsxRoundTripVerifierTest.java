@@ -431,12 +431,12 @@ class XlsxRoundTripVerifierTest {
             new DrawingMarkerSpec(4, 6, 0, 0),
             dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
         false,
-        Optional.ofNullable("Review the budget before signing."),
-        Optional.ofNullable("Ada Lovelace"),
-        Optional.ofNullable("Finance"),
-        Optional.ofNullable("ada@example.com"),
+        Optional.of("Review the budget before signing."),
+        Optional.of("Ada Lovelace"),
+        Optional.of("Finance"),
+        Optional.of("ada@example.com"),
         Optional.empty(),
-        Optional.ofNullable("invalid"),
+        Optional.of("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64))));
   }

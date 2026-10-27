@@ -34,6 +34,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /** Stateful low-memory append-oriented workbook authoring backed by POI's SXSSF writer. */
 // Streaming authoring spans canonical scalar, temporal, formula and rich-text operands.
 @SuppressWarnings("PMD.ExcessiveImports")
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_TEXT_CHARACTERS_PER_CELL
+})
 public final class StreamingWorkbookWriter implements AutoCloseable {
   private final SXSSFWorkbook workbook;
   private final StyleAdapter styleRegistry;
@@ -117,7 +120,7 @@ public final class StreamingWorkbookWriter implements AutoCloseable {
     switch (value) {
       case CellValue.Blank _ -> cell.setBlank();
       case CellValue.Text textValue -> {
-        CellTextLimits.requireSupportedLength(textValue.value(), "textValue.value"); // LIM-010
+        CellTextLimits.requireSupportedLength(textValue.value(), "textValue.value");
         cell.setCellValue(textValue.value());
       }
       case ResolvedRichText richTextValue ->

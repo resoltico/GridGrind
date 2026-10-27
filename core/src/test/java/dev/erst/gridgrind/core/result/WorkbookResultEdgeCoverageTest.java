@@ -457,25 +457,28 @@ class WorkbookResultEdgeCoverageTest {
         "columnAddress must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SchemaColumnReport(0, " ", "Owner", 1, 0, List.of(), "TEXT"))
+                () -> new SchemaColumnReport(0, " ", "Owner", 1, 0, List.of(), Optional.of("TEXT")))
             .getMessage());
     assertEquals(
         "columnIndex must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SchemaColumnReport(-1, "A", "Owner", 1, 0, List.of(), "TEXT"))
+                () ->
+                    new SchemaColumnReport(-1, "A", "Owner", 1, 0, List.of(), Optional.of("TEXT")))
             .getMessage());
     assertEquals(
         "populatedCellCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SchemaColumnReport(0, "A", "Owner", -1, 0, List.of(), "TEXT"))
+                () ->
+                    new SchemaColumnReport(0, "A", "Owner", -1, 0, List.of(), Optional.of("TEXT")))
             .getMessage());
     assertEquals(
         "blankCellCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SchemaColumnReport(0, "A", "Owner", 1, -1, List.of(), "TEXT"))
+                () ->
+                    new SchemaColumnReport(0, "A", "Owner", 1, -1, List.of(), Optional.of("TEXT")))
             .getMessage());
     assertEquals(
         "observedTypes counts must sum to populatedCellCount",
@@ -483,7 +486,13 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new SchemaColumnReport(
-                        0, "A", "Owner", 2, 0, List.of(new TypeCountReport("TEXT", 1)), "TEXT"))
+                        0,
+                        "A",
+                        "Owner",
+                        2,
+                        0,
+                        List.of(new TypeCountReport("TEXT", 1)),
+                        Optional.of("TEXT")))
             .getMessage());
     assertEquals(
         "observedTypes must not contain duplicate type TEXT",
@@ -497,7 +506,7 @@ class WorkbookResultEdgeCoverageTest {
                         2,
                         0,
                         List.of(new TypeCountReport("TEXT", 1), new TypeCountReport("TEXT", 1)),
-                        "TEXT"))
+                        Optional.of("TEXT")))
             .getMessage());
     assertEquals(
         "dominantType must be omitted or match one observedTypes entry",
@@ -505,7 +514,13 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new SchemaColumnReport(
-                        0, "A", "Owner", 1, 0, List.of(new TypeCountReport("TEXT", 1)), "NUMBER"))
+                        0,
+                        "A",
+                        "Owner",
+                        1,
+                        0,
+                        List.of(new TypeCountReport("TEXT", 1)),
+                        Optional.of("NUMBER")))
             .getMessage());
     assertEquals(
         "workbookScopedCount must not be negative",
@@ -701,7 +716,7 @@ class WorkbookResultEdgeCoverageTest {
             false,
             "Aptos",
             new FontHeightReport(220, BigDecimal.valueOf(11)),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),

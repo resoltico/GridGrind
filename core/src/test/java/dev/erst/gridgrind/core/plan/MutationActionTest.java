@@ -4,12 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
-import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
-import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
@@ -132,20 +131,18 @@ class MutationActionTest {
                 () -> MutationAction.Validation.requireNonZero(0, "delta"))
             .getMessage());
     assertEquals(
-        "row must not exceed " + ExcelRowSpan.MAX_ROW_INDEX + " (Excel row limit)",
+        "row must not exceed " + Limit.MAX_ROW_INDEX + " (Excel row limit)",
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                    MutationAction.Validation.requireRowIndex(
-                        ExcelRowSpan.MAX_ROW_INDEX + 1, "row"))
+                () -> MutationAction.Validation.requireRowIndex(Limit.MAX_ROW_INDEX + 1, "row"))
             .getMessage());
     assertEquals(
-        "column must not exceed " + ExcelColumnSpan.MAX_COLUMN_INDEX + " (Excel column limit)",
+        "column must not exceed " + Limit.MAX_COLUMN_INDEX + " (Excel column limit)",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     MutationAction.Validation.requireColumnIndex(
-                        ExcelColumnSpan.MAX_COLUMN_INDEX + 1, "column"))
+                        Limit.MAX_COLUMN_INDEX + 1, "column"))
             .getMessage());
     assertEquals(
         "last must not be less than first",
@@ -278,8 +275,8 @@ class MutationActionTest {
             MutationAction.Validation.copyRows(List.of(List.of(textCell("A"))))));
     MutationAction.Validation.requireNonBlank("ok", "field");
     MutationAction.Validation.requirePositive(1, "count");
-    MutationAction.Validation.requireRowIndex(ExcelRowSpan.MAX_ROW_INDEX, "row");
-    MutationAction.Validation.requireColumnIndex(ExcelColumnSpan.MAX_COLUMN_INDEX, "column");
+    MutationAction.Validation.requireRowIndex(Limit.MAX_ROW_INDEX, "row");
+    MutationAction.Validation.requireColumnIndex(Limit.MAX_COLUMN_INDEX, "column");
     MutationAction.Validation.requireOrderedSpan(1, 1, "first", "last");
   }
 

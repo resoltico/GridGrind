@@ -1,11 +1,12 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Optional;
 
 /** Reports one omitted creator field that has no protocol default. */
 public record RequestMissingRequiredField(String path) implements RequestShapeStructuralProblem {
   public RequestMissingRequiredField {
-    path = RequestStructuralProblemSupport.requireText(path, "path");
+    path = TextValidation.requireNonBlank(path, "path");
   }
 
   @Override

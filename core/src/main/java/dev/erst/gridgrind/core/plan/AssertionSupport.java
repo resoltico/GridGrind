@@ -14,14 +14,6 @@ import java.util.Objects;
 final class AssertionSupport {
   private AssertionSupport() {}
 
-  static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   static List<Assertion> copyAssertions(List<Assertion> assertions, String fieldName) {
     Objects.requireNonNull(assertions, fieldName + " must not be null");
     List<Assertion> copy = new ArrayList<>(assertions.size());

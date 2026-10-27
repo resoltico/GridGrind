@@ -1,41 +1,50 @@
 # Execution model
 
-The engine executes admitted, source-materialized plans through one of three backends.
-Native workbook mechanics live in feature adapters and the XSSF, streaming and event-read
-packages. Runtime owns admission, journal, assertions, host acceptance and publication.
+A WorkbookPlan describes intended work. A host-owned ExecutionGrant independently permits
+read resources, operation IDs, workbook target scope, publication and secret references.
+Plan content cannot manufacture authority. Java and CLI execution use the same grant model.
 
-## Routing and constraints recorded before the backend cutover
+Admission validates structure and defaults before binding request-owned paths. The JSON
+pipeline decodes UTF-8, parses once with recovery, collects schema/domain findings, materializes
+omission defaults, then binds the validated model. A binding failure after validation is an
+internal defect. Doctor retains safe independent fragments and reports every provable problem
+without applying workbook mutations.
 
-The full-XSSF workflow operates on an opened workbook, executes mutations and observations,
-performs the calculation and host-acceptance phases, persists, and closes the workbook.
-It supports the complete operation surface. It also supplies the materialized path for an
-EVENT_READ request that cannot take the direct source-read path.
+## Paths and secrets
 
-Direct event-read is selected only for EVENT_READ with DO_NOT_CALCULATE, no recalculate-on-open,
-inspection-only steps, an existing-file source and no persistence. Static validation permits
-GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only and rejects assertions and mutations. When direct
-routing is unavailable, the XSSF workflow serializes a private plain workbook for the event
-reader; the event-reader query restriction still applies. Encrypted sources are decrypted into
-an owned private workbook before reading, and their cleanup ownership survives through closure.
+File requests establish their containing directory as the execution root; stdin requests need
+an explicit root. Relative and absolute request-owned paths must remain under that root.
+Descriptor-relative no-follow access rejects symlinks and unsafe ancestors. Grants authorize
+exact resources rather than bypassing those protections. Response output is host transport.
 
-Streaming-write requires a NEW source, DO_NOT_CALCULATE, and mutations limited to ENSURE_SHEET
-and APPEND_ROW. Recalculate-on-open is allowed. An ENSURE_SHEET must precede append, inspection or
-assertion, and a streaming plan must create at least one sheet. Observations and assertions use
-materialized private workbooks; the streaming writer does not provide arbitrary in-place edits.
-Host acceptance verifies the materialized terminal workbook before publication.
+Secret references are resolved by the trusted host and separately allowed by the grant.
+Diagnostic redaction covers authored secret-capable input. Encrypted package plaintext and
+run scratch have explicit owners and cleanup lifetimes.
 
-These observations come from the existing `ExecutionWorkflowRouting`, `FullXssfWorkflow`,
-`ExecutionStreamingWorkflow`, `ExecutionDirectEventReadWorkflow`, `StepExecution`,
-`WorkbookStaticExecutionValidation`, `WorkbookStaticStreamingValidation`,
-`WorkbookOperationContract`, and `CalculationPolicySpec` implementations.
+## Execution
 
-## Backend capability ownership
+Specs carry complete authored choices, patches carry partial updates, reports carry observed
+facts, and resolved types exist where source binding changes the contract. Selectors resolve
+to concrete targets once. FULL_XSSF performs the complete in-memory workflow. EVENT_READ and
+STREAMING_WRITE have explicit reduced capabilities; unsupported work is rejected instead of
+silently changing backend.
 
-Capability declarations are pure core semantics, shared by the execution backends, static
-validation and catalog/help rendering. Each backend exposes its canonical declaration through
-`ExecutionBackend`; runtime routing reads it. The declarations include calculation restrictions
-and the direct event-read route, so consumers do not maintain separate policy lists.
+Steps preserve authored order. Assertions may collect after the terminal assertion phase
+begins; no later mutation is legal. Inspections may interleave. Factual observations retain
+stored labels and unsupported details without authoring them as new valid identifiers.
 
-The capability contract must live in core: core owns validation and catalog and cannot depend
-on engine. This is the layering correction to WP-42's literal engine-owned declaration wording;
-there is one shared declaration per mode, with no reverse module dependency or copied registry.
+## Publication and evidence
+
+Publication requires matching host authority. The engine stages an artifact, checks acceptance,
+then publishes through the admitted descriptor/collision policy. Failure cannot claim a written
+artifact. Existing-source security dispositions are explicit. Response publication is separate
+from workbook publication; if it fails, the already-rendered primary payload can fall back to
+stdout with a structured stderr notice.
+
+Journals record execution evidence. VERBOSE progress goes to the diagnostic stream rather than
+duplicating events in the primary response. Runtime before/after acceptance snapshots, package
+relation snapshots and unsupported native-style acquisition snapshots are operational state,
+not duplicate core model types.
+
+See [limits](LIMITATIONS.md), [problems](ERRORS.md), [CLI](CLI.md) and the
+[generated reference](reference/README.md) for exact fields and supported variants.

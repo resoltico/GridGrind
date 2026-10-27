@@ -3,10 +3,10 @@ package dev.erst.gridgrind.core.result;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -183,8 +183,8 @@ public record ExecutionJournal(
         throw new IllegalArgumentException("stepIndex must be >= 0");
       }
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      WorkbookPlan.requireNonBlank(stepKind, "stepKind");
-      WorkbookPlan.requireNonBlank(stepType, "stepType");
+      TextValidation.requireNonBlank(stepKind, "stepKind");
+      TextValidation.requireNonBlank(stepType, "stepType");
       resolvedTargets = copyValues(resolvedTargets, "resolvedTargets");
       Objects.requireNonNull(phase, "phase must not be null");
       Objects.requireNonNull(outcome, "outcome must not be null");
@@ -205,8 +205,8 @@ public record ExecutionJournal(
       displayOrder = 3)
   public record Target(String kind, String label) {
     public Target {
-      WorkbookPlan.requireNonBlank(kind, "kind");
-      WorkbookPlan.requireNonBlank(label, "label");
+      TextValidation.requireNonBlank(kind, "kind");
+      TextValidation.requireNonBlank(label, "label");
     }
   }
 
@@ -220,8 +220,8 @@ public record ExecutionJournal(
     public FailureClassification {
       Objects.requireNonNull(code, "code must not be null");
       Objects.requireNonNull(category, "category must not be null");
-      WorkbookPlan.requireNonBlank(stage, "stage");
-      WorkbookPlan.requireNonBlank(message, "message");
+      TextValidation.requireNonBlank(stage, "stage");
+      TextValidation.requireNonBlank(message, "message");
     }
   }
 
@@ -348,7 +348,7 @@ public record ExecutionJournal(
     if (normalized.isEmpty()) {
       return Optional.empty();
     }
-    return Optional.of(WorkbookPlan.requireNonBlank(normalized.orElseThrow(), fieldName));
+    return Optional.of(TextValidation.requireNonBlank(normalized.orElseThrow(), fieldName));
   }
 
   private static <T> Optional<T> normalizeOptionalValue(Optional<T> value, String fieldName) {
@@ -359,7 +359,7 @@ public record ExecutionJournal(
   }
 
   private static String requireExecutionTimestamp(String value, String fieldName) {
-    return WorkbookPlan.requireNonBlank(value, fieldName);
+    return TextValidation.requireNonBlank(value, fieldName);
   }
 
   private static void requireNonNegativeDuration(long durationMillis) {

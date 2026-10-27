@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.problem;
 
 import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 
 /** A host failure before workbook execution, identified without binding core to a transport. */
 @Variant(id = "HOST_RUNTIME", summary = "A host failure before workbook execution begins.")
@@ -11,7 +12,6 @@ public record HostContext(
     implements ProblemContext {
   /** Validates the caller-supplied host identity. */
   public HostContext {
-    java.util.Objects.requireNonNull(hostId, "hostId must not be null");
-    if (hostId.isBlank()) throw new IllegalArgumentException("hostId must not be blank");
+    hostId = TextValidation.requireNonBlank(hostId, "hostId");
   }
 }

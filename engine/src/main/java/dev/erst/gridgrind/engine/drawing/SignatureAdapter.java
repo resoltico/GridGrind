@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -64,7 +65,7 @@ public final class SignatureAdapter {
   public boolean updateAnchorIfPresent(
       XSSFSheet sheet, String objectName, DrawingAnchorSpec.TwoCell anchor) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");
 
     Optional<LocatedSignatureLine> located = find(sheet, objectName);
@@ -78,7 +79,7 @@ public final class SignatureAdapter {
 
   public boolean deleteIfPresent(XSSFSheet sheet, String objectName) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
 
     XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
     if (vmlDrawing == null) {
@@ -312,13 +313,6 @@ public final class SignatureAdapter {
         anchor.from().rowIndex(),
         anchor.to().columnIndex(),
         anchor.to().rowIndex());
-  }
-
-  private static void requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
   }
 
   private record LocatedSignatureLine(CTShape shape, XmlCursor cursor, int index) {}

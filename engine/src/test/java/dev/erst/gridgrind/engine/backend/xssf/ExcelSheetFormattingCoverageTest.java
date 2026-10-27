@@ -283,7 +283,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals("Quarterly", firstRun.text());
       assertEquals("Aptos", firstRun.font().fontName());
       assertEquals(FontHeightReport.fromTwips(260), firstRun.font().fontHeight());
-      assertEquals(rgb("#112233"), firstRun.font().fontColor());
+      assertEquals(rgb("#112233"), firstRun.font().fontColor().orElseThrow());
       assertFalse(firstRun.font().bold());
       assertTrue(firstRun.font().italic());
 
@@ -291,7 +291,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals(" Report", secondRun.text());
       assertEquals("Aptos", secondRun.font().fontName());
       assertEquals(FontHeightReport.fromTwips(260), secondRun.font().fontHeight());
-      assertEquals(rgb("#FF0000"), secondRun.font().fontColor());
+      assertEquals(rgb("#FF0000"), secondRun.font().fontColor().orElseThrow());
       assertTrue(secondRun.font().bold());
       assertTrue(secondRun.font().italic());
     }
@@ -346,7 +346,8 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           (CellReport.BlankReport) sheet.cells().snapshotCell("A2");
 
       assertEquals(rgb("#CDCDCD"), fillForegroundColor(firstCell.style().orElseThrow().fill()));
-      assertEquals(rgb("#A3A3A3"), firstCell.style().orElseThrow().font().fontColor());
+      assertEquals(
+          rgb("#A3A3A3"), firstCell.style().orElseThrow().font().fontColor().orElseThrow());
       assertTrue(firstCell.style().orElseThrow().font().strikeout());
       assertEquals(
           ExcelBorderStyle.DASH_DOT, borderStyle(firstCell.style().orElseThrow().border().top()));

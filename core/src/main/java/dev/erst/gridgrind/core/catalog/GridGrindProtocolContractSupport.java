@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
@@ -203,9 +204,7 @@ public final class GridGrindProtocolContractSupport {
       Objects.requireNonNull(recordType, "recordType must not be null");
       Objects.requireNonNull(fieldName, "fieldName must not be null");
       Objects.requireNonNull(defaultBoolean, "defaultBoolean must not be null");
-      if (fieldName.isBlank()) {
-        throw new IllegalArgumentException("fieldName must not be blank");
-      }
+      TextValidation.requireNonBlank(fieldName, "fieldName");
       if (required && defaultBoolean.isPresent()) {
         throw new IllegalArgumentException(
             "required primitive request fields must not declare defaults");

@@ -2,11 +2,12 @@ package dev.erst.gridgrind.core.model.table;
 
 import dev.erst.gridgrind.core.result.TypeCountReport;
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
 /** One inferred schema column with header text and observed value-type counts. */
 public record SchemaColumnReport(
@@ -16,16 +17,15 @@ public record SchemaColumnReport(
     int populatedCellCount,
     int blankCellCount,
     List<TypeCountReport> observedTypes,
-    @Nullable String dominantType) {
+    Optional<String> dominantType) {
   public SchemaColumnReport {
+    Objects.requireNonNull(dominantType, "dominantType must not be null");
     if (columnIndex < 0) {
       throw new IllegalArgumentException("columnIndex must not be negative");
     }
     Objects.requireNonNull(columnAddress, "columnAddress must not be null");
     Objects.requireNonNull(headerDisplayValue, "headerDisplayValue must not be null");
-    if (columnAddress.isBlank()) {
-      throw new IllegalArgumentException("columnAddress must not be blank");
-    }
+    TextValidation.requireNonBlank(columnAddress, "columnAddress");
     if (populatedCellCount < 0) {
       throw new IllegalArgumentException("populatedCellCount must not be negative");
     }
@@ -45,12 +45,13 @@ public record SchemaColumnReport(
     if (observedTypeCountTotal != populatedCellCount) {
       throw new IllegalArgumentException("observedTypes counts must sum to populatedCellCount");
     }
-    if (dominantType != null) {
-      TypeCountReport.requireSupportedType(dominantType, "dominantType");
-      if (!observedTypeNames.contains(dominantType)) {
-        throw new IllegalArgumentException(
-            "dominantType must be omitted or match one observedTypes entry");
-      }
-    }
+    dominantType.ifPresent(
+        type -> {
+          TypeCountReport.requireSupportedType(type, "dominantType");
+          if (!observedTypeNames.contains(type)) {
+            throw new IllegalArgumentException(
+                "dominantType must be omitted or match one observedTypes entry");
+          }
+        });
   }
 }

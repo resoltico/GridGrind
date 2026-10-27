@@ -149,9 +149,9 @@ tasks.named<Test>("test") {
     inputs.files(tasks.named("shadowJar"), tasks.named("installShadowDist"), tasks.named("shadowDistZip"), tasks.named("shadowDistTar"))
         .withPropertyName("deliveredArtifacts")
     inputs.dir(rootProject.layout.projectDirectory.dir("examples")).withPropertyName("repositoryExamples")
-    inputs.files(rootProject.file("README.md"), rootProject.file("docs/OPERATIONS.md"), rootProject.file("docs/QUICK_START.md"))
+    inputs.files(rootProject.file("README.md"), rootProject.file("docs/EXECUTION_MODEL.md"), rootProject.file("docs/QUICK_START.md"))
         .withPropertyName("hostGuidance")
-    useJUnitPlatform { excludeTags("container", "devcontainer") }
+    useJUnitPlatform { excludeTags("container", "devcontainer", "documentation") }
     systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
     systemProperty("gridgrind.golden.update", providers.gradleProperty("golden.update").getOrElse("false"))
 }
@@ -252,3 +252,29 @@ for (suite in listOf("container", "devcontainer")) {
         outputs.cacheIf { false }
     }
 }
+
+for (operation in listOf("generateReferenceDocs", "verifyGeneratedDocs")) {
+    tasks.register<JavaExec>(operation) {
+        group = "documentation"
+        description = if (operation == "verifyGeneratedDocs") "Verifies reference documents and schemas against core metadata." else "Regenerates metadata-owned Markdown references."
+        dependsOn("testClasses")
+        classpath = hostTestSources.get().runtimeClasspath
+        mainClass.set("dev.erst.gridgrind.cli.io.ReferenceDocumentsWriter")
+        args(rootProject.projectDir.absolutePath, if (operation == "verifyGeneratedDocs") "--verify" else "--write")
+    }
+}
+
+val documentationTest = tasks.register<Test>("documentationTest") {
+    group = "verification"
+    description = "Validates handwritten JSON examples and local documentation links."
+    dependsOn("testClasses")
+    testClassesDirs = hostTestSources.get().output.classesDirs
+    classpath = hostTestSources.get().runtimeClasspath
+    useJUnitPlatform { includeTags("documentation") }
+    systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
+    inputs.dir(rootProject.layout.projectDirectory.dir("docs")).withPropertyName("documentation")
+    inputs.files(rootProject.file("README.md"), rootProject.file("CHANGELOG.md"), rootProject.file("PATENTS.md"), rootProject.file("core/VOCABULARY.md"))
+        .withPropertyName("entryDocuments")
+    extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> { isEnabled = false }
+}
+tasks.named("check") { dependsOn(documentationTest) }

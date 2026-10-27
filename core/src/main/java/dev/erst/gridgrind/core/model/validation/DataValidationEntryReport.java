@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.validation;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,8 +34,8 @@ public sealed interface DataValidationEntryReport
       implements DataValidationEntryReport {
     public Unsupported {
       ranges = copyRanges(ranges);
-      kind = requireNonBlank(kind, "kind");
-      detail = requireNonBlank(detail, "detail");
+      kind = TextValidation.requireNonBlank(kind, "kind");
+      detail = TextValidation.requireNonBlank(detail, "detail");
     }
   }
 
@@ -59,13 +60,5 @@ public sealed interface DataValidationEntryReport
       throw new IllegalArgumentException("ranges must not be empty");
     }
     return copy;
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

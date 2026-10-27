@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.problem;
 
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,12 +52,8 @@ public interface GridGrindProblemDetail {
       Objects.requireNonNull(code, "code must not be null");
       Objects.requireNonNull(message, "message must not be null");
       Objects.requireNonNull(stage, "stage must not be null");
-      if (message.isBlank()) {
-        throw new IllegalArgumentException("message must not be blank");
-      }
-      if (stage.isBlank()) {
-        throw new IllegalArgumentException("stage must not be blank");
-      }
+      TextValidation.requireNonBlank(message, "message");
+      TextValidation.requireNonBlank(stage, "stage");
     }
   }
 }

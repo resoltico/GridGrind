@@ -4,10 +4,14 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** Protocol-facing explicit sheet range or formula target for named-range authoring. */
 @Union(discriminator = "type", catalog = true, displayOrder = 23)
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_NAMED_RANGE_FORMULA_INJECTION
+})
 public sealed interface NamedRangeTarget
     permits dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Range,
         dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Formula {
@@ -39,11 +43,8 @@ public sealed interface NamedRangeTarget
       summary = "Write one named-range target backed by an exact stored formula.")
   record Formula(String formula) implements NamedRangeTarget {
     public Formula {
-      Objects.requireNonNull(formula, "formula must not be null");
-      if (formula.isBlank()) {
-        throw new IllegalArgumentException("formula must not be blank");
-      }
-      FormulaInputSecurity.rejectDde(formula); // LIM-032
+      formula = TextValidation.requireNonBlank(formula, "formula");
+      FormulaInputSecurity.rejectDde(formula);
     }
   }
 }

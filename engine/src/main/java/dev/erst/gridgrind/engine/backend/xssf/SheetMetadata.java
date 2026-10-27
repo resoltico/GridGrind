@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.autofilter.AutofilterAdapter;
 import dev.erst.gridgrind.engine.conditionalformatting.ConditionalFormattingAdapter;
 import dev.erst.gridgrind.engine.validation.DataValidationAdapter;
@@ -47,7 +48,7 @@ public final class SheetMetadata {
 
   /** Creates or replaces the validation rule over the selected range. */
   public SheetMetadata setDataValidation(String range, ResolvedDataValidation validation) {
-    requireNonBlank(range, "range");
+    TextValidation.requireNonBlank(range, "range");
     Objects.requireNonNull(validation, "validation must not be null");
     dataValidationAdapter.setDataValidation(xssfSheet(), range, validation);
     return this;
@@ -72,7 +73,7 @@ public final class SheetMetadata {
       String range,
       List<AutofilterFilterColumnSpec> criteria,
       Optional<AutofilterSortStateSpec> sortState) {
-    requireNonBlank(range, "range");
+    TextValidation.requireNonBlank(range, "range");
     Objects.requireNonNull(criteria, "criteria must not be null");
     Objects.requireNonNull(sortState, "sortState must not be null");
     autofilterAdapter.setSheetAutofilter(xssfSheet(), range, criteria, sortState);
@@ -95,13 +96,6 @@ public final class SheetMetadata {
 
   private XSSFSheet xssfSheet() {
     return (XSSFSheet) sheet;
-  }
-
-  private static void requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
   }
 
   /** Clears data-validation rules on the bound sheet. */

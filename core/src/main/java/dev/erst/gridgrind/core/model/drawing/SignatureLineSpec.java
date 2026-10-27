@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.model.drawing;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public record SignatureLineSpec(
     Optional<PictureDataSpec> plainSignature) {
 
   public SignatureLineSpec {
-    requireNonBlank(name, "name");
+    TextValidation.requireNonBlank(name, "name");
     anchor = requireTwoCellAnchor(anchor);
     signingInstructions = normalizeOptional(signingInstructions, "signingInstructions");
     suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner");
@@ -42,14 +43,6 @@ public record SignatureLineSpec(
       throw new IllegalArgumentException(
           "caption or at least one suggested signer field must be provided");
     }
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {

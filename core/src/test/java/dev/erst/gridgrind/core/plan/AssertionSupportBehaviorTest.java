@@ -3,20 +3,20 @@ package dev.erst.gridgrind.core.plan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import org.junit.jupiter.api.Test;
 
 /** Focused residual coverage for low-level assertion validation helpers. */
 class AssertionSupportBehaviorTest {
   @Test
   void validatesNonBlankStringsAndFiniteNumbers() {
-    assertEquals("Budget", AssertionSupport.requireNonBlank("Budget", "field"));
+    assertEquals("Budget", TextValidation.requireNonBlank("Budget", "field"));
     assertEquals(12.5d, AssertionSupport.requireFiniteNumber(12.5d, "threshold"));
 
     assertEquals(
         "field must not be blank",
         assertThrows(
-                IllegalArgumentException.class,
-                () -> AssertionSupport.requireNonBlank(" ", "field"))
+                IllegalArgumentException.class, () -> TextValidation.requireNonBlank(" ", "field"))
             .getMessage());
     assertEquals(
         "threshold must not be null",

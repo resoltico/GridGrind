@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.discovery;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,7 +18,7 @@ final class RecipeCatalogValidation {
   }
 
   static String requirePortableRequestFileName(String requestFileName) {
-    String value = DiscoveryValidation.requireNonBlank(requestFileName, "requestFileName");
+    String value = TextValidation.requireNonBlank(requestFileName, "requestFileName");
     if (value.contains("/") || value.contains("\\")) {
       throw new IllegalArgumentException(
           "requestFileName must be one portable file name, not a repository path");

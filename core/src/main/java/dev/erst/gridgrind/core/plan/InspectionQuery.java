@@ -3,11 +3,13 @@ package dev.erst.gridgrind.core.plan;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
-import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import java.util.Objects;
 
 /** Ordered post-mutation inspection queries that introspect or analyze workbook state. */
 @Union(discriminator = "type")
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_CELL_RETURNING_READ_COUNT
+})
 public sealed interface InspectionQuery
     permits InspectionQuery.Introspection, InspectionQuery.Surface, InspectionQuery.Analysis {
 
@@ -18,7 +20,6 @@ public sealed interface InspectionQuery
    * prevent out-of-memory failures during serialization of large cell grids. See
    * docs/LIMITATIONS.md LIM-001.
    */
-  int MAX_READ_CELLS = ExcelReadLimits.MAX_READ_CELLS; // LIM-001
 
   /** Marker for raw workbook-fact queries with no higher-level interpretation. */
   sealed interface Introspection extends InspectionQuery

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.model.customxml;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** XML document exported from one workbook custom-XML mapping. */
@@ -13,15 +14,7 @@ public record CustomXmlExportReport(
     CustomXmlMappingReport mapping, String encoding, boolean schemaValidated, String xml) {
   public CustomXmlExportReport {
     Objects.requireNonNull(mapping, "mapping must not be null");
-    encoding = requireNonBlank(encoding, "encoding");
-    xml = requireNonBlank(xml, "xml");
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
+    encoding = TextValidation.requireNonBlank(encoding, "encoding");
+    xml = TextValidation.requireNonBlank(xml, "xml");
   }
 }

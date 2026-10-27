@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
@@ -15,7 +16,6 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.engine.layout.LayoutAdapter;
 import java.util.List;
@@ -183,7 +183,7 @@ class SheetPresentationTest {
                       Optional.empty(),
                       SheetOutlineSummarySpec.defaults(),
                       new SheetDefaultsSpec(
-                          ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH + 1,
+                          Limit.MAX_DEFAULT_COLUMN_WIDTH + 1,
                           SheetDefaultsSpec.defaults().defaultRowHeightPoints()),
                       List.of())));
       assertThrows(
@@ -197,7 +197,7 @@ class SheetPresentationTest {
                       SheetOutlineSummarySpec.defaults(),
                       new SheetDefaultsSpec(
                           SheetDefaultsSpec.defaults().defaultColumnWidth(),
-                          Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)),
+                          Math.nextUp(Limit.MAX_ROW_HEIGHT_POINTS)),
                       List.of())));
     }
   }

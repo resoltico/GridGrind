@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -53,10 +54,7 @@ public sealed interface AutofilterFilterCriterionSpec
   record Dynamic(String dynamicType, Optional<Double> value, Optional<Double> maxValue)
       implements AutofilterFilterCriterionSpec {
     public Dynamic {
-      Objects.requireNonNull(dynamicType, "dynamicType must not be null");
-      if (dynamicType.isBlank()) {
-        throw new IllegalArgumentException("dynamicType must not be blank");
-      }
+      dynamicType = TextValidation.requireNonBlank(dynamicType, "dynamicType");
       Objects.requireNonNull(value, "value must not be null");
       Objects.requireNonNull(maxValue, "maxValue must not be null");
       value = value.map(entry -> finite(entry, "value"));
@@ -86,10 +84,7 @@ public sealed interface AutofilterFilterCriterionSpec
   @Variant(id = "ICON", summary = "Retain rows matching one icon-set member.")
   record Icon(String iconSet, int iconId) implements AutofilterFilterCriterionSpec {
     public Icon {
-      Objects.requireNonNull(iconSet, "iconSet must not be null");
-      if (iconSet.isBlank()) {
-        throw new IllegalArgumentException("iconSet must not be blank");
-      }
+      iconSet = TextValidation.requireNonBlank(iconSet, "iconSet");
       if (iconId < 0) {
         throw new IllegalArgumentException("iconId must not be negative");
       }
@@ -105,12 +100,8 @@ public sealed interface AutofilterFilterCriterionSpec
     public CustomConditionSpec {
       Objects.requireNonNull(operator, "operator must not be null");
       Objects.requireNonNull(value, "value must not be null");
-      if (operator.isBlank()) {
-        throw new IllegalArgumentException("operator must not be blank");
-      }
-      if (value.isBlank()) {
-        throw new IllegalArgumentException("value must not be blank");
-      }
+      TextValidation.requireNonBlank(operator, "operator");
+      TextValidation.requireNonBlank(value, "value");
     }
   }
 

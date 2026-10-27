@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 import static dev.erst.gridgrind.engine.backend.xssf.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
@@ -59,7 +60,6 @@ import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
-import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -1184,7 +1184,7 @@ class ExcelWorkbookTest {
     assertEquals(ExcelVerticalAlignment.TOP, style.alignment().verticalAlignment());
     assertEquals("Aptos", style.font().fontName());
     assertEquals(new BigDecimal("11.5"), style.font().fontHeight().points());
-    assertEquals(rgb("#1F4E78"), style.font().fontColor());
+    assertEquals(rgb("#1F4E78"), style.font().fontColor().orElseThrow());
     assertTrue(style.font().underline());
     assertTrue(style.font().strikeout());
     assertEquals(rgb("#FFF2CC"), fillForegroundColor(style.fill()));
@@ -1564,7 +1564,7 @@ class ExcelWorkbookTest {
     if (sheet.getCTWorksheet().sizeOfColsArray() != 1) {
       return false;
     }
-    boolean[] seenColumns = new boolean[ExcelColumnSpan.MAX_COLUMN_INDEX + 1];
+    boolean[] seenColumns = new boolean[Limit.MAX_COLUMN_INDEX + 1];
     for (CTCol col : sheet.getCTWorksheet().getColsArray(0).getColList()) {
       if (col.getMin() != col.getMax()) {
         return false;

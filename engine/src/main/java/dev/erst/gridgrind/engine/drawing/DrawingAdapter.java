@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.backend.xssf.DrawingObjectNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.PoiRelationRemoval;
 import dev.erst.gridgrind.engine.charts.ChartAdapter;
@@ -126,7 +127,7 @@ public final class DrawingAdapter {
 
   public DrawingObjectPayloadReport drawingObjectPayload(XSSFSheet sheet, String objectName) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
 
     Optional<LocatedShape> located = optionalLocatedShape(sheet, objectName);
     boolean signatureLine = signatureLineController.hasNamedSignatureLine(sheet, objectName);
@@ -256,7 +257,7 @@ public final class DrawingAdapter {
   public void setDrawingObjectAnchor(
       XSSFSheet sheet, String objectName, DrawingAnchorSpec.TwoCell anchor) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");
 
     Optional<LocatedShape> located = optionalLocatedShape(sheet, objectName);
@@ -295,7 +296,7 @@ public final class DrawingAdapter {
 
   public void deleteDrawingObject(XSSFSheet sheet, String objectName) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
     Optional<LocatedShape> located = optionalLocatedShape(sheet, objectName);
     boolean signatureLine = signatureLineController.hasNamedSignatureLine(sheet, objectName);
     if (located.isPresent() && signatureLine) {
@@ -528,15 +529,7 @@ public final class DrawingAdapter {
     };
   }
 
-  /** Returns the value after enforcing that it is present and not blank. */
-  public static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
+  /** Reads the embedded object package and any available preview metadata. */
   public static DrawingObjectReport.EmbeddedObject snapshotEmbeddedObject(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     String objectName = resolvedName(objectData);
@@ -545,15 +538,17 @@ public final class DrawingAdapter {
         objectName,
         snapshotAnchor(shapeXml(objectData)),
         readback.packagingKind(),
-        readback.label(),
-        readback.fileName(),
-        readback.command(),
+        Optional.ofNullable(readback.label()),
+        Optional.ofNullable(readback.fileName()),
+        Optional.ofNullable(readback.command()),
         readback.contentType(),
         readback.payload().size(),
         sha256(readback.payload().bytes()),
-        readback.previewFormat(),
-        readback.previewImage() == null ? null : (long) readback.previewImage().size(),
-        readback.previewImage() == null ? null : sha256(readback.previewImage().bytes()));
+        Optional.ofNullable(readback.previewFormat()),
+        Optional.ofNullable(
+            readback.previewImage() == null ? null : (long) readback.previewImage().size()),
+        Optional.ofNullable(
+            readback.previewImage() == null ? null : sha256(readback.previewImage().bytes())));
   }
 
   private static DrawingObjectPayloadReport.EmbeddedObject embeddedObjectPayload(
@@ -563,11 +558,11 @@ public final class DrawingAdapter {
         objectName,
         readback.packagingKind(),
         readback.contentType(),
-        readback.fileName(),
+        Optional.ofNullable(readback.fileName()),
         sha256(readback.payload().bytes()),
         java.util.Base64.getEncoder().encodeToString(readback.payload().bytes()),
-        readback.label(),
-        readback.command());
+        Optional.ofNullable(readback.label()),
+        Optional.ofNullable(readback.command()));
   }
 
   public static Optional<org.apache.poi.openxml4j.opc.PackagePart> previewImagePart(
@@ -673,10 +668,7 @@ public final class DrawingAdapter {
       org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject oleObject,
       String relationId) {
     Objects.requireNonNull(oleObject, "oleObject must not be null");
-    Objects.requireNonNull(relationId, "relationId must not be null");
-    if (relationId.isBlank()) {
-      throw new IllegalArgumentException("relationId must not be blank");
-    }
+    TextValidation.requireNonBlank(relationId, "relationId");
     org.openxmlformats.schemas.spreadsheetml.x2006.main.CTObjectPr objectPr =
         oleObject.isSetObjectPr() ? oleObject.getObjectPr() : oleObject.addNewObjectPr();
     objectPr.setId(relationId);
@@ -907,7 +899,7 @@ public final class DrawingAdapter {
 
   private static Optional<LocatedShape> optionalLocatedShape(XSSFSheet sheet, String objectName) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    requireNonBlank(objectName, "objectName");
+    TextValidation.requireNonBlank(objectName, "objectName");
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing == null) {
       return Optional.empty();
@@ -963,9 +955,9 @@ public final class DrawingAdapter {
         readback.contentType(),
         readback.bytes().length,
         sha256(readback.bytes()),
-        dimensions.widthPixels(),
-        dimensions.heightPixels(),
-        blankAsOptional(picture.getCTPicture().getNvPicPr().getCNvPr().getDescr()).orElse(null));
+        Optional.ofNullable(dimensions.widthPixels()),
+        Optional.ofNullable(dimensions.heightPixels()),
+        blankAsOptional(picture.getCTPicture().getNvPicPr().getCNvPr().getDescr()));
   }
 
   public static DrawingObjectPayloadReport.Picture picturePayload(
@@ -978,7 +970,7 @@ public final class DrawingAdapter {
         objectName + readback.format().defaultExtension(),
         sha256(readback.bytes()),
         java.util.Base64.getEncoder().encodeToString(readback.bytes()),
-        blankAsOptional(picture.getCTPicture().getNvPicPr().getCNvPr().getDescr()).orElse(null));
+        blankAsOptional(picture.getCTPicture().getNvPicPr().getCNvPr().getDescr()));
   }
 
   public static void deletePicture(XSSFSheet sheet, LocatedShape located, XSSFPicture picture) {
@@ -1072,10 +1064,7 @@ public final class DrawingAdapter {
 
   public static void setPictureRelationId(XSSFPicture picture, String relationId) {
     Objects.requireNonNull(picture, "picture must not be null");
-    Objects.requireNonNull(relationId, "relationId must not be null");
-    if (relationId.isBlank()) {
-      throw new IllegalArgumentException("relationId must not be blank");
-    }
+    TextValidation.requireNonBlank(relationId, "relationId");
     if (picture.getCTPicture().getBlipFill() == null
         || picture.getCTPicture().getBlipFill().getBlip() == null) {
       throw new IllegalStateException(
@@ -1140,10 +1129,7 @@ public final class DrawingAdapter {
       Objects.requireNonNull(pictureData, "pictureData must not be null");
       Objects.requireNonNull(picturePart, "picturePart must not be null");
       Objects.requireNonNull(format, "format must not be null");
-      Objects.requireNonNull(contentType, "contentType must not be null");
-      if (contentType.isBlank()) {
-        throw new IllegalArgumentException("contentType must not be blank");
-      }
+      TextValidation.requireNonBlank(contentType, "contentType");
       this.pictureData = pictureData;
       this.picturePart = picturePart;
       this.format = format;
@@ -1351,8 +1337,8 @@ public final class DrawingAdapter {
         resolvedName(shape),
         snapshotAnchor(shapeXml(shape)),
         ExcelDrawingShapeKind.SIMPLE_SHAPE,
-        preset == null ? null : preset.toString(),
-        blankAsOptional(shape.getText()).orElse(null),
+        Optional.ofNullable(preset == null ? null : preset.toString()),
+        blankAsOptional(shape.getText()),
         0);
   }
 
@@ -1362,8 +1348,8 @@ public final class DrawingAdapter {
         resolvedName(connector),
         snapshotAnchor(shapeXml(connector)),
         ExcelDrawingShapeKind.CONNECTOR,
-        null,
-        null,
+        Optional.empty(),
+        Optional.empty(),
         0);
   }
 
@@ -1373,8 +1359,8 @@ public final class DrawingAdapter {
         resolvedName(group),
         snapshotAnchor(shapeXml(group)),
         ExcelDrawingShapeKind.GROUP,
-        null,
-        null,
+        Optional.empty(),
+        Optional.empty(),
         drawing.getShapes(group).size());
   }
 
@@ -1384,8 +1370,8 @@ public final class DrawingAdapter {
         resolvedName(graphicFrame),
         snapshotAnchor(shapeXml(graphicFrame)),
         ExcelDrawingShapeKind.GRAPHIC_FRAME,
-        null,
-        null,
+        Optional.empty(),
+        Optional.empty(),
         0);
   }
 

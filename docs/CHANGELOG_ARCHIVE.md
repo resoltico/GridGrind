@@ -1,12 +1,3 @@
----
-afad: "4.0"
-domain: CHANGELOG_ARCHIVE
-updated: "2026-07-02"
-route:
-  keywords: [gridgrind, changelog, release history, archive]
-  questions: ["where is the older gridgrind release history", "what changed before the recent gridgrind releases"]
----
-
 # Changelog Archive
 
 Older GridGrind release history lives here once the root `CHANGELOG.md` rotates older entries out of the live release ledger.
@@ -1337,7 +1328,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - `--help` banner changed from `GridGrind CLI <version>` to `GridGrind <version>` to match
   the product name.
 - Promoted the Apache POI XSSF capability inventory into a public reference at
-  [docs/POI_EXCEL_CAPABILITY_INVENTORY.md](./POI_EXCEL_CAPABILITY_INVENTORY.md) and rewrote
+  [docs/POI_EXCEL_CAPABILITY_INVENTORY.md](./reference/README.md) and rewrote
   it around the shipped `.xlsx` contract instead of internal parity-phase language.
 - README now links directly to the public capability inventory alongside the operations,
   quick-reference, and limitations docs.
@@ -1700,7 +1691,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 
 ### Added
 
-- Added [docs/DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md), a developer-facing map of the
+- Added [docs/DEVELOPER_GRADLE.md](./DEVELOPER.md), a developer-facing map of the
   Gradle system that explains the shared included build logic, the nested Jazzer composite build,
   the single version-catalog authority, and the periodic review questions contributors should use
   when revisiting the build architecture.
@@ -1798,7 +1789,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - Jazzer support-test progress pulses now include committed class-start and in-flight
   `test-progress` heartbeats, so long-running nested support tests remain observable to the outer
   gate instead of going dark between test completions.
-- Added [docs/DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md), which documents GridGrind's shell-level
+- Added [docs/DEVELOPER_JAVA.md](./DEVELOPER.md), which documents GridGrind's shell-level
   Java 26 setup, the `/usr/bin/java` macOS pitfall, the official `jdk.java.net/26` install path,
   and why `./gradlew` is the only supported Gradle entrypoint.
 - Added a no-save workbook-health example at

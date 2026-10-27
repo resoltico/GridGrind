@@ -5,24 +5,29 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.jspecify.annotations.Nullable;
 
 /** Protocol-facing factual report for one conditional-formatting differential style. */
 public record DifferentialStyleReport(
-    @Nullable String numberFormat,
-    @Nullable Boolean bold,
-    @Nullable Boolean italic,
-    @Nullable FontHeightReport fontHeight,
+    Optional<String> numberFormat,
+    Optional<Boolean> bold,
+    Optional<Boolean> italic,
+    Optional<FontHeightReport> fontHeight,
     Optional<CellColorReport> fontColor,
-    @Nullable Boolean underline,
-    @Nullable Boolean strikeout,
+    Optional<Boolean> underline,
+    Optional<Boolean> strikeout,
     Optional<CellColorReport> fillColor,
     Optional<DifferentialBorderReport> border,
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
   public DifferentialStyleReport {
-    if (numberFormat != null && numberFormat.isBlank()) {
+    Objects.requireNonNull(numberFormat, "numberFormat must not be null");
+    if (numberFormat.filter(String::isBlank).isPresent()) {
       throw new IllegalArgumentException("numberFormat must not be blank");
     }
+    Objects.requireNonNull(bold, "bold must not be null");
+    Objects.requireNonNull(italic, "italic must not be null");
+    Objects.requireNonNull(fontHeight, "fontHeight must not be null");
+    Objects.requireNonNull(underline, "underline must not be null");
+    Objects.requireNonNull(strikeout, "strikeout must not be null");
     Objects.requireNonNull(fontColor, "fontColor must not be null");
     Objects.requireNonNull(fillColor, "fillColor must not be null");
     Objects.requireNonNull(border, "border must not be null");
@@ -47,11 +52,7 @@ public record DifferentialStyleReport(
     }
   }
 
-  private static boolean hasNoStyleAttributes(@Nullable Object... attributes) {
-    return Stream.of(attributes)
-        .map(
-            attribute ->
-                attribute instanceof Optional<?> optional ? optional.orElse(null) : attribute)
-        .allMatch(Objects::isNull);
+  private static boolean hasNoStyleAttributes(Optional<?>... attributes) {
+    return Stream.of(attributes).allMatch(Optional::isEmpty);
   }
 }

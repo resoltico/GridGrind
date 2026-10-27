@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -35,7 +36,7 @@ public record ChartReport(
     boolean plotOnlyVisibleCells,
     List<Plot> plots) {
   public ChartReport {
-    requireNonBlank(name, "name");
+    TextValidation.requireNonBlank(name, "name");
     Objects.requireNonNull(anchor, "anchor must not be null");
     Objects.requireNonNull(title, "title must not be null");
     Objects.requireNonNull(legend, "legend must not be null");
@@ -66,7 +67,7 @@ public record ChartReport(
     @Variant(id = "FORMULA", summary = "Formula-backed title with cached text.")
     record Formula(String formula, String cachedText) implements Title {
       public Formula {
-        formula = requireNonBlank(formula, "formula");
+        formula = TextValidation.requireNonBlank(formula, "formula");
         Objects.requireNonNull(cachedText, "cachedText must not be null");
       }
     }
@@ -151,7 +152,7 @@ public record ChartReport(
         summary = "Formula-backed string chart source plus cached values.")
     record StringReference(String formula, List<String> cachedValues) implements DataSource {
       public StringReference {
-        formula = requireNonBlank(formula, "formula");
+        formula = TextValidation.requireNonBlank(formula, "formula");
         cachedValues = copyValues(cachedValues, "cachedValues");
       }
     }
@@ -163,7 +164,7 @@ public record ChartReport(
     record NumericReference(String formula, Optional<String> formatCode, List<String> cachedValues)
         implements DataSource {
       public NumericReference {
-        formula = requireNonBlank(formula, "formula");
+        formula = TextValidation.requireNonBlank(formula, "formula");
         Objects.requireNonNull(formatCode, "formatCode must not be null");
         if (formatCode.isPresent() && formatCode.orElseThrow().isBlank()) {
           throw new IllegalArgumentException("formatCode must not be blank");
@@ -405,8 +406,8 @@ public record ChartReport(
       summary = "Exact unsupported chart plot report preserved from the workbook.")
   public record Unsupported(String plotTypeToken, String detail) implements Plot {
     public Unsupported {
-      plotTypeToken = requireNonBlank(plotTypeToken, "plotTypeToken");
-      detail = requireNonBlank(detail, "detail");
+      plotTypeToken = TextValidation.requireNonBlank(plotTypeToken, "plotTypeToken");
+      detail = TextValidation.requireNonBlank(detail, "detail");
     }
   }
 
@@ -432,13 +433,5 @@ public record ChartReport(
       copiedValues.add(Objects.requireNonNull(value, fieldName + " must not contain null values"));
     }
     return List.copyOf(copiedValues);
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

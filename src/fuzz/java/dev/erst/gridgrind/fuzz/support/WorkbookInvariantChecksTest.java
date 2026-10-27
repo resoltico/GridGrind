@@ -234,7 +234,7 @@ class WorkbookInvariantChecksTest {
                                             false,
                                             "Calibri",
                                             new FontHeightReport(220, new BigDecimal("11")),
-                                            null,
+                                            Optional.empty(),
                                             false,
                                             false))))))),
                 new SheetInspectionResult.WindowResult(
@@ -338,7 +338,7 @@ class WorkbookInvariantChecksTest {
                                 1,
                                 0,
                                 List.of(new TypeCountReport("TEXT", 1)),
-                                "TEXT")))),
+                                Optional.of("TEXT"))))),
                 new WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult(
                     new StepId("named-range-surface"),
                     new NamedRangeSurfaceReport(
@@ -790,7 +790,7 @@ class WorkbookInvariantChecksTest {
                             false,
                             "Calibri",
                             new FontHeightReport(220, new BigDecimal("11")),
-                            rgb("#C00000"),
+                            Optional.ofNullable(rgb("#C00000")),
                             false,
                             false)))),
             Optional.of(new CommentAnchorReport(1, 2, 4, 6)));
@@ -804,12 +804,12 @@ class WorkbookInvariantChecksTest {
                 false,
                 "Calibri",
                 new FontHeightReport(220, new BigDecimal("11")),
-                indexed(8),
+                Optional.ofNullable(indexed(8)),
                 false,
                 false),
             CellFillReport.gradient(
                 CellGradientFillReport.linear(
-                    45.0d,
+                    Optional.of(45.0d),
                     List.of(
                         new CellGradientStopReport(0.0d, rgb("#1F497D")),
                         new CellGradientStopReport(1.0d, themed(4, 0.45d))))),
@@ -851,7 +851,7 @@ class WorkbookInvariantChecksTest {
                                             false,
                                             "Calibri",
                                             new FontHeightReport(220, new BigDecimal("11")),
-                                            rgb("#C00000"),
+                                            Optional.ofNullable(rgb("#C00000")),
                                             false,
                                             false))))))),
                 new SheetInspectionResult.CommentsResult(
@@ -973,9 +973,9 @@ class WorkbookInvariantChecksTest {
                             "image/png",
                             68L,
                             "abc123",
-                            1,
-                            1,
-                            "Queue preview"),
+                            Optional.of(1),
+                            Optional.of(1),
+                            Optional.of("Queue preview")),
                         new DrawingObjectReport.Shape(
                             "OpsShape",
                             new DrawingAnchorReport.OneCell(
@@ -984,8 +984,8 @@ class WorkbookInvariantChecksTest {
                                 457_200L,
                                 ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
                             ExcelDrawingShapeKind.SIMPLE_SHAPE,
-                            "rect",
-                            "Queue",
+                            Optional.of("rect"),
+                            Optional.of("Queue"),
                             0),
                         new DrawingObjectReport.EmbeddedObject(
                             "OpsEmbed",
@@ -996,15 +996,15 @@ class WorkbookInvariantChecksTest {
                                 914_400L,
                                 ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE),
                             ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                            "Ops payload",
-                            "ops-payload.txt",
-                            "open",
+                            Optional.of("Ops payload"),
+                            Optional.of("ops-payload.txt"),
+                            Optional.of("open"),
                             "application/octet-stream",
                             17L,
                             "def456",
-                            ExcelPictureFormat.PNG,
-                            68L,
-                            "preview789"))),
+                            Optional.ofNullable(ExcelPictureFormat.PNG),
+                            Optional.of(68L),
+                            Optional.of("preview789")))),
                 new WorkbookAssetInspectionResult.DrawingObjectPayloadResult(
                     new StepId("drawing-payload"),
                     new SheetLabel("Ops"),
@@ -1012,11 +1012,11 @@ class WorkbookInvariantChecksTest {
                         "OpsEmbed",
                         ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                         "application/octet-stream",
-                        "ops-payload.txt",
+                        Optional.of("ops-payload.txt"),
                         "def456",
                         "R3JpZEdyaW5kIHBheWxvYWQ=",
-                        "Ops payload",
-                        "open"))));
+                        Optional.of("Ops payload"),
+                        Optional.of("open")))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
@@ -1055,9 +1055,9 @@ class WorkbookInvariantChecksTest {
                             "image/png",
                             68L,
                             "abc123",
-                            1,
-                            1,
-                            null))),
+                            Optional.of(1),
+                            Optional.of(1),
+                            Optional.empty()))),
                 new WorkbookAssetInspectionResult.DrawingObjectPayloadResult(
                     new StepId("drawing-payload"),
                     new SheetLabel("Ops"),
@@ -1068,7 +1068,7 @@ class WorkbookInvariantChecksTest {
                         "OpsPicture.png",
                         "abc123",
                         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC",
-                        null))));
+                        Optional.empty()))));
 
     assertDoesNotThrow(
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
@@ -1373,8 +1373,17 @@ class WorkbookInvariantChecksTest {
         "schema-1",
         new CustomXmlMappingReport.Settings(true, true, false, true, true),
         new CustomXmlMappingReport.Schema(
-            "urn:gridgrind:budget", "en-US", "budget-map.xsd", "<xs:schema/>"),
-        new CustomXmlDataBindingReport("BudgetBinding", false, 42L, "budget.xml", 1L),
+            Optional.of("urn:gridgrind:budget"),
+            Optional.of("en-US"),
+            Optional.of("budget-map.xsd"),
+            Optional.of("<xs:schema/>")),
+        Optional.ofNullable(
+            new CustomXmlDataBindingReport(
+                Optional.of("BudgetBinding"),
+                Optional.of(false),
+                Optional.of(42L),
+                Optional.of("budget.xml"),
+                1L)),
         List.of(
             new CustomXmlLinkedCellReport(
                 new SheetLabel("Ops"), new CellAddress("A2"), "/BudgetMap/Owner[1]", "string")),
@@ -1503,7 +1512,7 @@ class WorkbookInvariantChecksTest {
             false,
             "Calibri",
             new FontHeightReport(220, new BigDecimal("11")),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),

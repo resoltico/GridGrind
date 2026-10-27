@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -68,28 +69,20 @@ final class RequestProblemDescriptorSupport {
 
   static Optional<String> copyJsonPath(Optional<String> jsonPath) {
     Objects.requireNonNull(jsonPath, "jsonPath must not be null");
-    return jsonPath.map(path -> requireNonBlank(path, "jsonPath"));
+    return jsonPath.map(path -> TextValidation.requireNonBlank(path, "jsonPath"));
   }
 
   static Optional<String> copyOptionalText(Optional<String> text, String fieldName) {
     Objects.requireNonNull(text, fieldName + " must not be null");
-    return text.map(value -> requireNonBlank(value, fieldName));
+    return text.map(value -> TextValidation.requireNonBlank(value, fieldName));
   }
 
   static List<String> copyStrings(List<String> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
-    return values.stream().map(value -> requireNonBlank(value, fieldName)).toList();
+    return values.stream().map(value -> TextValidation.requireNonBlank(value, fieldName)).toList();
   }
 
   static String requireJsonPath(String jsonPath) {
-    return requireNonBlank(jsonPath, "jsonPath");
-  }
-
-  static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
+    return TextValidation.requireNonBlank(jsonPath, "jsonPath");
   }
 }

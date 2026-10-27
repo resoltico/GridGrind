@@ -70,24 +70,24 @@ final class WorkbookInvariantCellMetadataChecks {
     WorkbookInvariantChecks.requireNonBlank(
         mapping.rootElement(), "custom XML mapping rootElement");
     WorkbookInvariantChecks.requireNonBlank(mapping.schemaId(), "custom XML mapping schemaId");
-    if (mapping.schema().namespace() != null) {
+    if (mapping.schema().namespace().isPresent()) {
       WorkbookInvariantChecks.requireNonBlank(
-          mapping.schema().namespace(), "custom XML mapping schema namespace");
+          mapping.schema().namespace().orElseThrow(), "custom XML mapping schema namespace");
     }
-    if (mapping.schema().language() != null) {
+    if (mapping.schema().language().isPresent()) {
       WorkbookInvariantChecks.requireNonBlank(
-          mapping.schema().language(), "custom XML mapping schema language");
+          mapping.schema().language().orElseThrow(), "custom XML mapping schema language");
     }
-    if (mapping.schema().reference() != null) {
+    if (mapping.schema().reference().isPresent()) {
       WorkbookInvariantChecks.requireNonBlank(
-          mapping.schema().reference(), "custom XML mapping schema reference");
+          mapping.schema().reference().orElseThrow(), "custom XML mapping schema reference");
     }
-    if (mapping.schema().xml() != null) {
+    if (mapping.schema().xml().isPresent()) {
       WorkbookInvariantChecks.requireNonBlank(
-          mapping.schema().xml(), "custom XML mapping schema xml");
+          mapping.schema().xml().orElseThrow(), "custom XML mapping schema xml");
     }
-    if (mapping.dataBinding() != null) {
-      requireCustomXmlDataBindingShape(mapping.dataBinding());
+    if (mapping.dataBinding().isPresent()) {
+      requireCustomXmlDataBindingShape(mapping.dataBinding().orElseThrow());
     }
     mapping
         .linkedCells()
@@ -100,17 +100,18 @@ final class WorkbookInvariantCellMetadataChecks {
   static void requireCustomXmlDataBindingShape(CustomXmlDataBindingReport dataBinding) {
     WorkbookInvariantChecks.require(
         dataBinding != null, "custom XML data binding must not be null");
-    if (dataBinding.dataBindingName() != null) {
+    if (dataBinding.dataBindingName().isPresent()) {
       WorkbookInvariantChecks.requireNonBlank(
-          dataBinding.dataBindingName(), "custom XML dataBindingName");
+          dataBinding.dataBindingName().orElseThrow(), "custom XML dataBindingName");
     }
-    if (dataBinding.connectionId() != null) {
+    if (dataBinding.connectionId().isPresent()) {
       WorkbookInvariantChecks.require(
-          dataBinding.connectionId() >= 0L, "custom XML connectionId must not be negative");
+          dataBinding.connectionId().orElseThrow() >= 0L,
+          "custom XML connectionId must not be negative");
     }
-    if (dataBinding.fileBindingName() != null) {
+    if (dataBinding.fileBindingName().isPresent()) {
       WorkbookInvariantChecks.requireNonBlank(
-          dataBinding.fileBindingName(), "custom XML fileBindingName");
+          dataBinding.fileBindingName().orElseThrow(), "custom XML fileBindingName");
     }
     WorkbookInvariantChecks.require(
         dataBinding.loadMode() >= 0L, "custom XML loadMode must not be negative");
@@ -240,13 +241,15 @@ final class WorkbookInvariantCellMetadataChecks {
       }
       case AutofilterFilterCriterionReport.Dynamic dynamic -> {
         WorkbookInvariantChecks.requireNonBlank(dynamic.dynamicType(), "autofilter dynamic type");
-        if (dynamic.value() != null) {
+        if (dynamic.value().isPresent()) {
           WorkbookInvariantChecks.require(
-              Double.isFinite(dynamic.value()), "autofilter dynamic value must be finite");
+              Double.isFinite(dynamic.value().orElseThrow()),
+              "autofilter dynamic value must be finite");
         }
-        if (dynamic.maxValue() != null) {
+        if (dynamic.maxValue().isPresent()) {
           WorkbookInvariantChecks.require(
-              Double.isFinite(dynamic.maxValue()), "autofilter dynamic maxValue must be finite");
+              Double.isFinite(dynamic.maxValue().orElseThrow()),
+              "autofilter dynamic maxValue must be finite");
         }
       }
       case AutofilterFilterCriterionReport.Top10 top10 -> {
@@ -254,14 +257,16 @@ final class WorkbookInvariantCellMetadataChecks {
             Double.isFinite(top10.value()), "autofilter top10 value must be finite");
         WorkbookInvariantChecks.require(
             top10.value() >= 0.0d, "autofilter top10 value must not be negative");
-        if (top10.filterValue() != null) {
+        if (top10.filterValue().isPresent()) {
           WorkbookInvariantChecks.require(
-              Double.isFinite(top10.filterValue()), "autofilter top10 filterValue must be finite");
+              Double.isFinite(top10.filterValue().orElseThrow()),
+              "autofilter top10 filterValue must be finite");
         }
       }
       case AutofilterFilterCriterionReport.Color color -> {
-        if (color.color() != null) {
-          WorkbookInvariantCellStyleChecks.requireCellColorShape(color.color(), "autofilter color");
+        if (color.color().isPresent()) {
+          WorkbookInvariantCellStyleChecks.requireCellColorShape(
+              color.color().orElseThrow(), "autofilter color");
         }
       }
       case AutofilterFilterCriterionReport.Icon icon -> {

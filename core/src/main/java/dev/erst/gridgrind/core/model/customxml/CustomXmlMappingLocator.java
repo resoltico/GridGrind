@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.model.customxml;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -20,14 +21,6 @@ public record CustomXmlMappingLocator(Optional<Long> mapId, Optional<String> nam
     if (mapId.isPresent() && mapId.orElseThrow() <= 0L) {
       throw new IllegalArgumentException("mapId must be greater than 0");
     }
-    name = name.map(value -> requireNonBlank(value, "name"));
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
+    name = name.map(value -> TextValidation.requireNonBlank(value, "name"));
   }
 }

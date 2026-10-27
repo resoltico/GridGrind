@@ -391,8 +391,8 @@ public final class AutofilterAdapter {
   public static AutofilterFilterCriterionReport dynamicCriterion(CTDynamicFilter dynamicFilter) {
     return new AutofilterFilterCriterionReport.Dynamic(
         dynamicFilter.getType() == null ? "UNKNOWN" : dynamicFilter.getType().toString(),
-        dynamicFilter.isSetVal() ? dynamicFilter.getVal() : null,
-        dynamicFilter.isSetMaxVal() ? dynamicFilter.getMaxVal() : null);
+        Optional.ofNullable(dynamicFilter.isSetVal() ? dynamicFilter.getVal() : null),
+        Optional.ofNullable(dynamicFilter.isSetMaxVal() ? dynamicFilter.getMaxVal() : null));
   }
 
   /** Reads the native top/bottom count or percent criterion. */
@@ -401,7 +401,7 @@ public final class AutofilterAdapter {
         !top10.isSetTop() || top10.getTop(),
         top10.isSetPercent() && top10.getPercent(),
         top10.getVal(),
-        top10.isSetFilterVal() ? top10.getFilterVal() : null);
+        Optional.ofNullable(top10.isSetFilterVal() ? top10.getFilterVal() : null));
   }
 
   /** Reads the effective differential color used by a color filter. */
@@ -409,13 +409,14 @@ public final class AutofilterAdapter {
       XSSFWorkbook workbook, CTColorFilter colorFilter) {
     return new AutofilterFilterCriterionReport.Color(
         colorFilter.isSetCellColor() && colorFilter.getCellColor(),
-        colorFilter.isSetDxfId()
-            ? dxfColor(
-                    workbook,
-                    colorFilter.getDxfId(),
-                    colorFilter.isSetCellColor() && colorFilter.getCellColor())
-                .orElse(null)
-            : null);
+        Optional.ofNullable(
+            colorFilter.isSetDxfId()
+                ? dxfColor(
+                        workbook,
+                        colorFilter.getDxfId(),
+                        colorFilter.isSetCellColor() && colorFilter.getCellColor())
+                    .orElse(null)
+                : null));
   }
 
   /** Reads the icon-set and icon index used by an icon filter. */

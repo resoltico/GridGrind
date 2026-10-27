@@ -7,6 +7,7 @@ module dev.erst.gridgrind.core {
   exports dev.erst.gridgrind.core.catalog;
   exports dev.erst.gridgrind.core.catalog.gather;
   exports dev.erst.gridgrind.core.metadata;
+  exports dev.erst.gridgrind.core.limits;
   exports dev.erst.gridgrind.core.model.chart;
   exports dev.erst.gridgrind.core.model.customxml;
   exports dev.erst.gridgrind.core.model.drawing;

@@ -5,8 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
-import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.engine.poi.SqrefRanges;
 import dev.erst.gridgrind.engine.validation.DataValidationAdapter;
 import java.util.List;
@@ -190,16 +189,14 @@ class ExcelDataValidationStructureSupportTest {
       addRawValidation(
           sheet,
           validation(
-              STDataValidationType.LIST,
-              List.of("A" + (ExcelRowSpan.MAX_ROW_INDEX + 1)),
-              "\"Queued\""));
+              STDataValidationType.LIST, List.of("A" + (Limit.MAX_ROW_INDEX + 1)), "\"Queued\""));
 
       IllegalArgumentException failure =
           assertThrows(
               IllegalArgumentException.class,
               () ->
                   DataValidationAdapter.expectedValidationsAfterInsertRows(
-                      sheet, ExcelRowSpan.MAX_ROW_INDEX, 1));
+                      sheet, Limit.MAX_ROW_INDEX, 1));
 
       assertTrue(failure.getMessage().contains("beyond the maximum row"));
     }
@@ -221,7 +218,7 @@ class ExcelDataValidationStructureSupportTest {
               IllegalArgumentException.class,
               () ->
                   DataValidationAdapter.expectedValidationsAfterInsertColumns(
-                      sheet, ExcelColumnSpan.MAX_COLUMN_INDEX, 1));
+                      sheet, Limit.MAX_COLUMN_INDEX, 1));
 
       assertTrue(failure.getMessage().contains("beyond the maximum column"));
     }

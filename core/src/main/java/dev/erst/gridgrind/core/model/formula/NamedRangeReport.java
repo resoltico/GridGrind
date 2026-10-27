@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.formula;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** Structured workbook-level analysis report for one defined name. */
@@ -32,10 +33,7 @@ public sealed interface NamedRangeReport
     public RangeReport {
       Objects.requireNonNull(name, "name must not be null");
       Objects.requireNonNull(scope, "scope must not be null");
-      Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
-      if (refersToFormula.isBlank()) {
-        throw new IllegalArgumentException("refersToFormula must not be blank");
-      }
+      refersToFormula = TextValidation.requireNonBlank(refersToFormula, "refersToFormula");
       Objects.requireNonNull(target, "target must not be null");
     }
   }

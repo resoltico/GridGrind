@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.result;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
-import java.util.Objects;
 
 /** Count of one observed cell value type inside a schema column. */
 public record TypeCountReport(String type, int count) {
@@ -9,10 +9,7 @@ public record TypeCountReport(String type, int count) {
       List.of("TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "TIME", "DATE_TIME");
 
   public TypeCountReport {
-    Objects.requireNonNull(type, "type must not be null");
-    if (type.isBlank()) {
-      throw new IllegalArgumentException("type must not be blank");
-    }
+    type = TextValidation.requireNonBlank(type, "type");
     requireSupportedType(type, "type");
     if (count <= 0) {
       throw new IllegalArgumentException("count must be greater than 0");

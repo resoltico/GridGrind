@@ -238,7 +238,12 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             "XSD",
             "schema.xsd",
             "<xsd:schema/>",
-            new CustomXmlDataBindingReport("binding", true, 5L, "binding.xml", 2L),
+            new CustomXmlDataBindingReport(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(5L),
+                Optional.of("binding.xml"),
+                2L),
             List.of(
                 new CustomXmlLinkedCellReport(
                     new SheetLabel("Foglio1"), new CellAddress("A1"), "/CORSO/NOME", "string")),
@@ -262,8 +267,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertFalse(surface3D.wireframe());
     assertEquals("{ABC}", signatureLine.setup().orElseThrow().setupId().orElseThrow());
     assertEquals("image/png", signatureLine.preview().orElseThrow().contentType());
-    assertEquals("urn:gridgrind:test", mapping.schema().namespace());
-    assertEquals("binding.xml", mapping.dataBinding().fileBindingName());
+    assertEquals("urn:gridgrind:test", mapping.schema().namespace().orElseThrow());
+    assertEquals(
+        "binding.xml", mapping.dataBinding().orElseThrow().fileBindingName().orElseThrow());
     assertEquals("CourseTable", mapping.linkedTables().getFirst().tableDisplayName());
 
     assertThrows(
@@ -364,13 +370,27 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 10, -1)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlDataBindingReport("binding", true, -1L, "binding.xml", 2L));
+        () ->
+            new CustomXmlDataBindingReport(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(-1L),
+                Optional.of("binding.xml"),
+                2L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlDataBindingReport("binding", true, 1L, " ", 2L));
+        () ->
+            new CustomXmlDataBindingReport(
+                Optional.of("binding"), Optional.of(true), Optional.of(1L), Optional.of(" "), 2L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlDataBindingReport("binding", true, 1L, "binding.xml", -1L));
+        () ->
+            new CustomXmlDataBindingReport(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(1L),
+                Optional.of("binding.xml"),
+                -1L));
     assertThrows(
         IllegalArgumentException.class,
         () -> mappingReport(" ", null, null, null, null, List.of(), List.of()));
@@ -802,7 +822,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
                 signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, " ", 10, 10)));
     assertEquals(
-        null,
+        Optional.empty(),
         mappingReport(
                 null,
                 null,
@@ -939,8 +959,11 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         "Schema1",
         new CustomXmlMappingReport.Settings(false, true, false, true, true),
         new CustomXmlMappingReport.Schema(
-            schemaNamespace, schemaLanguage, schemaReference, schemaXml),
-        dataBinding,
+            Optional.ofNullable(schemaNamespace),
+            Optional.ofNullable(schemaLanguage),
+            Optional.ofNullable(schemaReference),
+            Optional.ofNullable(schemaXml)),
+        Optional.ofNullable(dataBinding),
         linkedCells,
         linkedTables);
   }

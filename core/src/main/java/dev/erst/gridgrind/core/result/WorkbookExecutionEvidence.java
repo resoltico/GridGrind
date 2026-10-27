@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.semantics.OperationEffect;
 import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,7 +45,7 @@ public record WorkbookExecutionEvidence(
   public record Operation(
       String operationId, List<OperationEffect> effects, OperationEffectFootprint footprint) {
     public Operation {
-      operationId = requireNonBlank(operationId, "operationId");
+      operationId = TextValidation.requireNonBlank(operationId, "operationId");
       effects = copyValues(effects, "effects");
       if (effects.isEmpty()) {
         throw new IllegalArgumentException("effects must not be empty");
@@ -56,8 +57,8 @@ public record WorkbookExecutionEvidence(
   /** One immutable input copy identified by its bound path, byte count, and SHA-256 digest. */
   public record MaterializedInput(String role, String path, long byteSize, String sha256) {
     public MaterializedInput {
-      role = requireNonBlank(role, "role");
-      path = requireNonBlank(path, "path");
+      role = TextValidation.requireNonBlank(role, "role");
+      path = TextValidation.requireNonBlank(path, "path");
       if (byteSize < 0) {
         throw new IllegalArgumentException("byteSize must not be negative");
       }
@@ -235,16 +236,8 @@ public record WorkbookExecutionEvidence(
     return List.copyOf(copied);
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   private static String requireSha256(String value) {
-    String digest = requireNonBlank(value, "sha256");
+    String digest = TextValidation.requireNonBlank(value, "sha256");
     if (!digest.matches("[0-9a-f]{64}")) {
       throw new IllegalArgumentException("sha256 must be a lowercase SHA-256 hexadecimal digest");
     }
@@ -262,7 +255,7 @@ public record WorkbookExecutionEvidence(
   private static List<String> copyIdentifiers(List<String> values, String fieldName) {
     List<String> copied = copyRequiredValues(values, fieldName);
     for (String value : copied) {
-      requireNonBlank(value, fieldName + " element");
+      TextValidation.requireNonBlank(value, fieldName + " element");
     }
     return copied;
   }

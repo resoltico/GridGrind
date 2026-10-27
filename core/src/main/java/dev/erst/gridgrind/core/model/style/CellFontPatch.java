@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.model.style;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -28,9 +29,7 @@ public record CellFontPatch(
     Objects.requireNonNull(strikeout, "strikeout must not be null");
     fontName.ifPresent(
         value -> {
-          if (value.isBlank()) {
-            throw new IllegalArgumentException("fontName must not be blank");
-          }
+          TextValidation.requireNonBlank(value, "fontName");
         });
     if (bold.isEmpty()
         && italic.isEmpty()

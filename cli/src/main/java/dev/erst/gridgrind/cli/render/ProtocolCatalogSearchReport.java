@@ -3,8 +3,8 @@ package dev.erst.gridgrind.cli.render;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import dev.erst.gridgrind.core.discovery.DiscoveryValidation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,7 +15,7 @@ public record ProtocolCatalogSearchReport(
     ProtocolVersion protocolVersion, String query, List<ProtocolCatalogSearchHit> matches) {
   public ProtocolCatalogSearchReport {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-    query = DiscoveryValidation.requireNonBlank(query, "query");
+    query = TextValidation.requireNonBlank(query, "query");
     Objects.requireNonNull(matches, "matches must not be null");
     matches =
         matches.stream()

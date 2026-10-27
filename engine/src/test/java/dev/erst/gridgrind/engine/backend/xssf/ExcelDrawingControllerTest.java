@@ -112,8 +112,8 @@ class ExcelDrawingControllerTest {
           snapshots.stream().map(DrawingObjectReport::name).toList());
       DrawingObjectReport.Picture pictureSnapshot =
           assertInstanceOf(DrawingObjectReport.Picture.class, snapshots.getFirst());
-      assertEquals(1, pictureSnapshot.widthPixels());
-      assertEquals(1, pictureSnapshot.heightPixels());
+      assertEquals(1, pictureSnapshot.widthPixels().orElseThrow());
+      assertEquals(1, pictureSnapshot.heightPixels().orElseThrow());
       assertEquals(
           ExcelDrawingShapeKind.SIMPLE_SHAPE,
           assertInstanceOf(DrawingObjectReport.Shape.class, snapshots.get(1)).kind());
@@ -176,8 +176,8 @@ class ExcelDrawingControllerTest {
                   .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
-      assertEquals(1, pictureSnapshot.widthPixels());
-      assertEquals(1, pictureSnapshot.heightPixels());
+      assertEquals(1, pictureSnapshot.widthPixels().orElseThrow());
+      assertEquals(1, pictureSnapshot.heightPixels().orElseThrow());
     }
   }
 
@@ -195,12 +195,12 @@ class ExcelDrawingControllerTest {
                   "OpsSignature",
                   anchor(1, 1, 4, 6),
                   false,
-                  Optional.ofNullable("Review the numbers before signing."),
-                  Optional.ofNullable("Ada Lovelace"),
-                  Optional.ofNullable("Finance"),
-                  Optional.ofNullable("ada@example.com"),
+                  Optional.of("Review the numbers before signing."),
+                  Optional.of("Ada Lovelace"),
+                  Optional.of("Finance"),
+                  Optional.of("ada@example.com"),
                   Optional.empty(),
-                  Optional.ofNullable("invalid"),
+                  Optional.of("invalid"),
                   Optional.of(ExcelPictureFormat.PNG),
                   Optional.of(new BinaryContent(PNG_PIXEL_BYTES))));
 
@@ -677,9 +677,9 @@ class ExcelDrawingControllerTest {
               DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
-      assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat());
-      assertNotNull(snapshot.previewByteSize());
-      assertNotNull(snapshot.previewSha256());
+      assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat().orElseThrow());
+      org.junit.jupiter.api.Assertions.assertTrue(snapshot.previewByteSize().isPresent());
+      org.junit.jupiter.api.Assertions.assertTrue(snapshot.previewSha256().isPresent());
       assertArrayEquals(
           "payload".getBytes(StandardCharsets.UTF_8),
           java.util.Base64.getDecoder().decode(payload.base64Data()));
@@ -741,9 +741,12 @@ class ExcelDrawingControllerTest {
               DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
-      assertNull(snapshot.previewFormat());
-      assertNull(snapshot.previewByteSize());
-      assertNull(snapshot.previewSha256());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.previewFormat());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.previewByteSize());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.previewSha256());
       assertArrayEquals(
           "payload".getBytes(StandardCharsets.UTF_8),
           java.util.Base64.getDecoder().decode(payload.base64Data()));
@@ -799,9 +802,9 @@ class ExcelDrawingControllerTest {
               DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
-      assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat());
-      assertNotNull(snapshot.previewByteSize());
-      assertNotNull(snapshot.previewSha256());
+      assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat().orElseThrow());
+      org.junit.jupiter.api.Assertions.assertTrue(snapshot.previewByteSize().isPresent());
+      org.junit.jupiter.api.Assertions.assertTrue(snapshot.previewSha256().isPresent());
       assertArrayEquals(
           "payload".getBytes(StandardCharsets.UTF_8),
           java.util.Base64.getDecoder().decode(payload.base64Data()));

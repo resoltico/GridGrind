@@ -76,13 +76,13 @@ class ConditionalFormattingRuleReportTest {
         IllegalArgumentException.class,
         () ->
             new DifferentialStyleReport(
-                " ",
-                null,
-                null,
-                null,
+                Optional.of(" "),
                 Optional.empty(),
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 List.of()));
@@ -90,13 +90,13 @@ class ConditionalFormattingRuleReportTest {
         IllegalArgumentException.class,
         () ->
             new DifferentialStyleReport(
-                null,
-                null,
-                null,
-                null,
                 Optional.empty(),
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 List.of()));
@@ -104,13 +104,13 @@ class ConditionalFormattingRuleReportTest {
         NullPointerException.class,
         () ->
             new DifferentialStyleReport(
-                "0.00",
-                null,
-                null,
-                null,
+                Optional.of("0.00"),
                 Optional.empty(),
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 List.of((ExcelConditionalFormattingUnsupportedFeature) null)));

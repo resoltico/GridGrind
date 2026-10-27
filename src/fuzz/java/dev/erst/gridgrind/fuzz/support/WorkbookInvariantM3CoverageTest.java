@@ -158,7 +158,7 @@ class WorkbookInvariantM3CoverageTest {
             false,
             "Calibri",
             new FontHeightReport(220, new BigDecimal("11")),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),

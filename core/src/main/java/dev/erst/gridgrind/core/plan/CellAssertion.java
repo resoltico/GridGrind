@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.plan;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** Assertions over cell values, display values, formulas, and styles. */
@@ -57,7 +58,7 @@ public sealed interface CellAssertion extends Assertion
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
   record FormulaText(String formula) implements CellAssertion {
     public FormulaText {
-      formula = AssertionSupport.requireNonBlank(formula, "formula");
+      formula = TextValidation.requireNonBlank(formula, "formula");
     }
   }
 

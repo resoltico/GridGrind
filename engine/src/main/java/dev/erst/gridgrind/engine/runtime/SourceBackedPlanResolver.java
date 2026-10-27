@@ -26,6 +26,9 @@ import java.util.Objects;
  * <p>This resolver intentionally spans the authored payload families that can carry file-backed or
  * stdin-backed content.
  */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_FILE_BACKED_AUTHORED_INPUT_ISOLATION
+})
 public final class SourceBackedPlanResolver {
   private SourceBackedPlanResolver() {}
 
@@ -237,8 +240,7 @@ public final class SourceBackedPlanResolver {
     return text;
   }
 
-  private static String readUtf8File(
-      String path, ExecutionInputBindings bindings, String inputKind) // LIM-030
+  private static String readUtf8File(String path, ExecutionInputBindings bindings, String inputKind)
       throws IOException {
     try {
       return Files.readString(

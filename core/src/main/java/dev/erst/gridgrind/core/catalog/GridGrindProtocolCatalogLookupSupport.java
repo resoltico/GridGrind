@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -36,7 +37,7 @@ final class GridGrindProtocolCatalogLookupSupport {
   }
 
   static CatalogSearchResult search(Catalog catalog, String query) {
-    String trimmedQuery = CatalogRecordValidation.requireNonBlank(query, "query").trim();
+    String trimmedQuery = TextValidation.requireNonBlank(query, "query").trim();
     String normalizedQuery = trimmedQuery.toLowerCase(Locale.ROOT);
     List<String> tokens = List.of(normalizedQuery.split("\\s+"));
     List<RankedSearchMatch> rankedMatches =

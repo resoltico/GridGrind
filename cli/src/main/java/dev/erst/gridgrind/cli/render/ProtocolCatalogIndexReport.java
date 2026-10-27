@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.render;
 
-import dev.erst.gridgrind.core.discovery.DiscoveryValidation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,12 +14,13 @@ public record ProtocolCatalogIndexReport(
     List<ProtocolCatalogGroupIndex> nestedTypeGroups,
     List<ProtocolCatalogGroupIndex> plainTypeGroups,
     List<ProtocolCatalogFieldMetadataKey> fieldMetadataKeys,
-    List<ProtocolCatalogLookupNamespace> lookupNamespaces) {
+    List<ProtocolCatalogLookupNamespace> lookupNamespaces,
+    List<dev.erst.gridgrind.core.limits.Limit> limits) {
   public ProtocolCatalogIndexReport {
+    limits = List.copyOf(limits);
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-    discriminatorField =
-        DiscoveryValidation.requireNonBlank(discriminatorField, "discriminatorField");
-    requestTypeId = DiscoveryValidation.requireNonBlank(requestTypeId, "requestTypeId");
+    discriminatorField = TextValidation.requireNonBlank(discriminatorField, "discriminatorField");
+    requestTypeId = TextValidation.requireNonBlank(requestTypeId, "requestTypeId");
     Objects.requireNonNull(topLevelGroups, "topLevelGroups must not be null");
     Objects.requireNonNull(nestedTypeGroups, "nestedTypeGroups must not be null");
     Objects.requireNonNull(plainTypeGroups, "plainTypeGroups must not be null");

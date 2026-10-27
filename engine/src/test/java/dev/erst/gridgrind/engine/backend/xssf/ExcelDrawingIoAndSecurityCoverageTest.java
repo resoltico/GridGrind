@@ -148,7 +148,7 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
               DrawingObjectPayloadReport.EmbeddedObject.class,
               controller.drawingObjectPayload(sheet, objectData.getShapeName()));
       assertEquals(ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE, payload.packagingKind());
-      assertEquals("raw.bin", payload.fileName());
+      assertEquals("raw.bin", payload.fileName().orElseThrow());
       assertArrayEquals(
           "raw".getBytes(StandardCharsets.UTF_8),
           java.util.Base64.getDecoder().decode(payload.base64Data()));
@@ -250,7 +250,7 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
               DrawingObjectPayloadReport.EmbeddedObject.class,
               controller.drawingObjectPayload(sheet, objectData.getShapeName()));
       assertEquals(ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE, payload.packagingKind());
-      assertEquals("raw-ole.bin", payload.fileName());
+      assertEquals("raw-ole.bin", payload.fileName().orElseThrow());
       assertArrayEquals(
           ole2StorageBytes(), java.util.Base64.getDecoder().decode(payload.base64Data()));
     }

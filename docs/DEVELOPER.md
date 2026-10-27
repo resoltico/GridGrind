@@ -65,7 +65,7 @@ test-owned temporary directories.
 
 | Component | Version |
 |:----------|:--------|
-| Contributor devcontainer | pinned glibc base image plus Azul Zulu 26 JDK; see [DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md) |
+| Contributor devcontainer | pinned glibc base image plus Azul Zulu 26 JDK; see [contributor configuration](../.devcontainer/devcontainer.json) |
 | Java | 26 |
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
 | Architecture tests | ArchUnit 1.5.0 with its JUnit 6 integration in `architecture-tests:architectureTest` |
@@ -89,3 +89,11 @@ Jackson design, not a GridGrind version-skew bug.
 See [EXECUTION_MODEL.md](./EXECUTION_MODEL.md) for authority and publication,
 [CLI.md](./CLI.md) for host commands, [FUZZING.md](./FUZZING.md) for fuzzing,
 and [RELEASING.md](./RELEASING.md) for the tag-driven release workflow.
+
+## Contributor container
+
+Contributor configuration is owned by [.devcontainer/devcontainer.json](../.devcontainer/devcontainer.json)
+and its [Dockerfile](../.devcontainer/Dockerfile). Open the checkout in that container for the
+pinned JDK/tooling/font stack. The startup cache repair and opt-in devcontainerTest exercise
+caller-writable cache mounts. Dependency update decisions follow
+[the automation policy](DEPENDENCY_AUTOMATION_POLICY.md).

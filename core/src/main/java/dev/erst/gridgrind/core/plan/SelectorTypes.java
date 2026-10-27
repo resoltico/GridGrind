@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -130,10 +131,7 @@ public final class SelectorTypes {
   /** One stable selector-family description with its allowed wire type ids. */
   public record FamilyInfo(String family, List<String> typeIds) {
     public FamilyInfo {
-      Objects.requireNonNull(family, "family must not be null");
-      if (family.isBlank()) {
-        throw new IllegalArgumentException("family must not be blank");
-      }
+      family = TextValidation.requireNonBlank(family, "family");
       Objects.requireNonNull(typeIds, "typeIds must not be null");
       if (typeIds.isEmpty()) {
         throw new IllegalArgumentException("typeIds must not be empty");

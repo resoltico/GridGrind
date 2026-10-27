@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.discovery;
 
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +17,7 @@ public record RecipeKeywordMatchReport(
     List<Candidate> candidates) {
   public RecipeKeywordMatchReport {
     protocolVersion = DiscoveryValidation.requireProtocolVersion(protocolVersion);
-    query = DiscoveryValidation.requireNonBlank(query, "query");
+    query = TextValidation.requireNonBlank(query, "query");
     normalizedTerms = DiscoveryValidation.copyStrings(normalizedTerms, "normalizedTerms");
     unmatchedTerms = DiscoveryValidation.copyStrings(unmatchedTerms, "unmatchedTerms");
     suggestedIntentTags =
@@ -44,9 +45,9 @@ public record RecipeKeywordMatchReport(
       List<String> matchedTerms,
       List<String> matchSources) {
     public Candidate {
-      recipeId = DiscoveryValidation.requireNonBlank(recipeId, "recipeId");
+      recipeId = TextValidation.requireNonBlank(recipeId, "recipeId");
       Objects.requireNonNull(type, "type must not be null");
-      summary = DiscoveryValidation.requireNonBlank(summary, "summary");
+      summary = TextValidation.requireNonBlank(summary, "summary");
       if (score <= 0) {
         throw new IllegalArgumentException("score must be positive");
       }

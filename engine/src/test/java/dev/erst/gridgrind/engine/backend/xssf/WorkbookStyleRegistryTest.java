@@ -125,7 +125,7 @@ class WorkbookStyleRegistryTest {
       assertEquals("Aptos", snapshot.font().fontName());
       assertEquals(300, snapshot.font().fontHeight().twips());
       assertEquals(new BigDecimal("15"), snapshot.font().fontHeight().points());
-      assertEquals(rgb("#112233"), snapshot.font().fontColor());
+      assertEquals(rgb("#112233"), snapshot.font().fontColor().orElseThrow());
       assertTrue(snapshot.font().underline());
       assertTrue(snapshot.font().strikeout());
       assertEquals(rgb("#FFF2CC"), fillForegroundColor(snapshot.fill()));
@@ -226,7 +226,7 @@ class WorkbookStyleRegistryTest {
                   null,
                   null,
                   null)));
-      assertEquals(rgb("#445566"), styleRegistry.snapshot(cell).font().fontColor());
+      assertEquals(rgb("#445566"), styleRegistry.snapshot(cell).font().fontColor().orElseThrow());
     }
   }
 
@@ -247,7 +247,8 @@ class WorkbookStyleRegistryTest {
                   null,
                   null)));
       assertEquals(
-          CellColorReport.theme(6, -0.35d), styleRegistry.snapshot(cell).font().fontColor());
+          CellColorReport.theme(6, -0.35d),
+          styleRegistry.snapshot(cell).font().fontColor().orElseThrow());
 
       cell.setCellStyle(
           styleRegistry.mergedStyle(
@@ -268,7 +269,7 @@ class WorkbookStyleRegistryTest {
                   null)));
       assertEquals(
           CellColorReport.indexed(Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())),
-          styleRegistry.snapshot(cell).font().fontColor());
+          styleRegistry.snapshot(cell).font().fontColor().orElseThrow());
     }
   }
 
@@ -437,7 +438,7 @@ class WorkbookStyleRegistryTest {
       XSSFFont noColorFont = workbook.createFont();
       noColorFontStyle.setFont(noColorFont);
       cell.setCellStyle(noColorFontStyle);
-      assertNull(styleRegistry.snapshot(cell).font().fontColor());
+      assertEquals(Optional.empty(), styleRegistry.snapshot(cell).font().fontColor());
 
       XSSFCellStyle nonRgbFillStyle = workbook.createCellStyle();
       nonRgbFillStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -514,7 +515,7 @@ class WorkbookStyleRegistryTest {
       assertTrue(snapshot.alignment().wrapText());
       assertEquals(45, snapshot.alignment().textRotation());
       assertEquals(3, snapshot.alignment().indentation());
-      assertEquals(rgb("#102030"), snapshot.font().fontColor());
+      assertEquals(rgb("#102030"), snapshot.font().fontColor().orElseThrow());
       assertEquals(ExcelFillPattern.THIN_HORIZONTAL_BANDS, fillPattern(snapshot.fill()));
       assertEquals(rgb("#FFF2CC"), fillForegroundColor(snapshot.fill()));
       assertEquals(rgb("#DDEBF7"), fillBackgroundColor(snapshot.fill()));
@@ -545,7 +546,7 @@ class WorkbookStyleRegistryTest {
       CellStyleReport dateTimeSnapshot = styleRegistry.snapshot(cell);
       assertEquals("yyyy-mm-dd hh:mm:ss", dateTimeSnapshot.numberFormat());
       assertEquals(ExcelBorderStyle.MEDIUM, borderStyle(dateTimeSnapshot.border().top()));
-      assertEquals(rgb("#112233"), dateTimeSnapshot.font().fontColor());
+      assertEquals(rgb("#112233"), dateTimeSnapshot.font().fontColor().orElseThrow());
     }
   }
 

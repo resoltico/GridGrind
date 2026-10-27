@@ -657,7 +657,8 @@ final class XlsxParityCoreProbeGroup {
       XlsxParityOracle.StyleSnapshot themed) {
     CellStyleReport style = themedCell == null ? null : themedCell.style().orElse(null);
     return style != null
-        && matchesColorDescriptor(style.font().fontColor(), themed.fontColorDescriptor())
+        && matchesColorDescriptor(
+            style.font().fontColor().orElse(null), themed.fontColorDescriptor())
         && matchesColorDescriptor(fillForegroundColor(style.fill()), themed.fillColorDescriptor())
         && matchesColorDescriptor(
             borderColor(style.border().bottom()), themed.borderColorDescriptor());
@@ -681,7 +682,8 @@ final class XlsxParityCoreProbeGroup {
     return gradient.gradientFill()
         && style != null
         && fillGradient instanceof CellGradientFillReport.Linear linear
-        && approximatelyEquals(45.0d, linear.degree())
+        && linear.degree().isPresent()
+        && approximatelyEquals(45.0d, linear.degree().orElseThrow())
         && linear.stops().size() == 2
         && matchesColorDescriptor(linear.stops().get(1).color(), "theme=4|tint=0.45");
   }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.discovery;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,7 +15,7 @@ public record TaskEntry(
     TaskStarterContract starter,
     TaskWorkflow workflow) {
   public TaskEntry {
-    id = DiscoveryValidation.requireNonBlank(id, "id");
+    id = TextValidation.requireNonBlank(id, "id");
     intentTags = DiscoveryValidation.copyStrings(intentTags, "intentTags");
     Objects.requireNonNull(discoveryProfile, "discoveryProfile must not be null");
     Objects.requireNonNull(narrative, "narrative must not be null");

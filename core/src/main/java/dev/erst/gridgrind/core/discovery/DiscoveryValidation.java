@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.discovery;
 
 import dev.erst.gridgrind.core.catalog.TypeEntry;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -13,15 +14,6 @@ import java.util.function.Function;
 public final class DiscoveryValidation {
   private DiscoveryValidation() {}
 
-  /** Checks one required nonblank discovery or command-result string. */
-  public static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   /** Requires the version carried by a discovery or command result. */
   public static ProtocolVersion requireProtocolVersion(ProtocolVersion protocolVersion) {
     return Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
@@ -29,12 +21,14 @@ public final class DiscoveryValidation {
 
   static List<String> copyStrings(List<String> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
-    return List.copyOf(values.stream().map(value -> requireNonBlank(value, fieldName)).toList());
+    return List.copyOf(
+        values.stream().map(value -> TextValidation.requireNonBlank(value, fieldName)).toList());
   }
 
   static List<String> copyStringsAllowEmpty(List<String> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
-    return List.copyOf(values.stream().map(value -> requireNonBlank(value, fieldName)).toList());
+    return List.copyOf(
+        values.stream().map(value -> TextValidation.requireNonBlank(value, fieldName)).toList());
   }
 
   /** Normalizes an absent list to empty and copies each present nonblank string. */
@@ -50,7 +44,9 @@ public final class DiscoveryValidation {
     java.util.Optional<String> normalized =
         java.util.Objects.requireNonNull(value, fieldName + " must not be null");
     if (normalized.isPresent()) {
-      normalized = java.util.Optional.of(requireNonBlank(normalized.orElseThrow(), fieldName));
+      normalized =
+          java.util.Optional.of(
+              TextValidation.requireNonBlank(normalized.orElseThrow(), fieldName));
     }
     return normalized;
   }
@@ -104,7 +100,7 @@ public final class DiscoveryValidation {
     List<T> copy = new ArrayList<>(values.size());
     for (T value : values) {
       T nonNullValue = Objects.requireNonNull(value, fieldName + " must not contain nulls");
-      String key = requireNonBlank(keyExtractor.apply(nonNullValue), fieldName);
+      String key = TextValidation.requireNonBlank(keyExtractor.apply(nonNullValue), fieldName);
       if (!seen.add(key)) {
         throw new IllegalArgumentException(fieldName + " must not contain duplicate " + key);
       }

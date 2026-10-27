@@ -5,11 +5,11 @@ import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
 
 /** Factual drawing-object report returned by drawing reads. */
 @Union(discriminator = "type")
@@ -35,27 +35,27 @@ public sealed interface DrawingObjectReport
       String contentType,
       long byteSize,
       String sha256,
-      @Nullable Integer widthPixels,
-      @Nullable Integer heightPixels,
-      @Nullable String description)
+      Optional<Integer> widthPixels,
+      Optional<Integer> heightPixels,
+      Optional<String> description)
       implements DrawingObjectReport {
     public Picture {
+      Objects.requireNonNull(widthPixels, "widthPixels must not be null");
+      Objects.requireNonNull(heightPixels, "heightPixels must not be null");
       validateCommon(name, anchor);
       Objects.requireNonNull(format, "format must not be null");
-      contentType = requireNonBlank(contentType, "contentType");
-      sha256 = requireNonBlank(sha256, "sha256");
+      contentType = TextValidation.requireNonBlank(contentType, "contentType");
+      sha256 = TextValidation.requireNonBlank(sha256, "sha256");
       if (byteSize < 0L) {
         throw new IllegalArgumentException("byteSize must not be negative");
       }
-      if (widthPixels != null && widthPixels < 0) {
+      if (widthPixels.filter(value -> value < 0).isPresent()) {
         throw new IllegalArgumentException("widthPixels must not be negative");
       }
-      if (heightPixels != null && heightPixels < 0) {
+      if (heightPixels.filter(value -> value < 0).isPresent()) {
         throw new IllegalArgumentException("heightPixels must not be negative");
       }
-      if (description != null && description.isBlank()) {
-        throw new IllegalArgumentException("description must not be blank");
-      }
+      description = requireOptionalText(description, "description");
     }
   }
 
@@ -83,19 +83,15 @@ public sealed interface DrawingObjectReport
       String name,
       DrawingAnchorReport anchor,
       ExcelDrawingShapeKind kind,
-      @Nullable String presetGeometryToken,
-      @Nullable String text,
+      Optional<String> presetGeometryToken,
+      Optional<String> text,
       int childCount)
       implements DrawingObjectReport {
     public Shape {
       validateCommon(name, anchor);
       Objects.requireNonNull(kind, "kind must not be null");
-      if (presetGeometryToken != null && presetGeometryToken.isBlank()) {
-        throw new IllegalArgumentException("presetGeometryToken must not be blank");
-      }
-      if (text != null && text.isBlank()) {
-        throw new IllegalArgumentException("text must not be blank");
-      }
+      presetGeometryToken = requireOptionalText(presetGeometryToken, "presetGeometryToken");
+      text = requireOptionalText(text, "text");
       if (childCount < 0) {
         throw new IllegalArgumentException("childCount must not be negative");
       }
@@ -108,43 +104,37 @@ public sealed interface DrawingObjectReport
       String name,
       DrawingAnchorReport anchor,
       ExcelEmbeddedObjectPackagingKind packagingKind,
-      @Nullable String label,
-      @Nullable String fileName,
-      @Nullable String command,
+      Optional<String> label,
+      Optional<String> fileName,
+      Optional<String> command,
       String contentType,
       long byteSize,
       String sha256,
-      @Nullable ExcelPictureFormat previewFormat,
-      @Nullable Long previewByteSize,
-      @Nullable String previewSha256)
+      Optional<ExcelPictureFormat> previewFormat,
+      Optional<Long> previewByteSize,
+      Optional<String> previewSha256)
       implements DrawingObjectReport {
     public EmbeddedObject {
+      Objects.requireNonNull(previewFormat, "previewFormat must not be null");
+      Objects.requireNonNull(previewByteSize, "previewByteSize must not be null");
       validateCommon(name, anchor);
       Objects.requireNonNull(packagingKind, "packagingKind must not be null");
-      contentType = requireNonBlank(contentType, "contentType");
-      sha256 = requireNonBlank(sha256, "sha256");
-      if (label != null && label.isBlank()) {
-        throw new IllegalArgumentException("label must not be blank");
-      }
-      if (fileName != null && fileName.isBlank()) {
-        throw new IllegalArgumentException("fileName must not be blank");
-      }
-      if (command != null && command.isBlank()) {
-        throw new IllegalArgumentException("command must not be blank");
-      }
+      contentType = TextValidation.requireNonBlank(contentType, "contentType");
+      sha256 = TextValidation.requireNonBlank(sha256, "sha256");
+      label = requireOptionalText(label, "label");
+      fileName = requireOptionalText(fileName, "fileName");
+      command = requireOptionalText(command, "command");
       if (byteSize < 0L) {
         throw new IllegalArgumentException("byteSize must not be negative");
       }
-      if (previewFormat == null && previewByteSize != null) {
+      if (previewFormat.isEmpty() && previewByteSize.isPresent()) {
         throw new IllegalArgumentException("previewByteSize requires previewFormat");
       }
-      if (previewSha256 != null && previewSha256.isBlank()) {
-        throw new IllegalArgumentException("previewSha256 must not be blank");
-      }
-      if (previewFormat == null && previewSha256 != null) {
+      previewSha256 = requireOptionalText(previewSha256, "previewSha256");
+      if (previewFormat.isEmpty() && previewSha256.isPresent()) {
         throw new IllegalArgumentException("previewSha256 requires previewFormat");
       }
-      if (previewByteSize != null && previewByteSize < 0L) {
+      if (previewByteSize.filter(value -> value < 0L).isPresent()) {
         throw new IllegalArgumentException("previewByteSize must not be negative");
       }
     }
@@ -160,8 +150,8 @@ public sealed interface DrawingObjectReport
       implements DrawingObjectReport {
     public SignatureLine {
       validateCommon(name, anchor);
-      setup = normalizeOptional(setup, "setup");
-      preview = normalizeOptional(preview, "preview");
+      setup = requireOptional(setup, "setup");
+      preview = requireOptional(preview, "preview");
     }
   }
 
@@ -174,12 +164,12 @@ public sealed interface DrawingObjectReport
       Optional<String> suggestedSigner2,
       Optional<String> suggestedSignerEmail) {
     public SignatureSetup {
-      setupId = normalizeOptionalText(setupId, "setupId");
-      allowComments = normalizeOptional(allowComments, "allowComments");
-      signingInstructions = normalizeOptionalText(signingInstructions, "signingInstructions");
-      suggestedSigner = normalizeOptionalText(suggestedSigner, "suggestedSigner");
-      suggestedSigner2 = normalizeOptionalText(suggestedSigner2, "suggestedSigner2");
-      suggestedSignerEmail = normalizeOptionalText(suggestedSignerEmail, "suggestedSignerEmail");
+      setupId = requireOptionalText(setupId, "setupId");
+      allowComments = requireOptional(allowComments, "allowComments");
+      signingInstructions = requireOptionalText(signingInstructions, "signingInstructions");
+      suggestedSigner = requireOptionalText(suggestedSigner, "suggestedSigner");
+      suggestedSigner2 = requireOptionalText(suggestedSigner2, "suggestedSigner2");
+      suggestedSignerEmail = requireOptionalText(suggestedSignerEmail, "suggestedSignerEmail");
     }
   }
 
@@ -193,13 +183,13 @@ public sealed interface DrawingObjectReport
       Optional<Integer> heightPixels) {
     public SignaturePreview {
       Objects.requireNonNull(format, "format must not be null");
-      contentType = requireNonBlank(contentType, "contentType");
-      sha256 = normalizeOptionalText(sha256, "previewSha256");
+      contentType = TextValidation.requireNonBlank(contentType, "contentType");
+      sha256 = requireOptionalText(sha256, "previewSha256");
       if (byteSize < 0L) {
         throw new IllegalArgumentException("byteSize must not be negative");
       }
-      widthPixels = normalizeOptional(widthPixels, "widthPixels");
-      heightPixels = normalizeOptional(heightPixels, "heightPixels");
+      widthPixels = requireOptional(widthPixels, "widthPixels");
+      heightPixels = requireOptional(heightPixels, "heightPixels");
       widthPixels.ifPresent(
           width -> {
             if (width < 0) {
@@ -216,36 +206,25 @@ public sealed interface DrawingObjectReport
   }
 
   private static void validateCommon(String name, DrawingAnchorReport anchor) {
-    requireNonBlank(name, "name");
+    TextValidation.requireNonBlank(name, "name");
     Objects.requireNonNull(anchor, "anchor must not be null");
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
-  private static Optional<String> normalizeOptionalText(Optional<String> value, String fieldName) {
-    Optional<String> normalized = normalizeOptional(value, fieldName);
-    return normalized.map(text -> requireNonBlank(text, fieldName));
+  private static Optional<String> requireOptionalText(Optional<String> value, String fieldName) {
+    Optional<String> normalized = requireOptional(value, fieldName);
+    return normalized.map(text -> TextValidation.requireNonBlank(text, fieldName));
   }
 
   private static List<String> copyNonBlankStrings(List<String> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
     List<String> copy = new ArrayList<>(values.size());
     for (String value : values) {
-      copy.add(requireNonBlank(value, fieldName + " value"));
+      copy.add(TextValidation.requireNonBlank(value, fieldName + " value"));
     }
     return List.copyOf(copy);
   }
 
-  private static <T> Optional<T> normalizeOptional(Optional<T> value, String fieldName) {
-    Optional<T> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
-    normalized.ifPresent(
-        entry -> Objects.requireNonNull(entry, fieldName + " must not contain null"));
-    return normalized;
+  private static <T> Optional<T> requireOptional(Optional<T> value, String fieldName) {
+    return Objects.requireNonNull(value, fieldName + " must not be null");
   }
 }

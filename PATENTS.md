@@ -1,12 +1,3 @@
----
-afad: "5.0.1"
-domain: LEGAL
-updated: "2026-10-26"
-route:
-  keywords: [gridgrind, patent, patents, legal, dependencies, mpl, mit, apache, bsd, container]
-  questions: ["what patent rights accompany gridgrind", "does gridgrind offer a patent non-assertion pledge", "what patent terms apply to bundled dependencies"]
----
-
 # Patent Considerations
 
 This document describes which distributed license texts contain an express patent grant. It is

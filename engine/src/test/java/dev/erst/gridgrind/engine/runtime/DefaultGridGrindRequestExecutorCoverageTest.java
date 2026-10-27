@@ -39,6 +39,7 @@ import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused current-API coverage for executor-owned helper and conversion seams. */
@@ -161,7 +162,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
             false,
             "Aptos",
             FontHeightReport.fromPoints(new BigDecimal("11")),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),

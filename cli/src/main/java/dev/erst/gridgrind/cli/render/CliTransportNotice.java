@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.render;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import dev.erst.gridgrind.core.discovery.DiscoveryValidation;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -14,8 +14,7 @@ public record CliTransportNotice(
     Objects.requireNonNull(reason, "reason must not be null");
     Objects.requireNonNull(wroteTo, "wroteTo must not be null");
     responsePath = Objects.requireNonNullElseGet(responsePath, Optional::empty);
-    responsePath =
-        responsePath.map(path -> DiscoveryValidation.requireNonBlank(path, "responsePath"));
+    responsePath = responsePath.map(path -> TextValidation.requireNonBlank(path, "responsePath"));
   }
 
   /** Creates the fallback notice for a response file that could not be written. */

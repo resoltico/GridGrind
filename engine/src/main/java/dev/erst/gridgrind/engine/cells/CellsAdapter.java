@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import dev.erst.gridgrind.engine.comments.CommentAdapter;
@@ -23,7 +24,6 @@ import dev.erst.gridgrind.engine.formulas.FormulaRuntime;
 import dev.erst.gridgrind.engine.links.LinkAdapter;
 import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.poi.FormulaWrites;
-import dev.erst.gridgrind.engine.poi.NativeArguments;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import dev.erst.gridgrind.engine.styles.StyleAdapter;
 import dev.erst.gridgrind.engine.tables.TableAdapter;
@@ -47,6 +47,9 @@ import org.jspecify.annotations.Nullable;
 
 /** Owns typed cell reads, projection, mutation, previews and array formula groups. */
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CommentRequired"})
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_TEXT_CHARACTERS_PER_CELL
+})
 public final class CellsAdapter {
   private final Sheet sheet;
   private final StyleAdapter styleRegistry;
@@ -65,12 +68,12 @@ public final class CellsAdapter {
   }
 
   public String text(String address) {
-    NativeArguments.requireNonBlank(address, "address");
+    TextValidation.requireNonBlank(address, "address");
     return requiredCell(address).getStringCellValue();
   }
 
   public double number(String address) {
-    NativeArguments.requireNonBlank(address, "address");
+    TextValidation.requireNonBlank(address, "address");
     Cell cell = requiredCell(address);
     if (cell.getCellType() == CellType.FORMULA) {
       org.apache.poi.ss.usermodel.CellValue evaluatedCell;
@@ -89,7 +92,7 @@ public final class CellsAdapter {
   }
 
   public boolean bool(String address) {
-    NativeArguments.requireNonBlank(address, "address");
+    TextValidation.requireNonBlank(address, "address");
     Cell cell = requiredCell(address);
     if (cell.getCellType() == CellType.FORMULA) {
       org.apache.poi.ss.usermodel.CellValue evaluatedCell;
@@ -108,7 +111,7 @@ public final class CellsAdapter {
   }
 
   public String formula(String address) {
-    NativeArguments.requireNonBlank(address, "address");
+    TextValidation.requireNonBlank(address, "address");
     Cell cell = requiredCell(address);
     if (cell.getCellType() != CellType.FORMULA) {
       throw new IllegalStateException("Cell does not contain a formula: " + address);
@@ -121,7 +124,7 @@ public final class CellsAdapter {
   }
 
   public CellReport snapshotCell(String address, CellReadProjection projection) {
-    NativeArguments.requireNonBlank(address, "address");
+    TextValidation.requireNonBlank(address, "address");
     Objects.requireNonNull(projection, "projection must not be null");
     CellReference cellReference = parseCellReference(address);
     requireValidCellReference(address, cellReference);
@@ -138,7 +141,7 @@ public final class CellsAdapter {
     Objects.requireNonNull(projection, "projection must not be null");
     List<CellReport> cells = new ArrayList<>(addresses.size());
     for (String address : List.copyOf(addresses)) {
-      NativeArguments.requireNonBlank(address, "address");
+      TextValidation.requireNonBlank(address, "address");
       cells.add(snapshotCell(address, projection));
     }
     return List.copyOf(cells);
@@ -173,7 +176,7 @@ public final class CellsAdapter {
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
   public dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
       String topLeftAddress, int rowCount, int columnCount, CellReadProjection projection) {
-    NativeArguments.requireNonBlank(topLeftAddress, "topLeftAddress");
+    TextValidation.requireNonBlank(topLeftAddress, "topLeftAddress");
     Objects.requireNonNull(projection, "projection must not be null");
     if (rowCount <= 0) {
       throw new IllegalArgumentException("rowCount must be greater than 0");
@@ -507,7 +510,7 @@ public final class CellsAdapter {
   }
 
   public CellsAdapter setCell(String address, ResolvedCellWrite value) {
-    NativeArguments.requireNonBlank(address, "address");
+    TextValidation.requireNonBlank(address, "address");
     Objects.requireNonNull(value, "value must not be null");
 
     CellReference cellReference = parseCellReference(address);
@@ -522,7 +525,7 @@ public final class CellsAdapter {
   }
 
   public CellsAdapter setRange(String range, List<List<ResolvedCellWrite>> rows) {
-    NativeArguments.requireNonBlank(range, "range");
+    TextValidation.requireNonBlank(range, "range");
     Objects.requireNonNull(rows, "rows must not be null");
     if (rows.isEmpty()) {
       throw new IllegalArgumentException("rows must not be empty");
@@ -560,7 +563,7 @@ public final class CellsAdapter {
   }
 
   public CellsAdapter clearRange(String range) {
-    NativeArguments.requireNonBlank(range, "range");
+    TextValidation.requireNonBlank(range, "range");
     CellBounds excelRange = CellBounds.parse(range);
     for (int rowIndex = excelRange.firstRow(); rowIndex <= excelRange.lastRow(); rowIndex++) {
       Row row = sheet.getRow(rowIndex);
@@ -585,7 +588,7 @@ public final class CellsAdapter {
   }
 
   public CellsAdapter setArrayFormula(String range, ResolvedArrayFormula formula) {
-    NativeArguments.requireNonBlank(range, "range");
+    TextValidation.requireNonBlank(range, "range");
     Objects.requireNonNull(formula, "formula must not be null");
 
     CellBounds excelRange = CellBounds.parse(range);
@@ -614,7 +617,7 @@ public final class CellsAdapter {
   }
 
   public CellsAdapter clearArrayFormula(String address) {
-    NativeArguments.requireNonBlank(address, "address");
+    TextValidation.requireNonBlank(address, "address");
     Cell cell = requiredArrayCell(address);
     if (!cell.isPartOfArrayFormulaGroup()) {
       throw new IllegalArgumentException("Cell " + address + " is not part of an array formula.");
@@ -631,7 +634,7 @@ public final class CellsAdapter {
   }
 
   public CellsAdapter applyStyle(String range, CellStylePatch style) {
-    NativeArguments.requireNonBlank(range, "range");
+    TextValidation.requireNonBlank(range, "range");
     Objects.requireNonNull(style, "style must not be null");
 
     CellBounds excelRange = CellBounds.parse(range);
@@ -673,7 +676,7 @@ public final class CellsAdapter {
       }
       case CellValue.Text textValue -> {
         clearExistingFormula(cell);
-        CellTextLimits.requireSupportedLength(textValue.value(), "textValue.value"); // LIM-010
+        CellTextLimits.requireSupportedLength(textValue.value(), "textValue.value");
         cell.setCellValue(textValue.value());
       }
       case ResolvedRichText richTextValue -> {

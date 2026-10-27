@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.drawing;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,7 +17,7 @@ public record PictureSpec(
     DrawingAnchorSpec anchor,
     Optional<TextSourceSpec> description) {
   public PictureSpec {
-    name = requireNonBlank(name, "name");
+    name = TextValidation.requireNonBlank(name, "name");
     Objects.requireNonNull(image, "image must not be null");
     anchor = requireTwoCellAnchor(anchor);
     Objects.requireNonNull(description, "description must not be null");
@@ -26,14 +27,6 @@ public record PictureSpec(
             throw new IllegalArgumentException("description must not be blank");
           }
         });
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   private static DrawingAnchorSpec requireTwoCellAnchor(DrawingAnchorSpec anchor) {

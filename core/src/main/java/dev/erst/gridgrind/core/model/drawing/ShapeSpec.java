@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -33,7 +34,7 @@ public sealed interface ShapeSpec
       Optional<TextSourceSpec> text)
       implements ShapeSpec {
     public SimpleShape {
-      name = requireNonBlank(name, "name");
+      name = TextValidation.requireNonBlank(name, "name");
       anchor = requireTwoCellAnchor(anchor);
       Objects.requireNonNull(text, "text must not be null");
       presetGeometryToken = requirePresetGeometryToken(presetGeometryToken);
@@ -57,7 +58,7 @@ public sealed interface ShapeSpec
       summary = "Write one authored connector with no geometry token or text payload.")
   record Connector(String name, DrawingAnchorSpec anchor) implements ShapeSpec, ResolvedShape {
     public Connector {
-      name = requireNonBlank(name, "name");
+      name = TextValidation.requireNonBlank(name, "name");
       anchor = requireTwoCellAnchor(anchor);
     }
 
@@ -71,21 +72,11 @@ public sealed interface ShapeSpec
   static String requirePresetGeometryToken(String presetGeometryToken) {
     Objects.requireNonNull(presetGeometryToken, "presetGeometryToken must not be null");
     String normalized = presetGeometryToken.trim();
-    if (normalized.isBlank()) {
-      throw new IllegalArgumentException("presetGeometryToken must not be blank");
-    }
+    TextValidation.requireNonBlank(normalized, "presetGeometryToken");
     return normalized;
   }
 
   /** Validates required shape text shared by authored and materialized payloads. */
-  static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   private static DrawingAnchorSpec requireTwoCellAnchor(DrawingAnchorSpec anchor) {
     Objects.requireNonNull(anchor, "anchor must not be null");
     return switch (anchor) {

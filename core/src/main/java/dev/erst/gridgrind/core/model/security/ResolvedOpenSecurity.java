@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.model.security;
 
-import java.util.Objects;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 
 /** Explicit OOXML package-open security alternatives for plain and encrypted workbook sources. */
 public sealed interface ResolvedOpenSecurity
@@ -12,10 +12,7 @@ public sealed interface ResolvedOpenSecurity
   /** Opens an encrypted OOXML workbook using the supplied verified password candidate. */
   record Encrypted(String password) implements ResolvedOpenSecurity {
     public Encrypted {
-      Objects.requireNonNull(password, "password must not be null");
-      if (password.isBlank()) {
-        throw new IllegalArgumentException("password must not be blank");
-      }
+      password = TextValidation.requireNonBlank(password, "password");
     }
 
     @Override

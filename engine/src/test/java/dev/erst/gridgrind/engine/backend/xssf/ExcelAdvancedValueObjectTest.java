@@ -423,22 +423,22 @@ class ExcelAdvancedValueObjectTest {
             "OpsGroup",
             new DrawingAnchorReport.Absolute(1L, 2L, 10L, 20L, null),
             ExcelDrawingShapeKind.GROUP,
-            null,
-            null,
+            Optional.empty(),
+            Optional.empty(),
             2);
     DrawingObjectPayloadReport.EmbeddedObject payload =
         new DrawingObjectPayloadReport.EmbeddedObject(
             "OpsEmbed",
             ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
             "application/octet-stream",
-            "payload.txt",
+            Optional.of("payload.txt"),
             "abc123",
             java.util.Base64.getEncoder()
                 .encodeToString(
                     new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8))
                         .bytes()),
-            "Payload",
-            "payload.txt");
+            Optional.of("Payload"),
+            Optional.of("payload.txt"));
 
     assertNotEquals(binary.bytes(), binary.bytes());
     assertEquals(3, binary.size());
@@ -447,7 +447,7 @@ class ExcelAdvancedValueObjectTest {
     assertEquals("rect", ((ResolvedShape.SimpleShape) shape).presetGeometryToken());
     assertEquals("payload.txt", embeddedObject.fileName());
     assertEquals(2, groupSnapshot.childCount());
-    assertEquals("Payload", payload.label());
+    assertEquals("Payload", payload.label().orElseThrow());
     assertThrows(IllegalArgumentException.class, () -> new BinaryContent(new byte[0]));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0));
     assertThrows(
@@ -479,11 +479,11 @@ class ExcelAdvancedValueObjectTest {
                 "OpsEmbed",
                 ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
                 "application/octet-stream",
-                " ",
+                Optional.of(" "),
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(binary.bytes()),
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
   }
 
   @Test

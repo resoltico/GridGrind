@@ -114,14 +114,14 @@ final class WorkbookInvariantEngineShapeChecks {
             chart.title() != null, "engine chart title must not be null");
       }
       case dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.Shape shape -> {
-        if (shape.presetGeometryToken() != null) {
+        if (shape.presetGeometryToken().isPresent()) {
           WorkbookInvariantChecks.require(
-              !shape.presetGeometryToken().isBlank(),
+              !shape.presetGeometryToken().orElseThrow().isBlank(),
               "engine shape presetGeometryToken must not be blank");
         }
-        if (shape.text() != null) {
+        if (shape.text().isPresent()) {
           WorkbookInvariantChecks.require(
-              !shape.text().isBlank(), "engine shape text must not be blank");
+              !shape.text().orElseThrow().isBlank(), "engine shape text must not be blank");
         }
         WorkbookInvariantChecks.require(
             shape.childCount() >= 0, "engine shape childCount must not be negative");

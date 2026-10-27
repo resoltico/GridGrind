@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 import static dev.erst.gridgrind.engine.backend.xssf.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
@@ -38,7 +39,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.engine.cells.CellsAdapter;
@@ -231,10 +231,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertThrows(IllegalArgumentException.class, () -> sheet.rows().setHeight(0, 0, 0.0));
       assertThrows(
           IllegalArgumentException.class,
-          () ->
-              sheet
-                  .rows()
-                  .setHeight(0, 0, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
+          () -> sheet.rows().setHeight(0, 0, Math.nextUp(Limit.MAX_ROW_HEIGHT_POINTS)));
       assertThrows(
           IllegalArgumentException.class, () -> sheet.rows().setHeight(0, 0, Double.MIN_VALUE));
       assertThrows(IllegalArgumentException.class, () -> sheet.rows().setHeight(0, 0, Double.NaN));
@@ -512,7 +509,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertFalse(styledValue.style().orElseThrow().font().underline());
       assertFalse(styledValue.style().orElseThrow().font().strikeout());
       assertEquals(
-          CellColorReport.indexed(8), styledValue.style().orElseThrow().font().fontColor());
+          CellColorReport.indexed(8),
+          styledValue.style().orElseThrow().font().fontColor().orElseThrow());
       assertNull(fillForegroundColor(styledValue.style().orElseThrow().fill()));
       assertEquals(
           ExcelBorderStyle.NONE, borderStyle(styledValue.style().orElseThrow().border().top()));
@@ -544,7 +542,9 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           cleared.style().orElseThrow().alignment().verticalAlignment());
       assertEquals("Calibri", cleared.style().orElseThrow().font().fontName());
       assertEquals(220, cleared.style().orElseThrow().font().fontHeight().twips());
-      assertEquals(CellColorReport.indexed(8), cleared.style().orElseThrow().font().fontColor());
+      assertEquals(
+          CellColorReport.indexed(8),
+          cleared.style().orElseThrow().font().fontColor().orElseThrow());
       assertFalse(cleared.style().orElseThrow().font().underline());
       assertFalse(cleared.style().orElseThrow().font().strikeout());
       assertNull(fillForegroundColor(cleared.style().orElseThrow().fill()));
@@ -670,7 +670,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           ExcelVerticalAlignment.TOP, styled.style().orElseThrow().alignment().verticalAlignment());
       assertEquals("Aptos", styled.style().orElseThrow().font().fontName());
       assertEquals(280, styled.style().orElseThrow().font().fontHeight().twips());
-      assertEquals(rgb("#1F4E78"), styled.style().orElseThrow().font().fontColor());
+      assertEquals(rgb("#1F4E78"), styled.style().orElseThrow().font().fontColor().orElseThrow());
       assertTrue(styled.style().orElseThrow().font().underline());
       assertTrue(styled.style().orElseThrow().font().strikeout());
       assertEquals(rgb("#FFF2CC"), fillForegroundColor(styled.style().orElseThrow().fill()));

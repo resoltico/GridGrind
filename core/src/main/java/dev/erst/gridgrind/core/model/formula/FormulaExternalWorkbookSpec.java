@@ -2,7 +2,7 @@ package dev.erst.gridgrind.core.model.formula;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import java.util.Objects;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 
 /** One external workbook binding used by formula evaluation. */
 @CatalogType(
@@ -18,10 +18,7 @@ public record FormulaExternalWorkbookSpec(String workbookName, String path) {
   }
 
   private static String requireWorkbookName(String workbookName) {
-    Objects.requireNonNull(workbookName, "workbookName must not be null");
-    if (workbookName.isBlank()) {
-      throw new IllegalArgumentException("workbookName must not be blank");
-    }
+    TextValidation.requireNonBlank(workbookName, "workbookName");
     if (workbookName.indexOf('[') >= 0 || workbookName.indexOf(']') >= 0) {
       throw new IllegalArgumentException(
           "workbookName must not contain [ or ] because formulas add brackets automatically");

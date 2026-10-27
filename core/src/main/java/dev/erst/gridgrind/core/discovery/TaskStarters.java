@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.core.discovery;
 
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Locale;
-import java.util.Objects;
 
 /** Shared path and asset conventions for published task-starter recipes. */
 final class TaskStarters {
@@ -24,10 +24,7 @@ final class TaskStarters {
   }
 
   static String taskStarterAsset(String fileName) {
-    Objects.requireNonNull(fileName, "fileName must not be null");
-    if (fileName.isBlank()) {
-      throw new IllegalArgumentException("fileName must not be blank");
-    }
+    TextValidation.requireNonBlank(fileName, "fileName");
     return "task-starter-assets/" + fileName;
   }
 
@@ -36,10 +33,7 @@ final class TaskStarters {
   }
 
   private static String slug(String taskId) {
-    Objects.requireNonNull(taskId, "taskId must not be null");
-    if (taskId.isBlank()) {
-      throw new IllegalArgumentException("taskId must not be blank");
-    }
+    TextValidation.requireNonBlank(taskId, "taskId");
     return taskId.toLowerCase(Locale.ROOT).replace('_', '-');
   }
 }

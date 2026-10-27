@@ -270,12 +270,12 @@ class ExcelWorkbookImageCatalogSupportTest {
         objectName,
         anchor(fromColumn, fromRow, toColumn, toRow),
         false,
-        Optional.ofNullable("Review before signing."),
-        Optional.ofNullable("Ada Lovelace"),
-        Optional.ofNullable("Finance"),
-        Optional.ofNullable("ada@example.com"),
+        Optional.of("Review before signing."),
+        Optional.of("Ada Lovelace"),
+        Optional.of("Finance"),
+        Optional.of("ada@example.com"),
         Optional.empty(),
-        Optional.ofNullable("invalid"),
+        Optional.of("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new BinaryContent(PNG_PIXEL_BYTES)));
   }

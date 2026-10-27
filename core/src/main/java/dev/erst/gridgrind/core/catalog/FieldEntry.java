@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.metadata.WireDefault;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,7 +38,7 @@ public record FieldEntry(
   }
 
   public FieldEntry {
-    name = CatalogRecordValidation.requireNonBlank(name, "name");
+    name = TextValidation.requireNonBlank(name, "name");
     Objects.requireNonNull(requirement, "requirement must not be null");
     Objects.requireNonNull(shape, "shape must not be null");
     enumValues = CatalogRecordValidation.copyStrings(enumValues, "enumValues");

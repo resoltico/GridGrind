@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.layout;
 
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import java.util.Map;
 import java.util.Objects;
@@ -42,8 +42,7 @@ public final class DeterministicColumnSizer {
             sheet.setColumnWidth(
                 columnIndex,
                 SheetStructure.toColumnWidthUnits(
-                    Math.min(
-                        widthCharacters, ExcelSheetLayoutLimits.MAX_COLUMN_WIDTH_CHARACTERS))));
+                    Math.min(widthCharacters, Limit.MAX_COLUMN_WIDTH_CHARACTERS))));
   }
 
   private static boolean contributesVisibleContent(Cell cell) {

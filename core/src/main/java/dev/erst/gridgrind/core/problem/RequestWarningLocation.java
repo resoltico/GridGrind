@@ -4,7 +4,7 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import java.util.Objects;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 
 /** The authored request surface to which one non-fatal warning applies. */
 @Union(discriminator = "type", catalog = true, displayOrder = 47)
@@ -27,7 +27,7 @@ public sealed interface RequestWarningLocation
       }
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      stepType = requireNonBlank(stepType, "stepType");
+      stepType = TextValidation.requireNonBlank(stepType, "stepType");
     }
   }
 
@@ -35,8 +35,8 @@ public sealed interface RequestWarningLocation
   @Variant(id = "REQUEST_PATH", summary = "Warning located at one request-owned filesystem path.")
   record RequestPath(String path, String pathRole) implements RequestWarningLocation {
     public RequestPath {
-      path = requireNonBlank(path, "path");
-      pathRole = requireNonBlank(pathRole, "pathRole");
+      path = TextValidation.requireNonBlank(path, "path");
+      pathRole = TextValidation.requireNonBlank(pathRole, "pathRole");
     }
   }
 
@@ -60,16 +60,8 @@ public sealed interface RequestWarningLocation
       implements RequestWarningLocation {
     public FormulaCell {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
-      address = requireNonBlank(address, "address");
-      formula = requireNonBlank(formula, "formula");
+      address = TextValidation.requireNonBlank(address, "address");
+      formula = TextValidation.requireNonBlank(formula, "formula");
     }
-  }
-
-  private static String requireNonBlank(String value, String name) {
-    Objects.requireNonNull(value, name + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(name + " must not be blank");
-    }
-    return value;
   }
 }

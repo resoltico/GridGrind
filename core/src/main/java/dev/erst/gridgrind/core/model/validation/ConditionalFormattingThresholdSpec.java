@@ -6,6 +6,9 @@ import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
 
 /** Tagged authoring threshold variants for advanced conditional-formatting rules. */
 @Union(discriminator = "type", catalog = true, displayOrder = 65)
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_DDE_REJECTION_IN_ALL_FORMULA_INPUTS
+})
 public sealed interface ConditionalFormattingThresholdSpec
     permits dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec.Min,
         dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec.Max,
@@ -57,7 +60,7 @@ public sealed interface ConditionalFormattingThresholdSpec
       if (formula == null || formula.isBlank()) {
         throw new IllegalArgumentException("formula must not be blank");
       }
-      FormulaInputSecurity.rejectDde(formula); // LIM-027
+      FormulaInputSecurity.rejectDde(formula);
     }
   }
 

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
@@ -50,11 +51,11 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       assertTrue(rowGapFailure.getMessage().contains("last existing row + 1: 0 (Excel row 1)"));
 
       XSSFSheet insertRowLimit = workbook.createSheet("InsertRowLimit");
-      insertRowLimit.createRow(ExcelRowSpan.MAX_ROW_INDEX);
+      insertRowLimit.createRow(Limit.MAX_ROW_INDEX);
       IllegalArgumentException rowOverflowFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> StructuralEdits.insertRows(insertRowLimit, ExcelRowSpan.MAX_ROW_INDEX, 2));
+              () -> StructuralEdits.insertRows(insertRowLimit, Limit.MAX_ROW_INDEX, 2));
       assertTrue(
           rowOverflowFailure
               .getMessage()
@@ -77,9 +78,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException columnOverflowFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () ->
-                  StructuralEdits.insertColumns(
-                      insertColumnLimit, ExcelColumnSpan.MAX_COLUMN_INDEX, 2));
+              () -> StructuralEdits.insertColumns(insertColumnLimit, Limit.MAX_COLUMN_INDEX, 2));
       assertTrue(
           columnOverflowFailure
               .getMessage()
@@ -102,7 +101,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
               () ->
                   StructuralEdits.shiftRows(
                       insertRowBounds,
-                      new ExcelRowSpan(ExcelRowSpan.MAX_ROW_INDEX, ExcelRowSpan.MAX_ROW_INDEX),
+                      new ExcelRowSpan(Limit.MAX_ROW_INDEX, Limit.MAX_ROW_INDEX),
                       1));
       assertTrue(
           shiftRowHighFailure
@@ -131,8 +130,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
               () ->
                   StructuralEdits.shiftColumns(
                       insertColumnBounds,
-                      new ExcelColumnSpan(
-                          ExcelColumnSpan.MAX_COLUMN_INDEX, ExcelColumnSpan.MAX_COLUMN_INDEX),
+                      new ExcelColumnSpan(Limit.MAX_COLUMN_INDEX, Limit.MAX_COLUMN_INDEX),
                       1));
       assertTrue(
           shiftColumnHighFailure

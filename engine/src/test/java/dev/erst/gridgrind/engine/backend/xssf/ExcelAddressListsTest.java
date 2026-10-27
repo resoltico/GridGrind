@@ -3,8 +3,8 @@ package dev.erst.gridgrind.engine.backend.xssf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.vocabulary.ExcelAddressLists;
-import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +47,7 @@ class ExcelAddressListsTest {
             IllegalArgumentException.class,
             () ->
                 ExcelAddressLists.copyNonEmptyDistinctAddresses(
-                    java.util.stream.IntStream.rangeClosed(1, ExcelReadLimits.MAX_READ_CELLS + 1)
+                    java.util.stream.IntStream.rangeClosed(1, Limit.MAX_READ_CELLS + 1)
                         .mapToObj(index -> "A" + index)
                         .toList()));
 

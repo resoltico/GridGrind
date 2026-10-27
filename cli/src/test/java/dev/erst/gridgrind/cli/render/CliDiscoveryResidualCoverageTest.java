@@ -37,7 +37,8 @@ class CliDiscoveryResidualCoverageTest {
                     "Field is present only when one listed facet is requested."),
                 new ProtocolCatalogFieldMetadataKey(
                     "noteRefs", "Entry references stable note ids published once per payload.")),
-            List.of(new ProtocolCatalogLookupNamespace("<group>:<id>", "Use stable catalog ids.")));
+            List.of(new ProtocolCatalogLookupNamespace("<group>:<id>", "Use stable catalog ids.")),
+            List.of());
 
     assertEquals(2, report.topLevelGroups().getFirst().entryCount());
 

@@ -136,14 +136,15 @@ class AutofilterAdapterTest {
                   new AutofilterFilterCriterionReport.CustomConditionReport("equal", "Queue"))),
           snapshot.filterColumns().get(1).criterion());
       assertEquals(
-          new AutofilterFilterCriterionReport.Dynamic("today", 1.0d, 2.0d),
+          new AutofilterFilterCriterionReport.Dynamic(
+              "today", Optional.of(1.0d), Optional.of(2.0d)),
           snapshot.filterColumns().get(2).criterion());
       assertEquals(
-          new AutofilterFilterCriterionReport.Top10(false, true, 10.0d, null),
+          new AutofilterFilterCriterionReport.Top10(false, true, 10.0d, Optional.empty()),
           snapshot.filterColumns().get(3).criterion());
       assertEquals(
           new AutofilterFilterCriterionReport.Color(
-              false, CellColorReport.rgb(new RgbHex("#AABBCC"))),
+              false, Optional.ofNullable(CellColorReport.rgb(new RgbHex("#AABBCC")))),
           snapshot.filterColumns().get(4).criterion());
       assertEquals(
           new AutofilterFilterCriterionReport.Icon("3TrafficLights1", 2),
@@ -342,14 +343,15 @@ class AutofilterAdapterTest {
       assertEquals("lessThan", custom.conditions().getFirst().operator());
       assertEquals("equal", custom.conditions().get(1).operator());
       assertEquals(
-          new AutofilterFilterCriterionReport.Dynamic("today", 1.0d, 2.0d),
+          new AutofilterFilterCriterionReport.Dynamic(
+              "today", Optional.of(1.0d), Optional.of(2.0d)),
           snapshot.filterColumns().get(2).criterion());
       assertEquals(
-          new AutofilterFilterCriterionReport.Top10(false, true, 10.0d, 8.0d),
+          new AutofilterFilterCriterionReport.Top10(false, true, 10.0d, Optional.of(8.0d)),
           snapshot.filterColumns().get(3).criterion());
       assertEquals(
           new AutofilterFilterCriterionReport.Color(
-              true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
+              true, Optional.ofNullable(CellColorReport.rgb(new RgbHex("#AABBCC")))),
           snapshot.filterColumns().get(4).criterion());
       assertEquals(
           new AutofilterFilterCriterionReport.Icon("3TrafficLights1", 2),
@@ -358,7 +360,7 @@ class AutofilterAdapterTest {
           new AutofilterFilterCriterionReport.Values(List.of(), false),
           snapshot.filterColumns().get(6).criterion());
       assertEquals(
-          new AutofilterFilterCriterionReport.Color(false, null),
+          new AutofilterFilterCriterionReport.Color(false, Optional.empty()),
           snapshot.filterColumns().get(7).criterion());
     }
   }
@@ -437,13 +439,14 @@ class AutofilterAdapterTest {
       var dynamic =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDynamicFilter.Factory.newInstance();
       assertEquals(
-          new AutofilterFilterCriterionReport.Dynamic("UNKNOWN", null, null),
+          new AutofilterFilterCriterionReport.Dynamic(
+              "UNKNOWN", Optional.empty(), Optional.empty()),
           AutofilterAdapter.dynamicCriterion(dynamic));
 
       var top10 = org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
       top10.setVal(5.0d);
       assertEquals(
-          new AutofilterFilterCriterionReport.Top10(true, false, 5.0d, null),
+          new AutofilterFilterCriterionReport.Top10(true, false, 5.0d, Optional.empty()),
           AutofilterAdapter.top10Criterion(top10));
 
       var icon =
@@ -510,7 +513,7 @@ class AutofilterAdapterTest {
       var absentColorFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
       assertEquals(
-          new AutofilterFilterCriterionReport.Color(false, null),
+          new AutofilterFilterCriterionReport.Color(false, Optional.empty()),
           AutofilterAdapter.colorCriterion(workbook, absentColorFilter));
 
       var fillColorFilter =
@@ -519,7 +522,7 @@ class AutofilterAdapterTest {
       fillColorFilter.setDxfId(fillDxfId);
       assertEquals(
           new AutofilterFilterCriterionReport.Color(
-              true, CellColorReport.rgb(new RgbHex("#AABBCC"))),
+              true, Optional.ofNullable(CellColorReport.rgb(new RgbHex("#AABBCC")))),
           AutofilterAdapter.colorCriterion(workbook, fillColorFilter));
 
       var fontColorFilter =
@@ -527,7 +530,7 @@ class AutofilterAdapterTest {
       fontColorFilter.setDxfId(fontDxfId);
       assertEquals(
           new AutofilterFilterCriterionReport.Color(
-              false, CellColorReport.rgb(new RgbHex("#102030"))),
+              false, Optional.ofNullable(CellColorReport.rgb(new RgbHex("#102030")))),
           AutofilterAdapter.colorCriterion(workbook, fontColorFilter));
 
       assertEquals(
@@ -659,14 +662,14 @@ class AutofilterAdapterTest {
       top10.setPercent(false);
       top10.setVal(10d);
       assertEquals(
-          new AutofilterFilterCriterionReport.Top10(false, false, 10d, null),
+          new AutofilterFilterCriterionReport.Top10(false, false, 10d, Optional.empty()),
           AutofilterAdapter.top10Criterion(top10));
 
       var defaultTop =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
       defaultTop.setVal(5d);
       assertEquals(
-          new AutofilterFilterCriterionReport.Top10(true, false, 5d, null),
+          new AutofilterFilterCriterionReport.Top10(true, false, 5d, Optional.empty()),
           AutofilterAdapter.top10Criterion(defaultTop));
 
       var explicitTop =
@@ -674,7 +677,7 @@ class AutofilterAdapterTest {
       explicitTop.setTop(true);
       explicitTop.setVal(7d);
       assertEquals(
-          new AutofilterFilterCriterionReport.Top10(true, false, 7d, null),
+          new AutofilterFilterCriterionReport.Top10(true, false, 7d, Optional.empty()),
           AutofilterAdapter.top10Criterion(explicitTop));
 
       var percentTop =
@@ -683,7 +686,7 @@ class AutofilterAdapterTest {
       percentTop.setVal(3d);
       percentTop.setFilterVal(2d);
       assertEquals(
-          new AutofilterFilterCriterionReport.Top10(true, true, 3d, 2d),
+          new AutofilterFilterCriterionReport.Top10(true, true, 3d, Optional.of(2d)),
           AutofilterAdapter.top10Criterion(percentTop));
     }
   }
@@ -740,7 +743,7 @@ class AutofilterAdapterTest {
               AutofilterEntryReport.SheetOwned.class,
               controller.sheetOwnedAutofilters(sheet).getFirst());
       assertEquals(
-          new AutofilterFilterCriterionReport.Dynamic("today", null, null),
+          new AutofilterFilterCriterionReport.Dynamic("today", Optional.empty(), Optional.empty()),
           snapshot.filterColumns().getFirst().criterion());
     }
   }

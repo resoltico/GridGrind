@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.semantics.OperationEffect;
 import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
 import dev.erst.gridgrind.core.semantics.OperationPrecondition;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -126,8 +127,8 @@ public record TypeEntry(
   }
 
   public TypeEntry {
-    id = CatalogRecordValidation.requireNonBlank(id, "id");
-    summary = CatalogRecordValidation.requireNonBlank(summary, "summary");
+    id = TextValidation.requireNonBlank(id, "id");
+    summary = TextValidation.requireNonBlank(summary, "summary");
     fields = CatalogRecordValidation.copyFieldEntries(fields, "fields");
     targetSelectors =
         CatalogRecordValidation.copyTargetSelectorEntries(targetSelectors, "targetSelectors");

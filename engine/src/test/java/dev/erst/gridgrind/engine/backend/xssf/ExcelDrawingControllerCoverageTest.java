@@ -122,7 +122,8 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
       assertNotNull(invoke(controller, "shapeXml", Object.class, embeddedObject));
       simpleShape.getCTShape().getSpPr().unsetPrstGeom();
       simpleShape.getCTShape().getNvSpPr().getCNvPr().setName("");
-      assertNull(
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(),
           invoke(controller, "snapshotShape", DrawingObjectReport.Shape.class, simpleShape)
               .presetGeometryToken());
       assertTrue(

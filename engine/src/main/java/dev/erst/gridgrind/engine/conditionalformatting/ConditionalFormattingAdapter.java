@@ -1065,13 +1065,13 @@ public final class ConditionalFormattingAdapter {
     if (dxf == null) {
       return Optional.of(
           new DifferentialStyleReport(
-              null,
-              null,
-              null,
-              null,
               Optional.empty(),
-              null,
-              null,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               List.of(ExcelConditionalFormattingUnsupportedFeature.STYLE_REFERENCE)));
@@ -1221,13 +1221,13 @@ public final class ConditionalFormattingAdapter {
     }
     return Optional.of(
         new DifferentialStyleReport(
-            numberFormat,
-            font.bold(),
-            font.italic(),
-            font.fontHeight(),
+            Optional.ofNullable(numberFormat),
+            Optional.ofNullable(font.bold()),
+            Optional.ofNullable(font.italic()),
+            Optional.ofNullable(font.fontHeight()),
             Optional.ofNullable(font.fontColor()),
-            font.underline(),
-            font.strikeout(),
+            Optional.ofNullable(font.underline()),
+            Optional.ofNullable(font.strikeout()),
             Optional.ofNullable(fill.fillColor()),
             Optional.ofNullable(border.border()),
             unsupportedFeatures));

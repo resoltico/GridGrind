@@ -11,6 +11,11 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 
 /** Centralizes authored, rewritten, and scratch formula writes behind consistent errors. */
 @SuppressWarnings("PMD.CommentRequired")
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_FORMULA_LENGTH,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_NESTED_FUNCTION_LEVELS,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_FUNCTION_ARGUMENTS
+})
 public final class FormulaWrites {
   private FormulaWrites() {}
 
@@ -20,8 +25,7 @@ public final class FormulaWrites {
     Objects.requireNonNull(formula, "formula must not be null");
     Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
     try {
-      FormulaLimits.requireSupportedFormula(
-          cellContext(cell), formula); // LIM-013, LIM-014, LIM-015
+      FormulaLimits.requireSupportedFormula(cellContext(cell), formula);
       cell.setCellFormula(formula);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(formulaRuntime, sheetName, address, formula, exception);
@@ -34,8 +38,7 @@ public final class FormulaWrites {
     String sheetName = cell.getSheet().getSheetName();
     String address = cell.getAddress().formatAsString();
     try {
-      FormulaLimits.requireSupportedFormula(
-          cellContext(cell), formula); // LIM-013, LIM-014, LIM-015
+      FormulaLimits.requireSupportedFormula(cellContext(cell), formula);
       cell.setCellFormula(formula);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(sheetName, address, formula, exception);
@@ -77,8 +80,7 @@ public final class FormulaWrites {
     Objects.requireNonNull(formula, "formula must not be null");
     Objects.requireNonNull(operation, "operation must not be null");
     try {
-      FormulaLimits.requireSupportedFormula(
-          cellContext(cell), formula); // LIM-013, LIM-014, LIM-015
+      FormulaLimits.requireSupportedFormula(cellContext(cell), formula);
       cell.setCellFormula(formula);
     } catch (RuntimeException exception) {
       throw new IllegalStateException(
@@ -98,8 +100,7 @@ public final class FormulaWrites {
     Objects.requireNonNull(formula, "formula must not be null");
     Objects.requireNonNull(operation, "operation must not be null");
     try {
-      FormulaLimits.requireSupportedFormula(
-          cellContext(cell), formula); // LIM-013, LIM-014, LIM-015
+      FormulaLimits.requireSupportedFormula(cellContext(cell), formula);
       cell.setCellFormula(formula);
     } catch (RuntimeException exception) {
       throw new IllegalArgumentException(

@@ -184,7 +184,7 @@ public final class XlsxRoundTripVerifier {
             font.getItalic(),
             font.getFontName(),
             FontHeightReport.fromTwips(font.getFontHeight()),
-            toColorSnapshot(font.getXSSFColor()).orElse(null),
+            toColorSnapshot(font.getXSSFColor()),
             font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
             font.getStrikeout()),
         fillSnapshot(workbook, style),
@@ -247,8 +247,14 @@ public final class XlsxRoundTripVerifier {
         ExcelGradientFillGeometry.effectiveType(
             fill.isSetType() ? fill.getType().toString() : null, left, right, top, bottom);
     return "PATH".equals(type)
-        ? CellGradientFillReport.path(left, right, top, bottom, stops)
-        : CellGradientFillReport.linear(fill.isSetDegree() ? fill.getDegree() : null, stops);
+        ? CellGradientFillReport.path(
+            Optional.ofNullable(left),
+            Optional.ofNullable(right),
+            Optional.ofNullable(top),
+            Optional.ofNullable(bottom),
+            stops)
+        : CellGradientFillReport.linear(
+            Optional.ofNullable(fill.isSetDegree() ? fill.getDegree() : null), stops);
   }
 
   private static CellGradientStopReport gradientStopSnapshot(

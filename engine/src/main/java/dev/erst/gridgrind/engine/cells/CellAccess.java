@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.cells;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
-import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
@@ -66,8 +66,7 @@ public final class CellAccess {
 
   /** Preserves the bound-cell operation's explicit nonblank address precondition. */
   public static void requireAddress(String address) {
-    Objects.requireNonNull(address, "address must not be null");
-    if (address.isBlank()) throw new IllegalArgumentException("address must not be blank");
+    TextValidation.requireNonBlank(address, "address");
   }
 
   /** Returns the native A1 rendering used for persisted cell coordinates. */

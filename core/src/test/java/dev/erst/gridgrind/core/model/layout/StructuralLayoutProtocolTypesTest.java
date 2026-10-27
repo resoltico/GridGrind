@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
 import dev.erst.gridgrind.core.model.print.PrintAreaReport;
@@ -22,12 +23,9 @@ import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.plan.ColumnBandSelector;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
-import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
-import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -65,12 +63,10 @@ class StructuralLayoutProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             new RowBandSelector.Span(
-                new SheetName("Budget"),
-                ExcelRowSpan.MAX_ROW_INDEX + 1,
-                ExcelRowSpan.MAX_ROW_INDEX + 1));
+                new SheetName("Budget"), Limit.MAX_ROW_INDEX + 1, Limit.MAX_ROW_INDEX + 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new RowBandSelector.Span(new SheetName("Budget"), 0, ExcelRowSpan.MAX_ROW_INDEX + 1));
+        () -> new RowBandSelector.Span(new SheetName("Budget"), 0, Limit.MAX_ROW_INDEX + 1));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ColumnBandSelector.Span(new SheetName("Budget"), -1, 0));
@@ -84,14 +80,10 @@ class StructuralLayoutProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             new ColumnBandSelector.Span(
-                new SheetName("Budget"),
-                ExcelColumnSpan.MAX_COLUMN_INDEX + 1,
-                ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
+                new SheetName("Budget"), Limit.MAX_COLUMN_INDEX + 1, Limit.MAX_COLUMN_INDEX + 1));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ColumnBandSelector.Span(
-                new SheetName("Budget"), 0, ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
+        () -> new ColumnBandSelector.Span(new SheetName("Budget"), 0, Limit.MAX_COLUMN_INDEX + 1));
     assertThrows(
         IllegalArgumentException.class,
         () -> new RowBandSelector.Insertion(new SheetName("Budget"), 0, 0));
@@ -145,7 +137,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(2, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PrintTitleRowsSpec.Band(0, PrintTitleRowsSpec.MAX_ROW_INDEX + 1));
+        () -> new PrintTitleRowsSpec.Band(0, Limit.MAX_ROW_INDEX + 1));
 
     assertEquals(new PrintTitleColumnsSpec.None(), new PrintTitleColumnsSpec.None());
     assertEquals(new PrintTitleColumnsSpec.Band(0, 1), new PrintTitleColumnsSpec.Band(0, 1));
@@ -154,7 +146,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(2, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PrintTitleColumnsSpec.Band(0, PrintTitleColumnsSpec.MAX_COLUMN_INDEX + 1));
+        () -> new PrintTitleColumnsSpec.Band(0, Limit.MAX_COLUMN_INDEX + 1));
   }
 
   @Test
@@ -328,10 +320,10 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsSpec(0, 15.0d));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new SheetDefaultsSpec(ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH + 1, 15.0d));
+        () -> new SheetDefaultsSpec(Limit.MAX_DEFAULT_COLUMN_WIDTH + 1, 15.0d));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new SheetDefaultsSpec(8, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
+        () -> new SheetDefaultsSpec(8, Math.nextUp(Limit.MAX_ROW_HEIGHT_POINTS)));
     assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsReport(8, 0.0d));
     assertThrows(
         IllegalArgumentException.class,

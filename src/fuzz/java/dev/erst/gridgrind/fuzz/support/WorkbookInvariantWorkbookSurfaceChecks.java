@@ -111,17 +111,17 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.requireNonBlank(picture.sha256(), "picture sha256");
     WorkbookInvariantChecks.require(
         picture.byteSize() >= 0L, "picture byteSize must not be negative");
-    if (picture.widthPixels() != null) {
+    if (picture.widthPixels().isPresent()) {
       WorkbookInvariantChecks.require(
-          picture.widthPixels() >= 0, "picture widthPixels must not be negative");
+          picture.widthPixels().orElseThrow() >= 0, "picture widthPixels must not be negative");
     }
-    if (picture.heightPixels() != null) {
+    if (picture.heightPixels().isPresent()) {
       WorkbookInvariantChecks.require(
-          picture.heightPixels() >= 0, "picture heightPixels must not be negative");
+          picture.heightPixels().orElseThrow() >= 0, "picture heightPixels must not be negative");
     }
-    if (picture.description() != null) {
+    if (picture.description().isPresent()) {
       WorkbookInvariantChecks.require(
-          !picture.description().isBlank(), "picture description must not be blank");
+          !picture.description().orElseThrow().isBlank(), "picture description must not be blank");
     }
   }
 
@@ -135,12 +135,14 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
   }
 
   static void requireShapeDrawingObjectShape(DrawingObjectReport.Shape shape) {
-    if (shape.presetGeometryToken() != null) {
+    if (shape.presetGeometryToken().isPresent()) {
       WorkbookInvariantChecks.require(
-          !shape.presetGeometryToken().isBlank(), "shape presetGeometryToken must not be blank");
+          !shape.presetGeometryToken().orElseThrow().isBlank(),
+          "shape presetGeometryToken must not be blank");
     }
-    if (shape.text() != null) {
-      WorkbookInvariantChecks.require(!shape.text().isBlank(), "shape text must not be blank");
+    if (shape.text().isPresent()) {
+      WorkbookInvariantChecks.require(
+          !shape.text().orElseThrow().isBlank(), "shape text must not be blank");
     }
     WorkbookInvariantChecks.require(
         shape.childCount() >= 0, "shape childCount must not be negative");
@@ -152,32 +154,35 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.requireNonBlank(embeddedObject.sha256(), "embedded object sha256");
     WorkbookInvariantChecks.require(
         embeddedObject.byteSize() >= 0L, "embedded object byteSize must not be negative");
-    if (embeddedObject.label() != null) {
+    if (embeddedObject.label().isPresent()) {
       WorkbookInvariantChecks.require(
-          !embeddedObject.label().isBlank(), "embedded object label must not be blank");
+          !embeddedObject.label().orElseThrow().isBlank(),
+          "embedded object label must not be blank");
     }
-    if (embeddedObject.fileName() != null) {
+    if (embeddedObject.fileName().isPresent()) {
       WorkbookInvariantChecks.require(
-          !embeddedObject.fileName().isBlank(), "embedded object fileName must not be blank");
+          !embeddedObject.fileName().orElseThrow().isBlank(),
+          "embedded object fileName must not be blank");
     }
-    if (embeddedObject.command() != null) {
+    if (embeddedObject.command().isPresent()) {
       WorkbookInvariantChecks.require(
-          !embeddedObject.command().isBlank(), "embedded object command must not be blank");
+          !embeddedObject.command().orElseThrow().isBlank(),
+          "embedded object command must not be blank");
     }
-    if (embeddedObject.previewByteSize() != null) {
+    if (embeddedObject.previewByteSize().isPresent()) {
       WorkbookInvariantChecks.require(
-          embeddedObject.previewByteSize() >= 0L,
+          embeddedObject.previewByteSize().orElseThrow() >= 0L,
           "embedded object previewByteSize must not be negative");
       WorkbookInvariantChecks.require(
-          embeddedObject.previewFormat() != null,
+          embeddedObject.previewFormat().isPresent(),
           "embedded object previewByteSize requires previewFormat");
     }
-    if (embeddedObject.previewSha256() != null) {
+    if (embeddedObject.previewSha256().isPresent()) {
       WorkbookInvariantChecks.require(
-          !embeddedObject.previewSha256().isBlank(),
+          !embeddedObject.previewSha256().orElseThrow().isBlank(),
           "embedded object previewSha256 must not be blank");
       WorkbookInvariantChecks.require(
-          embeddedObject.previewFormat() != null,
+          embeddedObject.previewFormat().isPresent(),
           "embedded object previewSha256 requires previewFormat");
     }
   }
@@ -259,23 +264,27 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     switch (payload) {
       case DrawingObjectPayloadReport.Picture picture -> {
         WorkbookInvariantChecks.requireNonBlank(picture.fileName(), "picture payload fileName");
-        if (picture.description() != null) {
+        if (picture.description().isPresent()) {
           WorkbookInvariantChecks.require(
-              !picture.description().isBlank(), "picture payload description must not be blank");
+              !picture.description().orElseThrow().isBlank(),
+              "picture payload description must not be blank");
         }
       }
       case DrawingObjectPayloadReport.EmbeddedObject embeddedObject -> {
-        if (embeddedObject.fileName() != null) {
+        if (embeddedObject.fileName().isPresent()) {
           WorkbookInvariantChecks.require(
-              !embeddedObject.fileName().isBlank(), "embedded payload fileName must not be blank");
+              !embeddedObject.fileName().orElseThrow().isBlank(),
+              "embedded payload fileName must not be blank");
         }
-        if (embeddedObject.label() != null) {
+        if (embeddedObject.label().isPresent()) {
           WorkbookInvariantChecks.require(
-              !embeddedObject.label().isBlank(), "embedded payload label must not be blank");
+              !embeddedObject.label().orElseThrow().isBlank(),
+              "embedded payload label must not be blank");
         }
-        if (embeddedObject.command() != null) {
+        if (embeddedObject.command().isPresent()) {
           WorkbookInvariantChecks.require(
-              !embeddedObject.command().isBlank(), "embedded payload command must not be blank");
+              !embeddedObject.command().orElseThrow().isBlank(),
+              "embedded payload command must not be blank");
         }
       }
     }

@@ -19,7 +19,7 @@ class CellStylePatchTest {
         IllegalArgumentException.class,
         () ->
             new CellStylePatch(
-                Optional.ofNullable(" "),
+                Optional.of(" "),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -50,7 +50,7 @@ class CellStylePatchTest {
             new CellFontPatch(
                 Optional.empty(),
                 Optional.empty(),
-                Optional.ofNullable(" "),
+                Optional.of(" "),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -196,7 +196,7 @@ class CellStylePatchTest {
                 new CellFontPatch(
                     Optional.empty(),
                     Optional.empty(),
-                    Optional.ofNullable("Aptos"),
+                    Optional.of("Aptos"),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),

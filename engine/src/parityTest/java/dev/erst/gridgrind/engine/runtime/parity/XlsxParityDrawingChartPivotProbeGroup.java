@@ -177,12 +177,13 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             && "SIMPLE_SHAPE".equals(directShape.kind())
             && reportShape.kind()
                 == dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind.SIMPLE_SHAPE
-            && Objects.equals(directShape.presetGeometryToken(), reportShape.presetGeometryToken())
-            && Objects.equals(directShape.text(), reportShape.text())
+            && Objects.equals(
+                directShape.presetGeometryToken(), reportShape.presetGeometryToken().orElse(null))
+            && Objects.equals(directShape.text(), reportShape.text().orElse(null))
             && matchesAnchor(reportEmbedded.anchor(), directEmbedded.anchor())
             && directEmbedded.objectDigest().equals(reportEmbedded.sha256())
             && directEmbedded.objectDigest().equals(embedPayloadReport.sha256())
-            && Objects.equals(directEmbedded.fileName(), reportEmbedded.fileName());
+            && Objects.equals(directEmbedded.fileName(), reportEmbedded.fileName().orElse(null));
     return matches
         ? pass(
             "GridGrind authors, mutates, persists, and rereads Phase 5 drawing objects with direct POI agreement.")
@@ -282,7 +283,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             && matchesAnchor(reportEmbedded.anchor(), directEmbedded.anchor())
             && directEmbedded.objectDigest().equals(reportEmbedded.sha256())
             && directEmbedded.objectDigest().equals(payloadEmbedded.sha256())
-            && Objects.equals(directEmbedded.fileName(), reportEmbedded.fileName());
+            && Objects.equals(directEmbedded.fileName(), reportEmbedded.fileName().orElse(null));
     return readMatches && before.equals(after)
         ? pass("GridGrind reads and preserves embedded OLE payloads without package drift.")
         : fail("GridGrind embedded-object parity diverged from the direct POI oracle.");

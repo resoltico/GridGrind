@@ -1,20 +1,13 @@
 package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.catalog.gather.CatalogGatherers;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
 /** Package-private validation helpers shared by catalog record compact constructors. */
 final class CatalogRecordValidation {
   private CatalogRecordValidation() {}
-
-  static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
 
   static List<TypeEntry> copyEntries(List<TypeEntry> entries, String fieldName) {
     Objects.requireNonNull(entries, fieldName + " must not be null");
@@ -58,7 +51,7 @@ final class CatalogRecordValidation {
     Objects.requireNonNull(values, fieldName + " must not be null");
     List<String> copy = new java.util.ArrayList<>(values.size());
     for (String value : values) {
-      copy.add(requireNonBlank(value, fieldName));
+      copy.add(TextValidation.requireNonBlank(value, fieldName));
     }
     return List.copyOf(copy);
   }

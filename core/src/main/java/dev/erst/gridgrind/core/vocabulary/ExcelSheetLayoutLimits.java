@@ -1,14 +1,15 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import java.util.Optional;
 
 /** Shared Excel-facing limits for sheet sizing and sheet-view state. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_COLUMN_WIDTH,
+  dev.erst.gridgrind.core.limits.Limit.ID_ROW_HEIGHT,
+  dev.erst.gridgrind.core.limits.Limit.ID_SHEET_ZOOM_PERCENTAGE
+})
 public final class ExcelSheetLayoutLimits {
-  public static final double MAX_COLUMN_WIDTH_CHARACTERS = 255.0d; // LIM-004
-  public static final int MAX_DEFAULT_COLUMN_WIDTH = 255; // LIM-004
-  public static final double MAX_ROW_HEIGHT_POINTS = 409.0d; // LIM-005
-  public static final int MIN_ZOOM_PERCENT = 10; // LIM-022
-  public static final int MAX_ZOOM_PERCENT = 400; // LIM-022
 
   private ExcelSheetLayoutLimits() {}
 
@@ -28,11 +29,11 @@ public final class ExcelSheetLayoutLimits {
     if (defaultColumnWidth <= 0) {
       throw new IllegalArgumentException(fieldName + " must be greater than 0");
     }
-    if (defaultColumnWidth > MAX_DEFAULT_COLUMN_WIDTH) {
+    if (defaultColumnWidth > Limit.MAX_DEFAULT_COLUMN_WIDTH) {
       throw new IllegalArgumentException(
           fieldName
               + " must not exceed "
-              + MAX_DEFAULT_COLUMN_WIDTH
+              + Limit.MAX_DEFAULT_COLUMN_WIDTH
               + " (Excel column width limit): got "
               + defaultColumnWidth);
     }
@@ -66,7 +67,7 @@ public final class ExcelSheetLayoutLimits {
     if (widthCharacters <= 0.0d) {
       return Optional.of(ExcelColumnWidthViolation.NON_POSITIVE);
     }
-    if (widthCharacters > MAX_COLUMN_WIDTH_CHARACTERS) {
+    if (widthCharacters > Limit.MAX_COLUMN_WIDTH_CHARACTERS) {
       return Optional.of(ExcelColumnWidthViolation.TOO_LARGE);
     }
     if (Math.round(widthCharacters * 256.0d) <= 0) {
@@ -83,7 +84,7 @@ public final class ExcelSheetLayoutLimits {
     if (heightPoints <= 0.0d) {
       return Optional.of(ExcelRowHeightViolation.NON_POSITIVE);
     }
-    if (heightPoints > MAX_ROW_HEIGHT_POINTS) {
+    if (heightPoints > Limit.MAX_ROW_HEIGHT_POINTS) {
       return Optional.of(ExcelRowHeightViolation.TOO_LARGE);
     }
     if (Math.round(heightPoints * 20.0d) <= 0L) {
@@ -94,7 +95,7 @@ public final class ExcelSheetLayoutLimits {
 
   /** Returns the zoom-range violation, if any. */
   public static Optional<ExcelZoomViolation> zoomViolation(int zoomPercent) {
-    return zoomPercent < MIN_ZOOM_PERCENT || zoomPercent > MAX_ZOOM_PERCENT
+    return zoomPercent < Limit.MIN_ZOOM_PERCENT || zoomPercent > Limit.MAX_ZOOM_PERCENT
         ? Optional.of(ExcelZoomViolation.OUT_OF_RANGE)
         : Optional.empty();
   }

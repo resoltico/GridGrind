@@ -568,16 +568,19 @@ class ExcelSheetCopyControllerTest {
                       new AutofilterFilterColumnReport(
                           2L,
                           true,
-                          new AutofilterFilterCriterionReport.Dynamic("today", 1.0d, 2.0d)),
+                          new AutofilterFilterCriterionReport.Dynamic(
+                              "today", Optional.of(1.0d), Optional.of(2.0d))),
                       new AutofilterFilterColumnReport(
                           3L,
                           true,
-                          new AutofilterFilterCriterionReport.Top10(false, true, 10.0d, null)),
+                          new AutofilterFilterCriterionReport.Top10(
+                              false, true, 10.0d, Optional.empty())),
                       new AutofilterFilterColumnReport(
                           4L,
                           true,
                           new AutofilterFilterCriterionReport.Color(
-                              false, CellColorReport.rgb(new RgbHex("#AABBCC")))),
+                              false,
+                              Optional.ofNullable(CellColorReport.rgb(new RgbHex("#AABBCC"))))),
                       new AutofilterFilterColumnReport(
                           5L,
                           true,

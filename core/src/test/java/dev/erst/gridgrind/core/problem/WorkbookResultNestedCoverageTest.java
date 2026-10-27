@@ -2,7 +2,6 @@ package dev.erst.gridgrind.core.problem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
@@ -109,12 +108,18 @@ class WorkbookResultNestedCoverageTest {
             1,
             List.of(
                 new SchemaColumnReport(
-                    0, "A", "Owner", 1, 0, List.of(new TypeCountReport("TEXT", 1)), "TEXT")));
+                    0,
+                    "A",
+                    "Owner",
+                    1,
+                    0,
+                    List.of(new TypeCountReport("TEXT", 1)),
+                    Optional.of("TEXT"))));
     assertEquals(1, schema.columns().size());
     SchemaColumnReport optionalDominantTypeColumn =
         new SchemaColumnReport(
-            1, "B", "Cost", 1, 0, List.of(new TypeCountReport("NUMBER", 1)), null);
-    assertNull(optionalDominantTypeColumn.dominantType());
+            1, "B", "Cost", 1, 0, List.of(new TypeCountReport("NUMBER", 1)), Optional.empty());
+    assertEquals(Optional.empty(), optionalDominantTypeColumn.dominantType());
     assertEquals(
         "count must be greater than 0",
         assertThrows(IllegalArgumentException.class, () -> new TypeCountReport("TEXT", 0))
@@ -296,7 +301,7 @@ class WorkbookResultNestedCoverageTest {
             false,
             "Aptos",
             new FontHeightReport(220, BigDecimal.valueOf(11)),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),

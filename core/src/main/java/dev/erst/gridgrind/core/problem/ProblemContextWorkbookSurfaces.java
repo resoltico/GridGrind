@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Optional;
 
 /** Workbook and step location facts reused across problem-context stages. */
@@ -372,6 +373,6 @@ public interface ProblemContextWorkbookSurfaces {
   }
 
   private static String requireNonBlank(String value, String fieldName) {
-    return ProblemContextSupport.requireNonBlank(value, fieldName);
+    return TextValidation.requireNonBlank(value, fieldName);
   }
 }

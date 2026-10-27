@@ -69,6 +69,10 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STUnderlineValues;
 
 /** Owns workbook style/font/fill reuse, patch application, style readback and rich-text runs. */
 @SuppressWarnings({"PMD.ExcessiveImports", "PMD.CommentRequired"})
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_TEXT_CHARACTERS_PER_CELL,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_CELL_STYLES_PER_WORKBOOK
+})
 public final class StyleAdapter {
   private static final CellStylePatch LOCAL_DATE_STYLE_PATCH =
       new CellStylePatch(
@@ -195,7 +199,7 @@ public final class StyleAdapter {
   }
 
   private XSSFCellStyle createMergedStyle(XSSFCellStyle baseStyle, CellStylePatch stylePatch) {
-    requireCellStyleCapacity(workbook); // LIM-011
+    requireCellStyleCapacity(workbook);
     XSSFCellStyle cellStyle = workbook.createCellStyle();
     cellStyle.cloneStyleFrom(baseStyle);
 
@@ -319,7 +323,7 @@ public final class StyleAdapter {
         font.getItalic(),
         font.getFontName(),
         FontHeightReport.fromTwips(font.getFontHeight()),
-        ColorAdapter.snapshot(font.getXSSFColor()).orElse(null),
+        ColorAdapter.snapshot(font.getXSSFColor()),
         font.getUnderline() != FontUnderline.NONE.getByteValue(),
         font.getStrikeout());
   }
@@ -358,8 +362,14 @@ public final class StyleAdapter {
     java.util.List<CellGradientStopReport> stops =
         java.util.Arrays.stream(fill.getStopArray()).map(this::gradientStopSnapshot).toList();
     return "PATH".equals(type)
-        ? CellGradientFillReport.path(left, right, top, bottom, stops)
-        : CellGradientFillReport.linear(fill.isSetDegree() ? fill.getDegree() : null, stops);
+        ? CellGradientFillReport.path(
+            Optional.ofNullable(left),
+            Optional.ofNullable(right),
+            Optional.ofNullable(top),
+            Optional.ofNullable(bottom),
+            stops)
+        : CellGradientFillReport.linear(
+            Optional.ofNullable(fill.isSetDegree() ? fill.getDegree() : null), stops);
   }
 
   private CellFillReport fillSnapshot(XSSFCellStyle style) {
@@ -423,7 +433,7 @@ public final class StyleAdapter {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(richText, "richText must not be null");
 
-    CellTextLimits.requireSupportedLength(richText.plainText(), "richText.text"); // LIM-010
+    CellTextLimits.requireSupportedLength(richText.plainText(), "richText.text");
     XSSFRichTextString poiRichText = new XSSFRichTextString();
     for (ResolvedRichTextRun run : richText.runs()) {
       poiRichText.append(
@@ -484,9 +494,7 @@ public final class StyleAdapter {
         fontPatch.italic().orElse(baseFont.italic()),
         fontPatch.fontName().orElse(baseFont.fontName()),
         fontPatch.fontHeight().orElse(baseFont.fontHeight()),
-        fontPatch.fontColor().isPresent()
-            ? fontPatch.fontColor().orElseThrow()
-            : baseFont.fontColor(),
+        fontPatch.fontColor().or(baseFont::fontColor),
         fontPatch.underline().orElse(baseFont.underline()),
         fontPatch.strikeout().orElse(baseFont.strikeout()));
   }
@@ -796,8 +804,7 @@ public final class StyleAdapter {
     return EnumMappings.requireMappedValue(TO_POI_FILL_PATTERN, pattern, "GridGrind fill pattern");
   }
 
-  public static final int MAX_CELL_STYLES =
-      SpreadsheetVersion.EXCEL2007.getMaxCellStyles(); // LIM-011
+  public static final int MAX_CELL_STYLES = SpreadsheetVersion.EXCEL2007.getMaxCellStyles();
 
   public static void requireCellStyleCapacity(XSSFWorkbook workbook) {
     requireCellStyleCapacity(workbook.getNumCellStyles());

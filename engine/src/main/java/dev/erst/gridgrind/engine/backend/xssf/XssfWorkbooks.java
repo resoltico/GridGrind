@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.backend.xssf;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
@@ -16,6 +17,10 @@ import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Factory and open surface for materializing workbook wrappers. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_WORKBOOK_SOURCE_CONTENT_FORMAT,
+  dev.erst.gridgrind.core.limits.Limit.ID_ZIP_DECOMPRESSION_LIMITS
+})
 public final class XssfWorkbooks {
   private XssfWorkbooks() {}
 
@@ -75,12 +80,10 @@ public final class XssfWorkbooks {
         workbookPath, formulaEnvironment, openOptions, tempFileFactory);
   }
 
-  /** Maximum size of a single decompressed ZIP entry in an xlsx package (LIM-026). */
-  static final long MAX_ZIP_ENTRY_SIZE = 100L * 1024 * 1024; // 100 MiB
-
+  /** Maximum size of a single decompressed ZIP entry in an xlsx package. */
   static {
-    ZipSecureFile.setMinInflateRatio(0.01d); // LIM-026: 1:100 max decompression ratio
-    ZipSecureFile.setMaxEntrySize(MAX_ZIP_ENTRY_SIZE); // LIM-026
+    ZipSecureFile.setMinInflateRatio(Limit.MIN_ZIP_INFLATE_RATIO); // 1:100 max decompression ratio
+    ZipSecureFile.setMaxEntrySize(Limit.MAX_ZIP_ENTRY_SIZE);
   }
 
   /** Opens a plain materialized workbook with retained source-security metadata. */

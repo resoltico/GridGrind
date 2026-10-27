@@ -1,13 +1,14 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Optional;
 
 /** Reports one authored number that an IEEE-backed request field cannot retain exactly. */
 public record RequestNumberNotRepresentable(String path, String token, long tokenByteOffset)
     implements RequestStructuralProblem {
   public RequestNumberNotRepresentable {
-    path = RequestStructuralProblemSupport.requireText(path, "path");
-    token = RequestStructuralProblemSupport.requireText(token, "token");
+    path = TextValidation.requireNonBlank(path, "path");
+    token = TextValidation.requireNonBlank(token, "token");
     RequestStructuralProblemSupport.requireByteOffset(tokenByteOffset);
   }
 

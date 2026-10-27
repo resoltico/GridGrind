@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.customxml;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** Factual single-cell mapping entry linked to one custom-XML map. */
@@ -15,15 +16,7 @@ public record CustomXmlLinkedCellReport(
   public CustomXmlLinkedCellReport {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     java.util.Objects.requireNonNull(address, "address must not be null");
-    xpath = requireNonBlank(xpath, "xpath");
-    xmlDataType = requireNonBlank(xmlDataType, "xmlDataType");
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
+    xpath = TextValidation.requireNonBlank(xpath, "xpath");
+    xmlDataType = TextValidation.requireNonBlank(xmlDataType, "xmlDataType");
   }
 }

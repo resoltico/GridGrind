@@ -144,7 +144,7 @@ class CellReportReadbackTest {
                   false);
       assertEquals(
           List.of("DATE", "TIME", "DATE_TIME", "NUMBER"),
-          schema.columns().stream().map(SchemaColumnReport::dominantType).toList());
+          schema.columns().stream().map(column -> column.dominantType().orElseThrow()).toList());
       assertEquals(
           List.of("Date", "Time", "DateTime", "Number"),
           schema.columns().stream().map(SchemaColumnReport::headerDisplayValue).toList());
@@ -153,7 +153,7 @@ class CellReportReadbackTest {
               .sheetSchema(workbook, "Data", "A1", 2, 4, CellReadProjection.defaults(), false);
       assertEquals(
           List.of("NUMBER", "NUMBER", "NUMBER", "NUMBER"),
-          numeric.columns().stream().map(SchemaColumnReport::dominantType).toList());
+          numeric.columns().stream().map(column -> column.dominantType().orElseThrow()).toList());
       assertEquals(
           42d,
           assertInstanceOf(CellReport.NumberReport.class, sheet.cells().snapshotCell("D2"))

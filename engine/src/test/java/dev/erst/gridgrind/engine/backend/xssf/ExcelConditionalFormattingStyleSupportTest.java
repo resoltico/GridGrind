@@ -84,15 +84,15 @@ class ExcelConditionalFormattingStyleSupportTest {
 
       assertEquals(
           new DifferentialStyleReport(
-              "0.00",
-              true,
-              false,
-              FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
+              Optional.of("0.00"),
+              Optional.of(true),
+              Optional.of(false),
+              Optional.ofNullable(FontHeightReport.fromPoints(BigDecimal.valueOf(11))),
               Optional.ofNullable(
                   dev.erst.gridgrind.engine.backend.xssf.DifferentialStyleFixtures.color(
                       new ColorSpec.Theme(3, Optional.of(0.25d)))),
-              true,
-              true,
+              Optional.of(true),
+              Optional.of(true),
               Optional.ofNullable(
                   dev.erst.gridgrind.engine.backend.xssf.DifferentialStyleFixtures.color(
                       new ColorSpec.Indexed(12, Optional.empty()))),
@@ -191,13 +191,13 @@ class ExcelConditionalFormattingStyleSupportTest {
 
       assertEquals(
           new DifferentialStyleReport(
-              null,
-              null,
-              null,
-              null,
               Optional.empty(),
-              null,
-              null,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               List.of(ExcelConditionalFormattingUnsupportedFeature.STYLE_REFERENCE)),
@@ -223,13 +223,13 @@ class ExcelConditionalFormattingStyleSupportTest {
 
       assertEquals(
           new DifferentialStyleReport(
-              null,
-              null,
-              null,
-              null,
               Optional.empty(),
-              null,
-              null,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               List.of(ExcelConditionalFormattingUnsupportedFeature.STYLE_REFERENCE)),
@@ -546,7 +546,7 @@ class ExcelConditionalFormattingStyleSupportTest {
       DifferentialStyleReport snapshot =
           ConditionalFormattingAdapter.snapshotStyle(workbook.getStylesSource(), malformedCtRule);
 
-      assertEquals(false, snapshot.underline());
+      assertEquals(false, snapshot.underline().orElseThrow());
       assertEquals(Optional.of(CellColorReport.theme(1)), snapshot.fontColor());
       assertEquals(Optional.of(CellColorReport.theme(2)), snapshot.fillColor());
       assertEquals(
@@ -635,13 +635,13 @@ class ExcelConditionalFormattingStyleSupportTest {
 
       assertEquals(
           new DifferentialStyleReport(
-              null,
-              null,
-              null,
-              null,
               Optional.empty(),
-              false,
-              null,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(false),
+              Optional.empty(),
               Optional.empty(),
               Optional.ofNullable(
                   dev.erst.gridgrind.engine.backend.xssf.DifferentialStyleFixtures.border(

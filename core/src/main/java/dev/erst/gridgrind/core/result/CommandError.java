@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.discovery.DiscoveryValidation;
 import dev.erst.gridgrind.core.problem.DiagnosticOrder;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +27,7 @@ public record CommandError(
       throw new IllegalArgumentException("CommandError status must be REJECTED");
     }
     protocolVersion = DiscoveryValidation.requireProtocolVersion(protocolVersion);
-    command = DiscoveryValidation.requireNonBlank(command, "command");
+    command = TextValidation.requireNonBlank(command, "command");
     problems =
         DiagnosticOrder.problems(
             List.copyOf(Objects.requireNonNull(problems, "problems must not be null")));

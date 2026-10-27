@@ -730,7 +730,7 @@
             "type" : "integer"
           }
         },
-        "required" : [ "dataBindingName", "fileBinding", "connectionId", "fileBindingName", "loadMode" ],
+        "required" : [ "loadMode" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport" : {
@@ -848,7 +848,7 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport$Settings"
           }
         },
-        "required" : [ "mapId", "name", "rootElement", "schemaId", "settings", "schema", "dataBinding", "linkedCells", "linkedTables" ],
+        "required" : [ "mapId", "name", "rootElement", "schemaId", "settings", "schema", "linkedCells", "linkedTables" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport$Schema" : {
@@ -868,7 +868,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "namespace", "language", "reference", "xml" ],
+        "required" : [ ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport$Settings" : {
@@ -1094,7 +1094,7 @@
             "const" : "EMBEDDED_OBJECT"
           }
         },
-        "required" : [ "name", "packagingKind", "contentType", "fileName", "sha256", "base64Data", "label", "command", "type" ],
+        "required" : [ "name", "packagingKind", "contentType", "sha256", "base64Data", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport$Picture" : {
@@ -1127,7 +1127,7 @@
             "const" : "PICTURE"
           }
         },
-        "required" : [ "name", "format", "contentType", "fileName", "sha256", "base64Data", "description", "type" ],
+        "required" : [ "name", "format", "contentType", "fileName", "sha256", "base64Data", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.drawing.DrawingObjectReport" : {
@@ -1218,7 +1218,7 @@
             "const" : "EMBEDDED_OBJECT"
           }
         },
-        "required" : [ "name", "anchor", "packagingKind", "label", "fileName", "command", "contentType", "byteSize", "sha256", "previewFormat", "previewByteSize", "previewSha256", "type" ],
+        "required" : [ "name", "anchor", "packagingKind", "contentType", "byteSize", "sha256", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.drawing.DrawingObjectReport$Picture" : {
@@ -1257,7 +1257,7 @@
             "type" : "integer"
           }
         },
-        "required" : [ "name", "anchor", "format", "contentType", "byteSize", "sha256", "widthPixels", "heightPixels", "description", "type" ],
+        "required" : [ "name", "anchor", "format", "contentType", "byteSize", "sha256", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.drawing.DrawingObjectReport$Shape" : {
@@ -1287,7 +1287,7 @@
             "const" : "SHAPE"
           }
         },
-        "required" : [ "name", "anchor", "kind", "presetGeometryToken", "text", "childCount", "type" ],
+        "required" : [ "name", "anchor", "kind", "childCount", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.drawing.DrawingObjectReport$SignatureLine" : {
@@ -3270,7 +3270,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "bold", "italic", "fontName", "fontHeight", "fontColor", "underline", "strikeout" ],
+        "required" : [ "bold", "italic", "fontName", "fontHeight", "underline", "strikeout" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.style.CellGradientFillReport" : {
@@ -3302,7 +3302,7 @@
             "const" : "LINEAR"
           }
         },
-        "required" : [ "degree", "stops", "type" ],
+        "required" : [ "stops", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.style.CellGradientFillReport$Path" : {
@@ -3351,7 +3351,7 @@
             "const" : "PATH"
           }
         },
-        "required" : [ "left", "right", "top", "bottom", "stops", "type" ],
+        "required" : [ "stops", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.style.CellGradientStopReport" : {
@@ -3551,7 +3551,7 @@
             "type" : "array"
           }
         },
-        "required" : [ "numberFormat", "bold", "italic", "fontHeight", "underline", "strikeout", "unsupportedFeatures" ],
+        "required" : [ "unsupportedFeatures" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.style.FontHeightReport" : {
@@ -3732,7 +3732,7 @@
             "const" : "COLOR"
           }
         },
-        "required" : [ "cellColor", "color", "type" ],
+        "required" : [ "cellColor", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport$Custom" : {
@@ -3795,7 +3795,7 @@
             } ]
           }
         },
-        "required" : [ "dynamicType", "value", "maxValue", "type" ],
+        "required" : [ "dynamicType", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport$Icon" : {
@@ -3845,7 +3845,7 @@
             } ]
           }
         },
-        "required" : [ "top", "percent", "value", "filterValue", "type" ],
+        "required" : [ "top", "percent", "value", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport$Values" : {
@@ -4029,7 +4029,7 @@
             "type" : "integer"
           }
         },
-        "required" : [ "columnIndex", "columnAddress", "headerDisplayValue", "populatedCellCount", "blankCellCount", "observedTypes", "dominantType" ],
+        "required" : [ "columnIndex", "columnAddress", "headerDisplayValue", "populatedCellCount", "blankCellCount", "observedTypes" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.table.SheetSchemaReport" : {

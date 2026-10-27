@@ -1,9 +1,13 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Shared Excel sheet-name validation rules reused across protocol and engine surfaces. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_SHEET_NAME_CONTRACT
+})
 public final class ExcelSheetNames {
   private static final String INVALID_EXCEL_SHEET_CHARACTERS = ":\\/?*[]";
 
@@ -25,7 +29,7 @@ public final class ExcelSheetNames {
     if (value.isBlank()) {
       return Optional.of(ExcelSheetNameProblem.blank());
     }
-    if (value.length() > 31) {
+    if (value.length() > Limit.MAX_SHEET_NAME_LENGTH) {
       return Optional.of(ExcelSheetNameProblem.tooLong(value));
     }
     if (value.charAt(0) == '\'' || value.charAt(value.length() - 1) == '\'') {

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.catalog;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.metadata.WireDefault;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -58,10 +59,7 @@ public sealed interface FieldShape
           "Reference to one top-level discriminated family published elsewhere in the catalog.")
   record TopLevelTypeSetRef(String typeSet) implements FieldShape {
     public TopLevelTypeSetRef {
-      Objects.requireNonNull(typeSet, "typeSet must not be null");
-      if (typeSet.isBlank()) {
-        throw new IllegalArgumentException("typeSet must not be blank");
-      }
+      typeSet = TextValidation.requireNonBlank(typeSet, "typeSet");
     }
   }
 
@@ -72,10 +70,7 @@ public sealed interface FieldShape
           "Reference to one nested discriminated union group published elsewhere in the catalog.")
   record NestedTypeGroupRef(String group) implements FieldShape {
     public NestedTypeGroupRef {
-      Objects.requireNonNull(group, "group must not be null");
-      if (group.isBlank()) {
-        throw new IllegalArgumentException("group must not be blank");
-      }
+      group = TextValidation.requireNonBlank(group, "group");
     }
   }
 
@@ -91,10 +86,7 @@ public sealed interface FieldShape
         throw new IllegalArgumentException("groups must not be empty");
       }
       for (String group : groups) {
-        Objects.requireNonNull(group, "group must not be null");
-        if (group.isBlank()) {
-          throw new IllegalArgumentException("group must not be blank");
-        }
+        TextValidation.requireNonBlank(group, "group");
       }
     }
   }
@@ -105,10 +97,7 @@ public sealed interface FieldShape
       summary = "Reference to one plain record-type group published elsewhere in the catalog.")
   record PlainTypeGroupRef(String group) implements FieldShape {
     public PlainTypeGroupRef {
-      Objects.requireNonNull(group, "group must not be null");
-      if (group.isBlank()) {
-        throw new IllegalArgumentException("group must not be blank");
-      }
+      group = TextValidation.requireNonBlank(group, "group");
     }
   }
 }

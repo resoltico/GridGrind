@@ -36,7 +36,7 @@ class ReadbackSupportCoverageTest {
     CellReport.TextReport textSnapshot =
         new CellReport.TextReport(
             new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
-            Optional.ofNullable("Ada"),
+            Optional.of("Ada"),
             Optional.ofNullable(style("General")),
             Optional.empty(),
             Optional.empty(),
@@ -45,7 +45,7 @@ class ReadbackSupportCoverageTest {
     CellReport.NumberReport numberSnapshot =
         new CellReport.NumberReport(
             new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
-            Optional.ofNullable("42"),
+            Optional.of("42"),
             Optional.ofNullable(style("0.00")),
             Optional.empty(),
             Optional.empty(),
@@ -54,7 +54,7 @@ class ReadbackSupportCoverageTest {
     CellReport.BooleanReport booleanSnapshot =
         new CellReport.BooleanReport(
             new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
-            Optional.ofNullable("TRUE"),
+            Optional.of("TRUE"),
             Optional.ofNullable(style("General")),
             Optional.empty(),
             Optional.empty(),
@@ -62,11 +62,11 @@ class ReadbackSupportCoverageTest {
     CellReport.FormulaReport formulaSnapshot =
         new CellReport.FormulaReport(
             new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
-            Optional.ofNullable("42"),
+            Optional.of("42"),
             Optional.ofNullable(style("General")),
             Optional.empty(),
             Optional.empty(),
-            Optional.ofNullable("SUM(A1:A2)"),
+            Optional.of("SUM(A1:A2)"),
             java.util.Optional.of(numberSnapshot)
                 .flatMap(CellReport::value)
                 .map(value -> (dev.erst.gridgrind.core.model.value.CellValue) value),
@@ -75,7 +75,7 @@ class ReadbackSupportCoverageTest {
     CellReport.BlankReport blankSnapshot =
         new CellReport.BlankReport(
             new dev.erst.gridgrind.core.vocabulary.CellAddress("A5"),
-            Optional.ofNullable(""),
+            Optional.of(""),
             Optional.ofNullable(style("General")),
             Optional.empty(),
             Optional.empty(),
@@ -236,7 +236,7 @@ class ReadbackSupportCoverageTest {
         false,
         "Aptos",
         FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
-        null,
+        Optional.empty(),
         false,
         false);
   }
@@ -252,7 +252,7 @@ class ReadbackSupportCoverageTest {
             false,
             "Aptos",
             new FontHeightReport(220, BigDecimal.valueOf(11)),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),
@@ -268,7 +268,7 @@ class ReadbackSupportCoverageTest {
             false,
             "Aptos",
             new FontHeightReport(220, BigDecimal.valueOf(11)),
-            null,
+            Optional.empty(),
             false,
             false));
   }

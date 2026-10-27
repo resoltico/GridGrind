@@ -163,12 +163,12 @@ final class WorkbookInvariantAnalysisFormattingChecks {
 
   static void requireDifferentialStyleShape(DifferentialStyleReport style) {
     WorkbookInvariantChecks.require(style != null, "conditional formatting style must not be null");
-    if (style.numberFormat() != null) {
+    if (style.numberFormat().isPresent()) {
       WorkbookInvariantChecks.requireNonBlank(
-          style.numberFormat(), "conditional formatting numberFormat");
+          style.numberFormat().orElseThrow(), "conditional formatting numberFormat");
     }
-    if (style.fontHeight() != null) {
-      WorkbookInvariantCellSurfaceChecks.requireFontHeightShape(style.fontHeight());
+    if (style.fontHeight().isPresent()) {
+      WorkbookInvariantCellSurfaceChecks.requireFontHeightShape(style.fontHeight().orElseThrow());
     }
     style
         .fontColor()

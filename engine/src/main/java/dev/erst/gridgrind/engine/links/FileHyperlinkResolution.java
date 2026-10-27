@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.links;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -16,10 +17,7 @@ public sealed interface FileHyperlinkResolution
   /** Relative file path could not be resolved because the workbook has no filesystem location. */
   record UnresolvedRelativePath(String path) implements FileHyperlinkResolution {
     public UnresolvedRelativePath {
-      Objects.requireNonNull(path, "path must not be null");
-      if (path.isBlank()) {
-        throw new IllegalArgumentException("path must not be blank");
-      }
+      path = TextValidation.requireNonBlank(path, "path");
     }
   }
 
@@ -28,9 +26,7 @@ public sealed interface FileHyperlinkResolution
     public ResolvedPath {
       Objects.requireNonNull(path, "path must not be null");
       Objects.requireNonNull(resolvedPath, "resolvedPath must not be null");
-      if (path.isBlank()) {
-        throw new IllegalArgumentException("path must not be blank");
-      }
+      TextValidation.requireNonBlank(path, "path");
       resolvedPath = resolvedPath.toAbsolutePath().normalize();
     }
   }
@@ -40,12 +36,8 @@ public sealed interface FileHyperlinkResolution
     public MalformedPath {
       Objects.requireNonNull(path, "path must not be null");
       Objects.requireNonNull(reason, "reason must not be null");
-      if (path.isBlank()) {
-        throw new IllegalArgumentException("path must not be blank");
-      }
-      if (reason.isBlank()) {
-        throw new IllegalArgumentException("reason must not be blank");
-      }
+      TextValidation.requireNonBlank(path, "path");
+      TextValidation.requireNonBlank(reason, "reason");
     }
   }
 }

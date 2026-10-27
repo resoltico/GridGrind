@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.print;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
@@ -9,7 +10,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 public sealed interface PrintTitleColumnsSpec
     permits dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec.None,
         dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec.Band {
-  int MAX_COLUMN_INDEX = 16_383;
 
   /** Sheet has no repeating print-title columns. */
   @Variant(id = "NONE", summary = "Sheet has no repeating print-title columns.")
@@ -23,9 +23,10 @@ public sealed interface PrintTitleColumnsSpec
   record Band(int firstColumnIndex, int lastColumnIndex) implements PrintTitleColumnsSpec {
     public Band {
       requireBand(firstColumnIndex, lastColumnIndex, "firstColumnIndex", "lastColumnIndex");
-      if (lastColumnIndex > MAX_COLUMN_INDEX) {
+      if (lastColumnIndex > Limit.MAX_COLUMN_INDEX) {
         throw new IllegalArgumentException(
-            ExcelIndexDisplay.mustNotExceed("lastColumnIndex", lastColumnIndex, MAX_COLUMN_INDEX));
+            ExcelIndexDisplay.mustNotExceed(
+                "lastColumnIndex", lastColumnIndex, Limit.MAX_COLUMN_INDEX));
       }
     }
   }

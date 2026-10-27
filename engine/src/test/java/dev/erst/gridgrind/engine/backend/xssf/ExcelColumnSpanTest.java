@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import org.junit.jupiter.api.Test;
 
@@ -31,16 +32,14 @@ class ExcelColumnSpanTest {
     IllegalArgumentException firstOverflow =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                new ExcelColumnSpan(
-                    ExcelColumnSpan.MAX_COLUMN_INDEX + 1, ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
+            () -> new ExcelColumnSpan(Limit.MAX_COLUMN_INDEX + 1, Limit.MAX_COLUMN_INDEX + 1));
     assertTrue(firstOverflow.getMessage().contains("firstColumnIndex 16384 (Excel column XFE)"));
     assertTrue(firstOverflow.getMessage().contains("16383 (Excel column XFD)"));
 
     IllegalArgumentException lastOverflow =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new ExcelColumnSpan(0, ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
+            () -> new ExcelColumnSpan(0, Limit.MAX_COLUMN_INDEX + 1));
     assertTrue(lastOverflow.getMessage().contains("lastColumnIndex 16384 (Excel column XFE)"));
     assertTrue(lastOverflow.getMessage().contains("16383 (Excel column XFD)"));
   }

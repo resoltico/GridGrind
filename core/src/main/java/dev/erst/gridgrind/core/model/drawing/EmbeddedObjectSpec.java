@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.drawing;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** Authoritative embedded-object creation or replacement payload. */
@@ -19,21 +20,13 @@ public record EmbeddedObjectSpec(
     PictureDataSpec previewImage,
     DrawingAnchorSpec anchor) {
   public EmbeddedObjectSpec {
-    requireNonBlank(name, "name");
-    requireNonBlank(label, "label");
-    requireNonBlank(fileName, "fileName");
-    requireNonBlank(command, "command");
+    TextValidation.requireNonBlank(name, "name");
+    TextValidation.requireNonBlank(label, "label");
+    TextValidation.requireNonBlank(fileName, "fileName");
+    TextValidation.requireNonBlank(command, "command");
     Objects.requireNonNull(payload, "payload must not be null");
     Objects.requireNonNull(previewImage, "previewImage must not be null");
     requireTwoCellAnchor(anchor);
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   private static DrawingAnchorSpec requireTwoCellAnchor(DrawingAnchorSpec anchor) {

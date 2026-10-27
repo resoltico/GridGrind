@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.validation;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.RangeSelector;
@@ -9,8 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Rejects statically provable worksheet work that cannot run safely in full XSSF. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MATERIALIZED_WORKSHEET_WORK_PER_PLAN
+})
 final class WorkbookStaticMaterializationValidation {
-  static final long MAX_MATERIALIZED_WORK_ITEMS = 250_000L; // LIM-039
 
   private WorkbookStaticMaterializationValidation() {}
 
@@ -29,12 +32,12 @@ final class WorkbookStaticMaterializationValidation {
       }
       ValidWorkbookStaticWorkEstimate valid = (ValidWorkbookStaticWorkEstimate) estimate;
       totalWorkItems = Math.addExact(totalWorkItems, valid.workItems());
-      if (totalWorkItems > MAX_MATERIALIZED_WORK_ITEMS) {
+      if (totalWorkItems > Limit.MAX_MATERIALIZED_WORK_ITEMS) {
         violations.add(
             new WorkbookStaticViolation(
                 valid.jsonPath(),
                 "materialized worksheet work must not exceed "
-                    + MAX_MATERIALIZED_WORK_ITEMS
+                    + Limit.MAX_MATERIALIZED_WORK_ITEMS
                     + " items per plan; this step raises the total to "
                     + totalWorkItems));
       }

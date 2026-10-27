@@ -158,15 +158,16 @@ class ExcelConditionalFormattingControllerTest {
                           "A1>10",
                           Optional.ofNullable(
                               new DifferentialStyleReport(
-                                  "0.00",
-                                  true,
-                                  false,
-                                  FontHeightReport.fromPoints(BigDecimal.valueOf(12)),
+                                  Optional.of("0.00"),
+                                  Optional.of(true),
+                                  Optional.of(false),
+                                  Optional.ofNullable(
+                                      FontHeightReport.fromPoints(BigDecimal.valueOf(12))),
                                   Optional.ofNullable(
                                       dev.erst.gridgrind.engine.backend.xssf
                                           .DifferentialStyleFixtures.color(color("#102030"))),
-                                  true,
-                                  true,
+                                  Optional.of(true),
+                                  Optional.of(true),
                                   Optional.ofNullable(
                                       dev.erst.gridgrind.engine.backend.xssf
                                           .DifferentialStyleFixtures.color(color("#E0F0AA"))),
@@ -181,16 +182,16 @@ class ExcelConditionalFormattingControllerTest {
                           false,
                           ExcelComparisonOperator.BETWEEN,
                           "1",
-                          Optional.ofNullable("9"),
+                          Optional.of("9"),
                           Optional.ofNullable(
                               new DifferentialStyleReport(
-                                  null,
-                                  null,
-                                  true,
-                                  null,
                                   Optional.empty(),
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.of(true),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.ofNullable(
                                       dev.erst.gridgrind.engine.backend.xssf
                                           .DifferentialStyleFixtures.color(color("#AAEECC"))),
@@ -207,15 +208,15 @@ class ExcelConditionalFormattingControllerTest {
                           "C1=\"Ready\"",
                           Optional.ofNullable(
                               new DifferentialStyleReport(
-                                  null,
-                                  false,
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.of(false),
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.ofNullable(
                                       dev.erst.gridgrind.engine.backend.xssf
                                           .DifferentialStyleFixtures.color(color("#223344"))),
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.empty(),
                                   Optional.empty(),
                                   List.of())))))),
@@ -241,15 +242,15 @@ class ExcelConditionalFormattingControllerTest {
                           "C1=\"Ready\"",
                           Optional.ofNullable(
                               new DifferentialStyleReport(
-                                  null,
-                                  false,
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.of(false),
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.ofNullable(
                                       dev.erst.gridgrind.engine.backend.xssf
                                           .DifferentialStyleFixtures.color(color("#223344"))),
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.empty(),
                                   Optional.empty(),
                                   List.of())))))),
@@ -279,15 +280,15 @@ class ExcelConditionalFormattingControllerTest {
                           "C1=\"Ready\"",
                           Optional.ofNullable(
                               new DifferentialStyleReport(
-                                  null,
-                                  false,
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.of(false),
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.ofNullable(
                                       dev.erst.gridgrind.engine.backend.xssf
                                           .DifferentialStyleFixtures.color(color("#223344"))),
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.empty(),
                                   Optional.empty(),
                                   List.of())))))),
@@ -391,7 +392,7 @@ class ExcelConditionalFormattingControllerTest {
                       new ConditionalFormattingRuleReport.DataBarRule(
                           2,
                           false,
-                          Optional.ofNullable("#123456")
+                          Optional.of("#123456")
                               .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
                           true,
                           10,
@@ -492,15 +493,15 @@ class ExcelConditionalFormattingControllerTest {
                           true,
                           Optional.ofNullable(
                               new DifferentialStyleReport(
-                                  null,
-                                  true,
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.of(true),
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.ofNullable(
                                       dev.erst.gridgrind.engine.backend.xssf
                                           .DifferentialStyleFixtures.color(color("#223344"))),
-                                  null,
-                                  null,
+                                  Optional.empty(),
+                                  Optional.empty(),
                                   Optional.empty(),
                                   Optional.empty(),
                                   List.of())))))),
@@ -853,13 +854,13 @@ class ExcelConditionalFormattingControllerTest {
   void helperMethodsExposeStableLabelsAndFormulaValidation() throws Exception {
     DifferentialStyleReport style =
         new DifferentialStyleReport(
-            "0.00",
-            null,
-            null,
-            null,
+            Optional.of("0.00"),
             Optional.empty(),
-            null,
-            null,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             List.of());
@@ -897,7 +898,7 @@ class ExcelConditionalFormattingControllerTest {
             new ConditionalFormattingRuleReport.DataBarRule(
                 4,
                 false,
-                Optional.ofNullable("#223344").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
+                Optional.of("#223344").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
                 false,
                 0,
                 100,

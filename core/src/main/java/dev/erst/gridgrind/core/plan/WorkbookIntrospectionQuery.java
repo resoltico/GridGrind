@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
@@ -61,10 +62,7 @@ public sealed interface WorkbookIntrospectionQuery extends InspectionQuery.Intro
 
     public ExportCustomXmlMapping {
       Objects.requireNonNull(mapping, "mapping must not be null");
-      Objects.requireNonNull(encoding, "encoding must not be null");
-      if (encoding.isBlank()) {
-        throw new IllegalArgumentException("encoding must not be blank");
-      }
+      encoding = TextValidation.requireNonBlank(encoding, "encoding");
     }
   }
 

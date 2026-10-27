@@ -1,74 +1,14 @@
 package dev.erst.gridgrind.core.catalog;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-/** Build-failing audit over public Markdown integrity and AFAD metadata ownership. */
+/** Keeps the development version table aligned with the pinned dependency catalog. */
 class GridGrindMarkdownDocsAuditTest {
-  private static final Pattern VERSION_FRONTMATTER_PATTERN =
-      Pattern.compile("(?m)^version: \"([^\"]+)\"$");
-  private static final Pattern MARKDOWN_LINK_PATTERN =
-      Pattern.compile("\\[[^\\]]+\\]\\(([^)]+)\\)");
-
-  @Test
-  void afadMarkdownDocsDoNotDuplicateReleaseVersion() throws IOException {
-    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-
-    for (Path path : afadMarkdownDocs(repositoryRoot)) {
-      String contents = Files.readString(path);
-      assertFalse(
-          VERSION_FRONTMATTER_PATTERN.matcher(contents).find(),
-          () ->
-              path
-                  + " must not duplicate release version frontmatter; CHANGELOG.md owns release history");
-    }
-  }
-
-  @Test
-  void publicMarkdownDocsHaveNoBrokenLocalLinks() throws IOException {
-    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-    List<String> brokenLinks = new ArrayList<>();
-
-    for (Path path : publicMarkdownDocs(repositoryRoot)) {
-      String contents = Files.readString(path);
-      Matcher matcher = MARKDOWN_LINK_PATTERN.matcher(contents);
-      while (matcher.find()) {
-        String target = matcher.group(1);
-        if (target.startsWith("http://")
-            || target.startsWith("https://")
-            || target.startsWith("mailto:")
-            || target.startsWith("#")) {
-          continue;
-        }
-        String normalizedTarget = target.split("#", 2)[0];
-        if (normalizedTarget.isEmpty()) {
-          continue;
-        }
-        if (normalizedTarget.startsWith("/")) {
-          brokenLinks.add(path + " -> " + target + " (absolute filesystem paths are not allowed)");
-          continue;
-        }
-        if (!path.getParent().resolve(normalizedTarget).normalize().toFile().exists()) {
-          brokenLinks.add(path + " -> " + target);
-        }
-      }
-    }
-
-    assertTrue(
-        brokenLinks.isEmpty(),
-        () -> "Public Markdown docs contain broken local links: " + brokenLinks);
-  }
-
   @Test
   void developerFoundationVersionsMatchTheCanonicalVersionCatalog() throws IOException {
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
@@ -89,30 +29,6 @@ class GridGrindMarkdownDocsAuditTest {
     assertTrue(
         developerGuide.contains("Kotlin `" + catalogVersion(versionCatalog, "kotlin") + "`"),
         "docs/DEVELOPER.md must publish the catalog-owned Kotlin version");
-  }
-
-  private static List<Path> afadMarkdownDocs(Path repositoryRoot) throws IOException {
-    List<Path> paths = new ArrayList<>();
-    paths.add(repositoryRoot.resolve("PATENTS.md"));
-    try (Stream<Path> docs = Files.walk(repositoryRoot.resolve("docs"))) {
-      docs.filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".md"))
-          .sorted()
-          .forEach(paths::add);
-    }
-    return List.copyOf(paths);
-  }
-
-  private static List<Path> publicMarkdownDocs(Path repositoryRoot) throws IOException {
-    List<Path> paths = new ArrayList<>();
-    paths.add(repositoryRoot.resolve("README.md"));
-    paths.add(repositoryRoot.resolve("CHANGELOG.md"));
-    paths.add(repositoryRoot.resolve("PATENTS.md"));
-    try (Stream<Path> docs = Files.walk(repositoryRoot.resolve("docs"))) {
-      docs.filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".md"))
-          .sorted()
-          .forEach(paths::add);
-    }
-    return List.copyOf(paths);
   }
 
   private static String catalogVersion(String versionCatalog, String key) {

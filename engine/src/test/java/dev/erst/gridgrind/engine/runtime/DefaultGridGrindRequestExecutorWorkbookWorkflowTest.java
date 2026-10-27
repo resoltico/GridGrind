@@ -519,12 +519,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(2, runs(cell).size());
     assertEquals("Budget", runs(cell).get(0).text());
     assertEquals("Aptos", runs(cell).get(0).font().fontName());
-    assertEquals(rgb("#112233"), runs(cell).get(0).font().fontColor());
+    assertEquals(rgb("#112233"), runs(cell).get(0).font().fontColor().orElseThrow());
     assertTrue(runs(cell).get(0).font().italic());
     assertFalse(runs(cell).get(0).font().bold());
     assertEquals(" FY26", runs(cell).get(1).text());
     assertEquals("Aptos", runs(cell).get(1).font().fontName());
-    assertEquals(rgb("#FF0000"), runs(cell).get(1).font().fontColor());
+    assertEquals(rgb("#FF0000"), runs(cell).get(1).font().fontColor().orElseThrow());
     assertTrue(runs(cell).get(1).font().bold());
     assertTrue(runs(cell).get(1).font().italic());
   }
@@ -1614,24 +1614,24 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                           new dev.erst.gridgrind.core.model.table.TableColumnReport(
                               1L,
                               "Item",
-                              Optional.ofNullable(""),
-                              Optional.ofNullable(""),
-                              Optional.ofNullable(""),
-                              Optional.ofNullable("")),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of("")),
                           new dev.erst.gridgrind.core.model.table.TableColumnReport(
                               2L,
                               "Amount",
-                              Optional.ofNullable(""),
-                              Optional.ofNullable(""),
-                              Optional.ofNullable(""),
-                              Optional.ofNullable("")),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of("")),
                           new dev.erst.gridgrind.core.model.table.TableColumnReport(
                               3L,
                               "Billable",
-                              Optional.ofNullable(""),
-                              Optional.ofNullable(""),
-                              Optional.ofNullable(""),
-                              Optional.ofNullable("")))),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of("")))),
                   new dev.erst.gridgrind.core.model.table.TableStyleReport.Named(
                       "TableStyleMedium2", false, false, true, false),
                   new TableEntryReport.Behavior(true, false, false, false),

@@ -15,9 +15,7 @@ public final class ExcelGradientFillGeometry {
   /** Normalizes one authored gradient type to GridGrind's canonical upper-case form. */
   public static String normalizeType(String type) {
     String normalizedType = type == null ? "LINEAR" : type.strip().toUpperCase(Locale.ROOT);
-    if (normalizedType.isBlank()) {
-      throw new IllegalArgumentException("type must not be blank");
-    }
+    TextValidation.requireNonBlank(normalizedType, "type");
     if (!"LINEAR".equals(normalizedType) && !"PATH".equals(normalizedType)) {
       throw new IllegalArgumentException("type must be LINEAR or PATH");
     }

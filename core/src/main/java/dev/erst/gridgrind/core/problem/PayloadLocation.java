@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
@@ -66,10 +67,7 @@ public sealed interface PayloadLocation extends Serializable
 
   record PathOnly(String jsonPathValue) implements PayloadLocation {
     public PathOnly {
-      Objects.requireNonNull(jsonPathValue, "jsonPathValue must not be null");
-      if (jsonPathValue.isBlank()) {
-        throw new IllegalArgumentException("jsonPathValue must not be blank");
-      }
+      jsonPathValue = TextValidation.requireNonBlank(jsonPathValue, "jsonPathValue");
     }
 
     @Override
@@ -117,10 +115,7 @@ public sealed interface PayloadLocation extends Serializable
   record Located(String jsonPathValue, int jsonLineValue, int jsonColumnValue)
       implements PayloadLocation {
     public Located {
-      Objects.requireNonNull(jsonPathValue, "jsonPathValue must not be null");
-      if (jsonPathValue.isBlank()) {
-        throw new IllegalArgumentException("jsonPathValue must not be blank");
-      }
+      jsonPathValue = TextValidation.requireNonBlank(jsonPathValue, "jsonPathValue");
       if (jsonLineValue < 1) {
         throw new IllegalArgumentException("jsonLineValue must be greater than 0");
       }

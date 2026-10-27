@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.semantics.ProtocolTargetingMode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -50,9 +51,7 @@ public sealed interface AnalysisAssertion extends Assertion
       messageContains =
           messageContains.map(
               value -> {
-                if (value.isBlank()) {
-                  throw new IllegalArgumentException("messageContains must not be blank");
-                }
+                TextValidation.requireNonBlank(value, "messageContains");
                 return value;
               });
     }
@@ -78,9 +77,7 @@ public sealed interface AnalysisAssertion extends Assertion
       messageContains =
           messageContains.map(
               value -> {
-                if (value.isBlank()) {
-                  throw new IllegalArgumentException("messageContains must not be blank");
-                }
+                TextValidation.requireNonBlank(value, "messageContains");
                 return value;
               });
     }

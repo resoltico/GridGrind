@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
@@ -14,9 +15,9 @@ import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.NonXlsxPath;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
-import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -31,6 +32,11 @@ import java.util.Set;
     id = "WorkbookPlan",
     summary =
         "Complete GridGrind plan for workbook source, execution policy, formula environment, ordered mutation, assertion, and inspection steps, and persistence.")
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_DUPLICATE_STEP_IDS,
+  dev.erst.gridgrind.core.limits.Limit.ID_FILE_FORMAT,
+  dev.erst.gridgrind.core.limits.Limit.ID_STEP_COUNT
+})
 public record WorkbookPlan(
     ProtocolVersion protocolVersion,
     Optional<PlanId> planId,
@@ -191,9 +197,7 @@ public record WorkbookPlan(
     record ExistingFile(
         @dev.erst.gridgrind.core.metadata.FieldRule(
                 kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.PATH_SUFFIX,
-                text =
-                    dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues
-                        .WORKBOOK_PATH_SUFFIX)
+                text = dev.erst.gridgrind.core.limits.Limit.WORKBOOK_PATH_SUFFIX)
             String path,
         Optional<OoxmlOpenSecuritySpec> security)
         implements WorkbookSource {
@@ -258,9 +262,7 @@ public record WorkbookPlan(
     record SaveAs(
         @dev.erst.gridgrind.core.metadata.FieldRule(
                 kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.PATH_SUFFIX,
-                text =
-                    dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues
-                        .WORKBOOK_PATH_SUFFIX)
+                text = dev.erst.gridgrind.core.limits.Limit.WORKBOOK_PATH_SUFFIX)
             String path,
         IfExists ifExists,
         Optional<OoxmlPersistenceSecuritySpec> security)
@@ -286,14 +288,12 @@ public record WorkbookPlan(
     }
   }
 
-  /** Maximum number of steps permitted in one plan (LIM-024). */
-  public static final int MAX_STEPS = 10_000;
-
+  /** Maximum number of steps permitted in one plan. */
   private static List<WorkbookStep> copySteps(List<WorkbookStep> steps) {
     Objects.requireNonNull(steps, "steps must not be null");
-    if (steps.size() > MAX_STEPS) { // LIM-024
+    if (steps.size() > Limit.MAX_STEPS) {
       throw new IllegalArgumentException(
-          "steps must not exceed " + MAX_STEPS + " entries but was " + steps.size());
+          "steps must not exceed " + Limit.MAX_STEPS + " entries but was " + steps.size());
     }
     List<WorkbookStep> copy = new java.util.ArrayList<>(steps.size());
     Set<StepId> seen = new HashSet<>();
@@ -304,7 +304,6 @@ public record WorkbookPlan(
         throw nullStepException(stepPath);
       }
       copy.add(step);
-      // LIM-006
       if (!seen.add(step.stepId())) {
         throw duplicateStepIdException(step.stepId(), stepPath + ".stepId");
       }
@@ -330,19 +329,10 @@ public record WorkbookPlan(
         null);
   }
 
-  /** Validates required domain text with canonical request diagnostics. */
-  public static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   /** Validates the required workbook file suffix. */
-  public static void requireXlsxWorkbookPath(String path) { // LIM-002
-    requireNonBlank(path, "path");
-    if (!path.toLowerCase(Locale.ROOT).endsWith(ProtocolConstraintValues.WORKBOOK_PATH_SUFFIX)) {
+  public static void requireXlsxWorkbookPath(String path) {
+    TextValidation.requireNonBlank(path, "path");
+    if (!path.toLowerCase(Locale.ROOT).endsWith(Limit.WORKBOOK_PATH_SUFFIX)) {
       // Preserve the local operand path so request decoding can qualify it precisely against
       // source.path, persistence.path, and nested formula-environment path owners.
       throw new InvalidRequestException(

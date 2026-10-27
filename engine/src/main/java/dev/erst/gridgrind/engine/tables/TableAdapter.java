@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.autofilter.AutofilterAdapter;
 import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
@@ -114,10 +115,7 @@ public final class TableAdapter {
   public void deleteTable(XssfWorkbook workbook, String name, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     String validatedName = new TableName(name).value();
-    Objects.requireNonNull(sheetName, "sheetName must not be null");
-    if (sheetName.isBlank()) {
-      throw new IllegalArgumentException("sheetName must not be blank");
-    }
+    TextValidation.requireNonBlank(sheetName, "sheetName");
 
     Optional<TableHandle> tableHandle = tableByName(workbook, validatedName);
     if (tableHandle.isEmpty() || !tableHandle.orElseThrow().sheetName().equals(sheetName)) {
@@ -271,9 +269,7 @@ public final class TableAdapter {
   private void requireHeaders(List<String> headerNames) {
     Set<String> seen = new LinkedHashSet<>();
     for (String headerName : headerNames) {
-      if (headerName.isBlank()) {
-        throw new IllegalArgumentException("table header cells must not be blank");
-      }
+      TextValidation.requireNonBlank(headerName, "table header cells");
       String key = headerName.toUpperCase(Locale.ROOT);
       if (!seen.add(key)) {
         throw new IllegalArgumentException(

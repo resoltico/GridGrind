@@ -293,7 +293,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(2, schema.columnCount());
     assertEquals(3, schema.dataRowCount());
     assertEquals("Item", schema.columns().getFirst().headerDisplayValue());
-    assertEquals("TEXT", schema.columns().getFirst().dominantType());
+    assertEquals("TEXT", schema.columns().getFirst().dominantType().orElseThrow());
 
     assertEquals(1, ranges.workbookScopedCount());
     assertEquals(0, ranges.sheetScopedCount());

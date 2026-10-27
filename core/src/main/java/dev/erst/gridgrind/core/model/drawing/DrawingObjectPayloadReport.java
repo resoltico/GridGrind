@@ -4,9 +4,10 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Base64;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import java.util.Optional;
 
 /** Extracted binary drawing-object payload returned by payload reads. */
 @Union(discriminator = "type")
@@ -34,15 +35,13 @@ public sealed interface DrawingObjectPayloadReport
       String fileName,
       String sha256,
       String base64Data,
-      @Nullable String description)
+      Optional<String> description)
       implements DrawingObjectPayloadReport {
     public Picture {
       validateCommon(name, contentType, sha256, base64Data);
       Objects.requireNonNull(format, "format must not be null");
-      requireNonBlank(fileName, "fileName");
-      if (description != null && description.isBlank()) {
-        throw new IllegalArgumentException("description must not be blank");
-      }
+      TextValidation.requireNonBlank(fileName, "fileName");
+      description = requireOptionalText(description, "description");
     }
   }
 
@@ -52,41 +51,32 @@ public sealed interface DrawingObjectPayloadReport
       String name,
       ExcelEmbeddedObjectPackagingKind packagingKind,
       String contentType,
-      @Nullable String fileName,
+      Optional<String> fileName,
       String sha256,
       String base64Data,
-      @Nullable String label,
-      @Nullable String command)
+      Optional<String> label,
+      Optional<String> command)
       implements DrawingObjectPayloadReport {
     public EmbeddedObject {
       validateCommon(name, contentType, sha256, base64Data);
       Objects.requireNonNull(packagingKind, "packagingKind must not be null");
-      if (fileName != null && fileName.isBlank()) {
-        throw new IllegalArgumentException("fileName must not be blank");
-      }
-      if (label != null && label.isBlank()) {
-        throw new IllegalArgumentException("label must not be blank");
-      }
-      if (command != null && command.isBlank()) {
-        throw new IllegalArgumentException("command must not be blank");
-      }
+      fileName = requireOptionalText(fileName, "fileName");
+      label = requireOptionalText(label, "label");
+      command = requireOptionalText(command, "command");
     }
   }
 
   private static void validateCommon(
       String name, String contentType, String sha256, String base64Data) {
-    requireNonBlank(name, "name");
-    requireNonBlank(contentType, "contentType");
-    requireNonBlank(sha256, "sha256");
+    TextValidation.requireNonBlank(name, "name");
+    TextValidation.requireNonBlank(contentType, "contentType");
+    TextValidation.requireNonBlank(sha256, "sha256");
     requireBase64(base64Data, "base64Data");
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
+  private static Optional<String> requireOptionalText(Optional<String> value, String fieldName) {
+    return Objects.requireNonNull(value, fieldName + " must not be null")
+        .map(text -> TextValidation.requireNonBlank(text, fieldName));
   }
 
   private static String requireBase64(String value, String fieldName) {

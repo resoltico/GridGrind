@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -124,10 +125,11 @@ public record RequestDoctorReport(
       int assertionStepCount,
       int inspectionStepCount) {
     public Summary {
-      sourceType = requireNonBlank(sourceType, "sourceType");
-      persistenceType = requireNonBlank(persistenceType, "persistenceType");
-      executionMode = requireNonBlank(executionMode, "executionMode");
-      calculationStrategy = requireNonBlank(calculationStrategy, "calculationStrategy");
+      sourceType = TextValidation.requireNonBlank(sourceType, "sourceType");
+      persistenceType = TextValidation.requireNonBlank(persistenceType, "persistenceType");
+      executionMode = TextValidation.requireNonBlank(executionMode, "executionMode");
+      calculationStrategy =
+          TextValidation.requireNonBlank(calculationStrategy, "calculationStrategy");
       requireNonNegative(stepCount, "stepCount");
       requireNonNegative(mutationStepCount, "mutationStepCount");
       requireNonNegative(assertionStepCount, "assertionStepCount");
@@ -156,14 +158,6 @@ public record RequestDoctorReport(
       copy.add(Objects.requireNonNull(problem, "problems must not contain nulls"));
     }
     return List.copyOf(copy);
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   private static void requireNonNegative(int value, String fieldName) {

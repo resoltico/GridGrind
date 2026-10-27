@@ -3058,3 +3058,54 @@ archives, examples and inspected host docs as CLI test inputs. Archive timestamp
 reproducible through the shared archive convention. This corrects invalid up-to-date reuse after
 packaging changes; opt-in external suites remain excluded from normal coverage. The example-test
 command documentation now names the actual render-package owner and checks that its source exists.
+
+## WP-21/22 follow-through; WP-70/71/72
+
+Canonical factual reports now use Optional for every formerly nullable component. Native acquisition
+wraps absence at its boundary; getter consumers and all independent fuzz assertions retain the same
+facts. The independent schema validator accepts omitted optional font color and rejects an omitted
+required font name. The required arrays in the three schema snapshots are corrected accordingly;
+the old nullable components had been incorrectly advertised as required. No workbook snapshot was
+re-recorded. Report/engine/schema/replay behavior passed after the migration, including all engine
+runtime tests and 150 deterministic replay tests.
+
+Identical required-text primitives are owned once by TextValidation. The one-shot JDK syntax-tree
+migration removed 55 duplicate helper implementations and 96 direct guards; field-specific null and
+Unicode-blank failures are preserved. Fifty-one redundant null prechecks were removed. The remaining
+43 blank-error occurrences have reviewed optional/source/normalization/structured-diagnostic
+contracts in the external evidence record, meeting the bill's under-50 criterion. Source-only AST
+migration tools and failure evidence remain outside the checkout. An Error Prone text-block checker
+crashed transiently on simple literals; isolated unchanged compilation passed, and no checker was
+disabled. Formatter writes and checks were separated thereafter.
+
+Limit owns all 41 existing IDs, including LIM-006A, and the numeric/text constants used by enforcement.
+Old constant declarations and aliases were deleted. Compiled EnforcesLimit annotations connect actual
+owners to generated source links; unknown IDs fail generation. Limits, schemas, grouped type/operation
+references and problem references are generated from canonical data. The CLI help and catalog publish
+the same limit entries. Existing non-limit feature facts moved to request guidance. All eight reviewed
+metadata snapshot files change only help/reference presentation, catalog limit data, and the schema
+required arrays. Existing metadata limit cross-references were retained through compile-time ID
+constants; an accidental description change found during review was restored before the final run.
+
+The old LIM-037 prose contradicted the current reader: binary HSSF content renamed .xlsx is rejected
+by the OOXML reader. A native binary negative control and real OOXML positive control passed. Its
+stable ID now describes the current content-format boundary; enforcement behavior did not change.
+The inventory marker query now distinguishes retired // LIM comments from authoritative ID data.
+
+Handwritten per-operation pages, keyword-only prose gates and their unused vocabulary registry were
+retired. Generated coverage checks verify every catalog group/type appears exactly once. Handwritten
+JSON examples pass actual intake and static doctor; the negative control rejects an unknown member.
+Local Markdown targets and heading anchors resolve, and AFAD frontmatter is absent. Historical
+changelog text remains, with obsolete local links redirected to current references. The Unreleased
+entry describes the breaking redesign.
+
+The short root supplement cites implementation sources and adds no permission or baseline exception.
+AGENTS.md is unchanged. Old .codex/Jazzer ignore exceptions were removed. The untracked 1.2GB scratch
+root was an obsolete isolated Gradle cache plus empty operator regression directories; prior daemon
+and worker logs were retained outside the checkout, no live process used it, and it was removed.
+
+Wire-union validation checks every concrete leaf is a record while preserving meaningful sealed
+operation subfamilies. This is an explicit deviation from the literal direct-permits-only wording:
+flattening those families would discard their static contracts or require a duplicate marker
+hierarchy. Registration and closed-leaf verification use the actual sealed graph, with negative
+controls. This choice follows the user's authorization to QA and proceed by judgment.

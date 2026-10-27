@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
@@ -370,7 +371,7 @@ class ExcelRowColumnStructureTestSupport {
   static void assertCanonicalColumnDefinitions(XSSFSheet sheet) {
     assertEquals(1, sheet.getCTWorksheet().sizeOfColsArray());
 
-    boolean[] seenColumns = new boolean[ExcelColumnSpan.MAX_COLUMN_INDEX + 1];
+    boolean[] seenColumns = new boolean[Limit.MAX_COLUMN_INDEX + 1];
     for (CTCol col : sheet.getCTWorksheet().getColsArray(0).getColList()) {
       assertEquals(col.getMin(), col.getMax(), "column definitions=" + sheet.getCTWorksheet());
       for (int columnIndex = (int) col.getMin() - 1;

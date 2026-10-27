@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -10,7 +11,7 @@ public record RequestBindingFailure(
     IllegalArgumentException exception, String jsonPath, Optional<Long> byteOffset) {
   public RequestBindingFailure {
     Objects.requireNonNull(exception, "exception must not be null");
-    jsonPath = requireNonBlank(jsonPath, "jsonPath");
+    jsonPath = TextValidation.requireNonBlank(jsonPath, "jsonPath");
     byteOffset = Objects.requireNonNullElseGet(byteOffset, Optional::empty);
     byteOffset.ifPresent(
         offset -> {
@@ -47,13 +48,5 @@ public record RequestBindingFailure(
           default -> exception;
         };
     return new RequestBindingFailure(rebased, qualifiedPath, byteOffset);
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

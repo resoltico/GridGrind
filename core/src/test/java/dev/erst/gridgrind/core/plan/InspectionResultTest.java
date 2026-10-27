@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for step-keyed inspection result payloads. */
@@ -116,7 +117,7 @@ class InspectionResultTest {
             false,
             "Aptos",
             new FontHeightReport(220, BigDecimal.valueOf(11)),
-            null,
+            Optional.empty(),
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),

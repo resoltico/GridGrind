@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.drawing;
 
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** Embedded-object payload with materialized package and preview content. */
@@ -23,17 +24,9 @@ public record ResolvedEmbeddedObject(
     Objects.requireNonNull(previewFormat, "previewFormat must not be null");
     Objects.requireNonNull(previewImage, "previewImage must not be null");
     Objects.requireNonNull(anchor, "anchor must not be null");
-    if (name.isBlank()) {
-      throw new IllegalArgumentException("name must not be blank");
-    }
-    if (label.isBlank()) {
-      throw new IllegalArgumentException("label must not be blank");
-    }
-    if (fileName.isBlank()) {
-      throw new IllegalArgumentException("fileName must not be blank");
-    }
-    if (command.isBlank()) {
-      throw new IllegalArgumentException("command must not be blank");
-    }
+    TextValidation.requireNonBlank(name, "name");
+    TextValidation.requireNonBlank(label, "label");
+    TextValidation.requireNonBlank(fileName, "fileName");
+    TextValidation.requireNonBlank(command, "command");
   }
 }

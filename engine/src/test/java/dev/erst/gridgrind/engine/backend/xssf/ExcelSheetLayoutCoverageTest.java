@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 import static dev.erst.gridgrind.engine.backend.xssf.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -14,7 +15,6 @@ import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.layout.ColumnAdapter;
 import dev.erst.gridgrind.engine.layout.LayoutAdapter;
@@ -76,10 +76,8 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
       assertSame(rows, rows.setHeight(0, 1, 28.5));
       assertEquals((short) 570, poiSheet.getRow(0).getHeight());
       assertEquals((short) 570, poiSheet.getRow(1).getHeight());
-      rows.setHeight(0, 0, ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS);
-      assertEquals(
-          ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS,
-          layout.snapshot().rows().get(0).heightPoints());
+      rows.setHeight(0, 0, Limit.MAX_ROW_HEIGHT_POINTS);
+      assertEquals(Limit.MAX_ROW_HEIGHT_POINTS, layout.snapshot().rows().get(0).heightPoints());
 
       assertSame(layout, layout.setPane(new PaneSpec.Frozen(1, 2, 3, 4)));
       assertNotNull(poiSheet.getPaneInformation());
@@ -159,17 +157,13 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
         IllegalArgumentException.class, () -> SheetStructure.toColumnWidthUnits(Double.MIN_VALUE));
 
     assertEquals(28.5f, SheetStructure.toRowHeightPoints(28.5d));
-    assertDoesNotThrow(
-        () -> SheetStructure.toRowHeightPoints(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS));
+    assertDoesNotThrow(() -> SheetStructure.toRowHeightPoints(Limit.MAX_ROW_HEIGHT_POINTS));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            SheetStructure.toRowHeightPoints(
-                Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
+        () -> SheetStructure.toRowHeightPoints(Math.nextUp(Limit.MAX_ROW_HEIGHT_POINTS)));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            SheetStructure.toRowHeightPoints(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS + 1.0d));
+        () -> SheetStructure.toRowHeightPoints(Limit.MAX_ROW_HEIGHT_POINTS + 1.0d));
     assertThrows(
         IllegalArgumentException.class, () -> SheetStructure.toRowHeightPoints(Double.MIN_VALUE));
   }

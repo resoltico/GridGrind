@@ -1,9 +1,10 @@
 package dev.erst.gridgrind.core.model.drawing;
 
-import static dev.erst.gridgrind.core.model.drawing.ShapeSpec.requireNonBlank;
 import static dev.erst.gridgrind.core.model.drawing.ShapeSpec.requirePresetGeometryToken;
+import static dev.erst.gridgrind.core.vocabulary.TextValidation.requireNonBlank;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -32,9 +33,7 @@ public sealed interface ResolvedShape permits ResolvedShape.SimpleShape, ShapeSp
       presetGeometryToken = requirePresetGeometryToken(presetGeometryToken);
       text.ifPresent(
           value -> {
-            if (value.isBlank()) {
-              throw new IllegalArgumentException("text must not be blank");
-            }
+            TextValidation.requireNonBlank(value, "text");
           });
     }
 

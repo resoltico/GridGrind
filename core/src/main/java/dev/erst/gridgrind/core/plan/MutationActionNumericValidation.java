@@ -1,11 +1,10 @@
 package dev.erst.gridgrind.core.plan;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
 import dev.erst.gridgrind.core.problem.FieldValidationBoundRule;
 import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.FieldValidationProblemMappers;
-import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
-import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 
 /** Numeric and span validation for mutation actions. */
@@ -35,23 +34,23 @@ final class MutationActionNumericValidation {
 
   static void requireRowIndex(int value, String fieldName) {
     requireNonNegative(value, fieldName);
-    if (value > ExcelRowSpan.MAX_ROW_INDEX) {
+    if (value > Limit.MAX_ROW_INDEX) {
       throw MutationActionNameValidation.invalidField(
           FieldValidationProblem.atField(
               fieldName,
               FieldValidationBoundRule.ROW_INDEX_BOUNDS,
-              Integer.toString(ExcelRowSpan.MAX_ROW_INDEX)));
+              Integer.toString(Limit.MAX_ROW_INDEX)));
     }
   }
 
   static void requireColumnIndex(int value, String fieldName) {
     requireNonNegative(value, fieldName);
-    if (value > ExcelColumnSpan.MAX_COLUMN_INDEX) {
+    if (value > Limit.MAX_COLUMN_INDEX) {
       throw MutationActionNameValidation.invalidField(
           FieldValidationProblem.atField(
               fieldName,
               FieldValidationBoundRule.COLUMN_INDEX_BOUNDS,
-              Integer.toString(ExcelColumnSpan.MAX_COLUMN_INDEX)));
+              Integer.toString(Limit.MAX_COLUMN_INDEX)));
     }
   }
 

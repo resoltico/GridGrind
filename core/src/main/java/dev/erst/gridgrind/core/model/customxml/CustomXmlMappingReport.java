@@ -1,10 +1,11 @@
 package dev.erst.gridgrind.core.model.customxml;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import java.util.Optional;
 
 /** Factual workbook custom-XML mapping metadata returned by inspection. */
 @CatalogType(
@@ -18,18 +19,19 @@ public record CustomXmlMappingReport(
     String schemaId,
     Settings settings,
     Schema schema,
-    @Nullable CustomXmlDataBindingReport dataBinding,
+    Optional<CustomXmlDataBindingReport> dataBinding,
     List<CustomXmlLinkedCellReport> linkedCells,
     List<CustomXmlLinkedTableReport> linkedTables) {
   public CustomXmlMappingReport {
     if (mapId <= 0L) {
       throw new IllegalArgumentException("mapId must be greater than 0");
     }
-    name = requireNonBlank(name, "name");
-    rootElement = requireNonBlank(rootElement, "rootElement");
-    schemaId = requireNonBlank(schemaId, "schemaId");
+    name = TextValidation.requireNonBlank(name, "name");
+    rootElement = TextValidation.requireNonBlank(rootElement, "rootElement");
+    schemaId = TextValidation.requireNonBlank(schemaId, "schemaId");
     Objects.requireNonNull(settings, "settings must not be null");
     Objects.requireNonNull(schema, "schema must not be null");
+    Objects.requireNonNull(dataBinding, "dataBinding must not be null");
     linkedCells = copyValues(linkedCells, "linkedCells");
     linkedTables = copyValues(linkedTables, "linkedTables");
   }
@@ -52,32 +54,24 @@ public record CustomXmlMappingReport(
       summary = "Optional schema metadata attached to one custom-XML mapping.",
       displayOrder = 103)
   public record Schema(
-      @Nullable String namespace,
-      @Nullable String language,
-      @Nullable String reference,
-      @Nullable String xml) {
+      Optional<String> namespace,
+      Optional<String> language,
+      Optional<String> reference,
+      Optional<String> xml) {
     public Schema {
-      if (namespace != null) {
-        namespace = requireNonBlank(namespace, "namespace");
-      }
-      if (language != null) {
-        language = requireNonBlank(language, "language");
-      }
-      if (reference != null) {
-        reference = requireNonBlank(reference, "reference");
-      }
-      if (xml != null) {
-        xml = requireNonBlank(xml, "xml");
-      }
+      namespace =
+          Objects.requireNonNull(namespace, "namespace must not be null")
+              .map(value -> TextValidation.requireNonBlank(value, "namespace"));
+      language =
+          Objects.requireNonNull(language, "language must not be null")
+              .map(value -> TextValidation.requireNonBlank(value, "language"));
+      reference =
+          Objects.requireNonNull(reference, "reference must not be null")
+              .map(value -> TextValidation.requireNonBlank(value, "reference"));
+      xml =
+          Objects.requireNonNull(xml, "xml must not be null")
+              .map(value -> TextValidation.requireNonBlank(value, "xml"));
     }
-  }
-
-  private static String requireNonBlank(@Nullable String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 
   private static <T> List<T> copyValues(List<T> values, String fieldName) {

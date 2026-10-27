@@ -37,7 +37,12 @@ public record ExcelSheetNameProblem(ExcelSheetNameRule rule, List<String> operan
   public String message(String fieldName) {
     return switch (rule) {
       case BLANK -> fieldName + " must not be blank";
-      case TOO_LONG -> fieldName + " must not exceed 31 characters: " + operand(0);
+      case TOO_LONG ->
+          fieldName
+              + " must not exceed "
+              + dev.erst.gridgrind.core.limits.Limit.MAX_SHEET_NAME_LENGTH
+              + " characters: "
+              + operand(0);
       case BOUNDARY_QUOTE ->
           fieldName + " must not begin or end with a single quote: " + operand(0);
       case INVALID_CHARACTER ->

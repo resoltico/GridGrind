@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 
 /** One non-fatal request warning with a truthful step or request-path location. */
@@ -14,10 +15,7 @@ public record RequestWarning(
   public RequestWarning {
     Objects.requireNonNull(code, "code must not be null");
     Objects.requireNonNull(location, "location must not be null");
-    Objects.requireNonNull(message, "message must not be null");
-    if (message.isBlank()) {
-      throw new IllegalArgumentException("message must not be blank");
-    }
+    message = TextValidation.requireNonBlank(message, "message");
   }
 
   /** Creates a warning attached to one authored workbook step. */

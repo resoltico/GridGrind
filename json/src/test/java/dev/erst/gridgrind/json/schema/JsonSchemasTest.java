@@ -209,6 +209,33 @@ class JsonSchemasTest {
     }
   }
 
+  @Test
+  void factualFontSchemaAcceptsAbsentColorButRejectsMissingRequiredFacts() throws IOException {
+    ObjectNode document =
+        (ObjectNode)
+            GridGrindJsonMapperSupport.JSON_MAPPER.readTree(
+                JsonSchemas.document(JsonSchemas.Document.RESPONSE));
+    String definition = "dev.erst.gridgrind.core.model.style.CellFontReport";
+    document.remove("oneOf");
+    document.put("$ref", "#/$defs/" + definition);
+    Schema fontSchema = REGISTRY.getSchema(document.toString(), InputFormat.JSON);
+    var font =
+        new dev.erst.gridgrind.core.model.style.CellFontReport(
+            false,
+            false,
+            "Calibri",
+            dev.erst.gridgrind.core.model.style.FontHeightReport.fromTwips(220),
+            Optional.empty(),
+            false,
+            false);
+    String encoded = GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsString(font);
+    assertFalse(encoded.contains("fontColor"));
+    assertTrue(fontSchema.validate(encoded, InputFormat.JSON).isEmpty());
+    ObjectNode incomplete = (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(encoded);
+    incomplete.remove("fontName");
+    assertFalse(fontSchema.validate(incomplete.toString(), InputFormat.JSON).isEmpty());
+  }
+
   private static Schema schema(JsonSchemas.Document document) {
     return REGISTRY.getSchema(JsonSchemas.document(document), InputFormat.JSON);
   }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Optional;
 
 /** Reports JSON grammar that cannot be assigned a GridGrind request shape. */
@@ -11,7 +12,7 @@ public record RequestInvalidJson(
     Optional<Integer> jsonColumn)
     implements RequestStructuralProblem {
   public RequestInvalidJson {
-    message = RequestStructuralProblemSupport.requireText(message, "message");
+    message = TextValidation.requireNonBlank(message, "message");
     affectedJsonPath = RequestStructuralProblemSupport.copyJsonPath(affectedJsonPath);
     byteOffset = RequestStructuralProblemSupport.copyByteOffset(byteOffset);
     jsonLine = jsonLine.map(value -> value < 1 ? null : value);

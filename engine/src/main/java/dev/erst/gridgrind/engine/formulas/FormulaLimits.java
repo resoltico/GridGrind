@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.formulas;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Objects;
-import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.FormulaParser;
 import org.apache.poi.ss.formula.FormulaType;
 import org.apache.poi.ss.formula.ptg.Ptg;
@@ -14,11 +14,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /**
  * Centralized authored-formula ceiling checks before POI persists a workbook formula token tree.
  */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_FORMULA_LENGTH,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_NESTED_FUNCTION_LEVELS,
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_FUNCTION_ARGUMENTS
+})
 public final class FormulaLimits {
-  public static final int MAX_FORMULA_LENGTH = 8192; // LIM-013
-  public static final int MAX_NESTED_FUNCTION_LEVELS = 64; // LIM-014
-  public static final int MAX_FUNCTION_ARGUMENTS =
-      SpreadsheetVersion.EXCEL2007.getMaxFunctionArgs(); // LIM-015
 
   private FormulaLimits() {}
 
@@ -26,24 +27,24 @@ public final class FormulaLimits {
   public static void requireSupportedFormula(CellContext cellContext, String formula) {
     Objects.requireNonNull(cellContext, "cellContext must not be null");
     Objects.requireNonNull(formula, "formula must not be null");
-    if (formula.length() > MAX_FORMULA_LENGTH) {
+    if (formula.length() > Limit.MAX_FORMULA_LENGTH) {
       throw new IllegalArgumentException(
           "formula must not exceed "
-              + MAX_FORMULA_LENGTH
+              + Limit.MAX_FORMULA_LENGTH
               + " characters (Excel formula length limit)");
     }
 
     FormulaShape shape = scanFormulaShape(formula);
-    if (shape.maximumFunctionNesting() > MAX_NESTED_FUNCTION_LEVELS) {
+    if (shape.maximumFunctionNesting() > Limit.MAX_NESTED_FUNCTION_LEVELS) {
       throw new IllegalArgumentException(
           "formula must not exceed "
-              + MAX_NESTED_FUNCTION_LEVELS
+              + Limit.MAX_NESTED_FUNCTION_LEVELS
               + " nested function levels (Excel formula nesting limit)");
     }
-    if (shape.maximumFunctionArguments() > MAX_FUNCTION_ARGUMENTS) {
+    if (shape.maximumFunctionArguments() > Limit.MAX_FUNCTION_ARGUMENTS) {
       throw new IllegalArgumentException(
           "formula must not exceed "
-              + MAX_FUNCTION_ARGUMENTS
+              + Limit.MAX_FUNCTION_ARGUMENTS
               + " function arguments (Excel function argument limit)");
     }
 

@@ -1,8 +1,12 @@
 package dev.erst.gridgrind.core.catalog;
 
+import dev.erst.gridgrind.core.limits.Limit;
+
 /** Request size, workbook security and step semantics shared by public contract surfaces. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_REQUEST_JSON_SIZE
+})
 public final class GridGrindRequestSurfaceContractText {
-  private static final long REQUEST_DOCUMENT_LIMIT_BYTES = 16L * 1024 * 1024;
 
   private GridGrindRequestSurfaceContractText() {}
 
@@ -20,23 +24,20 @@ public final class GridGrindRequestSurfaceContractText {
 
   /** Maximum accepted JSON request document size in bytes. */
   public static long requestDocumentLimitBytes() {
-    // LIM-021
-    return REQUEST_DOCUMENT_LIMIT_BYTES;
+    return Limit.REQUEST_DOCUMENT_LIMIT_BYTES;
   }
 
   /** Human-readable summary of the canonical JSON request document limit. */
   public static String requestDocumentLimitSummary() {
-    // LIM-021
     return "request JSON must not exceed 16 MiB ("
-        + REQUEST_DOCUMENT_LIMIT_BYTES
+        + Limit.REQUEST_DOCUMENT_LIMIT_BYTES
         + " bytes); use UTF8_FILE, FILE, or STANDARD_INPUT sources for large authored payloads.";
   }
 
   /** One stable product-owned message for oversized JSON request payloads. */
   public static String requestDocumentTooLargeMessage() {
-    // LIM-021
     return "Request JSON exceeds the maximum size of 16 MiB ("
-        + REQUEST_DOCUMENT_LIMIT_BYTES
+        + Limit.REQUEST_DOCUMENT_LIMIT_BYTES
         + " bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT"
         + " sources.";
   }

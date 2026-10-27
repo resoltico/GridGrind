@@ -47,8 +47,8 @@ final class WorkbookInvariantCellStyleChecks {
     WorkbookInvariantChecks.require(font.fontName() != null, "fontName must not be null");
     WorkbookInvariantChecks.require(!font.fontName().isBlank(), "fontName must not be blank");
     requireFontHeightShape(font.fontHeight());
-    if (font.fontColor() != null) {
-      requireCellColorShape(font.fontColor(), "fontColor");
+    if (font.fontColor().isPresent()) {
+      requireCellColorShape(font.fontColor().orElseThrow(), "fontColor");
     }
   }
 
@@ -112,16 +112,17 @@ final class WorkbookInvariantCellStyleChecks {
         !gradient.stops().isEmpty(), "gradient fill stops must not be empty");
     switch (gradient) {
       case CellGradientFillReport.Linear linear -> {
-        if (linear.degree() != null) {
+        if (linear.degree().isPresent()) {
           WorkbookInvariantChecks.require(
-              Double.isFinite(linear.degree()), "linear gradient degree must be finite");
+              Double.isFinite(linear.degree().orElseThrow()),
+              "linear gradient degree must be finite");
         }
       }
       case CellGradientFillReport.Path path -> {
-        requireFiniteOrNull(path.left(), "path gradient left");
-        requireFiniteOrNull(path.right(), "path gradient right");
-        requireFiniteOrNull(path.top(), "path gradient top");
-        requireFiniteOrNull(path.bottom(), "path gradient bottom");
+        path.left().ifPresent(value -> requireFiniteOrNull(value, "path gradient left"));
+        path.right().ifPresent(value -> requireFiniteOrNull(value, "path gradient right"));
+        path.top().ifPresent(value -> requireFiniteOrNull(value, "path gradient top"));
+        path.bottom().ifPresent(value -> requireFiniteOrNull(value, "path gradient bottom"));
       }
     }
     for (CellGradientStopReport stop : gradient.stops()) {

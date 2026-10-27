@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 
 /** One ordered assertion step that verifies workbook state through the canonical contract. */
@@ -12,7 +13,7 @@ public record AssertionStep(
             kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NON_BLANK)
         @dev.erst.gridgrind.core.metadata.FieldRule(
             kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.STRING_PATTERN,
-            text = dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues.STEP_ID_PATTERN)
+            text = Limit.STEP_ID_PATTERN)
         StepId stepId,
     Selector target,
     Assertion assertion)

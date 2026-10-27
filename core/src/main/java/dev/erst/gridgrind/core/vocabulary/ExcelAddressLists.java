@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -7,22 +8,23 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Canonical validation for ordered address lists used by exact-cell read surfaces. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_CELL_RETURNING_READ_COUNT,
+  dev.erst.gridgrind.core.limits.Limit.ID_GET_CELLS_ADDRESS_LIST
+})
 public final class ExcelAddressLists {
   private ExcelAddressLists() {}
 
   /** Copies one non-empty ordered address list after rejecting blanks, nulls, and duplicates. */
-  public static List<String> copyNonEmptyDistinctAddresses(List<String> addresses) { // LIM-007
+  public static List<String> copyNonEmptyDistinctAddresses(List<String> addresses) {
     Objects.requireNonNull(addresses, "addresses must not be null");
     List<String> copy = List.copyOf(addresses);
     if (copy.isEmpty()) {
       throw new IllegalArgumentException("addresses must not be empty");
     }
-    if (copy.size() > ExcelReadLimits.MAX_READ_CELLS) { // LIM-001
+    if (copy.size() > Limit.MAX_READ_CELLS) {
       throw new IllegalArgumentException(
-          "addresses must not exceed "
-              + ExcelReadLimits.MAX_READ_CELLS
-              + " but was "
-              + copy.size());
+          "addresses must not exceed " + Limit.MAX_READ_CELLS + " but was " + copy.size());
     }
     Set<String> unique = new LinkedHashSet<>();
     for (int index = 0; index < copy.size(); index++) {

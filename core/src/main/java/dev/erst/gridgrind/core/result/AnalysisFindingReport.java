@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.result;
 
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,12 +20,8 @@ public record AnalysisFindingReport(
     Objects.requireNonNull(title, "title must not be null");
     Objects.requireNonNull(message, "message must not be null");
     Objects.requireNonNull(location, "location must not be null");
-    if (title.isBlank()) {
-      throw new IllegalArgumentException("title must not be blank");
-    }
-    if (message.isBlank()) {
-      throw new IllegalArgumentException("message must not be blank");
-    }
+    TextValidation.requireNonBlank(title, "title");
+    TextValidation.requireNonBlank(message, "message");
     evidence = WorkbookResultSupport.copyStrings(evidence, "evidence");
   }
 }

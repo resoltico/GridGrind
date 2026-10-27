@@ -1,12 +1,10 @@
 package dev.erst.gridgrind.core.plan;
 
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
 import dev.erst.gridgrind.core.problem.FieldValidationBoundRule;
 import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
-import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
-import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
-import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.Optional;
 
 /** Numeric and size validation for selector families. */
@@ -39,42 +37,42 @@ final class SelectorNumberValidation {
 
   static int requireRowIndexWithinBounds(int value, String fieldName) {
     requireNonNegative(value, fieldName);
-    if (value > ExcelRowSpan.MAX_ROW_INDEX) {
+    if (value > Limit.MAX_ROW_INDEX) {
       throw SelectorTextValidation.invalidField(
           FieldValidationProblem.atField(
               fieldName,
               FieldValidationBoundRule.ROW_INDEX_BOUNDS,
-              Integer.toString(ExcelRowSpan.MAX_ROW_INDEX)));
+              Integer.toString(Limit.MAX_ROW_INDEX)));
     }
     return value;
   }
 
   static int requireColumnIndexWithinBounds(int value, String fieldName) {
     requireNonNegative(value, fieldName);
-    if (value > ExcelColumnSpan.MAX_COLUMN_INDEX) {
+    if (value > Limit.MAX_COLUMN_INDEX) {
       throw SelectorTextValidation.invalidField(
           FieldValidationProblem.atField(
               fieldName,
               FieldValidationBoundRule.COLUMN_INDEX_BOUNDS,
-              Integer.toString(ExcelColumnSpan.MAX_COLUMN_INDEX)));
+              Integer.toString(Limit.MAX_COLUMN_INDEX)));
     }
     return value;
   }
 
   static void requireWindowSize(int rowCount, int columnCount) {
     long cells = (long) rowCount * columnCount;
-    if (cells > ExcelReadLimits.MAX_READ_CELLS) {
+    if (cells > Limit.MAX_READ_CELLS) {
       throw invalidWindowSize(cells);
     }
   }
 
   static void requireReadCellCount(int count, String fieldName) {
-    if (count > ExcelReadLimits.MAX_READ_CELLS) {
+    if (count > Limit.MAX_READ_CELLS) {
       throw SelectorTextValidation.invalidField(
           FieldValidationProblem.atField(
               fieldName,
               FieldValidationBoundRule.COLLECTION_SIZE_LIMIT,
-              Integer.toString(ExcelReadLimits.MAX_READ_CELLS),
+              Integer.toString(Limit.MAX_READ_CELLS),
               Integer.toString(count)));
     }
   }
@@ -84,7 +82,7 @@ final class SelectorNumberValidation {
         FieldValidationProblem.detached(
             "rowCount * columnCount",
             FieldValidationBoundRule.WINDOW_SIZE_PRODUCT,
-            Long.toString(ExcelReadLimits.MAX_READ_CELLS),
+            Long.toString(Limit.MAX_READ_CELLS),
             Long.toString(actualCells)),
         Optional.empty(),
         Optional.empty(),

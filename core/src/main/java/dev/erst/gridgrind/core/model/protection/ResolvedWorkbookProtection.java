@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.protection;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -15,15 +16,11 @@ public record ResolvedWorkbookProtection(
     Objects.requireNonNull(revisionsPassword, "revisionsPassword must not be null");
     workbookPassword.ifPresent(
         value -> {
-          if (value.isBlank()) {
-            throw new IllegalArgumentException("workbookPassword must not be blank");
-          }
+          TextValidation.requireNonBlank(value, "workbookPassword");
         });
     revisionsPassword.ifPresent(
         value -> {
-          if (value.isBlank()) {
-            throw new IllegalArgumentException("revisionsPassword must not be blank");
-          }
+          TextValidation.requireNonBlank(value, "revisionsPassword");
         });
   }
 

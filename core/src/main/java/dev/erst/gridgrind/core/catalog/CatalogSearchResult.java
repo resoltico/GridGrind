@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,7 +13,7 @@ public record CatalogSearchResult(
     List<CatalogSearchMatch> matches) {
   public CatalogSearchResult {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-    query = CatalogRecordValidation.requireNonBlank(query, "query");
+    query = TextValidation.requireNonBlank(query, "query");
     Objects.requireNonNull(matches, "matches must not be null");
     for (CatalogSearchMatch match : matches) {
       if (match == null) {

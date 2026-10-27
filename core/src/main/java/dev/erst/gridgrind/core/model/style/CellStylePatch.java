@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.style;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,9 +28,7 @@ public record CellStylePatch(
     Objects.requireNonNull(protection, "protection must not be null");
     numberFormat.ifPresent(
         value -> {
-          if (value.isBlank()) {
-            throw new IllegalArgumentException("numberFormat must not be blank");
-          }
+          TextValidation.requireNonBlank(value, "numberFormat");
         });
     if (numberFormat.isEmpty()
         && alignment.isEmpty()

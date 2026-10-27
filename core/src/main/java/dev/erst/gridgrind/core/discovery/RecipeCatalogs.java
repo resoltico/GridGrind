@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -24,9 +25,7 @@ public final class RecipeCatalogs {
   public static Optional<RecipeCatalogEntry> entryFor(String id) {
     java.util.Objects.requireNonNull(id, "id must not be null");
     String lookup = id.trim();
-    if (lookup.isBlank()) {
-      throw new IllegalArgumentException("id must not be blank");
-    }
+    TextValidation.requireNonBlank(lookup, "id");
     return RecipeRegistry.recipeFor(lookup).map(RecipeCatalogs::catalogEntryFor);
   }
 
@@ -34,9 +33,7 @@ public final class RecipeCatalogs {
   public static Optional<RecipeCatalogDetail> lookupFor(String id) {
     java.util.Objects.requireNonNull(id, "id must not be null");
     String lookup = id.trim();
-    if (lookup.isBlank()) {
-      throw new IllegalArgumentException("id must not be blank");
-    }
+    TextValidation.requireNonBlank(lookup, "id");
     return RecipeRegistry.recipeFor(lookup).map(RecipeCatalogs::catalogDetailFor);
   }
 

@@ -1,12 +1,13 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Optional;
 
 /** Reports explicit null where omission is the only representation of absence. */
 public record RequestExplicitNullField(String path, long tokenByteOffset)
     implements RequestShapeStructuralProblem {
   public RequestExplicitNullField {
-    path = RequestStructuralProblemSupport.requireText(path, "path");
+    path = TextValidation.requireNonBlank(path, "path");
     RequestStructuralProblemSupport.requireByteOffset(tokenByteOffset);
   }
 

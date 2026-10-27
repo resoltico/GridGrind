@@ -457,7 +457,7 @@ final class WorkbookIntrospector {
               populatedCellCount,
               blankCellCount,
               List.copyOf(observedTypes),
-              dominantType(typeCounts)));
+              Optional.ofNullable(dominantType(typeCounts))));
     }
 
     return new SheetSchemaReport(

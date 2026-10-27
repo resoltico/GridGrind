@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.formulas;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,7 +15,7 @@ public final class ComparisonFormulas {
       ExcelComparisonOperator operator, String formula1, Optional<String> formula2) {
     Objects.requireNonNull(operator, "operator must not be null");
     Objects.requireNonNull(formula2, "formula2 must not be null");
-    requireNonBlank(formula1, "formula1");
+    TextValidation.requireNonBlank(formula1, "formula1");
     if ((operator == ExcelComparisonOperator.BETWEEN
             || operator == ExcelComparisonOperator.NOT_BETWEEN)
         && (formula2.isEmpty() || formula2.orElseThrow().isBlank())) {
@@ -32,7 +33,7 @@ public final class ComparisonFormulas {
 
   /** Normalizes one formula-like string by trimming and removing a leading {@code =}. */
   public static String normalizeFormula(String value, String fieldName) {
-    String normalized = requireNonBlank(value, fieldName).trim();
+    String normalized = TextValidation.requireNonBlank(value, fieldName).trim();
     if (normalized.startsWith("=")) {
       normalized = normalized.substring(1);
     }
@@ -57,14 +58,5 @@ public final class ComparisonFormulas {
       return Optional.of(normalizeFormula(formula2.orElseThrow(), "formula2"));
     }
     return Optional.empty();
-  }
-
-  /** Requires one string field to be present and nonblank. */
-  public static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

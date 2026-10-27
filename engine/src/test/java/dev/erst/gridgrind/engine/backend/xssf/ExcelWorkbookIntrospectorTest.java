@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -565,7 +566,7 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 3, 1)));
 
-      assertNull(schema.surface().columns().getFirst().dominantType());
+      assertEquals(Optional.empty(), schema.surface().columns().getFirst().dominantType());
     }
   }
 
@@ -631,7 +632,7 @@ class ExcelWorkbookIntrospectorTest {
       SchemaColumnReport column = schema.surface().columns().getFirst();
       assertEquals(1, column.observedTypes().size());
       assertEquals("NUMBER", column.observedTypes().getFirst().type());
-      assertEquals("NUMBER", column.dominantType());
+      assertEquals("NUMBER", column.dominantType().orElseThrow());
     }
   }
 
@@ -669,10 +670,10 @@ class ExcelWorkbookIntrospectorTest {
                       WorkbookReadTestSupport.getSheetSchema("schema", "Data", "A1", 3, 2)));
 
       SchemaColumnReport boolCol = schema.surface().columns().get(0);
-      assertEquals("BOOLEAN", boolCol.dominantType());
+      assertEquals("BOOLEAN", boolCol.dominantType().orElseThrow());
 
       SchemaColumnReport errCol = schema.surface().columns().get(1);
-      assertEquals("ERROR", errCol.dominantType());
+      assertEquals("ERROR", errCol.dominantType().orElseThrow());
     }
   }
 
@@ -693,7 +694,7 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       WorkbookReadTestSupport.getSheetSchema("schema", "Data", "A1", 4, 1)));
 
-      assertEquals("TEXT", schema.surface().columns().getFirst().dominantType());
+      assertEquals("TEXT", schema.surface().columns().getFirst().dominantType().orElseThrow());
     }
   }
 

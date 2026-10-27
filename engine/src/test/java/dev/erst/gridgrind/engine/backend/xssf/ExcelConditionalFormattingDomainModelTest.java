@@ -139,15 +139,15 @@ class ExcelConditionalFormattingDomainModelTest {
         new ArrayList<>(List.of(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES));
     DifferentialStyleReport snapshot =
         new DifferentialStyleReport(
-            "0.00",
-            true,
-            false,
-            FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
+            Optional.of("0.00"),
+            Optional.of(true),
+            Optional.of(false),
+            Optional.ofNullable(FontHeightReport.fromPoints(BigDecimal.valueOf(11))),
             Optional.ofNullable(
                 dev.erst.gridgrind.engine.backend.xssf.DifferentialStyleFixtures.color(
                     new ColorSpec.Theme(3, Optional.of(0.25d)))),
-            true,
-            false,
+            Optional.of(true),
+            Optional.of(false),
             Optional.ofNullable(
                 dev.erst.gridgrind.engine.backend.xssf.DifferentialStyleFixtures.color(
                     new ColorSpec.Indexed(12, Optional.empty()))),
@@ -233,13 +233,13 @@ class ExcelConditionalFormattingDomainModelTest {
         IllegalArgumentException.class,
         () ->
             new DifferentialStyleReport(
-                " ",
-                null,
-                null,
-                null,
+                Optional.of(" "),
                 Optional.empty(),
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 List.of()));
@@ -247,13 +247,13 @@ class ExcelConditionalFormattingDomainModelTest {
         NullPointerException.class,
         () ->
             new DifferentialStyleReport(
-                null,
-                null,
-                null,
-                null,
                 Optional.empty(),
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 null));
@@ -261,13 +261,13 @@ class ExcelConditionalFormattingDomainModelTest {
         NullPointerException.class,
         () ->
             new DifferentialStyleReport(
-                null,
-                null,
-                null,
-                null,
                 Optional.empty(),
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.ofNullable(
                     dev.erst.gridgrind.engine.backend.xssf.DifferentialStyleFixtures.border(
@@ -277,26 +277,26 @@ class ExcelConditionalFormattingDomainModelTest {
         IllegalArgumentException.class,
         () ->
             new DifferentialStyleReport(
-                null,
-                null,
-                null,
-                null,
                 Optional.empty(),
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 List.of()));
     assertDoesNotThrow(
         () ->
             new DifferentialStyleReport(
-                null,
-                null,
-                null,
-                null,
                 Optional.empty(),
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT)));
@@ -373,13 +373,13 @@ class ExcelConditionalFormattingDomainModelTest {
             Optional.empty());
     DifferentialStyleReport snapshot =
         new DifferentialStyleReport(
-            "0.00",
-            null,
-            null,
-            null,
+            Optional.of("0.00"),
             Optional.empty(),
-            null,
-            null,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             List.of());
@@ -427,7 +427,7 @@ class ExcelConditionalFormattingDomainModelTest {
                 false,
                 ExcelComparisonOperator.GREATER_THAN,
                 "1",
-                Optional.ofNullable(" "),
+                Optional.of(" "),
                 Optional.ofNullable(snapshot)));
     assertThrows(
         IllegalArgumentException.class,
@@ -435,7 +435,7 @@ class ExcelConditionalFormattingDomainModelTest {
             new ConditionalFormattingRuleReport.DataBarRule(
                 1,
                 false,
-                Optional.ofNullable("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
+                Optional.of("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
                 false,
                 -1,
                 100,
@@ -447,7 +447,7 @@ class ExcelConditionalFormattingDomainModelTest {
             new ConditionalFormattingRuleReport.DataBarRule(
                 1,
                 false,
-                Optional.ofNullable("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
+                Optional.of("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
                 false,
                 0,
                 -1,
@@ -459,7 +459,7 @@ class ExcelConditionalFormattingDomainModelTest {
             new ConditionalFormattingRuleReport.DataBarRule(
                 1,
                 false,
-                Optional.ofNullable("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
+                Optional.of("#102030").map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
                 false,
                 0,
                 100,

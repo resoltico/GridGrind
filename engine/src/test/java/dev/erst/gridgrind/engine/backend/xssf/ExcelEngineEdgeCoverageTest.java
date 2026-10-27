@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.limits.Limit;
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
@@ -59,7 +60,7 @@ class ExcelEngineEdgeCoverageTest {
     assertDoesNotThrow(
         () ->
             ExcelSheetLayoutLimits.requireDefaultColumnWidth(
-                ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH, "defaultColumnWidth"));
+                Limit.MAX_DEFAULT_COLUMN_WIDTH, "defaultColumnWidth"));
   }
 
   @Test
@@ -439,12 +440,12 @@ class ExcelEngineEdgeCoverageTest {
                 "Signature",
                 anchor,
                 false,
-                Optional.ofNullable("instructions"),
-                Optional.ofNullable("Ada"),
-                Optional.ofNullable("Finance"),
-                Optional.ofNullable("ada@example.com"),
+                Optional.of("instructions"),
+                Optional.of("Ada"),
+                Optional.of("Finance"),
+                Optional.of("ada@example.com"),
                 Optional.empty(),
-                Optional.ofNullable("invalid"),
+                Optional.of("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
@@ -454,12 +455,12 @@ class ExcelEngineEdgeCoverageTest {
                 " ",
                 anchor,
                 false,
-                Optional.ofNullable("instructions"),
-                Optional.ofNullable("Ada"),
-                Optional.ofNullable("Finance"),
-                Optional.ofNullable("ada@example.com"),
+                Optional.of("instructions"),
+                Optional.of("Ada"),
+                Optional.of("Finance"),
+                Optional.of("ada@example.com"),
                 Optional.empty(),
-                Optional.ofNullable("invalid"),
+                Optional.of("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
@@ -469,12 +470,12 @@ class ExcelEngineEdgeCoverageTest {
                 "Signature",
                 anchor,
                 false,
-                Optional.ofNullable(" "),
-                Optional.ofNullable("Ada"),
-                Optional.ofNullable("Finance"),
-                Optional.ofNullable("ada@example.com"),
+                Optional.of(" "),
+                Optional.of("Ada"),
+                Optional.of("Finance"),
+                Optional.of("ada@example.com"),
                 Optional.empty(),
-                Optional.ofNullable("invalid"),
+                Optional.of("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
@@ -484,12 +485,12 @@ class ExcelEngineEdgeCoverageTest {
                 "Signature",
                 anchor,
                 false,
-                Optional.ofNullable("instructions"),
-                Optional.ofNullable(" "),
-                Optional.ofNullable("Finance"),
-                Optional.ofNullable("ada@example.com"),
+                Optional.of("instructions"),
+                Optional.of(" "),
+                Optional.of("Finance"),
+                Optional.of("ada@example.com"),
                 Optional.empty(),
-                Optional.ofNullable("invalid"),
+                Optional.of("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
@@ -499,12 +500,12 @@ class ExcelEngineEdgeCoverageTest {
                 "Signature",
                 anchor,
                 false,
-                Optional.ofNullable("instructions"),
-                Optional.ofNullable("Ada"),
-                Optional.ofNullable("Finance"),
-                Optional.ofNullable("ada@example.com"),
-                Optional.ofNullable("line1\nline2\nline3\nline4"),
-                Optional.ofNullable("invalid"),
+                Optional.of("instructions"),
+                Optional.of("Ada"),
+                Optional.of("Finance"),
+                Optional.of("ada@example.com"),
+                Optional.of("line1\nline2\nline3\nline4"),
+                Optional.of("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
@@ -519,7 +520,7 @@ class ExcelEngineEdgeCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.ofNullable("invalid"),
+                Optional.of("invalid"),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
@@ -530,11 +531,11 @@ class ExcelEngineEdgeCoverageTest {
                 anchor,
                 false,
                 Optional.empty(),
-                Optional.ofNullable("Ada"),
-                Optional.ofNullable("Finance"),
-                Optional.ofNullable("ada@example.com"),
+                Optional.of("Ada"),
+                Optional.of("Finance"),
+                Optional.of("ada@example.com"),
                 Optional.empty(),
-                Optional.ofNullable("invalid"),
+                Optional.of("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.empty()));
     assertThrows(
@@ -545,30 +546,53 @@ class ExcelEngineEdgeCoverageTest {
                 anchor,
                 false,
                 Optional.empty(),
-                Optional.ofNullable("Ada"),
-                Optional.ofNullable("Finance"),
-                Optional.ofNullable("ada@example.com"),
+                Optional.of("Ada"),
+                Optional.of("Finance"),
+                Optional.of("ada@example.com"),
                 Optional.empty(),
-                Optional.ofNullable("invalid"),
+                Optional.of("invalid"),
                 Optional.empty(),
                 Optional.of(new BinaryContent(new byte[] {1}))));
   }
 
   @Test
   void customXmlAndChartValueObjectsRejectInvalidInputs() {
-    assertDoesNotThrow(() -> new CustomXmlDataBindingReport("binding", true, 7L, "file", 0L));
+    assertDoesNotThrow(
+        () ->
+            new CustomXmlDataBindingReport(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(7L),
+                Optional.of("file"),
+                0L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlDataBindingReport(" ", true, 7L, "file", 0L));
+        () ->
+            new CustomXmlDataBindingReport(
+                Optional.of(" "), Optional.of(true), Optional.of(7L), Optional.of("file"), 0L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlDataBindingReport("binding", true, -1L, "file", 0L));
+        () ->
+            new CustomXmlDataBindingReport(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(-1L),
+                Optional.of("file"),
+                0L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlDataBindingReport("binding", true, 7L, " ", 0L));
+        () ->
+            new CustomXmlDataBindingReport(
+                Optional.of("binding"), Optional.of(true), Optional.of(7L), Optional.of(" "), 0L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlDataBindingReport("binding", true, 7L, "file", -1L));
+        () ->
+            new CustomXmlDataBindingReport(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(7L),
+                Optional.of("file"),
+                -1L));
 
     assertDoesNotThrow(
         () -> new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.empty()));
@@ -611,7 +635,13 @@ class ExcelEngineEdgeCoverageTest {
                     Optional.of("XSD"),
                     Optional.of("schema.xsd"),
                     Optional.of("<schema/>")),
-                Optional.of(new CustomXmlDataBindingReport("binding", true, 7L, "file", 0L)),
+                Optional.of(
+                    new CustomXmlDataBindingReport(
+                        Optional.of("binding"),
+                        Optional.of(true),
+                        Optional.of(7L),
+                        Optional.of("file"),
+                        0L)),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -870,12 +900,12 @@ class ExcelEngineEdgeCoverageTest {
                     "Dup",
                     ExcelChartTestSupport.anchor(5, 1, 8, 6),
                     false,
-                    Optional.ofNullable("instructions"),
-                    Optional.ofNullable("Ada"),
-                    Optional.ofNullable("Finance"),
-                    Optional.ofNullable("ada@example.com"),
+                    Optional.of("instructions"),
+                    Optional.of("Ada"),
+                    Optional.of("Finance"),
+                    Optional.of("ada@example.com"),
                     Optional.empty(),
-                    Optional.ofNullable("invalid"),
+                    Optional.of("invalid"),
                     Optional.of(ExcelPictureFormat.PNG),
                     Optional.of(new BinaryContent(new byte[] {1}))));
         forceSignatureLineName(wrappedWorkbook.sheet("Ops").xssfSheet(), "Dup");
@@ -957,7 +987,7 @@ class ExcelEngineEdgeCoverageTest {
         schemaId,
         settings,
         schema,
-        dataBinding == null ? null : dataBinding.orElse(null),
+        Optional.ofNullable(dataBinding == null ? null : dataBinding.orElse(null)),
         linkedCells,
         linkedTables);
   }
@@ -978,7 +1008,10 @@ class ExcelEngineEdgeCoverageTest {
       Optional<String> reference,
       Optional<String> xml) {
     return new CustomXmlMappingReport.Schema(
-        nullable(namespace), nullable(language), nullable(reference), nullable(xml));
+        Optional.ofNullable(nullable(namespace)),
+        Optional.ofNullable(nullable(language)),
+        Optional.ofNullable(nullable(reference)),
+        Optional.ofNullable(nullable(xml)));
   }
 
   private static <T> T nullable(Optional<T> value) {

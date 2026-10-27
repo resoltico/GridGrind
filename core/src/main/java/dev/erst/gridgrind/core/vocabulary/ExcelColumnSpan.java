@@ -1,10 +1,13 @@
 package dev.erst.gridgrind.core.vocabulary;
 
+import dev.erst.gridgrind.core.limits.Limit;
+
 /** Inclusive zero-based column band used by workbook-core structural column commands. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_COLUMNS_PER_WORKSHEET
+})
 public record ExcelColumnSpan(int firstColumnIndex, int lastColumnIndex) {
   /** Maximum column index addressable in one `.xlsx` worksheet. */
-  public static final int MAX_COLUMN_INDEX = 16_383; // LIM-009
-
   public ExcelColumnSpan {
     if (firstColumnIndex < 0) {
       throw new IllegalArgumentException(
@@ -19,13 +22,15 @@ public record ExcelColumnSpan(int firstColumnIndex, int lastColumnIndex) {
           ExcelIndexDisplay.mustNotBeLessThan(
               "lastColumnIndex", lastColumnIndex, "firstColumnIndex", firstColumnIndex));
     }
-    if (firstColumnIndex > MAX_COLUMN_INDEX) {
+    if (firstColumnIndex > Limit.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
-          ExcelIndexDisplay.mustNotExceed("firstColumnIndex", firstColumnIndex, MAX_COLUMN_INDEX));
+          ExcelIndexDisplay.mustNotExceed(
+              "firstColumnIndex", firstColumnIndex, Limit.MAX_COLUMN_INDEX));
     }
-    if (lastColumnIndex > MAX_COLUMN_INDEX) {
+    if (lastColumnIndex > Limit.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
-          ExcelIndexDisplay.mustNotExceed("lastColumnIndex", lastColumnIndex, MAX_COLUMN_INDEX));
+          ExcelIndexDisplay.mustNotExceed(
+              "lastColumnIndex", lastColumnIndex, Limit.MAX_COLUMN_INDEX));
     }
   }
 

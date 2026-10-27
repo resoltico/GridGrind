@@ -265,9 +265,10 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
             "picture.png",
             "abc123",
             java.util.Base64.getEncoder().encodeToString(data.bytes()),
-            "preview");
+            Optional.of("preview"));
     assertEquals("picture.png", picturePayload.fileName());
-    assertNull(
+    org.junit.jupiter.api.Assertions.assertEquals(
+        java.util.Optional.empty(),
         new DrawingObjectPayloadReport.Picture(
                 "NullDescPicture",
                 ExcelPictureFormat.PNG,
@@ -275,7 +276,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "picture.png",
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                null)
+                Optional.empty())
             .description());
     assertThrows(
         NullPointerException.class,
@@ -287,7 +288,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "picture.png",
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                null));
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -298,7 +299,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "picture.png",
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                null));
+                Optional.empty()));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -309,7 +310,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "picture.png",
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                null));
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -320,7 +321,7 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 " ",
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                null));
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -331,29 +332,30 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "picture.png",
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                " "));
+                Optional.of(" ")));
 
     DrawingObjectPayloadReport.EmbeddedObject embeddedPayload =
         new DrawingObjectPayloadReport.EmbeddedObject(
             "Embed",
             ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
             "application/octet-stream",
-            "payload.txt",
+            Optional.of("payload.txt"),
             "abc123",
             java.util.Base64.getEncoder().encodeToString(data.bytes()),
-            "Payload",
-            "payload.txt");
-    assertEquals("Payload", embeddedPayload.label());
-    assertNull(
+            Optional.of("Payload"),
+            Optional.of("payload.txt"));
+    assertEquals("Payload", embeddedPayload.label().orElseThrow());
+    org.junit.jupiter.api.Assertions.assertEquals(
+        java.util.Optional.empty(),
         new DrawingObjectPayloadReport.EmbeddedObject(
                 "NullOptEmbed",
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                 "application/octet-stream",
-                null,
+                Optional.empty(),
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                null,
-                null)
+                Optional.empty(),
+                Optional.empty())
             .label());
     assertThrows(
         NullPointerException.class,
@@ -362,11 +364,11 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 null,
                 "application/octet-stream",
-                "payload.txt",
+                Optional.of("payload.txt"),
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                "Payload",
-                "payload.txt"));
+                Optional.of("Payload"),
+                Optional.of("payload.txt")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -374,11 +376,11 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                 "application/octet-stream",
-                " ",
+                Optional.of(" "),
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                "Payload",
-                "payload.txt"));
+                Optional.of("Payload"),
+                Optional.of("payload.txt")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -386,11 +388,11 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                 "application/octet-stream",
-                "payload.txt",
+                Optional.of("payload.txt"),
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                " ",
-                "payload.txt"));
+                Optional.of(" "),
+                Optional.of("payload.txt")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -398,11 +400,11 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                 "application/octet-stream",
-                "payload.txt",
+                Optional.of("payload.txt"),
                 "abc123",
                 java.util.Base64.getEncoder().encodeToString(data.bytes()),
-                "Payload",
-                " "));
+                Optional.of("Payload"),
+                Optional.of(" ")));
 
     DrawingObjectReport.Picture pictureSnapshot =
         new DrawingObjectReport.Picture(
@@ -412,11 +414,12 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
             "image/png",
             10L,
             "abc123",
-            1,
-            1,
-            "preview");
+            Optional.of(1),
+            Optional.of(1),
+            Optional.of("preview"));
     assertEquals(10L, pictureSnapshot.byteSize());
-    assertNull(
+    org.junit.jupiter.api.Assertions.assertEquals(
+        java.util.Optional.empty(),
         new DrawingObjectReport.Picture(
                 "NullDescPicSnap",
                 DrawingGeometryFixtures.report(twoCell),
@@ -424,9 +427,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 10L,
                 "abc123",
-                null,
-                null,
-                null)
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())
             .description());
     assertThrows(
         NullPointerException.class,
@@ -438,9 +441,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 10L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -451,9 +454,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 " ",
                 10L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -464,9 +467,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 10L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -477,9 +480,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 10L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertEquals(
         0L,
         new DrawingObjectReport.Picture(
@@ -489,9 +492,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 0L,
                 "abc123",
-                null,
-                null,
-                null)
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())
             .byteSize());
     assertThrows(
         IllegalArgumentException.class,
@@ -503,9 +506,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 -1L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -516,9 +519,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 10L,
                 " ",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -529,9 +532,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 10L,
                 "abc123",
-                -1,
-                null,
-                null));
+                Optional.of(-1),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -542,9 +545,9 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 10L,
                 "abc123",
-                null,
-                -1,
-                null));
+                Optional.empty(),
+                Optional.of(-1),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -555,19 +558,19 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "image/png",
                 10L,
                 "abc123",
-                null,
-                null,
-                " "));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(" ")));
 
     DrawingObjectReport.Shape shapeSnapshot =
         new DrawingObjectReport.Shape(
             "Shape",
             DrawingGeometryFixtures.report(twoCell),
             ExcelDrawingShapeKind.SIMPLE_SHAPE,
-            "rect",
-            "Queue",
+            Optional.of("rect"),
+            Optional.of("Queue"),
             0);
-    assertEquals("rect", shapeSnapshot.presetGeometryToken());
+    assertEquals("rect", shapeSnapshot.presetGeometryToken().orElseThrow());
     assertThrows(
         NullPointerException.class,
         () ->
@@ -575,23 +578,18 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 null,
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelDrawingShapeKind.SIMPLE_SHAPE,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
                 0));
     assertThrows(
         NullPointerException.class,
         () ->
             new DrawingObjectReport.Shape(
-                "Shape", DrawingGeometryFixtures.report(twoCell), null, null, null, 0));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new DrawingObjectReport.Shape(
                 "Shape",
                 DrawingGeometryFixtures.report(twoCell),
-                ExcelDrawingShapeKind.SIMPLE_SHAPE,
-                " ",
                 null,
+                Optional.empty(),
+                Optional.empty(),
                 0));
     assertThrows(
         IllegalArgumentException.class,
@@ -600,8 +598,8 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Shape",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelDrawingShapeKind.SIMPLE_SHAPE,
-                null,
-                " ",
+                Optional.of(" "),
+                Optional.empty(),
                 0));
     assertThrows(
         IllegalArgumentException.class,
@@ -610,8 +608,18 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Shape",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelDrawingShapeKind.SIMPLE_SHAPE,
-                null,
-                null,
+                Optional.empty(),
+                Optional.of(" "),
+                0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Shape(
+                "Shape",
+                DrawingGeometryFixtures.report(twoCell),
+                ExcelDrawingShapeKind.SIMPLE_SHAPE,
+                Optional.empty(),
+                Optional.empty(),
                 -1));
 
     DrawingObjectReport.EmbeddedObject embeddedSnapshot =
@@ -619,30 +627,31 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
             "Embed",
             DrawingGeometryFixtures.report(twoCell),
             ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-            "Payload",
-            "payload.txt",
-            "payload.txt",
+            Optional.of("Payload"),
+            Optional.of("payload.txt"),
+            Optional.of("payload.txt"),
             "application/octet-stream",
             5L,
             "abc123",
-            ExcelPictureFormat.PNG,
-            1L,
-            "def456");
-    assertEquals(1L, embeddedSnapshot.previewByteSize());
-    assertNull(
+            Optional.ofNullable(ExcelPictureFormat.PNG),
+            Optional.of(1L),
+            Optional.of("def456"));
+    assertEquals(1L, embeddedSnapshot.previewByteSize().orElseThrow());
+    org.junit.jupiter.api.Assertions.assertEquals(
+        java.util.Optional.empty(),
         new DrawingObjectReport.EmbeddedObject(
                 "NullOptEmbedSnap",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                null,
-                null,
-                null)
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())
             .label());
     assertThrows(
         NullPointerException.class,
@@ -651,15 +660,15 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 null,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -667,15 +676,15 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                " ",
-                "payload.txt",
-                "payload.txt",
+                Optional.of(" "),
+                Optional.of("payload.txt"),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -683,15 +692,15 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                " ",
-                "payload.txt",
+                Optional.of("Payload"),
+                Optional.of(" "),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -699,30 +708,30 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                "payload.txt",
-                " ",
+                Optional.of("Payload"),
+                Optional.of("payload.txt"),
+                Optional.of(" "),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertEquals(
         0L,
         new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                "payload.txt",
-                "payload.txt",
+                Optional.of("Payload"),
+                Optional.of("payload.txt"),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 0L,
                 "abc123",
-                null,
-                null,
-                null)
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())
             .byteSize());
     assertThrows(
         IllegalArgumentException.class,
@@ -731,15 +740,15 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                "payload.txt",
-                "payload.txt",
+                Optional.of("Payload"),
+                Optional.of("payload.txt"),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 -1L,
                 "abc123",
-                null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -747,31 +756,32 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                "payload.txt",
-                "payload.txt",
+                Optional.of("Payload"),
+                Optional.of("payload.txt"),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                null,
-                1L,
-                null));
+                Optional.empty(),
+                Optional.of(1L),
+                Optional.empty()));
     assertEquals(
         0L,
         new DrawingObjectReport.EmbeddedObject(
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                "payload.txt",
-                "payload.txt",
+                Optional.of("Payload"),
+                Optional.of("payload.txt"),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                ExcelPictureFormat.PNG,
-                0L,
-                null)
-            .previewByteSize());
+                Optional.ofNullable(ExcelPictureFormat.PNG),
+                Optional.of(0L),
+                Optional.empty())
+            .previewByteSize()
+            .orElseThrow());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -779,15 +789,15 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                "payload.txt",
-                "payload.txt",
+                Optional.of("Payload"),
+                Optional.of("payload.txt"),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                ExcelPictureFormat.PNG,
-                -1L,
-                null));
+                Optional.ofNullable(ExcelPictureFormat.PNG),
+                Optional.of(-1L),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -795,15 +805,15 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                "payload.txt",
-                "payload.txt",
+                Optional.of("Payload"),
+                Optional.of("payload.txt"),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                ExcelPictureFormat.PNG,
-                1L,
-                " "));
+                Optional.ofNullable(ExcelPictureFormat.PNG),
+                Optional.of(1L),
+                Optional.of(" ")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -811,15 +821,15 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
                 "Embed",
                 DrawingGeometryFixtures.report(twoCell),
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
-                "Payload",
-                "payload.txt",
-                "payload.txt",
+                Optional.of("Payload"),
+                Optional.of("payload.txt"),
+                Optional.of("payload.txt"),
                 "application/octet-stream",
                 5L,
                 "abc123",
-                null,
-                null,
-                "def456"));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of("def456")));
 
     DrawingObjectNotFoundException missing = new DrawingObjectNotFoundException("Ops", "Ghost");
     assertTrue(missing.getMessage().contains("Ghost"));

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.value;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -18,10 +19,7 @@ final class ProtocolHyperlinkFileSupport {
   private ProtocolHyperlinkFileSupport() {}
 
   static String normalizeFileTarget(String path) {
-    Objects.requireNonNull(path, "path must not be null");
-    if (path.isBlank()) {
-      throw new IllegalArgumentException("path must not be blank");
-    }
+    TextValidation.requireNonBlank(path, "path");
     if (looksLikeFileUri(path)) {
       return normalizeFileUri(path);
     }

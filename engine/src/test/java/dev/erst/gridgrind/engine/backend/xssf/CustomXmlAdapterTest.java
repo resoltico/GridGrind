@@ -3,7 +3,6 @@ package dev.erst.gridgrind.engine.backend.xssf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,7 +44,7 @@ class CustomXmlAdapterTest {
       assertFalse(mapping.settings().append());
       assertTrue(mapping.settings().preserveSortAfLayout());
       assertTrue(mapping.settings().preserveFormat());
-      assertTrue(mapping.schema().xml().contains("<xsd:element name=\"CORSO\""));
+      assertTrue(mapping.schema().xml().orElseThrow().contains("<xsd:element name=\"CORSO\""));
       assertEquals(8, mapping.linkedCells().size());
       assertEquals("Foglio1", mapping.linkedCells().getFirst().sheetName().value());
       assertEquals("A1", mapping.linkedCells().getFirst().address().value());
@@ -309,10 +308,10 @@ class CustomXmlAdapterTest {
     ctMap.addNewDataBinding().setDataBindingLoadMode(7L);
 
     CustomXmlDataBindingReport dataBinding = CustomXmlAdapter.dataBinding(ctMap).orElseThrow();
-    org.junit.jupiter.api.Assertions.assertNull(dataBinding.dataBindingName());
-    org.junit.jupiter.api.Assertions.assertNull(dataBinding.fileBinding());
-    org.junit.jupiter.api.Assertions.assertNull(dataBinding.connectionId());
-    org.junit.jupiter.api.Assertions.assertNull(dataBinding.fileBindingName());
+    assertEquals(Optional.empty(), dataBinding.dataBindingName());
+    assertEquals(Optional.empty(), dataBinding.fileBinding());
+    assertEquals(Optional.empty(), dataBinding.connectionId());
+    assertEquals(Optional.empty(), dataBinding.fileBindingName());
     assertEquals(7L, dataBinding.loadMode());
   }
 
@@ -331,10 +330,10 @@ class CustomXmlAdapterTest {
     fullBinding.setDataBindingLoadMode(5L);
     CustomXmlDataBindingReport fullDataBinding =
         CustomXmlAdapter.dataBinding(boundCtMap).orElseThrow();
-    assertEquals("Binding", fullDataBinding.dataBindingName());
-    assertEquals(true, fullDataBinding.fileBinding());
-    assertEquals(9L, fullDataBinding.connectionId());
-    assertEquals("orders.xml", fullDataBinding.fileBindingName());
+    assertEquals("Binding", fullDataBinding.dataBindingName().orElseThrow());
+    assertEquals(true, fullDataBinding.fileBinding().orElseThrow());
+    assertEquals(9L, fullDataBinding.connectionId().orElseThrow());
+    assertEquals("orders.xml", fullDataBinding.fileBindingName().orElseThrow());
     assertEquals(5L, fullDataBinding.loadMode());
   }
 
@@ -361,10 +360,10 @@ class CustomXmlAdapterTest {
 
       CustomXmlMappingReport snapshot = CustomXmlAdapter.snapshot(map);
       assertEquals("OrdersMapping", snapshot.name());
-      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().namespace());
-      assertEquals("XSD", snapshot.schema().language());
-      org.junit.jupiter.api.Assertions.assertNull(snapshot.schema().reference());
-      assertNotNull(snapshot.schema().xml());
+      assertEquals(Optional.empty(), snapshot.schema().namespace());
+      assertEquals("XSD", snapshot.schema().language().orElseThrow());
+      assertEquals(Optional.empty(), snapshot.schema().reference());
+      assertTrue(snapshot.schema().xml().isPresent());
       assertEquals(List.of(), snapshot.linkedCells());
       assertEquals(1, snapshot.linkedTables().size());
       assertEquals("OrdersTable", snapshot.linkedTables().getFirst().tableName());
@@ -383,17 +382,17 @@ class CustomXmlAdapterTest {
           CustomXmlAdapter.snapshot(
               CustomXmlAdapterTestSupport.fakeMap(
                   ctMap, emptySchema, schemaNode, List.of(), List.of(table)));
-      org.junit.jupiter.api.Assertions.assertNull(emptySchemaSnapshot.schema().namespace());
-      org.junit.jupiter.api.Assertions.assertNull(emptySchemaSnapshot.schema().language());
-      org.junit.jupiter.api.Assertions.assertNull(emptySchemaSnapshot.schema().reference());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().namespace());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().language());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().reference());
 
       CustomXmlMappingReport nullSchemaSnapshot =
           CustomXmlAdapter.snapshot(
               CustomXmlAdapterTestSupport.fakeMap(
                   ctMap, null, schemaNode, List.of(), List.of(table)));
-      org.junit.jupiter.api.Assertions.assertNull(nullSchemaSnapshot.schema().namespace());
-      org.junit.jupiter.api.Assertions.assertNull(nullSchemaSnapshot.schema().language());
-      org.junit.jupiter.api.Assertions.assertNull(nullSchemaSnapshot.schema().reference());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().namespace());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().language());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().reference());
 
       CTSchema richSchema = CTSchema.Factory.newInstance();
       richSchema.setNamespace("urn:orders");
@@ -402,9 +401,9 @@ class CustomXmlAdapterTest {
           CustomXmlAdapter.snapshot(
               CustomXmlAdapterTestSupport.fakeMap(
                   ctMap, richSchema, schemaNode, List.of(), List.of(table)));
-      assertEquals("urn:orders", richSchemaSnapshot.schema().namespace());
-      org.junit.jupiter.api.Assertions.assertNull(richSchemaSnapshot.schema().language());
-      assertEquals("orders.xsd", richSchemaSnapshot.schema().reference());
+      assertEquals("urn:orders", richSchemaSnapshot.schema().namespace().orElseThrow());
+      assertEquals(Optional.empty(), richSchemaSnapshot.schema().language());
+      assertEquals("orders.xsd", richSchemaSnapshot.schema().reference().orElseThrow());
     }
   }
 
