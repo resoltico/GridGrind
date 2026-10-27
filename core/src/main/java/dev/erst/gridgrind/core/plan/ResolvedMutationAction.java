@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.plan;
 
 /** Executable mutations: source-free actions are shared with authored plans. */
-public sealed interface ResolvedMutationAction
+public sealed interface ResolvedMutationAction extends PreparedMutationAction
     permits CellMutationAction.ApplyStyle,
         CellMutationAction.ClearArrayFormula,
         CellMutationAction.ClearComment,

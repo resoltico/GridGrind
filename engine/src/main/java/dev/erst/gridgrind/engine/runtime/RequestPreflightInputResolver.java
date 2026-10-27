@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.plan.PreparedStep;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -12,19 +14,18 @@ import java.util.Optional;
 final class RequestPreflightInputResolver {
   private RequestPreflightInputResolver() {}
 
-  static Optional<WorkbookPlan> resolve(
+  static Optional<ResolvedPlan> resolve(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
       RequestPreflight.StepResolver stepResolver,
       List<GridGrindProblemDetail.Problem> problems) {
-    List<WorkbookStep> resolvedSteps = new ArrayList<>(request.steps().size());
+    List<PreparedStep> resolvedSteps = new ArrayList<>(request.steps().size());
     boolean failed = false;
     for (WorkbookStep step : request.steps()) {
       try {
-        resolvedSteps.add(stepResolver.resolve(step, bindings));
+        resolvedSteps.add(MutationResolution.prepareStep(stepResolver.resolve(step, bindings)));
       } catch (InputResolutionBatchException exception) {
         addBatchFailures(request, exception, problems);
-        resolvedSteps.add(step);
         failed = true;
       } catch (Exception exception) {
         problems.add(
@@ -32,7 +33,6 @@ final class RequestPreflightInputResolver {
                 exception,
                 RequestPreflight.resolveInputsContext(
                     request, InputResolutionFailure.unlocated(exception))));
-        resolvedSteps.add(step);
         failed = true;
       }
     }
@@ -40,13 +40,15 @@ final class RequestPreflightInputResolver {
       return Optional.empty();
     }
     return Optional.of(
-        new WorkbookPlan(
-            request.protocolVersion(),
-            request.planId(),
-            request.source(),
-            request.persistence(),
-            request.execution(),
-            request.formulaEnvironment(),
+        new ResolvedPlan(
+            new WorkbookPlan(
+                request.protocolVersion(),
+                request.planId(),
+                request.source(),
+                request.persistence(),
+                request.execution(),
+                request.formulaEnvironment(),
+                resolvedSteps.stream().map(PreparedStep::authoredStep).toList()),
             resolvedSteps));
   }
 

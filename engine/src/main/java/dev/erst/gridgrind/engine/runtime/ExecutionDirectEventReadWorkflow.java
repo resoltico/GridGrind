@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
@@ -51,10 +52,11 @@ final class ExecutionDirectEventReadWorkflow {
 
   WorkbookResult execute(
       ProtocolVersion protocolVersion,
-      WorkbookPlan request,
+      ResolvedPlan plan,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
+    WorkbookPlan request = plan.request();
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
     WorkbookPlan.WorkbookSource.ExistingFile source =
@@ -105,8 +107,8 @@ final class ExecutionDirectEventReadWorkflow {
     openPhase.succeed();
     dev.erst.gridgrind.core.grant.AcceptancePolicy hostAcceptancePolicy =
         bindings.executionGrant().acceptancePolicy();
-    for (int stepIndex = 0; stepIndex < request.steps().size(); stepIndex++) {
-      InspectionStep inspectionStep = (InspectionStep) request.steps().get(stepIndex);
+    for (int stepIndex = 0; stepIndex < plan.steps().size(); stepIndex++) {
+      InspectionStep inspectionStep = (InspectionStep) plan.steps().get(stepIndex);
       ExecutionJournalRecorder.StepHandle stepHandle = journal.beginStep(stepIndex, inspectionStep);
       try {
         inspections.add(

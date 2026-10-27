@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
@@ -18,7 +19,7 @@ import org.jspecify.annotations.Nullable;
 /** Mutable request-scoped evidence collected during one streaming-write workflow. */
 record StreamingWorkflowContext(
     ProtocolVersion protocolVersion,
-    WorkbookPlan request,
+    ResolvedPlan plan,
     ExecutionModeSpec executionMode,
     List<RequestWarning> warnings,
     ExecutionJournalRecorder journal,
@@ -29,17 +30,18 @@ record StreamingWorkflowContext(
     List<InspectionResult> inspections) {
   static StreamingWorkflowContext create(
       ProtocolVersion protocolVersion,
-      WorkbookPlan request,
+      ResolvedPlan plan,
       ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
+    WorkbookPlan request = plan.request();
     WorkbookLocation workbookLocation =
         ExecutionRequestPaths.workbookLocationFor(
             request.source(), request.persistence(), bindings.workingDirectory());
     return new StreamingWorkflowContext(
         protocolVersion,
-        request,
+        plan,
         executionMode,
         warnings,
         journal,
@@ -48,6 +50,10 @@ record StreamingWorkflowContext(
         new ArrayList<>(),
         new ArrayList<>(),
         new ArrayList<>());
+  }
+
+  WorkbookPlan request() {
+    return plan.request();
   }
 
   ExecutionFailure failure(CalculationReport calculation, GridGrindProblemDetail.Problem problem) {
@@ -68,7 +74,7 @@ record StreamingWorkflowContext(
       @Nullable Integer failedStepIndex,
       @Nullable StepId failedStepId) {
     return new ExecutionFailure(
-        new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
+        new ExecutionFailure.Context(protocolVersion, journal, request(), calculation),
         new ExecutionFailure.Artifacts(
             warnings, planAssertions, hostAssertions, preservation, inspections),
         new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.plan.PreparedStep;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.result.WorkbookResult;
@@ -19,7 +20,7 @@ final class FullXssfStepLoop {
 
   Optional<WorkbookResult> execute(
       FullXssfWorkflowState state, dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode) {
-    List<WorkbookStep> steps = state.executionContext().request().steps();
+    List<PreparedStep> steps = state.plan().steps();
     for (int stepIndex = 0; stepIndex < steps.size(); stepIndex++) {
       Optional<WorkbookResult> failure =
           executeStep(state, executionMode, stepIndex, steps.get(stepIndex));
@@ -34,7 +35,8 @@ final class FullXssfStepLoop {
       FullXssfWorkflowState state,
       dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode,
       int stepIndex,
-      WorkbookStep step) {
+      PreparedStep prepared) {
+    WorkbookStep step = prepared.authoredStep();
     FullXssfCalculationCheckpoint.Result checkpoint =
         calculationCheckpoint.beforeStep(
             state.executionContext(),
@@ -59,7 +61,7 @@ final class FullXssfStepLoop {
               state.executionContext().request().assertionMode(),
               state.executionContext().planAssertions(),
               state.executionContext().inspections(),
-              step,
+              prepared,
               state.formulaOrigins(),
               stepIndex);
       recordStepResult(state, collectedFailure, stepIndex, step, stepHandle);

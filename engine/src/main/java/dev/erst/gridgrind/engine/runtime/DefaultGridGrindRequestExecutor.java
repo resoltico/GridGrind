@@ -97,7 +97,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             null,
             null);
       }
-      WorkbookPlan resolvedRequest = preflight.preparedPlan();
+      var resolvedPlan = preflight.preparedPlan();
+      WorkbookPlan resolvedRequest = resolvedPlan.request();
       ExecutionInputBindings preparedBindings = preflight.preparedBindings();
       inputResolutionPhase.succeed();
 
@@ -113,7 +114,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             journal,
             () ->
                 workflowSupport.executeDirectEventReadWorkflow(
-                    protocolVersion, resolvedRequest, warnings, journal, preparedBindings));
+                    protocolVersion, resolvedPlan, warnings, journal, preparedBindings));
       }
       if (executionMode instanceof ExecutionModeSpec.StreamingWrite) {
         return responseSupport.guardUnexpectedRuntime(
@@ -123,7 +124,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             () ->
                 workflowSupport.executeStreamingWorkflow(
                     protocolVersion,
-                    resolvedRequest,
+                    resolvedPlan,
                     executionMode,
                     warnings,
                     journal,
@@ -164,7 +165,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           () ->
               workflowSupport.executeWorkbookWorkflow(
                   protocolVersion,
-                  resolvedRequest,
+                  resolvedPlan,
                   workbook,
                   executionMode,
                   warnings,

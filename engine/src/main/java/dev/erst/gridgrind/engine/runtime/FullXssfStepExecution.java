@@ -7,7 +7,8 @@ import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
-import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.PreparedMutationStep;
+import dev.erst.gridgrind.core.plan.PreparedStep;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -35,19 +36,19 @@ final class FullXssfStepExecution {
       AssertionModeSpec assertionMode,
       List<AssertionResult> assertions,
       List<InspectionResult> inspections,
-      WorkbookStep step,
+      PreparedStep step,
       FormulaOriginTracker formulaOrigins,
       int stepIndex)
       throws IOException, AssertionFailedException {
     return switch (step) {
-      case MutationStep mutationStep -> {
+      case PreparedMutationStep mutationStep -> {
         stepSupport
             .mutationStepExecutor()
             .execute(
                 workbook,
                 mutationStep,
                 formulaOrigins,
-                ExecutionStepContextFactory.referenceFor(stepIndex, mutationStep));
+                ExecutionStepContextFactory.referenceFor(stepIndex, mutationStep.authoredStep()));
         yield java.util.Optional.empty();
       }
       case AssertionStep assertionStep -> {

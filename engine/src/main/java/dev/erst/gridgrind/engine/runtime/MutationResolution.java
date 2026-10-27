@@ -46,7 +46,11 @@ import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.PreparedMutationAction;
+import dev.erst.gridgrind.core.plan.PreparedMutationStep;
+import dev.erst.gridgrind.core.plan.PreparedStep;
 import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
@@ -62,7 +66,21 @@ import java.util.Optional;
 final class MutationResolution {
   private MutationResolution() {}
 
-  static ResolvedMutationAction resolve(MutationAction action, ExecutionInputBindings bindings) {
+  static ResolvedPlan preparePlan(dev.erst.gridgrind.core.plan.WorkbookPlan request) {
+    return new ResolvedPlan(
+        request, request.steps().stream().map(MutationResolution::prepareStep).toList());
+  }
+
+  static PreparedStep prepareStep(dev.erst.gridgrind.core.plan.WorkbookStep step) {
+    return switch (step) {
+      case dev.erst.gridgrind.core.plan.MutationStep mutation ->
+          new PreparedMutationStep(mutation, prepare(mutation.action()));
+      case dev.erst.gridgrind.core.plan.InspectionStep inspection -> inspection;
+      case dev.erst.gridgrind.core.plan.AssertionStep assertion -> assertion;
+    };
+  }
+
+  static PreparedMutationAction prepare(MutationAction action) {
     return switch (action) {
       case ResolvedMutationAction shared -> shared;
       case CellMutationAction.SetCell cell ->
@@ -107,12 +125,21 @@ final class MutationResolution {
       case WorkbookMutationAction.SetPrintLayout layout ->
           new ResolvedMutationAction.SetPrintLayout(
               MutationResolution.toResolvedPrintLayout(layout.printLayout()));
+      case WorkbookMutationAction.SetSheetProtection protection -> protection;
+      case WorkbookMutationAction.SetWorkbookProtection protection -> protection;
+    };
+  }
+
+  static ResolvedMutationAction finish(
+      PreparedMutationAction action, ExecutionInputBindings bindings) {
+    return switch (action) {
+      case ResolvedMutationAction resolved -> resolved;
       case WorkbookMutationAction.SetSheetProtection protection ->
           new ResolvedMutationAction.SetSheetProtection(
               protection.protection(), protection.passwordRef().map(bindings::resolveSecret));
       case WorkbookMutationAction.SetWorkbookProtection protection ->
           new ResolvedMutationAction.SetWorkbookProtection(
-              MutationResolution.toResolvedWorkbookProtection(protection.protection(), bindings));
+              toResolvedWorkbookProtection(protection.protection(), bindings));
     };
   }
 

@@ -59,7 +59,7 @@ class ExecutionDirectEventReadWorkflowTest {
               WorkbookResult.Failure.class,
               workflow.execute(
                   ProtocolVersion.CURRENT,
-                  request,
+                  MutationResolution.preparePlan(request),
                   List.of(),
                   ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
                   rawBindings.withRequestPathAccess(access)));

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.PreparedMutationStep;
 import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.ResolvedTarget;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
@@ -26,26 +27,28 @@ final class FormulaAwareMutationStepExecutor {
 
   void execute(
       ExcelWorkbook workbook,
-      MutationStep mutationStep,
+      PreparedMutationStep prepared,
       FormulaOriginTracker formulaOrigins,
       StepReference authoringStep)
       throws IOException {
+    MutationStep mutationStep = prepared.authoredStep();
     ResolvedStep step =
         new ResolvedStep(
             (ResolvedTarget)
                 selectorResolver.resolveMutationTarget(
                     workbook, mutationStep.target(), mutationStep.action()),
-            MutationResolution.resolve(mutationStep.action(), bindings));
+            MutationResolution.finish(prepared.action(), bindings));
     FormulaOriginTracker.FormulaWrites writes = formulaOrigins.plannedWrites(workbook, step);
     ResolvedMutationExecutor.apply(workbook, step);
     formulaOrigins.record(workbook, writes, authoringStep);
   }
 
-  void executeStreaming(ExcelStreamingWorkbookWriter writer, MutationStep mutationStep)
+  void executeStreaming(ExcelStreamingWorkbookWriter writer, PreparedMutationStep prepared)
       throws IOException {
+    MutationStep mutationStep = prepared.authoredStep();
     writer.apply(
         new ResolvedStep(
             (ResolvedTarget) mutationStep.target(),
-            MutationResolution.resolve(mutationStep.action(), bindings)));
+            MutationResolution.finish(prepared.action(), bindings)));
   }
 }

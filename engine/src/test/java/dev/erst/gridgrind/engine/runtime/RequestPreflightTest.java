@@ -424,7 +424,11 @@ class RequestPreflightTest {
     assertFalse(failed.preparedRequest().isPresent());
     assertInstanceOf(ProblemContext.ResolveInputs.class, failed.problems().getFirst().context());
     assertThrows(IllegalStateException.class, failed::requirePreparedRequest);
-    assertEquals(request, new RequestPreflight.PreparedRequest(request, bindings).request());
+    assertEquals(
+        request,
+        new RequestPreflight.PreparedRequest(MutationResolution.preparePlan(request), bindings)
+            .plan()
+            .request());
     assertThrows(
         IllegalArgumentException.class,
         () -> new RequestPreflight.Result(java.util.Optional.empty(), List.of(), List.of()));
@@ -432,7 +436,9 @@ class RequestPreflightTest {
         IllegalArgumentException.class,
         () ->
             new RequestPreflight.Result(
-                java.util.Optional.of(new RequestPreflight.PreparedRequest(request, bindings)),
+                java.util.Optional.of(
+                    new RequestPreflight.PreparedRequest(
+                        MutationResolution.preparePlan(request), bindings)),
                 failed.problems(),
                 List.of()));
   }

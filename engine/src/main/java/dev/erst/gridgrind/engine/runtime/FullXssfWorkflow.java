@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
@@ -61,14 +61,14 @@ final class FullXssfWorkflow {
 
   WorkbookResult execute(
       ProtocolVersion protocolVersion,
-      WorkbookPlan request,
+      ResolvedPlan plan,
       ExcelWorkbook workbook,
       dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
     FullXssfWorkflowState state =
-        new FullXssfWorkflowState(protocolVersion, request, workbook, warnings, journal, bindings);
+        new FullXssfWorkflowState(protocolVersion, plan, workbook, warnings, journal, bindings);
     FullXssfHostAcceptance.Context acceptance;
     try {
       acceptance = hostAcceptance.capture(state, bindings);

@@ -125,7 +125,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
   record SetSheetProtection(
       SheetProtectionSettings protection,
       Optional<dev.erst.gridgrind.core.source.SecretReference> passwordRef)
-      implements WorkbookMutationAction {
+      implements WorkbookMutationAction, PreparedMutationAction {
     /** Enables sheet protection without applying a password hash. */
     public SetSheetProtection(SheetProtectionSettings protection) {
       this(protection, Optional.empty());
@@ -154,7 +154,7 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       targetSelectors = {WorkbookSelector.class},
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.WORKBOOK_MUTATION)
   record SetWorkbookProtection(WorkbookProtectionSpec protection)
-      implements WorkbookMutationAction {
+      implements WorkbookMutationAction, PreparedMutationAction {
     public SetWorkbookProtection {
       Objects.requireNonNull(protection, "protection must not be null");
     }

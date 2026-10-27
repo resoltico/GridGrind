@@ -288,8 +288,9 @@ class DefaultGridGrindRequestExecutorTestSupport
   static ResolvedStep command(Selector target, MutationAction action) {
     return new ResolvedStep(
         (ResolvedTarget) target,
-        MutationResolution.resolve(
-            action, ExecutionInputBindingsFixtureSupport.bindings(Path.of("."))));
+        MutationResolution.finish(
+            MutationResolution.prepare(action),
+            ExecutionInputBindingsFixtureSupport.bindings(Path.of("."))));
   }
 
   static ResolvedInspectionStep readCommand(InspectionStep step) {

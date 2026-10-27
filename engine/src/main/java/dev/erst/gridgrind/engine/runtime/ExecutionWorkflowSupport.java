@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
@@ -55,33 +55,33 @@ final class ExecutionWorkflowSupport {
 
   WorkbookResult executeWorkbookWorkflow(
       ProtocolVersion protocolVersion,
-      WorkbookPlan request,
+      ResolvedPlan plan,
       ExcelWorkbook workbook,
       ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
     return fullXssfWorkflow.execute(
-        protocolVersion, request, workbook, executionMode, warnings, journal, bindings);
+        protocolVersion, plan, workbook, executionMode, warnings, journal, bindings);
   }
 
   WorkbookResult executeDirectEventReadWorkflow(
       ProtocolVersion protocolVersion,
-      WorkbookPlan request,
+      ResolvedPlan plan,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
-    return directEventReadWorkflow.execute(protocolVersion, request, warnings, journal, bindings);
+    return directEventReadWorkflow.execute(protocolVersion, plan, warnings, journal, bindings);
   }
 
   WorkbookResult executeStreamingWorkflow(
       ProtocolVersion protocolVersion,
-      WorkbookPlan request,
+      ResolvedPlan plan,
       ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
     return streamingWorkflow.execute(
-        protocolVersion, request, executionMode, warnings, journal, bindings);
+        protocolVersion, plan, executionMode, warnings, journal, bindings);
   }
 }

@@ -6,7 +6,9 @@ import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
-import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.PreparedMutationStep;
+import dev.erst.gridgrind.core.plan.PreparedStep;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -62,15 +64,16 @@ final class ExecutionStreamingWorkflow {
 
   WorkbookResult execute(
       ProtocolVersion protocolVersion,
-      WorkbookPlan request,
+      ResolvedPlan plan,
       ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
+    WorkbookPlan request = plan.request();
     CollectedAssertionFailures collectedAssertionFailures = new CollectedAssertionFailures();
     StreamingWorkflowContext workflowContext =
         StreamingWorkflowContext.create(
-            protocolVersion, request, executionMode, warnings, journal, bindings);
+            protocolVersion, plan, executionMode, warnings, journal, bindings);
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
     @Nullable Path materializedPath = null;
@@ -214,7 +217,7 @@ final class ExecutionStreamingWorkflow {
       StreamingWorkflowContext workflowContext,
       CalculationReport calculation,
       CollectedAssertionFailures collectedAssertionFailures) {
-    List<WorkbookStep> steps = workflowContext.request().steps();
+    List<PreparedStep> steps = workflowContext.plan().steps();
     for (int stepIndex = 0; stepIndex < steps.size(); stepIndex++) {
       java.util.Optional<WorkbookResult> failure =
           executeStreamingStep(
@@ -237,12 +240,13 @@ final class ExecutionStreamingWorkflow {
       CalculationReport calculation,
       CollectedAssertionFailures collectedAssertionFailures,
       int stepIndex,
-      WorkbookStep step) {
+      PreparedStep prepared) {
+    WorkbookStep step = prepared.authoredStep();
     ExecutionJournalRecorder.StepHandle stepHandle =
         workflowContext.journal().beginStep(stepIndex, step);
     try {
       java.util.Optional<AssertionFailedException> collectedFailure =
-          executeStreamingStep(writer, workflowContext, step);
+          executeStreamingStep(writer, workflowContext, prepared);
       recordStreamingStepResult(
           workflowContext,
           collectedAssertionFailures,
@@ -283,10 +287,10 @@ final class ExecutionStreamingWorkflow {
   private java.util.Optional<AssertionFailedException> executeStreamingStep(
       ExcelStreamingWorkbookWriter writer,
       StreamingWorkflowContext workflowContext,
-      WorkbookStep step)
+      PreparedStep step)
       throws IOException, AssertionFailedException {
     return switch (step) {
-      case MutationStep mutationStep -> {
+      case PreparedMutationStep mutationStep -> {
         stepSupport.mutationStepExecutor().executeStreaming(writer, mutationStep);
         yield java.util.Optional.empty();
       }

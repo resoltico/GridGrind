@@ -71,7 +71,7 @@ class FullXssfWorkflowTest {
               WorkbookResult.Failure.class,
               workflow.execute(
                   ProtocolVersion.CURRENT,
-                  request,
+                  MutationResolution.preparePlan(request),
                   workbook,
                   new ExecutionModeSpec.FullXssf(),
                   new ArrayList<>(),
@@ -128,7 +128,7 @@ class FullXssfWorkflowTest {
           WorkbookResult.Failure.class,
           workflow.execute(
               ProtocolVersion.CURRENT,
-              request,
+              MutationResolution.preparePlan(request),
               workbook,
               new ExecutionModeSpec.FullXssf(),
               new ArrayList<>(),
@@ -158,7 +158,7 @@ class FullXssfWorkflowTest {
       FullXssfWorkflowState state =
           new FullXssfWorkflowState(
               ProtocolVersion.CURRENT,
-              request,
+              MutationResolution.preparePlan(request),
               workbook,
               new ArrayList<>(),
               ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),

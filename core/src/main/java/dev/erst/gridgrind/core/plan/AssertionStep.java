@@ -16,7 +16,7 @@ public record AssertionStep(
         StepId stepId,
     Selector target,
     Assertion assertion)
-    implements WorkbookStep {
+    implements WorkbookStep, PreparedStep {
   public AssertionStep {
     java.util.Objects.requireNonNull(stepId, "stepId must not be null");
     java.util.Objects.requireNonNull(target, "target must not be null");
@@ -26,5 +26,10 @@ public record AssertionStep(
   @Override
   public String stepKind() {
     return GridGrindProtocolTypeNames.workbookStepTypeName(AssertionStep.class);
+  }
+
+  @Override
+  public WorkbookStep authoredStep() {
+    return this;
   }
 }

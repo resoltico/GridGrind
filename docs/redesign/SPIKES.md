@@ -2816,3 +2816,33 @@ Inventories: converter100→0, main112120→112123, test150527→150534; blank27
 runtime snapshots2 unchanged. Necessary path and credential resolution moved to ExecutionRequestPaths;
 the zero converter count does not claim that materialization work vanished. ResolvedPlan and Phase4
 feature packaging/backends remain open; engine-excel-types still lists the adapters to reorganize.
+
+### WP-40 executable resolved plan
+
+Preflight now produces core ResolvedPlan with owned, ordered prepared steps; full-XSSF, streaming-write
+and direct-event workflows actually consume that seam. Source-free inspection/assertion/action records
+retain identity. Only materialized mutation operands receive PreparedMutationStep, with authored
+metadata retained for journal/error identity. Per-sibling preparation remains inside the independent
+failure collector, preserving source-workbook checks and cleanup. PreparedMutationAction shares the
+existing resolved family and two protection specs; secret references resolve only when their operation
+executes. Workbook-dependent selectors still resolve per step after earlier mutations. No duplicate
+65-action hierarchy, fake bindings, Object payload maps or compatibility execution overloads added.
+
+Core checks cover order/identity/list ownership and action-family mismatch. A real native execution
+test verifies materialized UTF8 operands after source deletion, delayed secret resolution, char-array
+wiping, saved-cell persistence and actual workbook password validation after POI reopening. Initial
+compile failed on one unmigrated direct-event fixture; corrected. Two new-test setup failures correctly
+rejected absent secret/file grants; explicit trusted fixture grants fixed them, with production authority
+unchanged and both failure XMLs retained externally. Focused execution test passes14s. Module checks
+pass5m12s, all94 retained seeds pass24s, required root ./gradlew check passes5m15s: core390, JSON353,
+engine1365 plus14 parity, CLI588, architecture14, zero failures/errors/skips. All143 goldens unchanged.
+No active campaigns. Baseline diff empty.
+
+The intermediate module check was unnecessarily broad and ran the CLI suite before the required root
+check. Existing JaCoCo report→clean-execution-data wiring forced fresh tests again. This duplication is
+not recommended practice: subsequent iteration should use focused tasks and one full check per commit;
+WP-61 must remove forced rerun wiring while preserving valid coverage evidence.
+
+Inventories: main112123→112246, test150534→150723; converters0/blank279/Support194/definitions0/runtime
+snapshots2 unchanged. WP-40 still has formula capability/target and preview-row mirrors to drain, and
+engine-excel-types remains nonempty until the WP-41 adapter package reorganization. No completion claim.

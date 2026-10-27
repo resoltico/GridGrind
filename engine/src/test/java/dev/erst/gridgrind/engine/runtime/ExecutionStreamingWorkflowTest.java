@@ -67,7 +67,7 @@ class ExecutionStreamingWorkflowTest {
             WorkbookResult.Failure.class,
             workflow.execute(
                 ProtocolVersion.CURRENT,
-                request,
+                MutationResolution.preparePlan(request),
                 new ExecutionModeSpec.StreamingWrite(),
                 List.of(),
                 ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
@@ -101,7 +101,7 @@ class ExecutionStreamingWorkflowTest {
             WorkbookResult.Failure.class,
             workflow.execute(
                 ProtocolVersion.CURRENT,
-                request,
+                MutationResolution.preparePlan(request),
                 new ExecutionModeSpec.StreamingWrite(),
                 List.of(),
                 ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),

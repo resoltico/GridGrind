@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.DiagnosticOrder;
@@ -65,7 +66,7 @@ final class RequestPreflight {
       if (problems.isEmpty()) {
         addGrantViolations(request, locatedBindings, problems);
       }
-      Optional<WorkbookPlan> resolvedRequest = Optional.empty();
+      Optional<ResolvedPlan> resolvedRequest = Optional.empty();
       if (problems.isEmpty()) {
         resolvedRequest =
             RequestPreflightInputResolver.resolve(request, locatedBindings, stepResolver, problems);
@@ -168,8 +169,8 @@ final class RequestPreflight {
           () -> new IllegalStateException("A failed preflight cannot produce a resolved request"));
     }
 
-    WorkbookPlan preparedPlan() {
-      return requirePreparedRequest().request();
+    ResolvedPlan preparedPlan() {
+      return requirePreparedRequest().plan();
     }
 
     ExecutionInputBindings preparedBindings() {
@@ -182,10 +183,10 @@ final class RequestPreflight {
     }
   }
 
-  record PreparedRequest(WorkbookPlan request, ExecutionInputBindings bindings)
+  record PreparedRequest(ResolvedPlan plan, ExecutionInputBindings bindings)
       implements AutoCloseable {
     PreparedRequest {
-      Objects.requireNonNull(request, "request must not be null");
+      Objects.requireNonNull(plan, "plan must not be null");
       Objects.requireNonNull(bindings, "bindings must not be null");
     }
 
