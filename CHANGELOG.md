@@ -1,38 +1,22 @@
 # Changelog
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.md](docs/CHANGELOG_ARCHIVE.md).
+Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](CHANGELOG_ARCHIVE.md).
 
 ## [Unreleased]
 
-### Breaking foundations redesign
-
-- Java 26 modules are core, json, engine and cli, with executable architecture verification.
-- One canonical spec/patch/report/resolved model and typed wire scalars replace engine mirrors.
-- Protocol version is integer 1; variant identity uses type/status, omission defaults come from metadata,
-  and explicit null is rejected rather than treated as omission.
-- Explicit run/doctor/catalog/schema/recipe/template/help/version/license commands replace flat flags.
-- Execution uses one host-owned grant with exact inputs, operations, targets, secrets and publication.
-- Root Gradle owns deterministic fuzz replay, delivery checks and advisory coverage/mutation reports.
-- Limits, schemas, operation references and problem documentation derive from canonical metadata.
-- Local builds use 0.0.0-dev; versioned tags drive verified GitHub and multi-architecture releases.
-
-
-### Added
-
-- Added behaviour snapshots for every shipped example and recipe, discovery and diagnostic commands, and persisted workbook facts, checked through both the Java CLI entry point and packaged JAR.
-
-### Changed
-
-- Switched GridGrind-owned files from MIT to the Mozilla Public License 2.0 (`MPL-2.0`), preserving third-party licenses and copyright notices; updated executable source-availability notices, JAR metadata, CLI legal output, and patent guidance. Copies already distributed under MIT retain those permissions.
-- Replaced custom file-size, complexity, and duplication gates with standard Java quality tools and an executable architecture rule requiring concrete wire variants to be records.
-- Made coverage and mutation scores advisory. Coverage reports remain part of verification, and weekly/manual PIT reporting targets the model and engine without blocking pull requests.
-- Consolidated build-task implementations and conventions in Kotlin, with the included build deriving its Java target from the shared toolchain pin.
-- Moved runtime and XSSF parity tests into the engine and replaced the executor verification project with focused architecture rules and negative controls.
-
-### Fixed
-
-- Fixed local discovery verification with macOS's ambient Python 3 runtime.
+- JSON protocolVersion is now integer 1, replacing V3; regenerate requests from current templates and update consumers. Wire variants use type or status.
+- CellValueSpec variants use value for scalar or source payloads and runs for rich text; update request producers. Explicit null is rejected instead of applying omission defaults.
+- CLI automation must use explicit run, doctor, catalog, schema, recipe and template subcommands; flat command flags and implicit stdin selection are removed. See [CLI](docs/CLI.md).
+- Java integrations use core specs, patches, reports, typed scalar records and the canonical grant; update model imports and constructors. Engine model mirrors are removed.
+- GridGrind-owned code uses MPL-2.0, retaining third-party terms. Previously distributed MIT copies retain their permissions; review source-distribution duties in [LICENSE](LICENSE).
+- Request, grant and response JSON Schemas are available through schema subcommands; structured intake diagnostics preserve independent valid fragments and exact JSON locations.
+- Pure authoring, recipes and discovery live in core; JSON codecs and schema handling live in json, allowing model-only Java consumers to omit the workbook engine.
+- Build logic uses Kotlin and the shared Java 26 target. Runtime and POI parity tests live in engine; architecture-tests verifies product boundaries and record wire leaves.
+- Coverage and mutation scores are advisory; custom source-shape budgets are removed. Run ./gradlew mutationReport for the configured mutation scopes.
+- Fuzzing uses the root Gradle build: check replays committed seeds; ./gradlew fuzz selects opt-in active campaigns. The nested Jazzer build and its operator scripts are removed.
+- check.sh uses one Gradle task graph for deterministic checks, coverage and distributions. Docker and contributor-container suites are separate Gradle tasks.
+- Local builds use 0.0.0-dev. Version tags drive verified releases and multi-architecture containers; release notes require one nonempty, dated changelog entry matching the tag.
 
 ## [0.76.0] - 2026-09-09
 

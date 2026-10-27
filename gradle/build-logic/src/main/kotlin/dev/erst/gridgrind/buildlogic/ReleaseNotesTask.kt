@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.buildlogic
 
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
@@ -27,6 +29,14 @@ abstract class ReleaseNotesTask : DefaultTask() {
         val header = "## [" + version + "]"
         val sections = lines.indices.filter { lines[it].startsWith(header) }
         if (sections.size != 1) throw GradleException("CHANGELOG.md must contain exactly one " + header + " section")
+        val heading = lines[sections.single()]
+        val datedHeading = Regex(Regex.escape(header) + " - ([0-9]{4}-[0-9]{2}-[0-9]{2})").matchEntire(heading)
+            ?: throw GradleException("CHANGELOG.md release heading must be " + header + " - YYYY-MM-DD")
+        try {
+            LocalDate.parse(datedHeading.groupValues[1])
+        } catch (exception: DateTimeParseException) {
+            throw GradleException("CHANGELOG.md release heading has an invalid calendar date: " + heading, exception)
+        }
         val body = lines.drop(sections.single() + 1).takeWhile { !it.startsWith("## ") }.joinToString("\n").trim()
         if (body.isEmpty()) throw GradleException("CHANGELOG.md release section is empty: " + version)
         val output = notes.get().asFile

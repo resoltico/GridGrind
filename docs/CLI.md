@@ -1,7 +1,7 @@
 # Command-line interface
 
 GridGrind accepts an explicit command. Running it without arguments displays overview help.
-Old command flags are rejected; there are no aliases.
+Only the commands and options below are accepted; command aliases are not supported.
 
     gridgrind run --request <path|-> --grant <path> [--response <path>] [--execution-root <dir>] [--temp-root <dir>] [--secrets-provider <path>] [--pretty]
     gridgrind doctor --request <path|-> [--grant <path>] [--response <path>] [--execution-root <dir>] [--temp-root <dir>] [--secrets-provider <path>] [--pretty]

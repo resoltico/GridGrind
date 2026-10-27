@@ -36,10 +36,12 @@ stored labels and unsupported details without authoring them as new valid identi
 ## Publication and evidence
 
 Publication requires matching host authority. The engine stages an artifact, checks acceptance,
-then publishes through the admitted descriptor/collision policy. Failure cannot claim a written
-artifact. Existing-source security dispositions are explicit. Response publication is separate
-from workbook publication; if it fails, the already-rendered primary payload can fall back to
-stdout with a structured stderr notice.
+then publishes through the admitted descriptor/collision policy. The response distinguishes
+NOT_ATTEMPTED, proven NOT_PUBLISHED, PUBLISHED and UNCERTAIN destination outcomes. An UNCERTAIN
+outcome requires inspecting the destination before retrying. A failed execution alone does not
+prove that the destination is unchanged. Existing-source security dispositions are explicit.
+Response publication is separate from workbook publication; if it fails, the already-rendered
+primary payload can fall back to stdout with a structured stderr notice.
 
 Journals record execution evidence. VERBOSE progress goes to the diagnostic stream rather than
 duplicating events in the primary response. Runtime before/after acceptance snapshots, package

@@ -35,8 +35,7 @@ class DocumentationTest {
     for (Path file : markdown()) {
       String text = Files.readString(file);
       if (text.startsWith("<!-- Generated")
-          || "CHANGELOG_ARCHIVE.md".equals(file.getFileName().toString())
-          || file.startsWith(ROOT.resolve("docs/redesign"))) continue;
+          || "CHANGELOG_ARCHIVE.md".equals(file.getFileName().toString())) continue;
       var matcher = JSON.matcher(text);
       while (matcher.find()) {
         byte[] input = matcher.group(1).getBytes(StandardCharsets.UTF_8);
@@ -110,8 +109,13 @@ class DocumentationTest {
 
   private static List<Path> markdown() throws java.io.IOException {
     List<Path> files = new ArrayList<>();
-    for (String name : List.of("README.md", "CHANGELOG.md", "PATENTS.md", "core/VOCABULARY.md"))
-      files.add(ROOT.resolve(name));
+    for (String name :
+        List.of(
+            "README.md",
+            "CHANGELOG.md",
+            "CHANGELOG_ARCHIVE.md",
+            "PATENTS.md",
+            "core/VOCABULARY.md")) files.add(ROOT.resolve(name));
     try (var paths = Files.walk(ROOT.resolve("docs"))) {
       paths.filter(path -> path.toString().endsWith(".md")).sorted().forEach(files::add);
     }

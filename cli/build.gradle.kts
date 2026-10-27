@@ -273,7 +273,7 @@ val documentationTest = tasks.register<Test>("documentationTest") {
     useJUnitPlatform { includeTags("documentation") }
     systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
     inputs.dir(rootProject.layout.projectDirectory.dir("docs")).withPropertyName("documentation")
-    inputs.files(rootProject.file("README.md"), rootProject.file("CHANGELOG.md"), rootProject.file("PATENTS.md"), rootProject.file("core/VOCABULARY.md"))
+    inputs.files(rootProject.file("README.md"), rootProject.file("CHANGELOG.md"), rootProject.file("CHANGELOG_ARCHIVE.md"), rootProject.file("PATENTS.md"), rootProject.file("core/VOCABULARY.md"))
         .withPropertyName("entryDocuments")
     extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> { isEnabled = false }
 }

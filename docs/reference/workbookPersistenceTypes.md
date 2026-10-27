@@ -19,7 +19,7 @@ Keep the workbook in memory only. The response persistence.type echoes NONE.
 
 ## OVERWRITE
 
-Overwrite the opened source workbook at source.path. No path field is accepted on OVERWRITE; the write target is the same path opened by the EXISTING source. persistence.security is required and declares both final OOXML encryption and signature dispositions. The response persistence.type echoes OVERWRITE, includes sourcePath (the original source path string) whenever an EXISTING source path was available, and otherwise omits sourcePath instead of inventing one. It carries write.status=WRITTEN with executionPath after a successful save or write.status=NOT_WRITTEN when the run fails before any file is updated.
+Overwrite the opened source workbook at source.path. No path field is accepted on OVERWRITE; the write target is the same path opened by the EXISTING source. persistence.security is required and declares both final OOXML encryption and signature dispositions. The response persistence.type echoes OVERWRITE, includes sourcePath (the original source path string) whenever an EXISTING source path was available, and otherwise omits sourcePath instead of inventing one. Its publication.status reports NOT_ATTEMPTED, NOT_PUBLISHED, PUBLISHED or UNCERTAIN. PUBLISHED includes executionPath, SHA-256, byte size, staged-artifact verification and durability evidence; UNCERTAIN requires destination inspection before any retry.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ Overwrite the opened source workbook at source.path. No path field is accepted o
 ```json
 {
   "id" : "OVERWRITE",
-  "summary" : "Overwrite the opened source workbook at source.path. No path field is accepted on OVERWRITE; the write target is the same path opened by the EXISTING source. persistence.security is required and declares both final OOXML encryption and signature dispositions. The response persistence.type echoes OVERWRITE, includes sourcePath (the original source path string) whenever an EXISTING source path was available, and otherwise omits sourcePath instead of inventing one. It carries write.status=WRITTEN with executionPath after a successful save or write.status=NOT_WRITTEN when the run fails before any file is updated.",
+  "summary" : "Overwrite the opened source workbook at source.path. No path field is accepted on OVERWRITE; the write target is the same path opened by the EXISTING source. persistence.security is required and declares both final OOXML encryption and signature dispositions. The response persistence.type echoes OVERWRITE, includes sourcePath (the original source path string) whenever an EXISTING source path was available, and otherwise omits sourcePath instead of inventing one. Its publication.status reports NOT_ATTEMPTED, NOT_PUBLISHED, PUBLISHED or UNCERTAIN. PUBLISHED includes executionPath, SHA-256, byte size, staged-artifact verification and durability evidence; UNCERTAIN requires destination inspection before any retry.",
   "fields" : [ {
     "name" : "security",
     "requirement" : "OPTIONAL",
@@ -45,7 +45,7 @@ Overwrite the opened source workbook at source.path. No path field is accepted o
 
 ## SAVE_AS
 
-Save the workbook to one .xlsx path with an explicit ifExists collision policy. ifExists=REJECT requires the target path to be absent. ifExists=REPLACE enables create-or-replace. Existing-source writes require persistence.security to declare both final OOXML encryption and signature dispositions; NEW writes default to NONE on both axes when security is omitted. The response persistence.type echoes SAVE_AS, includes requestedPath (the literal path from the request), and carries write.status=WRITTEN with executionPath (the absolute normalized path where the file was written) or write.status=NOT_WRITTEN when the run fails before the target file is created. Missing parent directories are created automatically.
+Save the workbook to one .xlsx path with an explicit ifExists collision policy. ifExists=REJECT requires the target path to be absent. ifExists=REPLACE enables create-or-replace. Existing-source writes require persistence.security to declare both final OOXML encryption and signature dispositions; NEW writes default to NONE on both axes when security is omitted. The response persistence.type echoes SAVE_AS, includes requestedPath (the literal path from the request), and reports publication.status as NOT_ATTEMPTED, NOT_PUBLISHED, PUBLISHED or UNCERTAIN. PUBLISHED includes executionPath, SHA-256, byte size, staged-artifact verification and durability evidence; UNCERTAIN requires destination inspection before any retry. Missing parent directories are created automatically.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -56,7 +56,7 @@ Save the workbook to one .xlsx path with an explicit ifExists collision policy. 
 ```json
 {
   "id" : "SAVE_AS",
-  "summary" : "Save the workbook to one .xlsx path with an explicit ifExists collision policy. ifExists=REJECT requires the target path to be absent. ifExists=REPLACE enables create-or-replace. Existing-source writes require persistence.security to declare both final OOXML encryption and signature dispositions; NEW writes default to NONE on both axes when security is omitted. The response persistence.type echoes SAVE_AS, includes requestedPath (the literal path from the request), and carries write.status=WRITTEN with executionPath (the absolute normalized path where the file was written) or write.status=NOT_WRITTEN when the run fails before the target file is created. Missing parent directories are created automatically.",
+  "summary" : "Save the workbook to one .xlsx path with an explicit ifExists collision policy. ifExists=REJECT requires the target path to be absent. ifExists=REPLACE enables create-or-replace. Existing-source writes require persistence.security to declare both final OOXML encryption and signature dispositions; NEW writes default to NONE on both axes when security is omitted. The response persistence.type echoes SAVE_AS, includes requestedPath (the literal path from the request), and reports publication.status as NOT_ATTEMPTED, NOT_PUBLISHED, PUBLISHED or UNCERTAIN. PUBLISHED includes executionPath, SHA-256, byte size, staged-artifact verification and durability evidence; UNCERTAIN requires destination inspection before any retry. Missing parent directories are created automatically.",
   "fields" : [ {
     "name" : "path",
     "requirement" : "REQUIRED",

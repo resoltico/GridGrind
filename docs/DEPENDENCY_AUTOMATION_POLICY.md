@@ -14,7 +14,7 @@ GridGrind requires an explicit human decision for every Dependabot update. Autom
 
 - Never merge a Dependabot PR without a successful CI `Gate` check.
 - A Docker base-image update also requires a successful `Docker smoke` check.
-- A Gradle update that changes Apache POI, Log4j, or Jackson also requires the `Check` job that exercises CLI-contract verification and Jazzer regression.
+- A Gradle update that changes Apache POI, Log4j, or Jackson also requires the `Check` job that exercises deterministic tests, the golden corpus and fuzz seed replay.
 - A GitHub Actions update requires the pinned workflow SHA to match the adopted release tag; verify it with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`.
 - Before ending a release session, every open Dependabot PR must be merged, closed with an explicit reason and branch deletion, or deliberately kept open with a still-valid reason recorded on the PR.
 - Never retag or amend a published release to absorb a dependency update. Post-publication dependency work lands through a new `main` pull request.

@@ -1,7 +1,7 @@
 # Changelog Archive
 
 Older GridGrind release history lives here once the root `CHANGELOG.md` rotates older entries out of the live release ledger.
-For the current unreleased stream and the most recent releases, use the root [CHANGELOG.md](../CHANGELOG.md).
+For the current unreleased stream and the most recent releases, use the root [CHANGELOG.md](CHANGELOG.md).
 
 ## [0.68.0] - 2026-06-12
 
@@ -1328,7 +1328,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - `--help` banner changed from `GridGrind CLI <version>` to `GridGrind <version>` to match
   the product name.
 - Promoted the Apache POI XSSF capability inventory into a public reference at
-  [docs/POI_EXCEL_CAPABILITY_INVENTORY.md](./reference/README.md) and rewrote
+  [docs/POI_EXCEL_CAPABILITY_INVENTORY.md](docs/reference/README.md) and rewrote
   it around the shipped `.xlsx` contract instead of internal parity-phase language.
 - README now links directly to the public capability inventory alongside the operations,
   quick-reference, and limitations docs.
@@ -1355,7 +1355,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
   `persistence.security.signature`, and factual `GET_PACKAGE_SECURITY` readback for package
   encryption and package-signature state.
 - Added `examples/package-security-create-request.json`
-  and [examples/package-security-inspect-request.json](../examples/package-security-inspect-request.json),
+  and [examples/package-security-inspect-request.json](examples/package-security-inspect-request.json),
   a paired public example flow for encrypted workbook authoring followed by factual package-security
   inspection.
 - Added a promoted Jazzer protocol-request seed for the package-security request surface so
@@ -1386,7 +1386,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - Added top-level `executionMode` request support for low-memory `.xlsx` workflows:
   `readMode: EVENT_READ` for summary-only event-model reads and `writeMode: STREAMING_WRITE` for
   append-oriented SXSSF authoring on `NEW` workbooks.
-- Added [examples/large-file-modes-request.json](../examples/large-file-modes-request.json), a
+- Added [examples/large-file-modes-request.json](examples/large-file-modes-request.json), a
   runnable example covering `executionMode`, `STREAMING_WRITE`, and summary-only `EVENT_READ`
   readback.
 
@@ -1413,7 +1413,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 
 - Added limited XSSF pivot-table parity to the public `.xlsx` contract with `SET_PIVOT_TABLE`,
   `DELETE_PIVOT_TABLE`, `GET_PIVOT_TABLES`, and `ANALYZE_PIVOT_TABLE_HEALTH`.
-- Added [examples/pivot-request.json](../examples/pivot-request.json), a runnable example covering
+- Added [examples/pivot-request.json](examples/pivot-request.json), a runnable example covering
   range-backed, named-range-backed, and table-backed pivot authoring plus factual pivot readback
   and pivot-health analysis.
 - Added the matching promoted Jazzer protocol-request seed so the public pivot example is
@@ -1445,7 +1445,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 
 ### Added
 
-- Added [examples/chart-request.json](../examples/chart-request.json), a runnable example covering
+- Added [examples/chart-request.json](examples/chart-request.json), a runnable example covering
   supported `BAR` chart authoring, named-range-backed series binding, explicit chart-anchor
   replacement, factual `GET_CHARTS` readback, and matching chart inventory in
   `GET_DRAWING_OBJECTS`.
@@ -1691,7 +1691,7 @@ For the current unreleased stream and the most recent releases, use the root [CH
 
 ### Added
 
-- Added [docs/DEVELOPER_GRADLE.md](./DEVELOPER.md), a developer-facing map of the
+- Added [docs/DEVELOPER_GRADLE.md](docs/DEVELOPER.md), a developer-facing map of the
   Gradle system that explains the shared included build logic, the nested Jazzer composite build,
   the single version-catalog authority, and the periodic review questions contributors should use
   when revisiting the build architecture.
@@ -1789,11 +1789,11 @@ For the current unreleased stream and the most recent releases, use the root [CH
 - Jazzer support-test progress pulses now include committed class-start and in-flight
   `test-progress` heartbeats, so long-running nested support tests remain observable to the outer
   gate instead of going dark between test completions.
-- Added [docs/DEVELOPER_JAVA.md](./DEVELOPER.md), which documents GridGrind's shell-level
+- Added [docs/DEVELOPER_JAVA.md](docs/DEVELOPER.md), which documents GridGrind's shell-level
   Java 26 setup, the `/usr/bin/java` macOS pitfall, the official `jdk.java.net/26` install path,
   and why `./gradlew` is the only supported Gradle entrypoint.
 - Added a no-save workbook-health example at
-  [examples/workbook-health-request.json](../examples/workbook-health-request.json), showing
+  [examples/workbook-health-request.json](examples/workbook-health-request.json), showing
   `ANALYZE_WORKBOOK_FINDINGS` as the default lint-style workflow and the correct quoted formula
   syntax for sheet names with spaces.
 - Successful protocol responses can now include a `warnings` array. The first shipped warning flags

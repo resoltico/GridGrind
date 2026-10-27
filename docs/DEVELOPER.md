@@ -51,17 +51,22 @@ Regenerate JSON examples from the pure recipe registry with:
 
 The committed binary recipe assets are fixed test inputs, including the separately audited
 Apache POI Custom XML fixture. Changes to those assets require reviewing their provenance,
-NOTICE and packaging checks. The retired shell asset generator is not a build prerequisite.
+NOTICE and packaging checks.
 
 Regenerate exchanged-document schemas with:
 
     ./gradlew :json:generateSchemas
 
 Reference verification checks committed output without rewriting it. Tests verify examples,
-schemas, documentation links and transport behavior. Generated workbooks belong in build or
-test-owned temporary directories.
+schemas, documentation links and transport behavior. Generate reference pages, limits and
+problem descriptions from metadata with:
 
-## Foundations
+    ./gradlew :cli:generateReferenceDocs
+
+Use `./gradlew verifyGeneratedDocs` to check committed references and schemas without rewriting
+them. Generated workbooks belong in build or test-owned temporary directories.
+
+## Toolchain and dependencies
 
 | Component | Version |
 |:----------|:--------|
@@ -74,12 +79,9 @@ test-owned temporary directories.
 | JUnit Jupiter | 6.1.3 |
 | Log4j Core | 2.26.1 |
 
-GridGrind's runtime, product modules, and shared included build logic under `gradle/build-logic`
-all target Java 26 now. The included build is no longer a JVM 25 exception: it compiles with
-Kotlin `2.4.20`, emits JVM 26 bytecode directly, and stays aligned with the repository's
-single Java baseline instead of carrying a separate bytecode-level footnote.
-Build-task implementations and convention plugins are Kotlin; their regression tests remain
-Java. The included build reads its Java target from the root `gradle.properties` pin.
+Product modules and shared build logic target Java 26. Kotlin `2.4.20` implements build tasks
+and convention plugins; their regression tests use Java. The included build reads its Java
+target from the root gradle.properties pin.
 
 Jackson dependency note: Jackson 3.x databind intentionally still uses the
 `com.fasterxml.jackson.core:jackson-annotations` artifact and package namespace. That is upstream

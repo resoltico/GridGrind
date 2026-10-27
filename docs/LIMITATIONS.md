@@ -23,10 +23,8 @@ still examines the entire rectangular sample even when many cells are blank, and
 `OutOfMemoryError`, empty response files, and unstructured exit-code-1 failures on worst-case
 cell-returning reads.
 
-This limit is not from Apache POI or Excel. A serialized-bytes cap was considered, but it would be
-data-dependent and only knowable after reading the workbook, so the current contract keeps the
-deterministic cell-count cap until response streaming or an equivalent two-phase size negotiation
-exists.
+This limit is not from Apache POI or Excel. A serialized-byte cap depends on workbook contents and is only knowable after reading the
+workbook. The deterministic cell-count cap bounds materialization before workbook IO.
 
 **Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover `lastRowIndex` and
 `lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region
@@ -672,9 +670,8 @@ the goal on the read path is factual reporting. The write path is intentionally 
 authorable persistence security owns one explicit strong-only AGILE contract and does not accept a
 `mode` field. Existing-workbook writes declare encryption explicitly: `NONE`, `ENCRYPT`, or
 `PRESERVE_SOURCE`; omission never inherits source encryption. `PRESERVE_SOURCE` applies only to a
-verified source envelope that the strong AGILE write contract can reapply. Reintroduce write-side `STANDARD` only if a named consumer proves an
-old-Excel authoring requirement; until then readable/reportable `STANDARD` remains intentionally
-broader than the authorable write contract.
+verified source envelope that the strong AGILE write contract can reapply. Readable/reportable `STANDARD` envelopes are outside the authorable strong-only AGILE write
+contract.
 
 Enforcement: [GridGrindOoxmlWriteEncryptionContractText](../core/src/main/java/dev/erst/gridgrind/core/catalog/GridGrindOoxmlWriteEncryptionContractText.java), [OoxmlEncryptionSpec](../core/src/main/java/dev/erst/gridgrind/core/model/security/OoxmlEncryptionSpec.java), [SecurityAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/security/SecurityAdapter.java).
 

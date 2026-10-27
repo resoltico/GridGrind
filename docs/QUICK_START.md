@@ -28,15 +28,17 @@ publication creates a new file; choose a fresh response path on each run.
 
 ## Container
 
-Build the local image, then bind a caller-owned directory at the image's /work directory.
-Matching the host uid/gid keeps generated files caller-owned:
+Build the local image and mount the caller-owned workspace at its identical absolute path.
+This keeps absolute grant paths valid inside the container. Match the host uid/gid so output
+files remain caller-owned:
 
     docker buildx build --load -t gridgrind-local .
-    docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd)":/work gridgrind-local help
+    workspace="$(pwd)"
+    docker run --rm --user "$(id -u):$(id -g)" -v "$workspace:$workspace" -w "$workspace" gridgrind-local help
 
 For a prepared request and grant in the mounted directory:
 
-    docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd)":/work gridgrind-local run --request budget-workspace/budget-request.json --grant budget-workspace/grant.json --response budget-workspace/container-result.json
+    docker run --rm --user "$(id -u):$(id -g)" -v "$workspace:$workspace" -w "$workspace" gridgrind-local run --request budget-workspace/budget-request.json --grant budget-workspace/grant.json --response budget-workspace/container-result.json
 
 ## Minimal plan
 

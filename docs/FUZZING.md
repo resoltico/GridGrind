@@ -2,8 +2,7 @@
 
 Fuzzing belongs to the root Gradle build and uses Java 26 with the pinned Jazzer driver.
 The generators and workbook invariants live in src/fuzz/java; committed raw inputs live in
-src/fuzz/resources/seeds. No separate build, launcher scripts, promotion metadata or run
-history is required.
+src/fuzz/resources/seeds.
 
 Run deterministic regression replay with:
 
@@ -24,8 +23,8 @@ Active fuzzing is an explicit operation:
 Available harnesses are protocol-request, protocol-workflow, engine-command-sequence and
 xlsx-roundtrip. The default active duration is 60 seconds. The standalone driver mutates raw
 bytes through FuzzTarget; active runs and deterministic replay use the same Java input cursor
-and invariant methods. This implements the documented S2 fallback, rather than depending on
-Jazzer's JUnit native bootstrap.
+and invariant methods. The standalone driver owns native bootstrap; ordinary JUnit replay
+uses the pure Java cursor.
 
 Working corpora are under build/fuzz/corpus/<harness>; finding artifacts are under
 build/fuzz/findings/<harness>. Preserve a useful finding there before cleaning build outputs.
@@ -37,5 +36,4 @@ Unexpected exceptions and invariant violations fail the replay or active run. Ge
 workflow grants authorize the workflow's exact operations, owned source and publication;
 authority failures cannot count as successful workflow exercise.
 
-Full active campaigns and mutation campaigns are separate from ordinary checks. During the
-foundations redesign they run only after all implementation is complete, as requested.
+Active fuzz and mutation campaigns are opt-in checks, separate from ordinary deterministic verification.
