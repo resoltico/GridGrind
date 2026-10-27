@@ -326,7 +326,11 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 examples.contains(
-                    "./gradlew :cli:test --tests dev.erst.gridgrind.cli.io.ExampleRequestFixturesTest"),
+                        "./gradlew :cli:test --tests dev.erst.gridgrind.cli.render.ExampleRequestFixturesTest")
+                    && Files.isRegularFile(
+                        RepositoryRootTestSupport.repositoryRoot()
+                            .resolve(
+                                "cli/src/test/java/dev/erst/gridgrind/cli/render/ExampleRequestFixturesTest.java")),
                 "examples guide must point at the live example-fixture verification test owner"));
   }
 

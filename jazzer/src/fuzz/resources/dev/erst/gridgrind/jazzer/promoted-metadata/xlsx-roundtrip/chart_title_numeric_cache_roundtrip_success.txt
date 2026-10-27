@@ -1,8 +1,0 @@
-Replay Result
-Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/chart_title_numeric_cache_roundtrip_success.bin
-Harness: xlsx-roundtrip
-Outcome: SUCCESS
-Input Bytes: 255
-Command Count: 10
-Style Kinds: (none)
-Command Kinds: APPEND_ROW=7, CREATE_SHEET=2, SET_CHART=1

@@ -2,6 +2,7 @@
 # Ensure devcontainer-managed cache mounts stay writable for the remote user.
 
 set -euo pipefail
+source "$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
 
 current_user="$(id -un)"
 current_group="$(id -gn)"

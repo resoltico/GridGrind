@@ -17,7 +17,7 @@ the Dev Container CLI for the tooling-agnostic path, or another way to open a sh
 contributor container.
 **Companion references**: [DEVELOPER.md](./DEVELOPER.md),
 [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md), [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md),
-[DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md)
+[DEVELOPER_JAZZER_OPERATIONS.md](./FUZZING.md)
 
 ## Canonical Stance
 
@@ -50,7 +50,7 @@ The committed owner files are:
 - [.devcontainer/devcontainer.json](../.devcontainer/devcontainer.json)
 - [.devcontainer/Dockerfile](../.devcontainer/Dockerfile)
 - [scripts/devcontainer-prepare-user-home.sh](../scripts/devcontainer-prepare-user-home.sh)
-- [scripts/validate-devcontainer.sh](../scripts/validate-devcontainer.sh)
+- [scripts/validate-devcontainer.sh](../cli/src/test/java/dev/erst/gridgrind/cli/golden/DevcontainerTest.java)
 
 ## Canonical Owner Versus Client Overlay
 
@@ -102,7 +102,7 @@ java --version
 javac --version
 docker version --format '{{.Server.Version}}'
 ./gradlew --version --console=plain
-./scripts/validate-devcontainer.sh
+./gradlew devcontainerTest
 ```
 
 Expected contributor shape:
@@ -110,7 +110,7 @@ Expected contributor shape:
 - `java` and `javac` report Java 26
 - Java vendor is Azul Zulu inside the container
 - `docker version` reaches the host Docker Desktop engine
-- `./scripts/validate-devcontainer.sh` succeeds
+- `./gradlew devcontainerTest` succeeds
 
 This remains the most integrated path because the Java, Gradle, and Java-test extensions are all
 forced into the container workspace host instead of the macOS host extension process tree.
@@ -140,7 +140,7 @@ Important truth boundary:
 - this means the host needs Docker plus the CLI itself
 - if you want a lower-level Docker-only path for one narrow task, use the raw Docker workflows
   documented elsewhere, such as the Docker-only Jazzer session in
-  [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md#run-one-docker-only-fuzz-session-from-a-fresh-terminal)
+  [DEVELOPER_JAZZER_OPERATIONS.md](./FUZZING.md)
 
 Run these commands in order from the host shell:
 
@@ -192,7 +192,7 @@ Run these commands in order from the host shell:
 7. Run the repo's own devcontainer validator from that same path:
 
    ```bash
-   devcontainer exec --workspace-folder . ./scripts/validate-devcontainer.sh
+   devcontainer exec --workspace-folder . ./gradlew devcontainerTest
    ```
 
 8. Run normal contributor commands through the same CLI surface when you want them:
@@ -213,7 +213,7 @@ If you do not want VS Code, the underlying contributor model is still valid:
 - keep the repository on the host filesystem
 - materialize the committed devcontainer from `.devcontainer/`
 - get a shell inside that container
-- run `./gradlew`, `./check.sh`, `./scripts/docker-smoke.sh`, and `jazzer/bin/*` there
+- run `./gradlew`, `./check.sh`, `./gradlew containerTest`, and `jazzer/bin/*` there
 - edit the same bind-mounted files from any host editor you like
 
 What you lose outside VS Code is the committed editor-in-container routing for the Java, Gradle,
@@ -255,7 +255,7 @@ poisoned them with root-owned entries.
 
 If your immediate goal is "run one real fuzzing session from a plain terminal with Docker and no
 host Java tooling", use the numbered noob-safe walkthrough in
-[DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md#run-one-docker-only-fuzz-session-from-a-fresh-terminal).
+[DEVELOPER_JAZZER_OPERATIONS.md](./FUZZING.md).
 
 ## Day-To-Day Workflow
 
@@ -265,14 +265,14 @@ Run normal contributor commands inside the container terminal:
 ./gradlew test --console=plain
 ./gradlew check --console=plain
 ./check.sh --console=plain
-./scripts/docker-smoke.sh
+./gradlew containerTest
 ```
 
 The repository files still live on the host, so edits made in the container are the same tracked
 files you see from macOS. The devcontainer keeps Gradle and general Java caches in named Docker
 volumes instead of bind-mounted host dot-directories, which reduces churn in the checkout and keeps
 tool caches out of the host editor's process space. Top-level `./check.sh`,
-`./scripts/docker-smoke.sh`, `./scripts/validate-devcontainer.sh`, and `jazzer/bin/*` commands
+`./gradlew containerTest`, `./gradlew devcontainerTest`, and `jazzer/bin/*` commands
 also share one repo-wide verification lock, so let the active verification run finish before
 starting another one.
 

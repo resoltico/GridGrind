@@ -120,24 +120,6 @@ distributions.named("shadow") {
     }
 }
 
-val cleanShadowStartScripts = tasks.register<Delete>("cleanShadowStartScripts") {
-    delete(layout.buildDirectory.dir("scriptsShadow"))
-}
-
-val cleanLegacyCliDistribution = tasks.register<Delete>("cleanLegacyCliDistribution") {
-    delete(layout.buildDirectory.dir("scripts"))
-    delete(layout.buildDirectory.dir("install/cli"))
-    delete(layout.buildDirectory.dir("install/cli-shadow"))
-}
-
-val cleanInstalledShadowDist = tasks.register<Delete>("cleanInstalledShadowDist") {
-    delete(layout.buildDirectory.dir("install/gridgrind"))
-}
-
-val cleanDistributionArchives = tasks.register<Delete>("cleanDistributionArchives") {
-    delete(layout.buildDirectory.dir("distributions"))
-}
-
 tasks.named<JavaExec>("run") {
     workingDir = rootProject.projectDir
 }
@@ -148,16 +130,10 @@ tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startScripts")
 
 tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startShadowScripts") {
     applicationName = "gridgrind"
-    dependsOn(cleanShadowStartScripts)
 }
 
 tasks.named<Sync>("installDist") {
     enabled = false
-}
-
-tasks.named<Sync>("installShadowDist") {
-    dependsOn(cleanLegacyCliDistribution)
-    dependsOn(cleanInstalledShadowDist)
 }
 
 tasks.named("distZip") {
@@ -168,16 +144,14 @@ tasks.named("distTar") {
     enabled = false
 }
 
-tasks.named("shadowDistZip") {
-    dependsOn(cleanDistributionArchives)
-}
-
-tasks.named("shadowDistTar") {
-    dependsOn(cleanDistributionArchives)
-}
-
 tasks.named<Test>("test") {
-    dependsOn(tasks.named("shadowJar"))
+    dependsOn("shadowJar", "installShadowDist", "shadowDistZip", "shadowDistTar")
+    inputs.files(tasks.named("shadowJar"), tasks.named("installShadowDist"), tasks.named("shadowDistZip"), tasks.named("shadowDistTar"))
+        .withPropertyName("deliveredArtifacts")
+    inputs.dir(rootProject.layout.projectDirectory.dir("examples")).withPropertyName("repositoryExamples")
+    inputs.files(rootProject.file("README.md"), rootProject.file("docs/OPERATIONS.md"), rootProject.file("docs/QUICK_START.md"))
+        .withPropertyName("hostGuidance")
+    useJUnitPlatform { excludeTags("container", "devcontainer") }
     systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
     systemProperty("gridgrind.golden.update", providers.gradleProperty("golden.update").getOrElse("false"))
 }
@@ -187,7 +161,6 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     archiveBaseName = "gridgrind"
     archiveVersion = ""
     archiveClassifier = ""
-    isReproducibleFileOrder = true
 
     // Merge ServiceLoader registrations from all bundled JARs.
     filesMatching("META-INF/services/**") {
@@ -213,7 +186,6 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 
     manifest {
         attributes(
-            "Enable-Native-Access" to "ALL-UNNAMED",
             "Implementation-Title" to "GridGrind",
             "Implementation-Version" to project.version,
             "Implementation-Vendor" to "Ervins Strauhmanis",
@@ -263,4 +235,20 @@ pluginManager.withPlugin("java") {
 
 tasks.named("assemble") {
     dependsOn("shadowJar")
+}
+
+val hostTestSources = the<org.gradle.api.plugins.JavaPluginExtension>().sourceSets.named("test")
+for (suite in listOf("container", "devcontainer")) {
+    tasks.register<Test>(suite + "Test") {
+        group = "verification"
+        description = "Explicit Docker-backed " + suite + " verification."
+        dependsOn("testClasses", "shadowJar")
+        testClassesDirs = hostTestSources.get().output.classesDirs
+        classpath = hostTestSources.get().runtimeClasspath
+        useJUnitPlatform { includeTags(suite) }
+        systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
+        extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> { isEnabled = false }
+        outputs.upToDateWhen { false }
+        outputs.cacheIf { false }
+    }
 }

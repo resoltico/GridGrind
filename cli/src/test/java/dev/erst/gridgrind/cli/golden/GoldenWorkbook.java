@@ -18,7 +18,7 @@ import tools.jackson.databind.node.ObjectNode;
 final class GoldenWorkbook {
   private GoldenWorkbook() {}
 
-  static ObjectNode execute(GoldenLauncher launcher, Path workspace, Path request)
+  static ObjectNode execute(WorkbookLauncher launcher, Path workspace, Path request)
       throws IOException, InterruptedException {
     JsonNode plan = GoldenSnapshots.JSON.readTree(Files.readAllBytes(request));
     Path grant = grant(plan, workspace, request.getFileName() + "-grant.json");
@@ -122,7 +122,7 @@ final class GoldenWorkbook {
     }
   }
 
-  private static ObjectNode readback(GoldenLauncher launcher, Path workspace, Path output)
+  private static ObjectNode readback(WorkbookLauncher launcher, Path workspace, Path output)
       throws IOException, InterruptedException {
     ObjectNode plan = readPlan(output);
     ArrayNode steps = (ArrayNode) plan.path("steps");
@@ -221,7 +221,7 @@ final class GoldenWorkbook {
   }
 
   private static JsonNode runRead(
-      GoldenLauncher launcher, Path workspace, ObjectNode plan, String name)
+      WorkbookLauncher launcher, Path workspace, ObjectNode plan, String name)
       throws IOException, InterruptedException {
     Path request = workspace.resolve("readback-" + name + ".json");
     Files.writeString(request, GoldenSnapshots.JSON.writeValueAsString(plan));

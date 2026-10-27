@@ -110,17 +110,17 @@ Expected local shape on Docker Desktop:
 Then the supported local gates are:
 
 ```bash
-./scripts/validate-devcontainer.sh
-./scripts/docker-smoke.sh
+./gradlew devcontainerTest
+./gradlew containerTest
 ./check.sh
 ```
 
-`./scripts/validate-devcontainer.sh` builds the contributor devcontainer image, checks that it
+`./gradlew devcontainerTest` builds the contributor devcontainer image, checks that it
 still exposes Azul Zulu Java 26 on a glibc base, verifies the portable devcontainer contract,
 checks that the container-start repair keeps cache mounts writable for the remote user, and
 verifies the committed VS Code overlay contract. Run it when you change `.devcontainer/`,
 contributor-container docs, or the devcontainer start hooks. It shares the same repo-wide
-verification lock as `./check.sh`, `./scripts/docker-smoke.sh`, and `jazzer/bin/*`, so these
+verification lock as `./check.sh`, `./gradlew containerTest`, and `jazzer/bin/*`, so these
 top-level verification entrypoints are intentionally serialized.
 
 `./check.sh` Stage 5 invokes `scripts/docker-smoke.sh`, which:

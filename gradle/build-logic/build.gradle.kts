@@ -11,6 +11,8 @@ plugins {
     `java-gradle-plugin`
 }
 
+dependencyLocking { lockAllConfigurations() }
+
 repositories {
     mavenCentral()
     gradlePluginPortal()
@@ -43,9 +45,9 @@ gradlePlugin {
             id = "gridgrind.java-conventions"
             implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindJavaConventionsPlugin"
         }
-        register("gridgrindJazzerConventions") {
-            id = "gridgrind.jazzer-conventions"
-            implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindJazzerConventionsPlugin"
+        register("gridgrindFuzzConventions") {
+            id = "gridgrind.fuzz-conventions"
+            implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindFuzzConventionsPlugin"
         }
         register("gridgrindMutationConventions") {
             id = "gridgrind.mutation-conventions"

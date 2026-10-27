@@ -1,0 +1,38 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "EXISTING",
+    "path": "books odd/nested/office [docker #smoke].xlsx"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "execution": {
+    "mode": {"type": "FULL_XSSF"},
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
+  },
+  "steps": [
+    {
+      "stepId": "existing-workbook",
+      "target": {
+        "type": "WORKBOOK_CURRENT"
+      },
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      }
+    }
+  ]
+}

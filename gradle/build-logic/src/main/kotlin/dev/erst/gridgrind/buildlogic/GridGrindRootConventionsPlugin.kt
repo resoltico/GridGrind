@@ -28,9 +28,10 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             description = providers.gradleProperty("gridgrindDescription").get()
             configureGridGrindRepositories()
 
-            allprojects {
-                group = providers.gradleProperty("group").get()
-                version = providers.gradleProperty("version").get()
+            allprojects { candidate ->
+                candidate.dependencyLocking { it.lockAllConfigurations() }
+                candidate.group = providers.gradleProperty("group").get()
+                candidate.version = providers.gradleProperty("version").get()
             }
 
             configure<JacocoPluginExtension> {
@@ -125,6 +126,14 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     }
                 }
 
+            tasks.register<ReleaseNotesTask>("prepareReleaseNotes") {
+                group = "distribution"
+                description = "Extracts the exact versioned CHANGELOG section; never publishes."
+                releaseVersion.set(providers.gradleProperty("version"))
+                changelog.set(layout.projectDirectory.file("CHANGELOG.md"))
+                notes.set(layout.buildDirectory.file("release-notes.md"))
+            }
+
             val verifyBuildLogicTests = gradle.includedBuild("build-logic").task(":test")
             val architectureCheck = registerGridGrindArchitectureCheck()
             registerGridGrindMutationReport()
@@ -145,7 +154,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     executionData.from(
                         provider {
                             coverageSubprojects().flatMap { subproject ->
-                                subproject.tasks.withType(Test::class.java).map { testTask ->
+                                subproject.coverageTestTasks().map { testTask ->
                                     testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
                                 }
                             }
@@ -289,9 +298,6 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("gradle/build-logic/build.gradle.kts"))
             add(rootFile("gradle/build-logic/settings.gradle.kts"))
             add(rootFile("gradle/libs.versions.toml"))
-            add(rootFile("jazzer/README.md"))
-            add(rootFile("jazzer/build.gradle.kts"))
-            add(rootFile("jazzer/settings.gradle.kts"))
         }.filter(File::isFile)
 
     private fun Project.projectFileTree(

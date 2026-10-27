@@ -133,7 +133,7 @@ directory as the workspace root so the example can read the committed
 Refresh the checkout-rooted request fixtures and the generated package-security workbook asset with:
 
 ```bash
-./scripts/sync-generated-examples.sh
+./gradlew :cli:writeRepositoryExamples
 ```
 
 Treat the checked-in `examples/*.json` fixtures and the generated package-security workbook as derived artifacts from that script and the CLI recipe registry's example view; do not hand-edit them in place.
@@ -141,7 +141,7 @@ Treat the checked-in `examples/*.json` fixtures and the generated package-securi
 The authoritative verification loop for the shipped examples is:
 
 ```bash
-./gradlew :cli:test --tests dev.erst.gridgrind.cli.io.ExampleRequestFixturesTest
+./gradlew :cli:test --tests dev.erst.gridgrind.cli.render.ExampleRequestFixturesTest
 ./gradlew :engine:test --tests dev.erst.gridgrind.engine.runtime.ExampleExecutionFixturesTest
 ./gradlew :core:test --tests dev.erst.gridgrind.core.authoring.GridGrindPlanTest
 ./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar

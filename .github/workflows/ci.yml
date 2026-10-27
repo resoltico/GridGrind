@@ -36,8 +36,7 @@ jobs:
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Run the supported whole-repo deterministic gate
-        # Active fuzzing remains local-only. CI exercises only the deterministic nested Jazzer,
-        # packaging, shell, and Docker stages shipped by the root check.sh contract.
+        # Ordinary checks include deterministic seed replay; active campaigns remain opt-in.
         run: ./check.sh
 
   docker-smoke:
@@ -61,7 +60,7 @@ jobs:
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Run Docker smoke separately so branch protection keeps an honest Docker-specific gate
-        run: ./scripts/docker-smoke.sh
+        run: ./gradlew containerTest
 
   devcontainer-changes:
     name: Detect devcontainer changes
@@ -87,7 +86,9 @@ jobs:
           fi
           changed=$(git diff --name-only "$base" "${{ github.sha }}" -- \
             '.devcontainer' \
-            'scripts/validate-devcontainer.sh' \
+            'scripts/lib/common.sh' \
+            'cli/src/test/java/dev/erst/gridgrind/cli/golden/DevcontainerTest.java' \
+            'cli/src/test/java/dev/erst/gridgrind/cli/golden/DockerFixture.java' \
             'scripts/devcontainer-prepare-user-home.sh')
           if [[ -n "$changed" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -105,10 +106,17 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version: '26'
+          distribution: zulu
+
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Validate the committed contributor devcontainer surface
-        run: ./scripts/validate-devcontainer.sh
+        run: ./gradlew devcontainerTest
 
   gate:
     name: Gate

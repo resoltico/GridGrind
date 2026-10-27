@@ -90,11 +90,11 @@ Two-tier structure: landing pages give the overview; detail pages own the full f
 | [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md) | Java 26 conventions, sealed types, records, Jackson 3.x usage |
 | [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md) | Docker image build, run, and testing |
 | [DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md) | Dev container setup and usage |
-| [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md) | Jazzer fuzz-testing overview and status |
-| [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md) | Running Jazzer fuzz jobs |
-| [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md) | Jazzer corpus and coverage guidance |
+| [DEVELOPER_JAZZER.md](./FUZZING.md) | Jazzer fuzz-testing overview and status |
+| [DEVELOPER_JAZZER_OPERATIONS.md](./FUZZING.md) | Running Jazzer fuzz jobs |
+| [DEVELOPER_JAZZER_COVERAGE.md](./FUZZING.md) | Jazzer corpus and coverage guidance |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Architecture decision record: contract module replacement approach |
-| [RELEASE_PROTOCOL.md](./RELEASE_PROTOCOL.md) | Release checklist and publishing steps |
+| [RELEASING.md](./RELEASING.md) | Release checklist and publishing steps |
 | [DEPENDENCY_AUTOMATION_POLICY.md](./DEPENDENCY_AUTOMATION_POLICY.md) | Dependency-update triage, approval, and release hygiene policy |
 
 ---

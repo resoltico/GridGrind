@@ -2,9 +2,9 @@
   "exit" : 0,
   "stderr" : "",
   "stdout" : {
-    "containerImageRef" : "ghcr.io/resoltico/gridgrind:0.76.0",
+    "containerImageRef" : "ghcr.io/resoltico/gridgrind:latest",
     "description" : "Structured .xlsx workbook automation engine with an agent-friendly JSON protocol",
-    "documentRef" : "https://github.com/resoltico/GridGrind/blob/v0.76.0",
+    "documentRef" : "https://github.com/resoltico/GridGrind/blob/main",
     "protocolVersion" : 1,
     "surface" : {
       "coordinateSystems" : {

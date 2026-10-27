@@ -1,0 +1,55 @@
+package dev.erst.gridgrind.fuzz.support;
+
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+
+/** Samples pie-like chart plot families for paired protocol and engine surfaces. */
+final class OperationSequenceChartSlicePlotSupport {
+  private OperationSequenceChartSlicePlotSupport() {}
+
+  static ChartPlotSpec nextChartPlotInput(
+      int plotKind, boolean varyColors, GridGrindFuzzData data) {
+    return switch (plotKind) {
+      case 4 ->
+          new ChartPlotSpec.Doughnut(
+              varyColors,
+              OperationSequenceChartFactory.nextOptionalInt(data, 0, 360),
+              OperationSequenceChartFactory.nextOptionalInt(data, 10, 90),
+              OperationSequenceChartFactory.nextChartSeriesInputs(data, true));
+      case 7 ->
+          new ChartPlotSpec.Pie(
+              varyColors,
+              OperationSequenceChartFactory.nextOptionalInt(data, 0, 360),
+              OperationSequenceChartFactory.nextChartSeriesInputs(data, true));
+      case 8 ->
+          new ChartPlotSpec.Pie3D(
+              varyColors, OperationSequenceChartFactory.nextChartSeriesInputs(data, true));
+      default -> throw unsupportedPlotKind(plotKind);
+    };
+  }
+
+  static ResolvedChart.Plot nextExcelChartPlotDefinition(
+      int plotKind, boolean varyColors, GridGrindFuzzData data) {
+    return switch (plotKind) {
+      case 4 ->
+          new ResolvedChart.Doughnut(
+              varyColors,
+              OperationSequenceChartFactory.nextOptionalInt(data, 0, 360),
+              OperationSequenceChartFactory.nextOptionalInt(data, 10, 90),
+              OperationSequenceChartFactory.nextExcelChartSeries(data, true));
+      case 7 ->
+          new ResolvedChart.Pie(
+              varyColors,
+              OperationSequenceChartFactory.nextOptionalInt(data, 0, 360),
+              OperationSequenceChartFactory.nextExcelChartSeries(data, true));
+      case 8 ->
+          new ResolvedChart.Pie3D(
+              varyColors, OperationSequenceChartFactory.nextExcelChartSeries(data, true));
+      default -> throw unsupportedPlotKind(plotKind);
+    };
+  }
+
+  private static IllegalArgumentException unsupportedPlotKind(int plotKind) {
+    return new IllegalArgumentException("Unsupported slice plot kind: " + plotKind);
+  }
+}

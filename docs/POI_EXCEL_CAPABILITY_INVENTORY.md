@@ -38,7 +38,7 @@ route:
 - Canonical verification commands for this surface:
   - `./gradlew parity`
   - `./gradlew check`
-  - `./gradlew --project-dir jazzer check`
+  - `./gradlew fuzzReplay`
   - `jazzer/bin/fuzz-protocol-request -PjazzerMaxDuration=15s --console=plain`
   - `jazzer/bin/fuzz-protocol-workflow -PjazzerMaxDuration=15s --console=plain`
   - `./check.sh`

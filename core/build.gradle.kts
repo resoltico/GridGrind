@@ -1,3 +1,4 @@
+import dev.erst.gridgrind.buildlogic.coverageTestTasks
 import info.solidsoft.gradle.pitest.PitestPluginExtension
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
@@ -61,13 +62,13 @@ val downstreamCoverageProjects =
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->
-        downstreamProject.tasks.withType<Test>().map { task -> task.path }
+        downstreamProject.coverageTestTasks().map { task -> task.path }
     }
 
 fun downstreamCoverageExecutionData() =
     provider {
         downstreamCoverageProjects.flatMap { downstreamProject ->
-            downstreamProject.tasks.withType<Test>().map { testTask ->
+            downstreamProject.coverageTestTasks().map { testTask ->
                 testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
             }
         }

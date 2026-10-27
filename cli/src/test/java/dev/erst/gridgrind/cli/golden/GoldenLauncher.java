@@ -14,13 +14,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /** Exercises the public transport both inside the JVM and through the delivered artifact. */
-enum GoldenLauncher {
+enum GoldenLauncher implements WorkbookLauncher {
   IN_PROCESS,
   SHADOW_JAR;
 
   static final Path REPOSITORY = Path.of(System.getProperty("gridgrind.repository"));
 
-  Result run(Path workspace, String... arguments) throws IOException, InterruptedException {
+  @Override
+  public Result run(Path workspace, String... arguments) throws IOException, InterruptedException {
     if (this == IN_PROCESS) {
       ByteArrayOutputStream stdout = new ByteArrayOutputStream();
       ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -34,8 +35,13 @@ enum GoldenLauncher {
     command.add("-jar");
     command.add(REPOSITORY.resolve("cli/build/libs/gridgrind.jar").toString());
     command.addAll(List.of(arguments));
-    Path stdout = workspace.resolve("process-stdout.log");
-    Path stderr = workspace.resolve("process-stderr.log");
+    return runProcess(command, workspace, 60);
+  }
+
+  static Result runProcess(List<String> command, Path workspace, long timeoutSeconds)
+      throws IOException, InterruptedException {
+    Path stdout = Files.createTempFile(workspace, "process-stdout-", ".log");
+    Path stderr = Files.createTempFile(workspace, "process-stderr-", ".log");
     try (Process process =
         new ProcessBuilder(command)
             .directory(workspace.toFile())
@@ -44,7 +50,8 @@ enum GoldenLauncher {
             .start()) {
       try {
         process.getOutputStream().close();
-        assertTrue(process.waitFor(60, TimeUnit.SECONDS), () -> "CLI timed out: " + command);
+        assertTrue(
+            process.waitFor(timeoutSeconds, TimeUnit.SECONDS), () -> "CLI timed out: " + command);
         return new Result(process.exitValue(), Files.readString(stdout), Files.readString(stderr));
       } finally {
         if (process.isAlive()) {

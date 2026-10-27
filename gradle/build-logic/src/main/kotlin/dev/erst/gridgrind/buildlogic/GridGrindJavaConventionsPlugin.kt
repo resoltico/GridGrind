@@ -12,6 +12,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.gradle.api.plugins.quality.Pmd
 import org.gradle.api.plugins.quality.PmdExtension
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
@@ -104,6 +105,11 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 rulesMinimumPriority.set(3)
                 setRuleSetFiles(files(repositoryLayout.productionPmdRuleset))
                 setRuleSets(emptyList())
+            }
+
+            tasks.withType(AbstractArchiveTask::class.java).configureEach { archive ->
+                archive.isPreserveFileTimestamps = false
+                archive.isReproducibleFileOrder = true
             }
 
             tasks.withType(Jar::class.java).configureEach(
@@ -229,9 +235,9 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.named("jacocoTestReport", JacocoReport::class.java).configure(
                 object : Action<JacocoReport> {
                     override fun execute(report: JacocoReport) {
-                        report.dependsOn(tasks.withType(Test::class.java))
+                        report.dependsOn(coverageTestTasks())
                         report.executionData.from(
-                            tasks.withType(Test::class.java).map { testTask ->
+                            coverageTestTasks().map { testTask ->
                                 testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
                             },
                         )

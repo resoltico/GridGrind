@@ -2996,3 +2996,65 @@ zero failures, errors or skips. Delivered inventories: main Java 106294, test Ja
 Support classes 62, blank checks 274, shell lines 10842; CLI main Java 5566. Against the
 preceding checkpoint these are 108045/150182/73/273/10842 respectively. Host implementation
 is delivered; the soft CLI target and pending core follow-through remain explicit deviations.
+
+## WP-60/61/62 — Root fuzzing, native checks and tag-driven releases
+
+The root fuzz source set retains 56 generator/invariant classes and all 94 raw inputs
+(48 request, 11 workflow, 9 command sequence, 26 roundtrip). The native-provider adapter
+was removed: both replay and the standalone byte[] target use the existing pure Java cursor.
+The shared invariants and expected-invalid families are preserved. Generator/invariant tests
+and a negative/positive workflow-authority control make 148 passing replay tests (13 s).
+The previous helper granted zero operations; generated workflows now receive exact owned
+source/operation/publication authority, and authority rejection fails the workflow harness.
+
+The nested build, topology, promotion metadata, custom operator tools, run locks and launcher
+scripts are removed. Local findings and prior reports were archived outside the checkout before
+retiring their generated directories. SHA-256 evidence confirms all 94 seed bytes transferred
+unchanged. Active fuzzing uses a single opt-in Gradle JavaExec and the pinned driver's own
+installer; active execution remains unverified until the post-implementation campaigns.
+
+The seven-line check.sh checks Java 26 and executes one Gradle graph for check, coverage and
+archives. It propagates the actual exit status directly. Common shell code and the contributor
+cache repair are the only scripts left (60 total lines including check.sh). No process monitor,
+self-test framework, embedded Python, fake publisher or duplicate quality-gate invocation remains.
+
+Existing golden/integration tests cover the CLI/discovery contracts. Native JUnit additions
+verify JAR legal texts and the audited fixture, ZIP/TAR agreement, the installed launcher and
+publication-failure payload preservation, plus actual installed-launcher workbook execution.
+The five original Docker smoke requests are preserved as JSON fixtures and run locally before
+an opt-in image build; these five native host/distribution tests passed in 26 s. Separate tagged
+container and contributor-image tests retain actual Docker scenarios and cache ownership repair.
+Coverage selects JaCoCo-enabled suites, so neither Docker suite becomes an ordinary prerequisite;
+the actual check/coverage dry-run includes fuzzReplay and excludes active fuzz, PIT and Docker.
+Docker execution is deferred to delivered-state verification rather than building intermediate
+images repeatedly.
+
+Local version is 0.0.0-dev. Release version comes from vX.Y.Z, and a native Gradle task requires
+one nonempty matching CHANGELOG section. Its three independent extraction/rejection tests pass.
+The single release workflow runs normal checks and container tests before GitHub/multi-arch
+publication; manual dry runs skip publication and pruning. The prior prune job is carried forward.
+Docker builder/runtime version inputs agree. No tag, workflow, release, image push or package
+pruning was executed. act is unavailable; external release dry-run remains unverified.
+
+The four reviewed discovery snapshot diffs contain only development references: text help and
+guidance URLs move from v0.76.0 to main; guidance uses the latest image reference; structured
+help/version update those same two reference fields. Version fields and banners retain their
+existing normalization. No workbook snapshots changed.
+
+Dependency locks now cover root, all five modules and included build. The first lock attempt
+configured the root repeatedly; checking the actual module files exposed that scope error.
+The corrected per-project configuration produced all five module lockfiles, with no unresolved
+dependencies reported. New check source compiled; static review narrowed checked exceptions and
+named asserting helpers accurately. Two scoped PMD allocation exemptions retain independent legal
+text decoding and per-base-image platform sets; no behavioral assertion was removed.
+
+Audit of deleted operator tests found two outcome regressions whose byte inputs already exist
+among the 94 seeds. Their hashes match exactly. Explicit missing-sheet and successful collapsed-
+column roundtrip assertions now run directly against the engine, rather than relying on the
+removed operator outcome DTOs. Replay is now 150 passing tests (6 s), with no new seed bytes.
+
+Before commit, the artifact-based test input audit added the actual JAR, installed launcher,
+archives, examples and inspected host docs as CLI test inputs. Archive timestamps/order are now
+reproducible through the shared archive convention. This corrects invalid up-to-date reuse after
+packaging changes; opt-in external suites remain excluded from normal coverage. The example-test
+command documentation now names the actual render-package owner and checks that its source exists.

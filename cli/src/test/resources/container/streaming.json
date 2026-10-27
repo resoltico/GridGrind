@@ -1,0 +1,109 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "books odd/nested/office streaming [docker #smoke].xlsx",
+    "ifExists": "REPLACE"
+  },
+  "execution": {
+    "mode": {"type": "STREAMING_WRITE"},
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
+  },
+  "steps": [
+    {
+      "stepId": "ensure-ledger",
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      },
+      "action": {
+        "type": "ENSURE_SHEET"
+      }
+    },
+    {
+      "stepId": "append-header",
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      },
+      "action": {
+        "type": "APPEND_ROW",
+        "values": {
+          "type": "TYPED",
+          "cells": [
+            {
+              "type": "TEXT",
+              "value": {
+                "type": "INLINE",
+                "text": "Team"
+              }
+            },
+            {
+              "type": "TEXT",
+              "value": {
+                "type": "INLINE",
+                "text": "Task"
+              }
+            },
+            {
+              "type": "TEXT",
+              "value": {
+                "type": "INLINE",
+                "text": "Hours"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "stepId": "append-ops",
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      },
+      "action": {
+        "type": "APPEND_ROW",
+        "values": {
+          "type": "TYPED",
+          "cells": [
+            {
+              "type": "TEXT",
+              "value": {
+                "type": "INLINE",
+                "text": "Ops"
+              }
+            },
+            {
+              "type": "TEXT",
+              "value": {
+                "type": "INLINE",
+                "text": "Badge prep"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "value": 6.5
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

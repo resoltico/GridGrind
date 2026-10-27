@@ -1,0 +1,68 @@
+package dev.erst.gridgrind.fuzz.support;
+
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import java.util.Base64;
+import java.util.Optional;
+
+/** Validates protocol responses and workbook state without depending on JUnit assertions. */
+public final class WorkbookInvariantChecks {
+  private WorkbookInvariantChecks() {}
+
+  /** Requires the response shape to satisfy the protocol invariants the fuzzers rely on. */
+  public static void requireResponseShape(WorkbookResult response) {
+    WorkbookInvariantResponseChecks.requireResponseShape(response);
+  }
+
+  /**
+   * Requires the response shape to agree with the request's source, reads, and persistence
+   * contract.
+   */
+  public static void requireWorkflowOutcomeShape(WorkbookPlan request, WorkbookResult response) {
+    WorkbookInvariantResponseChecks.requireWorkflowOutcomeShape(request, response);
+  }
+
+  /** Requires the open workbook to satisfy the structural invariants the fuzzers rely on. */
+  public static void requireWorkbookShape(XssfWorkbook workbook) {
+    WorkbookInvariantWorkbookChecks.requireWorkbookShape(workbook);
+  }
+
+  static void require(boolean condition, String message) {
+    if (!condition) {
+      throw new IllegalStateException(message);
+    }
+  }
+
+  static void requireNonBlank(String value, String fieldName) {
+    require(value != null, fieldName + " must not be null");
+    require(!value.isBlank(), fieldName + " must not be blank");
+  }
+
+  static void requireBase64(String value, String fieldName) {
+    require(value != null, fieldName + " must not be null");
+    try {
+      Base64.getDecoder().decode(value);
+    } catch (IllegalArgumentException exception) {
+      throw new IllegalStateException(fieldName + " must be valid base64", exception);
+    }
+  }
+
+  static void requireNonBlank(TextSourceSpec value, String fieldName) {
+    require(value != null, fieldName + " must not be null");
+    if (value instanceof TextSourceSpec.Inline inline) {
+      require(!inline.text().isBlank(), fieldName + " must not be blank");
+    }
+  }
+
+  static <T> T requirePresent(Optional<T> value, String fieldName) {
+    require(value != null, fieldName + " must not be null");
+    require(value.isPresent(), fieldName + " must not be absent");
+    return value.orElseThrow();
+  }
+
+  static void requireOptionalNonBlank(Optional<String> value, String fieldName) {
+    requireNonBlank(requirePresent(value, fieldName), fieldName);
+  }
+}

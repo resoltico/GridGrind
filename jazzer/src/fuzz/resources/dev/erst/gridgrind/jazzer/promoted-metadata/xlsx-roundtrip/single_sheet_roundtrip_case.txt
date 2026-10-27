@@ -1,8 +1,0 @@
-Replay Result
-Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/single_sheet_roundtrip_case.bin
-Harness: xlsx-roundtrip
-Outcome: SUCCESS
-Input Bytes: 1
-Command Count: 1
-Style Kinds: (none)
-Command Kinds: CREATE_SHEET=1

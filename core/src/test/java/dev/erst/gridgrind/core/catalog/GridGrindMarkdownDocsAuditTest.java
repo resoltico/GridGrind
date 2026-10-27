@@ -94,7 +94,6 @@ class GridGrindMarkdownDocsAuditTest {
   private static List<Path> afadMarkdownDocs(Path repositoryRoot) throws IOException {
     List<Path> paths = new ArrayList<>();
     paths.add(repositoryRoot.resolve("PATENTS.md"));
-    paths.add(repositoryRoot.resolve("jazzer/README.md"));
     try (Stream<Path> docs = Files.walk(repositoryRoot.resolve("docs"))) {
       docs.filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".md"))
           .sorted()
@@ -108,7 +107,6 @@ class GridGrindMarkdownDocsAuditTest {
     paths.add(repositoryRoot.resolve("README.md"));
     paths.add(repositoryRoot.resolve("CHANGELOG.md"));
     paths.add(repositoryRoot.resolve("PATENTS.md"));
-    paths.add(repositoryRoot.resolve("jazzer/README.md"));
     try (Stream<Path> docs = Files.walk(repositoryRoot.resolve("docs"))) {
       docs.filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".md"))
           .sorted()

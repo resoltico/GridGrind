@@ -138,13 +138,17 @@ public final class ProductInfo {
   }
 
   static String containerImageRef(String version) {
-    String tag = "unknown".equals(version) ? "latest" : version;
+    String tag = unreleased(version) ? "latest" : version;
     return "ghcr.io/resoltico/gridgrind:" + tag;
   }
 
   static String documentRef(String version) {
-    String gitRef = "unknown".equals(version) ? "main" : "v" + version;
+    String gitRef = unreleased(version) ? "main" : "v" + version;
     return "https://github.com/resoltico/GridGrind/blob/" + gitRef;
+  }
+
+  private static boolean unreleased(String version) {
+    return "unknown".equals(version) || "0.0.0-dev".equals(version);
   }
 
   private static String buildThirdParty(

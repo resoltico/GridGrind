@@ -4,9 +4,11 @@
 # reproducible across time.
 FROM azul/zulu-openjdk:26@sha256:7dc4483e0fc259abb8234c9c0ef87f9fc5a472c018b9238e5f6c17fb85174837 AS build
 
+ARG GRIDGRIND_VERSION
+
 WORKDIR /workspace
 
-COPY gradlew gradle.properties settings.gradle.kts build.gradle.kts ./
+COPY gradlew gradle.properties settings.gradle.kts build.gradle.kts gradle.lockfile settings-gradle.lockfile ./
 COPY gradle ./gradle
 COPY LICENSE NOTICE PATENTS.md LICENSE-APACHE-2.0 LICENSE-BSD-2-CLAUSE LICENSE-BSD-3-CLAUSE ./
 COPY cli ./cli
@@ -17,7 +19,9 @@ COPY architecture-tests ./architecture-tests
 COPY examples ./examples
 
 RUN chmod +x gradlew
-RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar
+RUN --mount=type=cache,target=/root/.gradle set --; \
+    if [ -n "${GRIDGRIND_VERSION}" ]; then set -- "-Pversion=${GRIDGRIND_VERSION}"; fi; \
+    ./gradlew --no-daemon :cli:shadowJar "$@"
 
 FROM azul/zulu-openjdk:26-jre@sha256:9382c343f6de2c9f2633b7f629380f9c2a9444df8768a880c690bd5ea74f51b6
 
