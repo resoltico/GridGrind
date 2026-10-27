@@ -7,7 +7,7 @@ import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import java.util.List;
 
-/** Decodes bounded structured values from a Jazzer data provider. */
+/** Decodes bounded structured values from a byte cursor. */
 public final class FuzzDataDecoders {
   private FuzzDataDecoders() {}
 

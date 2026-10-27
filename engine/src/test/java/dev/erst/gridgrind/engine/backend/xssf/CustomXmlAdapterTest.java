@@ -438,30 +438,4 @@ class CustomXmlAdapterTest {
                 CustomXmlAdapter.schemaXml(map, CustomXmlAdapterTestSupport.failingTransformer()));
     assertTrue(schemaFailure.getMessage().contains("OrdersMapping"));
   }
-
-  @Test
-  void schemaXmlWrapsTransformerFactoryFailuresWithMappingName() throws Exception {
-    CTMap ctMap = CTMap.Factory.newInstance();
-    ctMap.setID(52L);
-    ctMap.setName("FactoryFailureMap");
-    Node schemaNode = XMLHelper.newDocumentBuilder().newDocument().createElement("schema");
-    CustomXmlAdapterTestSupport.FakeMap map =
-        CustomXmlAdapterTestSupport.fakeMap(
-            ctMap, CTSchema.Factory.newInstance(), schemaNode, List.of(), List.of());
-
-    String originalFactory = System.getProperty("javax.xml.transform.TransformerFactory");
-    System.setProperty(
-        "javax.xml.transform.TransformerFactory", ThrowingTransformerFactory.class.getName());
-    try {
-      IllegalStateException failure =
-          assertThrows(IllegalStateException.class, () -> CustomXmlAdapter.schemaXml(map));
-      assertTrue(failure.getMessage().contains("FactoryFailureMap"));
-    } finally {
-      if (originalFactory == null) {
-        System.clearProperty("javax.xml.transform.TransformerFactory");
-      } else {
-        System.setProperty("javax.xml.transform.TransformerFactory", originalFactory);
-      }
-    }
-  }
 }

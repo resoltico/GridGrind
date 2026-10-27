@@ -75,7 +75,7 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(
         () ->
             roundTrip(
-                "gridgrind-jazzer-gradient-roundtrip-",
+                "gridgrind-fuzz-gradient-roundtrip-",
                 List.of(
                     new ResolvedStep(
                         new SheetSelector.ByName(new SheetName("Budget")),
@@ -110,7 +110,7 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(
         () ->
             roundTrip(
-                "gridgrind-jazzer-metadata-roundtrip-",
+                "gridgrind-fuzz-metadata-roundtrip-",
                 List.of(
                     new ResolvedStep(
                         new SheetSelector.ByName(new SheetName("Budget")),
@@ -170,7 +170,7 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(
         () ->
             roundTrip(
-                "gridgrind-jazzer-structured-roundtrip-",
+                "gridgrind-fuzz-structured-roundtrip-",
                 List.of(
                     new ResolvedStep(
                         new SheetSelector.ByName(new SheetName("Budget")),
@@ -256,7 +256,7 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(
         () ->
             roundTrip(
-                "gridgrind-jazzer-comment-column-roundtrip-",
+                "gridgrind-fuzz-comment-column-roundtrip-",
                 List.of(
                     new ResolvedStep(
                         new SheetSelector.ByName(new SheetName("LL")),
@@ -291,7 +291,7 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(
         () ->
             roundTrip(
-                "gridgrind-jazzer-copy-picture-roundtrip-",
+                "gridgrind-fuzz-copy-picture-roundtrip-",
                 List.of(
                     new ResolvedStep(
                         new SheetSelector.ByName(new SheetName("Queue")),
@@ -335,7 +335,7 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(
         () ->
             roundTrip(
-                "gridgrind-jazzer-copy-embedded-preview-roundtrip-",
+                "gridgrind-fuzz-copy-embedded-preview-roundtrip-",
                 List.of(
                     new ResolvedStep(
                         new SheetSelector.ByName(new SheetName("Queue")),
@@ -374,7 +374,7 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(
         () ->
             roundTrip(
-                "gridgrind-jazzer-array-signature-roundtrip-",
+                "gridgrind-fuzz-array-signature-roundtrip-",
                 List.of(
                     new ResolvedStep(
                         new SheetSelector.ByName(new SheetName("Approvals")),

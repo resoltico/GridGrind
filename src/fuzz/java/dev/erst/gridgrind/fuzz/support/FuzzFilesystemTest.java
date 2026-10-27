@@ -118,7 +118,7 @@ class FuzzFilesystemTest {
   private static Set<Path> workflowDirectories(Path temporary) throws IOException {
     try (var paths = Files.list(temporary)) {
       return paths
-          .filter(path -> path.getFileName().toString().startsWith("gridgrind-jazzer-workflow-"))
+          .filter(path -> path.getFileName().toString().startsWith("gridgrind-fuzz-workflow-"))
           .collect(Collectors.toSet());
     }
   }

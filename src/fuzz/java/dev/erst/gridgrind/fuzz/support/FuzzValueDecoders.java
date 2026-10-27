@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Owns bounded cell-value and matrix decoding for Jazzer inputs. */
+/** Owns bounded cell-value and matrix decoding for fuzz inputs. */
 final class FuzzValueDecoders {
   private FuzzValueDecoders() {}
 

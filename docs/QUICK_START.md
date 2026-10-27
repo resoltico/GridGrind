@@ -1,6 +1,6 @@
 # Quick start
 
-Use a Java 26 JDK and the checked-in Gradle wrapper:
+Use a Java 27 JDK and the checked-in Gradle wrapper:
 
     ./gradlew :cli:shadowJar
     java -jar cli/build/libs/gridgrind.jar help

@@ -1,8 +1,8 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.28.0@sha256:bb22d9815c728170f72750f4e5b0d672e06176142e1d602c7e66c050100b7e5b
 
 # Pin both builder and runtime manifest lists so local rebuilds and published images stay
 # reproducible across time.
-FROM azul/zulu-openjdk:26@sha256:7dc4483e0fc259abb8234c9c0ef87f9fc5a472c018b9238e5f6c17fb85174837 AS build
+FROM azul-zulu:27.30-27.0.1-jdk-debian13@sha256:7f3f17771a7a8500b8844c7da21b89f14feb856b7bafe6d68292bca8e746f035 AS build
 
 ARG GRIDGRIND_VERSION
 
@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/root/.gradle set --; \
     if [ -n "${GRIDGRIND_VERSION}" ]; then set -- "-Pversion=${GRIDGRIND_VERSION}"; fi; \
     ./gradlew --no-daemon :cli:shadowJar "$@"
 
-FROM azul/zulu-openjdk:26-jre@sha256:9382c343f6de2c9f2633b7f629380f9c2a9444df8768a880c690bd5ea74f51b6
+FROM azul-zulu:27.30-27.0.1-jre-debian13@sha256:5682efdef44a68c0b27f7a8a7365945dc662b209af6dfca9983d65db2a478394
 
 ARG GRIDGRIND_VERSION=unknown
 
@@ -33,7 +33,7 @@ LABEL org.opencontainers.image.version="${GRIDGRIND_VERSION}"
 LABEL org.opencontainers.image.vendor="Ervins Strauhmanis"
 LABEL org.opencontainers.image.source="https://github.com/resoltico/GridGrind"
 LABEL org.opencontainers.image.documentation="https://github.com/resoltico/GridGrind/blob/main/README.md"
-LABEL org.opencontainers.image.base.name="docker.io/azul/zulu-openjdk:26-jre"
+LABEL org.opencontainers.image.base.name="docker.io/library/azul-zulu:27.30-27.0.1-jre-debian13"
 
 ARG GRIDGRIND_UID=65532
 ARG GRIDGRIND_GID=65532

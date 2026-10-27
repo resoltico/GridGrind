@@ -37,7 +37,10 @@ class DevcontainerTest {
         GoldenSnapshots.JSON.readTree(
             Files.readString(GoldenLauncher.REPOSITORY.resolve(".devcontainer/devcontainer.json")));
     assertTrue(
-        config.path("features").has("ghcr.io/devcontainers/features/docker-outside-of-docker:1"));
+        config
+            .path("features")
+            .has(
+                "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.1@sha256:698f5900fac471e046c6e9d4333fec88c0e8d952c713494fa0712dce80baeca0"));
     assertEquals("vscode", config.path("remoteUser").asText());
     assertEquals("/workspaces/gridgrind", config.path("workspaceFolder").asText());
     assertEquals(
@@ -58,7 +61,7 @@ class DevcontainerTest {
     boolean defaultRuntime = false;
     for (var runtime : editor.path("settings").path("java.configuration.runtimes")) {
       defaultRuntime |=
-          "/usr/lib/jvm/zulu-26".equals(runtime.path("path").asText())
+          "/usr/lib/jvm/zulu-27".equals(runtime.path("path").asText())
               && runtime.path("default").asBoolean();
     }
     assertTrue(defaultRuntime);
@@ -67,7 +70,7 @@ class DevcontainerTest {
             List.of(),
             "bash",
             "-lc",
-            "set -euo pipefail; . /etc/os-release; case \"$ID\" in ubuntu|debian) ;; *) exit 1;; esac; java -XshowSettings:properties -version 2>&1 | grep -F 'java.vendor = Azul Systems, Inc.'; java --version | grep -E '26(\\.|\\+| )'; javac --version | grep -E '^javac 26(\\.|$)'; git --version; python3 --version; shellcheck --version; fc-match 'DejaVu Sans'"));
+            "set -euo pipefail; . /etc/os-release; case \"$ID\" in ubuntu|debian) ;; *) exit 1;; esac; java -XshowSettings:properties -version 2>&1 | grep -F 'java.vendor = Azul Systems, Inc.'; java --version | grep -E '27(\\.|\\+| )'; javac --version | grep -E '^javac 27(\\.|$)'; git --version; python3 --version; shellcheck --version; fc-match 'DejaVu Sans'"));
   }
 
   @Test

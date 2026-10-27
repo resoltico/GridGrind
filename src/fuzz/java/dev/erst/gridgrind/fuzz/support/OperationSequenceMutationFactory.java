@@ -28,7 +28,7 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.Optional;
 
-/** Builds bounded mutation steps for protocol-workflow Jazzer generation. */
+/** Builds bounded mutation steps for protocol-workflow fuzz generation. */
 final class OperationSequenceMutationFactory {
   private OperationSequenceMutationFactory() {}
 

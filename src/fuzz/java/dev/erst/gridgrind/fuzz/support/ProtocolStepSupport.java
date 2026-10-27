@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-/** Shared step-native workflow builders for Jazzer harnesses. */
+/** Shared step-native workflow builders for fuzz harnesses. */
 final class ProtocolStepSupport {
   private ProtocolStepSupport() {}
 

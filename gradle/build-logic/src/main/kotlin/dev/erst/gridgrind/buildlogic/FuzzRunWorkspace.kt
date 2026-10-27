@@ -60,7 +60,7 @@ object FuzzRunWorkspace {
                 Files.createDirectories(temporary)
                 val findings = Files.createDirectories(findingsRoot.resolve(harness))
                 for (input in inputs) Files.copy(input, corpus.resolve(input.fileName))
-                val ceiling = inputs.sumOf(Files::size) + (runs.toLong() + inputs.size + 1L) * maxInputBytes
+                val ceiling = inputs.sumOf(Files::size) + runs.toLong() * maxInputBytes
                 action.accept(RunFiles(corpus, temporary, findings, ceiling))
                 // A failing/killed run keeps its scratch for diagnosis; the next admitted run resets it.
                 deleteTree(temporary)

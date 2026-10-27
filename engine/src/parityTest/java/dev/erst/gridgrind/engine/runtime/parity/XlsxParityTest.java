@@ -42,8 +42,9 @@ final class XlsxParityTest {
     XlsxParityLedger.CorpusManifest corpus =
         XlsxParitySupport.call("load parity corpus manifest", XlsxParityLedger::loadCorpus);
 
-    assertEquals("5.5.1", ledger.poiVersion());
-    assertEquals("5.5.1", corpus.poiVersion());
+    String runtimePoiVersion = org.apache.poi.Version.getVersion();
+    assertEquals(runtimePoiVersion, ledger.poiVersion(), "Ledger must name the tested POI runtime");
+    assertEquals(runtimePoiVersion, corpus.poiVersion(), "Corpus must name the tested POI runtime");
     assertEquals(
         List.of(
             XlsxParityScenarios.CORE_WORKBOOK,

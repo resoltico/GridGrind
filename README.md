@@ -1,12 +1,12 @@
 # GridGrind
 
-GridGrind is a Java 26 / Gradle engine for structured .xlsx automation. Author a canonical
+GridGrind is a Java 27 / Gradle engine for structured .xlsx automation. Author a canonical
 workbook plan through JSON or the pure Java API, provide explicit host authority, and receive
 factual results, assertions and execution evidence.
 
 ## Start
 
-Build from a Java 26 JDK with:
+Build with a Java 27 JDK selected by JAVA_HOME and PATH:
 
     ./gradlew :cli:shadowJar
     java -jar cli/build/libs/gridgrind.jar help

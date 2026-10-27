@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** Dedicated chart payload generator shared by protocol and engine-side Jazzer sequences. */
+/** Dedicated chart payload generator shared by protocol and engine-side sequences. */
 final class OperationSequenceChartFactory {
   private static final String DRAWING_CHART_NAME = "OpsChart";
 

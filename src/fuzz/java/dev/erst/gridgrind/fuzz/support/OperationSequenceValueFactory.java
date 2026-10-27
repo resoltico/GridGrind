@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-/** Builds bounded protocol and engine value payloads shared across the Jazzer generators. */
+/** Builds bounded protocol and engine value payloads shared across the fuzz generators. */
 final class OperationSequenceValueFactory {
   static final String DRAWING_PICTURE_NAME = "OpsPicture";
   static final String DRAWING_CHART_NAME = "OpsChart";

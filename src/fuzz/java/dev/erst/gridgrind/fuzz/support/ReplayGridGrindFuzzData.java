@@ -3,7 +3,7 @@ package dev.erst.gridgrind.fuzz.support;
 import java.util.Arrays;
 import java.util.Objects;
 
-/** Replays GridGrind's scalar fuzz-input surface in pure Java without Jazzer's native layer. */
+/** Replays GridGrind's scalar fuzz-input surface in pure Java without native instrumentation. */
 final class ReplayGridGrindFuzzData implements GridGrindFuzzData {
   private static final double TWO_TO_63 = 0x1.0p63;
   private static final double UNSIGNED_LONG_MAX_AS_DOUBLE = unsignedLongToDouble(-1L);

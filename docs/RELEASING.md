@@ -1,5 +1,7 @@
 # Releasing
 
+Use the Java 27 toolchain/runtime configured in gradle.properties.
+
 Local builds use 0.0.0-dev from gradle.properties. A release builds the checked-out vX.Y.Z tag
 with -Pversion=X.Y.Z; the same version reaches JAR metadata, distribution names and the image.
 

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "poiVersion": "5.5.1",
+  "poiVersion": "6.0.0",
   "scenarios": [
     {
       "id": "gridgrind-core-authoring",

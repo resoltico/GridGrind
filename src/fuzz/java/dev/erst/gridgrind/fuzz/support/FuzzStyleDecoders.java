@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Owns bounded style, color, border, and font decoding for Jazzer inputs. */
+/** Owns bounded style, color, border, and font decoding for fuzz inputs. */
 final class FuzzStyleDecoders {
   private FuzzStyleDecoders() {}
 

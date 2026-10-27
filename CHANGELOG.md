@@ -5,6 +5,12 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 
 ## [Unreleased]
 
+- Build and supported product runtime now require Java 27; the source/bytecode target is 26 to match stable compiler-analysis tooling.
+- Apache POI 6.0.0 corrects Excel unary-minus precedence and picture-anchor movement during row/column edits; recalculated values and affected drawing layouts can change.
+- POI 6 multiplication/division follows IEEE 754 directly; raw cached results can change at floating-point precision, so exact numeric expectations may need updating.
+- Runtime libraries use current stable JSON, cryptography and XML releases, including Jackson 3.2.4 and Bouncy Castle 1.86; resolved dependencies and bundled legal notices are refreshed.
+- CI and container inputs use current action releases, Ubuntu 26.04 runners/contributor images, and digest-pinned Azul 27.0.1 Debian 13 images.
+- Java formatting calls the current google-java-format 1.37 API directly through Spotless, avoiding its obsolete upstream adapter; formatter-only javac exports are declared in gradle.properties.
 - JSON protocolVersion is now integer 1, replacing V3; regenerate requests from current templates and update consumers. Wire variants use type or status.
 - CellValueSpec variants use value for scalar or source payloads and runs for rich text; update request producers. Explicit null is rejected instead of applying omission defaults.
 - CLI automation must use explicit run, doctor, catalog, schema, recipe and template subcommands; flat command flags and implicit stdin selection are removed. See [CLI](docs/CLI.md).
@@ -12,9 +18,10 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 - GridGrind-owned code uses MPL-2.0, retaining third-party terms. Previously distributed MIT copies retain their permissions; review source-distribution duties in [LICENSE](LICENSE).
 - Request, grant and response JSON Schemas are available through schema subcommands; structured intake diagnostics preserve independent valid fragments and exact JSON locations.
 - Pure authoring, recipes and discovery live in core; JSON codecs and schema handling live in json, allowing model-only Java consumers to omit the workbook engine.
-- Build logic uses Kotlin and the shared Java 26 target. Runtime and POI parity tests live in engine; architecture-tests verifies product boundaries and record wire leaves.
+- Build logic uses Kotlin and the declared Java target. Runtime and POI parity tests live in engine; architecture-tests verifies product boundaries and record wire leaves.
 - Coverage and mutation scores are advisory; custom source-shape budgets are removed. Run ./gradlew mutationReport for the configured mutation scopes.
-- Fuzzing uses the root Gradle build: check replays committed seeds; ./gradlew fuzz selects opt-in active campaigns. The nested Jazzer build and its operator scripts are removed.
+- Fuzzing uses JQF 3.0 on Java 27. Root check replays committed seeds; ./gradlew fuzz selects bounded active runs. Jazzer, its agent bootstrap and the nested fuzz build are removed.
+- JQF active runs retain explicit invariants and coverage feedback; generic security-sink sanitizers and comparison/value profiling are not provided by the new driver.
 - check.sh uses one Gradle task graph for deterministic checks, coverage and distributions. Docker and contributor-container suites are separate Gradle tasks.
 - Local builds use 0.0.0-dev. Version tags drive verified releases and multi-architecture containers; release notes require one nonempty, dated changelog entry matching the tag.
 - Active fuzzing defaults to 60 s, 10,000 executions and 32 KiB inputs, with one retained corpus. Unreviewed findings block another run; see [fuzzing](docs/FUZZING.md).

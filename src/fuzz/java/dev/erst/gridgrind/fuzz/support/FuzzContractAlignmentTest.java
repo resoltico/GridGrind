@@ -10,7 +10,7 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import org.junit.jupiter.api.Test;
 
-/** Guards Jazzer support helpers against contract-model drift. */
+/** Guards fuzz support helpers against contract-model drift. */
 class FuzzContractAlignmentTest {
   @Test
   void nextProtocolGridProducesCanonicalTypedGridInput() {

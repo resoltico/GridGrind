@@ -18,8 +18,19 @@
     </rule>
 
     <rule ref="category/java/bestpractices.xml">
+        <!-- Dense fixtures compose assertion and static-helper imports; production stays explicit. -->
+        <exclude name="OnDemandImport"/>
+        <exclude name="TypeNameMismatch"/>
         <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
         <exclude name="UnitTestContainsTooManyAsserts"/>
+    </rule>
+
+    <!-- Cohesive package-private families may share a source file. Keep public type-name
+         and package-directory alignment checks from the built-in rule. -->
+    <rule ref="category/java/bestpractices.xml/TypeNameMismatch">
+        <properties>
+            <property name="violationSuppressXPath" value="self::*[@Visibility = 'package']"/>
+        </properties>
     </rule>
 
     <rule ref="category/java/design.xml">

@@ -15,7 +15,7 @@ import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
-/** Builds bounded inspection steps for protocol-workflow Jazzer generation. */
+/** Builds bounded inspection steps for protocol-workflow fuzz generation. */
 final class OperationSequenceInspectionFactory {
   private OperationSequenceInspectionFactory() {}
 

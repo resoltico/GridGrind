@@ -14,18 +14,26 @@ resolve_script_dir() {
 GRIDGRIND_ROOT="$(cd "$(resolve_script_dir "${BASH_SOURCE[0]}")/../.." && pwd)"
 readonly GRIDGRIND_ROOT
 
-require_java_26() {
-    local tool output version
+require_java() {
+    local tool output version required_version key value
+    required_version=""
+    while IFS='=' read -r key value; do
+        if [[ "${key}" == gridgrindJavaVersion ]]; then required_version="${value}"; fi
+    done < "${GRIDGRIND_ROOT}/gradle.properties"
+    if [[ ! "${required_version}" =~ ^[0-9]+$ ]]; then
+        printf 'error: gradle.properties must declare gridgrindJavaVersion as an integer\n' >&2
+        return 1
+    fi
     for tool in java javac; do
         if ! output="$("${tool}" --version 2>&1)"; then
-            printf 'error: %s must resolve to a working Java 26 JDK\n' "${tool}" >&2
+            printf 'error: %s must resolve to a working Java %s JDK\n' "${tool}" "${required_version}" >&2
             return 1
         fi
         version="${output#* }"
         version="${version%%[[:space:]]*}"
         case "${version}" in
-            26|26.*|26+*) ;;
-            *) printf 'error: %s must report Java 26; found %s\n' "${tool}" "${output%%$'\n'*}" >&2; return 1 ;;
+            "${required_version}"|"${required_version}".*|"${required_version}"+*) ;;
+            *) printf 'error: %s must report Java %s; found %s\n' "${tool}" "${required_version}" "${output%%$'\n'*}" >&2; return 1 ;;
         esac
     done
 }

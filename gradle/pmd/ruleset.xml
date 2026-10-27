@@ -18,7 +18,17 @@
         <exclude name="NullAssignment"/>
     </rule>
 
-    <rule ref="category/java/bestpractices.xml"/>
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="TypeNameMismatch"/>
+    </rule>
+
+    <!-- Cohesive package-private families may share a source file. Keep public type-name
+         and package-directory alignment checks from the built-in rule. -->
+    <rule ref="category/java/bestpractices.xml/TypeNameMismatch">
+        <properties>
+            <property name="violationSuppressXPath" value="self::*[@Visibility = 'package']"/>
+        </properties>
+    </rule>
 
     <rule ref="category/java/design.xml">
         <!-- Demeter violations are too noisy for a layered facade API -->

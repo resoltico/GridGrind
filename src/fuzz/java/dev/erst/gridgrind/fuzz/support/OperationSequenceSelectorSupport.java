@@ -9,7 +9,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
-/** Shared selector, span, and execution-policy helpers for Jazzer operation generation. */
+/** Shared selector, span, and execution-policy helpers for operation generation. */
 final class OperationSequenceSelectorSupport {
   private OperationSequenceSelectorSupport() {}
 

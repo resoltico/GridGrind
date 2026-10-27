@@ -9,10 +9,12 @@ import dev.erst.gridgrind.engine.poi.FillRegistryAccess;
 import dev.erst.gridgrind.engine.poi.ImageCatalog;
 import dev.erst.gridgrind.engine.poi.PrivateContract;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
+import org.apache.poi.Version;
 import org.junit.jupiter.api.Test;
 
 /** Fails fast when a POI upgrade breaks one of GridGrind's explicit private engine seams. */
-class PoiPrivateAccessCompatibilityTest {
+class PoiPrivateContractTest {
   @Test
   void currentPoiVersionSatisfiesEveryRegisteredPrivateEngineContract() {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -62,23 +64,10 @@ class PoiPrivateAccessCompatibilityTest {
   }
 
   @Test
-  void failureMessagesCoverPoiVersionFallbackPaths() {
-    PrivateContract moduleVersionContract =
-        PrivateContract.field(String.class, "value", "module-version fallback");
-    PrivateContract noPackageContract =
-        PrivateContract.field(byte[].class, "length", "no-package fallback");
-    PrivateContract unknownVersionContract =
-        PrivateContract.field(
-            PoiPrivateAccessCompatibilityTest.class, "class", "unknown-version fallback");
-
-    assertAll(
-        () ->
-            assertTrue(
-                moduleVersionContract
-                    .failureMessage()
-                    .contains("Apache POI private contract unavailable")),
-        () -> assertTrue(moduleVersionContract.failureMessage().contains("Apache POI 26")),
-        () -> assertTrue(noPackageContract.failureMessage().contains("Apache POI 26")),
-        () -> assertTrue(unknownVersionContract.failureMessage().contains("Apache POI unknown")));
+  void failureMessagesUseTheActualPoiVersionForEveryContractOwner() {
+    for (Class<?> owner : List.of(String.class, byte[].class, PoiPrivateContractTest.class)) {
+      var contract = PrivateContract.field(owner, "missing", "diagnostic identity");
+      assertTrue(contract.failureMessage().contains("Apache POI " + Version.getVersion()));
+    }
   }
 }

@@ -21,7 +21,7 @@ class GridGrindJavaConventionsPluginTest {
     Files.writeString(
         projectDirectory.resolve("settings.gradle.kts"), "rootProject.name = \"fixture\"\n");
     Files.writeString(
-        projectDirectory.resolve("gradle.properties"), "gridgrindJavaVersion=26\n");
+        projectDirectory.resolve("gradle.properties"), "gridgrindJavaVersion=27\ngridgrindJavaTargetVersion=26\n");
     Files.writeString(
         projectDirectory.resolve("gradle/pmd/ruleset.xml"), minimalRuleset());
     Files.writeString(
@@ -61,11 +61,11 @@ class GridGrindJavaConventionsPluginTest {
   private static String versionCatalog() {
     return """
         [versions]
-        errorprone = "2.50.0"
-        google-java-format = "1.36.1"
-        jacoco = "0.8.15"
-        nullaway = "0.14.1"
-        pmd = "7.26.0"
+        errorprone = "2.51.0"
+        google-java-format = "1.37.0"
+        jacoco = "0.8.16"
+        nullaway = "0.14.3"
+        pmd = "7.28.0"
 
         [libraries]
         errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }

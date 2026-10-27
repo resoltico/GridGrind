@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Builds bounded protocol requests and workbook command sequences for Jazzer harnesses. */
+/** Builds bounded protocol requests and workbook command sequences for fuzz harnesses. */
 public final class OperationSequenceModel {
   private OperationSequenceModel() {}
 

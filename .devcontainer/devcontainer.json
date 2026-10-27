@@ -5,7 +5,7 @@
     "context": "."
   },
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.1@sha256:698f5900fac471e046c6e9d4333fec88c0e8d952c713494fa0712dce80baeca0": {}
   },
   "workspaceFolder": "/workspaces/gridgrind",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/gridgrind,type=bind,consistency=cached",
@@ -24,8 +24,8 @@
       "settings": {
         "java.configuration.runtimes": [
           {
-            "name": "JavaSE-26",
-            "path": "/usr/lib/jvm/zulu-26",
+            "name": "JavaSE-27",
+            "path": "/usr/lib/jvm/zulu-27",
             "default": true
           }
         ],

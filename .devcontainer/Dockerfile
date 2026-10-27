@@ -1,11 +1,6 @@
-# Contributor devcontainer for GridGrind.
-#
-# Why this is not the runtime image:
-# - VS Code remote extensions expect a glibc-based environment more than the shipped Alpine JRE.
-# - Contributors need a full JDK, shell tooling, and repo verification dependencies rather than a
-#   minimal runtime-only image.
-# - We still keep the Java vendor aligned with CI by installing Azul Zulu 26.
-FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04@sha256:d94c97dd9cacf183d0a6fd12a8e87b526e9e928307674ae9c94139139c0c6eae
+# Contributor image with the full JDK, shell tooling and fonts used for development.
+# The shipped product image uses a separate JRE and carries only runtime components.
+FROM mcr.microsoft.com/devcontainers/base:3.0.10-ubuntu26.04@sha256:91eff046d5c12318fc98e59258982b87ba896c467427ed8b5dab5a02107a5db7
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -35,12 +30,12 @@ RUN apt-get update \
     && echo "deb [signed-by=/usr/share/keyrings/azul.gpg] https://repos.azul.com/zulu/deb stable main" \
         > /etc/apt/sources.list.d/zulu.list \
     && apt-get update \
-    && apt-get install -y --no-install-recommends zulu26-jdk \
-    && zulu_home="$(find /usr/lib/jvm -maxdepth 1 -mindepth 1 -type d -name 'zulu26*' | sort | head -1)" \
+    && apt-get install -y --no-install-recommends zulu27-jdk \
+    && zulu_home="$(find /usr/lib/jvm -maxdepth 1 -mindepth 1 -type d -name 'zulu27*' | sort | head -1)" \
     && [[ -n "${zulu_home}" ]] \
-    && ln -sfn "${zulu_home}" /usr/lib/jvm/zulu-26 \
-    && test -x /usr/lib/jvm/zulu-26/bin/java \
-    && test -x /usr/lib/jvm/zulu-26/bin/javac \
+    && ln -sfn "${zulu_home}" /usr/lib/jvm/zulu-27 \
+    && test -x /usr/lib/jvm/zulu-27/bin/java \
+    && test -x /usr/lib/jvm/zulu-27/bin/javac \
     && fc-cache -f >/dev/null \
     && java --version >/dev/null \
     && javac --version >/dev/null \
@@ -49,7 +44,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME=/usr/lib/jvm/zulu-26
+ENV JAVA_HOME=/usr/lib/jvm/zulu-27
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
 USER vscode
