@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +19,7 @@ import tools.jackson.databind.node.ObjectNode;
 /** Negative controls for portable preview fingerprints and independent persisted-image checks. */
 class GoldenSignaturePreviewsTest {
   @Test
-  void persistedBytesDimensionsAndFingerprintMustAllAgree() throws Exception {
+  void persistedBytesDimensionsAndFingerprintMustAllAgree() throws IOException {
     byte[] image = png(0xFFFFFF);
     String hash = GoldenSignaturePreviews.sha256(image);
     ObjectNode preview = preview(image);
@@ -49,7 +50,7 @@ class GoldenSignaturePreviewsTest {
   }
 
   @Test
-  void normalizationKeepsPreviewIdentityAcrossExecutionAndReadback() throws Exception {
+  void normalizationKeepsPreviewIdentityAcrossExecutionAndReadback() {
     ObjectNode baseline = observation("a".repeat(64), 100);
     ObjectNode differentRasterization = observation("b".repeat(64), 200);
     Path workspace = Path.of(".").toAbsolutePath();
@@ -103,7 +104,7 @@ class GoldenSignaturePreviewsTest {
         .put("heightPixels", 3);
   }
 
-  private static byte[] png(int color) throws Exception {
+  private static byte[] png(int color) throws IOException {
     var image = new BufferedImage(2, 3, BufferedImage.TYPE_INT_RGB);
     image.setRGB(0, 0, color);
     var bytes = new ByteArrayOutputStream();

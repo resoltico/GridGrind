@@ -159,6 +159,8 @@ final class GoldenSnapshots {
   }
 
   /** Identity relationships retained across one execution and its readback. */
+  @SuppressWarnings(
+      "PMD.UseConcurrentHashMap") // One canonicalization owns insertion-ordered identities.
   private static final class NormalizationState {
     private final Set<String> certifiedGeneratedPreviews;
 

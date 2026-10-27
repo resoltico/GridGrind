@@ -42,6 +42,7 @@ final class GoldenSignaturePreviews {
     return verify(plan, workspace, workspace.resolve(path), execution.path("readback"));
   }
 
+  @SuppressWarnings("PMD.UseConcurrentHashMap") // Invocation-local maps are read sequentially.
   static Set<String> verify(JsonNode plan, Path workspace, Path output, JsonNode readback)
       throws IOException {
     Map<String, byte[]> expected = new LinkedHashMap<>();
@@ -75,17 +76,7 @@ final class GoldenSignaturePreviews {
 
   private static byte[] render(JsonNode definition, Path workspace) throws IOException {
     var signature = new XSSFSignatureLine();
-    if (definition.has("suggestedSigner"))
-      signature.setSuggestedSigner(definition.path("suggestedSigner").asString());
-    if (definition.has("suggestedSigner2"))
-      signature.setSuggestedSigner2(definition.path("suggestedSigner2").asString());
-    if (definition.has("suggestedSignerEmail"))
-      signature.setSuggestedSignerEmail(definition.path("suggestedSignerEmail").asString());
-    if (definition.has("signingInstructions"))
-      signature.setSigningInstructions(definition.path("signingInstructions").asString());
-    if (definition.has("caption")) signature.setCaption(definition.path("caption").asString());
-    if (definition.has("invalidStamp"))
-      signature.setInvalidStamp(definition.path("invalidStamp").asString());
+    configureMetadata(signature, definition);
     if (definition.has("plainSignature")) {
       JsonNode picture = definition.path("plainSignature");
       assertEquals(
@@ -110,16 +101,30 @@ final class GoldenSignaturePreviews {
     }
   }
 
+  private static void configureMetadata(XSSFSignatureLine signature, JsonNode definition) {
+    if (definition.has("suggestedSigner"))
+      signature.setSuggestedSigner(definition.path("suggestedSigner").asString());
+    if (definition.has("suggestedSigner2"))
+      signature.setSuggestedSigner2(definition.path("suggestedSigner2").asString());
+    if (definition.has("suggestedSignerEmail"))
+      signature.setSuggestedSignerEmail(definition.path("suggestedSignerEmail").asString());
+    if (definition.has("signingInstructions"))
+      signature.setSigningInstructions(definition.path("signingInstructions").asString());
+    if (definition.has("caption")) signature.setCaption(definition.path("caption").asString());
+    if (definition.has("invalidStamp"))
+      signature.setInvalidStamp(definition.path("invalidStamp").asString());
+  }
+
   private static void verifyReports(
       JsonNode node, Map<String, byte[]> expected, Map<String, byte[]> media, Set<String> certified)
       throws IOException {
     if (node.isObject()) {
-      if ("SIGNATURE_LINE".equals(node.path("type").asString("")) && node.has("preview")) {
-        String name = node.path("name").asString();
-        if (expected.containsKey(name)) {
-          verifyPreview(node.path("preview"), expected.get(name), media);
-          certified.add(node.path("preview").path("sha256").asString());
-        }
+      String name = node.path("name").asString("");
+      if ("SIGNATURE_LINE".equals(node.path("type").asString(""))
+          && node.has("preview")
+          && expected.containsKey(name)) {
+        verifyPreview(node.path("preview"), expected.get(name), media);
+        certified.add(node.path("preview").path("sha256").asString());
       }
       for (var property : node.properties())
         verifyReports(property.getValue(), expected, media, certified);
