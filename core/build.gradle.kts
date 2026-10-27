@@ -28,7 +28,7 @@ tasks.named<info.solidsoft.gradle.pitest.PitestTask>("pitest") {
 }
 
 configure<PitestPluginExtension> {
-    targetClasses.set(
+    targetClasses.convention(
         setOf(
             "dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation*",
             "dev.erst.gridgrind.core.vocabulary.RgbHex",
@@ -40,7 +40,7 @@ configure<PitestPluginExtension> {
             "dev.erst.gridgrind.core.validation.WorkbookStaticMaterializationValidation*",
         ),
     )
-    targetTests.set(
+    targetTests.convention(
         setOf(
             "dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidationTest",
             "dev.erst.gridgrind.core.model.security.AdvancedMutationProtocolTypesTest",
@@ -94,12 +94,12 @@ dependencies {
     testRuntimeOnly(libs.log4j.core)
 }
 
-tasks.withType<Test>().configureEach {
+tasks.named<Test>("test") {
     inputs.files(
-        rootProject.fileTree("docs") { include("*.md") },
-        rootProject.file("README.md"),
+        rootProject.file("docs/DEVELOPER.md"),
+        rootProject.file("gradle/libs.versions.toml"),
+        rootProject.fileTree("docs/reference") { include("*.md") },
     ).withPathSensitivity(PathSensitivity.RELATIVE)
-    systemProperty("gridgrind.root.dir", rootProject.projectDir.absolutePath)
 }
 
 tasks.named<JacocoReport>("jacocoTestReport") {

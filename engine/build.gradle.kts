@@ -14,19 +14,22 @@ plugins {
 description = "Core GridGrind workbook automation and request execution engine"
 
 configure<PitestPluginExtension> {
-    targetClasses.set(
+    targetClasses.convention(
         setOf(
             "dev.erst.gridgrind.engine.runtime.FormulaOriginTracker*",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightPaths*",
             "dev.erst.gridgrind.engine.validation.DataValidationAdapter*",
         ),
     )
-    targetTests.set(
+    targetTests.convention(
         setOf(
             "dev.erst.gridgrind.engine.runtime.FormulaOriginTrackerTest",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightTest",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightFormulaEnvironmentTest",
             "dev.erst.gridgrind.engine.validation.ValidationComparisonOperatorsTest",
+            "dev.erst.gridgrind.engine.backend.xssf.ExcelDataValidation*Test",
+            "dev.erst.gridgrind.engine.backend.xssf.ExcelStructureValidationRewriteCoverageTest",
+            "dev.erst.gridgrind.engine.backend.xssf.ExcelResidualValidationCoverageTest",
         ),
     )
 }
@@ -116,10 +119,6 @@ dependencies {
     add(paritySourceSet.runtimeOnlyConfigurationName, libs.slf4j.api)
 }
 val parityTest = tasks.register<Test>("parityTest") {
-    inputs.files(
-        rootProject.fileTree("docs") { include("*.md") },
-        rootProject.file("README.md"),
-    ).withPathSensitivity(PathSensitivity.RELATIVE)
     description = "Runs the XSSF behavioural parity corpus."
     group = "verification"
     testClassesDirs = paritySourceSet.output.classesDirs
