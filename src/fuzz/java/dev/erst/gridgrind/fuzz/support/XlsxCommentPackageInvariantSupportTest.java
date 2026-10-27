@@ -17,10 +17,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CommentsDocument;
 
 /** Regression tests for persisted OOXML comment-package invariants. */
 class XlsxCommentPackageInvariantSupportTest {
+  @TempDir Path temporary;
+
   @Test
   void requireCanonicalCommentPackageStateAcceptsCanonicalWorkbook() throws IOException {
     Path workbookPath = workbookWithComment("gridgrind-comment-package-canonical-");
@@ -47,8 +50,8 @@ class XlsxCommentPackageInvariantSupportTest {
     assertTrue(failure.getMessage().contains("comment refs must be unique"));
   }
 
-  private static Path workbookWithComment(String prefix) throws IOException {
-    Path workbookPath = Files.createTempFile(prefix, ".xlsx");
+  private Path workbookWithComment(String prefix) throws IOException {
+    Path workbookPath = Files.createTempFile(temporary, prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
@@ -61,10 +64,11 @@ class XlsxCommentPackageInvariantSupportTest {
     return workbookPath;
   }
 
-  private static Path rewriteEntry(
+  private Path rewriteEntry(
       Path sourceWorkbook, String entryPrefix, UnaryOperator<byte[]> transformer)
       throws IOException {
-    Path rewrittenWorkbook = Files.createTempFile("gridgrind-comment-package-mutated-", ".xlsx");
+    Path rewrittenWorkbook =
+        Files.createTempFile(temporary, "gridgrind-comment-package-mutated-", ".xlsx");
     try (ZipInputStream inputStream = new ZipInputStream(Files.newInputStream(sourceWorkbook));
         ZipOutputStream outputStream =
             new ZipOutputStream(Files.newOutputStream(rewrittenWorkbook))) {

@@ -41,8 +41,10 @@ public final class XlsxRoundTripHarness {
           // Invalid command sequences are expected to fail before or during persistence.
         }
       }
-    } finally {
-      FuzzFilesystem.deleteRecursively(directory);
+    } catch (IOException | RuntimeException | Error failure) {
+      FuzzFilesystem.cleanupAfterFailure(directory, failure);
+      throw failure;
     }
+    FuzzFilesystem.deleteRecursively(directory);
   }
 }

@@ -62,9 +62,11 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** Regression tests for the `.xlsx` round-trip verifier itself. */
 class XlsxRoundTripVerifierTest {
+  @TempDir Path temporary;
   private static final String PNG_PIXEL_BASE64 =
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC";
 
@@ -412,8 +414,8 @@ class XlsxRoundTripVerifierTest {
                         new ResolvedMutationAction.SetSignatureLine(signatureLineDefinition())))));
   }
 
-  private static void roundTrip(String prefix, List<ResolvedStep> commands) throws IOException {
-    Path workbookPath = Files.createTempFile(prefix, ".xlsx");
+  private void roundTrip(String prefix, List<ResolvedStep> commands) throws IOException {
+    Path workbookPath = Files.createTempFile(temporary, prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {

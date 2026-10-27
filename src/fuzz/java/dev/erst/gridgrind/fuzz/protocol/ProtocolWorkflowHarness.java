@@ -3,6 +3,7 @@ package dev.erst.gridgrind.fuzz.protocol;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.fuzz.support.FuzzFilesystem;
 import dev.erst.gridgrind.fuzz.support.FuzzWorkbookIo;
 import dev.erst.gridgrind.fuzz.support.GeneratedProtocolWorkflow;
 import dev.erst.gridgrind.fuzz.support.GridGrindFuzzData;
@@ -36,8 +37,10 @@ public final class ProtocolWorkflowHarness {
       }
       WorkbookInvariantChecks.requireResponseShape(response);
       WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response);
-    } finally {
-      workflow.cleanup();
+    } catch (RuntimeException | Error failure) {
+      workflow.cleanupRoots().forEach(root -> FuzzFilesystem.cleanupAfterFailure(root, failure));
+      throw failure;
     }
+    workflow.cleanup();
   }
 }

@@ -65,20 +65,25 @@ public final class OperationSequenceModel {
               pivotTableName));
     }
     WorkflowStorage workflowStorage = nextWorkflowStorage(primarySheet, secondarySheet, data);
-    return new GeneratedProtocolWorkflow(
-        ProtocolStepSupport.request(
-            workflowStorage.source(),
-            workflowStorage.persistence(),
-            OperationSequenceSelectorSupport.nextExecutionPolicy(
-                data,
-                primarySheet,
-                secondarySheet,
-                OperationSequenceSelectorSupport.validFormulaAddress(data)),
-            FormulaEnvironmentSpec.empty(),
-            mutations,
-            assertions,
-            inspections),
-        List.of(workflowStorage.cleanupRoot()));
+    try {
+      return new GeneratedProtocolWorkflow(
+          ProtocolStepSupport.request(
+              workflowStorage.source(),
+              workflowStorage.persistence(),
+              OperationSequenceSelectorSupport.nextExecutionPolicy(
+                  data,
+                  primarySheet,
+                  secondarySheet,
+                  OperationSequenceSelectorSupport.validFormulaAddress(data)),
+              FormulaEnvironmentSpec.empty(),
+              mutations,
+              assertions,
+              inspections),
+          List.of(workflowStorage.cleanupRoot()));
+    } catch (RuntimeException | Error failure) {
+      FuzzFilesystem.cleanupAfterFailure(workflowStorage.cleanupRoot(), failure);
+      throw failure;
+    }
   }
 
   /** Returns a bounded sequence of workbook-core commands. */

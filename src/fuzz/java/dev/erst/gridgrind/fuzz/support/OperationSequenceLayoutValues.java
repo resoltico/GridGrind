@@ -234,42 +234,47 @@ final class OperationSequenceLayoutValues {
     Path sourcePath = directory.resolve("source.xlsx");
     Path saveAsPath = directory.resolve("output.xlsx");
 
-    return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 ->
-          new OperationSequenceValueFactory.WorkflowStorage(
-              new WorkbookPlan.WorkbookSource.New(),
+    try {
+      return switch (selectorSlot(nextSelectorByte(data))) {
+        case 0 ->
+            new OperationSequenceValueFactory.WorkflowStorage(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                directory);
+        case 1 ->
+            new OperationSequenceValueFactory.WorkflowStorage(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                directory);
+        case 2 -> {
+          writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
+          yield new OperationSequenceValueFactory.WorkflowStorage(
+              new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
               new WorkbookPlan.WorkbookPersistence.None(),
               directory);
-      case 1 ->
-          new OperationSequenceValueFactory.WorkflowStorage(
-              new WorkbookPlan.WorkbookSource.New(),
+        }
+        case 3 -> {
+          writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
+          yield new OperationSequenceValueFactory.WorkflowStorage(
+              new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
+              new WorkbookPlan.WorkbookPersistence.Overwrite(
+                  dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+              directory);
+        }
+        default -> {
+          writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
+          yield new OperationSequenceValueFactory.WorkflowStorage(
+              new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
               new WorkbookPlan.WorkbookPersistence.SaveAs(
                   saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
               directory);
-      case 2 -> {
-        writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
-        yield new OperationSequenceValueFactory.WorkflowStorage(
-            new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
-            new WorkbookPlan.WorkbookPersistence.None(),
-            directory);
-      }
-      case 3 -> {
-        writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
-        yield new OperationSequenceValueFactory.WorkflowStorage(
-            new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
-            directory);
-      }
-      default -> {
-        writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
-        yield new OperationSequenceValueFactory.WorkflowStorage(
-            new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
-            new WorkbookPlan.WorkbookPersistence.SaveAs(
-                saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            directory);
-      }
-    };
+        }
+      };
+    } catch (IOException | RuntimeException | Error failure) {
+      FuzzFilesystem.cleanupAfterFailure(directory, failure);
+      throw failure;
+    }
   }
 
   static void writeExistingWorkbook(

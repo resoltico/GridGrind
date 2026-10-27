@@ -28,9 +28,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** Regression tests for persisted OOXML picture-package invariants. */
 class XlsxPicturePackageInvariantSupportTest {
+  @TempDir Path temporary;
   private static final byte[] PNG_PIXEL_BYTES =
       Base64.getDecoder()
           .decode(
@@ -66,7 +68,8 @@ class XlsxPicturePackageInvariantSupportTest {
   @Test
   void requireCanonicalPicturePackageStateAcceptsCopiedEmbeddedObjectPreviewRelations()
       throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-picture-package-embedded-copy-", ".xlsx");
+    Path workbookPath =
+        Files.createTempFile(temporary, "gridgrind-picture-package-embedded-copy-", ".xlsx");
     Files.deleteIfExists(workbookPath);
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
@@ -98,7 +101,8 @@ class XlsxPicturePackageInvariantSupportTest {
   @Test
   void requireCanonicalPicturePackageStateRejectsWorksheetPreviewRefsPointingAtDrawings()
       throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-picture-package-sheet-preview-", ".xlsx");
+    Path workbookPath =
+        Files.createTempFile(temporary, "gridgrind-picture-package-sheet-preview-", ".xlsx");
     Files.deleteIfExists(workbookPath);
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
@@ -139,8 +143,8 @@ class XlsxPicturePackageInvariantSupportTest {
     assertTrue(failure.getMessage().contains("xl/drawings/"));
   }
 
-  private static Path workbookWithPicture(String prefix) throws IOException {
-    Path workbookPath = Files.createTempFile(prefix, ".xlsx");
+  private Path workbookWithPicture(String prefix) throws IOException {
+    Path workbookPath = Files.createTempFile(temporary, prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
@@ -163,15 +167,16 @@ class XlsxPicturePackageInvariantSupportTest {
     return workbookPath;
   }
 
-  private static Path rewriteEntry(
+  private Path rewriteEntry(
       Path sourceWorkbook, String entryName, UnaryOperator<String> transformer) throws IOException {
     return rewriteEntries(sourceWorkbook, Map.of(entryName, transformer));
   }
 
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-  private static Path rewriteEntries(
-      Path sourceWorkbook, Map<String, UnaryOperator<String>> transformers) throws IOException {
-    Path mutatedWorkbook = Files.createTempFile("gridgrind-picture-package-mutated-", ".xlsx");
+  private Path rewriteEntries(Path sourceWorkbook, Map<String, UnaryOperator<String>> transformers)
+      throws IOException {
+    Path mutatedWorkbook =
+        Files.createTempFile(temporary, "gridgrind-picture-package-mutated-", ".xlsx");
     try (ZipFile zipFile = new ZipFile(sourceWorkbook.toFile());
         ZipOutputStream outputStream =
             new ZipOutputStream(Files.newOutputStream(mutatedWorkbook))) {

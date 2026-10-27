@@ -4,7 +4,6 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
-import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
@@ -43,12 +42,18 @@ class GridGrindFuzzConventionsPlugin : Plugin<Project> {
                     it.formatAnnotations()
                 }
             }
+            val replayTemporary = layout.buildDirectory.dir("tmp/fuzzReplay").get().asFile
             val replay = tasks.register<Test>("fuzzReplay") {
                 group = "verification"
                 description = "Runs committed seeds and generator/invariant regressions without the native fuzz driver."
                 testClassesDirs = fuzz.output.classesDirs
                 classpath = fuzz.runtimeClasspath
                 useJUnitPlatform()
+                systemProperty("java.io.tmpdir", replayTemporary.absolutePath)
+                doFirst {
+                    check(!replayTemporary.exists() || replayTemporary.deleteRecursively()) { "Cannot reset fuzz replay scratch: $replayTemporary" }
+                    check(replayTemporary.mkdirs()) { "Cannot create fuzz replay scratch: $replayTemporary" }
+                }
                 systemProperty("gridgrind.fuzz.seeds", layout.projectDirectory.dir("src/fuzz/resources/seeds").asFile.absolutePath)
                 inputs.dir(layout.projectDirectory.dir("src/fuzz/resources/seeds"))
                 extensions.configure<JacocoTaskExtension> { isEnabled = false }
@@ -68,30 +73,20 @@ class GridGrindFuzzConventionsPlugin : Plugin<Project> {
                     ),
                 )
             }
-            val harness = providers.gradleProperty("harness").orElse("").get()
-            val duration = providers.gradleProperty("fuzzSeconds").orElse("60").get()
-            val corpus = layout.buildDirectory.dir("fuzz/corpus/" + harness).get().asFile
-            val findings = layout.buildDirectory.dir("fuzz/findings/" + harness).get().asFile
-            val seeds = layout.projectDirectory.dir("src/fuzz/resources/seeds/" + harness).asFile
-            tasks.register<JavaExec>("fuzz") {
+            val selectedHarness = providers.gradleProperty("harness").orElse("").get()
+            tasks.register<FuzzTask>("fuzz") {
                 group = "verification"
-                description = "Actively fuzzes one explicitly selected harness; opt-in, never part of check."
+                description = "Actively fuzzes one explicitly selected harness; bounded, opt-in, never part of check."
                 dependsOn(agent, fuzz.classesTaskName)
                 classpath = fuzz.runtimeClasspath
                 mainClass.set("com.code_intelligence.jazzer.Jazzer")
-                systemProperty("gridgrind.fuzz.harness", harness)
                 jvmArgs("--enable-native-access=ALL-UNNAMED", "-javaagent:" + agent.flatMap { it.archiveFile }.get().asFile.absolutePath)
-                args("--target_class=dev.erst.gridgrind.fuzz.FuzzTarget", "--instrumentation_includes=dev.erst.gridgrind.core.**:dev.erst.gridgrind.json.**:dev.erst.gridgrind.engine.**", "-max_total_time=" + duration, "-artifact_prefix=" + findings.absolutePath + "/", corpus.absolutePath)
-                doFirst {
-                    require(harness.matches(Regex("[a-z]+(?:-[a-z]+)*")) && seeds.isDirectory) { "Select -Pharness=protocol-request|protocol-workflow|engine-command-sequence|xlsx-roundtrip" }
-                    require(duration.toIntOrNull()?.let { it > 0 } == true) { "fuzzSeconds must be a positive integer" }
-                    corpus.mkdirs()
-                    findings.mkdirs()
-                    seeds.listFiles()?.filter { it.isFile }?.forEach { seed ->
-                        val target = corpus.resolve(seed.name)
-                        if (!target.exists()) seed.copyTo(target)
-                    }
-                }
+                harness.set(selectedHarness)
+                seconds.set(providers.gradleProperty("fuzzSeconds").orElse("60").map(String::toInt))
+                runs.set(providers.gradleProperty("fuzzRuns").orElse("10000").map(String::toInt))
+                maxInputBytes.set(providers.gradleProperty("fuzzMaxInputBytes").orElse("32768").map(String::toInt))
+                seeds.set(layout.projectDirectory.dir("src/fuzz/resources/seeds/" + selectedHarness))
+                workspace.set(layout.buildDirectory.dir("fuzz"))
             }
         }
     }

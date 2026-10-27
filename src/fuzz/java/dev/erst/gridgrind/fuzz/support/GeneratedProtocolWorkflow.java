@@ -17,7 +17,16 @@ public record GeneratedProtocolWorkflow(WorkbookPlan request, List<Path> cleanup
 
   /** Deletes every generated local scratch directory or file owned by this workflow. */
   public void cleanup() {
-    cleanupRoots.forEach(FuzzFilesystem::deleteRecursively);
+    RuntimeException firstFailure = null;
+    for (Path root : cleanupRoots) {
+      try {
+        FuzzFilesystem.deleteRecursively(root);
+      } catch (RuntimeException cleanupFailure) {
+        if (firstFailure == null) firstFailure = cleanupFailure;
+        else firstFailure.addSuppressed(cleanupFailure);
+      }
+    }
+    if (firstFailure != null) throw firstFailure;
   }
 
   /** Returns the explicit execution root that owns this generated workflow's relative paths. */
