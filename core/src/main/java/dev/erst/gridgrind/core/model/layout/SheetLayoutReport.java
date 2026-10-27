@@ -1,0 +1,25 @@
+package dev.erst.gridgrind.core.model.layout;
+
+import dev.erst.gridgrind.core.result.WorkbookResultSupport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import java.util.List;
+import java.util.Objects;
+
+/** Layout metadata such as pane state, zoom, and visible row and column sizing for one sheet. */
+public record SheetLayoutReport(
+    SheetLabel sheetName,
+    PaneReport pane,
+    int zoomPercent,
+    SheetPresentationReport presentation,
+    List<ColumnLayoutReport> columns,
+    List<RowLayoutReport> rows) {
+  public SheetLayoutReport {
+    Objects.requireNonNull(sheetName, "sheetName must not be null");
+    Objects.requireNonNull(pane, "pane must not be null");
+    Objects.requireNonNull(presentation, "presentation must not be null");
+    dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits.requireZoomPercent(
+        zoomPercent, "zoomPercent");
+    columns = WorkbookResultSupport.copyValues(columns, "columns");
+    rows = WorkbookResultSupport.copyValues(rows, "rows");
+  }
+}

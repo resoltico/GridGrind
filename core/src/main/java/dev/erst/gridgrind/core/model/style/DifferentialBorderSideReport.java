@@ -1,0 +1,20 @@
+package dev.erst.gridgrind.core.model.style;
+
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import java.util.Objects;
+import java.util.Optional;
+
+/** Protocol-facing factual report for one conditional-formatting differential border side. */
+public record DifferentialBorderSideReport(
+    Optional<ExcelBorderStyle> style, Optional<CellColorReport> color) {
+  public DifferentialBorderSideReport {
+    Objects.requireNonNull(style, "style must not be null");
+    Objects.requireNonNull(color, "color must not be null");
+    if (style.isEmpty() && color.isEmpty()) {
+      throw new IllegalArgumentException("border side must set style and/or color");
+    }
+    if (style.isPresent() && style.orElseThrow() == ExcelBorderStyle.NONE && color.isPresent()) {
+      throw new IllegalArgumentException("border side color is not supported when style is NONE");
+    }
+  }
+}

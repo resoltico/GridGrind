@@ -4,14 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,8 +24,8 @@ class ExecutionStepSupportTest {
   void eventReadRejectsSurfaceQueriesBeforeTouchingTheWorkbookPath() {
     WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
-    ExecutionStepSupport support =
-        new ExecutionStepSupport(
+    StepExecution support =
+        new StepExecution(
             workbookEngine,
             selectorResolver,
             new AssertionExecutor(workbookEngine, selectorResolver),
@@ -37,7 +38,7 @@ class ExecutionStepSupportTest {
                 ExecutionGrantTestSupport.noPublication()));
     InspectionStep inspectionStep =
         new InspectionStep(
-            "formula-surface",
+            new StepId("formula-surface"),
             new SheetSelector.All(),
             new InspectionSurfaceQuery.GetFormulaSurface());
 
@@ -47,8 +48,7 @@ class ExecutionStepSupportTest {
             () -> support.executeEventInspection(Path.of("unused.xlsx"), inspectionStep));
 
     assertEquals(
-        GridGrindExecutionModeMetadata.eventRead()
-            .unsupportedQueryMessage(inspectionStep.query().queryType()),
+        BackendCapabilities.eventRead().unsupportedQueryMessage(inspectionStep.query().queryType()),
         failure.getMessage());
   }
 
@@ -57,8 +57,8 @@ class ExecutionStepSupportTest {
     WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
     Path tempRoot = Files.createTempDirectory("gridgrind-step-support-root-");
-    ExecutionStepSupport support =
-        new ExecutionStepSupport(
+    StepExecution support =
+        new StepExecution(
             workbookEngine,
             selectorResolver,
             new AssertionExecutor(workbookEngine, selectorResolver),
@@ -67,7 +67,7 @@ class ExecutionStepSupportTest {
                 tempRoot, tempRoot.resolve("private"), ExecutionGrantTestSupport.noPublication()));
     InspectionStep inspectionStep =
         new InspectionStep(
-            "formula-surface",
+            new StepId("formula-surface"),
             new SheetSelector.All(),
             new InspectionSurfaceQuery.GetFormulaSurface());
     Path filesystemRoot = Path.of("").toAbsolutePath().normalize().getRoot();
@@ -79,7 +79,7 @@ class ExecutionStepSupportTest {
             support.executeInspectionAgainstMaterializedPath(
                 inspectionStep,
                 new WorkbookLocation.UnsavedWorkbook(),
-                ExecutionModeInput.fullXssf(),
+                ExecutionModeSpec.fullXssf(),
                 filesystemRoot));
   }
 }

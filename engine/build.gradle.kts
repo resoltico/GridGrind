@@ -1,6 +1,7 @@
+import dev.erst.gridgrind.buildlogic.coverageTestTasks
+import info.solidsoft.gradle.pitest.PitestPluginExtension
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
-import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
@@ -12,44 +13,43 @@ plugins {
 
 description = "Core GridGrind workbook automation and request execution engine"
 
-gridgrindMutation {
-    targetClasses.set(
+configure<PitestPluginExtension> {
+    targetClasses.convention(
         setOf(
             "dev.erst.gridgrind.engine.runtime.FormulaOriginTracker*",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightPaths*",
-            "dev.erst.gridgrind.excel.validation.ExcelDataValidationComparisonOperatorPoiBridge*",
+            "dev.erst.gridgrind.engine.validation.DataValidationAdapter*",
         ),
     )
-    targetTests.set(
+    targetTests.convention(
         setOf(
             "dev.erst.gridgrind.engine.runtime.FormulaOriginTrackerTest",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightTest",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightFormulaEnvironmentTest",
-            "dev.erst.gridgrind.excel.validation.ExcelDataValidationComparisonOperatorPoiBridgeTest",
+            "dev.erst.gridgrind.engine.validation.ValidationComparisonOperatorsTest",
+            "dev.erst.gridgrind.engine.backend.xssf.ExcelDataValidation*Test",
+            "dev.erst.gridgrind.engine.backend.xssf.ExcelStructureValidationRewriteCoverageTest",
+            "dev.erst.gridgrind.engine.backend.xssf.ExcelResidualValidationCoverageTest",
         ),
     )
-    mutationThreshold.set(100)
-    coverageThreshold.set(100)
-    testStrengthThreshold.set(100)
-    maxSurviving.set(0)
 }
 
 tasks.named("pitest") {
-    mustRunAfter(":contract:pitest")
+    mustRunAfter(":core:pitest")
 }
 
 // Engine behavior is exercised through both runtime adapters; coverage evidence must include both.
-val downstreamCoverageProjects = listOf(project(":cli"), project(":executor"))
+val downstreamCoverageProjects = listOf(project(":json"), project(":cli"))
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->
-        downstreamProject.tasks.withType<Test>().map { task -> task.path }
+        downstreamProject.coverageTestTasks().map { task -> task.path }
     }
 
 fun downstreamCoverageExecutionData() =
     provider {
         downstreamCoverageProjects.flatMap { downstreamProject ->
-            downstreamProject.tasks.withType<Test>().map { testTask ->
+            downstreamProject.coverageTestTasks().map { testTask ->
                 testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
             }
         }
@@ -67,8 +67,7 @@ fun localCoverageExecutionData() =
     }
 
 dependencies {
-    api(project(":contract"))
-    api(project(":excel-foundation"))
+    api(project(":core"))
     implementation(libs.jakarta.activation)
     implementation(libs.jakarta.xml.bind)
     implementation(libs.poi.ooxml)
@@ -98,9 +97,40 @@ tasks.named<JacocoReport>("jacocoTestReport") {
     executionData.from(downstreamCoverageExecutionData())
 }
 
-tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
-    dependsOn(tasks.named<Test>("test"))
-    executionData.from(localCoverageExecutionData())
-    dependsOn(downstreamCoverageTaskPaths())
-    executionData.from(downstreamCoverageExecutionData())
+val paritySourceSet = the<org.gradle.api.tasks.SourceSetContainer>().create("parityTest") {
+    compileClasspath += sourceSets.main.get().output + configurations.getByName("testCompileClasspath")
+    runtimeClasspath += output + compileClasspath
+}
+configurations.named(paritySourceSet.implementationConfigurationName) {
+    extendsFrom(configurations.getByName("testImplementation"))
+}
+configurations.named(paritySourceSet.runtimeOnlyConfigurationName) {
+    extendsFrom(configurations.getByName("testRuntimeOnly"))
+}
+dependencies {
+    testImplementation(project(":json"))
+    testImplementation(project(":cli"))
+    testImplementation(libs.jackson.databind)
+    add(paritySourceSet.implementationConfigurationName, libs.jackson.databind)
+    add(paritySourceSet.implementationConfigurationName, libs.bcpkix)
+    add(paritySourceSet.implementationConfigurationName, libs.bcprov)
+    add(paritySourceSet.implementationConfigurationName, libs.bcutil)
+    add(paritySourceSet.implementationConfigurationName, libs.xmlsec)
+    add(paritySourceSet.runtimeOnlyConfigurationName, libs.slf4j.api)
+}
+val parityTest = tasks.register<Test>("parityTest") {
+    description = "Runs the XSSF behavioural parity corpus."
+    group = "verification"
+    testClassesDirs = paritySourceSet.output.classesDirs
+    classpath = paritySourceSet.runtimeClasspath
+    useJUnitPlatform()
+    failOnNoDiscoveredTests = true
+    shouldRunAfter(tasks.named<Test>("test"))
+}
+tasks.named<org.gradle.api.plugins.quality.Pmd>("pmdParityTest") {
+    ruleSetFiles = files(rootProject.file("gradle/pmd/test-ruleset.xml"))
+    ruleSets = emptyList()
+}
+tasks.named("check") {
+    dependsOn(parityTest, "pmdParityTest")
 }

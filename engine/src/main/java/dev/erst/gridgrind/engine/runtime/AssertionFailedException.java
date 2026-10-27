@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionFailure;
+import dev.erst.gridgrind.core.plan.AssertionFailure;
 import java.util.Objects;
 
 /** Internal checked exception used to surface structured assertion mismatches through problems. */

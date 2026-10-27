@@ -1,25 +1,25 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameOptionalReference;
-import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
+import static dev.erst.gridgrind.engine.runtime.ResolutionIdentity.sameOptionalReference;
+import static dev.erst.gridgrind.engine.runtime.ResolutionIdentity.sameReference;
 
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
-import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.contract.dto.DataValidationInput;
-import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
-import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
-import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
-import dev.erst.gridgrind.contract.dto.PictureDataInput;
-import dev.erst.gridgrind.contract.dto.PictureInput;
-import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
-import dev.erst.gridgrind.contract.dto.RichTextRunInput;
-import dev.erst.gridgrind.contract.dto.ShapeInput;
-import dev.erst.gridgrind.contract.dto.SignatureLineInput;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,74 +29,74 @@ import java.util.Optional;
 final class SourceBackedStructuredInputResolver {
   private SourceBackedStructuredInputResolver() {}
 
-  static List<RichTextRunInput> resolveRuns(
-      List<RichTextRunInput> runs, ExecutionInputBindings bindings) throws IOException {
-    List<RichTextRunInput> resolvedRuns = new ArrayList<>(runs.size());
+  static List<RichTextRunSpec> resolveRuns(
+      List<RichTextRunSpec> runs, ExecutionInputBindings bindings) throws IOException {
+    List<RichTextRunSpec> resolvedRuns = new ArrayList<>(runs.size());
     boolean changed = false;
-    for (RichTextRunInput run : runs) {
-      RichTextRunInput resolvedRun = resolveRichTextRun(run, bindings);
+    for (RichTextRunSpec run : runs) {
+      RichTextRunSpec resolvedRun = resolveRichTextRun(run, bindings);
       resolvedRuns.add(resolvedRun);
       changed |= !sameReference(resolvedRun, run);
     }
     return changed ? List.copyOf(resolvedRuns) : runs;
   }
 
-  private static RichTextRunInput resolveRichTextRun(
-      RichTextRunInput run, ExecutionInputBindings bindings) throws IOException {
-    TextSourceInput resolvedSource =
-        SourceBackedPlanResolver.resolveTextSource(run.source(), bindings, false, "rich-text run");
-    if (!(resolvedSource instanceof TextSourceInput.Inline inline)) {
+  private static RichTextRunSpec resolveRichTextRun(
+      RichTextRunSpec run, ExecutionInputBindings bindings) throws IOException {
+    TextSourceSpec resolvedSource =
+        SourceBackedPlanResolver.resolveTextSource(run.text(), bindings, false, "rich-text run");
+    if (!(resolvedSource instanceof TextSourceSpec.Inline inline)) {
       return run;
     }
     String resolvedText = inline.text();
     if (resolvedText.isEmpty()) {
       IllegalArgumentException failure =
           new IllegalArgumentException("rich-text run must not be empty");
-      if (bindings.collectInputResolutionFailure(failure, run.source())) {
+      if (bindings.collectInputResolutionFailure(failure, run.text())) {
         return run;
       }
       throw failure;
     }
-    return sameReference(resolvedSource, run.source())
+    return sameReference(resolvedSource, run.text())
         ? run
-        : new RichTextRunInput(resolvedSource, run.font());
+        : new RichTextRunSpec(resolvedSource, run.font());
   }
 
-  static CommentInput resolveComment(CommentInput comment, ExecutionInputBindings bindings)
+  static CommentSpec resolveComment(CommentSpec comment, ExecutionInputBindings bindings)
       throws IOException {
-    TextSourceInput resolvedText =
+    TextSourceSpec resolvedText =
         SourceBackedPlanResolver.resolveTextSource(comment.text(), bindings, true, "comment text");
-    Optional<List<RichTextRunInput>> resolvedRuns =
+    Optional<List<RichTextRunSpec>> resolvedRuns =
         comment.runs().isEmpty()
             ? Optional.empty()
             : Optional.of(resolveRuns(comment.runs().orElseThrow(), bindings));
     return sameReference(resolvedText, comment.text())
             && sameOptionalReference(resolvedRuns, comment.runs())
         ? comment
-        : new CommentInput(
+        : new CommentSpec(
             resolvedText, comment.author(), comment.visible(), resolvedRuns, comment.anchor());
   }
 
-  static CustomXmlImportInput resolveCustomXmlImport(
-      CustomXmlImportInput input, ExecutionInputBindings bindings) throws IOException {
-    TextSourceInput resolvedXml =
+  static CustomXmlImportSpec resolveCustomXmlImport(
+      CustomXmlImportSpec input, ExecutionInputBindings bindings) throws IOException {
+    TextSourceSpec resolvedXml =
         SourceBackedPlanResolver.resolveTextSource(input.xml(), bindings, true, "custom XML");
     return sameReference(resolvedXml, input.xml())
         ? input
-        : new CustomXmlImportInput(input.locator(), resolvedXml);
+        : new CustomXmlImportSpec(input.locator(), resolvedXml);
   }
 
-  static SignatureLineInput resolveSignatureLine(
-      SignatureLineInput signatureLine, ExecutionInputBindings bindings) throws IOException {
+  static SignatureLineSpec resolveSignatureLine(
+      SignatureLineSpec signatureLine, ExecutionInputBindings bindings) throws IOException {
     if (signatureLine.plainSignature().isEmpty()) {
       return signatureLine;
     }
-    PictureDataInput resolvedPlainSignature =
+    PictureDataSpec resolvedPlainSignature =
         resolvePictureData(signatureLine.plainSignature().orElseThrow(), bindings);
     return sameOptionalReference(
             Optional.of(resolvedPlainSignature), signatureLine.plainSignature())
         ? signatureLine
-        : new SignatureLineInput(
+        : new SignatureLineSpec(
             signatureLine.name(),
             signatureLine.anchor(),
             signatureLine.allowComments(),
@@ -109,10 +109,10 @@ final class SourceBackedStructuredInputResolver {
             Optional.of(resolvedPlainSignature));
   }
 
-  static PictureInput resolvePicture(PictureInput picture, ExecutionInputBindings bindings)
+  static PictureSpec resolvePicture(PictureSpec picture, ExecutionInputBindings bindings)
       throws IOException {
-    PictureDataInput resolvedImage = resolvePictureData(picture.image(), bindings);
-    Optional<TextSourceInput> resolvedDescription = picture.description();
+    PictureDataSpec resolvedImage = resolvePictureData(picture.image(), bindings);
+    Optional<TextSourceSpec> resolvedDescription = picture.description();
     if (picture.description().isPresent()) {
       resolvedDescription =
           Optional.of(
@@ -122,28 +122,28 @@ final class SourceBackedStructuredInputResolver {
     return sameReference(resolvedImage, picture.image())
             && sameOptionalReference(resolvedDescription, picture.description())
         ? picture
-        : new PictureInput(picture.name(), resolvedImage, picture.anchor(), resolvedDescription);
+        : new PictureSpec(picture.name(), resolvedImage, picture.anchor(), resolvedDescription);
   }
 
-  private static PictureDataInput resolvePictureData(
-      PictureDataInput image, ExecutionInputBindings bindings) throws IOException {
-    BinarySourceInput resolvedSource =
+  private static PictureDataSpec resolvePictureData(
+      PictureDataSpec image, ExecutionInputBindings bindings) throws IOException {
+    BinarySourceSpec resolvedSource =
         SourceBackedPlanResolver.resolveBinarySource(image.source(), bindings, "picture payload");
     return sameReference(resolvedSource, image.source())
         ? image
-        : new PictureDataInput(image.format(), resolvedSource);
+        : new PictureDataSpec(image.format(), resolvedSource);
   }
 
-  static EmbeddedObjectInput resolveEmbeddedObject(
-      EmbeddedObjectInput embeddedObject, ExecutionInputBindings bindings) throws IOException {
-    BinarySourceInput resolvedPayload =
+  static EmbeddedObjectSpec resolveEmbeddedObject(
+      EmbeddedObjectSpec embeddedObject, ExecutionInputBindings bindings) throws IOException {
+    BinarySourceSpec resolvedPayload =
         SourceBackedPlanResolver.resolveBinarySource(
             embeddedObject.payload(), bindings, "embedded-object payload");
-    PictureDataInput resolvedPreview = resolvePictureData(embeddedObject.previewImage(), bindings);
+    PictureDataSpec resolvedPreview = resolvePictureData(embeddedObject.previewImage(), bindings);
     return sameReference(resolvedPayload, embeddedObject.payload())
             && sameReference(resolvedPreview, embeddedObject.previewImage())
         ? embeddedObject
-        : new EmbeddedObjectInput(
+        : new EmbeddedObjectSpec(
             embeddedObject.name(),
             embeddedObject.label(),
             embeddedObject.fileName(),
@@ -153,16 +153,16 @@ final class SourceBackedStructuredInputResolver {
             embeddedObject.anchor());
   }
 
-  static ChartInput resolveChart(ChartInput chart, ExecutionInputBindings bindings)
+  static ChartSpec resolveChart(ChartSpec chart, ExecutionInputBindings bindings)
       throws IOException {
-    return SourceBackedChartInputResolver.resolveChart(chart, bindings);
+    return SourceBackedChartSpecResolver.resolveChart(chart, bindings);
   }
 
-  static ShapeInput resolveShape(ShapeInput shape, ExecutionInputBindings bindings)
+  static ShapeSpec resolveShape(ShapeSpec shape, ExecutionInputBindings bindings)
       throws IOException {
     return switch (shape) {
-      case ShapeInput.SimpleShape simpleShape -> {
-        Optional<TextSourceInput> resolvedText = simpleShape.text();
+      case ShapeSpec.SimpleShape simpleShape -> {
+        Optional<TextSourceSpec> resolvedText = simpleShape.text();
         if (simpleShape.text().isPresent()) {
           resolvedText =
               Optional.of(
@@ -171,23 +171,23 @@ final class SourceBackedStructuredInputResolver {
         }
         yield sameOptionalReference(resolvedText, simpleShape.text())
             ? shape
-            : new ShapeInput.SimpleShape(
+            : new ShapeSpec.SimpleShape(
                 simpleShape.name(),
                 simpleShape.anchor(),
                 simpleShape.presetGeometryToken(),
                 resolvedText);
       }
-      case ShapeInput.Connector _ -> shape;
+      case ShapeSpec.Connector _ -> shape;
     };
   }
 
-  static DataValidationInput resolveDataValidation(
-      DataValidationInput validation, ExecutionInputBindings bindings) throws IOException {
-    Optional<DataValidationPromptInput> resolvedPrompt = validation.prompt();
+  static DataValidationSpec resolveDataValidation(
+      DataValidationSpec validation, ExecutionInputBindings bindings) throws IOException {
+    Optional<DataValidationPromptSpec> resolvedPrompt = validation.prompt();
     if (validation.prompt().isPresent()) {
       resolvedPrompt = Optional.of(resolvePrompt(validation.prompt().orElseThrow(), bindings));
     }
-    Optional<DataValidationErrorAlertInput> resolvedAlert = validation.errorAlert();
+    Optional<DataValidationErrorAlertSpec> resolvedAlert = validation.errorAlert();
     if (validation.errorAlert().isPresent()) {
       resolvedAlert =
           Optional.of(resolveErrorAlert(validation.errorAlert().orElseThrow(), bindings));
@@ -195,7 +195,7 @@ final class SourceBackedStructuredInputResolver {
     return sameOptionalReference(resolvedPrompt, validation.prompt())
             && sameOptionalReference(resolvedAlert, validation.errorAlert())
         ? validation
-        : new DataValidationInput(
+        : new DataValidationSpec(
             validation.rule(),
             validation.allowBlank(),
             validation.suppressDropDownArrow(),
@@ -203,42 +203,42 @@ final class SourceBackedStructuredInputResolver {
             resolvedAlert);
   }
 
-  private static DataValidationPromptInput resolvePrompt(
-      DataValidationPromptInput prompt, ExecutionInputBindings bindings) throws IOException {
-    TextSourceInput resolvedTitle =
+  private static DataValidationPromptSpec resolvePrompt(
+      DataValidationPromptSpec prompt, ExecutionInputBindings bindings) throws IOException {
+    TextSourceSpec resolvedTitle =
         SourceBackedPlanResolver.resolveTextSource(
             prompt.title(), bindings, true, "validation prompt title");
-    TextSourceInput resolvedText =
+    TextSourceSpec resolvedText =
         SourceBackedPlanResolver.resolveTextSource(
             prompt.text(), bindings, true, "validation prompt text");
     return sameReference(resolvedTitle, prompt.title())
             && sameReference(resolvedText, prompt.text())
         ? prompt
-        : new DataValidationPromptInput(resolvedTitle, resolvedText, prompt.showPromptBox());
+        : new DataValidationPromptSpec(resolvedTitle, resolvedText, prompt.showPromptBox());
   }
 
-  private static DataValidationErrorAlertInput resolveErrorAlert(
-      DataValidationErrorAlertInput alert, ExecutionInputBindings bindings) throws IOException {
-    TextSourceInput resolvedTitle =
+  private static DataValidationErrorAlertSpec resolveErrorAlert(
+      DataValidationErrorAlertSpec alert, ExecutionInputBindings bindings) throws IOException {
+    TextSourceSpec resolvedTitle =
         SourceBackedPlanResolver.resolveTextSource(
             alert.title(), bindings, true, "validation error title");
-    TextSourceInput resolvedText =
+    TextSourceSpec resolvedText =
         SourceBackedPlanResolver.resolveTextSource(
             alert.text(), bindings, true, "validation error text");
     return sameReference(resolvedTitle, alert.title()) && sameReference(resolvedText, alert.text())
         ? alert
-        : new DataValidationErrorAlertInput(
+        : new DataValidationErrorAlertSpec(
             alert.style(), resolvedTitle, resolvedText, alert.showErrorBox());
   }
 
-  static TableInput resolveTable(TableInput table, ExecutionInputBindings bindings)
+  static TableSpec resolveTable(TableSpec table, ExecutionInputBindings bindings)
       throws IOException {
-    TextSourceInput resolvedComment =
+    TextSourceSpec resolvedComment =
         SourceBackedPlanResolver.resolveTextSource(
             table.comment(), bindings, false, "table comment");
     return sameReference(resolvedComment, table.comment())
         ? table
-        : new TableInput(
+        : new TableSpec(
             table.name(),
             table.sheetName(),
             table.range(),
@@ -255,14 +255,14 @@ final class SourceBackedStructuredInputResolver {
             table.columns());
   }
 
-  static PrintLayoutInput resolvePrintLayout(
-      PrintLayoutInput printLayout, ExecutionInputBindings bindings) throws IOException {
-    HeaderFooterTextInput resolvedHeader = resolveHeaderFooter(printLayout.header(), bindings);
-    HeaderFooterTextInput resolvedFooter = resolveHeaderFooter(printLayout.footer(), bindings);
+  static PrintLayoutSpec resolvePrintLayout(
+      PrintLayoutSpec printLayout, ExecutionInputBindings bindings) throws IOException {
+    HeaderFooterTextSpec resolvedHeader = resolveHeaderFooter(printLayout.header(), bindings);
+    HeaderFooterTextSpec resolvedFooter = resolveHeaderFooter(printLayout.footer(), bindings);
     return sameReference(resolvedHeader, printLayout.header())
             && sameReference(resolvedFooter, printLayout.footer())
         ? printLayout
-        : new PrintLayoutInput(
+        : new PrintLayoutSpec(
             printLayout.printArea(),
             printLayout.orientation(),
             printLayout.scaling(),
@@ -273,21 +273,21 @@ final class SourceBackedStructuredInputResolver {
             printLayout.setup());
   }
 
-  static HeaderFooterTextInput resolveHeaderFooter(
-      HeaderFooterTextInput text, ExecutionInputBindings bindings) throws IOException {
-    TextSourceInput resolvedLeft =
+  static HeaderFooterTextSpec resolveHeaderFooter(
+      HeaderFooterTextSpec text, ExecutionInputBindings bindings) throws IOException {
+    TextSourceSpec resolvedLeft =
         SourceBackedPlanResolver.resolveTextSource(
             text.left(), bindings, false, "header/footer left");
-    TextSourceInput resolvedCenter =
+    TextSourceSpec resolvedCenter =
         SourceBackedPlanResolver.resolveTextSource(
             text.center(), bindings, false, "header/footer center");
-    TextSourceInput resolvedRight =
+    TextSourceSpec resolvedRight =
         SourceBackedPlanResolver.resolveTextSource(
             text.right(), bindings, false, "header/footer right");
     return sameReference(resolvedLeft, text.left())
             && sameReference(resolvedCenter, text.center())
             && sameReference(resolvedRight, text.right())
         ? text
-        : new HeaderFooterTextInput(resolvedLeft, resolvedCenter, resolvedRight);
+        : new HeaderFooterTextSpec(resolvedLeft, resolvedCenter, resolvedRight);
   }
 }

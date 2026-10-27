@@ -3,18 +3,22 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-import dev.erst.gridgrind.contract.assertion.AssertionFailure;
-import dev.erst.gridgrind.contract.assertion.CellAssertion;
-import dev.erst.gridgrind.contract.dto.CellScalarValue;
-import dev.erst.gridgrind.contract.dto.CliRuntimeContext;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
-import dev.erst.gridgrind.contract.json.MessageInvariant;
-import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.AssertionFailure;
+import dev.erst.gridgrind.core.plan.CellAssertion;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.HostContext;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.MessageInvariant;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Optional;
@@ -23,8 +27,8 @@ import org.junit.jupiter.api.Test;
 /** Covers payload-location enrichment branches in {@link GridGrindProblems}. */
 class GridGrindProblemsCoverageTest {
   @Test
-  void enrichContextKeepsPreExecutionCliRuntimeContextUnchanged() {
-    CliRuntimeContext context = new CliRuntimeContext();
+  void enrichContextKeepsPreExecutionHostContextUnchanged() {
+    HostContext context = new HostContext("cli");
 
     assertSame(
         context, GridGrindProblems.enrichContext(context, new IllegalStateException("boom")));
@@ -103,7 +107,7 @@ class GridGrindProblemsCoverageTest {
                 bindingContext,
                 badRequest(Optional.of("source.path"), Optional.of(4), Optional.of(9)));
 
-    assertEquals("BIND_REQUEST", locatedContext.stage());
+    assertEquals("BIND_REQUEST", locatedContext.type());
     assertEquals(Optional.of("source.path"), locatedContext.jsonPath());
     assertEquals(Optional.of(4), locatedContext.jsonLine());
     assertEquals(Optional.of(9), locatedContext.jsonColumn());
@@ -118,8 +122,8 @@ class GridGrindProblemsCoverageTest {
         new ProblemContext.ExecuteStep(
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
             new ProblemContextWorkbookSurfaces.StepReference(
-                0, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
-            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B2"));
+                0, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell(new SheetLabel("Budget"), "B2"));
     ProblemContext.PersistWorkbook saveAsContext =
         new ProblemContext.PersistWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "SAVE_AS"),
@@ -137,10 +141,10 @@ class GridGrindProblemsCoverageTest {
             new AssertionFailedException(
                 "EXPECT_CELL_VALUE mismatched effective values at B2",
                 new AssertionFailure(
-                    "assert-total",
+                    new StepId("assert-total"),
                     "EXPECT_CELL_VALUE",
-                    new CellSelector.ByAddress("Budget", "B2"),
-                    new CellAssertion.CellValue(new CellScalarValue.NumberValue(1200.0d)),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
+                    new CellAssertion.Value(new CellValue.NumberValue(1200.0d)),
                     java.util.List.of())),
             assertionContext);
     GridGrindProblemDetail.Problem saveAsConflict =
@@ -173,7 +177,7 @@ class GridGrindProblemsCoverageTest {
         "Check the source workbook path, permissions, and file locks before retrying.",
         openWorkbookDenied.resolution());
     assertEquals(
-        "Check the --response destination path, parent directory permissions, free disk space, and file locks before retrying.",
+        "Check the response destination path, parent directory permissions, free disk space, and file locks before retrying.",
         writeResponseDenied.resolution());
   }
 

@@ -25,10 +25,7 @@ class GridGrindJavaConventionsPluginTest {
     Files.writeString(
         projectDirectory.resolve("gradle/pmd/ruleset.xml"), minimalRuleset());
     Files.writeString(
-        projectDirectory.resolve("gradle/pmd/semantic-shape-ruleset.xml"), minimalRuleset());
-    Files.writeString(
         projectDirectory.resolve("gradle/pmd/test-ruleset.xml"), minimalRuleset());
-    Files.writeString(projectDirectory.resolve("gradle/semantic-shape-policy.tsv"), "");
     Files.writeString(projectDirectory.resolve("gradle/libs.versions.toml"), versionCatalog());
     Files.writeString(
         projectDirectory.resolve("build.gradle"),

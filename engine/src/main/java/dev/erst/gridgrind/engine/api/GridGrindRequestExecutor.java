@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.util.Objects;
 
 /** Transport-neutral execution port for one complete GridGrind request workflow. */
@@ -23,7 +23,7 @@ public interface GridGrindRequestExecutor {
    * diagnostics.
    */
   default WorkbookResult execute(
-      RequestAnalysis analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
+      RequestIntake analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(inputs, "inputs must not be null");
     Objects.requireNonNull(sink, "sink must not be null");
@@ -31,7 +31,7 @@ public interface GridGrindRequestExecutor {
   }
 
   /** Executes one fully bound raw request with no live journal sink. */
-  default WorkbookResult execute(RequestAnalysis analysis, GridGrindRequestInputs inputs) {
+  default WorkbookResult execute(RequestIntake analysis, GridGrindRequestInputs inputs) {
     return execute(analysis, inputs, GridGrindProgressSink.NOOP);
   }
 

@@ -1,31 +1,31 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.InvalidFormulaInputException;
-import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
-import dev.erst.gridgrind.contract.json.FormulaRequestException;
-import dev.erst.gridgrind.contract.json.InvalidEncodingException;
-import dev.erst.gridgrind.contract.json.InvalidJsonException;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
-import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
-import dev.erst.gridgrind.contract.json.NumberNotRepresentableException;
-import dev.erst.gridgrind.excel.CellNotFoundException;
-import dev.erst.gridgrind.excel.InvalidCellAddressException;
-import dev.erst.gridgrind.excel.InvalidFormulaException;
-import dev.erst.gridgrind.excel.InvalidRangeAddressException;
-import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
-import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
-import dev.erst.gridgrind.excel.MissingExternalWorkbookException;
-import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
-import dev.erst.gridgrind.excel.SheetNotFoundException;
-import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
-import dev.erst.gridgrind.excel.UnsupportedFormulaConstructException;
-import dev.erst.gridgrind.excel.UnsupportedFormulaException;
-import dev.erst.gridgrind.excel.UnsupportedSourceEncryptionPreservationException;
-import dev.erst.gridgrind.excel.WorkbookNotFoundException;
-import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
-import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
-import dev.erst.gridgrind.excel.WorkbookSecurityException;
+import dev.erst.gridgrind.core.model.formula.InvalidFormulaInputException;
+import dev.erst.gridgrind.core.model.formula.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.InvalidEncodingException;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.NumberNotRepresentableException;
+import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidSigningConfigurationException;
+import dev.erst.gridgrind.engine.backend.xssf.InvalidWorkbookPasswordException;
+import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.UnsupportedSourceEncryptionPreservationException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookNotFoundException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookNotOpenableException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookPasswordRequiredException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookSecurityException;
+import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
+import dev.erst.gridgrind.engine.formulas.MissingExternalWorkbookException;
+import dev.erst.gridgrind.engine.formulas.UnregisteredUserDefinedFunctionException;
+import dev.erst.gridgrind.engine.formulas.UnsupportedFormulaConstructException;
+import dev.erst.gridgrind.engine.formulas.UnsupportedFormulaException;
 import java.io.IOException;
 import java.time.DateTimeException;
 import java.util.Objects;
@@ -82,7 +82,7 @@ final class GridGrindProblemCodeClassifier {
       case WorkbookPublicationException publication ->
           publication.publication()
                   instanceof
-                  dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                  dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
                       .Uncertain
               ? GridGrindProblemCode.PUBLICATION_UNCERTAIN
               : GridGrindProblemCode.IO_ERROR;

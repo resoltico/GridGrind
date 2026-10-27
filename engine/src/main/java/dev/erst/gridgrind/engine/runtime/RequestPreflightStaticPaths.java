@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +50,7 @@ final class RequestPreflightStaticPaths {
           bindings,
           new ProblemContext.PersistWorkbook(
               ExecutionRequestPaths.requestShape(request),
-              new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+              new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                   .PersistenceReference.SaveAs(saveAs.path())),
           problems);
     }
@@ -75,7 +75,7 @@ final class RequestPreflightStaticPaths {
         bindings,
         new ProblemContext.ResolveInputs(
             ExecutionRequestPaths.requestShape(request),
-            dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference.path(
+            dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference.path(
                 "formula external workbook", path)),
         problems);
   }

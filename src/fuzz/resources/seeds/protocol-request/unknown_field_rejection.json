@@ -1,0 +1,11 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "dataFormat": "unknown",
+  "steps": []
+}

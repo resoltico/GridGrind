@@ -1,0 +1,19 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      },
+      "target": {
+        "type": "WORKBOOK_CURRENT"
+      }
+    }
+  ]
+}

@@ -4,11 +4,14 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.Delete
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
     `java-gradle-plugin`
 }
+
+dependencyLocking { lockAllConfigurations() }
 
 repositories {
     mavenCentral()
@@ -22,7 +25,6 @@ dependencies {
     implementation(
         "net.ltgt.gradle:gradle-errorprone-plugin:${libs.versions.errorprone.plugin.get()}",
     )
-    implementation("net.sourceforge.pmd:pmd-java:${libs.versions.pmd.get()}")
     implementation(
         "info.solidsoft.gradle.pitest:gradle-pitest-plugin:${libs.versions.pitest.gradle.plugin.get()}",
     )
@@ -43,9 +45,9 @@ gradlePlugin {
             id = "gridgrind.java-conventions"
             implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindJavaConventionsPlugin"
         }
-        register("gridgrindJazzerConventions") {
-            id = "gridgrind.jazzer-conventions"
-            implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindJazzerConventionsPlugin"
+        register("gridgrindFuzzConventions") {
+            id = "gridgrind.fuzz-conventions"
+            implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindFuzzConventionsPlugin"
         }
         register("gridgrindMutationConventions") {
             id = "gridgrind.mutation-conventions"
@@ -54,9 +56,17 @@ gradlePlugin {
     }
 }
 
-// GridGrind's runtime, product modules, and shared build logic all target Java 26.
+val javaRelease =
+    providers.fileContents(layout.projectDirectory.file("../../gradle.properties")).asText.map { text ->
+        val properties = Properties()
+        text.reader().use(properties::load)
+        properties.getProperty("gridgrindJavaVersion")?.toIntOrNull()
+            ?: error("Root gradle.properties must declare an integer gridgrindJavaVersion")
+    }.get()
+
+// The included build derives its compiler target from the same pin as the product modules.
 kotlin {
-    jvmToolchain(26)
+    jvmToolchain(javaRelease)
 }
 
 fun cleanDestinationTaskName(taskName: String): String =
@@ -77,11 +87,6 @@ val cleanCompileTestKotlinDestination =
         "compileTestKotlin",
         tasks.named<KotlinCompile>("compileTestKotlin").flatMap { it.destinationDirectory },
     )
-val cleanCompileJavaDestination =
-    registerCleanDestinationTask(
-        "compileJava",
-        tasks.named<JavaCompile>("compileJava").flatMap { it.destinationDirectory },
-    )
 val cleanCompileTestJavaDestination =
     registerCleanDestinationTask(
         "compileTestJava",
@@ -90,23 +95,18 @@ val cleanCompileTestJavaDestination =
 
 tasks.named<KotlinCompile>("compileKotlin") {
     incremental = false
-    compilerOptions.jvmTarget.set(JvmTarget.JVM_26)
+    compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaRelease.toString()))
     dependsOn(cleanCompileKotlinDestination)
 }
 
 tasks.named<KotlinCompile>("compileTestKotlin") {
     incremental = false
-    compilerOptions.jvmTarget.set(JvmTarget.JVM_26)
+    compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaRelease.toString()))
     dependsOn(cleanCompileTestKotlinDestination)
 }
 
-tasks.named<JavaCompile>("compileJava") {
-    options.release = 26
-    dependsOn(cleanCompileJavaDestination)
-}
-
 tasks.named<JavaCompile>("compileTestJava") {
-    options.release = 26
+    options.release = javaRelease
     dependsOn(cleanCompileTestJavaDestination)
 }
 

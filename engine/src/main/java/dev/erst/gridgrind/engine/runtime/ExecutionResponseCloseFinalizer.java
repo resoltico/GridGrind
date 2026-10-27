@@ -1,9 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +20,7 @@ final class ExecutionResponseCloseFinalizer {
       ExecutionJournalRecorder journal,
       @Nullable GridGrindProblemCode primaryFailureCode,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     return switch (response) {
       case WorkbookResult.Success success ->
           new WorkbookResult.Success(
@@ -57,7 +58,7 @@ final class ExecutionResponseCloseFinalizer {
       ExecutionJournalRecorder journal,
       @Nullable GridGrindProblemCode primaryFailureCode,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId,
+      @Nullable StepId failedStepId,
       GridGrindProblemDetail.Problem closeProblem) {
     return switch (response) {
       case WorkbookResult.Failure existingFailure ->

@@ -1,24 +1,24 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournal;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.RowBandSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.result.ExecutionJournal;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -202,27 +202,27 @@ final class ExecutionJournalTargetResolver {
     };
   }
 
-  static String summarizeCellInput(CellInput input) {
+  static String summarizeCellInput(CellValueSpec input) {
     return switch (input) {
-      case CellInput.Blank _ -> "Blank[]";
-      case CellInput.Text text -> "Text[" + summarizeTextSource(text.source()) + "]";
-      case CellInput.RichText richText -> "RichText[runs=" + richText.runs().size() + "]";
-      case CellInput.NumberValue numberValue -> "Number[number=" + numberValue.number() + "]";
-      case CellInput.BooleanValue booleanValue -> "Boolean[value=" + booleanValue.bool() + "]";
-      case CellInput.ErrorValue errorValue -> "Error[error=" + errorValue.error() + "]";
-      case CellInput.Date date -> "Date[value=" + date.date() + "]";
-      case CellInput.DateTime dateTime -> "DateTime[value=" + dateTime.dateTime() + "]";
-      case CellInput.Formula formula -> "Formula[" + summarizeTextSource(formula.source()) + "]";
-      case CellInput.RawFormula rawFormula ->
-          "RawFormula[" + summarizeTextSource(rawFormula.source()) + "]";
+      case CellValueSpec.Blank _ -> "Blank[]";
+      case CellValueSpec.Text text -> "Text[" + summarizeTextSource(text.value()) + "]";
+      case CellValueSpec.RichText richText -> "RichText[runs=" + richText.runs().size() + "]";
+      case CellValueSpec.NumberValue numberValue -> "Number[number=" + numberValue.value() + "]";
+      case CellValueSpec.BooleanValue booleanValue -> "Boolean[value=" + booleanValue.value() + "]";
+      case CellValueSpec.ErrorValue errorValue -> "Error[error=" + errorValue.value() + "]";
+      case CellValueSpec.Date date -> "Date[value=" + date.value() + "]";
+      case CellValueSpec.DateTime dateTime -> "DateTime[value=" + dateTime.value() + "]";
+      case CellValueSpec.Formula formula -> "Formula[" + summarizeTextSource(formula.value()) + "]";
+      case CellValueSpec.RawFormula rawFormula ->
+          "RawFormula[" + summarizeTextSource(rawFormula.value()) + "]";
     };
   }
 
-  private static String summarizeTextSource(TextSourceInput source) {
+  private static String summarizeTextSource(TextSourceSpec source) {
     return switch (source) {
-      case TextSourceInput.Inline inline -> "text=" + inline.text();
-      case TextSourceInput.Utf8File file -> "path=" + file.path();
-      case TextSourceInput.StandardInput _ -> "source=STANDARD_INPUT";
+      case TextSourceSpec.Inline inline -> "text=" + inline.text();
+      case TextSourceSpec.Utf8File file -> "path=" + file.path();
+      case TextSourceSpec.Stdin _ -> "source=STANDARD_INPUT";
     };
   }
 }

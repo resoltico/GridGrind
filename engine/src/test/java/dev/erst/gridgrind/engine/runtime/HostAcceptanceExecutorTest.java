@@ -4,18 +4,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.PresenceAssertion;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,14 +35,14 @@ class HostAcceptanceExecutorTest {
   @Test
   void verifiesTerminalAssertionsAndSemanticFactsForAnInMemoryWorkbook() throws Exception {
     HostAcceptanceExecutor executor = new HostAcceptanceExecutor(stepSupport());
-    GridGrindHostAcceptancePolicy.RequireAll policy =
-        new GridGrindHostAcceptancePolicy.RequireAll(
+    AcceptancePolicy.RequireAll policy =
+        new AcceptancePolicy.RequireAll(
             List.of(
                 terminalSheetAssertion(),
                 preserveSheetSummary(),
-                new GridGrindHostAcceptancePolicy.Requirement.RequireCalculation()));
+                new AcceptancePolicy.Requirement.RequireCalculation()));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       HostAcceptanceSnapshot snapshot =
           executor.captureBeforeMutation(
@@ -55,6 +57,9 @@ class HostAcceptanceExecutorTest {
           verification.preservation().stream()
               .map(WorkbookExecutionEvidence.Preservation.SemanticEstablished.class::cast)
               .flatMap(value -> value.inspectionStepIds().stream())
+              .toList()
+              .stream()
+              .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
               .toList());
     }
   }
@@ -63,20 +68,18 @@ class HostAcceptanceExecutorTest {
   void verifiesTerminalAssertionsForAMaterializedWorkbook() throws Exception {
     Path workbookPath = writeWorkbook();
     HostAcceptanceExecutor executor = new HostAcceptanceExecutor(stepSupport());
-    GridGrindHostAcceptancePolicy.RequireAll policy =
-        new GridGrindHostAcceptancePolicy.RequireAll(List.of(terminalSheetAssertion()));
+    AcceptancePolicy.RequireAll policy =
+        new AcceptancePolicy.RequireAll(List.of(terminalSheetAssertion()));
     HostAcceptanceVerification terminalVerification =
         executor.verifyMaterializedTerminalAcceptance(
             policy, workbookPath, new WorkbookLocation.UnsavedWorkbook());
     HostAcceptanceVerification minimumVerification =
         executor.verifyMaterializedTerminalAcceptance(
-            GridGrindHostAcceptancePolicy.minimum(),
-            workbookPath,
-            new WorkbookLocation.UnsavedWorkbook());
+            AcceptancePolicy.minimum(), workbookPath, new WorkbookLocation.UnsavedWorkbook());
     HostAcceptanceVerification calculationOnlyVerification =
         executor.verifyMaterializedTerminalAcceptance(
-            new GridGrindHostAcceptancePolicy.RequireAll(
-                List.of(new GridGrindHostAcceptancePolicy.Requirement.RequireCalculation())),
+            new AcceptancePolicy.RequireAll(
+                List.of(new AcceptancePolicy.Requirement.RequireCalculation())),
             workbookPath,
             new WorkbookLocation.UnsavedWorkbook());
 
@@ -89,13 +92,13 @@ class HostAcceptanceExecutorTest {
   void refusesOpaquePreservationWithoutAMaterializedSourceAndKeepsMinimumPolicyEmpty()
       throws Exception {
     HostAcceptanceExecutor executor = new HostAcceptanceExecutor(stepSupport());
-    GridGrindHostAcceptancePolicy.RequireAll opaque =
-        new GridGrindHostAcceptancePolicy.RequireAll(
+    AcceptancePolicy.RequireAll opaque =
+        new AcceptancePolicy.RequireAll(
             List.of(
-                new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
+                new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
                     List.of("/customXml/item1.xml"))));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       assertThrows(
           IOException.class,
           () ->
@@ -104,7 +107,7 @@ class HostAcceptanceExecutorTest {
       assertEquals(
           List.of(),
           executor.verifyStagedArtifact(
-              GridGrindHostAcceptancePolicy.minimum(), HostAcceptanceSnapshot.empty(), root));
+              AcceptancePolicy.minimum(), HostAcceptanceSnapshot.empty(), root));
     }
   }
 
@@ -112,11 +115,9 @@ class HostAcceptanceExecutorTest {
   void establishesExplicitOpaquePartPreservationAgainstTheVerifiedStagedArtifact()
       throws Exception {
     HostAcceptanceExecutor executor = new HostAcceptanceExecutor(stepSupport());
-    GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts requirement =
-        new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
-            List.of("/customXml/item1.xml"));
-    GridGrindHostAcceptancePolicy.RequireAll policy =
-        new GridGrindHostAcceptancePolicy.RequireAll(List.of(requirement));
+    AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts requirement =
+        new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(List.of("/customXml/item1.xml"));
+    AcceptancePolicy.RequireAll policy = new AcceptancePolicy.RequireAll(List.of(requirement));
     Path source = zipWithCustomPart("source.zip", "stable");
     Path staged = zipWithCustomPart("staged.zip", "stable");
     HostAcceptanceSnapshot snapshot =
@@ -134,11 +135,9 @@ class HostAcceptanceExecutorTest {
 
   @Test
   void snapshotRejectsUncapturedRequirementsAndMismatchedSemanticBaselines() {
-    GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts opaque =
-        new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
-            List.of("/customXml/item1.xml"));
-    GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts semantic =
-        preserveSheetSummary();
+    AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts opaque =
+        new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(List.of("/customXml/item1.xml"));
+    AcceptancePolicy.Requirement.PreserveInspectionFacts semantic = preserveSheetSummary();
 
     assertThrows(
         IllegalStateException.class, () -> HostAcceptanceSnapshot.empty().sourceFor(opaque));
@@ -149,28 +148,28 @@ class HostAcceptanceExecutorTest {
         () -> new HostAcceptanceSnapshot.SemanticPreservation(semantic, List.of()));
   }
 
-  private GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions terminalSheetAssertion() {
-    return new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
+  private AcceptancePolicy.Requirement.TerminalAssertions terminalSheetAssertion() {
+    return new AcceptancePolicy.Requirement.TerminalAssertions(
         List.of(
             new AssertionStep(
-                "assert-budget",
-                new SheetSelector.ByName("Budget"),
+                new StepId("assert-budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new PresenceAssertion.SheetPresent())));
   }
 
-  private GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts preserveSheetSummary() {
-    return new GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts(
+  private AcceptancePolicy.Requirement.PreserveInspectionFacts preserveSheetSummary() {
+    return new AcceptancePolicy.Requirement.PreserveInspectionFacts(
         List.of(
             new InspectionStep(
-                "preserve-summary",
-                new SheetSelector.ByName("Budget"),
+                new StepId("preserve-summary"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetSheetSummary())));
   }
 
-  private ExecutionStepSupport stepSupport() throws IOException {
+  private StepExecution stepSupport() throws IOException {
     WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
-    return new ExecutionStepSupport(
+    return new StepExecution(
         workbookEngine,
         selectorResolver,
         new AssertionExecutor(workbookEngine, selectorResolver),

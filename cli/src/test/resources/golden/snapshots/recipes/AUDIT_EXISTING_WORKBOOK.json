@@ -1,0 +1,433 @@
+{
+  "detail" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "advisory" : "REQUIRES_EXAMPLE_ASSETS",
+      "discoveryProfile" : {
+        "discoveryTerms" : [ "audit", "inspect", "health", "findings", "diagnose", "read only" ],
+        "intentProfile" : {
+          "artifacts" : [ "WORKBOOK", "PACKAGE_SECURITY", "FORMULA_SURFACE" ],
+          "goals" : [ "INSPECT", "ANALYZE", "VERIFY" ]
+        }
+      },
+      "executionProfile" : {
+        "assetMode" : "SELF_CONTAINED",
+        "mutationMode" : "READ_ONLY",
+        "persistenceMode" : "NONE",
+        "sourceMode" : "EXISTING_WORKBOOK"
+      },
+      "id" : "AUDIT_EXISTING_WORKBOOK",
+      "intentTags" : [ "office", "audit", "analysis", "readback", "safety" ],
+      "interactionProfile" : {
+        "requiredInputKinds" : [ "SOURCE_WORKBOOK_PATH", "TARGET_SHEET_NAMES" ],
+        "verificationKinds" : [ "FACT_READBACK", "HEALTH_ANALYSIS" ]
+      },
+      "optionalFeatures" : [ "Package security inspection for protected OOXML files.", "Targeted formula-surface inspection before broad workbook findings.", "Follow-up assertion plans after the first audit pass." ],
+      "outcomes" : [ "Existing workbook structure is surfaced as facts instead of guesses.", "Health analyses aggregate into one workbook-level findings view.", "The default audit posture stays read-only and non-persistent." ],
+      "protocolVersion" : 1,
+      "requestFileName" : "audit-existing-workbook-request.json",
+      "requestProfile" : {
+        "assertionTypes" : [ ],
+        "calculationStrategy" : "DO_NOT_CALCULATE",
+        "executionMode" : "FULL_XSSF",
+        "inspectionQueryTypes" : [ "GET_WORKBOOK_SUMMARY", "GET_COMMENTS", "GET_DRAWING_OBJECTS", "GET_FORMULA_SURFACE", "ANALYZE_WORKBOOK_FINDINGS" ],
+        "journalLevel" : "SUMMARY",
+        "markRecalculateOnOpen" : false,
+        "mutationActionTypes" : [ ],
+        "persistenceType" : "NONE",
+        "sourceType" : "EXISTING",
+        "stepCount" : 5
+      },
+      "requiredInputs" : [ "Source workbook path.", "Target sheets or workbook areas that matter to the audit.", "Any expected invariants that should later become assertions." ],
+      "requiredWorkspacePaths" : [ "task-starter-assets/workbook-ops-source.xlsx" ],
+      "summary" : "Inspect an existing workbook, surface health findings, and avoid mutation unless a follow-up workflow explicitly asks for it.",
+      "type" : "TASK_STARTER",
+      "workflow" : {
+        "commonPitfalls" : [ "EVENT_READ is intentionally limited; many audit plans require FULL_XSSF.", "Loaded formulas that Apache POI cannot evaluate surface as UNSUPPORTED_FORMULA instead of silently recalculating.", "If the audit needs strict policy checks, promote the findings into ASSERTION steps in a follow-up plan." ],
+        "phases" : [ {
+          "capabilityRefs" : [ {
+            "group" : "workbookSourceTypes",
+            "id" : "EXISTING"
+          }, {
+            "group" : "workbookPersistenceTypes",
+            "id" : "NONE"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_WORKBOOK_SUMMARY"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_PACKAGE_SECURITY"
+          } ],
+          "label" : "Open And Inspect The Package",
+          "notes" : [ "A no-persistence audit pass reduces accidental mutation." ],
+          "objective" : "Start with workbook-level facts and security state before diving into sheet logic.",
+          "purpose" : "INSPECT"
+        }, {
+          "capabilityRefs" : [ {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_FORMULA_SURFACE"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "ANALYZE_WORKBOOK_FINDINGS"
+          } ],
+          "label" : "Analyze The Workbook",
+          "notes" : [ "Use targeted factual reads first when a later finding needs detail." ],
+          "objective" : "Read formula surfaces and aggregate workbook findings into one operator view.",
+          "purpose" : "ANALYZE"
+        } ]
+      }
+    }
+  },
+  "execution" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "assertions" : [ ],
+      "calculation" : {
+        "execution" : {
+          "cachesCleared" : false,
+          "evaluatedFormulaCount" : 0,
+          "markRecalculateOnOpenApplied" : false,
+          "status" : "NOT_REQUESTED"
+        },
+        "policy" : { }
+      },
+      "evidence" : {
+        "admission" : {
+          "materializedInputs" : [ {
+            "byteSize" : 9105,
+            "path" : "<workspace>/recipe/task-starter-assets/workbook-ops-source.xlsx",
+            "role" : "source",
+            "sha256" : "bd7da95c2d02b4b8fbdb8a7c174a8d7d1a7ba27169170f38558e5e8cbae8c052"
+          } ],
+          "operations" : [ {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_WORKBOOK_SUMMARY"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_COMMENTS"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_DRAWING_OBJECTS"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_FORMULA_SURFACE"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "ANALYZE_WORKBOOK_FINDINGS"
+          } ]
+        },
+        "computational" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "presentational" : {
+          "status" : "NOT_ASSESSED"
+        },
+        "preservation" : [ {
+          "status" : "NOT_REQUESTED"
+        } ],
+        "structural" : {
+          "status" : "NOT_ESTABLISHED"
+        },
+        "taskSpecific" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "inspections" : [ {
+        "stepId" : "read-workbook-summary",
+        "type" : "GET_WORKBOOK_SUMMARY",
+        "workbook" : {
+          "activeSheetName" : "Template",
+          "forceFormulaRecalculationOnOpen" : false,
+          "namedRangeCount" : 0,
+          "selectedSheetNames" : [ "Template" ],
+          "sheetCount" : 2,
+          "sheetNames" : [ "Template", "Summary" ],
+          "type" : "WITH_SHEETS"
+        }
+      }, {
+        "comments" : [ {
+          "address" : "A1",
+          "comment" : {
+            "anchor" : {
+              "firstColumn" : 0,
+              "firstRow" : 0,
+              "lastColumn" : 3,
+              "lastRow" : 3
+            },
+            "author" : "GridGrind",
+            "text" : "Template owner column",
+            "visible" : false
+          }
+        } ],
+        "sheetName" : "Template",
+        "stepId" : "read-template-comments",
+        "type" : "GET_COMMENTS"
+      }, {
+        "drawingObjects" : [ {
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 3,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 6,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 5
+            },
+            "type" : "TWO_CELL"
+          },
+          "name" : "TemplateSignature",
+          "preview" : {
+            "byteSize" : 2952,
+            "contentType" : "image/png",
+            "format" : "PNG",
+            "heightPixels" : 150,
+            "sha256" : "8056509f27f1f7f714cb1eb0faaf1898c354896f93c725ea6281563b34b6ad14",
+            "widthPixels" : 400
+          },
+          "setup" : {
+            "allowComments" : false,
+            "setupId" : "<setupId-0>",
+            "signingInstructions" : "Review the workbook before signing.",
+            "suggestedSigner" : "Ada Lovelace",
+            "suggestedSigner2" : "Operations",
+            "suggestedSignerEmail" : "ada@example.com"
+          },
+          "type" : "SIGNATURE_LINE"
+        } ],
+        "sheetName" : "Template",
+        "stepId" : "read-drawing-objects",
+        "type" : "GET_DRAWING_OBJECTS"
+      }, {
+        "stepId" : "read-formula-surface",
+        "surface" : {
+          "sheets" : [ {
+            "distinctFormulaCount" : 1,
+            "formulaCellCount" : 1,
+            "formulas" : [ {
+              "addresses" : [ "B1" ],
+              "formula" : "'Template'!B2",
+              "occurrenceCount" : 1
+            } ],
+            "sheetName" : "Summary"
+          } ],
+          "totalFormulaCellCount" : 1
+        },
+        "type" : "GET_FORMULA_SURFACE"
+      }, {
+        "analysis" : {
+          "findings" : [ ],
+          "summary" : {
+            "errorCount" : 0,
+            "infoCount" : 0,
+            "totalCount" : 0,
+            "warningCount" : 0
+          }
+        },
+        "stepId" : "analyze-workbook-findings",
+        "type" : "ANALYZE_WORKBOOK_FINDINGS"
+      } ],
+      "journal" : {
+        "calculation" : {
+          "execution" : {
+            "status" : "NOT_REQUESTED"
+          },
+          "preflight" : {
+            "status" : "NOT_REQUESTED"
+          }
+        },
+        "close" : {
+          "status" : "SUCCEEDED"
+        },
+        "inputResolution" : {
+          "status" : "SUCCEEDED"
+        },
+        "level" : "SUMMARY",
+        "open" : {
+          "status" : "SUCCEEDED"
+        },
+        "outcome" : {
+          "completedStepCount" : 5,
+          "durationMillis" : "<durationMillis>",
+          "plannedStepCount" : 5,
+          "status" : "SUCCEEDED"
+        },
+        "persistencePhase" : {
+          "status" : "SUCCEEDED"
+        },
+        "source" : {
+          "path" : "<workspace>/recipe/task-starter-assets/workbook-ops-source.xlsx",
+          "type" : "EXISTING"
+        },
+        "steps" : [ {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "WORKBOOK",
+            "label" : "Current workbook"
+          } ],
+          "stepId" : "read-workbook-summary",
+          "stepIndex" : 0,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_WORKBOOK_SUMMARY"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "CELL",
+            "label" : "Cells Template![A1]"
+          } ],
+          "stepId" : "read-template-comments",
+          "stepIndex" : 1,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_COMMENTS"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "DRAWING",
+            "label" : "All drawing objects on Template"
+          } ],
+          "stepId" : "read-drawing-objects",
+          "stepIndex" : 2,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_DRAWING_OBJECTS"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "SHEET",
+            "label" : "Sheets [Summary]"
+          } ],
+          "stepId" : "read-formula-surface",
+          "stepIndex" : 3,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_FORMULA_SURFACE"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "WORKBOOK",
+            "label" : "Current workbook"
+          } ],
+          "stepId" : "analyze-workbook-findings",
+          "stepIndex" : 4,
+          "stepKind" : "INSPECTION",
+          "stepType" : "ANALYZE_WORKBOOK_FINDINGS"
+        } ],
+        "validation" : {
+          "status" : "SUCCEEDED"
+        }
+      },
+      "persistence" : {
+        "type" : "NONE"
+      },
+      "planId" : "audit-existing-workbook-starter",
+      "protocolVersion" : 1,
+      "status" : "SUCCEEDED",
+      "warnings" : [ ]
+    }
+  },
+  "materializedRequest" : {
+    "persistence" : {
+      "type" : "NONE"
+    },
+    "planId" : "audit-existing-workbook-starter",
+    "protocolVersion" : 1,
+    "source" : {
+      "path" : "task-starter-assets/workbook-ops-source.xlsx",
+      "type" : "EXISTING"
+    },
+    "steps" : [ {
+      "query" : {
+        "type" : "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId" : "read-workbook-summary",
+      "target" : {
+        "type" : "WORKBOOK_CURRENT"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_COMMENTS"
+      },
+      "stepId" : "read-template-comments",
+      "target" : {
+        "addresses" : [ "A1" ],
+        "sheetName" : "Template",
+        "type" : "CELL_BY_ADDRESSES"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_DRAWING_OBJECTS"
+      },
+      "stepId" : "read-drawing-objects",
+      "target" : {
+        "sheetName" : "Template",
+        "type" : "DRAWING_OBJECT_ALL_ON_SHEET"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_FORMULA_SURFACE"
+      },
+      "stepId" : "read-formula-surface",
+      "target" : {
+        "names" : [ "Summary" ],
+        "type" : "SHEET_BY_NAMES"
+      }
+    }, {
+      "query" : {
+        "type" : "ANALYZE_WORKBOOK_FINDINGS"
+      },
+      "stepId" : "analyze-workbook-findings",
+      "target" : {
+        "type" : "WORKBOOK_CURRENT"
+      }
+    } ]
+  },
+  "print" : {
+    "exit" : 2,
+    "stderr" : "",
+    "stdout" : {
+      "command" : "recipe show",
+      "problems" : [ {
+        "category" : "ARGUMENTS",
+        "causes" : [ ],
+        "code" : "INVALID_ARGUMENTS",
+        "context" : {
+          "argument" : {
+            "argument" : "id",
+            "type" : "NAMED"
+          },
+          "type" : "PARSE_ARGUMENTS"
+        },
+        "message" : "Asset-backed recipes require recipe materialize AUDIT_EXISTING_WORKBOOK --workspace <new-directory>.",
+        "recovery" : "CHANGE_REQUEST",
+        "resolution" : "Use gridgrind recipe list for IDs, or gridgrind recipe match for a goal.",
+        "title" : "Invalid host arguments"
+      } ],
+      "protocolVersion" : 1,
+      "status" : "REJECTED"
+    }
+  }
+}

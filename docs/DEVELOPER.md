@@ -1,513 +1,135 @@
----
-afad: "4.0"
-domain: DEVELOPER
-updated: "2026-08-31"
-route:
-  keywords: [gridgrind, build, gradle, architecture, archunit, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
-  questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
----
+# Development
 
-# Developer Reference
+GridGrind requires a Java 26 JDK. Use the checked-in Gradle wrapper; gradle.properties owns
+the Java pin and local version, and gradle/libs.versions.toml owns dependency versions.
+Gradle dependency locks retain the resolved build inputs.
 
-**Purpose**: Build, test, architecture, and quality gate reference for GridGrind contributors.
-**Preferred contributor path**: the committed devcontainer in
-[DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md), entered either through VS Code Dev
-Containers or the tooling-agnostic Dev Container CLI.
-**Fallback contributor path**: host-native Java 26 plus Docker Desktop as documented in
-[DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md) and [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md).
+## Checks
 
-Companion references:
-- [DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md)
-- [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md)
-- [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
-- [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md)
-- [JAVA_AUTHORING.md](./JAVA_AUTHORING.md)
-- [DEVELOPER_CONTRACT_REPLACEMENT_ADR.md](./DEVELOPER_CONTRACT_REPLACEMENT_ADR.md)
-- [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
-- [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md)
-- [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md)
+Run the normal development gate:
 
----
+    ./check.sh
 
-## Preferred Contributor Workflow
+The wrapper checks the shell JDK and enters one Gradle graph for check, coverage, the fat JAR
+and both launcher distributions. Valid test execution data is reused with unchanged inputs.
+It does not run Docker, active fuzzing or mutation campaigns.
 
-GridGrind's preferred local contributor workflow is the committed devcontainer:
+Use focused Gradle tests while changing a behavior. Product tests live beside their owners;
+architecture-tests contains ArchUnit rules and negative controls, while engine:parityTest
+compares engine behavior with Apache POI. The golden CLI corpus retains request materialization,
+execution and workbook readback through both in-process and packaged-JAR launchers.
 
-- keep the repository on the local macOS filesystem
-- materialize the committed devcontainer through a devcontainer-spec client
-- use VS Code `Reopen in Container` for the most integrated editor path, or
-  `devcontainer up` plus `devcontainer exec` for the tooling-agnostic path
-- run Java, Gradle, Jazzer, shell verification, and Docker-backed repo gates from the container
-  terminal
+Explicit additional suites are:
 
-That path keeps the contributor Java stack aligned with CI's Azul Zulu 26 vendor while isolating
-the repository from host-side Java extension daemons and attach probes. Host-native Java 26 work
-remains supported, but the devcontainer is the documented default.
+    ./gradlew containerTest
+    ./gradlew devcontainerTest
+    ./gradlew fuzzReplay
+    ./gradlew mutationReport
 
----
+Container suites use anonymous Docker client configuration and the active local engine.
+They own their temporary images, containers and volumes. They are excluded from normal test
+and coverage prerequisites. Mutation and coverage reports are advisory, without score thresholds.
+Active fuzzing is described in [FUZZING.md](./FUZZING.md); ordinary check includes all committed
+seed inputs and generator/invariant regressions.
+
+## Campaign resources
+
+PIT uses at most four workers, further limited by available CPUs and Gradle's `--max-workers`.
+The core and engine scopes run sequentially; each PIT coordinator and worker has a 512 MiB
+heap ceiling. Unchanged inputs reuse the fixed report directory instead of rerunning PIT.
+Temporary PIT state is reset only for a real execution, removed on success and retained on
+failure until the next run.
+
+Use a narrow class, test and mutator selection when checking the machinery:
+
+    ./gradlew :core:pitest -PmutationClasses=dev.erst.gridgrind.core.vocabulary.RgbHex -PmutationTests=dev.erst.gridgrind.core.vocabulary.RgbHexTest -PmutationMutators=MATH --max-workers=1
+
+The comma-separated selectors override the module defaults for that invocation. A narrow run
+is not evidence for a complete campaign. Active fuzzing has its own limits in [FUZZING.md](FUZZING.md).
+
+## CI and cache ownership
+
+GitHub runs deterministic checks, product Docker smoke and applicable contributor-container
+checks independently; the aggregate Gate requires all applicable results. The deterministic
+job does not install Docker build tooling. Gradle cache writes are restricted to the default
+branch; other refs restore read-only. Setup-gradle removes unused user-home cache entries
+before a permitted cache save, including after a failed build. Failed check reports are
+retained as a seven-day artifact.
+
+The root check finalizer retains three configuration-cache reports: the current input report
+and two preceding comparisons. This limits retained diagnostics after checks, not active
+writes or arbitrary standalone Gradle invocations. Project test reports and campaign findings
+have separate ownership and are not removed by that finalizer.
+
+Gradle owns shared user-home dependency and local build caches; the repository does not impose
+a byte quota on that shared directory. The included build reuses one workspace-local TestKit
+home across its functional tests. Deleting these caches routinely forces downloads and build
+setup again. Preserve useful failure evidence before deliberately cleaning project outputs.
 
 ## Architecture
 
-GridGrind is a six-module Gradle project with compiler-enforced JPMS boundaries:
+Core contains the pure model, metadata, validation, discovery, grants and executable resolved
+plans. JSON owns tolerant intake, binding, schemas and derived wire configuration. Engine owns
+execution and native workbook mechanics, with POI confined to its feature/backend packages.
+CLI contains commands, rendering and host IO; workspace materialization stays with that host.
 
-```
-excel-foundation/
-            Shared Excel-domain foundation. Owns the POI-free `.xlsx` enums,
-            limits, and span/value objects shared by contract, engine,
-            executor-facing tests, and downstream adapters.
+JPMS defines module readability and exports. ArchUnit checks package boundaries, native-type
+confinement, signatures and closed model shapes against actual compiled product roots.
+Build logic is Kotlin in gradle/build-logic; its tests use Gradle's ProjectBuilder.
 
-engine/     Apache-POI-backed workbook engine. Owns mutable workbook state,
-            workbook mutation rules, factual workbook inspection, and the
-            narrow exported request-execution API used by downstream
-            transports.
+## Generated source data
 
-contract/   Canonical GridGrind contract model. Owns the public request and
-            response types, catalog metadata, JSON codecs, and transport-
-            neutral contract shapes.
+Regenerate JSON examples from the pure recipe registry with:
 
-executor/   Verification-only parity and execution-regression surface.
-            Exercises the engine runtime directly but does not own the live
-            request-execution boundary.
+    ./gradlew :cli:writeRepositoryExamples
 
-authoring-java/
-            Fluent Java authoring layer. Owns selector builders, authored
-            step builders, and canonical `WorkbookPlan` emission without
-            exposing engine internals or pulling executor runtime concerns
-            into the module boundary.
+The committed binary recipe assets are fixed test inputs, including the separately audited
+Apache POI Custom XML fixture. Changes to those assets require reviewing their provenance,
+NOTICE and packaging checks.
 
-cli/        Thin transport adapter. Reads a contract request from stdin
-            or --request file, delegates to engine's exported API, writes
-            the response, and exposes help/template/catalog discovery
-            commands.
-```
+Regenerate exchanged-document schemas with:
 
-The CLI is not the core. The foundation is `excel-foundation` plus `engine` plus `contract` plus
-`executor`. The `authoring-java` API and the CLI are two downstream surfaces on top of that
-foundation. Future adapters (HTTP, gRPC, library embedding) can be added without touching
-`excel-foundation`, `engine`, or `contract`.
+    ./gradlew :json:generateSchemas
 
-The enforced dependency graph is:
+Reference verification checks committed output without rewriting it. Tests verify examples,
+schemas, documentation links and transport behavior. Generate reference pages, limits and
+problem descriptions from metadata with:
 
-```text
-dev.erst.gridgrind.authoring -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
-dev.erst.gridgrind.cli -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
-dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
-```
+    ./gradlew :cli:generateReferenceDocs
 
-`authoring-java` does not depend on `engine`, and `cli` depends only on the `engine` module's
-exported `dev.erst.gridgrind.engine.api` seam instead of the internal runtime package. The
-`executor` Gradle project exists only as a parity and regression-verification surface; the live
-request executor and workbook-to-contract bridge are inside `engine`, and the exported API is now
-narrower than the internal runtime namespace. `excel-foundation` is the only shared Excel-domain
-surface allowed to sit below both `contract` and `engine`, so the public contract no longer
-imports POI-backed engine internals just to reuse enums or limits. Shared Java build conventions enable
-`modularity.inferModulePath`, so the `module-info.java` descriptors in the product modules
-participate in normal local builds, CI, and release verification.
+Use `./gradlew verifyGeneratedDocs` to check committed references and schemas without rewriting
+them. Generated workbooks belong in build or test-owned temporary directories.
 
-Within `engine`, the workbook runtime no longer treats `dev.erst.gridgrind.excel` as one flat
-catch-all namespace. High-churn workbook subdomains now sit in dedicated `event`, `stream`,
-`pivot`, `customxml`, `ooxml`, `drawing`, and `validation` subpackages so package names carry the
-same theory boundaries as the code they own.
-
-The highest-churn architecture seams are intentionally split too:
-- `GridGrindProtocolCatalog` owns the top-level catalog assembly, `CatalogFieldMetadataSupport` derives nested/plain field-shape metadata from the canonical descriptor groups, and `GridGrindProtocolCatalogLookupSupport` owns exact lookup plus grouped operation-centered search behavior.
-- Jazzer request generation is no longer one monolith: the `OperationSequence*` family now splits orchestration, selector helpers, mutation/inspection/command factories, observation-side assertions, bounded payload generation, and chart payload generation into focused seams, while `WorkbookInvariantChecks` is split across workbook/cell/engine-surface invariant helpers.
-- Build-failing architecture audits protect these boundaries. The verification-only `executor:architectureTest` task runs only ArchUnit over the five compiled product modules, while `executor:architectureTestContract` runs only Jupiter to prove the effective fail-closed policy and 13-rule inventory. Together they keep every product package assigned, keep the module graph acyclic, preserve foundation/contract/engine/adapter dependency direction, constrain engine API implementation bridges, reject runtime and workbook implementation types from the exported API surface including generic signatures, require closed sealed-interface variants, reserve sealed classes for typed exception bases, keep direct `Cell.setCellFormula(...)` calls inside `ExcelFormulaWriteSupport`, and keep private POI access inside `PoiPrivateAccessSupport`, including method references. The custom rule implementation lives in executor main and has 100% line, branch, and STRONGER PIT coverage, including compiler-generated conditions and predicates. JPMS remains the actual module-encapsulation boundary, while source and build audits cover facts bytecode cannot prove. The split hotspot files must also stay below their enforced size ceilings, and `PoiPrivateAccessCompatibilityTest` fails fast if a POI upgrade stops resolving the registered private sheet-clone, picture-catalog, fill-registry, or relation-removal seams that the engine still depends on.
-
-## Contract Replacement Mode
-
-The former monolithic `protocol` module is gone. GridGrind is now in hard-break contract-replacement
-mode: new top-level contract surface growth must happen through the `contract` plus `engine`
-split and the accepted post-replacement architecture, not by reintroducing monolithic
-transport-and-execution ownership. The accepted architecture decision record for that freeze is
-[DEVELOPER_CONTRACT_REPLACEMENT_ADR.md](./DEVELOPER_CONTRACT_REPLACEMENT_ADR.md).
-
----
-
-## Foundations
+## Toolchain and dependencies
 
 | Component | Version |
 |:----------|:--------|
-| Contributor devcontainer | pinned glibc base image plus Azul Zulu 26 JDK; see [DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md) |
+| Contributor devcontainer | pinned glibc base image plus Azul Zulu 26 JDK; see [contributor configuration](../.devcontainer/devcontainer.json) |
 | Java | 26 |
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
-| Architecture tests | ArchUnit 1.5.0 with its JUnit 6 integration, isolated to the paired `executor:architectureTest` and `executor:architectureTestContract` verification tasks |
+| Architecture tests | ArchUnit 1.5.0 with its JUnit 6 integration in `architecture-tests:architectureTest` |
 | Apache POI | 5.5.1 |
 | Jackson Databind | 3.2.2 |
 | JUnit Jupiter | 6.1.3 |
 | Log4j Core | 2.26.1 |
 
-GridGrind's runtime, product modules, and shared included build logic under `gradle/build-logic`
-all target Java 26 now. The included build is no longer a JVM 25 exception: it compiles with
-Kotlin `2.4.20`, emits JVM 26 bytecode directly, and stays aligned with the repository's
-single Java baseline instead of carrying a separate bytecode-level footnote.
+Product modules and shared build logic target Java 26. Kotlin `2.4.20` implements build tasks
+and convention plugins; their regression tests use Java. The included build reads its Java
+target from the root gradle.properties pin.
 
 Jackson dependency note: Jackson 3.x databind intentionally still uses the
 `com.fasterxml.jackson.core:jackson-annotations` artifact and package namespace. That is upstream
 Jackson design, not a GridGrind version-skew bug.
 
----
 
-## Commands
+See [EXECUTION_MODEL.md](./EXECUTION_MODEL.md) for authority and publication,
+[CLI.md](./CLI.md) for host commands, [FUZZING.md](./FUZZING.md) for fuzzing,
+and [RELEASING.md](./RELEASING.md) for the tag-driven release workflow.
 
-`./gradlew check` remains the root-project code-quality gate: Spotless formatting,
-explicit-import verification, the root `verifyJavaSourceShape` and `verifyControlPlaneShape`
-policy gates, Error Prone with NullAway on `@NullMarked` production packages, PMD, tests, and
-JaCoCo coverage verification for `engine`, `contract`, `executor`, `authoring-java`, and `cli`.
-`./check.sh` is the supported whole-repo deterministic gate: root `check` plus `coverage`,
-nested Jazzer `check`,
-`:cli:shadowJar`, architecture-split shell regressions, packaged-JAR CLI contract verification,
-release-surface shell checks, and a Docker smoke test that runs the image from a non-default
-working directory with weird request/response/save paths while also asserting the published
-help/version/response contract semantically. `check.sh`
-intentionally lives in the repository root as the canonical contributor entrypoint, while
-`scripts/` contains helper scripts invoked by the root gate and GitHub workflows. Both should be
-clean before a release-quality change is considered done. When Stage 1 reaches long-running Gradle
-`Test` tasks, the shared test conventions emit
-`[GRADLE-TEST-PULSE]` lines with class-start, class-complete, and throttled test-progress facts
-so the local watchdog tracks semantic execution rather than mistaking quiet test output for a
-hang. The fixed five-stage inventory and the Stage 4 shell-regression list are canonically owned
-by `scripts/check-stage-contract.sh`, so root-gate usage text and execution wiring stay aligned as
-release-surface shell coverage evolves.
+## Contributor container
 
-Use `./gradlew`, not path-global `gradle`. GridGrind's CLI, fat JAR, release flow, and
-`./check.sh` all depend on the ambient shell `java`, so the local shell must resolve Java 26 from
-a real full JDK. Keep the repository on the local filesystem when you run the full verification
-loop; mounted external volumes are outside the supported setup because Gradle project-cache and
-JaCoCo file locking can fail there on macOS. If you edit from a mounted volume, run the heavy
-build/test loop from a local-disk worktree or disposable mirror instead. `./check.sh` now fails
-fast if the shell runtime is wrong. The same root gate also forces `--no-daemon`, isolates
-`GRADLE_USER_HOME` to a repo-scoped path under `tmp/gradle-user-home` by default, and shares one
-repo-wide verification lock with `scripts/validate-devcontainer.sh`, `scripts/docker-smoke.sh`,
-and `jazzer/bin/*` so top-level verification entrypoints cannot overlap accidentally.
-Docker smoke and release verification should likewise stay independent from personal Docker login
-state by using an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine,
-and local Docker verification now requires `docker buildx` because Stage 5 builds through
-`docker buildx build --load` instead of Docker's deprecated classic builder path.
-The committed contributor devcontainer is validated separately through
-`./scripts/validate-devcontainer.sh`, which builds the contributor image, checks its pinned Java
-and tooling surface, guards the portable devcontainer contract, and verifies the committed VS Code
-overlay contract in `.devcontainer/devcontainer.json`.
-
-```bash
-# Run the local full-stack gate
-./check.sh
-
-# Run the separately scheduled critical mutation-testing gate
-./check_mutation.sh
-
-# Run the root-project CI gate
-./gradlew check
-./gradlew verifyJavaSourceShape
-
-# Targeted iteration during development
-./gradlew test                   # tests only, no quality gates
-./gradlew coverage               # tests + coverage verification + HTML/XML report generation
-./gradlew architectureCheck      # mandatory ArchUnit product architecture rules
-./gradlew mutationCheck          # reviewed PIT scopes; intentionally outside normal check
-./gradlew spotlessCheck          # formatting check only
-./gradlew spotlessApply          # auto-format in place (run before spotlessCheck)
-./gradlew pmdMain pmdTest        # PMD only
-
-# Build artifacts
-./gradlew :cli:shadowJar
-./gradlew :cli:run --args="--print-grant-template --response grant.json"
-# Edit grant.json to authorize examples/budget-request.json's exact resources, operations, and output.
-./gradlew :cli:run --args="--request examples/budget-request.json --grant grant.json"
-./gradlew :cli:run --args="--version"
-./gradlew :cli:run --args="--print-request-template"
-./gradlew :cli:run --args="--print-protocol-catalog"
-./gradlew :cli:run --args="--print-recipe --lookup BUDGET"
-./gradlew :cli:run --args="--print-recipe-catalog"
-./gradlew :cli:run --args="--print-recipe-catalog --lookup DASHBOARD"
-./gradlew :cli:run --args="--print-recipe --lookup DASHBOARD"
-./gradlew :cli:run --args='--print-recipe-keyword-match --query "monthly sales dashboard with charts"'
-./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
-./scripts/docker-smoke.sh
-./scripts/validate-devcontainer.sh
-```
-
-The protocol catalog is generated from the contract record signatures. If you change request
-records, nested tagged unions, or plain input records, keep the field-shape output authoritative:
-every field should still publish required/optional status and the exact nested/plain group
-accepted by polymorphic inputs. Contract-bearing discovery prose such as low-memory mode limits,
-formula parse boundaries, and workbook-health summaries now live in the canonical contract layer
-instead of thin downstream string copies. `GridGrindContractText` owns stable wording and
-`GridGrindExecutionModeMetadata` owns the structured EVENT_READ and STREAMING_WRITE contract
-rules plus their validation messages. CLI-specific presentation lives downstream in `cli`:
-`CliSurface` and `GridGrindCliHelp` own the help section labels, key/value entries, flags,
-docs links, and example routing that the transport renders. `cli` owns the high-level task
-descriptor DTOs plus typed discovery profiles, while `GridGrindCliRecipeRegistry`,
-`GridGrindRecipeDefinition`, `GridGrindRecipeDefinitions`, the concrete
-`GridGrindExampleRecipeDefinition` and `GridGrindTaskRecipeDefinition` variants, and the
-per-task `*TaskRecipe` classes,
-`GridGrindAdHocTaskRequestScaffolds`, and
-`GridGrindRecipeKeywordMatcher` owns the downstream recipe/discovery policy: one shared published
-recipe source feeds the built-in example view plus the executable task-starter view, official
-task ids resolve only through that registry-owned recipe set, the ad hoc scaffolder builds only
-generic unpublished task requests, and English keyword query ranking is anchored first in typed
-goal/artifact metadata rather than loose notes or pitfalls. Request linting is also part of that
-authoritative public surface now: `engine` exports a narrow request-doctor API alongside the
-request executor, and the packaged-artifact verifiers exercise the emitted doctor report plus
-every published built-in example and task starter instead of relying only on module-local tests.
-The build now also includes
-contract-side and CLI-side public-surface
-linters that fail if docs, generated help, catalog summaries, shipped examples, or shared runtime
-diagnostics mention a canonical mutation, assertion, or inspection id that is not registered in
-the catalog vocabulary.
-The catalog build path still uses a small internal
-`contract.catalog.gather` seam for the two cases that genuinely benefit from Stream Gatherers:
-ordered uniqueness and reflected field-metadata expansion. The built-in request template remains
-an ordinary constant because no domain gatherer semantics are needed there. Keep
-`--print-request-template` as the smallest valid machine-readable request; workflow snippets such
-as the no-save `ANALYZE_WORKBOOK_FINDINGS` lint pass belong in help text, public docs, and the
-example request set instead of the emitted template itself.
-
----
-
-## GitHub Workflows
-
-Release automation is split across three workflows:
-
-- `CI` runs the supported whole-repo deterministic gate through `./check.sh`, then validates the
-  committed contributor devcontainer surface so the preferred local development environment cannot
-  silently drift away from the documented contract.
-- `Release` builds the fat JAR, black-box verifies the packaged CLI discovery surface, publishes
-  the GitHub Release idempotently when a `v*` tag is pushed, and verifies that the published
-  release object and `gridgrind.jar` asset exist.
-- `Container` first runs the same Docker smoke script against the local Dockerfile build, then
-  builds and publishes the multi-arch GHCR image, verifies with an isolated anonymous Docker
-  config that both the exact version tag and `latest` are publicly pullable and runnable, then
-  black-box verifies the published CLI help, protocol catalog, task catalog, recipe,
-  task keyword matcher, and doctor surfaces from both tags before pruning older container package
-  versions.
-- `Gradle wrapper validation` runs when wrapper files change and validates the checked-in wrapper
-  surface.
-
-Targeted `workflow_dispatch` reruns for `Release` and `Container` are guarded deliberately: before
-either workflow builds or publishes anything, the checked-out tag must still match
-`gradle.properties`, resolve to the exact remote tag commit, remain reachable from `main`, and
-already have successful `Check` plus `Docker smoke` runs on that exact commit. The container
-workflow also publishes explicit OCI provenance and SBOM attestations for the released image.
-
-The container cleanup step intentionally uses `gh api` against GitHub Packages instead of
-`actions/delete-package-versions`. That action still runs on Node20, while GitHub is moving
-JavaScript actions to Node24, and raw count-based cleanup is incorrect for GHCR multi-arch
-images because one release produces several package-version records: the tagged OCI index plus
-multiple untagged platform and attestation manifests.
-
-The workflow therefore keeps the five newest tagged releases (`X.Y.Z`) as anchors and deletes
-only package-version records older than the oldest retained anchor. This preserves complete
-release groups instead of splitting a release across the retention boundary.
-
----
-
-## Quality Gates
-
-`./gradlew check` runs each of the following root-project gates. Any failure fails the build.
-`./check.sh` runs these same root-project gates, then runs nested Jazzer verification, builds the
-CLI fat JAR, syntax-checks the release-surface shell scripts, and finally runs the Docker smoke
-script.
-The release/publication shell verifiers and their regressions now use repo-local disposable
-scratch under `tmp/` rather than depending on macOS `/var/folders` temp behavior, so local runs
-and CI exercise the same deterministic shell surface.
-If Docker or shell-script stages materialize temporary secret-bearing fixtures, those fixtures must
-obey the same filesystem-security contract as production instead of weakening the runtime policy
-just to make smoke tests pass.
-
-### Error Prone
-
-Compile-time static analysis. These checks are promoted to errors (build fails):
-
-- `NullAway` on `@NullMarked` production packages, using JSpecify nullness
-- `BadImport`
-- `BoxedPrimitiveConstructor`
-- `CheckReturnValue`
-- `EqualsIncompatibleType`
-- `JavaLangClash`
-- `MissingCasesInEnumSwitch`
-- `MissingOverride`
-- `ReferenceEquality`
-- `StringCaseLocaleUsage`
-
-### PMD
-
-Structural analysis plus a root-owned source-shape ratchet.
-
-- `gradle/pmd/ruleset.xml` — baseline production rules. It enforces `errorprone`,
-  `bestpractices`, `multithreading`, `performance`, `security`, documentation, and the
-  production-safe subset of `design`.
-- `gradle/pmd/semantic-shape-ruleset.xml` — stricter production-main design thresholds consumed
-  by the dedicated semantic-shape gate instead of the broad PMD task.
-- `gradle/pmd/test-ruleset.xml` — test code: the broad hygiene categories remain active, but the
-  class-level structural PMD rules (`GodClass`, `TooManyMethods`, `CouplingBetweenObjects`,
-  `CyclomaticComplexity`, `CognitiveComplexity`, and `ExcessiveImports`) are intentionally left to
-  the repository-owned source-shape gate instead of duplicated here; `CommentRequired` enforces
-  class-level Javadoc only.
-- `verifyJavaSourceShape` — root build-logic task that parses every repo-owned handwritten Java
-  source set, including `main`, `test`, `testFixtures`, `architectureTest`, `parityTest`, and Jazzer surfaces,
-  writes `build/reports/source-shape/source-shape.tsv`, and enforces role-specific budgets from
-  `gradle/source-shape-policy.tsv`.
-- `verifyControlPlaneShape` — root build-logic task that scans repo-owned shell, Kotlin
-  build-logic, and long-lived operator-control files, writes
-  `build/reports/source-shape/control-plane-shape.tsv`, and enforces reviewed budgets from
-  `gradle/control-plane-shape-policy.tsv`.
-- `verifyJavaSourceDuplication` — root build-logic task that scans repo-owned handwritten Java
-  sources whose
-  policy row keeps `duplicationGuard=CHECK`, writes
-  `build/reports/source-shape/java-duplication.tsv`, and fails on duplicated token spans large
-  enough to indicate a new shared seam instead of letting mirror allowances hide behind global
-  exclusions.
-- `verifyJavaSemanticShape` — root build-logic task that aggregates `pmdSemanticMain` reports,
-  writes `build/reports/source-shape/java-semantic-shape.tsv`, and fails on any production-main
-  PMD semantic-shape finding not explicitly reviewed in `gradle/semantic-shape-policy.tsv`.
-
-`gradle/source-shape-policy.tsv` is the structural-governance authority. It owns broad role
-budgets, per-role duplication ownership, and any reviewed exact-surface override. Exact reviewed
-surfaces must name an owner, declare `reviewExpiresOn` plus `splitTrigger`, tighten at least one
-metric beyond their broader role, and keep their reviewed headroom close to the current file shape
-so historical god-file budgets cannot survive after a split. Repository build-logic tests also
-enforce that reviewed waivers stay live and near-term instead of being parked indefinitely.
-
-`gradle/control-plane-shape-policy.tsv` applies the same owner/expiry/split-trigger lifecycle to
-repository control-plane surfaces that sit outside handwritten Java source sets, including shell
-gates, Kotlin build-logic, and the live operator ledger/protocol files in the task
-inventory.
-
-`gradle/semantic-shape-policy.tsv` is the semantic-shape exception registry. Every entry is
-file-exact, owner-tagged, expiring, and tied to a concrete split trigger so semantic PMD debt
-cannot hide behind package-wide or indefinite allowances.
-
-### Spotless
-
-Google Java Format 1.36.1. Removes unused imports. Run `./gradlew spotlessApply` to auto-format
-before committing; `./gradlew spotlessCheck` (run by `check`) will fail if formatting is off.
-Project-file formatting intentionally excludes local-only instruction and scratch areas,
-so personal workspace state cannot destabilize the canonical quality gates.
-
-### JaCoCo
-
-100% line and branch coverage required across all modules.
-
-Coverage-gate protocol:
-- never rely on JaCoCo defaults for verification semantics
-- per-module verification must set both `LINE` and `BRANCH` counters explicitly
-- per-module reports and verification must read all local `build/jacoco/*.exec` files, not only
-  `test.exec`
-- aggregated root coverage must read all subproject `build/jacoco/*.exec` files as well
-
-This rule is especially important in GridGrind because `executor` already has more than one local
-`Test` task. A hardcoded `test.exec` assumption would silently exclude `parityTest` coverage from
-the gate. See [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md) for the canonical build-logic
-protocol.
-
-After the `contract` plus `executor` split, `contract` coverage intentionally includes downstream
-consumer execution data from `executor` and `cli` in addition to `contract`'s own tests. That is
-not a loophole: it is the correct ownership model for a canonical public contract whose behavior
-is exercised both by direct DTO/catalog tests and by the executor and CLI seams that consume it.
-
-`engine` coverage also intentionally includes downstream consumer execution data from `executor`.
-That reflects the same ownership model: the exported engine seam is proven both by local engine
-tests and by the request-execution layer that consumes it.
-
-| Module | Line Coverage | Branch Coverage |
-|:-------|:-------------|:----------------|
-| `engine` | 100% | 100% |
-| `contract` | 100% | 100% |
-| `executor` | 100% | 100% |
-| `authoring-java` | 100% | 100% |
-| `cli` | 100% | 100% |
-
-`./gradlew check` enforces the thresholds but does not write report files. Run
-`./gradlew coverage` to enforce thresholds and generate HTML/XML reports at
-`build/reports/jacoco/` in each module plus an aggregated cross-module report at
-`build/reports/jacoco/aggregated/`.
-The root coverage tasks discover participating JaCoCo-enabled Java subprojects dynamically and
-collect every module `build/jacoco/*.exec` file, so adding another product module must not
-require hand-editing a root hardcoded task list.
-
-The table above applies only to the root product modules. The nested Jazzer build has a separate
-coverage contract because its local-only generator, telemetry, and operator classes are exercised
-primarily through regression replay and live fuzzing rather than ordinary unit tests. Run
-`./gradlew --project-dir jazzer check` to enforce Jazzer's dedicated coverage scope together with
-its shared Spotless and PMD gates. The entire extracted `OperationSequence*` generator family
-follows the same coverage scope as `OperationSequenceModel`, and direct selector-sweep seam tests
-still exercise those split generator layers so the exclusion does not mean "untested".
-
-Supported `jazzer/bin/*` wrappers are part of that operator contract too. They must remain
-compatible with stock macOS `/bin/bash` 3.2 under `set -u`; do not assume Bash 4+ empty-array
-expansion semantics in shell wrappers that contributors run directly.
-
----
-
-## Execution Semantics
-
-Mutation steps run first in authored order, assertion and inspection steps run wherever they are
-placed in authored order, and persistence happens only after every step succeeds.
-
-If any step or calculation phase fails, the request returns a structured error and workbook
-persistence is skipped. This gives agents deterministic failure semantics at the `.xlsx` output
-boundary: GridGrind does not emit a partially written workbook file.
-
----
-
-## Workflow Fixtures
-
-The shipped JSON fixtures are generated from the CLI-owned example registry in
-checkout-rooted form. Refresh them with
-[`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh), or print any one of
-the artifact-native built-in examples directly with `gridgrind --print-recipe --lookup <self-contained-id>`
-or materialize an asset-backed workspace with `gridgrind --materialize-recipe --lookup <id> --workspace <new-directory>`. The full
-map, path-rooting rules, and verification loop live in [EXAMPLES.md](./EXAMPLES.md). Do not
-hand-edit the checked-in `examples/*.json` fixtures or the generated package-security workbook;
-regenerate them from the CLI-owned recipe registry so the committed examples, built-in example surface,
-and verification loop stay on one source of truth. These
-fixtures and authoring examples cover the core surface:
-
-| File | What It Tests |
-|:-----|:-------------|
-| `examples/budget-request.json` | Range write, style, formula, workbook summary, cells, window, and schema inspection steps |
-| `examples/file-hyperlink-health-request.json` | File-hyperlink authoring plus explicit hyperlink metadata and hyperlink-health analysis |
-| `examples/introspection-analysis-request.json` | Inspection-heavy workbook showcasing factual reads plus targeted formula, hyperlink, named-range, and aggregate workbook analysis together |
-| `examples/java-authoring-workflow.java` | Fluent Java authoring example showing selector-first table-key targeting, source-backed row selection, ordered inspection, and assertion steps without hand-written JSON |
-| `examples/array-formula-request.json` | Dedicated array-formula authoring, array-group readback, and group clearing |
-| `examples/custom-xml-request.json` | Existing-workbook custom-XML mapping discovery, XML export, file-backed XML import, and factual cell reread |
-| `examples/signature-line-request.json` | Signature-line authoring with drawing-object readback and authored anchor replacement |
-| `examples/chart-request.json` | Supported chart authoring with named-range-backed series and factual chart readback |
-| `examples/pivot-request.json` | Range-backed pivot authoring, pivot-table inspection, and pivot-health analysis |
-| `examples/package-security-inspect-request.json` | Encrypted workbook open plus factual package-security inspection |
-| `examples/source-backed-input-request.json` | File-backed text, formula, and binary payload authoring with drawing-payload extraction |
-| `examples/large-file-modes-request.json` | Low-memory `STREAMING_WRITE` execution plus open-time recalculation flagging |
-| `examples/assertion-request.json` | Ordered mutate-then-verify flow with first-class assertion steps and verbose journaling |
-| `examples/workbook-health-request.json` | Compact no-save health workflow combining sheet summary, formula health, aggregate workbook findings, and cell readback |
-
-Run any JSON fixture through an explicit least-authority grant:
-
-```bash
-./gradlew :cli:run --args="--print-grant-template --response grant.json"
-# Edit grant.json to authorize examples/<file>.json's exact resources, operations, and output.
-./gradlew :cli:run --args="--request examples/<file>.json --grant grant.json"
-```
-
-Examples that persist a workbook write to `generated-workbooks/` beside the request file; for the
-checked-in repository fixtures that means `examples/generated-workbooks/`. The no-save examples
-return JSON only.
-
-The Java example is compiled and executed by `:authoring-java:test` and demonstrates how the
-`authoring-java` module emits one canonical `WorkbookPlan` without dropping to raw JSON. The
-public walkthrough for that surface lives in [JAVA_AUTHORING.md](./JAVA_AUTHORING.md).
-
----
-
-## Jackson 3.x Package Notes
-
-GridGrind uses Jackson 3.x (`tools.jackson.core:jackson-databind:3.2.0`). The package split:
-
-| Surface | Package |
-|:--------|:--------|
-| Annotations (`@JsonTypeInfo`, `@JsonSubTypes`, `@JsonProperty`) | `com.fasterxml.jackson.annotation.*` |
-| Core / databind APIs (`JsonMapper`, `JacksonException`) | `tools.jackson.databind.*` / `tools.jackson.core.*` |
-
-The annotation module kept its original Java package in Jackson 3.x. Only the core/databind
-implementation packages changed. Spotless will revert incorrect `tools.jackson.annotation.*`
-imports back to `com.fasterxml.jackson.annotation.*` automatically.
+Contributor configuration is owned by [.devcontainer/devcontainer.json](../.devcontainer/devcontainer.json)
+and its [Dockerfile](../.devcontainer/Dockerfile). Open the checkout in that container for the
+pinned JDK/tooling/font stack. The startup cache repair and opt-in devcontainerTest exercise
+caller-writable cache mounts. Dependency update decisions follow
+[the automation policy](DEPENDENCY_AUTOMATION_POLICY.md).

@@ -2,8 +2,8 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -37,7 +37,7 @@ final class RequestPathPublicationTestSupport {
 
   static void copySiblingExactly(Path stagedArtifact, RequestPathBinding binding, Path siblingName)
       throws IOException {
-    RequestPathPublicationFileSupport.copyAndForce(
+    PublicationFileOperations.copyAndForce(
         stagedArtifact,
         binding.openSiblingChannel(
             siblingName,

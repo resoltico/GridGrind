@@ -1,17 +1,17 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.DiagnosticOrder;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
-import dev.erst.gridgrind.contract.json.RequestBoundFragments;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequest;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
-import dev.erst.gridgrind.contract.step.WorkbookStaticStep;
-import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.DiagnosticOrder;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestBoundFragments;
+import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequest;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.core.validation.WorkbookStaticStep;
+import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestAnalysisProblems;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import java.util.Objects;
  */
 final class StaticRequestValidator {
   List<GridGrindProblemDetail.Problem> validate(
-      RequestAnalysis analysis, ProblemContextRequestSurfaces.RequestInput requestInput) {
+      RequestIntake analysis, ProblemContextRequestSurfaces.RequestInput requestInput) {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(requestInput, "requestInput must not be null");
     List<GridGrindProblemDetail.Problem> problems =
@@ -47,7 +47,7 @@ final class StaticRequestValidator {
   }
 
   private static List<GridGrindProblemDetail.Problem> validatePlanRules(
-      WorkbookPlan request, java.util.Optional<RequestAnalysis> analysis) {
+      WorkbookPlan request, java.util.Optional<RequestIntake> analysis) {
     List<GridGrindProblemDetail.Problem> problems = new ArrayList<>();
     addContractViolations(
         problems,
@@ -61,7 +61,7 @@ final class StaticRequestValidator {
       List<GridGrindProblemDetail.Problem> problems,
       WorkbookStaticRequest request,
       ProblemContextRequestSurfaces.RequestShape requestShape,
-      java.util.Optional<RequestAnalysis> analysis) {
+      java.util.Optional<RequestIntake> analysis) {
     for (WorkbookStaticViolation violation : WorkbookStaticRequestContract.validate(request)) {
       problems.add(
           staticProblem(requestShape, analysis, violation.jsonPath(), violation.message()));
@@ -80,7 +80,7 @@ final class StaticRequestValidator {
 
   private static GridGrindProblemDetail.Problem staticProblem(
       ProblemContextRequestSurfaces.RequestShape requestShape,
-      java.util.Optional<RequestAnalysis> analysis,
+      java.util.Optional<RequestIntake> analysis,
       String jsonPath,
       String message) {
     ProblemContext.ValidateRequest context = new ProblemContext.ValidateRequest(requestShape);

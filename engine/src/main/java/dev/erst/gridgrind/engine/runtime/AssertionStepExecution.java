@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
+import dev.erst.gridgrind.core.plan.AssertionResult;
 import java.util.Objects;
 
 /** One assertion outcome, retaining failure detail when terminal collection must continue. */

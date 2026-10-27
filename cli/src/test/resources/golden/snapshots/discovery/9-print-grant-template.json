@@ -1,0 +1,18 @@
+{
+  "exit" : 0,
+  "stderr" : "",
+  "stdout" : {
+    "acceptancePolicy" : {
+      "type" : "MINIMUM_ONLY"
+    },
+    "allowedSecretReferences" : [ ],
+    "operationIds" : [ ],
+    "publicationAuthority" : {
+      "type" : "NONE"
+    },
+    "readableResources" : [ ],
+    "targetAuthority" : {
+      "type" : "WORKBOOK_WIDE"
+    }
+  }
+}

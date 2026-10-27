@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -89,7 +89,7 @@ class OpaqueOoxmlPartPreservationTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.Requirement
+                new dev.erst.gridgrind.core.grant.AcceptancePolicy.Requirement
                     .PreserveOpaqueOoxmlParts(List.of("../customXml/item1.xml")));
 
     assertEquals("partNames must contain normalized OOXML part names", exception.getMessage());

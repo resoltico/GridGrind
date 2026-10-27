@@ -1,0 +1,837 @@
+package dev.erst.gridgrind.json.intake;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.PayloadException;
+import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.problem.RequestMissingTypeDiscriminator;
+import dev.erst.gridgrind.core.problem.RequestUnknownField;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+
+/** Tests for JSON serialization, parser wording, and the step-based wire shape. */
+@SuppressWarnings("NotJavadoc")
+class GridGrindJsonTest {
+  @Test
+  void readsRequestsFromTheMinimalTopLevelProtocolEnvelope() throws IOException {
+    WorkbookPlan plan =
+        GridGrindJson.readRequest(
+            """
+            {
+              "protocolVersion": 1,
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(ProtocolVersion.CURRENT, plan.protocolVersion());
+    assertTrue(plan.execution().isDefault());
+    assertEquals(ExecutionJournalLevel.SUMMARY, plan.journalLevel());
+    assertTrue(plan.formulaEnvironment().isEmpty());
+    String serialized =
+        new String(GridGrindJsonOutput.writeRequestBytes(plan), StandardCharsets.UTF_8);
+    assertFalse(serialized.contains("\"execution\""));
+    assertFalse(serialized.contains("\"formulaEnvironment\""));
+  }
+
+  @Test
+  void rejectsRequestsThatOmitRequiredTopLevelSections() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" }
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(exception.getMessage().contains("protocolVersion"));
+  }
+
+  @Test
+  void reportsUnsupportedEnumValuesWithAllowedCandidates() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+            {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},
+             "execution":{"assertionMode":"NOT_A_MODE"},"steps":[]}
+            """
+                        .getBytes(StandardCharsets.UTF_8)));
+    assertEquals(
+        "Unsupported value 'NOT_A_MODE' for field 'execution.assertionMode'; expected one of: FAIL_FAST, COLLECT",
+        exception.getMessage());
+  }
+
+  @Test
+  void rejectsExplicitNullPlaceholdersDuringRequestRead() {
+    InvalidRequestShapeException optionalNull =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "planId": null,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": { "type": "FULL_XSSF" },
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": false
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException topLevelNull =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": null,
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException nestedNull =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "summary",
+                          "target": null,
+                          "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(
+        "Field 'planId' must be omitted when absent; explicit null is not accepted.",
+        optionalNull.getMessage());
+    assertEquals(
+        "Field 'execution' must be omitted when absent; explicit null is not accepted.",
+        topLevelNull.getMessage());
+    assertEquals(
+        "Field 'steps[0].target' must be omitted when absent; explicit null is not accepted.",
+        nestedNull.getMessage());
+    assertEquals(Optional.of("planId"), optionalNull.jsonPath());
+    assertEquals(Optional.of("execution"), topLevelNull.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), nestedNull.jsonPath());
+  }
+
+  @Test
+  void derivesJsonPathForMissingCreatorProperties() {
+    IllegalArgumentException missingProtocolVersion =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": { "type": "FULL_XSSF" },
+                        "journal": { "level": "SUMMARY" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": false
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertInstanceOf(InvalidRequestShapeException.class, missingProtocolVersion);
+    assertInstanceOf(PayloadException.class, missingProtocolVersion);
+    PayloadException payloadException = (PayloadException) missingProtocolVersion;
+    assertEquals("Missing required field 'protocolVersion'", missingProtocolVersion.getMessage());
+    assertEquals(Optional.of("protocolVersion"), payloadException.jsonPath());
+  }
+
+  @Test
+  void derivesJsonPathForMissingSaveAsIfExists() {
+    IllegalArgumentException missingIfExists =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "SAVE_AS", "path": "budget.xlsx" },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertInstanceOf(InvalidRequestShapeException.class, missingIfExists);
+    assertInstanceOf(PayloadException.class, missingIfExists);
+    PayloadException payloadException = (PayloadException) missingIfExists;
+    assertEquals("Missing required field 'persistence.ifExists'", missingIfExists.getMessage());
+    assertEquals(Optional.of("persistence.ifExists"), payloadException.jsonPath());
+  }
+
+  @Test
+  void derivesPreciseJsonPathForNonXlsxWorkbookPathViolations() {
+    InvalidRequestException invalidSourcePath =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "EXISTING", "path": "budget.txt" },
+                      "persistence": { "type": "NONE" },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestException invalidPersistencePath =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "SAVE_AS", "path": "budget.txt", "ifExists": "REJECT" },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestException invalidExternalWorkbookPath =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [
+                          { "workbookName": "Rates.xlsx", "path": "rates.txt" }
+                        ],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(Optional.of("source.path"), invalidSourcePath.jsonPath());
+    assertEquals(Optional.of("persistence.path"), invalidPersistencePath.jsonPath());
+    assertEquals(
+        Optional.of("formulaEnvironment.externalWorkbooks[0].path"),
+        invalidExternalWorkbookPath.jsonPath(),
+        invalidExternalWorkbookPath::toString);
+  }
+
+  @Test
+  @SuppressWarnings("StringConcatToTextBlock")
+  void roundTripsRequestsResponsesAndCatalogs() throws IOException {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicySpec.mode(ExecutionModeSpec.fullXssf()),
+            FormulaEnvironmentSpec.empty(),
+            List.of(
+                new MutationStep(
+                    new StepId("set-owner"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(new CellValueSpec.Text(text("Owner")))),
+                new AssertionStep(
+                    new StepId("assert-owner"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellAssertion.Value(
+                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
+                new InspectionStep(
+                    new StepId("summary"),
+                    new WorkbookSelector.Current(),
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary())));
+    WorkbookResult response =
+        WorkbookResults.success(
+            ProtocolVersion.CURRENT,
+            new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
+            List.of(
+                new RequestWarning(
+                    dev.erst.gridgrind.core.problem.GridGrindWarningCode
+                        .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                    0,
+                    new StepId("set-owner"),
+                    "SET_CELL",
+                    "warning")),
+            List.of(new AssertionResult.Passed(new StepId("assert-owner"), "EXPECT_CELL_VALUE")),
+            List.of(
+                new WorkbookInspectionResult.WorkbookSummaryResult(
+                    new StepId("summary"),
+                    new WorkbookSummary.WithSheets(
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel("Budget"),
+                        List.of(new SheetLabel("Budget")),
+                        0,
+                        false))));
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+
+    assertEquals(
+        request, GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(request)));
+    assertEquals(
+        response,
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(response)));
+    assertEquals(
+        catalog,
+        GridGrindJson.readProtocolCatalog(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog)));
+  }
+
+  @Test
+  void roundTripsResolveInputsAndCalculationFailureContexts() throws IOException {
+    WorkbookResult resolveInputsFailure =
+        WorkbookResults.failure(
+            ProtocolVersion.CURRENT,
+            new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                "out/report.xlsx", new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
+            new GridGrindProblemDetail.Problem(
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                    .category(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                    .recovery(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND.title(),
+                "missing payload",
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                    .resolution(),
+                new dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
+                        .known("NEW", "NONE"),
+                    dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference
+                        .path("cell text", "missing.txt"),
+                    java.util.Optional.of(
+                        dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation
+                            .pathAtByteOffset("steps[0].action.value.value.path", 73))),
+                List.of()));
+    WorkbookResult calculationFailure =
+        WorkbookResults.failure(
+            ProtocolVersion.CURRENT,
+            new GridGrindProblemDetail.Problem(
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA,
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.category(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.recovery(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.title(),
+                "bad formula",
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.resolution(),
+                new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation.Preflight(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
+                        .known("EXISTING", "SAVE_AS"),
+                    dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
+                        .formulaCell(new SheetLabel("Ops"), "B1", "SUM(")),
+                List.of()));
+
+    assertEquals(
+        resolveInputsFailure,
+        GridGrindJson.readWorkbookResult(
+            GridGrindJsonOutput.writeWorkbookResultBytes(resolveInputsFailure)));
+    assertEquals(
+        calculationFailure,
+        GridGrindJson.readWorkbookResult(
+            GridGrindJsonOutput.writeWorkbookResultBytes(calculationFailure)));
+  }
+
+  private static TextSourceSpec text(String value) {
+    return TextSourceSpec.inline(value);
+  }
+
+  @Test
+  void readsCalculationPolicyWithoutExplicitOpenTimeRecalcFlagAndDoesNotLeakHelperFields()
+      throws IOException {
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "protocolVersion": 1,
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "mode": {"type": "FULL_XSSF"},
+                "journal": { "level": "NORMAL" },
+                "calculation": {
+                  "strategy": { "type": "EVALUATE_ALL" },
+                  "markRecalculateOnOpen": false
+                }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": []
+              },
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    byte[] serialized = GridGrindJsonOutput.writeRequestBytes(request);
+    String serializedJson = new String(serialized, StandardCharsets.UTF_8);
+
+    assertFalse(serializedJson.contains("\"default\""));
+    assertEquals(ExecutionModeSpec.fullXssf(), request.effectiveExecutionMode());
+    assertFalse(request.calculationPolicy().markRecalculateOnOpen());
+    assertEquals(request, GridGrindJson.readRequest(serialized));
+  }
+
+  @Test
+  void readsCanonicalStepEnvelopeWithoutOuterStepType() throws IOException {
+    WorkbookPlan plan =
+        GridGrindJson.readRequest(
+            """
+            {
+              "protocolVersion": 1,
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "mode": {"type": "FULL_XSSF"},
+                "journal": { "level": "NORMAL" },
+                "calculation": {
+                  "strategy": { "type": "DO_NOT_CALCULATE" },
+                  "markRecalculateOnOpen": false
+                }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": []
+              },
+              "steps": [
+                {
+                  "stepId": "set-owner",
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "action": {
+                    "type": "SET_CELL",
+                    "value": {
+                      "type": "TEXT",
+                      "value": { "type": "INLINE", "text": "Owner" }
+                    }
+                  }
+                },
+                {
+                  "stepId": "assert-owner",
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "assertion": {
+                    "type": "EXPECT_CELL_VALUE",
+                    "expectedValue": { "type": "TEXT", "value": "Owner" }
+                  }
+                },
+                {
+                  "stepId": "summary",
+                  "target": { "type": "WORKBOOK_CURRENT" },
+                  "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                }
+              ]
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(3, plan.steps().size());
+    assertInstanceOf(MutationStep.class, plan.steps().get(0));
+    assertInstanceOf(AssertionStep.class, plan.steps().get(1));
+    assertInstanceOf(InspectionStep.class, plan.steps().get(2));
+  }
+
+  @Test
+  void readsRequestsFromInputStreamsWithoutClosingThem() throws IOException {
+    try (TrackingInputStream inputStream =
+        new TrackingInputStream(
+            """
+            {
+              "protocolVersion": 1,
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "mode": {"type": "FULL_XSSF"},
+                "journal": { "level": "NORMAL" },
+                "calculation": {
+                  "strategy": { "type": "DO_NOT_CALCULATE" },
+                  "markRecalculateOnOpen": false
+                }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": []
+              },
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8))) {
+      WorkbookPlan request = GridGrindJson.readRequest(inputStream);
+
+      assertEquals(ProtocolVersion.CURRENT, request.protocolVersion());
+      assertFalse(inputStream.closed);
+    }
+  }
+
+  @Test
+  void rejectsUnknownTypeValuesNonStringTypeIdsAndFractionalIntegersWithProductOwnedMessages() {
+    InvalidRequestShapeException unknownType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "bad",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "query": { "type": "NO_SUCH_QUERY" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException nonStringType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "bad-shape",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "query": { "type": 1 }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException fractionalInteger =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "window",
+                          "target": {
+                            "type": "RANGE_RECTANGULAR_WINDOW",
+                            "sheetName": "Budget",
+                            "topLeftAddress": "A1",
+                            "rowCount": 2.5,
+                            "columnCount": 2
+                          },
+                          "query": { "type": "GET_WINDOW" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(
+        unknownType.getMessage().startsWith("Unknown type value 'NO_SUCH_QUERY'; valid values: "));
+    assertEquals(Optional.of("steps[0].query.type"), unknownType.jsonPath());
+    assertEquals(
+        "Field 'steps[0].query.type' must be a JSON string type id", nonStringType.getMessage());
+    assertEquals(Optional.of("steps[0].query.type"), nonStringType.jsonPath());
+    assertEquals(
+        "Field 'steps[0].target.rowCount' must be a JSON integer between -2147483648 and 2147483647",
+        fractionalInteger.getMessage());
+    assertEquals(Optional.of("steps[0].target.rowCount"), fractionalInteger.jsonPath());
+  }
+
+  @Test
+  void surfacesProductOwnedSuggestionsForCommonFirstContactTypeMistakes() {
+    InvalidRequestShapeException deletedAssertionName =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "legacy",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "assertion": { "type": "EXPECT_PRESENT" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException deletedAbsentAssertionName =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "legacy-absent",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "assertion": { "type": "EXPECT_ABSENT" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException unknownAssertionType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "legacy-unknown",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "assertion": { "type": "EXPECT_LEGACYISH" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException wrongSourceType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": {
+                        "type": "FILE",
+                        "path": "budget.xlsx"
+                      },
+                      "persistence": { "type": "NONE" },
+                      "steps": [ ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException unknownSourceType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": {
+                        "type": "ARCHIVE",
+                        "path": "budget.xlsx"
+                      },
+                      "persistence": { "type": "NONE" },
+                      "steps": [ ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(deletedAssertionName.getMessage().contains("valid values:"));
+    assertTrue(deletedAbsentAssertionName.getMessage().contains("valid values:"));
+    assertTrue(unknownAssertionType.getMessage().contains("valid values:"));
+    assertTrue(
+        wrongSourceType.getMessage().contains("source.type='EXISTING'"),
+        "source type failures must teach the existing-workbook discriminator");
+    assertTrue(unknownSourceType.getMessage().contains("valid values: EXISTING, NEW"));
+  }
+
+  @Test
+  void reportsMissingPolymorphicAssertionTypeAndUnknownMembersWithoutCrashing() {
+    byte[] request =
+        """
+        {
+          "protocolVersion": 1,
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "steps": [
+            {
+              "stepId": "assertion-missing-type",
+              "target": { "type": "WORKBOOK_CURRENT" },
+              "assertion": { "F5pe": "EXPECT_CHART_PRESENT" }
+            }
+          ]
+        }
+        """
+            .getBytes(StandardCharsets.UTF_8);
+
+    RequestIntake analysis = GridGrindJson.analyzeRequest(request);
+    assertEquals(
+        List.of("steps[0].assertion.F5pe", "steps[0].assertion.type"),
+        analysis.structuralProblems().stream()
+            .map(problem -> problem.jsonPath().orElseThrow())
+            .toList());
+    assertEquals(
+        List.of(RequestUnknownField.class, RequestMissingTypeDiscriminator.class),
+        analysis.structuralProblems().stream().map(Object::getClass).toList());
+
+    InvalidRequestShapeException firstProblem =
+        assertThrows(InvalidRequestShapeException.class, () -> GridGrindJson.readRequest(request));
+    assertEquals("Unknown field 'steps[0].assertion.F5pe'", firstProblem.getMessage());
+    assertEquals(Optional.of("steps[0].assertion.F5pe"), firstProblem.jsonPath());
+  }
+
+  @Test
+  void rejectsStepsThatMixActionAndQuery() {
+    InvalidRequestShapeException invalidStep =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "bad",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "action": {
+                            "type": "CLEAR_WORKBOOK_PROTECTION"
+                          },
+                          "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(
+        "Field 'steps[0]' must be an object containing exactly one of action, assertion, or query",
+        invalidStep.getMessage());
+    assertEquals(Optional.of("steps[0]"), invalidStep.jsonPath());
+  }
+
+  /** Tracks whether the request reader closes the source stream after consuming it. */
+  @SuppressWarnings("NotJavadoc")
+  private static final class TrackingInputStream extends InputStream {
+    private final ByteArrayInputStream delegate;
+    private boolean closed;
+
+    private TrackingInputStream(byte[] bytes) {
+      this.delegate = new ByteArrayInputStream(bytes);
+    }
+
+    @Override
+    public int read() {
+      return delegate.read();
+    }
+
+    @Override
+    public int read(byte[] buffer, int offset, int length) {
+      return delegate.read(buffer, offset, length);
+    }
+
+    @Override
+    public void close() {
+      closed = true;
+    }
+  }
+}

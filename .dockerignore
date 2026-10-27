@@ -7,15 +7,16 @@
 !gradle.properties
 !gradlew
 !settings.gradle.kts
+!gradle.lockfile
+!settings-gradle.lockfile
 !gradle/
 
 # Production modules needed for :cli:shadowJar.
-!authoring-java/
 !cli/
-!contract/
+!core/
+!json/
 !engine/
-!excel-foundation/
-!executor/
+!architecture-tests/
 
 # Asset-backed built-in recipes are copied into the CLI JAR during processResources.
 !examples/

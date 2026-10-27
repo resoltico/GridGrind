@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.ExecutionProgressEvent;
+import dev.erst.gridgrind.core.result.ExecutionProgressEvent;
 import java.util.Objects;
 
 /** Public live sink for structured execution progress from verbose plan execution. */

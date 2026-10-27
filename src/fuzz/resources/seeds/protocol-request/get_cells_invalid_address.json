@@ -1,0 +1,43 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Data"
+      }
+    },
+    {
+      "stepId": "step-02-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A1",
+        "value": {
+          "type": "TEXT",
+          "value": {
+            "type": "INLINE",
+            "text": "hello"
+          }
+        }
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS",
+        "sheetName": "Data",
+        "addresses": [
+          "BADADDR"
+        ]
+      },
+      "stepId": "cells"
+    }
+  ]
+}

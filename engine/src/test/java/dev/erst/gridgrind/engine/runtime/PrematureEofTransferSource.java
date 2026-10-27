@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
 /** Declares one byte but reaches EOF before a fallback transfer can read it. */
-final class PrematureEofTransferSource extends RequestPathPublicationFileSupport.TransferSource {
+final class PrematureEofTransferSource extends PublicationFileOperations.TransferSource {
   @Override
   long size() {
     return 1;

@@ -1,26 +1,29 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.assertion.CellAssertion;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelSheet;
-import dev.erst.gridgrind.excel.ExcelTableSnapshot;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.WorkbookRuleResult;
+import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.Assertion;
+import dev.erst.gridgrind.core.plan.CellAssertion;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.InspectionQuery;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XssfSheet;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -44,7 +47,7 @@ final class SemanticSelectorResolver {
           SheetIntrospectionQuery.GetComments.class);
   private static final Set<Class<? extends Assertion>> EXACT_CELL_ASSERTIONS =
       Set.of(
-          CellAssertion.CellValue.class,
+          CellAssertion.Value.class,
           CellAssertion.DisplayValue.class,
           CellAssertion.FormulaText.class,
           CellAssertion.CellStyle.class);
@@ -55,7 +58,7 @@ final class SemanticSelectorResolver {
     this.workbookEngine = Objects.requireNonNull(workbookEngine, "workbookEngine must not be null");
   }
 
-  Selector resolveMutationTarget(ExcelWorkbook workbook, Selector target, MutationAction action) {
+  Selector resolveMutationTarget(XssfWorkbook workbook, Selector target, MutationAction action) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(target, "target must not be null");
     Objects.requireNonNull(action, "action must not be null");
@@ -65,7 +68,7 @@ final class SemanticSelectorResolver {
   }
 
   ResolvedInspectionTarget resolveInspectionTarget(
-      String stepId, ExcelWorkbook workbook, Selector target, InspectionQuery query) {
+      StepId stepId, XssfWorkbook workbook, Selector target, InspectionQuery query) {
     Objects.requireNonNull(stepId, "stepId must not be null");
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(target, "target must not be null");
@@ -75,7 +78,7 @@ final class SemanticSelectorResolver {
         : ResolvedInspectionTarget.direct(target);
   }
 
-  Selector resolveAssertionTarget(ExcelWorkbook workbook, Selector target, Assertion assertion) {
+  Selector resolveAssertionTarget(XssfWorkbook workbook, Selector target, Assertion assertion) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(target, "target must not be null");
     Objects.requireNonNull(assertion, "assertion must not be null");
@@ -84,18 +87,20 @@ final class SemanticSelectorResolver {
         : target;
   }
 
-  private Selector resolveExactCellTarget(ExcelWorkbook workbook, Selector target) {
+  private Selector resolveExactCellTarget(XssfWorkbook workbook, Selector target) {
     if (target instanceof TableCellSelector.ByColumnName tableCell) {
       ResolvedTableCell resolvedCell = resolveTableCell(workbook, tableCell, false);
       return new CellSelector.ByAddress(
-          resolvedCell.sheetName(),
-          Objects.requireNonNull(resolvedCell.address(), "resolved cell address must be present"));
+          new SheetName(resolvedCell.sheetName()),
+          new CellAddress(
+              Objects.requireNonNull(
+                  resolvedCell.address(), "resolved cell address must be present")));
     }
     return target;
   }
 
   private ResolvedInspectionTarget resolveExactCellInspectionTarget(
-      String stepId, ExcelWorkbook workbook, Selector target, InspectionQuery query) {
+      StepId stepId, XssfWorkbook workbook, Selector target, InspectionQuery query) {
     if (!(target instanceof TableCellSelector.ByColumnName tableCell)) {
       return ResolvedInspectionTarget.direct(target);
     }
@@ -106,26 +111,27 @@ final class SemanticSelectorResolver {
     }
     return ResolvedInspectionTarget.direct(
         new CellSelector.ByAddress(
-            resolvedCell.sheetName(),
-            Objects.requireNonNull(
-                resolvedCell.address(), "resolved cell address must be present")));
+            new SheetName(resolvedCell.sheetName()),
+            new CellAddress(
+                Objects.requireNonNull(
+                    resolvedCell.address(), "resolved cell address must be present"))));
   }
 
   private ResolvedTableCell resolveTableCell(
-      ExcelWorkbook workbook, TableCellSelector.ByColumnName selector, boolean allowZeroMatch) {
+      XssfWorkbook workbook, TableCellSelector.ByColumnName selector, boolean allowZeroMatch) {
     ResolvedTableRow resolvedRow = resolveTableRow(workbook, selector.row(), allowZeroMatch);
     int columnOffset = tableColumnOffset(resolvedRow.table(), selector.columnName());
     if (!resolvedRow.matched()) {
       TableRowSelector.ByKeyCell byKeyCell = (TableRowSelector.ByKeyCell) selector.row();
       return new ResolvedTableCell(
-          resolvedRow.table().sheetName(),
-          resolvedRow.table().name(),
+          resolvedRow.table().sheetName().value(),
+          resolvedRow.table().name().value(),
           byKeyCell.columnName(),
           null);
     }
     return new ResolvedTableCell(
-        resolvedRow.table().sheetName(),
-        resolvedRow.table().name(),
+        resolvedRow.table().sheetName().value(),
+        resolvedRow.table().name().value(),
         selector.columnName(),
         a1Address(
             Objects.requireNonNull(resolvedRow.rowIndex(), "resolved row index must be present"),
@@ -133,7 +139,7 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedTableRow resolveTableRow(
-      ExcelWorkbook workbook, TableRowSelector selector, boolean allowZeroMatch) {
+      XssfWorkbook workbook, TableRowSelector selector, boolean allowZeroMatch) {
     ResolvedTable table = resolveExactTable(workbook, tableSelectorFor(selector));
     int dataRowCount = table.dataRowCount();
     if (selector instanceof TableRowSelector.ByIndex byIndex) {
@@ -157,24 +163,30 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedTableRow resolveKeyedTableRow(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       ResolvedTable table,
       TableRowSelector.ByKeyCell selector,
       boolean allowZeroMatch) {
     int keyColumnOffset = tableColumnOffset(table.table(), selector.columnName());
-    ExcelSheet sheet = workbook.sheet(table.table().sheetName());
+    XssfSheet sheet = workbook.sheet(table.table().sheetName().value());
     Integer matchedRowIndex = null;
     for (int rowIndex = table.dataFirstRowIndex();
         rowIndex <= table.dataLastRowIndex();
         rowIndex++) {
       String address = a1Address(rowIndex, table.firstColumnIndex() + keyColumnOffset);
-      ExcelCellSnapshot snapshot = sheet.cells().snapshotCell(address);
-      if (matchesKeyCell(
-          snapshot, selector.expectedValue(), workbook.xssfWorkbook().isDate1904())) {
+      CellReport snapshot =
+          sheet
+              .cells()
+              .snapshotCell(
+                  address,
+                  dev.erst.gridgrind.core.plan.CellReadProjection.of(
+                      dev.erst.gridgrind.core.plan.CellReadFacet.VALUE,
+                      dev.erst.gridgrind.core.plan.CellReadFacet.FORMULA));
+      if (matchesKeyCell(snapshot, selector.expectedValue())) {
         if (matchedRowIndex != null) {
           throw new IllegalArgumentException(
               "table row selector matched more than one row for table "
-                  + table.table().name()
+                  + table.table().name().value()
                   + " column "
                   + selector.columnName());
         }
@@ -187,28 +199,76 @@ final class SemanticSelectorResolver {
       }
       throw new IllegalArgumentException(
           "table row selector matched no rows for table "
-              + table.table().name()
+              + table.table().name().value()
               + " column "
               + selector.columnName());
     }
     return new ResolvedTableRow(table.table(), matchedRowIndex, table.firstColumnIndex());
   }
 
-  static boolean matchesKeyCell(
-      ExcelCellSnapshot snapshot, CellInput expectedValue, boolean date1904) {
-    return SemanticSelectorKeyMatchSupport.matchesKeyCell(snapshot, expectedValue, date1904);
+  static boolean matchesKeyCell(CellReport snapshot, CellValueSpec expectedValue) {
+    var report = snapshot;
+    return switch (expectedValue) {
+      case CellValueSpec.Blank _ ->
+          report instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport;
+      case CellValueSpec.Text text ->
+          report instanceof dev.erst.gridgrind.core.model.value.CellReport.TextReport textReport
+              && textReport
+                  .value()
+                  .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+                  .orElseThrow()
+                  .equals(inlineText(text.value(), "table row key TEXT"));
+      case CellValueSpec.NumberValue numberValue ->
+          report instanceof dev.erst.gridgrind.core.model.value.CellReport.NumberReport numberReport
+              && Double.compare(
+                      numberReport
+                          .value()
+                          .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
+                          .orElseThrow(),
+                      numberValue.value())
+                  == 0;
+      case CellValueSpec.BooleanValue booleanValue ->
+          report
+                  instanceof
+                  dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanReport
+              && booleanReport
+                  .value()
+                  .map(dev.erst.gridgrind.core.model.value.CellValue.BooleanValue::value)
+                  .orElseThrow()
+                  .equals(booleanValue.value());
+      case CellValueSpec.Formula formula ->
+          report
+                  instanceof
+                  dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaReport
+              && formulaReport
+                  .formula()
+                  .orElseThrow()
+                  .equals(inlineText(formula.value(), "table row key FORMULA"));
+      default -> false;
+    };
   }
 
-  private ResolvedTable resolveExactTable(ExcelWorkbook workbook, TableSelector selector) {
-    WorkbookRuleResult.TablesResult result =
-        (WorkbookRuleResult.TablesResult)
+  private static String inlineText(
+      dev.erst.gridgrind.core.source.TextSourceSpec source, String context) {
+    if (source instanceof dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline) {
+      return inline.text();
+    }
+    throw new IllegalStateException(context + " must be resolved to INLINE text before execution");
+  }
+
+  private ResolvedTable resolveExactTable(XssfWorkbook workbook, TableSelector selector) {
+    dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult result =
+        (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
             workbookEngine
                 .read(
                     workbook,
-                    new WorkbookReadCommand.GetTables(
-                        RESOLUTION_STEP_ID, SelectorConverter.toExcelTableSelection(selector)))
+                    new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                        new StepId(RESOLUTION_STEP_ID),
+                        (dev.erst.gridgrind.core.plan.ResolvedTarget) selector,
+                        new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                            .GetTables()))
                 .getFirst();
-    List<ExcelTableSnapshot> tables = result.tables();
+    List<TableEntryReport> tables = result.tables();
     if (tables.isEmpty()) {
       if (selector instanceof TableSelector.ByName byName) {
         throw new IllegalArgumentException("table not found: " + byName.name());
@@ -220,16 +280,8 @@ final class SemanticSelectorResolver {
               + "@"
               + byNameOnSheet.sheetName());
     }
-    ExcelTableSnapshot table = tables.getFirst();
-    if (selector instanceof TableSelector.ByNameOnSheet byNameOnSheet
-        && !table.sheetName().equals(byNameOnSheet.sheetName())) {
-      throw new IllegalArgumentException(
-          "table not found on expected sheet: "
-              + byNameOnSheet.name()
-              + "@"
-              + byNameOnSheet.sheetName());
-    }
-    RangeBounds bounds = RangeBounds.parse(table.range());
+    TableEntryReport table = tables.getFirst();
+    RangeBounds bounds = RangeBounds.parse(table.range().value());
     return new ResolvedTable(
         table,
         bounds.firstColumn(),
@@ -237,7 +289,7 @@ final class SemanticSelectorResolver {
         bounds.lastRow() - table.structure().totalsRowCount());
   }
 
-  private static int tableColumnOffset(ExcelTableSnapshot table, String columnName) {
+  private static int tableColumnOffset(TableEntryReport table, String columnName) {
     String lookup = columnName.toUpperCase(Locale.ROOT);
     for (int index = 0; index < table.structure().columnNames().size(); index++) {
       if (table.structure().columnNames().get(index).toUpperCase(Locale.ROOT).equals(lookup)) {
@@ -245,7 +297,7 @@ final class SemanticSelectorResolver {
       }
     }
     throw new IllegalArgumentException(
-        "table " + table.name() + " does not contain column " + columnName);
+        "table " + table.name().value() + " does not contain column " + columnName);
   }
 
   private static TableSelector tableSelectorFor(TableRowSelector selector) {
@@ -270,14 +322,15 @@ final class SemanticSelectorResolver {
   }
 
   private static InspectionResult emptyInspectionResult(
-      String stepId, String sheetName, InspectionQuery query) {
+      StepId stepId, String sheetName, InspectionQuery query) {
     if (query instanceof SheetIntrospectionQuery.GetCells) {
-      return new SheetInspectionResult.CellsResult(stepId, sheetName, List.of());
+      return new SheetInspectionResult.CellsResult(stepId, new SheetLabel(sheetName), List.of());
     }
     if (query instanceof SheetIntrospectionQuery.GetHyperlinks) {
-      return new SheetInspectionResult.HyperlinksResult(stepId, sheetName, List.of());
+      return new SheetInspectionResult.HyperlinksResult(
+          stepId, new SheetLabel(sheetName), List.of());
     }
-    return new SheetInspectionResult.CommentsResult(stepId, sheetName, List.of());
+    return new SheetInspectionResult.CommentsResult(stepId, new SheetLabel(sheetName), List.of());
   }
 
   record ResolvedInspectionTarget(
@@ -305,11 +358,11 @@ final class SemanticSelectorResolver {
   }
 
   private record ResolvedTable(
-      ExcelTableSnapshot snapshot,
+      TableEntryReport snapshot,
       int firstColumnIndex,
       int dataFirstRowIndex,
       int dataLastRowIndex) {
-    ExcelTableSnapshot table() {
+    TableEntryReport table() {
       return snapshot;
     }
 
@@ -319,7 +372,7 @@ final class SemanticSelectorResolver {
   }
 
   private record ResolvedTableRow(
-      ExcelTableSnapshot table, @Nullable Integer rowIndex, int firstColumnIndex) {
+      TableEntryReport table, @Nullable Integer rowIndex, int firstColumnIndex) {
     boolean matched() {
       return rowIndex != null;
     }
@@ -335,8 +388,8 @@ final class SemanticSelectorResolver {
   private record RangeBounds(int firstRow, int lastRow, int firstColumn, int lastColumn) {
     static RangeBounds parse(String range) {
       String[] parts = Objects.requireNonNull(range, "range must not be null").split(":", -1);
-      CellAddress first = CellAddress.parse(parts[0]);
-      CellAddress last = CellAddress.parse(parts[parts.length - 1]);
+      CellCoordinates first = CellCoordinates.parse(parts[0]);
+      CellCoordinates last = CellCoordinates.parse(parts[parts.length - 1]);
       return new RangeBounds(
           Math.min(first.rowIndex(), last.rowIndex()),
           Math.max(first.rowIndex(), last.rowIndex()),
@@ -345,8 +398,8 @@ final class SemanticSelectorResolver {
     }
   }
 
-  private record CellAddress(int rowIndex, int columnIndex) {
-    static CellAddress parse(String address) {
+  private record CellCoordinates(int rowIndex, int columnIndex) {
+    static CellCoordinates parse(String address) {
       String normalized = address.replace("$", "").toUpperCase(Locale.ROOT);
       String columnText = normalized.replaceAll("[0-9].*$", "");
       int columnIndex = 0;
@@ -354,7 +407,7 @@ final class SemanticSelectorResolver {
         columnIndex = (columnIndex * 26) + (columnText.charAt(index) - 'A' + 1);
       }
       int rowIndex = Integer.parseInt(normalized.substring(columnText.length())) - 1;
-      return new CellAddress(rowIndex, columnIndex - 1);
+      return new CellCoordinates(rowIndex, columnIndex - 1);
     }
   }
 }

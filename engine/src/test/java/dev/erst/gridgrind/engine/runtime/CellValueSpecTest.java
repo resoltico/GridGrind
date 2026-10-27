@@ -1,0 +1,148 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+/** Tests for CellValueSpec record construction and ResolvedCellWrite conversion. */
+class CellValueSpecTest {
+  @Test
+  void convertsAllSupportedInputTypesToExcelValues() {
+    assertInstanceOf(
+        CellValue.Blank.class, MutationResolution.toResolvedCellWrite(new CellValueSpec.Blank()));
+
+    CellValue.Text textValue =
+        assertInstanceOf(
+            CellValue.Text.class, MutationResolution.toResolvedCellWrite(textCell("Budget")));
+    assertEquals("Budget", textValue.value());
+
+    ResolvedRichText richTextValue =
+        assertInstanceOf(
+            ResolvedRichText.class,
+            MutationResolution.toResolvedCellWrite(
+                new CellValueSpec.RichText(
+                    List.of(
+                        richTextRun("Budget"),
+                        richTextRun(
+                            " FY26",
+                            fontInput(
+                                Boolean.TRUE,
+                                null,
+                                null,
+                                null,
+                                ColorSpec.rgb(new RgbHex("#AABBCC")),
+                                null,
+                                null))))));
+    assertEquals(
+        new ResolvedRichText(
+            List.of(
+                new ResolvedRichTextRun("Budget", java.util.Optional.empty()),
+                new ResolvedRichTextRun(
+                    " FY26",
+                    java.util.Optional.of(
+                        new dev.erst.gridgrind.core.model.style.CellFontPatch(
+                            java.util.Optional.of(Boolean.TRUE),
+                            java.util.Optional.empty(),
+                            java.util.Optional.empty(),
+                            java.util.Optional.empty(),
+                            java.util.Optional.of(ColorSpec.rgb(new RgbHex("#AABBCC"))),
+                            java.util.Optional.empty(),
+                            java.util.Optional.empty()))))),
+        richTextValue);
+
+    CellValue.NumberValue numberValue =
+        assertInstanceOf(
+            CellValue.NumberValue.class,
+            MutationResolution.toResolvedCellWrite(new CellValueSpec.NumberValue(42.5)));
+    assertEquals(42.5, numberValue.value());
+
+    CellValue.BooleanValue booleanValue =
+        assertInstanceOf(
+            CellValue.BooleanValue.class,
+            MutationResolution.toResolvedCellWrite(new CellValueSpec.BooleanValue(true)));
+    assertTrue(booleanValue.value());
+
+    ResolvedFormula formulaValue =
+        assertInstanceOf(
+            ResolvedFormula.class,
+            MutationResolution.toResolvedCellWrite(formulaCell("SUM(B2:B4)")));
+    assertEquals("SUM(B2:B4)", formulaValue.value());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> MutationResolution.toResolvedCellWrite(formulaCell("=SUM(B2:B4)")));
+
+    ResolvedRawFormula rawFormulaValue =
+        assertInstanceOf(
+            ResolvedRawFormula.class,
+            MutationResolution.toResolvedCellWrite(
+                new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"))));
+    assertEquals("LAMBDA(x,x+1)(A1)", rawFormulaValue.value());
+    assertEquals(
+        "RawFormula[text=LAMBDA(x,x+1)(A1)]",
+        ExecutionJournalTargetResolver.summarizeCellInput(
+            new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"))));
+
+    CellValueSpec.Date dateValue =
+        assertInstanceOf(
+            CellValueSpec.Date.class,
+            MutationResolution.toResolvedCellWrite(
+                new CellValueSpec.Date(LocalDate.of(2026, 3, 23))));
+    assertEquals(LocalDate.of(2026, 3, 23), dateValue.value());
+
+    CellValueSpec.DateTime dateTimeValue =
+        assertInstanceOf(
+            CellValueSpec.DateTime.class,
+            MutationResolution.toResolvedCellWrite(
+                new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 23, 10, 15, 30))));
+    assertEquals(LocalDateTime.of(2026, 3, 23, 10, 15, 30), dateTimeValue.value());
+  }
+
+  @Test
+  void validatesTypedInputRequirements() {
+    assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.Text(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.RichText(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.RichText(List.of()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new CellValueSpec.RichText(List.of(richTextRun(""))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellValueSpec.NumberValue(Double.POSITIVE_INFINITY));
+    assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.NumberValue(Double.NaN));
+    assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.Formula(null));
+    assertThrows(IllegalArgumentException.class, () -> formulaCell("="));
+    assertThrows(IllegalArgumentException.class, () -> formulaCell("=   "));
+    assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.Date(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellValueSpec.DateTime(null));
+  }
+
+  @Test
+  void rejectsDdeFormulaInjectionInAllCaseForms() {
+    IllegalArgumentException ddeUpper =
+        assertThrows(
+            IllegalArgumentException.class, () -> formulaCell("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertTrue(ddeUpper.getMessage().contains("DDE"));
+
+    assertThrows(
+        IllegalArgumentException.class, () -> formulaCell("dde(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class, () -> formulaCell("Dde(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class, () -> formulaCell("=DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class, () -> formulaCell("=dde(\"cmd\",\"/C calc\",\"\")"));
+  }
+}

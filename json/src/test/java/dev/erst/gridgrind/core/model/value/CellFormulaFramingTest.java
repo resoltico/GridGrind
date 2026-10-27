@@ -1,0 +1,142 @@
+package dev.erst.gridgrind.core.model.value;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.model.formula.FormulaTextValidation;
+import dev.erst.gridgrind.core.model.formula.InvalidFormulaInputException;
+import dev.erst.gridgrind.core.model.formula.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
+import org.junit.jupiter.api.Test;
+
+/** Locks the shared OOXML formula-body framing for parsed and opaque cell formulas. */
+class CellFormulaFramingTest {
+  @Test
+  void rejectsLeadingEqualsAndEmptyFormulaBodiesForBothInputVariants() {
+    assertThrows(
+        InvalidFormulaInputException.class,
+        () -> new CellValueSpec.Formula(TextSourceSpec.inline("=SUM(A1:A2)")));
+    assertThrows(
+        InvalidRawFormulaTextException.class,
+        () -> new CellValueSpec.RawFormula(TextSourceSpec.inline("=LAMBDA(x,x)(A1)")));
+    assertThrows(
+        InvalidFormulaInputException.class,
+        () -> new CellValueSpec.Formula(TextSourceSpec.inline(" ")));
+    assertThrows(
+        InvalidRawFormulaTextException.class,
+        () -> new CellValueSpec.RawFormula(TextSourceSpec.inline(" ")));
+  }
+
+  @Test
+  void enforcesDistinctNormalAndOpaqueFormulaTextContracts() {
+    assertThrows(
+        InvalidFormulaInputException.class,
+        () -> new CellValueSpec.Formula(TextSourceSpec.inline("{=A1:A2}")));
+    assertEquals(
+        "{=A1",
+        ((TextSourceSpec.Inline) new CellValueSpec.Formula(TextSourceSpec.inline("{=A1")).value())
+            .text());
+    assertThrows(
+        InvalidRawFormulaTextException.class,
+        () -> new CellValueSpec.RawFormula(TextSourceSpec.inline("A1\u0001+B1")));
+    assertThrows(
+        InvalidRawFormulaTextException.class,
+        () -> new CellValueSpec.RawFormula(TextSourceSpec.inline("A1\uD800+B1")));
+
+    CellValueSpec.RawFormula raw =
+        new CellValueSpec.RawFormula(TextSourceSpec.inline("\"<b>\"&A1\t\n\r\uD83D\uDE00"));
+    assertEquals("\"<b>\"&A1\t\n\r\uD83D\uDE00", ((TextSourceSpec.Inline) raw.value()).text());
+    FormulaTextValidation.requireXml10CharacterData(
+        new String(
+            new int[] {0x9, 0xA, 0xD, 0x20, 0xD7FF, 0xE000, 0xFFFD, 0x10000, 0x10FFFF}, 0, 9));
+    assertThrows(
+        InvalidRawFormulaTextException.class,
+        () -> FormulaTextValidation.requireXml10CharacterData("A1\uFFFE+B1"));
+  }
+
+  @Test
+  void preservesOpaqueFormulaBodiesWithoutApplyingNormalFormulaSecurityRules() {
+    CellValueSpec.RawFormula raw =
+        new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"));
+
+    assertEquals("LAMBDA(x,x+1)(A1)", ((TextSourceSpec.Inline) raw.value()).text());
+    TextSourceSpec.Utf8File fileSource = TextSourceSpec.utf8File("raw-formula.txt");
+    assertEquals(fileSource, new CellValueSpec.RawFormula(fileSource).value());
+  }
+
+  @Test
+  void bindsRawFormulaFromTheWireAsADistinctCellInputType() {
+    var plan =
+        GridGrindJson.readRequest(
+            """
+            {
+              "protocolVersion": 1,
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "steps": [
+                {
+                  "stepId": "set-raw",
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "action": {
+                    "type": "SET_CELL",
+                    "value": { "type": "RAW_FORMULA", "value": { "type": "INLINE", "text": "LAMBDA(x,x+1)(A1)" } }
+                  }
+                }
+              ]
+            }
+            """);
+
+    MutationStep step = assertInstanceOf(MutationStep.class, plan.steps().getFirst());
+    CellMutationAction.SetCell setCell =
+        assertInstanceOf(CellMutationAction.SetCell.class, step.action());
+    assertInstanceOf(CellValueSpec.RawFormula.class, setCell.value());
+  }
+
+  @Test
+  void retainsTheFormulaSpecificProblemCodeThroughJsonBinding() {
+    FormulaRequestException normal =
+        assertThrows(
+            FormulaRequestException.class,
+            () -> GridGrindJson.readRequest(requestWithFormula("FORMULA", "=SUM(A1:A2)")));
+    FormulaRequestException raw =
+        assertThrows(
+            FormulaRequestException.class,
+            () -> GridGrindJson.readRequest(requestWithFormula("RAW_FORMULA", "A1\u0001+B1")));
+
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA, normal.problemCode());
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA_TEXT, raw.problemCode());
+    assertEquals(
+        "steps[0].action.value.value.text", normal.jsonLocation().jsonPath().orElseThrow());
+    assertEquals(
+        "steps[0].action.value.value.text", normal.requestProblem().jsonPath().orElseThrow());
+    assertTrue(normal.getMessage().contains("must not begin with ="));
+  }
+
+  private static String requestWithFormula(String type, String formula) {
+    return """
+        {
+          "protocolVersion": 1,
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "steps": [
+            {
+              "stepId": "set-formula",
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "action": {
+                "type": "SET_CELL",
+                "value": { "type": "%s", "value": { "type": "INLINE", "text": "%s" } }
+              }
+            }
+          ]
+        }
+        """
+        .formatted(type, formula.replace("\u0001", "\\u0001"));
+  }
+}

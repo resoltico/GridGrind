@@ -1,0 +1,48 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "EXISTING",
+    "path": "books odd/nested/office streaming [docker #smoke].xlsx"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "execution": {
+    "mode": {"type": "EVENT_READ"},
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
+  },
+  "steps": [
+    {
+      "stepId": "streaming-workbook",
+      "target": {
+        "type": "WORKBOOK_CURRENT"
+      },
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      }
+    },
+    {
+      "stepId": "streaming-sheet",
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      },
+      "query": {
+        "type": "GET_SHEET_SUMMARY"
+      }
+    }
+  ]
+}

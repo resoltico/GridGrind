@@ -1,0 +1,29 @@
+package dev.erst.gridgrind.core.model.drawing;
+
+import dev.erst.gridgrind.core.metadata.CatalogType;
+
+/** Factual comment-anchor bounds loaded from one worksheet drawing. */
+@CatalogType(
+    id = "CommentAnchorReport",
+    summary = "Exact comment-anchor bounds reported from worksheet drawing metadata.",
+    displayOrder = 87)
+public record CommentAnchorReport(int firstColumn, int firstRow, int lastColumn, int lastRow) {
+  public CommentAnchorReport {
+    requireNonNegative(firstColumn, "firstColumn");
+    requireNonNegative(firstRow, "firstRow");
+    requireNonNegative(lastColumn, "lastColumn");
+    requireNonNegative(lastRow, "lastRow");
+    if (lastColumn < firstColumn) {
+      throw new IllegalArgumentException("lastColumn must be greater than or equal to firstColumn");
+    }
+    if (lastRow < firstRow) {
+      throw new IllegalArgumentException("lastRow must be greater than or equal to firstRow");
+    }
+  }
+
+  private static void requireNonNegative(int value, String fieldName) {
+    if (value < 0) {
+      throw new IllegalArgumentException(fieldName + " must not be negative");
+    }
+  }
+}

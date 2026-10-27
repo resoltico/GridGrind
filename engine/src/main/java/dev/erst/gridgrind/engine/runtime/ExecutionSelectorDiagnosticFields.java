@@ -1,19 +1,19 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.RowBandSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import java.util.Optional;
 
 /** Selector diagnostic field extraction for execution journal contexts. */
@@ -26,14 +26,15 @@ final class ExecutionSelectorDiagnosticFields {
       case SheetSelector sheetSelector -> sheetNameFor(sheetSelector);
       case CellSelector cellSelector -> singleSheetName(cellSelector);
       case RangeSelector rangeSelector -> singleSheetName(rangeSelector);
-      case RowBandSelector.Span span -> Optional.of(span.sheetName());
-      case RowBandSelector.Insertion insertion -> Optional.of(insertion.sheetName());
-      case ColumnBandSelector.Span span -> Optional.of(span.sheetName());
-      case ColumnBandSelector.Insertion insertion -> Optional.of(insertion.sheetName());
-      case DrawingObjectSelector.AllOnSheet allOnSheet -> Optional.of(allOnSheet.sheetName());
-      case DrawingObjectSelector.ByName byName -> Optional.of(byName.sheetName());
-      case ChartSelector.AllOnSheet allOnSheet -> Optional.of(allOnSheet.sheetName());
-      case ChartSelector.ByName byName -> Optional.of(byName.sheetName());
+      case RowBandSelector.Span span -> Optional.of(span.sheetName().value());
+      case RowBandSelector.Insertion insertion -> Optional.of(insertion.sheetName().value());
+      case ColumnBandSelector.Span span -> Optional.of(span.sheetName().value());
+      case ColumnBandSelector.Insertion insertion -> Optional.of(insertion.sheetName().value());
+      case DrawingObjectSelector.AllOnSheet allOnSheet ->
+          Optional.of(allOnSheet.sheetName().value());
+      case DrawingObjectSelector.ByName byName -> Optional.of(byName.sheetName().value());
+      case ChartSelector.AllOnSheet allOnSheet -> Optional.of(allOnSheet.sheetName().value());
+      case ChartSelector.ByName byName -> Optional.of(byName.sheetName().value());
       case TableSelector tableSelector -> sheetNameFor(tableSelector);
       case PivotTableSelector pivotTableSelector -> sheetNameFor(pivotTableSelector);
       case NamedRangeSelector namedRangeSelector -> singleSheetName(namedRangeSelector);
@@ -44,25 +45,25 @@ final class ExecutionSelectorDiagnosticFields {
 
   static Optional<String> addressFor(Selector selector) {
     if (selector instanceof CellSelector.ByAddress byAddress) {
-      return Optional.of(byAddress.address());
+      return Optional.of(byAddress.address().value());
     }
     if (selector instanceof RangeSelector.RectangularWindow window) {
-      return Optional.of(window.topLeftAddress());
+      return Optional.of(window.topLeftAddress().value());
     }
     return Optional.empty();
   }
 
   static Optional<String> rangeFor(Selector selector) {
     if (selector instanceof RangeSelector.ByRange byRange) {
-      return Optional.of(byRange.range());
+      return Optional.of(byRange.range().value());
     }
     if (selector instanceof RangeSelector.ByRanges byRanges) {
       return byRanges.ranges().size() == 1
-          ? Optional.of(byRanges.ranges().getFirst())
+          ? Optional.of(byRanges.ranges().getFirst().value())
           : Optional.empty();
     }
     if (selector instanceof RangeSelector.RectangularWindow window) {
-      return Optional.of(window.range());
+      return Optional.of(window.range().value());
     }
     return Optional.empty();
   }
@@ -76,18 +77,19 @@ final class ExecutionSelectorDiagnosticFields {
 
   static Optional<String> singleSheetName(CellSelector selector) {
     return switch (selector) {
-      case CellSelector.AllUsedInSheet allUsedInSheet -> Optional.of(allUsedInSheet.sheetName());
-      case CellSelector.ByAddress byAddress -> Optional.of(byAddress.sheetName());
-      case CellSelector.ByAddresses byAddresses -> Optional.of(byAddresses.sheetName());
+      case CellSelector.AllUsedInSheet allUsedInSheet ->
+          Optional.of(allUsedInSheet.sheetName().value());
+      case CellSelector.ByAddress byAddress -> Optional.of(byAddress.sheetName().value());
+      case CellSelector.ByAddresses byAddresses -> Optional.of(byAddresses.sheetName().value());
     };
   }
 
   static Optional<String> singleSheetName(RangeSelector selector) {
     return switch (selector) {
-      case RangeSelector.AllOnSheet allOnSheet -> Optional.of(allOnSheet.sheetName());
-      case RangeSelector.ByRange byRange -> Optional.of(byRange.sheetName());
-      case RangeSelector.ByRanges byRanges -> Optional.of(byRanges.sheetName());
-      case RangeSelector.RectangularWindow window -> Optional.of(window.sheetName());
+      case RangeSelector.AllOnSheet allOnSheet -> Optional.of(allOnSheet.sheetName().value());
+      case RangeSelector.ByRange byRange -> Optional.of(byRange.sheetName().value());
+      case RangeSelector.ByRanges byRanges -> Optional.of(byRanges.sheetName().value());
+      case RangeSelector.RectangularWindow window -> Optional.of(window.sheetName().value());
     };
   }
 
@@ -97,7 +99,7 @@ final class ExecutionSelectorDiagnosticFields {
       case NamedRangeSelector.ByName _ -> Optional.empty();
       case NamedRangeSelector.ByNames _ -> Optional.empty();
       case NamedRangeSelector.WorkbookScope _ -> Optional.empty();
-      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.sheetName());
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.sheetName().value());
       case NamedRangeSelector.AnyOf anyOf ->
           anyOf.selectors().size() == 1
               ? singleSheetName(anyOf.selectors().getFirst())
@@ -109,18 +111,21 @@ final class ExecutionSelectorDiagnosticFields {
     return switch (selector) {
       case NamedRangeSelector.ByName _ -> Optional.empty();
       case NamedRangeSelector.WorkbookScope _ -> Optional.empty();
-      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.sheetName());
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.sheetName().value());
     };
   }
 
   static Optional<String> singleNamedRangeName(NamedRangeSelector selector) {
     return switch (selector) {
       case NamedRangeSelector.All _ -> Optional.empty();
-      case NamedRangeSelector.ByName byName -> Optional.of(byName.name());
+      case NamedRangeSelector.ByName byName -> Optional.of(byName.name().value());
       case NamedRangeSelector.ByNames byNames ->
-          byNames.names().size() == 1 ? Optional.of(byNames.names().getFirst()) : Optional.empty();
-      case NamedRangeSelector.WorkbookScope workbookScope -> Optional.of(workbookScope.name());
-      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name());
+          byNames.names().size() == 1
+              ? Optional.of(byNames.names().getFirst().value())
+              : Optional.empty();
+      case NamedRangeSelector.WorkbookScope workbookScope ->
+          Optional.of(workbookScope.name().value());
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name().value());
       case NamedRangeSelector.AnyOf anyOf ->
           anyOf.selectors().size() == 1
               ? singleNamedRangeName(anyOf.selectors().getFirst())
@@ -130,18 +135,21 @@ final class ExecutionSelectorDiagnosticFields {
 
   static Optional<String> singleNamedRangeName(NamedRangeSelector.Ref selector) {
     return switch (selector) {
-      case NamedRangeSelector.ByName byName -> Optional.of(byName.name());
-      case NamedRangeSelector.WorkbookScope workbookScope -> Optional.of(workbookScope.name());
-      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name());
+      case NamedRangeSelector.ByName byName -> Optional.of(byName.name().value());
+      case NamedRangeSelector.WorkbookScope workbookScope ->
+          Optional.of(workbookScope.name().value());
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name().value());
     };
   }
 
   private static Optional<String> sheetNameFor(SheetSelector selector) {
     return switch (selector) {
       case SheetSelector.All _ -> Optional.empty();
-      case SheetSelector.ByName byName -> Optional.of(byName.name());
+      case SheetSelector.ByName byName -> Optional.of(byName.name().value());
       case SheetSelector.ByNames byNames ->
-          byNames.names().size() == 1 ? Optional.of(byNames.names().getFirst()) : Optional.empty();
+          byNames.names().size() == 1
+              ? Optional.of(byNames.names().getFirst().value())
+              : Optional.empty();
     };
   }
 
@@ -150,7 +158,8 @@ final class ExecutionSelectorDiagnosticFields {
       case TableSelector.All _ -> Optional.empty();
       case TableSelector.ByName _ -> Optional.empty();
       case TableSelector.ByNames _ -> Optional.empty();
-      case TableSelector.ByNameOnSheet byNameOnSheet -> Optional.of(byNameOnSheet.sheetName());
+      case TableSelector.ByNameOnSheet byNameOnSheet ->
+          Optional.of(byNameOnSheet.sheetName().value());
     };
   }
 
@@ -159,7 +168,8 @@ final class ExecutionSelectorDiagnosticFields {
       case PivotTableSelector.All _ -> Optional.empty();
       case PivotTableSelector.ByName _ -> Optional.empty();
       case PivotTableSelector.ByNames _ -> Optional.empty();
-      case PivotTableSelector.ByNameOnSheet byNameOnSheet -> Optional.of(byNameOnSheet.sheetName());
+      case PivotTableSelector.ByNameOnSheet byNameOnSheet ->
+          Optional.of(byNameOnSheet.sheetName().value());
     };
   }
 

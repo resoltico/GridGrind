@@ -1,0 +1,666 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.calculateAll;
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.calculateAllAndMarkRecalculateOnOpen;
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.calculateTargets;
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.clearFormulaCaches;
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.deferCalculation;
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.markRecalculateOnOpen;
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.requireEvaluation;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.List;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.junit.jupiter.api.Test;
+
+/** Direct unit coverage for Phase 6 calculation-policy execution helpers. */
+class CalculationPolicyExecutorTest {
+  @Test
+  void normalizesPoliciesAndExposesModeGuards() {
+    CalculationPolicySpec normalized = CalculationPolicyExecutor.normalize(null);
+
+    assertTrue(normalized.isDefault());
+    assertTrue(CalculationPolicyExecutor.allowsEventRead(null));
+    assertFalse(CalculationPolicyExecutor.allowsEventRead(calculateAll()));
+    assertTrue(CalculationPolicyExecutor.allowsStreamingWrite(markRecalculateOnOpen()));
+    assertFalse(CalculationPolicyExecutor.allowsEventRead(markRecalculateOnOpen()));
+    assertFalse(CalculationPolicyExecutor.allowsStreamingWrite(calculateAll()));
+    assertFalse(CalculationPolicyExecutor.requiresMutationPrefix(null));
+    assertFalse(CalculationPolicyExecutor.requiresMutationPrefix(deferCalculation()));
+    assertTrue(CalculationPolicyExecutor.requiresMutationPrefix(clearFormulaCaches()));
+    assertTrue(
+        CalculationPolicyExecutor.requiresMutationPrefix(
+            calculateTargets(
+                new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                    new SheetName("Budget"), new CellAddress("B1")))));
+
+    CalculationReport report =
+        CalculationPolicyExecutor.notRequestedReport(markRecalculateOnOpen());
+    assertTrue(report.policy().markRecalculateOnOpen());
+    assertEquals(CalculationExecutionStatus.NOT_REQUESTED, report.execution().status());
+    assertTrue(report.preflight().isEmpty());
+  }
+
+  @Test
+  void preflightAndExecutionSucceedForSupportedPolicies() throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      CalculationPolicyExecutor.PreflightOutcome notRequested =
+          CalculationPolicyExecutor.preflight(workbook, null);
+      CalculationPolicyExecutor.PreflightOutcome clearCachesOnly =
+          CalculationPolicyExecutor.preflight(workbook, clearFormulaCaches());
+
+      assertTrue(notRequested.report().isEmpty());
+      assertEquals(0, notRequested.evaluationTargetCount());
+      assertTrue(clearCachesOnly.report().isEmpty());
+    }
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      CalculationPolicyExecutor.ExecutionOutcome doNotCalculate =
+          CalculationPolicyExecutor.execute(workbook, CalculationPolicySpec.defaults(), 0, false);
+
+      assertEquals(CalculationExecutionStatus.NOT_REQUESTED, doNotCalculate.report().status());
+      assertFalse(doNotCalculate.report().markRecalculateOnOpenApplied());
+    }
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("C1", new ResolvedFormula("A1*3"));
+
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
+      CalculationPolicyExecutor.ExecutionOutcome execution =
+          CalculationPolicyExecutor.execute(
+              workbook,
+              calculateAllAndMarkRecalculateOnOpen(),
+              preflight.evaluationTargetCount(),
+              preflight.hasUnevaluableFormula());
+
+      assertTrue(preflight.failure().isEmpty());
+      assertEquals(CalculationReport.Scope.WORKBOOK, preflight.report().orElseThrow().scope());
+      assertEquals(2, preflight.evaluationTargetCount());
+      assertTrue(execution.failure().isEmpty());
+      assertEquals(CalculationExecutionStatus.SUCCEEDED, execution.report().status());
+      assertEquals(2, execution.report().evaluatedFormulaCount());
+      assertTrue(execution.report().markRecalculateOnOpenApplied());
+      assertTrue(workbook.formulas().recalculateOnOpenEnabled());
+    }
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(5.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+
+      CalculationPolicySpec targeted =
+          calculateTargets(
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                  new SheetName("Budget"), new CellAddress("B1")));
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, targeted);
+      CalculationPolicyExecutor.ExecutionOutcome execution =
+          CalculationPolicyExecutor.execute(
+              workbook,
+              targeted,
+              preflight.evaluationTargetCount(),
+              preflight.hasUnevaluableFormula());
+
+      assertTrue(preflight.failure().isEmpty());
+      assertEquals(CalculationReport.Scope.TARGETS, preflight.report().orElseThrow().scope());
+      assertEquals(1, execution.report().evaluatedFormulaCount());
+      assertFalse(execution.report().markRecalculateOnOpenApplied());
+    }
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook.formulas().evaluateAll();
+
+      CalculationPolicyExecutor.ExecutionOutcome clearCaches =
+          CalculationPolicyExecutor.execute(
+              workbook,
+              new CalculationPolicySpec(new CalculationStrategySpec.ClearCachesOnly(), true),
+              0,
+              false);
+      CalculationPolicyExecutor.ExecutionOutcome markOnly =
+          CalculationPolicyExecutor.execute(workbook, markRecalculateOnOpen(), 0, false);
+
+      assertTrue(clearCaches.report().cachesCleared());
+      assertTrue(clearCaches.report().markRecalculateOnOpenApplied());
+      assertEquals(CalculationExecutionStatus.SUCCEEDED, markOnly.report().status());
+      assertTrue(markOnly.report().markRecalculateOnOpenApplied());
+    }
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(5.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+
+      CalculationPolicySpec targetedAndMarked =
+          new CalculationPolicySpec(
+              new CalculationStrategySpec.EvaluateTargets(
+                  List.of(
+                      new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                          new SheetName("Budget"), new CellAddress("B1")))),
+              true);
+      CalculationPolicyExecutor.ExecutionOutcome execution =
+          CalculationPolicyExecutor.execute(workbook, targetedAndMarked, 1, false);
+
+      assertEquals(CalculationExecutionStatus.SUCCEEDED, execution.report().status());
+      assertTrue(execution.report().markRecalculateOnOpenApplied());
+    }
+  }
+
+  @Test
+  void preflightAndExecutionFailuresCarryClassificationAndValidation() throws Exception {
+    try (XssfWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createMixedFailureWorkbook())) {
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
+
+      assertEquals(GridGrindProblemCode.INVALID_FORMULA, preflight.failure().orElseThrow().code());
+      assertEquals(1, preflight.report().orElseThrow().summary().evaluableNowCount());
+      assertEquals(1, preflight.report().orElseThrow().summary().unevaluableNowCount());
+      assertEquals(1, preflight.report().orElseThrow().summary().unparseableByPoiCount());
+    }
+
+    try (XssfWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createInvalidFormulaWorkbook())) {
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
+      CalculationPolicyExecutor.ExecutionOutcome targetedExecution =
+          CalculationPolicyExecutor.execute(
+              workbook,
+              calculateTargets(
+                  new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                      new SheetName("Budget"), new CellAddress("B1"))),
+              1,
+              false);
+
+      assertEquals(GridGrindProblemCode.INVALID_FORMULA, preflight.failure().orElseThrow().code());
+      assertEquals(
+          CalculationPolicyExecutor.Phase.PREFLIGHT, preflight.failure().orElseThrow().phase());
+      assertEquals("Budget", preflight.failure().orElseThrow().sheetName());
+      assertEquals("B1", preflight.failure().orElseThrow().address());
+      assertEquals("SUM(", preflight.failure().orElseThrow().formula());
+      assertEquals(1, preflight.report().orElseThrow().summary().unparseableByPoiCount());
+      assertEquals(CalculationExecutionStatus.FAILED, targetedExecution.report().status());
+      assertEquals(
+          CalculationPolicyExecutor.Phase.EXECUTION,
+          targetedExecution.failure().orElseThrow().phase());
+    }
+
+    try (XssfWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createMissingExternalWorkbook())) {
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
+
+      assertEquals(
+          GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK, preflight.failure().orElseThrow().code());
+      assertEquals(1, preflight.report().orElseThrow().summary().unevaluableNowCount());
+    }
+
+    try (XssfWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createUdfFormulaWorkbook())) {
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
+
+      assertEquals(
+          GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION,
+          preflight.failure().orElseThrow().code());
+      assertTrue(preflight.failure().orElseThrow().message().contains("DOUBLE"));
+    }
+
+    try (XssfWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
+      CalculationPolicyExecutor.ExecutionOutcome execution =
+          CalculationPolicyExecutor.execute(workbook, requireEvaluation(), 1, false);
+
+      assertEquals(
+          GridGrindProblemCode.UNSUPPORTED_FORMULA, preflight.failure().orElseThrow().code());
+      assertEquals(CalculationExecutionStatus.FAILED, execution.report().status());
+      assertEquals(
+          CalculationPolicyExecutor.Phase.EXECUTION, execution.failure().orElseThrow().phase());
+      assertNotNull(execution.failure().orElseThrow().exception());
+      assertTrue(execution.report().message().orElseThrow().contains("APP.TITLE"));
+    }
+
+    try (XssfWorkbook workbook = failingClearCachesWorkbook()) {
+      CalculationPolicyExecutor.ExecutionOutcome clearCachesFailure =
+          CalculationPolicyExecutor.execute(workbook, clearFormulaCaches(), 0, false);
+
+      assertEquals(CalculationExecutionStatus.FAILED, clearCachesFailure.report().status());
+      assertEquals(
+          CalculationPolicyExecutor.Phase.EXECUTION,
+          clearCachesFailure.failure().orElseThrow().phase());
+      assertTrue(
+          clearCachesFailure.report().message().orElseThrow().contains("clear caches failed"));
+    }
+
+    assertEquals(
+        "evaluationTargetCount must be >= 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CalculationPolicyExecutor.PreflightOutcome(null, -1, false, null))
+            .getMessage());
+    assertEquals(
+        "report must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> new CalculationPolicyExecutor.ExecutionOutcome(null, null))
+            .getMessage());
+    assertEquals(
+        "phase must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new CalculationPolicyExecutor.FailureDetail(
+                        GridGrindProblemCode.INVALID_FORMULA,
+                        null,
+                        "Budget",
+                        "B1",
+                        "SUM(",
+                        "bad",
+                        null))
+            .getMessage());
+    assertEquals(
+        "code or exception must be present",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CalculationPolicyExecutor.FailureDetail(
+                        null,
+                        CalculationPolicyExecutor.Phase.PREFLIGHT,
+                        null,
+                        null,
+                        null,
+                        "bad",
+                        null))
+            .getMessage());
+    assertEquals(
+        "message must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CalculationPolicyExecutor.FailureDetail(
+                        GridGrindProblemCode.INVALID_FORMULA,
+                        CalculationPolicyExecutor.Phase.PREFLIGHT,
+                        null,
+                        null,
+                        null,
+                        " ",
+                        null))
+            .getMessage());
+    assertInstanceOf(
+        RuntimeException.class,
+        new CalculationPolicyExecutor.FailureDetail(
+                CalculationPolicyExecutor.Phase.EXECUTION, new RuntimeException("boom"))
+            .exception());
+  }
+
+  @Test
+  void lenientEvaluationLeavesUnevaluableFormulasUntouchedAndReportsPartial() throws Exception {
+    try (XssfWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
+      CalculationPolicySpec lenientAndMarked =
+          new CalculationPolicySpec(new CalculationStrategySpec.EvaluateAll(), true);
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, lenientAndMarked);
+      CalculationPolicyExecutor.ExecutionOutcome execution =
+          CalculationPolicyExecutor.execute(
+              workbook,
+              lenientAndMarked,
+              preflight.evaluationTargetCount(),
+              preflight.hasUnevaluableFormula());
+
+      assertTrue(preflight.failure().isEmpty());
+      assertTrue(preflight.hasUnevaluableFormula());
+      assertEquals(CalculationExecutionStatus.PARTIAL, execution.report().status());
+      assertTrue(execution.report().markRecalculateOnOpenApplied());
+      assertTrue(workbook.formulas().recalculateOnOpenEnabled());
+      assertTrue(execution.failure().isEmpty());
+    }
+  }
+
+  @Test
+  void deferredCalculationReportsCapabilitiesWithoutEvaluating() throws Exception {
+    try (XssfWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, deferCalculation());
+      CalculationPolicyExecutor.ExecutionOutcome execution =
+          CalculationPolicyExecutor.execute(
+              workbook,
+              deferCalculation(),
+              preflight.evaluationTargetCount(),
+              preflight.hasUnevaluableFormula());
+
+      assertTrue(preflight.failure().isEmpty());
+      assertTrue(preflight.hasUnevaluableFormula());
+      assertEquals(CalculationExecutionStatus.NOT_REQUESTED, execution.report().status());
+      assertTrue(execution.failure().isEmpty());
+
+      CalculationPolicyExecutor.ExecutionOutcome markedExecution =
+          CalculationPolicyExecutor.execute(
+              workbook,
+              new CalculationPolicySpec(new CalculationStrategySpec.DeferredCalculation(), true),
+              preflight.evaluationTargetCount(),
+              preflight.hasUnevaluableFormula());
+      assertEquals(CalculationExecutionStatus.SUCCEEDED, markedExecution.report().status());
+      assertTrue(markedExecution.report().markRecalculateOnOpenApplied());
+    }
+  }
+
+  @Test
+  void lenientTargetedEvaluationLeavesUnevaluableTargetsUntouched() throws Exception {
+    try (XssfWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
+      CalculationPolicySpec targeted =
+          calculateTargets(
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                  new SheetName("Ops"), new CellAddress("A1")));
+      CalculationPolicyExecutor.PreflightOutcome preflight =
+          CalculationPolicyExecutor.preflight(workbook, targeted);
+      CalculationPolicyExecutor.ExecutionOutcome execution =
+          CalculationPolicyExecutor.execute(
+              workbook,
+              targeted,
+              preflight.evaluationTargetCount(),
+              preflight.hasUnevaluableFormula());
+
+      assertTrue(preflight.failure().isEmpty());
+      assertTrue(preflight.hasUnevaluableFormula());
+      assertEquals(CalculationExecutionStatus.PARTIAL, execution.report().status());
+      assertTrue(execution.failure().isEmpty());
+    }
+  }
+
+  @Test
+  void circularReferencesBlockRequiredEvaluationAndRemainLenientForOtherStrategies()
+      throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      var sheet = workbook.getOrCreateSheet("Budget");
+      sheet.cells().setCell("A1", new ResolvedFormula("A1+1"));
+      sheet.cells().setCell("B1", new ResolvedFormula("C1+1"));
+      sheet.cells().setCell("C1", new ResolvedFormula("B1+1"));
+
+      CalculationPolicySpec doNotCalculate = CalculationPolicySpec.defaults();
+      CalculationPolicySpec deferred = deferCalculation();
+      CalculationPolicySpec clearCaches = clearFormulaCaches();
+      CalculationPolicySpec evaluateAll = calculateAll();
+      CalculationPolicySpec evaluateTargets =
+          calculateTargets(
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                  new SheetName("Budget"), new CellAddress("A1")));
+      CalculationPolicySpec requireEvaluation = requireEvaluation();
+
+      assertTrue(CalculationPolicyExecutor.preflight(workbook, doNotCalculate).report().isEmpty());
+      assertTrue(CalculationPolicyExecutor.preflight(workbook, clearCaches).report().isEmpty());
+
+      CalculationPolicyExecutor.PreflightOutcome deferredPreflight =
+          CalculationPolicyExecutor.preflight(workbook, deferred);
+      CalculationPolicyExecutor.PreflightOutcome allPreflight =
+          CalculationPolicyExecutor.preflight(workbook, evaluateAll);
+      CalculationPolicyExecutor.PreflightOutcome targetPreflight =
+          CalculationPolicyExecutor.preflight(workbook, evaluateTargets);
+      CalculationPolicyExecutor.PreflightOutcome requiredPreflight =
+          CalculationPolicyExecutor.preflight(workbook, requireEvaluation);
+
+      assertTrue(deferredPreflight.failure().isEmpty());
+      assertTrue(deferredPreflight.hasUnevaluableFormula());
+      assertTrue(allPreflight.failure().isEmpty());
+      assertTrue(allPreflight.hasUnevaluableFormula());
+      assertTrue(targetPreflight.failure().isEmpty());
+      assertTrue(targetPreflight.hasUnevaluableFormula());
+      assertEquals(
+          GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE,
+          requiredPreflight.failure().orElseThrow().code());
+      assertEquals(3, requiredPreflight.report().orElseThrow().summary().unevaluableNowCount());
+
+      assertEquals(
+          CalculationExecutionStatus.NOT_REQUESTED,
+          CalculationPolicyExecutor.execute(workbook, doNotCalculate, 0, false).report().status());
+      assertEquals(
+          CalculationExecutionStatus.NOT_REQUESTED,
+          CalculationPolicyExecutor.execute(
+                  workbook,
+                  deferred,
+                  deferredPreflight.evaluationTargetCount(),
+                  deferredPreflight.hasUnevaluableFormula())
+              .report()
+              .status());
+      assertEquals(
+          CalculationExecutionStatus.SUCCEEDED,
+          CalculationPolicyExecutor.execute(workbook, clearCaches, 0, false).report().status());
+      assertEquals(
+          CalculationExecutionStatus.PARTIAL,
+          CalculationPolicyExecutor.execute(
+                  workbook,
+                  evaluateAll,
+                  allPreflight.evaluationTargetCount(),
+                  allPreflight.hasUnevaluableFormula())
+              .report()
+              .status());
+      assertEquals(
+          CalculationExecutionStatus.PARTIAL,
+          CalculationPolicyExecutor.execute(
+                  workbook,
+                  evaluateTargets,
+                  targetPreflight.evaluationTargetCount(),
+                  targetPreflight.hasUnevaluableFormula())
+              .report()
+              .status());
+    }
+  }
+
+  @Test
+  void aggregatesCapabilityCountsAndPreservesFailureSeverityOrder() {
+    CalculationReport.FormulaCapability evaluable =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("A1")),
+            "1+1",
+            FormulaCapabilityKind.EVALUABLE_NOW,
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
+    CalculationReport.FormulaCapability missingExternal =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1")),
+            "[Rates.xlsx]Sheet1!A1",
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK),
+            java.util.Optional.of("missing"));
+    CalculationReport.FormulaCapability circular =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B2")),
+            "B2+1",
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE),
+            java.util.Optional.of("circular"));
+    CalculationReport.FormulaCapability unregistered =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("C1")),
+            "DOUBLE(A1)",
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION),
+            java.util.Optional.of("unregistered"));
+    CalculationReport.FormulaCapability unsupported =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("D1")),
+            "APP.TITLE()",
+            FormulaCapabilityKind.UNEVALUABLE_NOW,
+            java.util.Optional.of(GridGrindProblemCode.UNSUPPORTED_FORMULA),
+            java.util.Optional.of("unsupported"));
+    CalculationReport.FormulaCapability invalid =
+        new CalculationReport.FormulaCapability(
+            new FormulaCellTarget(new SheetName("Budget"), new CellAddress("E1")),
+            "SUM(",
+            FormulaCapabilityKind.UNPARSEABLE_BY_POI,
+            java.util.Optional.of(GridGrindProblemCode.INVALID_FORMULA),
+            java.util.Optional.of("invalid"));
+
+    CalculationReport.Summary summary =
+        CalculationCapabilities.summaryFor(List.of(evaluable, circular, invalid));
+    assertEquals(1, summary.evaluableNowCount());
+    assertEquals(1, summary.unevaluableNowCount());
+    assertEquals(1, summary.unparseableByPoiCount());
+    assertEquals(0, CalculationCapabilities.severityRank(invalid));
+    assertEquals(1, CalculationCapabilities.severityRank(circular));
+    assertEquals(2, CalculationCapabilities.severityRank(missingExternal));
+    assertEquals(3, CalculationCapabilities.severityRank(unregistered));
+    assertEquals(4, CalculationCapabilities.severityRank(unsupported));
+  }
+
+  private static Path createMissingExternalWorkbook() throws IOException {
+    Path directory = Files.createTempDirectory("gridgrind-calculation-external-");
+    Path referencedWorkbookPath = directory.resolve("referenced.xlsx");
+    Path workbookPath = directory.resolve("external.xlsx");
+
+    try (XSSFWorkbook referencedWorkbook = new XSSFWorkbook()) {
+      referencedWorkbook.createSheet("Rates").createRow(0).createCell(0).setCellValue(7.5d);
+      try (OutputStream outputStream = Files.newOutputStream(referencedWorkbookPath)) {
+        referencedWorkbook.write(outputStream);
+      }
+    }
+
+    try (Workbook referencedWorkbook = WorkbookFactory.create(referencedWorkbookPath.toFile());
+        XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.linkExternalWorkbook("referenced.xlsx", referencedWorkbook);
+      workbook.setCellFormulaValidation(false);
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      sheet.createRow(0).createCell(0).setCellValue("External");
+      sheet.getRow(0).createCell(1).setCellFormula("[referenced.xlsx]Rates!$A$1");
+      try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    return workbookPath;
+  }
+
+  private static Path createMixedFailureWorkbook() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-calculation-mixed-", ".xlsx");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.setCellFormulaValidation(false);
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      sheet.createRow(0).createCell(0).setCellValue(2.0d);
+      sheet.getRow(0).createCell(1).setCellFormula("A1*2");
+      sheet.getRow(0).createCell(2).setCellFormula("APP.TITLE()");
+      sheet.getRow(0).createCell(3).setCellFormula("A1*4");
+      try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (FileSystem archive = FileSystems.newFileSystem(workbookPath, (ClassLoader) null)) {
+      Path sheetXml = archive.getPath("/xl/worksheets/sheet1.xml");
+      String xml = Files.readString(sheetXml, StandardCharsets.UTF_8);
+      Files.writeString(
+          sheetXml, xml.replace("<f>A1*2</f>", "<f>SUM(</f>"), StandardCharsets.UTF_8);
+    }
+
+    return workbookPath;
+  }
+
+  private static XssfWorkbook failingClearCachesWorkbook() {
+    return instantiateWorkbook(new IteratorFailingWorkbook());
+  }
+
+  private static XssfWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
+    return XssfWorkbooks.wrap(workbook);
+  }
+
+  /** Workbook whose sheet iteration path fails so cache clearing can surface execution errors. */
+  private static final class IteratorFailingWorkbook extends XSSFWorkbook {
+    @Override
+    public Iterator<Sheet> iterator() {
+      throw new IllegalStateException("clear caches failed");
+    }
+  }
+
+  private static Path createUdfFormulaWorkbook() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-calculation-udf-", ".xlsx");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.setCellFormulaValidation(false);
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      sheet.createRow(0).createCell(0).setCellValue(21.0d);
+      sheet.getRow(0).createCell(1).setCellFormula("DOUBLE(A1)");
+      try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    return workbookPath;
+  }
+
+  private static Path createUnsupportedFormulaWorkbook() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-calculation-unsupported-", ".xlsx");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.setCellFormulaValidation(false);
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      sheet.createRow(0).createCell(0).setCellFormula("APP.TITLE()");
+      try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    return workbookPath;
+  }
+
+  private static Path createInvalidFormulaWorkbook() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-calculation-invalid-", ".xlsx");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      sheet.createRow(0).createCell(0).setCellValue(2.0d);
+      sheet.getRow(0).createCell(1).setCellFormula("A1*2");
+      try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (FileSystem archive = FileSystems.newFileSystem(workbookPath, (ClassLoader) null)) {
+      Path sheetXml = archive.getPath("/xl/worksheets/sheet1.xml");
+      String xml = Files.readString(sheetXml, StandardCharsets.UTF_8);
+      Files.writeString(
+          sheetXml, xml.replace("<f>A1*2</f>", "<f>SUM(</f>"), StandardCharsets.UTF_8);
+    }
+
+    return workbookPath;
+  }
+}

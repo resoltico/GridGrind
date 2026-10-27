@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
 import java.io.IOException;
 import java.util.Objects;
 

@@ -1,0 +1,35 @@
+package dev.erst.gridgrind.core.authoring;
+
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import java.util.Objects;
+import java.util.Optional;
+
+/** One authored mutation step that receives a stable step id when added to a plan. */
+public final class PlannedMutation {
+  private final Optional<StepId> stepId;
+  private final Selector target;
+  private final MutationAction action;
+
+  PlannedMutation(Optional<StepId> stepId, Selector target, MutationAction action) {
+    Objects.requireNonNull(stepId, "stepId must not be null");
+    this.stepId = stepId;
+    this.target = Objects.requireNonNull(target, "target must not be null");
+    this.action = Objects.requireNonNull(action, "action must not be null");
+  }
+
+  PlannedMutation(Selector target, MutationAction action) {
+    this(Optional.empty(), target, action);
+  }
+
+  /** Returns a copy that pins an explicit step id instead of relying on plan auto-generation. */
+  public PlannedMutation named(StepId newStepId) {
+    return new PlannedMutation(Optional.of(newStepId), target, action);
+  }
+
+  MutationStep toStep(StepId generatedStepId) {
+    return new MutationStep(stepId.orElse(generatedStepId), target, action);
+  }
+}

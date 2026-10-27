@@ -3,16 +3,16 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,8 +32,8 @@ class ExecutionDirectEventReadWorkflowTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile(source.getFileName().toString()),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(new ExecutionModeInput.EventRead()),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.mode(new ExecutionModeSpec.EventRead()),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     ExecutionInputBindings rawBindings =
         new ExecutionInputBindings(
@@ -58,20 +58,21 @@ class ExecutionDirectEventReadWorkflowTest {
           assertInstanceOf(
               WorkbookResult.Failure.class,
               workflow.execute(
-                  GridGrindProtocolVersion.current(),
-                  request,
-                  List.of(),
-                  ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                  rawBindings.withRequestPathAccess(access)));
+                  new ExecutionDirectEventReadWorkflow.Call(
+                      ProtocolVersion.CURRENT,
+                      MutationResolution.preparePlan(request),
+                      List.of(),
+                      ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
+                      rawBindings.withRequestPathAccess(access))));
 
       assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     }
   }
 
-  private ExecutionStepSupport stepSupport(ExecutionInputBindings bindings) {
+  private StepExecution stepSupport(ExecutionInputBindings bindings) {
     WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
-    return new ExecutionStepSupport(
+    return new StepExecution(
         workbookEngine,
         selectorResolver,
         new AssertionExecutor(workbookEngine, selectorResolver),
@@ -79,8 +80,8 @@ class ExecutionDirectEventReadWorkflowTest {
         bindings);
   }
 
-  private static ExecutionResponseSupport responseSupport() {
-    return new ExecutionResponseSupport(ExcelWorkbook::close, materialized -> materialized.close());
+  private static ExecutionResults responseSupport() {
+    return new ExecutionResults(XssfWorkbook::close, materialized -> materialized.close());
   }
 
   private Path writeWorkbook() throws IOException {

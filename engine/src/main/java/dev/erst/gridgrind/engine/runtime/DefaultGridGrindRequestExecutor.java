@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,7 +15,7 @@ import java.util.Optional;
 public final class DefaultGridGrindRequestExecutor implements GridGrindRequestExecutor {
   private final DefaultGridGrindRequestExecutorDependencies dependencies;
   private final StaticRequestValidator staticValidator;
-  private final ExecutionResponseSupport responseSupport;
+  private final ExecutionResults responseSupport;
 
   /** Creates the production request executor with the default workbook executors and closers. */
   public DefaultGridGrindRequestExecutor() {
@@ -27,7 +27,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     this.dependencies = Objects.requireNonNull(dependencies, "dependencies must not be null");
     this.staticValidator = new StaticRequestValidator();
     this.responseSupport =
-        new ExecutionResponseSupport(
+        new ExecutionResults(
             this.dependencies.workbookCloser(), this.dependencies.readableWorkbookCloser());
   }
 
@@ -43,32 +43,39 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       WorkbookPlan request,
       ExecutionInputBindings bindings,
       ExecutionProgressSink sink,
-      Optional<dev.erst.gridgrind.contract.json.RequestAnalysis> analysis) {
+      Optional<dev.erst.gridgrind.core.problem.RequestIntake> analysis) {
     WorkbookPlan authoredRequest = Objects.requireNonNull(request, "request must not be null");
     ExecutionInputBindings executionBindings =
         Objects.requireNonNull(bindings, "bindings must not be null");
     Objects.requireNonNull(analysis, "analysis must not be null");
     TempFileFactory tempFileFactory = executionBindings.tempFileFactory();
-    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(tempFileFactory);
-    ExecutionStepSupport stepSupport =
-        stepSupport(this.dependencies, tempFileFactory, executionBindings);
-    ExecutionWorkflowSupport workflowSupport =
-        new ExecutionWorkflowSupport(
-            workbookSupport,
-            new ExecutionCalculationSupport(this.dependencies.streamingCalculationApplier()),
-            stepSupport,
-            responseSupport,
-            tempFileFactory);
+    WorkbookLifecycle workbookSupport = new WorkbookLifecycle(tempFileFactory);
+    StepExecution stepSupport = stepSupport(this.dependencies, tempFileFactory, executionBindings);
+    CalculationWorkflow calculationSupport =
+        new CalculationWorkflow(this.dependencies.streamingCalculationApplier());
+    FullXssfWorkflow fullXssfWorkflow =
+        new FullXssfWorkflow(
+            calculationSupport,
+            new FullXssfStepExecution(stepSupport, responseSupport),
+            new FullXssfCalculationCheckpoint(calculationSupport, responseSupport),
+            new FullXssfPersistence(workbookSupport, responseSupport),
+            new HostAcceptanceExecutor(stepSupport),
+            responseSupport);
+    ExecutionDirectEventReadWorkflow directEventReadWorkflow =
+        new ExecutionDirectEventReadWorkflow(stepSupport, responseSupport, tempFileFactory);
+    ExecutionStreamingWorkflow streamingWorkflow =
+        new ExecutionStreamingWorkflow(
+            workbookSupport, calculationSupport, stepSupport, tempFileFactory);
     ExecutionJournalRecorder journal =
         ExecutionJournalRecorder.start(authoredRequest, sink, executionBindings.workingDirectory());
-    GridGrindProtocolVersion protocolVersion = authoredRequest.protocolVersion();
+    ProtocolVersion protocolVersion = authoredRequest.protocolVersion();
 
     ExecutionJournalRecorder.PhaseHandle validationPhase = journal.beginValidation();
     Optional<GridGrindProblemDetail.Problem> validationError =
         staticValidator.validate(authoredRequest).stream().findFirst();
     if (validationError.isPresent()) {
       validationPhase.fail(validationError.get().code());
-      return ExecutionResponseSupport.failureResponse(
+      return ExecutionResults.failureResponse(
           protocolVersion,
           journal,
           authoredRequest,
@@ -88,7 +95,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       if (!preflight.problems().isEmpty()) {
         GridGrindProblemDetail.Problem problem = preflight.problems().getFirst();
         inputResolutionPhase.fail(problem.code());
-        return ExecutionResponseSupport.failureResponse(
+        return ExecutionResults.failureResponse(
             protocolVersion,
             journal,
             authoredRequest,
@@ -97,7 +104,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             null,
             null);
       }
-      WorkbookPlan resolvedRequest = preflight.preparedPlan();
+      var resolvedPlan = preflight.preparedPlan();
+      WorkbookPlan resolvedRequest = resolvedPlan.request();
       ExecutionInputBindings preparedBindings = preflight.preparedBindings();
       inputResolutionPhase.succeed();
 
@@ -105,47 +113,49 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           new java.util.ArrayList<>(GridGrindRequestWarnings.collect(resolvedRequest));
       warnings.addAll(preflight.warnings());
 
-      ExecutionModeInput executionMode = executionMode(resolvedRequest);
-      if (directEventReadEligible(resolvedRequest, executionMode)) {
+      ExecutionModeSpec executionMode = resolvedRequest.effectiveExecutionMode();
+      if (directEventReadWorkflow.capabilities().accepts(resolvedRequest)) {
         return responseSupport.guardUnexpectedRuntime(
             protocolVersion,
             resolvedRequest,
             journal,
             () ->
-                workflowSupport.executeDirectEventReadWorkflow(
-                    protocolVersion, resolvedRequest, warnings, journal, preparedBindings));
+                directEventReadWorkflow.execute(
+                    new ExecutionDirectEventReadWorkflow.Call(
+                        protocolVersion, resolvedPlan, warnings, journal, preparedBindings)));
       }
-      if (executionMode instanceof ExecutionModeInput.StreamingWrite) {
+      if (streamingWorkflow.capabilities().accepts(resolvedRequest)) {
         return responseSupport.guardUnexpectedRuntime(
             protocolVersion,
             resolvedRequest,
             journal,
             () ->
-                workflowSupport.executeStreamingWorkflow(
-                    protocolVersion,
-                    resolvedRequest,
-                    executionMode,
-                    warnings,
-                    journal,
-                    preparedBindings));
+                streamingWorkflow.execute(
+                    new ExecutionStreamingWorkflow.Call(
+                        protocolVersion,
+                        resolvedPlan,
+                        executionMode,
+                        warnings,
+                        journal,
+                        preparedBindings)));
       }
 
       ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
-      ExcelWorkbook workbook;
+      XssfWorkbook workbook;
       try {
         workbook =
             workbookSupport.openWorkbook(
                 resolvedRequest.source(), resolvedRequest.formulaEnvironment(), preparedBindings);
       } catch (Exception exception) {
         GridGrindProblemDetail.Problem problem =
-            ExecutionResponseSupport.problemFor(
+            GridGrindProblems.fromException(
                 exception,
-                new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
+                new dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook(
                     ExecutionRequestPaths.requestShape(resolvedRequest),
                     ExecutionRequestPaths.workbookReference(
                         resolvedRequest, preparedBindings.workingDirectory())));
         openPhase.fail(problem.code());
-        return ExecutionResponseSupport.failureResponse(
+        return ExecutionResults.failureResponse(
             protocolVersion,
             journal,
             resolvedRequest,
@@ -162,20 +172,21 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           journal,
           workbook,
           () ->
-              workflowSupport.executeWorkbookWorkflow(
-                  protocolVersion,
-                  resolvedRequest,
-                  workbook,
-                  executionMode,
-                  warnings,
-                  journal,
-                  preparedBindings));
+              fullXssfWorkflow.execute(
+                  new FullXssfWorkflow.Call(
+                      protocolVersion,
+                      resolvedPlan,
+                      workbook,
+                      executionMode,
+                      warnings,
+                      journal,
+                      preparedBindings)));
     } finally {
       preflight.release();
     }
   }
 
-  private static ExecutionStepSupport stepSupport(
+  private static StepExecution stepSupport(
       DefaultGridGrindRequestExecutorDependencies dependencies,
       TempFileFactory tempFileFactory,
       ExecutionInputBindings bindings) {
@@ -183,19 +194,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         new SemanticSelectorResolver(dependencies.workbookEngine());
     AssertionExecutor assertionExecutor =
         new AssertionExecutor(dependencies.workbookEngine(), selectorResolver);
-    return new ExecutionStepSupport(
+    return new StepExecution(
         dependencies.workbookEngine(),
         selectorResolver,
         assertionExecutor,
         tempFileFactory,
         bindings);
-  }
-
-  static boolean directEventReadEligible(WorkbookPlan request, ExecutionModeInput executionMode) {
-    return ExecutionWorkflowRouting.directEventReadEligible(request, executionMode);
-  }
-
-  static ExecutionModeInput executionMode(WorkbookPlan request) {
-    return ExecutionWorkflowRouting.executionMode(request);
   }
 }

@@ -4,13 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -29,14 +33,14 @@ class GridGrindEngineGrantTest {
 
   @Test
   void executesWhenThePublicInputCarriesAMatchingHostGrant() {
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of("ENSURE_SHEET"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            GridGrindHostAcceptancePolicy.minimum());
+            AcceptancePolicy.minimum());
 
     WorkbookResult.Success success =
         assertInstanceOf(
@@ -48,57 +52,55 @@ class GridGrindEngineGrantTest {
     assertEquals(
         1,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                dev.erst.gridgrind.core.result.ExecutionJournal.Outcome.Succeeded.class,
                 success.journal().outcome())
             .completedStepCount());
   }
 
   @Test
   void hostGrantRejectsMalformedAuthorityAndDeduplicatesExplicitValues() {
-    GridGrindExecutionGrant.Bounded grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(
-                new GridGrindExecutionGrant.ReadAuthority.File(root.resolve("input.xlsx")),
-                new GridGrindExecutionGrant.ReadAuthority.File(root.resolve("input.xlsx"))),
+                new ExecutionGrant.ReadAuthority.File(root.resolve("input.xlsx")),
+                new ExecutionGrant.ReadAuthority.File(root.resolve("input.xlsx"))),
             List.of("ENSURE_SHEET", "ENSURE_SHEET"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.SelectedSheets(
-                List.of("Budget", "Budget")),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget", "Budget")),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            GridGrindHostAcceptancePolicy.minimum());
+            AcceptancePolicy.minimum());
 
     assertEquals(1, grant.readableResources().size());
     assertEquals(List.of("ENSURE_SHEET"), grant.operationIds());
     assertEquals(
         List.of("Budget"),
-        ((GridGrindExecutionGrant.WorkbookTargetAuthority.SelectedSheets)
-                grant.workbookTargetAuthority())
+        ((ExecutionGrant.WorkbookTargetAuthority.SelectedSheets) grant.targetAuthority())
             .sheetNames());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new GridGrindExecutionGrant.Bounded(
+            new ExecutionGrant(
                 List.of(),
                 List.of("ensure-sheet"),
-                new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-                new GridGrindExecutionGrant.PublicationAuthority.None(),
+                new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+                new ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
-                GridGrindHostAcceptancePolicy.minimum()));
+                AcceptancePolicy.minimum()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of(" ")));
+        () -> new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of(" ")));
   }
 
   private static WorkbookPlan request() {
     return WorkbookPlan.standard(
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
+        ExecutionPolicySpec.defaults(),
+        FormulaEnvironmentSpec.empty(),
         List.of(
             new MutationStep(
-                "ensure-sheet",
-                new SheetSelector.ByName("Budget"),
+                new StepId("ensure-sheet"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.EnsureSheet())));
   }
 }

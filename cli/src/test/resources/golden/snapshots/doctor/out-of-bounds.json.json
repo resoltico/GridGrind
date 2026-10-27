@@ -1,0 +1,35 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST",
+        "message" : "address must be within Excel .xlsx bounds",
+        "stage" : "BIND_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST",
+      "context" : {
+        "json" : {
+          "byteOffset" : 154,
+          "jsonPath" : "steps[0].target.address",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "BIND_REQUEST"
+      },
+      "message" : "address must be within Excel .xlsx bounds",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field 'address'.",
+      "title" : "Invalid request"
+    } ],
+    "protocolVersion" : 1,
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

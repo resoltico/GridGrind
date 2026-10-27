@@ -1,0 +1,678 @@
+{
+  "detail" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "advisory" : "SELF_CONTAINED",
+      "id" : "SIGNATURE_LINE",
+      "intentTags" : [ "drawing", "signature", "visual", "authoring" ],
+      "protocolVersion" : 1,
+      "requestFileName" : "signature-line-request.json",
+      "requestProfile" : {
+        "assertionTypes" : [ ],
+        "calculationStrategy" : "DO_NOT_CALCULATE",
+        "executionMode" : "FULL_XSSF",
+        "inspectionQueryTypes" : [ "GET_DRAWING_OBJECTS" ],
+        "journalLevel" : "SUMMARY",
+        "markRecalculateOnOpen" : false,
+        "mutationActionTypes" : [ "ENSURE_SHEET", "SET_SIGNATURE_LINE", "SET_DRAWING_OBJECT_ANCHOR" ],
+        "persistenceType" : "SAVE_AS",
+        "sourceType" : "NEW",
+        "stepCount" : 5
+      },
+      "requiredWorkspacePaths" : [ ],
+      "summary" : "Signature-line authoring with drawing-object readback and authored anchor replacement.",
+      "type" : "EXAMPLE"
+    }
+  },
+  "execution" : {
+    "exit" : 0,
+    "readback" : {
+      "bounds" : [ {
+        "sheet" : {
+          "lastColumnIndex" : -1,
+          "lastRowIndex" : -1,
+          "physicalRowCount" : 0,
+          "protection" : {
+            "type" : "UNPROTECTED"
+          },
+          "sheetName" : "Approvals",
+          "visibility" : "VISIBLE"
+        },
+        "stepId" : "sheet-0",
+        "type" : "GET_SHEET_SUMMARY"
+      } ],
+      "facts" : [ {
+        "layout" : {
+          "columns" : [ ],
+          "pane" : {
+            "type" : "NONE"
+          },
+          "presentation" : {
+            "display" : {
+              "displayFormulas" : false,
+              "displayGridlines" : true,
+              "displayRowColHeadings" : true,
+              "displayZeros" : true,
+              "rightToLeft" : false
+            },
+            "ignoredErrors" : [ ],
+            "outlineSummary" : {
+              "rowSumsBelow" : true,
+              "rowSumsRight" : true
+            },
+            "sheetDefaults" : {
+              "defaultColumnWidth" : 8,
+              "defaultRowHeightPoints" : 15.0
+            }
+          },
+          "rows" : [ ],
+          "sheetName" : "Approvals",
+          "zoomPercent" : 100
+        },
+        "stepId" : "sheet-0-layout",
+        "type" : "GET_SHEET_LAYOUT"
+      }, {
+        "layout" : {
+          "footer" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "header" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "orientation" : "PORTRAIT",
+          "printArea" : {
+            "type" : "NONE"
+          },
+          "repeatingColumns" : {
+            "type" : "NONE"
+          },
+          "repeatingRows" : {
+            "type" : "NONE"
+          },
+          "scaling" : {
+            "type" : "AUTOMATIC"
+          },
+          "setup" : {
+            "blackAndWhite" : false,
+            "columnBreaks" : [ ],
+            "copies" : 1,
+            "draft" : false,
+            "firstPageNumber" : 1,
+            "horizontallyCentered" : false,
+            "margins" : {
+              "bottom" : 0.75,
+              "footer" : 0.3,
+              "header" : 0.3,
+              "left" : 0.7,
+              "right" : 0.7,
+              "top" : 0.75
+            },
+            "paperSize" : 1,
+            "printGridlines" : false,
+            "rowBreaks" : [ ],
+            "useFirstPageNumber" : false,
+            "verticallyCentered" : false
+          },
+          "sheetName" : "Approvals"
+        },
+        "stepId" : "sheet-0-print",
+        "type" : "GET_PRINT_LAYOUT"
+      }, {
+        "charts" : [ ],
+        "sheetName" : "Approvals",
+        "stepId" : "sheet-0-charts",
+        "type" : "GET_CHARTS"
+      }, {
+        "drawingObjects" : [ {
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 5,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 8,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 6
+            },
+            "type" : "TWO_CELL"
+          },
+          "name" : "BudgetSignature",
+          "preview" : {
+            "byteSize" : "<signature-preview-byteSize-0>",
+            "contentType" : "image/png",
+            "format" : "PNG",
+            "heightPixels" : 150,
+            "sha256" : "<signature-preview-sha256-0>",
+            "widthPixels" : 400
+          },
+          "setup" : {
+            "allowComments" : false,
+            "setupId" : "<setupId-0>",
+            "signingInstructions" : "Review the budget before signing.",
+            "suggestedSigner" : "Ada Lovelace",
+            "suggestedSigner2" : "Finance",
+            "suggestedSignerEmail" : "ada@example.com"
+          },
+          "type" : "SIGNATURE_LINE"
+        } ],
+        "sheetName" : "Approvals",
+        "stepId" : "sheet-0-drawing",
+        "type" : "GET_DRAWING_OBJECTS"
+      }, {
+        "stepId" : "tables",
+        "tables" : [ ],
+        "type" : "GET_TABLES"
+      }, {
+        "pivotTables" : [ ],
+        "stepId" : "pivots",
+        "type" : "GET_PIVOT_TABLES"
+      }, {
+        "analysis" : {
+          "findings" : [ ],
+          "summary" : {
+            "errorCount" : 0,
+            "infoCount" : 0,
+            "totalCount" : 0,
+            "warningCount" : 0
+          }
+        },
+        "stepId" : "findings",
+        "type" : "ANALYZE_WORKBOOK_FINDINGS"
+      } ],
+      "summary" : [ {
+        "stepId" : "summary",
+        "type" : "GET_WORKBOOK_SUMMARY",
+        "workbook" : {
+          "activeSheetName" : "Approvals",
+          "forceFormulaRecalculationOnOpen" : false,
+          "namedRangeCount" : 0,
+          "selectedSheetNames" : [ "Approvals" ],
+          "sheetCount" : 1,
+          "sheetNames" : [ "Approvals" ],
+          "type" : "WITH_SHEETS"
+        }
+      } ]
+    },
+    "stderr" : "",
+    "stdout" : {
+      "assertions" : [ ],
+      "calculation" : {
+        "execution" : {
+          "cachesCleared" : false,
+          "evaluatedFormulaCount" : 0,
+          "markRecalculateOnOpenApplied" : false,
+          "status" : "NOT_REQUESTED"
+        },
+        "policy" : { }
+      },
+      "evidence" : {
+        "admission" : {
+          "materializedInputs" : [ ],
+          "operations" : [ {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "ENSURE_SHEET"
+          }, {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "DRAWINGS" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "SET_SIGNATURE_LINE"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_DRAWING_OBJECTS"
+          }, {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "DRAWINGS" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "SET_DRAWING_OBJECT_ANCHOR"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_DRAWING_OBJECTS"
+          } ]
+        },
+        "computational" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "presentational" : {
+          "status" : "NOT_ASSESSED"
+        },
+        "preservation" : [ {
+          "status" : "NOT_REQUESTED"
+        } ],
+        "structural" : {
+          "status" : "ESTABLISHED"
+        },
+        "taskSpecific" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "inspections" : [ {
+        "drawingObjects" : [ {
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 1,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 4,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 6
+            },
+            "type" : "TWO_CELL"
+          },
+          "name" : "BudgetSignature",
+          "preview" : {
+            "byteSize" : "<signature-preview-byteSize-0>",
+            "contentType" : "image/png",
+            "format" : "PNG",
+            "heightPixels" : 150,
+            "sha256" : "<signature-preview-sha256-0>",
+            "widthPixels" : 400
+          },
+          "setup" : {
+            "allowComments" : false,
+            "setupId" : "<setupId-0>",
+            "signingInstructions" : "Review the budget before signing.",
+            "suggestedSigner" : "Ada Lovelace",
+            "suggestedSigner2" : "Finance",
+            "suggestedSignerEmail" : "ada@example.com"
+          },
+          "type" : "SIGNATURE_LINE"
+        } ],
+        "sheetName" : "Approvals",
+        "stepId" : "step-03-read-drawing-objects",
+        "type" : "GET_DRAWING_OBJECTS"
+      }, {
+        "drawingObjects" : [ {
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 5,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 8,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 6
+            },
+            "type" : "TWO_CELL"
+          },
+          "name" : "BudgetSignature",
+          "preview" : {
+            "byteSize" : "<signature-preview-byteSize-0>",
+            "contentType" : "image/png",
+            "format" : "PNG",
+            "heightPixels" : 150,
+            "sha256" : "<signature-preview-sha256-0>",
+            "widthPixels" : 400
+          },
+          "setup" : {
+            "allowComments" : false,
+            "setupId" : "<setupId-0>",
+            "signingInstructions" : "Review the budget before signing.",
+            "suggestedSigner" : "Ada Lovelace",
+            "suggestedSigner2" : "Finance",
+            "suggestedSignerEmail" : "ada@example.com"
+          },
+          "type" : "SIGNATURE_LINE"
+        } ],
+        "sheetName" : "Approvals",
+        "stepId" : "step-05-read-drawing-objects-after-move",
+        "type" : "GET_DRAWING_OBJECTS"
+      } ],
+      "journal" : {
+        "calculation" : {
+          "execution" : {
+            "status" : "NOT_REQUESTED"
+          },
+          "preflight" : {
+            "status" : "NOT_REQUESTED"
+          }
+        },
+        "close" : {
+          "status" : "SUCCEEDED"
+        },
+        "inputResolution" : {
+          "status" : "SUCCEEDED"
+        },
+        "level" : "SUMMARY",
+        "open" : {
+          "status" : "SUCCEEDED"
+        },
+        "outcome" : {
+          "completedStepCount" : 5,
+          "durationMillis" : "<durationMillis>",
+          "plannedStepCount" : 5,
+          "status" : "SUCCEEDED"
+        },
+        "persistencePhase" : {
+          "status" : "SUCCEEDED"
+        },
+        "source" : {
+          "type" : "NEW"
+        },
+        "steps" : [ {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "SHEET",
+            "label" : "Sheet Approvals"
+          } ],
+          "stepId" : "step-01-ensure-sheet",
+          "stepIndex" : 0,
+          "stepKind" : "MUTATION",
+          "stepType" : "ENSURE_SHEET"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "SHEET",
+            "label" : "Sheet Approvals"
+          } ],
+          "stepId" : "step-02-set-signature-line",
+          "stepIndex" : 1,
+          "stepKind" : "MUTATION",
+          "stepType" : "SET_SIGNATURE_LINE"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "DRAWING",
+            "label" : "All drawing objects on Approvals"
+          } ],
+          "stepId" : "step-03-read-drawing-objects",
+          "stepIndex" : 2,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_DRAWING_OBJECTS"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "DRAWING",
+            "label" : "Drawing object Approvals!BudgetSignature"
+          } ],
+          "stepId" : "step-04-move-signature-line",
+          "stepIndex" : 3,
+          "stepKind" : "MUTATION",
+          "stepType" : "SET_DRAWING_OBJECT_ANCHOR"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "DRAWING",
+            "label" : "All drawing objects on Approvals"
+          } ],
+          "stepId" : "step-05-read-drawing-objects-after-move",
+          "stepIndex" : 4,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_DRAWING_OBJECTS"
+        } ],
+        "validation" : {
+          "status" : "SUCCEEDED"
+        }
+      },
+      "persistence" : {
+        "publication" : {
+          "byteSize" : "<byteSize>",
+          "durability" : {
+            "type" : "FILE_AND_DIRECTORY_SYNCED"
+          },
+          "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-signature-line.xlsx",
+          "sha256" : "<sha256>",
+          "stagedArtifactVerification" : { },
+          "status" : "PUBLISHED"
+        },
+        "requestedPath" : "generated-workbooks/gridgrind-signature-line.xlsx",
+        "type" : "SAVE_AS"
+      },
+      "planId" : "signature-line-workflow",
+      "protocolVersion" : 1,
+      "status" : "SUCCEEDED",
+      "warnings" : [ ]
+    }
+  },
+  "materializedRequest" : {
+    "persistence" : {
+      "ifExists" : "REPLACE",
+      "path" : "generated-workbooks/gridgrind-signature-line.xlsx",
+      "type" : "SAVE_AS"
+    },
+    "planId" : "signature-line-workflow",
+    "protocolVersion" : 1,
+    "source" : {
+      "type" : "NEW"
+    },
+    "steps" : [ {
+      "action" : {
+        "type" : "ENSURE_SHEET"
+      },
+      "stepId" : "step-01-ensure-sheet",
+      "target" : {
+        "name" : "Approvals",
+        "type" : "SHEET_BY_NAME"
+      }
+    }, {
+      "action" : {
+        "signatureLine" : {
+          "allowComments" : false,
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 1,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 4,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 6
+            },
+            "type" : "TWO_CELL"
+          },
+          "invalidStamp" : "invalid",
+          "name" : "BudgetSignature",
+          "plainSignature" : {
+            "format" : "PNG",
+            "source" : {
+              "base64Data" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC",
+              "type" : "INLINE_BASE64"
+            }
+          },
+          "signingInstructions" : "Review the budget before signing.",
+          "suggestedSigner" : "Ada Lovelace",
+          "suggestedSigner2" : "Finance",
+          "suggestedSignerEmail" : "ada@example.com"
+        },
+        "type" : "SET_SIGNATURE_LINE"
+      },
+      "stepId" : "step-02-set-signature-line",
+      "target" : {
+        "name" : "Approvals",
+        "type" : "SHEET_BY_NAME"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_DRAWING_OBJECTS"
+      },
+      "stepId" : "step-03-read-drawing-objects",
+      "target" : {
+        "sheetName" : "Approvals",
+        "type" : "DRAWING_OBJECT_ALL_ON_SHEET"
+      }
+    }, {
+      "action" : {
+        "anchor" : {
+          "behavior" : "MOVE_AND_RESIZE",
+          "from" : {
+            "columnIndex" : 5,
+            "dx" : 0,
+            "dy" : 0,
+            "rowIndex" : 1
+          },
+          "to" : {
+            "columnIndex" : 8,
+            "dx" : 0,
+            "dy" : 0,
+            "rowIndex" : 6
+          },
+          "type" : "TWO_CELL"
+        },
+        "type" : "SET_DRAWING_OBJECT_ANCHOR"
+      },
+      "stepId" : "step-04-move-signature-line",
+      "target" : {
+        "objectName" : "BudgetSignature",
+        "sheetName" : "Approvals",
+        "type" : "DRAWING_OBJECT_BY_NAME"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_DRAWING_OBJECTS"
+      },
+      "stepId" : "step-05-read-drawing-objects-after-move",
+      "target" : {
+        "sheetName" : "Approvals",
+        "type" : "DRAWING_OBJECT_ALL_ON_SHEET"
+      }
+    } ]
+  },
+  "print" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "persistence" : {
+        "ifExists" : "REPLACE",
+        "path" : "generated-workbooks/gridgrind-signature-line.xlsx",
+        "type" : "SAVE_AS"
+      },
+      "planId" : "signature-line-workflow",
+      "protocolVersion" : 1,
+      "source" : {
+        "type" : "NEW"
+      },
+      "steps" : [ {
+        "action" : {
+          "type" : "ENSURE_SHEET"
+        },
+        "stepId" : "step-01-ensure-sheet",
+        "target" : {
+          "name" : "Approvals",
+          "type" : "SHEET_BY_NAME"
+        }
+      }, {
+        "action" : {
+          "signatureLine" : {
+            "allowComments" : false,
+            "anchor" : {
+              "behavior" : "MOVE_AND_RESIZE",
+              "from" : {
+                "columnIndex" : 1,
+                "dx" : 0,
+                "dy" : 0,
+                "rowIndex" : 1
+              },
+              "to" : {
+                "columnIndex" : 4,
+                "dx" : 0,
+                "dy" : 0,
+                "rowIndex" : 6
+              },
+              "type" : "TWO_CELL"
+            },
+            "invalidStamp" : "invalid",
+            "name" : "BudgetSignature",
+            "plainSignature" : {
+              "format" : "PNG",
+              "source" : {
+                "base64Data" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC",
+                "type" : "INLINE_BASE64"
+              }
+            },
+            "signingInstructions" : "Review the budget before signing.",
+            "suggestedSigner" : "Ada Lovelace",
+            "suggestedSigner2" : "Finance",
+            "suggestedSignerEmail" : "ada@example.com"
+          },
+          "type" : "SET_SIGNATURE_LINE"
+        },
+        "stepId" : "step-02-set-signature-line",
+        "target" : {
+          "name" : "Approvals",
+          "type" : "SHEET_BY_NAME"
+        }
+      }, {
+        "query" : {
+          "type" : "GET_DRAWING_OBJECTS"
+        },
+        "stepId" : "step-03-read-drawing-objects",
+        "target" : {
+          "sheetName" : "Approvals",
+          "type" : "DRAWING_OBJECT_ALL_ON_SHEET"
+        }
+      }, {
+        "action" : {
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 5,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 8,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 6
+            },
+            "type" : "TWO_CELL"
+          },
+          "type" : "SET_DRAWING_OBJECT_ANCHOR"
+        },
+        "stepId" : "step-04-move-signature-line",
+        "target" : {
+          "objectName" : "BudgetSignature",
+          "sheetName" : "Approvals",
+          "type" : "DRAWING_OBJECT_BY_NAME"
+        }
+      }, {
+        "query" : {
+          "type" : "GET_DRAWING_OBJECTS"
+        },
+        "stepId" : "step-05-read-drawing-objects-after-move",
+        "target" : {
+          "sheetName" : "Approvals",
+          "type" : "DRAWING_OBJECT_ALL_ON_SHEET"
+        }
+      } ]
+    }
+  }
+}

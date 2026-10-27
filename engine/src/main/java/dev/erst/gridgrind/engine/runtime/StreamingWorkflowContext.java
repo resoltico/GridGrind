@@ -1,24 +1,26 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /** Mutable request-scoped evidence collected during one streaming-write workflow. */
 record StreamingWorkflowContext(
-    GridGrindProtocolVersion protocolVersion,
-    WorkbookPlan request,
-    ExecutionModeInput executionMode,
+    ProtocolVersion protocolVersion,
+    ResolvedPlan plan,
+    ExecutionModeSpec executionMode,
     List<RequestWarning> warnings,
     ExecutionJournalRecorder journal,
     WorkbookLocation workbookLocation,
@@ -27,18 +29,19 @@ record StreamingWorkflowContext(
     List<Preservation> preservation,
     List<InspectionResult> inspections) {
   static StreamingWorkflowContext create(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookPlan request,
-      ExecutionModeInput executionMode,
+      ProtocolVersion protocolVersion,
+      ResolvedPlan plan,
+      ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
+    WorkbookPlan request = plan.request();
     WorkbookLocation workbookLocation =
         ExecutionRequestPaths.workbookLocationFor(
             request.source(), request.persistence(), bindings.workingDirectory());
     return new StreamingWorkflowContext(
         protocolVersion,
-        request,
+        plan,
         executionMode,
         warnings,
         journal,
@@ -49,6 +52,10 @@ record StreamingWorkflowContext(
         new ArrayList<>());
   }
 
+  WorkbookPlan request() {
+    return plan.request();
+  }
+
   ExecutionFailure failure(CalculationReport calculation, GridGrindProblemDetail.Problem problem) {
     return failure(calculation, problem, null, null);
   }
@@ -57,7 +64,7 @@ record StreamingWorkflowContext(
       CalculationReport calculation,
       GridGrindProblemDetail.Problem problem,
       int failedStepIndex,
-      String failedStepId) {
+      StepId failedStepId) {
     return failure(calculation, problem, Integer.valueOf(failedStepIndex), failedStepId);
   }
 
@@ -65,9 +72,9 @@ record StreamingWorkflowContext(
       CalculationReport calculation,
       GridGrindProblemDetail.Problem problem,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     return new ExecutionFailure(
-        new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
+        new ExecutionFailure.Context(protocolVersion, journal, request(), calculation),
         new ExecutionFailure.Artifacts(
             warnings, planAssertions, hostAssertions, preservation, inspections),
         new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));

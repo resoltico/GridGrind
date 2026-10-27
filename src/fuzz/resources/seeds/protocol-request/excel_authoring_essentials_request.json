@@ -1,0 +1,263 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "generated-workbooks/gridgrind-excel-authoring-essentials.xlsx",
+    "ifExists": "REPLACE"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Budget"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Label"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Value"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Hosting"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 49.0
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Domain"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 12.0
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Total"
+              }
+            },
+            {
+              "type": "FORMULA",
+              "source": {
+                "type": "INLINE",
+                "text": "SUM(B2:B3)"
+              }
+            }
+          ]
+        ]
+      },
+      "target": {
+        "type": "RANGE_BY_RANGE",
+        "sheetName": "Budget",
+        "range": "A1:B4"
+      }
+    },
+    {
+      "stepId": "step-03-set-hyperlink",
+      "action": {
+        "type": "SET_HYPERLINK",
+        "target": {
+          "type": "URL",
+          "target": "https://example.com/budget-handbook"
+        }
+      },
+      "target": {
+        "type": "CELL_BY_ADDRESS",
+        "sheetName": "Budget",
+        "address": "A1"
+      }
+    },
+    {
+      "stepId": "step-04-set-hyperlink",
+      "action": {
+        "type": "SET_HYPERLINK",
+        "target": {
+          "type": "FILE",
+          "path": "support/budget backup.xlsx"
+        }
+      },
+      "target": {
+        "type": "CELL_BY_ADDRESS",
+        "sheetName": "Budget",
+        "address": "A2"
+      }
+    },
+    {
+      "stepId": "step-05-set-comment",
+      "action": {
+        "type": "SET_COMMENT",
+        "comment": {
+          "text": {
+            "type": "INLINE",
+            "text": "Verified by finance on 2026-03-26."
+          },
+          "author": "GridGrind",
+          "visible": true
+        }
+      },
+      "target": {
+        "type": "CELL_BY_ADDRESS",
+        "sheetName": "Budget",
+        "address": "B4"
+      }
+    },
+    {
+      "stepId": "step-06-set-named-range",
+      "action": {
+        "type": "SET_NAMED_RANGE",
+        "name": "BudgetTotal",
+        "scope": {
+          "type": "WORKBOOK"
+        },
+        "target": {
+          "sheetName": "Budget",
+          "range": "B4"
+        }
+      },
+      "target": {
+        "type": "NAMED_RANGE_WORKBOOK_SCOPE",
+        "name": "BudgetTotal"
+      }
+    },
+    {
+      "stepId": "step-07-set-named-range",
+      "action": {
+        "type": "SET_NAMED_RANGE",
+        "name": "BudgetTable",
+        "scope": {
+          "type": "SHEET",
+          "sheetName": "Budget"
+        },
+        "target": {
+          "sheetName": "Budget",
+          "range": "A1:B4"
+        }
+      },
+      "target": {
+        "type": "NAMED_RANGE_SHEET_SCOPE",
+        "name": "BudgetTable",
+        "sheetName": "Budget"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "cells",
+      "target": {
+        "type": "CELL_BY_ADDRESSES",
+        "sheetName": "Budget",
+        "addresses": [
+          "A1",
+          "A2",
+          "B4"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WINDOW"
+      },
+      "stepId": "window",
+      "target": {
+        "type": "RANGE_RECTANGULAR_WINDOW",
+        "sheetName": "Budget",
+        "topLeftAddress": "A1",
+        "rowCount": 4,
+        "columnCount": 2
+      }
+    },
+    {
+      "query": {
+        "type": "GET_HYPERLINKS"
+      },
+      "stepId": "hyperlinks",
+      "target": {
+        "type": "CELL_BY_ADDRESSES",
+        "sheetName": "Budget",
+        "addresses": [
+          "A1",
+          "A2",
+          "B4"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_COMMENTS"
+      },
+      "stepId": "comments",
+      "target": {
+        "type": "CELL_BY_ADDRESSES",
+        "sheetName": "Budget",
+        "addresses": [
+          "A1",
+          "B4"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_NAMED_RANGES"
+      },
+      "stepId": "named-ranges",
+      "target": {
+        "type": "NAMED_RANGE_ALL"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_NAMED_RANGE_SURFACE"
+      },
+      "stepId": "named-range-surface",
+      "target": {
+        "type": "NAMED_RANGE_ALL"
+      }
+    }
+  ],
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "EVALUATE_ALL"
+      }
+    }
+  }
+}

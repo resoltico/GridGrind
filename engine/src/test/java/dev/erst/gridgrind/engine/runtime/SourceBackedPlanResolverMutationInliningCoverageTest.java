@@ -1,0 +1,393 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+
+/** Source-backed resolver mutation-family inlining coverage. */
+class SourceBackedPlanResolverMutationInliningCoverageTest
+    extends SourceBackedPlanResolverTestSupport {
+  @Test
+  void resolveCoversRemainingMutationFamiliesAndPreservesNonMutationSteps() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-phase7-");
+    Files.writeString(
+        workingDirectory.resolve("comment.txt"), "Ada Lovelace", StandardCharsets.UTF_8);
+    Files.writeString(workingDirectory.resolve("run1.txt"), "Ada", StandardCharsets.UTF_8);
+    Files.writeString(workingDirectory.resolve("run2.txt"), " Lovelace", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("picture-description.txt"),
+        "Queue preview",
+        StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("chart-title.txt"), "Quarterly Trend", StandardCharsets.UTF_8);
+    Files.writeString(workingDirectory.resolve("shape.txt"), "Queue shape", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("prompt-title.txt"), "Choose", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("prompt-text.txt"), "Pick one value", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("error-title.txt"), "Invalid", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("error-text.txt"), "Try again", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("table-comment.txt"),
+        "Quarterly budget table",
+        StandardCharsets.UTF_8);
+    Files.writeString(workingDirectory.resolve("header-left.txt"), "Left", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("header-center.txt"), "Center", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("header-right.txt"), "Right", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("formula.txt"), "SUM(B2:B3)", StandardCharsets.UTF_8);
+    Files.write(
+        workingDirectory.resolve("payload.bin"), "payload".getBytes(StandardCharsets.UTF_8));
+    Files.write(workingDirectory.resolve("preview.bin"), pngBytes());
+
+    AssertionStep assertion =
+        new AssertionStep(
+            new StepId("assert-budget"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.Text("Quarterly Budget")));
+    InspectionStep inspection =
+        new InspectionStep(
+            new StepId("inspect-budget"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+            new SheetIntrospectionQuery.GetCells());
+
+    WorkbookPlan plan =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
+            List.of(
+                new MutationStep(
+                    new StepId("step-01-set-comment"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetComment(
+                        new CommentSpec(
+                            TextSourceSpec.utf8File("comment.txt"),
+                            "Ada",
+                            false,
+                            java.util.Optional.of(
+                                List.of(
+                                    new RichTextRunSpec(
+                                        TextSourceSpec.utf8File("run1.txt"),
+                                        java.util.Optional.empty()),
+                                    new RichTextRunSpec(
+                                        TextSourceSpec.utf8File("run2.txt"),
+                                        java.util.Optional.empty()))),
+                            java.util.Optional.empty()))),
+                new MutationStep(
+                    new StepId("step-02-set-picture"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetPicture(
+                        picture(
+                            "Logo",
+                            new PictureDataSpec(
+                                ExcelPictureFormat.PNG, BinarySourceSpec.file("preview.bin")),
+                            twoCellAnchor(),
+                            TextSourceSpec.utf8File("picture-description.txt")))),
+                new MutationStep(
+                    new StepId("step-03-set-bar-chart"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetChart(
+                        chartInput(
+                            "Bar",
+                            twoCellAnchor(),
+                            new ChartTitleSpec.Text(TextSourceSpec.utf8File("chart-title.txt")),
+                            null,
+                            ExcelChartDisplayBlanksAs.GAP,
+                            true,
+                            new ChartPlotSpec.Bar(
+                                false,
+                                dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection.COLUMN,
+                                dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
+                                Optional.empty(),
+                                Optional.empty(),
+                                List.of(chartSeries()))))),
+                new MutationStep(
+                    new StepId("step-04-set-line-chart"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetChart(
+                        chartInput(
+                            "Line",
+                            twoCellAnchor(),
+                            new ChartTitleSpec.Formula("Budget!$A$1"),
+                            null,
+                            ExcelChartDisplayBlanksAs.ZERO,
+                            true,
+                            new ChartPlotSpec.Line(
+                                false,
+                                dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping.STANDARD,
+                                List.of(chartSeries()))))),
+                new MutationStep(
+                    new StepId("step-05-set-pie-chart"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetChart(
+                        chartInput(
+                            "Pie",
+                            twoCellAnchor(),
+                            new ChartTitleSpec.None(),
+                            null,
+                            ExcelChartDisplayBlanksAs.GAP,
+                            true,
+                            new ChartPlotSpec.Pie(false, Optional.of(0), List.of(chartSeries()))))),
+                new MutationStep(
+                    new StepId("step-06-set-shape"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetShape(
+                        simpleShape(
+                            "Shape",
+                            twoCellAnchor(),
+                            "roundRect",
+                            TextSourceSpec.utf8File("shape.txt")))),
+                new MutationStep(
+                    new StepId("step-07-set-embedded"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetEmbeddedObject(
+                        new EmbeddedObjectSpec(
+                            "Payload",
+                            "Payload",
+                            "payload.bin",
+                            "open",
+                            BinarySourceSpec.file("payload.bin"),
+                            new PictureDataSpec(
+                                ExcelPictureFormat.PNG, BinarySourceSpec.file("preview.bin")),
+                            twoCellAnchor()))),
+                new MutationStep(
+                    new StepId("step-08-set-validation"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
+                    new StructuredMutationAction.SetDataValidation(
+                        dataValidation(
+                            new DataValidationRuleSpec.WholeNumber(
+                                ExcelComparisonOperator.BETWEEN, "1", java.util.Optional.of("10")),
+                            false,
+                            false,
+                            new DataValidationPromptSpec(
+                                TextSourceSpec.utf8File("prompt-title.txt"),
+                                TextSourceSpec.utf8File("prompt-text.txt"),
+                                false),
+                            new DataValidationErrorAlertSpec(
+                                ExcelDataValidationErrorStyle.STOP,
+                                TextSourceSpec.utf8File("error-title.txt"),
+                                TextSourceSpec.utf8File("error-text.txt"),
+                                false)))),
+                new MutationStep(
+                    new StepId("step-09-set-table"),
+                    new dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet(
+                        new TableName("BudgetTable"), new SheetName("Budget")),
+                    new StructuredMutationAction.SetTable(
+                        new TableSpec(
+                            new TableName("BudgetTable"),
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                            new RangeRef("A1:B2"),
+                            false,
+                            true,
+                            new TableStyleSpec.Named(
+                                "TableStyleMedium2", false, false, true, false),
+                            TextSourceSpec.utf8File("table-comment.txt"),
+                            false,
+                            false,
+                            false,
+                            "",
+                            "",
+                            "",
+                            List.of()))),
+                new MutationStep(
+                    new StepId("step-10-append-row"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new CellMutationAction.AppendRow(
+                        new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
+                            List.of(
+                                new CellValueSpec.Text(TextSourceSpec.utf8File("chart-title.txt")),
+                                new CellValueSpec.RichText(
+                                    List.of(
+                                        new RichTextRunSpec(
+                                            TextSourceSpec.utf8File("run1.txt"),
+                                            java.util.Optional.empty()),
+                                        new RichTextRunSpec(
+                                            TextSourceSpec.utf8File("run2.txt"),
+                                            java.util.Optional.empty()))),
+                                new CellValueSpec.Formula(
+                                    TextSourceSpec.utf8File("formula.txt")))))),
+                new MutationStep(
+                    new StepId("step-11-print-layout"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new WorkbookMutationAction.SetPrintLayout(
+                        printLayoutWithHeader(
+                            new HeaderFooterTextSpec(
+                                TextSourceSpec.utf8File("header-left.txt"),
+                                TextSourceSpec.utf8File("header-center.txt"),
+                                TextSourceSpec.utf8File("header-right.txt"))))),
+                assertion,
+                inspection));
+
+    WorkbookPlan resolved =
+        SourceBackedPlanResolver.resolve(
+            plan,
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory, plan, "stdin-text".getBytes(StandardCharsets.UTF_8)));
+
+    CellMutationAction.SetComment commentAction =
+        assertInstanceOf(
+            CellMutationAction.SetComment.class, ((MutationStep) resolved.steps().get(0)).action());
+    assertEquals("Ada Lovelace", ((TextSourceSpec.Inline) commentAction.comment().text()).text());
+    assertEquals(
+        "Ada",
+        ((TextSourceSpec.Inline) commentAction.comment().runs().orElseThrow().getFirst().text())
+            .text());
+
+    DrawingMutationAction.SetPicture pictureAction =
+        assertInstanceOf(
+            DrawingMutationAction.SetPicture.class,
+            ((MutationStep) resolved.steps().get(1)).action());
+    assertEquals(
+        Base64.getEncoder().encodeToString(pngBytes()),
+        ((BinarySourceSpec.InlineBase64) pictureAction.picture().image().source()).base64Data());
+    assertEquals(
+        "Queue preview",
+        ((TextSourceSpec.Inline) pictureAction.picture().description().orElseThrow()).text());
+
+    DrawingMutationAction.SetChart barChart =
+        assertInstanceOf(
+            DrawingMutationAction.SetChart.class,
+            ((MutationStep) resolved.steps().get(2)).action());
+    ChartSpec resolvedBarChart = barChart.chart();
+    assertInstanceOf(ChartPlotSpec.Bar.class, resolvedBarChart.plots().getFirst());
+    assertEquals(
+        "Quarterly Trend",
+        ((TextSourceSpec.Inline)
+                assertInstanceOf(ChartTitleSpec.Text.class, resolvedBarChart.title()).source())
+            .text());
+
+    DrawingMutationAction.SetChart lineChart =
+        assertInstanceOf(
+            DrawingMutationAction.SetChart.class,
+            ((MutationStep) resolved.steps().get(3)).action());
+    assertInstanceOf(ChartPlotSpec.Line.class, lineChart.chart().plots().getFirst());
+    assertInstanceOf(ChartTitleSpec.Formula.class, lineChart.chart().title());
+
+    DrawingMutationAction.SetChart pieChart =
+        assertInstanceOf(
+            DrawingMutationAction.SetChart.class,
+            ((MutationStep) resolved.steps().get(4)).action());
+    assertInstanceOf(ChartPlotSpec.Pie.class, pieChart.chart().plots().getFirst());
+    assertInstanceOf(ChartTitleSpec.None.class, pieChart.chart().title());
+
+    DrawingMutationAction.SetShape shapeAction =
+        assertInstanceOf(
+            DrawingMutationAction.SetShape.class,
+            ((MutationStep) resolved.steps().get(5)).action());
+    assertEquals(
+        "Queue shape",
+        ((TextSourceSpec.Inline)
+                assertInstanceOf(ShapeSpec.SimpleShape.class, shapeAction.shape())
+                    .text()
+                    .orElseThrow())
+            .text());
+
+    DrawingMutationAction.SetEmbeddedObject embeddedAction =
+        assertInstanceOf(
+            DrawingMutationAction.SetEmbeddedObject.class,
+            ((MutationStep) resolved.steps().get(6)).action());
+    assertEquals(
+        Base64.getEncoder().encodeToString("payload".getBytes(StandardCharsets.UTF_8)),
+        ((BinarySourceSpec.InlineBase64) embeddedAction.embeddedObject().payload()).base64Data());
+
+    StructuredMutationAction.SetDataValidation validationAction =
+        assertInstanceOf(
+            StructuredMutationAction.SetDataValidation.class,
+            ((MutationStep) resolved.steps().get(7)).action());
+    assertEquals(
+        "Choose",
+        ((TextSourceSpec.Inline) validationAction.validation().prompt().orElseThrow().title())
+            .text());
+    assertEquals(
+        "Try again",
+        ((TextSourceSpec.Inline) validationAction.validation().errorAlert().orElseThrow().text())
+            .text());
+
+    StructuredMutationAction.SetTable tableAction =
+        assertInstanceOf(
+            StructuredMutationAction.SetTable.class,
+            ((MutationStep) resolved.steps().get(8)).action());
+    assertEquals(
+        "Quarterly budget table", ((TextSourceSpec.Inline) tableAction.table().comment()).text());
+
+    CellMutationAction.AppendRow appendRow =
+        assertInstanceOf(
+            CellMutationAction.AppendRow.class, ((MutationStep) resolved.steps().get(9)).action());
+    assertEquals(
+        "SUM(B2:B3)",
+        ((TextSourceSpec.Inline)
+                assertInstanceOf(
+                        CellValueSpec.Formula.class, appendRow.values().toCellInputs().get(2))
+                    .value())
+            .text());
+
+    WorkbookMutationAction.SetPrintLayout printLayout =
+        assertInstanceOf(
+            WorkbookMutationAction.SetPrintLayout.class,
+            ((MutationStep) resolved.steps().get(10)).action());
+    assertEquals(
+        "Left", ((TextSourceSpec.Inline) printLayout.printLayout().header().left()).text());
+    assertEquals(
+        "Center", ((TextSourceSpec.Inline) printLayout.printLayout().header().center()).text());
+    assertEquals(
+        "Right", ((TextSourceSpec.Inline) printLayout.printLayout().header().right()).text());
+
+    assertSame(assertion, resolved.steps().get(11));
+    assertSame(inspection, resolved.steps().get(12));
+  }
+}

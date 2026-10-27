@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.SecretReference;
+import dev.erst.gridgrind.core.source.SecretReference;
 
 /** Resolves one host-authorized secret reference for a single GridGrind execution. */
 @FunctionalInterface

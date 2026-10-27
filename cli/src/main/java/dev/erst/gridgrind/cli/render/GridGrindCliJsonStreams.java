@@ -1,0 +1,46 @@
+package dev.erst.gridgrind.cli.render;
+
+import dev.erst.gridgrind.core.discovery.RecipeCatalog;
+import dev.erst.gridgrind.core.discovery.RecipeKeywordMatchReport;
+import dev.erst.gridgrind.core.discovery.ShippedExampleCatalog;
+import dev.erst.gridgrind.core.discovery.TaskCatalog;
+import dev.erst.gridgrind.core.result.CommandError;
+import java.io.IOException;
+import java.io.InputStream;
+import tools.jackson.databind.JsonNode;
+
+/** Internal stream-oriented helpers for tests that exercise caller-owned stream lifecycles. */
+final class GridGrindCliJsonStreams {
+  private GridGrindCliJsonStreams() {}
+
+  static TaskCatalog readTaskCatalog(InputStream inputStream) throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, TaskCatalog.class);
+  }
+
+  static RecipeCatalog readRecipeCatalog(InputStream inputStream) throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, RecipeCatalog.class);
+  }
+
+  static RecipeKeywordMatchReport readRecipeKeywordMatchReport(InputStream inputStream)
+      throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, RecipeKeywordMatchReport.class);
+  }
+
+  static ShippedExampleCatalog readShippedExampleCatalog(InputStream inputStream)
+      throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, ShippedExampleCatalog.class);
+  }
+
+  static ProtocolCatalogSearchReport readProtocolCatalogSearchReport(InputStream inputStream)
+      throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, ProtocolCatalogSearchReport.class);
+  }
+
+  static CommandError readCommandError(InputStream inputStream) throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, CommandError.class);
+  }
+
+  static JsonNode readTree(byte[] bytes) throws IOException {
+    return GridGrindCliJsonCodecSupport.readTree(bytes);
+  }
+}

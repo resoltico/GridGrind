@@ -1,0 +1,35 @@
+package dev.erst.gridgrind.json.intake;
+
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+/** Parses one UTF-8 request document while retaining every member occurrence and parser fault. */
+final class TolerantRequestJsonParser {
+  private TolerantRequestJsonParser() {}
+
+  static RequestSyntaxParseResult parse(byte[] bytes) {
+    Objects.requireNonNull(bytes, "bytes must not be null");
+    RequestUtf8DecodeResult decoded = RequestUtf8Decoder.decode(bytes);
+    if (!decoded.problems().isEmpty()) {
+      return new RequestSyntaxParseResult(
+          new RequestJsonInvalid(0), decoded.problems(), decoded.warnings());
+    }
+    if (containsOnlyJsonWhitespace(decoded.text())) {
+      return new RequestSyntaxParseResult(
+          new RequestJsonInvalid(0),
+          List.of(
+              new RequestInvalidJson("Invalid JSON payload", Optional.empty(), Optional.of(0L))),
+          decoded.warnings());
+    }
+    RequestSyntaxParseResult parsed = new RequestTolerantSyntaxParser(decoded).parseDocument();
+    return new RequestSyntaxParseResult(parsed.root(), parsed.problems(), decoded.warnings());
+  }
+
+  private static boolean containsOnlyJsonWhitespace(String text) {
+    return text.isEmpty()
+        || text.chars()
+            .allMatch(character -> RequestSyntaxCursor.isJsonWhitespace((char) character));
+  }
+}

@@ -1,0 +1,1701 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.layout.WindowReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.ExecutionJournal;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.XlsxRoundTrip;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+
+/** Workbook workflow integration tests for DefaultGridGrindRequestExecutor. */
+class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
+    extends DefaultGridGrindRequestExecutorTestSupport {
+  @Test
+  void executesAssertionStepsAlongsideMutationsAndInspections() {
+    WorkbookResult.Success success =
+        success(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    executionPolicy(calculateAll()),
+                    null,
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Budget")),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
+                            new CellMutationAction.SetCell(textCell("Owner"))),
+                        mutate(
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("B2")),
+                            new CellMutationAction.SetCell(formulaCell("2+3")))),
+                    assertions(
+                        assertThat(
+                            "assert-owner",
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
+                        assertThat(
+                            "assert-formula",
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("B2")),
+                            new CellAssertion.FormulaText("2+3"))),
+                    inspections(
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses(
+                                new SheetName("Budget"),
+                                List.of(new CellAddress("A1"), new CellAddress("B2"))),
+                            allFacetCellsQuery())))));
+
+    assertEquals(List.of("assert-owner", "assert-formula"), assertionIds(success));
+    assertEquals(List.of("cells"), inspectionIds(success));
+    SheetInspectionResult.CellsResult cells =
+        inspection(success, "cells", SheetInspectionResult.CellsResult.class);
+    assertEquals(
+        "Owner",
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+            .orElseThrow());
+  }
+
+  @Test
+  void surfacesStructuredAssertionFailuresWithObservedFacts() {
+    WorkbookResult.Failure failure =
+        failure(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Budget")),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
+                            new CellMutationAction.SetCell(textCell("Owner")))),
+                    assertions(
+                        assertThat(
+                            "assert-owner",
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Wrong")))),
+                    inspections())));
+
+    assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
+    assertEquals("EXECUTE_STEP", failure.problem().context().type());
+    assertEquals("assert-owner", failedAssertion(failure).stepId().value());
+    assertEquals("EXPECT_CELL_VALUE", failedAssertion(failure).assertionType());
+    assertEquals(1, failedAssertion(failure).observations().size());
+    assertInstanceOf(
+        SheetInspectionResult.CellsResult.class,
+        failedAssertion(failure).observations().getFirst());
+  }
+
+  @Test
+  void successResponsesCarryStructuredExecutionJournal() {
+    WorkbookResult.Success success =
+        success(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                WorkbookPlan.identified(
+                    ProtocolVersion.CURRENT,
+                    new PlanId("ledger-audit"),
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionPolicySpec.journal(
+                        new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE)),
+                    FormulaEnvironmentSpec.empty(),
+                    steps(
+                        List.of(
+                            mutate(
+                                new SheetSelector.ByName(new SheetName("Ledger")),
+                                new WorkbookMutationAction.EnsureSheet())),
+                        List.of(
+                            inspect(
+                                "summary",
+                                new WorkbookSelector.Current(),
+                                new WorkbookIntrospectionQuery.GetWorkbookSummary()))))));
+
+    assertEquals("ledger-audit", success.planId().orElseThrow().value());
+    assertEquals(ExecutionJournalLevel.VERBOSE, success.journal().level());
+    assertEquals(2, success.journal().steps().size());
+    assertEquals("ENSURE_SHEET", success.journal().steps().getFirst().stepType());
+    assertEquals(
+        ExecutionJournal.StepOutcome.SUCCEEDED, success.journal().steps().getFirst().outcome());
+    assertEquals(
+        "Sheet Ledger", success.journal().steps().getFirst().resolvedTargets().getFirst().label());
+    assertEquals(ExecutionJournal.Status.SUCCEEDED, success.journal().outcome().status());
+  }
+
+  @Test
+  void failedResponsesCarryStepFailureClassificationInExecutionJournal() {
+    WorkbookResult.Failure failure =
+        failure(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                WorkbookPlan.identified(
+                    ProtocolVersion.CURRENT,
+                    new PlanId("bad-open"),
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionPolicySpec.journal(
+                        new ExecutionJournalSpec(ExecutionJournalLevel.NORMAL)),
+                    FormulaEnvironmentSpec.empty(),
+                    List.of(
+                        new InspectionStep(
+                            new StepId("missing-sheet"),
+                            new SheetSelector.ByName(new SheetName("Missing")),
+                            new SheetIntrospectionQuery.GetSheetSummary())))));
+
+    assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
+    assertEquals(ExecutionJournal.Status.FAILED, outcome.status());
+    assertEquals(0, outcome.failedStep().orElseThrow().failedStepIndex());
+    assertEquals("missing-sheet", outcome.failedStep().orElseThrow().failedStepId().value());
+    assertEquals(
+        GridGrindProblemCode.SHEET_NOT_FOUND,
+        failure.journal().steps().getFirst().failure().orElseThrow().code());
+    assertEquals(
+        ExecutionJournal.StepOutcome.FAILED, failure.journal().steps().getFirst().outcome());
+  }
+
+  @Test
+  void executesWorkbookWorkflowAndReturnsOrderedReadResults() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-agent-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                executionPolicy(calculateAllAndMarkRecalculateOnOpen()),
+                null,
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new CellMutationAction.AppendRow(
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
+                                List.of(
+                                    textCell("Item"), textCell("Amount"), textCell("Billable"))))),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new CellMutationAction.AppendRow(
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
+                                List.of(
+                                    textCell("Hosting"),
+                                    new CellValueSpec.NumberValue(49.0),
+                                    new CellValueSpec.BooleanValue(true))))),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new CellMutationAction.AppendRow(
+                            new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
+                                List.of(
+                                    textCell("Domain"),
+                                    new CellValueSpec.NumberValue(12.0),
+                                    new CellValueSpec.BooleanValue(false))))),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A4")),
+                        new CellMutationAction.SetCell(textCell("Total"))),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
+                        new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.AutoSizeColumns())),
+                inspect(
+                    "workbook",
+                    new WorkbookSelector.Current(),
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary()),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"),
+                        List.of(
+                            new CellAddress("A1"), new CellAddress("B4"), new CellAddress("C2"))),
+                    allFacetCellsQuery()),
+                inspect(
+                    "window",
+                    new RangeSelector.RectangularWindow(
+                        new SheetName("Budget"), new CellAddress("A1"), 4, 3),
+                    new SheetIntrospectionQuery.GetWindow())));
+
+    WorkbookResult.Success success = success(response);
+    WorkbookSummary workbook =
+        read(success, "workbook", WorkbookInspectionResult.WorkbookSummaryResult.class).workbook();
+    SheetInspectionResult.CellsResult cells =
+        read(success, "cells", SheetInspectionResult.CellsResult.class);
+    WindowReport window =
+        read(success, "window", SheetInspectionResult.WindowResult.class).window();
+
+    assertEquals(ProtocolVersion.CURRENT, success.protocolVersion());
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertTrue(Files.exists(workbookPath));
+    assertEquals(
+        List.of(dev.erst.gridgrind.core.problem.GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH),
+        success.warnings().stream().map(RequestWarning::code).toList());
+    assertEquals(List.of("workbook", "cells", "window"), stepIds(success));
+    assertEquals(1, workbook.sheetCount());
+    assertEquals(
+        List.of("Budget"),
+        workbook.sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
+    assertEquals(0, workbook.namedRangeCount());
+    assertTrue(workbook.forceFormulaRecalculationOnOpen());
+
+    assertEquals("Budget", cells.sheetName().value());
+    assertEquals(
+        "Item",
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+            .orElseThrow());
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaCell =
+        cast(
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
+            cells.cells().get(1));
+    assertEquals("SUM(B2:B3)", formulaText(formulaCell));
+    assertEquals(
+        61.0, assertInstanceOf(CellValue.NumberValue.class, evaluation(formulaCell)).value());
+    assertTrue(
+        cast(
+                dev.erst.gridgrind.core.model.value.CellReport.BooleanReport.class,
+                cells.cells().get(2))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.BooleanValue::value)
+            .orElseThrow());
+
+    assertEquals("Budget", window.sheetName().value());
+    assertEquals("A1", window.topLeftAddress().value());
+    assertEquals(4, window.dimensions().rowCount());
+    assertEquals("A1", windowCells(window).getFirst().address().value());
+  }
+
+  @Test
+  void executesDrawingWorkflowAndReturnsDrawingReadResults() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-drawing-request-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    DrawingAnchorSpec.TwoCell firstAnchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(1, 1, 0, 0),
+            new DrawingMarkerSpec(4, 6, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    DrawingAnchorSpec.TwoCell movedAnchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(6, 2, 0, 0),
+            new DrawingMarkerSpec(9, 7, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    PictureDataSpec pictureData =
+        new PictureDataSpec(
+            ExcelPictureFormat.PNG,
+            binary(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"));
+
+    WorkbookResult.Success success =
+        success(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Ops")),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Ops")),
+                            new DrawingMutationAction.SetPicture(
+                                picture("OpsPicture", pictureData, firstAnchor, null))),
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Ops")),
+                            new DrawingMutationAction.SetShape(
+                                simpleShape("OpsShape", firstAnchor, "rect", text("Queue")))),
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Ops")),
+                            new DrawingMutationAction.SetEmbeddedObject(
+                                new EmbeddedObjectSpec(
+                                    "OpsEmbed",
+                                    "Payload",
+                                    "payload.txt",
+                                    "payload.txt",
+                                    binary("cGF5bG9hZA=="),
+                                    pictureData,
+                                    firstAnchor))),
+                        mutate(
+                            new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsPicture"),
+                            new DrawingMutationAction.SetDrawingObjectAnchor(movedAnchor)),
+                        mutate(
+                            new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsShape"),
+                            new DrawingMutationAction.DeleteDrawingObject())),
+                    inspect(
+                        "drawing",
+                        new DrawingObjectSelector.AllOnSheet(new SheetName("Ops")),
+                        new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
+                    inspect(
+                        "payload",
+                        new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsEmbed"),
+                        new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()))));
+
+    WorkbookAssetInspectionResult.DrawingObjectsResult drawingObjects =
+        read(success, "drawing", WorkbookAssetInspectionResult.DrawingObjectsResult.class);
+    WorkbookAssetInspectionResult.DrawingObjectPayloadResult payload =
+        read(success, "payload", WorkbookAssetInspectionResult.DrawingObjectPayloadResult.class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertTrue(Files.exists(workbookPath));
+    assertEquals(2, drawingObjects.drawingObjects().size());
+    assertEquals(
+        List.of("OpsPicture", "OpsEmbed"),
+        drawingObjects.drawingObjects().stream().map(DrawingObjectReport::name).toList());
+    assertEquals(
+        ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE,
+        assertInstanceOf(
+                DrawingAnchorReport.TwoCell.class,
+                drawingObjects.drawingObjects().getFirst().anchor())
+            .behavior());
+    assertEquals("cGF5bG9hZA==", payload.payload().base64Data());
+  }
+
+  @Test
+  void executesRichTextCellWorkflowAndReportsStructuredRuns() {
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
+                        new CellMutationAction.ApplyStyle(
+                            styleInput(
+                                null,
+                                null,
+                                fontInput(
+                                    null,
+                                    Boolean.TRUE,
+                                    "Aptos",
+                                    new FontHeightSpec.Twips(260),
+                                    ColorSpec.rgb(new RgbHex("#112233")),
+                                    null,
+                                    null),
+                                null,
+                                null,
+                                null))),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                        new CellMutationAction.SetCell(budgetRichTextCell()))),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"), List.of(new CellAddress("A1"))),
+                    allFacetCellsQuery())));
+
+    WorkbookResult.Success success = success(response);
+    SheetInspectionResult.CellsResult cells =
+        read(success, "cells", SheetInspectionResult.CellsResult.class);
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport cell =
+        cast(
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
+            cells.cells().getFirst());
+
+    assertEquals("Budget FY26", textValue(cell));
+    assertEquals(2, runs(cell).size());
+    assertEquals("Budget", runs(cell).get(0).text());
+    assertEquals("Aptos", runs(cell).get(0).font().fontName());
+    assertEquals(rgb("#112233"), runs(cell).get(0).font().fontColor().orElseThrow());
+    assertTrue(runs(cell).get(0).font().italic());
+    assertFalse(runs(cell).get(0).font().bold());
+    assertEquals(" FY26", runs(cell).get(1).text());
+    assertEquals("Aptos", runs(cell).get(1).font().fontName());
+    assertEquals(rgb("#FF0000"), runs(cell).get(1).font().fontColor().orElseThrow());
+    assertTrue(runs(cell).get(1).font().bold());
+    assertTrue(runs(cell).get(1).font().italic());
+  }
+
+  @Test
+  void surfacesRequestWarningsAlongsideSuccessfulExecution() {
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget Review")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Summary")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new CellSelector.ByAddress(
+                            new SheetName("Budget Review"), new CellAddress("A1")),
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1200.0))),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
+                        new CellMutationAction.SetCell(formulaCell("Budget Review!A1"))))));
+
+    WorkbookResult.Success success = success(response);
+
+    assertEquals(
+        List.of(
+            new RequestWarning(
+                dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                3,
+                new StepId("step-04-set-cell"),
+                "SET_CELL",
+                "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax.")),
+        success.warnings());
+    assertEquals(List.of(), success.inspections());
+  }
+
+  @Test
+  void opensExistingWorkbookAndOverwritesSource() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-existing-", ".xlsx");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Before"));
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
+    }
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.Overwrite(
+                    dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+                mutations(
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                        new CellMutationAction.SetCell(textCell("After"))),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B1")),
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(12.0)))),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"),
+                        List.of(new CellAddress("A1"), new CellAddress("B1"))),
+                    allFacetCellsQuery())));
+
+    WorkbookResult.Success success = success(response);
+    SheetInspectionResult.CellsResult cells =
+        read(success, "cells", SheetInspectionResult.CellsResult.class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(
+        "After",
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+            .orElseThrow());
+    assertEquals(
+        12.0,
+        cast(
+                dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
+                cells.cells().get(1))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
+            .orElseThrow());
+  }
+
+  @Test
+  void returnsStructuralReadResultsAndPersistsWorkbookShape() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-ops-");
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                        new CellMutationAction.SetCell(textCell("Quarterly"))),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
+                        new WorkbookMutationAction.MergeCells()),
+                    mutate(
+                        new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
+                        new WorkbookMutationAction.SetColumnWidth(16.0)),
+                    mutate(
+                        new RowBandSelector.Span(new SheetName("Budget"), 0, 0),
+                        new WorkbookMutationAction.SetRowHeight(28.5)),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 1, 1, 1))),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.SetSheetZoom(125)),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.SetSheetPresentation(
+                            new SheetPresentationSpec(
+                                new SheetDisplaySpec(false, false, false, true, true),
+                                Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
+                                new SheetOutlineSummarySpec(false, false),
+                                new SheetDefaultsSpec(11, 18.5d),
+                                List.of(
+                                    new IgnoredErrorSpec(
+                                        new RangeRef("A1:B2"),
+                                        List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))))),
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.SetPrintLayout(
+                            new PrintLayoutSpec(
+                                new PrintAreaSpec.Range(new RangeRef("A1:B12")),
+                                ExcelPrintOrientation.LANDSCAPE,
+                                new PrintScalingSpec.Fit(1, 0),
+                                new PrintTitleRowsSpec.Band(0, 0),
+                                new PrintTitleColumnsSpec.Band(0, 0),
+                                headerFooter("Budget", "", ""),
+                                headerFooter("", "Page &P", ""),
+                                new PrintSetupSpec(
+                                    PrintSetupSpec.defaults().margins(),
+                                    true,
+                                    false,
+                                    false,
+                                    PrintSetupSpec.defaults().paperSize(),
+                                    false,
+                                    false,
+                                    PrintSetupSpec.defaults().copies(),
+                                    false,
+                                    PrintSetupSpec.defaults().firstPageNumber(),
+                                    List.of(),
+                                    List.of()))))),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"), List.of(new CellAddress("A1"))),
+                    allFacetCellsQuery()),
+                inspect(
+                    "merged",
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new SheetIntrospectionQuery.GetMergedRegions()),
+                inspect(
+                    "layout",
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new SheetIntrospectionQuery.GetSheetLayout()),
+                inspect(
+                    "printLayout",
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new SheetIntrospectionQuery.GetPrintLayout()),
+                inspect(
+                    "workbook",
+                    new WorkbookSelector.Current(),
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary())));
+
+    WorkbookResult.Success success = success(response);
+    SheetInspectionResult.CellsResult cells =
+        read(success, "cells", SheetInspectionResult.CellsResult.class);
+    SheetInspectionResult.MergedRegionsResult merged =
+        read(success, "merged", SheetInspectionResult.MergedRegionsResult.class);
+    SheetLayoutReport layout =
+        read(success, "layout", SheetInspectionResult.SheetLayoutResult.class).layout();
+    PrintLayoutReport printLayout =
+        read(success, "printLayout", SheetInspectionResult.PrintLayoutResult.class).layout();
+    WorkbookSummary workbook =
+        read(success, "workbook", WorkbookInspectionResult.WorkbookSummaryResult.class).workbook();
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(
+        "Quarterly",
+        cast(
+                dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
+                cells.cells().getFirst())
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+            .orElseThrow());
+    assertEquals(
+        List.of("A1:B1"),
+        merged.mergedRegions().stream().map(MergedRegionReport::range).toList().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
+    assertInstanceOf(PaneReport.Frozen.class, layout.pane());
+    PaneReport.Frozen frozen = cast(PaneReport.Frozen.class, layout.pane());
+    assertEquals(1, frozen.splitColumn());
+    assertEquals(1, frozen.splitRow());
+    assertEquals(125, layout.zoomPercent());
+    assertEquals(
+        new SheetDisplayReport(false, false, false, true, true), layout.presentation().display());
+    assertEquals(Optional.of(rgb("#112233")), layout.presentation().tabColor());
+    assertEquals(
+        new SheetOutlineSummaryReport(false, false), layout.presentation().outlineSummary());
+    assertEquals(new SheetDefaultsReport(11, 18.5d), layout.presentation().sheetDefaults());
+    assertEquals(
+        List.of(
+            new IgnoredErrorReport(
+                new RangeLabel("A1:B2"), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+        layout.presentation().ignoredErrors());
+    assertEquals(16.0, layout.columns().getFirst().widthCharacters());
+    assertEquals(28.5, layout.rows().getFirst().heightPoints());
+    assertEquals(ExcelPrintOrientation.LANDSCAPE, printLayout.orientation());
+    assertTrue(printLayout.setup().printGridlines());
+    assertEquals(
+        List.of("Budget"),
+        workbook.sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
+
+    assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
+    assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
+    assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
+    dev.erst.gridgrind.core.model.layout.SheetLayoutReport reopenedLayout =
+        XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.SheetDisplayReport(
+            false, false, false, true, true),
+        reopenedLayout.presentation().display());
+    assertEquals(
+        Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
+        reopenedLayout.presentation().tabColor());
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport(false, false),
+        reopenedLayout.presentation().outlineSummary());
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.SheetDefaultsReport(11, 18.5d),
+        reopenedLayout.presentation().sheetDefaults());
+    assertEquals(
+        List.of(
+            new dev.erst.gridgrind.core.model.validation.IgnoredErrorReport(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
+                List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+        reopenedLayout.presentation().ignoredErrors());
+    assertTrue(XlsxRoundTrip.printLayout(workbookPath, "Budget").setup().printGridlines());
+  }
+
+  @Test
+  void returnsB3SheetLayoutFactsAndPersistsVisibilityGrouping() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-b3-layout-");
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Layout")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Layout"), new RangeRef("A1:F6")),
+                        new CellMutationAction.SetRange(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
+                                List.of(
+                                    List.of(
+                                        textCell("Item"),
+                                        textCell("Qty"),
+                                        textCell("Status"),
+                                        textCell("Note"),
+                                        textCell("Owner"),
+                                        textCell("Flag")),
+                                    List.of(
+                                        textCell("Hosting"),
+                                        new CellValueSpec.NumberValue(42.0),
+                                        textCell("Open"),
+                                        textCell("Alpha"),
+                                        textCell("Ada"),
+                                        textCell("Y")),
+                                    List.of(
+                                        textCell("Support"),
+                                        new CellValueSpec.NumberValue(84.0),
+                                        textCell("Closed"),
+                                        textCell("Beta"),
+                                        textCell("Lin"),
+                                        textCell("N")),
+                                    List.of(
+                                        textCell("Ops"),
+                                        new CellValueSpec.NumberValue(168.0),
+                                        textCell("Open"),
+                                        textCell("Gamma"),
+                                        textCell("Bea"),
+                                        textCell("Y")),
+                                    List.of(
+                                        textCell("QA"),
+                                        new CellValueSpec.NumberValue(21.0),
+                                        textCell("Queued"),
+                                        textCell("Delta"),
+                                        textCell("Kai"),
+                                        textCell("N")),
+                                    List.of(
+                                        textCell("Infra"),
+                                        new CellValueSpec.NumberValue(7.0),
+                                        textCell("Done"),
+                                        textCell("Epsilon"),
+                                        textCell("Mia"),
+                                        textCell("Y")))))),
+                    mutate(
+                        new RowBandSelector.Span(new SheetName("Layout"), 1, 3),
+                        new WorkbookMutationAction.GroupRows(true)),
+                    mutate(
+                        new RowBandSelector.Span(new SheetName("Layout"), 5, 5),
+                        new WorkbookMutationAction.SetRowVisibility(true)),
+                    mutate(
+                        new ColumnBandSelector.Span(new SheetName("Layout"), 1, 3),
+                        new WorkbookMutationAction.GroupColumns(true)),
+                    mutate(
+                        new ColumnBandSelector.Span(new SheetName("Layout"), 5, 5),
+                        new WorkbookMutationAction.SetColumnVisibility(true))),
+                inspect(
+                    "layout",
+                    new SheetSelector.ByName(new SheetName("Layout")),
+                    new SheetIntrospectionQuery.GetSheetLayout())));
+
+    WorkbookResult.Success success = success(response);
+    SheetLayoutReport layout =
+        read(success, "layout", SheetInspectionResult.SheetLayoutResult.class).layout();
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(6, layout.rows().size());
+    assertTrue(layout.rows().get(1).hidden());
+    assertEquals(1, layout.rows().get(1).outlineLevel());
+    assertTrue(layout.rows().get(4).collapsed());
+    assertTrue(layout.rows().get(5).hidden());
+    assertEquals(6, layout.columns().size());
+    assertTrue(layout.columns().get(1).hidden());
+    assertEquals(1, layout.columns().get(1).outlineLevel());
+    assertTrue(layout.columns().get(4).collapsed());
+    assertTrue(layout.columns().get(5).hidden());
+
+    dev.erst.gridgrind.core.model.layout.SheetLayoutReport reopenedLayout =
+        XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
+    assertTrue(reopenedLayout.rows().get(1).hidden());
+    assertEquals(1, reopenedLayout.rows().get(1).outlineLevel());
+    assertTrue(reopenedLayout.rows().get(4).collapsed());
+    assertTrue(reopenedLayout.rows().get(5).hidden());
+    assertTrue(reopenedLayout.columns().get(1).hidden());
+    assertEquals(1, reopenedLayout.columns().get(1).outlineLevel());
+    assertTrue(reopenedLayout.columns().get(4).collapsed());
+    assertTrue(reopenedLayout.columns().get(5).hidden());
+  }
+
+  @Test
+  void returnsFactualMalformedPositiveLayoutValuesWithoutClampingReadback() throws IOException {
+    Path sourceWorkbook = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-factual-source-");
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Layout");
+      workbook.sheet("Layout").cells().setCell("A1", new CellValue.Text("Header"));
+      workbook.sheet("Layout").columns().setWidth(0, 0, 16.0d);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, sourceWorkbook);
+    }
+
+    Path malformedWorkbook =
+        dev.erst.gridgrind.engine.backend.xssf.OoxmlPartMutator.rewriteEntries(
+            sourceWorkbook,
+            Map.of(
+                "xl/worksheets/sheet1.xml",
+                xml ->
+                    xml.replace("<sheetFormatPr defaultRowHeight=\"15.0\"/>", "")
+                        .replace(
+                            "<sheetViews>", "<sheetFormatPr defaultRowHeight=\"999\"/><sheetViews>")
+                        .replace("width=\"16.0\"", "width=\"300.0\"")));
+
+    WorkbookResult.Success success =
+        success(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(malformedWorkbook.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    inspect(
+                        "layout",
+                        new SheetSelector.ByName(new SheetName("Layout")),
+                        new SheetIntrospectionQuery.GetSheetLayout()))));
+
+    SheetLayoutReport layout =
+        read(success, "layout", SheetInspectionResult.SheetLayoutResult.class).layout();
+    assertEquals(999.0d, layout.presentation().sheetDefaults().defaultRowHeightPoints());
+    assertEquals(300.0d, layout.columns().getFirst().widthCharacters());
+    assertEquals(999.0d, layout.rows().getFirst().heightPoints());
+
+    dev.erst.gridgrind.core.model.layout.SheetLayoutReport reopenedLayout =
+        XlsxRoundTrip.sheetLayout(malformedWorkbook, "Layout");
+    assertEquals(999.0d, reopenedLayout.presentation().sheetDefaults().defaultRowHeightPoints());
+    assertEquals(300.0d, reopenedLayout.columns().getFirst().widthCharacters());
+    assertEquals(999.0d, reopenedLayout.rows().getFirst().heightPoints());
+  }
+
+  @Test
+  void executesB3InsertDeleteAndShiftOperationsAndPersistsMovedCells() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-b3-geometry-");
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Moves")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Moves"), new RangeRef("A1:D3")),
+                        new CellMutationAction.SetRange(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
+                                List.of(
+                                    List.of(
+                                        textCell("Item"),
+                                        textCell("Qty"),
+                                        textCell("Status"),
+                                        textCell("Note")),
+                                    List.of(
+                                        textCell("Hosting"),
+                                        new CellValueSpec.NumberValue(42.0),
+                                        textCell("Open"),
+                                        textCell("Alpha")),
+                                    List.of(
+                                        textCell("Support"),
+                                        new CellValueSpec.NumberValue(84.0),
+                                        textCell("Closed"),
+                                        textCell("Beta")))))),
+                    mutate(
+                        new RowBandSelector.Insertion(new SheetName("Moves"), 1, 1),
+                        new WorkbookMutationAction.InsertRows()),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Moves"), new CellAddress("A2")),
+                        new CellMutationAction.SetCell(textCell("Spacer"))),
+                    mutate(
+                        new RowBandSelector.Span(new SheetName("Moves"), 2, 3),
+                        new WorkbookMutationAction.ShiftRows(1)),
+                    mutate(
+                        new RowBandSelector.Span(new SheetName("Moves"), 2, 2),
+                        new WorkbookMutationAction.DeleteRows()),
+                    mutate(
+                        new ColumnBandSelector.Insertion(new SheetName("Moves"), 1, 1),
+                        new WorkbookMutationAction.InsertColumns()),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Moves"), new CellAddress("B1")),
+                        new CellMutationAction.SetCell(textCell("Pad"))),
+                    mutate(
+                        new ColumnBandSelector.Span(new SheetName("Moves"), 2, 4),
+                        new WorkbookMutationAction.ShiftColumns(1)),
+                    mutate(
+                        new ColumnBandSelector.Span(new SheetName("Moves"), 2, 2),
+                        new WorkbookMutationAction.DeleteColumns())),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses(
+                        new SheetName("Moves"),
+                        List.of(
+                            new CellAddress("A2"),
+                            new CellAddress("B1"),
+                            new CellAddress("A3"),
+                            new CellAddress("C3"),
+                            new CellAddress("E4"))),
+                    allFacetCellsQuery())));
+
+    WorkbookResult.Success success = success(response);
+    SheetInspectionResult.CellsResult cells =
+        read(success, "cells", SheetInspectionResult.CellsResult.class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(
+        "Spacer",
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+            .orElseThrow());
+    assertEquals(
+        "Pad",
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(1))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+            .orElseThrow());
+    assertEquals(
+        "Hosting",
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(2))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+            .orElseThrow());
+    assertEquals(
+        42.0,
+        cast(
+                dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
+                cells.cells().get(3))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
+            .orElseThrow());
+    assertEquals(
+        "Beta",
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(4))
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+            .orElseThrow());
+
+    try (XssfWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
+      assertEquals("Spacer", workbook.sheet("Moves").cells().text("A2"));
+      assertEquals("Pad", workbook.sheet("Moves").cells().text("B1"));
+      assertEquals("Hosting", workbook.sheet("Moves").cells().text("A3"));
+      assertEquals(42.0, workbook.sheet("Moves").cells().number("C3"));
+      assertEquals("Beta", workbook.sheet("Moves").cells().text("E4"));
+    }
+  }
+
+  @Test
+  void returnsStructuredFailureForRowStructuralEditsThatWouldMoveTables() {
+    WorkbookResult.Failure failure =
+        failure(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Budget")),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new RangeSelector.ByRange(
+                                new SheetName("Budget"), new RangeRef("A1:B3")),
+                            new CellMutationAction.SetRange(
+                                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
+                                    List.of(
+                                        List.of(textCell("Item"), textCell("Qty")),
+                                        List.of(
+                                            textCell("Hosting"),
+                                            new CellValueSpec.NumberValue(42.0)),
+                                        List.of(
+                                            textCell("Support"),
+                                            new CellValueSpec.NumberValue(84.0)))))),
+                        mutate(
+                            new StructuredMutationAction.SetTable(
+                                TableSpec.withDefaultMetadata(
+                                    new TableName("BudgetTable"),
+                                    new SheetName("Budget"),
+                                    new RangeRef("A1:B3"),
+                                    false,
+                                    new TableStyleSpec.None()))),
+                        mutate(
+                            new RowBandSelector.Insertion(new SheetName("Budget"), 1, 1),
+                            new WorkbookMutationAction.InsertRows())))));
+
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertTrue(failure.problem().message().contains("table 'BudgetTable'"));
+    assertTrue(failure.problem().message().contains("row structural edits"));
+  }
+
+  @Test
+  void returnsStructuredFailureForColumnStructuralEditsWhenWorkbookHasFormulas() {
+    WorkbookResult.Failure failure =
+        failure(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName(new SheetName("Budget")),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
+                            new CellMutationAction.SetCell(textCell("Item"))),
+                        mutate(
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("B2")),
+                            new CellMutationAction.SetCell(formulaCell("SUM(1, 1)"))),
+                        mutate(
+                            new ColumnBandSelector.Insertion(new SheetName("Budget"), 1, 1),
+                            new WorkbookMutationAction.InsertColumns())))));
+
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertTrue(failure.problem().message().contains("Column insert, delete, and shift operations"));
+  }
+
+  @Test
+  void returnsAuthoringMetadataAndNamedRangeReadResults() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-authoring-ops-");
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                        new CellMutationAction.SetCell(textCell("Report"))),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
+                        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(61.0))),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                        new CellMutationAction.SetHyperlink(
+                            new HyperlinkTarget.Url("https://example.com/report"))),
+                    mutate(
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                        new CellMutationAction.SetComment(
+                            CommentSpec.plain(text("Review"), "GridGrind", true))),
+                    ExecutorStructuredMutationTargets.namedRange(
+                        new StructuredMutationAction.SetNamedRange(
+                            new DefinedName("BudgetTotal"),
+                            new NamedRangeScope.Workbook(),
+                            NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))),
+                    ExecutorStructuredMutationTargets.namedRange(
+                        new StructuredMutationAction.SetNamedRange(
+                            new DefinedName("LocalItem"),
+                            new NamedRangeScope.Sheet(new SheetName("Budget")),
+                            NamedRangeTarget.range(
+                                new SheetName("Budget"), new RangeRef("A1:B2"))))),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"),
+                        List.of(new CellAddress("A1"), new CellAddress("B4"))),
+                    allFacetCellsQuery()),
+                inspect(
+                    "hyperlinks",
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"), List.of(new CellAddress("A1"))),
+                    new SheetIntrospectionQuery.GetHyperlinks()),
+                inspect(
+                    "comments",
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"), List.of(new CellAddress("A1"))),
+                    new SheetIntrospectionQuery.GetComments()),
+                inspect(
+                    "ranges",
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
+                    new WorkbookIntrospectionQuery.GetNamedRanges())));
+
+    WorkbookResult.Success success = success(response);
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport linkedCell =
+        cast(
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
+            read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst());
+    SheetInspectionResult.HyperlinksResult hyperlinks =
+        read(success, "hyperlinks", SheetInspectionResult.HyperlinksResult.class);
+    SheetInspectionResult.CommentsResult comments =
+        read(success, "comments", SheetInspectionResult.CommentsResult.class);
+    WorkbookInspectionResult.NamedRangesResult ranges =
+        read(success, "ranges", WorkbookInspectionResult.NamedRangesResult.class);
+
+    assertEquals(
+        java.util.Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
+        linkedCell.hyperlink());
+    assertEquals("Review", linkedCell.comment().orElseThrow().text());
+    assertEquals("A1", hyperlinks.hyperlinks().getFirst().address().value());
+    assertEquals(
+        new HyperlinkTarget.Url("https://example.com/report"),
+        hyperlinks.hyperlinks().getFirst().hyperlink());
+    assertEquals("A1", comments.comments().getFirst().address().value());
+    assertEquals("Review", comments.comments().getFirst().comment().text());
+    assertEquals(2, ranges.namedRanges().size());
+    assertTrue(
+        ranges
+            .namedRanges()
+            .contains(
+                new NamedRangeReport.RangeReport(
+                    new DefinedNameLabel("BudgetTotal"),
+                    new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
+                    ranges.namedRanges().stream()
+                        .filter(namedRange -> "BudgetTotal".equals(namedRange.name().value()))
+                        .findFirst()
+                        .orElseThrow()
+                        .refersToFormula(),
+                    NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
+    assertTrue(
+        ranges
+            .namedRanges()
+            .contains(
+                new NamedRangeReport.RangeReport(
+                    new DefinedNameLabel("LocalItem"),
+                    new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Sheet(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
+                    ranges.namedRanges().stream()
+                        .filter(namedRange -> "LocalItem".equals(namedRange.name().value()))
+                        .findFirst()
+                        .orElseThrow()
+                        .refersToFormula(),
+                    NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1:B2")))));
+
+    assertEquals(
+        new HyperlinkTarget.Url("https://example.com/report"),
+        XlsxRoundTrip.cellHyperlink(workbookPath, "Budget", "A1").orElseThrow());
+    assertAll(
+        () ->
+            assertEquals(
+                "Review",
+                XlsxRoundTrip.cellComment(workbookPath, "Budget", "A1").orElseThrow().text()),
+        () ->
+            assertEquals(
+                "GridGrind",
+                XlsxRoundTrip.cellComment(workbookPath, "Budget", "A1").orElseThrow().author()),
+        () ->
+            assertTrue(
+                XlsxRoundTrip.cellComment(workbookPath, "Budget", "A1").orElseThrow().visible()));
+    assertEquals(2, XlsxRoundTrip.namedRanges(workbookPath).size());
+  }
+
+  @Test
+  void returnsDataValidationReadResultsAndPersistsNormalizedRules() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-data-validation-ops-");
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2:C5")),
+                        new StructuredMutationAction.SetDataValidation(
+                            dataValidation(
+                                new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
+                                true,
+                                false,
+                                prompt("Status", "Pick one workflow state.", true),
+                                errorAlert(
+                                    ExcelDataValidationErrorStyle.STOP,
+                                    "Invalid status",
+                                    "Use one of the allowed values.",
+                                    true)))),
+                    mutate(
+                        new RangeSelector.ByRanges(
+                            new SheetName("Budget"), List.of(new RangeRef("B3"))),
+                        new StructuredMutationAction.ClearDataValidations()),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("E2:E5")),
+                        new StructuredMutationAction.SetDataValidation(
+                            dataValidation(
+                                new DataValidationRuleSpec.FormulaList("#REF!"),
+                                false,
+                                false,
+                                null,
+                                null)))),
+                inspect(
+                    "validations",
+                    new RangeSelector.AllOnSheet(new SheetName("Budget")),
+                    new SheetIntrospectionQuery.GetDataValidations()),
+                inspect(
+                    "health",
+                    new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
+                    new InspectionAnalysisQuery.AnalyzeDataValidationHealth())));
+
+    WorkbookResult.Success success = success(response);
+    SheetInspectionResult.DataValidationsResult validations =
+        read(success, "validations", SheetInspectionResult.DataValidationsResult.class);
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult health =
+        read(
+            success,
+            "health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult.class);
+    List<DataValidationEntryReport> persisted =
+        XlsxRoundTrip.dataValidations(workbookPath, "Budget");
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(2, validations.validations().size());
+    DataValidationEntryReport.Supported explicitList =
+        assertInstanceOf(
+            DataValidationEntryReport.Supported.class, validations.validations().getFirst());
+    DataValidationEntryReport.Supported brokenFormula =
+        assertInstanceOf(
+            DataValidationEntryReport.Supported.class, validations.validations().get(1));
+    assertEquals(
+        List.of("A2:C2", "A4:C5", "A3", "C3"),
+        explicitList.ranges().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
+    assertInstanceOf(DataValidationRuleSpec.ExplicitList.class, explicitList.validation().rule());
+    assertEquals(
+        List.of("E2:E5"),
+        brokenFormula.ranges().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
+    assertEquals(
+        "#REF!",
+        cast(DataValidationRuleSpec.FormulaList.class, brokenFormula.validation().rule())
+            .formula());
+    assertEquals(2, health.analysis().checkedValidationCount());
+    assertEquals(1, health.analysis().summary().errorCount());
+    assertEquals(
+        AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
+        health.analysis().findings().getFirst().code());
+    assertEquals(2, persisted.size());
+    assertEquals(
+        List.of("A2:C2", "A4:C5", "A3", "C3"),
+        persisted.getFirst().ranges().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+            .toList());
+  }
+
+  @Test
+  void returnsConditionalFormattingReadResultsAndPersistsDefinitions() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-conditional-formatting-");
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B5")),
+                        new CellMutationAction.SetRange(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
+                                List.of(
+                                    List.of(textCell("Status"), textCell("Amount")),
+                                    List.of(textCell("Queued"), new CellValueSpec.NumberValue(1.0)),
+                                    List.of(textCell("Done"), new CellValueSpec.NumberValue(9.0)),
+                                    List.of(textCell("Done"), new CellValueSpec.NumberValue(11.0)),
+                                    List.of(
+                                        textCell("Queued"), new CellValueSpec.NumberValue(4.0)))))),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
+                        new StructuredMutationAction.SetConditionalFormatting(
+                            conditionalFormattingReadbackBlock()))),
+                inspect(
+                    "conditional-formatting",
+                    new RangeSelector.AllOnSheet(new SheetName("Budget")),
+                    new SheetIntrospectionQuery.GetConditionalFormatting()),
+                inspect(
+                    "conditional-formatting-health",
+                    new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
+                    new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth())));
+
+    WorkbookResult.Success success = success(response);
+    SheetInspectionResult.ConditionalFormattingResult conditionalFormatting =
+        read(
+            success,
+            "conditional-formatting",
+            SheetInspectionResult.ConditionalFormattingResult.class);
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult health =
+        read(
+            success,
+            "conditional-formatting-health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
+                .class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(1, conditionalFormatting.conditionalFormattingBlocks().size());
+    ConditionalFormattingEntryReport block =
+        conditionalFormatting.conditionalFormattingBlocks().getFirst();
+    assertEquals(
+        List.of("B2:B5"),
+        block.ranges().stream().map(dev.erst.gridgrind.core.vocabulary.WireString::value).toList());
+    assertEquals(2, block.rules().size());
+    assertInstanceOf(ConditionalFormattingRuleReport.FormulaRule.class, block.rules().get(0));
+    assertInstanceOf(ConditionalFormattingRuleReport.CellValueRule.class, block.rules().get(1));
+    assertEquals(1, health.analysis().checkedConditionalFormattingBlockCount());
+    assertEquals(List.of(), health.analysis().findings());
+
+    try (XssfWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
+      WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult reopened =
+          (dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult)
+              readExecutor
+                  .read(
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("conditional-formatting"),
+                          new dev.erst.gridgrind.core.plan.RangeSelector.AllOnSheet(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetConditionalFormatting()))
+                  .getFirst();
+
+      assertEquals(1, reopened.conditionalFormattingBlocks().size());
+      ConditionalFormattingEntryReport reopenedBlock =
+          reopened.conditionalFormattingBlocks().getFirst();
+      assertEquals(
+          List.of("B2:B5"),
+          reopenedBlock.ranges().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
+      assertEquals(2, reopenedBlock.rules().size());
+      assertEquals(
+          "B2>5",
+          cast(ConditionalFormattingRuleReport.FormulaRule.class, reopenedBlock.rules().get(0))
+              .formula());
+      assertEquals(
+          ExcelComparisonOperator.BETWEEN,
+          cast(ConditionalFormattingRuleReport.CellValueRule.class, reopenedBlock.rules().get(1))
+              .operator());
+    }
+  }
+
+  @Test
+  void returnsAutofilterAndTableReadResultsAndPersistsDefinitions() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-table-autofilter-");
+
+    WorkbookResult response =
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName(new SheetName("Budget")),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:C4")),
+                        new CellMutationAction.SetRange(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
+                                List.of(
+                                    List.of(
+                                        textCell("Item"), textCell("Amount"), textCell("Billable")),
+                                    List.of(
+                                        textCell("Hosting"),
+                                        new CellValueSpec.NumberValue(49.0),
+                                        new CellValueSpec.BooleanValue(true)),
+                                    List.of(
+                                        textCell("Domain"),
+                                        new CellValueSpec.NumberValue(12.0),
+                                        new CellValueSpec.BooleanValue(false)),
+                                    List.of(
+                                        textCell("Support"),
+                                        new CellValueSpec.NumberValue(18.0),
+                                        new CellValueSpec.BooleanValue(true)))))),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("E1:F3")),
+                        new CellMutationAction.SetRange(
+                            new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
+                                List.of(
+                                    List.of(textCell("Queue"), textCell("Owner")),
+                                    List.of(textCell("Late invoices"), textCell("Marta")),
+                                    List.of(textCell("Badge orders"), textCell("Rihards")))))),
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("E1:F3")),
+                        new StructuredMutationAction.SetAutofilter()),
+                    mutate(
+                        new StructuredMutationAction.SetTable(
+                            TableSpec.withDefaultMetadata(
+                                new TableName("BudgetTable"),
+                                new SheetName("Budget"),
+                                new RangeRef("A1:C4"),
+                                false,
+                                new TableStyleSpec.Named(
+                                    "TableStyleMedium2", false, false, true, false))))),
+                inspect(
+                    "filters",
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new SheetIntrospectionQuery.GetAutofilters()),
+                inspect(
+                    "tables",
+                    new TableSelector.All(),
+                    new WorkbookAssetIntrospectionQuery.GetTables()),
+                inspect(
+                    "autofilter-health",
+                    new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
+                    new InspectionAnalysisQuery.AnalyzeAutofilterHealth()),
+                inspect(
+                    "table-health",
+                    new TableSelector.All(),
+                    new InspectionAnalysisQuery.AnalyzeTableHealth())));
+
+    WorkbookResult.Success success = success(response);
+    SheetInspectionResult.AutofiltersResult filters =
+        read(success, "filters", SheetInspectionResult.AutofiltersResult.class);
+    WorkbookAssetInspectionResult.TablesResult tables =
+        read(success, "tables", WorkbookAssetInspectionResult.TablesResult.class);
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult autofilterHealth =
+        read(
+            success,
+            "autofilter-health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult.class);
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult tableHealth =
+        read(
+            success,
+            "table-health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult.class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(
+        List.of(
+            new AutofilterEntryReport.SheetOwned(new RangeLabel("E1:F3")),
+            new AutofilterEntryReport.TableOwned(new RangeLabel("A1:C4"), "BudgetTable")),
+        filters.autofilters());
+    assertEquals(1, tables.tables().size());
+    TableEntryReport table = tables.tables().getFirst();
+    assertEquals("BudgetTable", table.name().value());
+    assertEquals(List.of("Item", "Amount", "Billable"), table.structure().columnNames());
+    assertEquals(
+        new TableStyleReport.Named("TableStyleMedium2", false, false, true, false), table.style());
+    assertTrue(table.behavior().hasAutofilter());
+    assertEquals(2, autofilterHealth.analysis().checkedAutofilterCount());
+    assertEquals(List.of(), autofilterHealth.analysis().findings());
+    assertEquals(1, tableHealth.analysis().checkedTableCount());
+    assertEquals(List.of(), tableHealth.analysis().findings());
+
+    try (XssfWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
+      WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult reopenedFilters =
+          (dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult)
+              readExecutor
+                  .read(
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("filters"),
+                          new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                          new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                              .GetAutofilters()))
+                  .getFirst();
+      dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult reopenedTables =
+          (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
+              readExecutor
+                  .read(
+                      workbook,
+                      new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                          new StepId("tables"),
+                          new TableSelector.All(),
+                          new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                              .GetTables()))
+                  .getFirst();
+
+      assertEquals(
+          List.of(
+              new AutofilterEntryReport.SheetOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("E1:F3")),
+              new AutofilterEntryReport.TableOwned(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:C4"), "BudgetTable")),
+          reopenedFilters.autofilters());
+      assertEquals(
+          List.of(
+              new TableEntryReport(
+                  new dev.erst.gridgrind.core.vocabulary.TableLabel("BudgetTable"),
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:C4"),
+                  new TableEntryReport.Structure(
+                      1,
+                      0,
+                      List.of("Item", "Amount", "Billable"),
+                      List.of(
+                          new dev.erst.gridgrind.core.model.table.TableColumnReport(
+                              1L,
+                              "Item",
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of("")),
+                          new dev.erst.gridgrind.core.model.table.TableColumnReport(
+                              2L,
+                              "Amount",
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of("")),
+                          new dev.erst.gridgrind.core.model.table.TableColumnReport(
+                              3L,
+                              "Billable",
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of(""),
+                              Optional.of("")))),
+                  new dev.erst.gridgrind.core.model.table.TableStyleReport.Named(
+                      "TableStyleMedium2", false, false, true, false),
+                  new TableEntryReport.Behavior(true, false, false, false),
+                  new TableEntryReport.Presentation(
+                      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()))),
+          reopenedTables.tables());
+    }
+  }
+
+  private static ConditionalFormattingSpec conditionalFormattingReadbackBlock() {
+    return new ConditionalFormattingSpec(
+        List.of(
+            new ConditionalFormattingRuleSpec.FormulaRule(
+                "B2>5",
+                true,
+                java.util.Optional.of(
+                    new DifferentialStylePatch(
+                        Optional.of("0.00"),
+                        Optional.of(true),
+                        Optional.empty(),
+                        Optional.empty(),
+                        java.util.Optional.of(ColorSpec.rgb(new RgbHex("#102030"))),
+                        Optional.empty(),
+                        Optional.empty(),
+                        java.util.Optional.of(ColorSpec.rgb(new RgbHex("#E0F0AA"))),
+                        java.util.Optional.empty()))),
+            new ConditionalFormattingRuleSpec.CellValueRule(
+                ExcelComparisonOperator.BETWEEN,
+                "1",
+                java.util.Optional.of("10"),
+                false,
+                java.util.Optional.of(
+                    new DifferentialStylePatch(
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(true),
+                        Optional.empty(),
+                        java.util.Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        java.util.Optional.empty(),
+                        java.util.Optional.empty())))));
+  }
+
+  private static CellValueSpec.RichText budgetRichTextCell() {
+    return new CellValueSpec.RichText(
+        List.of(
+            richTextRun("Budget"),
+            new RichTextRunSpec(
+                text(" FY26"),
+                maybe(
+                    fontInput(
+                        Boolean.TRUE,
+                        null,
+                        null,
+                        null,
+                        ColorSpec.rgb(new RgbHex("#FF0000")),
+                        null,
+                        null)))));
+  }
+
+  private static dev.erst.gridgrind.core.plan.AssertionFailure failedAssertion(
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(AssertionResult.Failed.class, failure.assertions().getFirst())
+        .failure();
+  }
+}

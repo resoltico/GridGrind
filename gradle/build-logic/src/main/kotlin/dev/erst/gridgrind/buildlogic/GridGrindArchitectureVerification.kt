@@ -10,7 +10,6 @@ internal fun Project.registerGridGrindArchitectureCheck(): TaskProvider<Task> =
         architectureTask.group = "verification"
         architectureTask.description =
             "Runs the mandatory bytecode-level product architecture rules."
-        architectureTask.dependsOn(":executor:architectureTest")
-        architectureTask.dependsOn(":executor:architectureTestContract")
-        architectureTask.dependsOn(":executor:pmdArchitectureTest")
+        architectureTask.dependsOn(":architecture-tests:architectureTest")
+        architectureTask.dependsOn(":architecture-tests:pmdArchitectureTest")
     }

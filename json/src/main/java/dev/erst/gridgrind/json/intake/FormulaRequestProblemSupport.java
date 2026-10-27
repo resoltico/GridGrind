@@ -1,0 +1,45 @@
+package dev.erst.gridgrind.json.intake;
+
+import dev.erst.gridgrind.core.model.formula.FormulaInputException;
+import dev.erst.gridgrind.core.model.formula.InvalidFormulaInputException;
+import dev.erst.gridgrind.core.model.formula.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import java.util.Optional;
+import org.jspecify.annotations.Nullable;
+
+/** Retains the distinct public problem codes for normal and opaque formula-input validation. */
+final class FormulaRequestProblemSupport {
+  private FormulaRequestProblemSupport() {}
+
+  static Optional<FormulaRequestException> inputFailure(
+      Throwable failure,
+      Optional<String> jsonPath,
+      Optional<Integer> jsonLine,
+      Optional<Integer> jsonColumn,
+      @Nullable Throwable cause) {
+    return inputFailure(failure)
+        .map(
+            input ->
+                new FormulaRequestException(
+                    codeFor(input), input.publicMessage(), jsonPath, jsonLine, jsonColumn, cause));
+  }
+
+  private static Optional<FormulaInputException> inputFailure(Throwable failure) {
+    Throwable current = failure;
+    while (current != null) {
+      if (current instanceof FormulaInputException formulaInputException) {
+        return Optional.of(formulaInputException);
+      }
+      current = current.getCause();
+    }
+    return Optional.empty();
+  }
+
+  private static GridGrindProblemCode codeFor(FormulaInputException failure) {
+    return switch (failure) {
+      case InvalidFormulaInputException _ -> GridGrindProblemCode.INVALID_FORMULA;
+      case InvalidRawFormulaTextException _ -> GridGrindProblemCode.INVALID_FORMULA_TEXT;
+    };
+  }
+}

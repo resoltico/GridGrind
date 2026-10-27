@@ -1,11 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ExecutionJournal;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.ExecutionProgressEvent;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.ExecutionJournal;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.ExecutionProgressEvent;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -151,7 +152,7 @@ final class ExecutionJournalRecorder {
       int plannedStepCount,
       GridGrindProblemCode failureCode,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     return buildFailure(plannedStepCount, failureCode, failedStepIndex, failedStepId, true);
   }
 
@@ -159,7 +160,7 @@ final class ExecutionJournalRecorder {
       int plannedStepCount,
       GridGrindProblemCode failureCode,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId,
+      @Nullable StepId failedStepId,
       boolean emitPlanOutcomeEvent) {
     if (emitPlanOutcomeEvent) {
       emit(
@@ -230,13 +231,13 @@ final class ExecutionJournalRecorder {
       ExecutionProgressEvent.Status status,
       @Nullable GridGrindProblemCode problemCode,
       @Nullable Integer stepIndex,
-      @Nullable String stepId) {
+      @Nullable StepId stepId) {
     if (level != ExecutionJournalLevel.VERBOSE) {
       return;
     }
     String timestamp = Instant.now().toString();
     Optional<Integer> optionalStepIndex = Optional.ofNullable(stepIndex);
-    Optional<String> optionalStepId = Optional.ofNullable(stepId);
+    Optional<StepId> optionalStepId = Optional.ofNullable(stepId);
     sink.emit(
         switch (status) {
           case STARTED ->
@@ -271,7 +272,7 @@ final class ExecutionJournalRecorder {
   final class PhaseHandle {
     private final ExecutionProgressEvent.Category category;
     private final @Nullable Integer stepIndex;
-    private final @Nullable String stepId;
+    private final @Nullable StepId stepId;
     private final java.util.function.Consumer<ExecutionJournal.Phase> consumer;
     private final @Nullable String startedAt;
     private final long startedAtNanos;
@@ -280,7 +281,7 @@ final class ExecutionJournalRecorder {
     private PhaseHandle(
         ExecutionProgressEvent.Category category,
         @Nullable Integer stepIndex,
-        @Nullable String stepId,
+        @Nullable StepId stepId,
         java.util.function.Consumer<ExecutionJournal.Phase> consumer) {
       this.category = category;
       this.stepIndex = stepIndex;
@@ -359,7 +360,7 @@ final class ExecutionJournalRecorder {
 
     void fail(
         GridGrindProblemCode code,
-        dev.erst.gridgrind.contract.dto.GridGrindProblemCategory category,
+        dev.erst.gridgrind.core.problem.GridGrindProblemCategory category,
         String stage,
         String message) {
       ExecutionJournal.Phase phase = phaseHandle.fail(code);

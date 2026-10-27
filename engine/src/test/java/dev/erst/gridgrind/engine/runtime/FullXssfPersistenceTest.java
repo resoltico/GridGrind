@@ -3,17 +3,17 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ class FullXssfPersistenceTest {
             },
             responseSupport());
 
-    try (var workbook = ExcelWorkbooks.create()) {
+    try (var workbook = XssfWorkbooks.create()) {
       FullXssfPersistence.Result result =
           persistence.persist(
               context(workbook), bindings(), CalculationReport.notRequested(), ignored -> {});
@@ -63,7 +63,7 @@ class FullXssfPersistenceTest {
             },
             responseSupport());
 
-    try (var workbook = ExcelWorkbooks.create()) {
+    try (var workbook = XssfWorkbooks.create()) {
       FullXssfPersistence.Result result =
           persistence.persist(
               context(workbook), bindings(), CalculationReport.notRequested(), ignored -> {});
@@ -75,18 +75,18 @@ class FullXssfPersistenceTest {
   }
 
   private WorkbookWorkflowExecutionContext context(
-      dev.erst.gridgrind.excel.ExcelWorkbook workbook) {
+      dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook workbook) {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 root.resolve("output.xlsx").toString(),
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     return new WorkbookWorkflowExecutionContext(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         request,
         workbook,
         ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
@@ -101,17 +101,18 @@ class FullXssfPersistenceTest {
     return new ExecutionInputBindings(
         root,
         root.resolve("scratch"),
-        new GridGrindExecutionGrant.Bounded(
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            GridGrindHostAcceptancePolicy.minimum()));
+            AcceptancePolicy.minimum()));
   }
 
-  private static ExecutionResponseSupport responseSupport() {
-    return new ExecutionResponseSupport(
-        dev.erst.gridgrind.excel.ExcelWorkbook::close, materialized -> materialized.close());
+  private static ExecutionResults responseSupport() {
+    return new ExecutionResults(
+        dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook::close,
+        materialized -> materialized.close());
   }
 }

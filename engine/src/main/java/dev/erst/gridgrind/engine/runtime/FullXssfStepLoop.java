@@ -1,8 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.PreparedStep;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,9 +19,8 @@ final class FullXssfStepLoop {
   }
 
   Optional<WorkbookResult> execute(
-      FullXssfWorkflowState state,
-      dev.erst.gridgrind.contract.dto.ExecutionModeInput executionMode) {
-    List<WorkbookStep> steps = state.executionContext().request().steps();
+      FullXssfWorkflowState state, dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode) {
+    List<PreparedStep> steps = state.plan().steps();
     for (int stepIndex = 0; stepIndex < steps.size(); stepIndex++) {
       Optional<WorkbookResult> failure =
           executeStep(state, executionMode, stepIndex, steps.get(stepIndex));
@@ -33,9 +33,10 @@ final class FullXssfStepLoop {
 
   private Optional<WorkbookResult> executeStep(
       FullXssfWorkflowState state,
-      dev.erst.gridgrind.contract.dto.ExecutionModeInput executionMode,
+      dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode,
       int stepIndex,
-      WorkbookStep step) {
+      PreparedStep prepared) {
+    WorkbookStep step = prepared.authoredStep();
     FullXssfCalculationCheckpoint.Result checkpoint =
         calculationCheckpoint.beforeStep(
             state.executionContext(),
@@ -60,7 +61,7 @@ final class FullXssfStepLoop {
               state.executionContext().request().assertionMode(),
               state.executionContext().planAssertions(),
               state.executionContext().inspections(),
-              step,
+              prepared,
               state.formulaOrigins(),
               stepIndex);
       recordStepResult(state, collectedFailure, stepIndex, step, stepHandle);
@@ -90,12 +91,12 @@ final class FullXssfStepLoop {
     }
     AssertionFailedException failure = collectedFailure.orElseThrow();
     GridGrindProblemDetail.Problem problem =
-        ExecutionResponseSupport.problemFor(
+        GridGrindProblems.fromException(
             failure,
             ExecutionStepContextFactory.contextFor(
                 state.executionContext().request(), stepIndex, step, failure));
     stepHandle.fail(
-        problem.code(), problem.category(), problem.context().stage(), problem.message());
+        problem.code(), problem.category(), problem.context().type(), problem.message());
     state.collectedAssertionFailures().add(stepIndex, step.stepId(), problem);
   }
 }

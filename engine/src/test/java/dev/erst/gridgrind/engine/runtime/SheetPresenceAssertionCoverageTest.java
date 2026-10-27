@@ -3,14 +3,17 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PresenceAssertion;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -24,15 +27,15 @@ class SheetPresenceAssertionCoverageTest {
     AssertionExecutor executor = new AssertionExecutor(workbookEngine, selectorResolver);
     WorkbookLocation location = new WorkbookLocation.UnsavedWorkbook();
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       assertDoesNotThrow(
           () ->
               executor.execute(
                   new AssertionStep(
-                      "s1",
-                      new SheetSelector.ByName("Budget"),
+                      new StepId("s1"),
+                      new SheetSelector.ByName(new SheetName("Budget")),
                       new PresenceAssertion.SheetPresent()),
                   workbook,
                   location));
@@ -42,8 +45,8 @@ class SheetPresenceAssertionCoverageTest {
           () ->
               executor.execute(
                   new AssertionStep(
-                      "s2",
-                      new SheetSelector.ByName("Missing"),
+                      new StepId("s2"),
+                      new SheetSelector.ByName(new SheetName("Missing")),
                       new PresenceAssertion.SheetPresent()),
                   workbook,
                   location));
@@ -52,8 +55,8 @@ class SheetPresenceAssertionCoverageTest {
           () ->
               executor.execute(
                   new AssertionStep(
-                      "s3",
-                      new SheetSelector.ByName("Missing"),
+                      new StepId("s3"),
+                      new SheetSelector.ByName(new SheetName("Missing")),
                       new PresenceAssertion.SheetAbsent()),
                   workbook,
                   location));
@@ -63,8 +66,8 @@ class SheetPresenceAssertionCoverageTest {
           () ->
               executor.execute(
                   new AssertionStep(
-                      "s4",
-                      new SheetSelector.ByName("Budget"),
+                      new StepId("s4"),
+                      new SheetSelector.ByName(new SheetName("Budget")),
                       new PresenceAssertion.SheetAbsent()),
                   workbook,
                   location));
@@ -73,7 +76,9 @@ class SheetPresenceAssertionCoverageTest {
           () ->
               executor.execute(
                   new AssertionStep(
-                      "s5", new SheetSelector.All(), new PresenceAssertion.SheetPresent()),
+                      new StepId("s5"),
+                      new SheetSelector.All(),
+                      new PresenceAssertion.SheetPresent()),
                   workbook,
                   location));
 
@@ -81,8 +86,8 @@ class SheetPresenceAssertionCoverageTest {
           () ->
               executor.execute(
                   new AssertionStep(
-                      "s6",
-                      new SheetSelector.ByNames(List.of("Budget")),
+                      new StepId("s6"),
+                      new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
                       new PresenceAssertion.SheetPresent()),
                   workbook,
                   location));
@@ -93,7 +98,9 @@ class SheetPresenceAssertionCoverageTest {
           () ->
               executor.execute(
                   new AssertionStep(
-                      "s7", new SheetSelector.All(), new PresenceAssertion.SheetAbsent()),
+                      new StepId("s7"),
+                      new SheetSelector.All(),
+                      new PresenceAssertion.SheetAbsent()),
                   workbook,
                   location));
     }
@@ -106,15 +113,15 @@ class SheetPresenceAssertionCoverageTest {
     AssertionExecutor executor = new AssertionExecutor(workbookEngine, selectorResolver);
     WorkbookLocation location = new WorkbookLocation.UnsavedWorkbook();
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       assertDoesNotThrow(
           () ->
               executor.execute(
                   new AssertionStep(
-                      "nr1",
-                      new NamedRangeSelector.ByName("MissingRange"),
+                      new StepId("nr1"),
+                      new NamedRangeSelector.ByName(new DefinedName("MissingRange")),
                       new PresenceAssertion.NamedRangeAbsent()),
                   workbook,
                   location));

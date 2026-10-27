@@ -1,0 +1,166 @@
+package dev.erst.gridgrind.json.intake;
+
+import dev.erst.gridgrind.core.plan.Assertion;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionQuery;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
+import dev.erst.gridgrind.core.problem.MissingRequiredField;
+import dev.erst.gridgrind.core.problem.UnknownField;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import java.util.Optional;
+import java.util.Set;
+import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.node.ObjectNode;
+
+/** Deserializes workbook steps from the canonical step envelope without a redundant outer type. */
+public final class WorkbookStepJsonDeserializer<T extends WorkbookStep>
+    extends ValueDeserializer<T> {
+  private final Class<T> expectedType;
+  private static final Set<String> ALLOWED_FIELDS =
+      Set.of("stepId", "target", "action", "assertion", "query");
+
+  /** Selects the declared union or concrete step type required by the containing document. */
+  public WorkbookStepJsonDeserializer(Class<T> expectedType) {
+    this.expectedType = expectedType;
+  }
+
+  @Override
+  public T deserialize(JsonParser parser, DeserializationContext context) {
+    WorkbookStep step = readStep(parser, context);
+    if (!expectedType.isInstance(step)) {
+      return context.reportInputMismatch(
+          expectedType,
+          "Expected a %s step",
+          dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames.workbookStepTypeName(
+              expectedType));
+    }
+    return expectedType.cast(step);
+  }
+
+  @Override
+  public Class<?> handledType() {
+    return expectedType;
+  }
+
+  private WorkbookStep readStep(JsonParser parser, DeserializationContext context) {
+    JsonNode rawNode = parser.readValueAsTree();
+    if (!(rawNode instanceof ObjectNode stepNode)) {
+      throw WorkbookStepJsonFailurePathSupport.inputMismatch(
+          parser,
+          new ActionableShapeMessage(
+              "steps entries must be JSON objects",
+              "Replace each steps entry with one JSON object containing stepId, target, and"
+                  + " exactly one of action, assertion, or query.",
+              Optional.empty()));
+    }
+    rejectUnknownFields(stepNode, context);
+
+    StepId stepId =
+        deserializeField(requiredNode(stepNode, "stepId", context), parser, StepId.class, "stepId");
+    JsonNode targetNode = requiredNode(stepNode, "target", context);
+    JsonNode actionNode = stepNode.get("action");
+    JsonNode assertionNode = stepNode.get("assertion");
+    JsonNode queryNode = stepNode.get("query");
+    int stepPayloadCount =
+        (actionNode == null ? 0 : 1)
+            + (assertionNode == null ? 0 : 1)
+            + (queryNode == null ? 0 : 1);
+    if (stepPayloadCount != 1) {
+      throw WorkbookStepJsonFailurePathSupport.inputMismatch(
+          context.getParser(),
+          new ActionableShapeMessage(
+              "Each step must contain exactly one of 'action', 'assertion', or 'query'",
+              "Add exactly one of action, assertion, or query to each step.",
+              Optional.empty()));
+    }
+    if (actionNode != null) {
+      MutationAction action = deserializeField(actionNode, parser, MutationAction.class, "action");
+      Selector target =
+          WorkbookStepJsonTargetSupport.deserializeTarget(targetNode, parser, "target");
+      return new MutationStep(stepId, target, action);
+    }
+    if (assertionNode != null) {
+      Assertion assertion = deserializeField(assertionNode, parser, Assertion.class, "assertion");
+      Selector target =
+          WorkbookStepJsonTargetSupport.deserializeTarget(targetNode, parser, "target");
+      return new AssertionStep(stepId, target, assertion);
+    }
+    InspectionQuery query = deserializeField(queryNode, parser, InspectionQuery.class, "query");
+    Selector target = WorkbookStepJsonTargetSupport.deserializeTarget(targetNode, parser, "target");
+    return new InspectionStep(stepId, target, query);
+  }
+
+  private static void rejectUnknownFields(ObjectNode stepNode, DeserializationContext context) {
+    String fieldName = firstUnexpectedFieldName(stepNode);
+    if (fieldName != null) {
+      throw WorkbookStepJsonFailurePathSupport.fieldFailure(
+          fieldName,
+          WorkbookStepJsonFailurePathSupport.inputMismatch(
+              context.getParser(), new UnknownField(fieldName)));
+    }
+  }
+
+  private static JsonNode requiredNode(
+      ObjectNode stepNode, String fieldName, DeserializationContext context) {
+    JsonNode node = stepNode.get(fieldName);
+    if (node == null) {
+      throw WorkbookStepJsonFailurePathSupport.fieldFailure(
+          fieldName,
+          WorkbookStepJsonFailurePathSupport.inputMismatch(
+              context.getParser(), new MissingRequiredField(fieldName)));
+    }
+    if (node.isNull()) {
+      throw WorkbookStepJsonFailurePathSupport.fieldFailure(
+          fieldName,
+          WorkbookStepJsonFailurePathSupport.inputMismatch(
+              context.getParser(),
+              new dev.erst.gridgrind.core.problem.ExplicitNullField(fieldName)));
+    }
+    return node;
+  }
+
+  private static <T> T deserializeNode(JsonNode node, JsonParser parser, Class<T> targetType) {
+    try (JsonParser nodeParser = node.traverse(parser.objectReadContext())) {
+      return nodeParser.readValueAs(targetType);
+    }
+  }
+
+  static <T> T deserializeField(
+      JsonNode node, JsonParser parser, Class<T> targetType, String fieldName) {
+    try {
+      return deserializeNode(node, parser, targetType);
+    } catch (JacksonException exception) {
+      Optional<dev.erst.gridgrind.core.problem.InvalidRequestException> validationFailure =
+          WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
+              fieldName, node, targetType, exception);
+      if (validationFailure.isPresent()) {
+        throw validationFailure.orElseThrow();
+      }
+      throw WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
+          fieldName, node, targetType, exception);
+    } catch (IllegalArgumentException exception) {
+      throw WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure(fieldName, exception);
+    }
+  }
+
+  private static @Nullable String firstUnexpectedFieldName(ObjectNode stepNode) {
+    var fields = stepNode.propertyNames().iterator();
+    while (fields.hasNext()) {
+      String fieldName = fields.next();
+      if (!ALLOWED_FIELDS.contains(fieldName)) {
+        return fieldName;
+      }
+    }
+    return null;
+  }
+}

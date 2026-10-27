@@ -1,0 +1,35 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Field 'steps' must be a JSON array",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 75,
+          "jsonPath" : "steps",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Field 'steps' must be a JSON array",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Fix field 'steps' so it matches the published request shape.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : 1,
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

@@ -1,0 +1,103 @@
+package dev.erst.gridgrind.core.catalog;
+
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+
+/** JSON-serializable recursive field-shape contract used by protocol discovery output. */
+@Union(discriminator = "type")
+public sealed interface FieldShape
+    permits FieldShape.Scalar,
+        FieldShape.ListShape,
+        FieldShape.TopLevelTypeSetRef,
+        FieldShape.NestedTypeGroupRef,
+        FieldShape.NestedTypeGroupUnionRef,
+        FieldShape.PlainTypeGroupRef {
+
+  /** Scalar JSON value type such as STRING, NUMBER, or BOOLEAN. */
+  @Variant(id = "SCALAR", summary = "Scalar JSON value type such as STRING, NUMBER, or BOOLEAN.")
+  record Scalar(
+      ScalarType scalarType,
+      @WireDefault(value = "[]", omit = true) List<FieldConstraint> constraints)
+      implements FieldShape {
+    /** Creates an unconstrained scalar field shape. */
+    public Scalar(ScalarType scalarType) {
+      this(scalarType, List.of());
+    }
+
+    public Scalar {
+      Objects.requireNonNull(scalarType, "scalarType must not be null");
+      constraints = List.copyOf(Objects.requireNonNullElseGet(constraints, List::of));
+      for (FieldConstraint constraint : constraints) {
+        Objects.requireNonNull(constraint, "constraints must not contain null values");
+      }
+      constraints =
+          constraints.stream()
+              .sorted(
+                  Comparator.comparing(FieldConstraint::type)
+                      .thenComparing(FieldConstraint::sortKey))
+              .toList();
+    }
+  }
+
+  /** Recursive array shape whose elements all share the same shape. */
+  @Variant(id = "LIST", summary = "Recursive array shape whose elements all share the same shape.")
+  record ListShape(FieldShape elementShape) implements FieldShape {
+    public ListShape {
+      Objects.requireNonNull(elementShape, "elementShape must not be null");
+    }
+  }
+
+  /** Reference to one top-level discriminated family published elsewhere in the catalog. */
+  @Variant(
+      id = "TOP_LEVEL_TYPE_SET",
+      summary =
+          "Reference to one top-level discriminated family published elsewhere in the catalog.")
+  record TopLevelTypeSetRef(String typeSet) implements FieldShape {
+    public TopLevelTypeSetRef {
+      typeSet = TextValidation.requireNonBlank(typeSet, "typeSet");
+    }
+  }
+
+  /** Reference to one nested discriminated union group published elsewhere in the catalog. */
+  @Variant(
+      id = "NESTED_TYPE_GROUP",
+      summary =
+          "Reference to one nested discriminated union group published elsewhere in the catalog.")
+  record NestedTypeGroupRef(String group) implements FieldShape {
+    public NestedTypeGroupRef {
+      group = TextValidation.requireNonBlank(group, "group");
+    }
+  }
+
+  /** Reference to one union of nested discriminated groups published elsewhere in the catalog. */
+  @Variant(
+      id = "NESTED_TYPE_GROUP_UNION",
+      summary =
+          "Reference to one union of nested discriminated groups published elsewhere in the catalog.")
+  record NestedTypeGroupUnionRef(java.util.List<String> groups) implements FieldShape {
+    public NestedTypeGroupUnionRef {
+      groups = java.util.List.copyOf(groups);
+      if (groups.isEmpty()) {
+        throw new IllegalArgumentException("groups must not be empty");
+      }
+      for (String group : groups) {
+        TextValidation.requireNonBlank(group, "group");
+      }
+    }
+  }
+
+  /** Reference to one plain record-type group published elsewhere in the catalog. */
+  @Variant(
+      id = "PLAIN_TYPE_GROUP",
+      summary = "Reference to one plain record-type group published elsewhere in the catalog.")
+  record PlainTypeGroupRef(String group) implements FieldShape {
+    public PlainTypeGroupRef {
+      group = TextValidation.requireNonBlank(group, "group");
+    }
+  }
+}

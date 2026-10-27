@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.Objects;
 
 /** Public request-shape queries needed by transport adapters before execution starts. */

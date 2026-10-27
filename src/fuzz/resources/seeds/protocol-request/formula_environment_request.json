@@ -1,0 +1,177 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "generated-workbooks/gridgrind-formula-environment.xlsx",
+    "ifExists": "REPLACE"
+  },
+  "formulaEnvironment": {
+    "udfToolpacks": [
+      {
+        "name": "math",
+        "functions": [
+          {
+            "name": "DOUBLE",
+            "minimumArgumentCount": 1,
+            "formulaTemplate": "ARG1*2"
+          }
+        ]
+      }
+    ]
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Budget"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Item"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Hours"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Rate"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Onboarding"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 4
+            },
+            {
+              "type": "NUMBER",
+              "number": 120
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Support"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 3
+            },
+            {
+              "type": "NUMBER",
+              "number": 90
+            }
+          ]
+        ]
+      },
+      "target": {
+        "type": "RANGE_BY_RANGE",
+        "sheetName": "Budget",
+        "range": "A1:C3"
+      }
+    },
+    {
+      "stepId": "step-03-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "FORMULA",
+          "value": {
+            "type": "INLINE",
+            "text": "DOUBLE(B2)"
+          }
+        }
+      },
+      "target": {
+        "type": "CELL_BY_ADDRESS",
+        "sheetName": "Budget",
+        "address": "D2"
+      }
+    },
+    {
+      "stepId": "step-04-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "FORMULA",
+          "value": {
+            "type": "INLINE",
+            "text": "B2*C2"
+          }
+        }
+      },
+      "target": {
+        "type": "CELL_BY_ADDRESS",
+        "sheetName": "Budget",
+        "address": "E2"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "formula-cells",
+      "target": {
+        "type": "CELL_BY_ADDRESSES",
+        "sheetName": "Budget",
+        "addresses": [
+          "B2",
+          "D2",
+          "E2"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_FORMULA_SURFACE"
+      },
+      "stepId": "formula-surface",
+      "target": {
+        "type": "SHEET_BY_NAMES",
+        "names": [
+          "Budget"
+        ]
+      }
+    }
+  ],
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "EVALUATE_ALL"
+      }
+    }
+  }
+}

@@ -1,8 +1,0 @@
-Replay Result
-Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/embedded_object_copy_sheet_roundtrip_success.bin
-Harness: xlsx-roundtrip
-Outcome: SUCCESS
-Input Bytes: 181
-Command Count: 10
-Style Kinds: (none)
-Command Kinds: APPEND_ROW=5, CREATE_SHEET=2, SET_CHART=1, COPY_SHEET=1, SET_EMBEDDED_OBJECT=1

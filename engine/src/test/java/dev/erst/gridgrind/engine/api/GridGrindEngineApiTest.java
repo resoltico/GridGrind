@@ -9,17 +9,19 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.SecretReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.source.SecretReference;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -94,16 +96,16 @@ class GridGrindEngineApiTest {
         new GridGrindRequestDoctor() {
           @Override
           public RequestDoctorReport diagnose(
-              dev.erst.gridgrind.contract.json.RequestAnalysis analysis,
-              dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput
+              dev.erst.gridgrind.core.problem.RequestIntake analysis,
+              dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput
                   requestInput) {
             return cleanDoctorSummary();
           }
 
           @Override
           public RequestDoctorReport diagnose(
-              dev.erst.gridgrind.contract.json.RequestAnalysis analysis,
-              dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput
+              dev.erst.gridgrind.core.problem.RequestIntake analysis,
+              dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput
                   requestInput,
               GridGrindRequestInputs inputs) {
             return cleanDoctorSummary();
@@ -126,14 +128,14 @@ class GridGrindEngineApiTest {
   @Test
   void publicDoctorTranslatesBothStandardInputAndHostSecretBindings() throws IOException {
     SecretReference reference = new SecretReference("provider-password");
-    GridGrindExecutionGrant.Bounded grant =
-        new GridGrindExecutionGrant.Bounded(
-            List.of(new GridGrindExecutionGrant.ReadAuthority.StandardInput()),
+    ExecutionGrant grant =
+        new ExecutionGrant(
+            List.of(new ExecutionGrant.ReadAuthority.Stdin()),
             List.of("SET_CELL"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(reference),
-            GridGrindHostAcceptancePolicy.minimum());
+            AcceptancePolicy.minimum());
     GridGrindRequestInputs standardInputAndSecret =
         new GridGrindRequestInputs(
             Path.of("engine-api-inputs"),
@@ -156,8 +158,8 @@ class GridGrindEngineApiTest {
                 WorkbookPlan.standard(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                    dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                    dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+                    dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
                     List.of()),
                 secretOnly));
   }
@@ -221,7 +223,7 @@ class GridGrindEngineApiTest {
   @Test
   void productionRequestExecutorForwardsVerboseProgressToThePublicSink() throws IOException {
     WorkbookPlan verboseRequest = verboseRequest();
-    AtomicReference<dev.erst.gridgrind.contract.dto.ExecutionProgressEvent> observedEvent =
+    AtomicReference<dev.erst.gridgrind.core.result.ExecutionProgressEvent> observedEvent =
         new AtomicReference<>();
 
     WorkbookResult response =
@@ -231,7 +233,7 @@ class GridGrindEngineApiTest {
     assertInstanceOf(WorkbookResult.Success.class, response);
     assertNotNull(observedEvent.get());
     assertEquals(
-        dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.PLAN,
+        dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category.PLAN,
         observedEvent.get().category());
   }
 
@@ -245,7 +247,7 @@ class GridGrindEngineApiTest {
     return GridGrindJson.readRequest(
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -267,7 +269,7 @@ class GridGrindEngineApiTest {
               "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
               "action": {
                 "type": "SET_CELL",
-                "value": { "type": "TEXT", "source": { "type": "STANDARD_INPUT" } }
+                "value": { "type": "TEXT", "value": { "type": "STANDARD_INPUT" } }
               }
             }
           ]
@@ -280,7 +282,7 @@ class GridGrindEngineApiTest {
     return GridGrindJson.readRequest(
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -319,13 +321,13 @@ class GridGrindEngineApiTest {
         noPublicationGrant());
   }
 
-  private static GridGrindExecutionGrant.Bounded noPublicationGrant() {
-    return new GridGrindExecutionGrant.Bounded(
+  private static ExecutionGrant noPublicationGrant() {
+    return new ExecutionGrant(
         List.of(),
         List.of(),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.None(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.None(),
         List.of(),
-        GridGrindHostAcceptancePolicy.minimum());
+        AcceptancePolicy.minimum());
   }
 }

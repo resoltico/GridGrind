@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.api;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -9,12 +10,12 @@ public final class GridGrindRequestInputs {
   private final Path workingDirectory;
   private final Path tempRoot;
   private final Optional<byte[]> standardInputBytes;
-  private final GridGrindExecutionGrant executionGrant;
+  private final ExecutionGrant executionGrant;
   private final Optional<GridGrindSecretResolver> secretResolver;
 
   /** Creates execution inputs from one working directory, temp root, and explicit host grant. */
   public GridGrindRequestInputs(
-      Path workingDirectory, Path tempRoot, GridGrindExecutionGrant executionGrant) {
+      Path workingDirectory, Path tempRoot, ExecutionGrant executionGrant) {
     this(
         workingDirectory,
         tempRoot,
@@ -30,7 +31,7 @@ public final class GridGrindRequestInputs {
       Path workingDirectory,
       Path tempRoot,
       byte[] standardInputBytes,
-      GridGrindExecutionGrant executionGrant) {
+      ExecutionGrant executionGrant) {
     this(
         workingDirectory,
         tempRoot,
@@ -44,7 +45,7 @@ public final class GridGrindRequestInputs {
       Path workingDirectory,
       Path tempRoot,
       byte[] standardInputBytes,
-      GridGrindExecutionGrant executionGrant,
+      ExecutionGrant executionGrant,
       GridGrindSecretResolver secretResolver) {
     this(
         workingDirectory,
@@ -58,7 +59,7 @@ public final class GridGrindRequestInputs {
   public GridGrindRequestInputs(
       Path workingDirectory,
       Path tempRoot,
-      GridGrindExecutionGrant executionGrant,
+      ExecutionGrant executionGrant,
       GridGrindSecretResolver secretResolver) {
     this(
         workingDirectory,
@@ -72,7 +73,7 @@ public final class GridGrindRequestInputs {
       Path workingDirectory,
       Path tempRoot,
       Optional<byte[]> standardInputBytes,
-      GridGrindExecutionGrant executionGrant,
+      ExecutionGrant executionGrant,
       Optional<GridGrindSecretResolver> secretResolver) {
     Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
     Objects.requireNonNull(tempRoot, "tempRoot must not be null");
@@ -107,7 +108,7 @@ public final class GridGrindRequestInputs {
   }
 
   /** Returns the trusted host grant required for this execution. */
-  public GridGrindExecutionGrant executionGrant() {
+  public ExecutionGrant executionGrant() {
     return executionGrant;
   }
 

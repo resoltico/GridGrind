@@ -1,0 +1,162 @@
+package dev.erst.gridgrind.core.result;
+
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
+import java.util.Objects;
+import java.util.Optional;
+
+/** Persistence outcome variants returned on every workbook result. */
+public interface WorkbookResultPersistence {
+  /** Reports whether the workbook was persisted during execution. */
+  @Union(discriminator = "type")
+  sealed interface PersistenceOutcome
+      permits PersistenceOutcome.NotSaved,
+          PersistenceOutcome.SavedAs,
+          PersistenceOutcome.Overwritten {
+
+    /** Workbook remained in memory only and was not published to a destination. */
+    @Variant(
+        id = "NONE",
+        summary = "Workbook remained in memory only and was not published to a destination.")
+    record NotSaved() implements PersistenceOutcome {}
+
+    /** Workbook targeted the path supplied in the SAVE_AS persistence field. */
+    @Variant(
+        id = "SAVE_AS",
+        summary = "Workbook targeted the path supplied in the SAVE_AS persistence field.")
+    record SavedAs(String requestedPath, PublicationOutcome publication)
+        implements PersistenceOutcome {
+      public SavedAs {
+        requestedPath = TextValidation.requireNonBlank(requestedPath, "requestedPath");
+        Objects.requireNonNull(publication, "publication must not be null");
+      }
+    }
+
+    /** Workbook targeted the opened source workbook path for overwrite persistence. */
+    @Variant(
+        id = "OVERWRITE",
+        summary = "Workbook targeted the opened source workbook path for overwrite persistence.")
+    record Overwritten(Optional<String> sourcePath, PublicationOutcome publication)
+        implements PersistenceOutcome {
+      public Overwritten {
+        sourcePath = normalizeSourcePath(sourcePath);
+        Objects.requireNonNull(publication, "publication must not be null");
+      }
+
+      /** Creates one overwrite outcome that echoes a known EXISTING source path. */
+      public Overwritten(String sourcePath, PublicationOutcome publication) {
+        this(Optional.of(sourcePath), publication);
+      }
+
+      private static Optional<String> normalizeSourcePath(Optional<String> sourcePath) {
+        Optional<String> normalized = Objects.requireNonNullElseGet(sourcePath, Optional::empty);
+        if (normalized.isEmpty()) {
+          return Optional.empty();
+        }
+        return Optional.of(TextValidation.requireNonBlank(normalized.orElseThrow(), "sourcePath"));
+      }
+    }
+  }
+
+  /** Reports what GridGrind established about one requested final workbook destination. */
+  @Union(discriminator = "status")
+  sealed interface PublicationOutcome
+      permits PublicationOutcome.NotAttempted,
+          PublicationOutcome.NotPublished,
+          PublicationOutcome.Published,
+          PublicationOutcome.Uncertain {
+
+    /** Final destination mutation was never attempted. */
+    @Variant(id = "NOT_ATTEMPTED", summary = "Final destination mutation was never attempted.")
+    record NotAttempted() implements PublicationOutcome {}
+
+    /**
+     * Final destination remains provably absent or unchanged after publication did not complete.
+     */
+    @Variant(
+        id = "NOT_PUBLISHED",
+        summary =
+            "Final destination remains provably absent or unchanged after publication did not complete.")
+    record NotPublished(DestinationState destinationState) implements PublicationOutcome {
+      public NotPublished {
+        Objects.requireNonNull(destinationState, "destinationState must not be null");
+      }
+    }
+
+    /** Final destination was observed with the complete verified staged artifact. */
+    @Variant(
+        id = "PUBLISHED",
+        summary = "Final destination was observed with the complete verified staged artifact.")
+    record Published(
+        String executionPath,
+        String sha256,
+        long byteSize,
+        StagedArtifactVerification stagedArtifactVerification,
+        DurabilityEvidence durability)
+        implements PublicationOutcome {
+      public Published {
+        executionPath = TextValidation.requireNonBlank(executionPath, "executionPath");
+        sha256 = requireSha256(sha256);
+        if (byteSize < 0) {
+          throw new IllegalArgumentException("byteSize must be >= 0");
+        }
+        Objects.requireNonNull(
+            stagedArtifactVerification, "stagedArtifactVerification must not be null");
+        Objects.requireNonNull(durability, "durability must not be null");
+      }
+    }
+
+    /** Final destination may have changed, so automated retry is unsafe without inspection. */
+    @Variant(
+        id = "UNCERTAIN",
+        summary =
+            "Final destination may have changed, so automated retry is unsafe without inspection.")
+    record Uncertain(String executionPath, Recovery recovery) implements PublicationOutcome {
+      public Uncertain {
+        executionPath = TextValidation.requireNonBlank(executionPath, "executionPath");
+        Objects.requireNonNull(recovery, "recovery must not be null");
+      }
+    }
+
+    /** Known final-destination state after a publication failure. */
+    enum DestinationState {
+      ABSENT,
+      PRESERVED
+    }
+
+    /** Required operator response to an uncertain publication attempt. */
+    enum Recovery {
+      INSPECT_DESTINATION_DO_NOT_RETRY
+    }
+
+    /** Staged artifact successfully reopened with its effective package-security settings. */
+    record StagedArtifactVerification() {}
+
+    /** Durability evidence established for one published artifact. */
+    @Union(discriminator = "type")
+    sealed interface DurabilityEvidence
+        permits DurabilityEvidence.FileAndDirectorySynced,
+            DurabilityEvidence.FileSyncedDirectoryUnestablished {
+      /** File data and the containing directory entry were synchronized. */
+      @Variant(
+          id = "FILE_AND_DIRECTORY_SYNCED",
+          summary = "File data and the containing directory entry were synchronized.")
+      record FileAndDirectorySynced() implements DurabilityEvidence {}
+
+      /** File data was synchronized but directory synchronization was not established. */
+      @Variant(
+          id = "FILE_SYNCED_DIRECTORY_UNESTABLISHED",
+          summary = "File data was synchronized but directory synchronization was not established.")
+      record FileSyncedDirectoryUnestablished() implements DurabilityEvidence {}
+    }
+
+    private static String requireSha256(String value) {
+      String normalized = TextValidation.requireNonBlank(value, "sha256");
+      if (!normalized.matches("[0-9a-f]{64}")) {
+        throw new IllegalArgumentException("sha256 must be 64 lowercase hexadecimal characters");
+      }
+      return normalized;
+    }
+  }
+}

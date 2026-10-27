@@ -2,10 +2,10 @@ package dev.erst.gridgrind.engine.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -20,11 +20,11 @@ class GridGrindRequestAnalysisProblemsTest {
     ProblemContext.ReadRequest pathOnly =
         firstReadRequest(
             GridGrindJson.analyzeRequest(
-                "{\"protocolVersion\":\"V3\"}".getBytes(StandardCharsets.UTF_8)));
+                "{\"protocolVersion\":1}".getBytes(StandardCharsets.UTF_8)));
     ProblemContext.ReadRequest pathAtByteOffset =
         firstReadRequest(GridGrindJson.analyzeRequest("null".getBytes(StandardCharsets.UTF_8)));
     byte[] duplicateRequest =
-        "{\"protocolVersion\":\"V3\",\"protocolVersion\":\"V3\"}".getBytes(StandardCharsets.UTF_8);
+        "{\"protocolVersion\":1,\"protocolVersion\":1}".getBytes(StandardCharsets.UTF_8);
     ProblemContext.ReadRequest duplicate =
         projected(duplicateRequest).stream()
             .map(GridGrindProblemDetail.Problem::context)
@@ -64,7 +64,7 @@ class GridGrindRequestAnalysisProblemsTest {
     byte[] fragmentFailure =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "EXISTING", "path": "source.xls" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -74,7 +74,7 @@ class GridGrindRequestAnalysisProblemsTest {
     byte[] completePlanFailure =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
@@ -114,7 +114,7 @@ class GridGrindRequestAnalysisProblemsTest {
   }
 
   private static ProblemContext.ReadRequest firstReadRequest(
-      dev.erst.gridgrind.contract.json.RequestAnalysis analysis) {
+      dev.erst.gridgrind.core.problem.RequestIntake analysis) {
     return projected(analysis).stream()
         .map(GridGrindProblemDetail.Problem::context)
         .filter(ProblemContext.ReadRequest.class::isInstance)
@@ -137,7 +137,7 @@ class GridGrindRequestAnalysisProblemsTest {
   }
 
   private static List<GridGrindProblemDetail.Problem> projected(
-      dev.erst.gridgrind.contract.json.RequestAnalysis analysis) {
+      dev.erst.gridgrind.core.problem.RequestIntake analysis) {
     return GridGrindRequestAnalysisProblems.project(
         analysis, ProblemContextRequestSurfaces.RequestInput.standardInput());
   }

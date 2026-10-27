@@ -1,0 +1,749 @@
+package dev.erst.gridgrind.json.intake;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.catalog.CatalogNote;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.catalog.TypeEntry;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.layout.WindowDimensionsReport;
+import dev.erst.gridgrind.core.model.layout.WindowReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
+
+/** Additional parser-wording and invalid-payload coverage for the shared JSON codec. */
+class GridGrindJsonCoverageTest {
+  @Test
+  void readsResponsesAndCatalogsFromStreamsWithoutClosingThem() throws IOException {
+    WorkbookResult response =
+        WorkbookResults.success(
+            List.of(),
+            List.of(),
+            List.of(
+                new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    RequestDoctorReport doctorReport =
+        RequestDoctorReport.warnings(
+            new RequestDoctorReport.Summary(
+                "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 1, 1, 0, 0),
+            List.of(
+                new RequestWarning(
+                    dev.erst.gridgrind.core.problem.GridGrindWarningCode
+                        .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                    0,
+                    new StepId("step-1"),
+                    "SET_CELL",
+                    "warning")));
+
+    try (TrackingInputStream responseStream =
+            new TrackingInputStream(GridGrindJsonOutput.writeWorkbookResultBytes(response));
+        TrackingInputStream catalogStream =
+            new TrackingInputStream(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog));
+        TrackingInputStream doctorReportStream =
+            new TrackingInputStream(
+                GridGrindJsonOutput.writeRequestDoctorReportBytes(doctorReport))) {
+      assertEquals(response, GridGrindJson.readWorkbookResult(responseStream));
+      assertEquals(catalog, GridGrindJson.readProtocolCatalog(catalogStream));
+      assertEquals(doctorReport, GridGrindJson.readRequestDoctorReport(doctorReportStream));
+      assertEquals(
+          doctorReport,
+          GridGrindJson.readRequestDoctorReport(
+              GridGrindJsonOutput.writeRequestDoctorReportBytes(doctorReport)));
+      assertFalse(responseStream.closed);
+      assertFalse(catalogStream.closed);
+      assertFalse(doctorReportStream.closed);
+    }
+  }
+
+  @Test
+  void invalidResponseAndCatalogStreamsSurfaceInvalidJsonWithoutClosingCallerStreams()
+      throws IOException {
+    try (TrackingInputStream responseStream =
+            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
+        TrackingInputStream catalogStream =
+            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
+        TrackingInputStream doctorReportStream =
+            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8))) {
+      assertInstanceOf(
+          InvalidJsonException.class,
+          assertThrows(
+              InvalidJsonException.class, () -> GridGrindJson.readWorkbookResult(responseStream)));
+      assertInstanceOf(
+          InvalidJsonException.class,
+          assertThrows(
+              InvalidJsonException.class, () -> GridGrindJson.readProtocolCatalog(catalogStream)));
+      assertInstanceOf(
+          InvalidJsonException.class,
+          assertThrows(
+              InvalidJsonException.class,
+              () -> GridGrindJson.readRequestDoctorReport(doctorReportStream)));
+      assertFalse(responseStream.closed);
+      assertFalse(catalogStream.closed);
+      assertFalse(doctorReportStream.closed);
+    }
+  }
+
+  @Test
+  void invalidRequestBytesSurfaceInvalidJson() {
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readRequest("{".getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
+  void requestTreeRendersTheWireObjectWithoutIOLayering() {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
+            List.of());
+    WorkbookPlan explicitRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicySpec.mode(ExecutionModeSpec.eventRead()),
+            new FormulaEnvironmentSpec(
+                List.of(new FormulaExternalWorkbookSpec("rates.xlsx", "tmp/rates.xlsx")),
+                FormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
+                List.of()),
+            List.of());
+
+    ObjectNode requestTree = GridGrindJsonOutput.requestTree(request);
+    ObjectNode explicitRequestTree = GridGrindJsonOutput.requestTree(explicitRequest);
+
+    assertEquals(1, requestTree.path("protocolVersion").intValue());
+    assertEquals("NEW", requestTree.path("source").path("type").stringValue());
+    assertTrue(requestTree.path("steps").isArray());
+    assertFalse(requestTree.has("execution"));
+    assertFalse(requestTree.has("formulaEnvironment"));
+    assertEquals(
+        "EVENT_READ",
+        explicitRequestTree.path("execution").path("mode").path("type").stringValue());
+    assertEquals(
+        "USE_CACHED_VALUE",
+        explicitRequestTree.path("formulaEnvironment").path("missingWorkbookPolicy").stringValue());
+    assertEquals(
+        "request must not be null",
+        assertThrows(NullPointerException.class, () -> GridGrindJsonOutput.requestTree(null))
+            .getMessage());
+  }
+
+  @Test
+  void readRequestFromJsonStringDecodesWithoutATransportLayer() {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
+            List.of());
+    String requestJson = GridGrindJsonOutput.requestTree(request).toString();
+
+    assertEquals(request, GridGrindJson.readRequest(requestJson));
+    assertEquals(
+        "json must not be null",
+        assertThrows(NullPointerException.class, () -> GridGrindJson.readRequest((String) null))
+            .getMessage());
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(InvalidJsonException.class, () -> GridGrindJson.readRequest("{")));
+    InvalidRequestShapeException explicitNull =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": null,
+                      "steps": [ ]
+                    }
+                    """));
+    assertEquals(
+        "Field 'execution' must be omitted when absent; explicit null is not accepted.",
+        explicitNull.getMessage());
+  }
+
+  @Test
+  void invalidRequestDoctorReportBytesSurfaceInvalidJson() {
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readRequestDoctorReport("{".getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
+  void emptyJsonDocumentsSurfaceInvalidJsonAcrossByteAndStreamReads() {
+    assertEquals(
+        "Invalid JSON payload",
+        assertThrows(InvalidJsonException.class, () -> GridGrindJson.readRequest(new byte[0]))
+            .getMessage());
+    assertEquals(
+        "Invalid JSON payload",
+        assertThrows(
+                InvalidJsonException.class,
+                () -> GridGrindJson.readWorkbookResult(new ByteArrayInputStream(new byte[0])))
+            .getMessage());
+  }
+
+  @Test
+  void rejectsTopLevelAndArrayNullRequestPayloads() {
+    assertEquals(
+        "Field 'request' must be a JSON object at the root",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () -> GridGrindJson.readRequest("null".getBytes(StandardCharsets.UTF_8)))
+            .getMessage());
+    assertEquals(
+        "Field 'request' must be a JSON object at the root",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        new ByteArrayInputStream("null".getBytes(StandardCharsets.UTF_8))))
+            .getMessage());
+    assertEquals(
+        "Field 'steps[0]' must be omitted when absent; explicit null is not accepted.",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        """
+                        {
+                          "protocolVersion": 1,
+                          "source": { "type": "NEW" },
+                          "persistence": { "type": "NONE" },
+                          "execution": {
+                            "mode": {"type": "FULL_XSSF"},
+                            "journal": { "level": "NORMAL" },
+                            "calculation": {
+                              "strategy": { "type": "DO_NOT_CALCULATE" },
+                              "markRecalculateOnOpen": false
+                            }
+                          },
+                          "formulaEnvironment": {
+                            "externalWorkbooks": [],
+                            "missingWorkbookPolicy": "ERROR",
+                            "udfToolpacks": []
+                          },
+                          "steps": [null]
+                        }
+                        """
+                            .getBytes(StandardCharsets.UTF_8)))
+            .getMessage());
+  }
+
+  @Test
+  void rejectsExplicitNullPlaceholdersAcrossNonRequestWireReads() throws IOException {
+    WorkbookResult response =
+        WorkbookResults.success(
+            List.of(),
+            List.of(),
+            List.of(
+                new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    RequestDoctorReport doctorReport =
+        RequestDoctorReport.clean(
+            new RequestDoctorReport.Summary(
+                "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
+
+    assertEquals(
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readWorkbookResult(
+                        new ByteArrayInputStream(
+                            withTopLevelNull(
+                                GridGrindJsonOutput.writeWorkbookResultBytes(response),
+                                "warnings"))))
+            .getMessage());
+    assertEquals(
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readWorkbookResult(
+                        withTopLevelNull(
+                            GridGrindJsonOutput.writeWorkbookResultBytes(response), "warnings")))
+            .getMessage());
+    assertEquals(
+        "Field 'plainTypes' must be omitted when absent; explicit null is not accepted.",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readProtocolCatalog(
+                        withTopLevelNull(
+                            GridGrindJsonOutput.writeProtocolCatalogBytes(catalog), "plainTypes")))
+            .getMessage());
+    assertEquals(
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequestDoctorReport(
+                        withTopLevelNull(
+                            GridGrindJsonOutput.writeRequestDoctorReportBytes(doctorReport),
+                            "warnings")))
+            .getMessage());
+  }
+
+  @Test
+  void validatesNullArgumentsAcrossAllPublicReadAndWriteSurfaceMethods() {
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.readWorkbookResult((InputStream) null))
+            .getMessage());
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.readProtocolCatalog((InputStream) null))
+            .getMessage());
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.readRequestDoctorReport((InputStream) null))
+            .getMessage());
+    assertEquals(
+        "bytes must not be null",
+        assertThrows(
+                NullPointerException.class, () -> GridGrindJson.readProtocolCatalog((byte[]) null))
+            .getMessage());
+    assertEquals(
+        "bytes must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.readRequestDoctorReport((byte[]) null))
+            .getMessage());
+    assertEquals(
+        "request must not be null",
+        assertThrows(NullPointerException.class, () -> GridGrindJsonOutput.writeRequestBytes(null))
+            .getMessage());
+    assertEquals(
+        "response must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJsonOutput.writeWorkbookResultBytes(null))
+            .getMessage());
+    assertEquals(
+        "outputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJsonOutput.writeWorkbookResult(
+                        null,
+                        WorkbookResults.failure(
+                            new GridGrindProblemDetail.Problem(
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON,
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON
+                                    .category(),
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON
+                                    .recovery(),
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON
+                                    .title(),
+                                "bad",
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON
+                                    .resolution(),
+                                new dev.erst.gridgrind.core.problem.ProblemContext.ParseArguments(
+                                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces
+                                        .HostArgument.named("--request")),
+                                List.of())),
+                        false))
+            .getMessage());
+    assertEquals(
+        "outputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJsonOutput.writeProtocolCatalog(
+                        null, GridGrindProtocolCatalog.catalog(), false))
+            .getMessage());
+    assertEquals(
+        "outputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJsonOutput.writeRequestDoctorReport(
+                        null,
+                        RequestDoctorReport.clean(
+                            new RequestDoctorReport.Summary(
+                                "NEW",
+                                "NONE",
+                                "FULL_XSSF",
+                                "DO_NOT_CALCULATE",
+                                false,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0)),
+                        false))
+            .getMessage());
+  }
+
+  @Test
+  void typeEntryAndRequestReadersStayDeterministicThroughPublicRoundTrip() throws IOException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorReportOutputStream = new ByteArrayOutputStream();
+    TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
+    RequestDoctorReport doctorReport =
+        RequestDoctorReport.clean(
+            new RequestDoctorReport.Summary(
+                "NEW", "SAVE_AS", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
+    GridGrindJsonOutput.writeTypeEntry(outputStream, entry);
+    GridGrindJsonOutput.writeRequestDoctorReport(doctorReportOutputStream, doctorReport, false);
+    Catalog catalog =
+        GridGrindJson.readProtocolCatalog(
+            new ByteArrayInputStream(
+                GridGrindJsonOutput.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog())));
+    RequestDoctorReport decodedDoctorReport =
+        GridGrindJson.readRequestDoctorReport(
+            new ByteArrayInputStream(
+                GridGrindJsonOutput.writeRequestDoctorReportBytes(doctorReport)));
+    WorkbookPlan template =
+        GridGrindJson.readRequest(
+            new ByteArrayInputStream(
+                GridGrindJsonOutput.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate())));
+
+    assertFalse(outputStream.toString(StandardCharsets.UTF_8).isBlank());
+    assertFalse(doctorReportOutputStream.toString(StandardCharsets.UTF_8).isBlank());
+    assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
+    assertEquals(doctorReport, decodedDoctorReport);
+    assertEquals(GridGrindProtocolCatalog.requestTemplate(), template);
+  }
+
+  @Test
+  void streamWriteApisMatchByteArraySerializationsForLargePayloads() throws IOException {
+    String largeText = "x".repeat(200_000);
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+                        {
+                          "protocolVersion": 1,
+                          "source": { "type": "NEW" },
+                          "persistence": { "type": "NONE" },
+                          "execution": {
+                            "mode": {"type": "FULL_XSSF"},
+                            "journal": { "level": "NORMAL" },
+                            "calculation": {
+                              "strategy": { "type": "DO_NOT_CALCULATE" },
+                              "markRecalculateOnOpen": false
+                            }
+                          },
+                          "formulaEnvironment": {
+                            "externalWorkbooks": [],
+                            "missingWorkbookPolicy": "ERROR",
+                            "udfToolpacks": []
+                          },
+                          "steps": [
+                            {
+                          "stepId": "set-owner",
+                          "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                          "action": {
+                            "type": "SET_CELL",
+                            "value": {
+                              "type": "TEXT",
+                              "value": { "type": "INLINE", "text": "%s" }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                    """
+                .formatted(largeText)
+                .getBytes(StandardCharsets.UTF_8));
+    WorkbookResult response =
+        WorkbookResults.success(
+            List.of(),
+            List.of(),
+            List.of(
+                new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    assertStreamSerializationMatchesBytes(
+        GridGrindJsonOutput.writeRequestBytes(request),
+        out -> GridGrindJsonOutput.writeRequest(out, request, false));
+    assertStreamSerializationMatchesBytes(
+        GridGrindJsonOutput.writeWorkbookResultBytes(response),
+        out -> GridGrindJsonOutput.writeWorkbookResult(out, response, false));
+    assertStreamSerializationMatchesBytes(
+        GridGrindJsonOutput.writeProtocolCatalogBytes(catalog),
+        out -> GridGrindJsonOutput.writeProtocolCatalog(out, catalog, false));
+  }
+
+  @Test
+  void catalogLookupResultPrependsProtocolVersionToValueFields() throws IOException {
+    TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    GridGrindJsonOutput.writeCatalogLookupResult(
+        outputStream, ProtocolVersion.CURRENT, entry, false);
+    String json = outputStream.toString(StandardCharsets.UTF_8);
+    assertTrue(json.indexOf("\"protocolVersion\"") < json.indexOf("\"id\""));
+    assertTrue(json.contains("\"GET_CELLS\""));
+    assertEquals(
+        "protocolVersion must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJsonOutput.writeCatalogLookupResult(
+                        new ByteArrayOutputStream(), null, entry, false))
+            .getMessage());
+    assertEquals(
+        "value must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJsonOutput.writeCatalogLookupResult(
+                        new ByteArrayOutputStream(), ProtocolVersion.CURRENT, null, false))
+            .getMessage());
+
+    ByteArrayOutputStream noteOutput = new ByteArrayOutputStream();
+    GridGrindJsonOutput.writeCatalogLookupResult(
+        noteOutput,
+        ProtocolVersion.CURRENT,
+        entry,
+        List.of(new CatalogNote("sharedRule", "Shared rule text.")),
+        false);
+    String notedJson = noteOutput.toString(StandardCharsets.UTF_8);
+    assertTrue(notedJson.contains("\"notes\""));
+    assertTrue(notedJson.contains("\"sharedRule\""));
+    assertEquals(
+        "notes must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJsonOutput.writeCatalogLookupResult(
+                        new ByteArrayOutputStream(), ProtocolVersion.CURRENT, entry, null, false))
+            .getMessage());
+  }
+
+  @Test
+  void discoverySerializersOmitExplicitNullProperties() throws IOException {
+    String catalogJson =
+        new String(
+            GridGrindJsonOutput.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()),
+            StandardCharsets.UTF_8);
+    ByteArrayOutputStream typeEntryOutput = new ByteArrayOutputStream();
+    GridGrindJsonOutput.writeTypeEntry(
+        typeEntryOutput, GridGrindProtocolCatalog.entryFor("EXPECT_TABLE_PRESENT").orElseThrow());
+    String typeEntryJson = typeEntryOutput.toString(StandardCharsets.UTF_8);
+
+    assertFalse(catalogJson.contains(": null"));
+    assertFalse(typeEntryJson.contains(": null"));
+    assertFalse(typeEntryJson.contains("targetSelectorRule"));
+  }
+
+  @Test
+  void requestAndResponseSerializersOmitExplicitNullProperties() throws IOException {
+    WorkbookPlan request = GridGrindProtocolCatalog.requestTemplate();
+    WorkbookResult response =
+        WorkbookResults.success(
+            List.of(),
+            List.of(),
+            List.of(
+                new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
+
+    String requestJson =
+        new String(GridGrindJsonOutput.writeRequestBytes(request), StandardCharsets.UTF_8);
+    String responseJson =
+        new String(GridGrindJsonOutput.writeWorkbookResultBytes(response), StandardCharsets.UTF_8);
+
+    assertFalse(requestJson.contains(": null"));
+    assertFalse(responseJson.contains(": null"));
+    assertFalse(requestJson.contains("\"execution\""));
+    assertFalse(requestJson.contains("\"formulaEnvironment\""));
+  }
+
+  @Test
+  void compactReadbackResponsesStayWithinTheM3PayloadBudgets() throws IOException {
+    WorkbookResult cellsResponse =
+        WorkbookResults.success(
+            List.of(),
+            List.of(),
+            List.of(
+                new dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult(
+                    new StepId("cells"),
+                    new SheetLabel("Budget"),
+                    List.of(
+                        new CellReport.TextReport(
+                            new CellAddress("A1"),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            java.util.Optional.of(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
+                            Optional.empty())))));
+    WorkbookResult sparseWindowResponse =
+        WorkbookResults.success(
+            List.of(),
+            List.of(),
+            List.of(
+                new dev.erst.gridgrind.core.plan.SheetInspectionResult.WindowResult(
+                    new StepId("window"),
+                    new WindowReport.Sparse(
+                        new SheetLabel("Budget"),
+                        new CellAddress("A1"),
+                        new WindowDimensionsReport(50, 50),
+                        List.of(
+                            new CellReport.TextReport(
+                                new CellAddress("A1"),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                java.util.Optional.of(
+                                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
+                                Optional.empty()))))));
+
+    byte[] cellsResponseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(cellsResponse);
+    byte[] sparseWindowResponseBytes =
+        GridGrindJsonOutput.writeWorkbookResultBytes(sparseWindowResponse);
+
+    assertTrue(
+        cellsResponseBytes.length < 1316,
+        () ->
+            "default one-cell readback should stay compact but serialized to "
+                + cellsResponseBytes.length
+                + " bytes");
+    assertTrue(
+        sparseWindowResponseBytes.length < 4096,
+        () ->
+            "sparse 50x50 near-empty window should stay in kilobytes but serialized to "
+                + sparseWindowResponseBytes.length
+                + " bytes");
+  }
+
+  @Test
+  void rejectsExplicitNullInDeepNestedRequestFieldWithFullDottedPath() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": {"type": "FULL_XSSF"},
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": null
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    assertEquals(
+        "Field 'execution.calculation.markRecalculateOnOpen' must be omitted when absent; explicit"
+            + " null is not accepted.",
+        exception.getMessage());
+    assertEquals(
+        Optional.of("execution.calculation.markRecalculateOnOpen"),
+        exception.jsonLocation().jsonPath());
+  }
+
+  private static void assertStreamSerializationMatchesBytes(byte[] expected, StreamWriter writer)
+      throws IOException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    writer.write(outputStream);
+    assertArrayEquals(expected, outputStream.toByteArray());
+  }
+
+  private static byte[] withTopLevelNull(byte[] bytes, String fieldName) throws IOException {
+    JsonMapper mapper = JsonMapper.builder().build();
+    ObjectNode node = (ObjectNode) mapper.readTree(bytes);
+    node.putNull(fieldName);
+    return mapper.writeValueAsBytes(node);
+  }
+
+  /** Input stream wrapper that records whether caller-owned close was triggered. */
+  private static final class TrackingInputStream extends InputStream {
+    private final ByteArrayInputStream delegate;
+    private boolean closed;
+
+    private TrackingInputStream(byte[] bytes) {
+      this.delegate = new ByteArrayInputStream(bytes);
+    }
+
+    @Override
+    public int read() {
+      return delegate.read();
+    }
+
+    @Override
+    public int read(byte[] buffer, int offset, int length) {
+      return delegate.read(buffer, offset, length);
+    }
+
+    @Override
+    public void close() {
+      closed = true;
+    }
+  }
+
+  /** One streamed JSON writer shape used to prove output-stream APIs avoid buffering drift. */
+  @FunctionalInterface
+  @SuppressWarnings("NotJavadoc")
+  private interface StreamWriter {
+    void write(OutputStream outputStream) throws IOException;
+  }
+}

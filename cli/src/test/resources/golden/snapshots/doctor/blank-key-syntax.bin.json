@@ -1,0 +1,226 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_JSON",
+        "message" : "Expected '}' to close object",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_JSON",
+      "context" : {
+        "json" : {
+          "byteOffset" : 0,
+          "jsonColumn" : 1,
+          "jsonLine" : 1,
+          "type" : "BYTE_OFFSET_LINE_COLUMN"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Expected '}' to close object",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Send syntactically valid JSON.",
+      "title" : "Invalid JSON payload"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_JSON",
+        "message" : "Expected ':' after object property name",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_JSON",
+      "context" : {
+        "json" : {
+          "byteOffset" : 4,
+          "jsonColumn" : 3,
+          "jsonLine" : 2,
+          "type" : "BYTE_OFFSET_LINE_COLUMN"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Expected ':' after object property name",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Send syntactically valid JSON.",
+      "title" : "Invalid JSON payload"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Unknown field '[\"    \"]'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 4,
+          "jsonPath" : "[\"    \"]",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Unknown field '[\"    \"]'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Remove or rename unexpected field '[\"    \"]' so the request matches the protocol.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_JSON",
+        "message" : "Expected a JSON value",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_JSON",
+      "context" : {
+        "json" : {
+          "byteOffset" : 10,
+          "jsonPath" : "[\"    \"]",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Expected a JSON value",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Send syntactically valid JSON.",
+      "title" : "Invalid JSON payload"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_JSON",
+        "message" : "Expected ',' or '}' after object member",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_JSON",
+      "context" : {
+        "json" : {
+          "byteOffset" : 23,
+          "jsonColumn" : 22,
+          "jsonLine" : 2,
+          "type" : "BYTE_OFFSET_LINE_COLUMN"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Expected ',' or '}' after object member",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Send syntactically valid JSON.",
+      "title" : "Invalid JSON payload"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Missing required field 'protocolVersion'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "jsonPath" : "protocolVersion",
+          "type" : "PATH_ONLY"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Missing required field 'protocolVersion'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Add protocolVersion: 1 at the request root.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Missing required field 'source'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "jsonPath" : "source",
+          "type" : "PATH_ONLY"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Missing required field 'source'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Add required field 'source' to the request payload.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Missing required field 'persistence'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "jsonPath" : "persistence",
+          "type" : "PATH_ONLY"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Missing required field 'persistence'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Add required field 'persistence' to the request payload.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Missing required field 'steps'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "jsonPath" : "steps",
+          "type" : "PATH_ONLY"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Missing required field 'steps'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Add required field 'steps' to the request payload.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : 1,
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

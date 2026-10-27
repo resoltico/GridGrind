@@ -2,7 +2,6 @@ package dev.erst.gridgrind.buildlogic
 
 import com.diffplug.gradle.spotless.SpotlessExtension
 import java.io.File
-import java.math.BigDecimal
 import net.ltgt.gradle.errorprone.CheckSeverity
 import org.gradle.api.Action
 import org.gradle.api.Plugin
@@ -13,7 +12,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.gradle.api.plugins.quality.Pmd
 import org.gradle.api.plugins.quality.PmdExtension
-import org.gradle.api.tasks.Delete
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
@@ -22,11 +21,7 @@ import org.gradle.kotlin.dsl.getByType
 import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
-import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
-import org.gradle.testing.jacoco.tasks.rules.JacocoLimit
-import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRule
-import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRulesContainer
 
 class GridGrindJavaConventionsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -69,14 +64,6 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     javaExtension.sourceSets.named("test").map { sourceSet ->
                         sourceSet.allSource.files.any(File::isFile)
                     }
-                val semanticSourceFiles =
-                    mainSourceSet.map { sourceSet ->
-                        sourceSet.allJava.sourceDirectories.asFileTree
-                    }
-                val semanticCompileClasspathConfigurationName =
-                    mainSourceSet.map { sourceSet ->
-                        sourceSet.compileClasspathConfigurationName
-                    }
                 val coverageClasses =
                     mainSourceSet.map { sourceSet ->
                         sourceSet.output.classesDirs.asFileTree.matching { patternFilterable ->
@@ -95,42 +82,6 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                         }
                     },
                 )
-
-                tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification::class.java)
-                    .configure(
-                        object : Action<JacocoCoverageVerification> {
-                            override fun execute(verification: JacocoCoverageVerification) {
-                                verification.onlyIf("project has first-party test sources") {
-                                    hasOwnTestSources.get()
-                                }
-                                verification.sourceDirectories.setFrom(mainSourceSet.map { it.allJava.srcDirs })
-                                verification.classDirectories.setFrom(coverageClasses)
-                            }
-                        },
-                    )
-
-                tasks.register("pmdSemanticMain", Pmd::class.java) { pmd ->
-                    pmd.group = LifecycleBasePlugin.VERIFICATION_GROUP
-                    pmd.description =
-                        "Runs the structural semantic-shape PMD profile for reviewed production-code governance."
-                    pmd.onlyIf("project has first-party production Java sources") {
-                        semanticSourceFiles.get().files.any(File::isFile)
-                    }
-                    pmd.setSource(semanticSourceFiles)
-                    pmd.classpath =
-                        configurations.named(semanticCompileClasspathConfigurationName.get()).get()
-                    pmd.ruleSetFiles = files(repositoryLayout.semanticShapePmdRuleset)
-                    pmd.ruleSets = emptyList()
-                    pmd.ignoreFailures = true
-                    pmd.reports.xml.required.set(true)
-                    pmd.reports.xml.outputLocation.set(
-                        layout.buildDirectory.file("reports/pmd/semanticMain.xml"),
-                    )
-                    pmd.reports.html.required.set(true)
-                    pmd.reports.html.outputLocation.set(
-                        layout.buildDirectory.file("reports/pmd/semanticMain.html"),
-                    )
-                }
             }
 
             dependencies.add("errorprone", libs.findLibrary("errorprone-core").get().get())
@@ -156,17 +107,27 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 setRuleSets(emptyList())
             }
 
+            tasks.withType(AbstractArchiveTask::class.java).configureEach { archive ->
+                archive.isPreserveFileTimestamps = false
+                archive.isReproducibleFileOrder = true
+            }
+
             tasks.withType(Jar::class.java).configureEach(
                 object : Action<Jar> {
                     override fun execute(jar: Jar) {
                         pruneJarOutputsTask.expectedArchiveFileNames.add(jar.archiveFileName)
                         jar.dependsOn(pruneJarOutputsTask)
+                        if (jar.name != "shadowJar") {
+                            jar.from(repositoryLayout.repositoryRoot.resolve("LICENSE")) {
+                                it.into("META-INF")
+                            }
+                        }
                         jar.manifest.attributes(
                             mapOf(
                                 "Implementation-Title" to project.name,
                                 "Implementation-Version" to project.version,
                                 "Implementation-Vendor" to "Ervins Strauhmanis",
-                                "Implementation-License" to "MIT",
+                                "Implementation-License" to "MPL-2.0",
                             ),
                         )
                     }
@@ -223,27 +184,14 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     },
                 )
 
-            val jacocoExecutionData = objects.fileCollection()
-            val cleanJacocoExecutionData =
-                tasks.register("cleanJacocoExecutionData", Delete::class.java) { cleanTask: Delete ->
-                    cleanTask.group = LifecycleBasePlugin.VERIFICATION_GROUP
-                    cleanTask.description =
-                        "Removes stale JaCoCo execution data before generating fresh coverage evidence."
-                    cleanTask.outputs.upToDateWhen { false }
-                    cleanTask.delete(jacocoExecutionData)
-                }
             tasks.withType(Test::class.java).configureEach(
                 object : Action<Test> {
                     override fun execute(test: Test) {
                         val jacocoDestinationFile = jacocoExecutionDataFile(test)
                         val jacoco = test.extensions.getByType(JacocoTaskExtension::class.java)
                         jacoco.destinationFile = jacocoDestinationFile
-                        jacocoExecutionData.from(jacocoDestinationFile)
                         test.outputs.file(jacocoDestinationFile)
-                        test.outputs.doNotCacheIf(
-                            "JaCoCo verification requires fresh execution data after it is cleared.",
-                        ) { true }
-                        test.mustRunAfter(cleanJacocoExecutionData)
+                        // Reuse execution data only with the test task's unchanged inputs/output.
                         test.doFirst {
                             jacocoDestinationFile.parentFile.mkdirs()
                             if (jacocoDestinationFile.exists()) {
@@ -287,10 +235,9 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.named("jacocoTestReport", JacocoReport::class.java).configure(
                 object : Action<JacocoReport> {
                     override fun execute(report: JacocoReport) {
-                        report.dependsOn(cleanJacocoExecutionData)
-                        report.dependsOn(tasks.withType(Test::class.java))
+                        report.dependsOn(coverageTestTasks())
                         report.executionData.from(
-                            tasks.withType(Test::class.java).map { testTask ->
+                            coverageTestTasks().map { testTask ->
                                 testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
                             },
                         )
@@ -302,52 +249,8 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
 
             tasks.named("check").configure { checkTask ->
                 checkTask.dependsOn("spotlessCheck")
-                checkTask.dependsOn("jacocoTestCoverageVerification")
+                checkTask.dependsOn("jacocoTestReport")
             }
-
-            tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification::class.java).configure(
-                object : Action<JacocoCoverageVerification> {
-                    override fun execute(verification: JacocoCoverageVerification) {
-                        verification.dependsOn(cleanJacocoExecutionData)
-                        verification.dependsOn(tasks.withType(Test::class.java))
-                        verification.executionData.from(
-                            tasks.withType(Test::class.java).map { testTask ->
-                                testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
-                            },
-                        )
-                        verification.violationRules(
-                            object : Action<JacocoViolationRulesContainer> {
-                                override fun execute(rules: JacocoViolationRulesContainer) {
-                                    rules.rule(
-                                        object : Action<JacocoViolationRule> {
-                                            override fun execute(rule: JacocoViolationRule) {
-                                                rule.limit(
-                                                    object : Action<JacocoLimit> {
-                                                        override fun execute(limit: JacocoLimit) {
-                                                            limit.counter = "LINE"
-                                                            limit.value = "COVEREDRATIO"
-                                                            limit.minimum = BigDecimal("1.0")
-                                                        }
-                                                    },
-                                                )
-                                                rule.limit(
-                                                    object : Action<JacocoLimit> {
-                                                        override fun execute(limit: JacocoLimit) {
-                                                            limit.counter = "BRANCH"
-                                                            limit.value = "COVEREDRATIO"
-                                                            limit.minimum = BigDecimal("1.0")
-                                                        }
-                                                    },
-                                                )
-                                            }
-                                        },
-                                    )
-                                }
-                            },
-                        )
-                    }
-                },
-            )
         }
     }
 

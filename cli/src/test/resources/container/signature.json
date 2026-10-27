@@ -1,0 +1,92 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "books odd/nested/office signature [docker #smoke].xlsx",
+    "ifExists": "REPLACE"
+  },
+  "execution": {
+    "mode": {"type": "FULL_XSSF"},
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
+  },
+  "steps": [
+    {
+      "stepId": "ensure-approvals",
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Approvals"
+      },
+      "action": {
+        "type": "ENSURE_SHEET"
+      }
+    },
+    {
+      "stepId": "set-signature-line",
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Approvals"
+      },
+      "action": {
+        "type": "SET_SIGNATURE_LINE",
+        "signatureLine": {
+          "name": "BudgetSignature",
+          "anchor": {
+            "type": "TWO_CELL",
+            "from": {
+              "columnIndex": 1,
+              "rowIndex": 1,
+              "dx": 0,
+              "dy": 0
+            },
+            "to": {
+              "columnIndex": 4,
+              "rowIndex": 6,
+              "dx": 0,
+              "dy": 0
+            },
+            "behavior": "MOVE_AND_RESIZE"
+          },
+          "allowComments": false,
+          "signingInstructions": "Review the budget before signing.",
+          "suggestedSigner": "Ada Lovelace",
+          "suggestedSigner2": "Finance",
+          "suggestedSignerEmail": "ada@example.com",
+          "invalidStamp": "invalid",
+          "plainSignature": {
+            "format": "PNG",
+            "source": {
+              "type": "INLINE_BASE64",
+              "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
+            }
+          }
+        }
+      }
+    },
+    {
+      "stepId": "read-signature",
+      "target": {
+        "type": "DRAWING_OBJECT_ALL_ON_SHEET",
+        "sheetName": "Approvals"
+      },
+      "query": {
+        "type": "GET_DRAWING_OBJECTS"
+      }
+    }
+  ]
+}

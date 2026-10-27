@@ -1,0 +1,50 @@
+package dev.erst.gridgrind.core.plan;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import org.junit.jupiter.api.Test;
+
+/** Verifies that step construction retains bindable fragments for static contract validation. */
+class WorkbookStepValidationTest {
+  @Test
+  void keepsKnownButIncompatibleOperationTargetPairsBound() {
+    CellMutationAction.SetCell action =
+        new CellMutationAction.SetCell(new CellValueSpec.Text(TextSourceSpec.inline("Owner")));
+
+    assertDoesNotThrow(
+        () ->
+            new MutationStep(
+                new StepId("set-owner"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
+                action));
+    assertEquals(
+        "SET_CELL requires target type CELL_BY_ADDRESS or TABLE_CELL_BY_COLUMN_NAME but got RANGE_BY_RANGE",
+        WorkbookOperationContracts.targetViolation(
+                action, new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")))
+            .orElseThrow());
+  }
+
+  @Test
+  void acceptsCompatibleOperationTargetPairsThroughTheSameContract() {
+    CellMutationAction.SetCell action =
+        new CellMutationAction.SetCell(new CellValueSpec.Text(TextSourceSpec.inline("Owner")));
+
+    assertTrue(
+        WorkbookOperationContracts.targetViolation(
+                action, new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")))
+            .isEmpty());
+    assertTrue(
+        WorkbookOperationContracts.targetViolation(
+                new WorkbookIntrospectionQuery.GetWorkbookSummary(), new WorkbookSelector.Current())
+            .isEmpty());
+  }
+}

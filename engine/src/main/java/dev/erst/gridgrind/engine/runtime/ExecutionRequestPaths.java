@@ -1,10 +1,21 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec;
+import dev.erst.gridgrind.core.model.security.ResolvedEncryption;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceEncryption;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
+import dev.erst.gridgrind.core.model.security.ResolvedSignature;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -12,20 +23,21 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /** Request path, source, and persistence facts shared across executor workflows. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_REQUEST_OWNED_PATH_CONTAINMENT
+})
 final class ExecutionRequestPaths {
   private ExecutionRequestPaths() {}
 
-  static ExcelOoxmlPersistenceOptions persistenceOptions(
+  static ResolvedPersistenceSecurity persistenceOptions(
       WorkbookPlan.WorkbookPersistence persistence, ExecutionInputBindings bindings)
       throws IOException {
     return switch (persistence) {
-      case WorkbookPlan.WorkbookPersistence.None _ -> ExcelOoxmlPersistenceOptions.none();
+      case WorkbookPlan.WorkbookPersistence.None _ -> ResolvedPersistenceSecurity.none();
       case WorkbookPlan.WorkbookPersistence.Overwrite overwrite ->
-          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
-              overwrite.security().orElse(null), bindings);
+          materializePersistenceSecurity(overwrite.security().orElse(null), bindings);
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
-              saveAs.security().orElse(null), bindings);
+          materializePersistenceSecurity(saveAs.security().orElse(null), bindings);
     };
   }
 
@@ -38,11 +50,10 @@ final class ExecutionRequestPaths {
     };
   }
 
-  static ExcelOoxmlPackageSecuritySnapshot sourcePackageSecurity(
-      WorkbookPlan.WorkbookSource source) {
+  static OoxmlPackageSecurityReport sourcePackageSecurity(WorkbookPlan.WorkbookSource source) {
     return switch (source) {
-      case WorkbookPlan.WorkbookSource.New _ -> ExcelOoxmlPackageSecuritySnapshot.none();
-      case WorkbookPlan.WorkbookSource.ExistingFile _ -> ExcelOoxmlPackageSecuritySnapshot.none();
+      case WorkbookPlan.WorkbookSource.New _ -> OoxmlPackageSecurityReport.none();
+      case WorkbookPlan.WorkbookSource.ExistingFile _ -> OoxmlPackageSecurityReport.none();
     };
   }
 
@@ -53,7 +64,7 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
           existingFile
               .security()
-              .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+              .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec::passwordRef)
               .map(bindings::resolveSecret);
     };
   }
@@ -64,7 +75,7 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile -> {
         if (existingFile
             .security()
-            .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+            .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec::passwordRef)
             .isPresent()) {
           throw new IllegalStateException(
               "source encryption references require execution bindings");
@@ -119,32 +130,32 @@ final class ExecutionRequestPaths {
     };
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape requestShape(
+  static dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape requestShape(
       WorkbookPlan request) {
-    return dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+    return dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape.known(
         reqSourceType(request), reqPersistenceType(request));
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+  static dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference
       workbookReference(WorkbookPlan request, Path workingDirectory) {
     return switch (request.source()) {
       case WorkbookPlan.WorkbookSource.New _ ->
-          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+          dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference
               .newWorkbook();
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+          dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference
               .existingFile(normalizePath(existingFile.path(), workingDirectory).toString());
     };
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+  static dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.PersistenceReference
       persistenceReference(WorkbookPlan request, Path workingDirectory) {
     return switch (request.persistence()) {
       case WorkbookPlan.WorkbookPersistence.Overwrite _ ->
-          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+          dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.PersistenceReference
               .overwrite(Objects.requireNonNull(reqSourcePath(request, workingDirectory)));
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+          dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.PersistenceReference
               .saveAs(normalizePath(saveAs.path(), workingDirectory).toString());
       case WorkbookPlan.WorkbookPersistence.None _ ->
           throw new IllegalArgumentException("persistence reference requires a saving policy");
@@ -158,7 +169,7 @@ final class ExecutionRequestPaths {
         candidate.isAbsolute()
             ? candidate.toAbsolutePath().normalize()
             : base.resolve(candidate).normalize();
-    if (!normalized.startsWith(base)) { // LIM-025
+    if (!normalized.startsWith(base)) {
       throw new RequestPathEscapeException("path must not escape the execution root: " + path);
     }
     return normalized;
@@ -177,5 +188,75 @@ final class ExecutionRequestPaths {
               ? normalizePath(existingFile.path(), workingDirectory).toString()
               : null;
     };
+  }
+
+  static ResolvedOpenSecurity materializeOpenSecurity(
+      @Nullable OoxmlOpenSecuritySpec input, ExecutionInputBindings bindings) {
+    return input == null || input.passwordRef().isEmpty()
+        ? new ResolvedOpenSecurity.Unencrypted()
+        : new ResolvedOpenSecurity.Encrypted(
+            bindings.resolveSecret(input.passwordRef().orElseThrow()));
+  }
+
+  static ResolvedPersistenceSecurity materializePersistenceSecurity(
+      @Nullable OoxmlPersistenceSecuritySpec input, ExecutionInputBindings bindings)
+      throws IOException {
+    if (input == null) {
+      return ResolvedPersistenceSecurity.none();
+    }
+    return new ResolvedPersistenceSecurity(
+        encryptionPolicy(input.encryption(), bindings),
+        signaturePolicy(input.signature(), bindings));
+  }
+
+  private static ResolvedPersistenceEncryption encryptionPolicy(
+      OoxmlPersistenceEncryptionSpec input, ExecutionInputBindings bindings) {
+    return switch (input) {
+      case OoxmlPersistenceEncryptionSpec.None none -> none;
+      case OoxmlPersistenceEncryptionSpec.Encrypt encrypt ->
+          new ResolvedPersistenceEncryption.Encrypt(
+              materializeEncryption(encrypt.encryption(), bindings));
+      case OoxmlPersistenceEncryptionSpec.PreserveSource preserve -> preserve;
+    };
+  }
+
+  private static ResolvedPersistenceSignature signaturePolicy(
+      OoxmlPersistenceSignatureSpec input, ExecutionInputBindings bindings) throws IOException {
+    return switch (input) {
+      case OoxmlPersistenceSignatureSpec.None none -> none;
+      case OoxmlPersistenceSignatureSpec.Sign sign ->
+          new ResolvedPersistenceSignature.Sign(materializeSignature(sign.signature(), bindings));
+    };
+  }
+
+  private static ResolvedEncryption materializeEncryption(
+      OoxmlEncryptionSpec input, ExecutionInputBindings bindings) {
+    return new ResolvedEncryption(
+        bindings.resolveSecret(input.passwordRef()), input.cipher(), input.hash());
+  }
+
+  private static ResolvedSignature materializeSignature(
+      OoxmlSignatureSpec input, ExecutionInputBindings bindings) throws IOException {
+    try {
+      return new ResolvedSignature(
+          bindings
+              .requestPathAccess()
+              .materializeRead(
+                  input.pkcs12Path(),
+                  "persistence.security.signature.signature.pkcs12Path",
+                  "gridgrind-signing-material-",
+                  ".p12"),
+          bindings.resolveSecret(input.keystorePasswordRef()),
+          input
+              .keyPasswordRef()
+              .map(bindings::resolveSecret)
+              .orElseGet(() -> bindings.resolveSecret(input.keystorePasswordRef())),
+          input.alias(),
+          input.digestAlgorithm(),
+          input.description());
+    } catch (java.nio.file.NoSuchFileException exception) {
+      throw new dev.erst.gridgrind.engine.backend.xssf.InvalidSigningConfigurationException(
+          "Signing material does not exist: " + input.pkcs12Path(), exception);
+    }
   }
 }

@@ -4,18 +4,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
-import dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,13 +36,13 @@ class RequestPreflightPathTest {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("missing-source.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            new FormulaEnvironmentInput(
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecuritySpec.none()),
+            ExecutionPolicySpec.defaults(),
+            new FormulaEnvironmentSpec(
                 List.of(
-                    new FormulaExternalWorkbookInput(
+                    new FormulaExternalWorkbookSpec(
                         "ExternalOne.xlsx", "missing-external-one.xlsx"),
-                    new FormulaExternalWorkbookInput(
+                    new FormulaExternalWorkbookSpec(
                         "ExternalTwo.xlsx", "missing-external-two.xlsx")),
                 FormulaMissingWorkbookPolicy.ERROR,
                 List.of()),
@@ -98,12 +100,12 @@ class RequestPreflightPathTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.getFileName().toString()),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
-                    "insert-column",
-                    new ColumnBandSelector.Insertion("Ops", 1, 1),
+                    new StepId("insert-column"),
+                    new ColumnBandSelector.Insertion(new SheetName("Ops"), 1, 1),
                     new WorkbookMutationAction.InsertColumns())));
 
     RequestPreflight.Result result = verify(request);
@@ -134,9 +136,9 @@ class RequestPreflightPathTest {
     return WorkbookPlan.standard(
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
-        ExecutionPolicyInput.defaults(),
-        new FormulaEnvironmentInput(
-            List.of(new FormulaExternalWorkbookInput("Escaped.xlsx", "../escaped.xlsx")),
+        ExecutionPolicySpec.defaults(),
+        new FormulaEnvironmentSpec(
+            List.of(new FormulaExternalWorkbookSpec("Escaped.xlsx", "../escaped.xlsx")),
             FormulaMissingWorkbookPolicy.ERROR,
             List.of()),
         List.of());

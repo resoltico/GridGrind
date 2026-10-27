@@ -1,15 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
-import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackagePersistenceSupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.security.SecurityAdapter;
 import java.util.List;
 
 /**
@@ -26,9 +26,8 @@ final class RequestPreflightWorkbookSource {
       return;
     }
     var context = RequestPreflight.openWorkbookContext(request, bindings);
-    ExecutionWorkbookSupport workbookSupport =
-        new ExecutionWorkbookSupport(bindings.tempFileFactory());
-    try (ExcelWorkbook workbook = workbookSupport.openWorkbook(request.source(), null, bindings)) {
+    WorkbookLifecycle workbookSupport = new WorkbookLifecycle(bindings.tempFileFactory());
+    try (XssfWorkbook workbook = workbookSupport.openWorkbook(request.source(), null, bindings)) {
       validateSourcePersistencePolicy(request, workbook);
       addFormulaColumnViolations(request, bindings, workbook, problems);
     } catch (Exception exception) {
@@ -39,59 +38,46 @@ final class RequestPreflightWorkbookSource {
   private static void addFormulaColumnViolations(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       List<GridGrindProblemDetail.Problem> problems) {
     for (WorkbookStaticViolation violation :
         WorkbookStaticRequestContract.validateKnownFormulaPresence(
-            request, containsFormula(workbook))) {
+            request, workbook.formulas().containsFormula())) {
       problems.add(
           GridGrindProblems.problem(
-              dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST,
+              dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST,
               violation.message(),
               RequestPreflight.openWorkbookContext(request, bindings),
               List.of()));
     }
   }
 
-  private static boolean containsFormula(ExcelWorkbook workbook) {
-    for (org.apache.poi.ss.usermodel.Sheet sheet : workbook.xssfWorkbook()) {
-      for (org.apache.poi.ss.usermodel.Row row : sheet) {
-        for (org.apache.poi.ss.usermodel.Cell cell : row) {
-          if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.FORMULA) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  private static void validateSourcePersistencePolicy(
-      WorkbookPlan request, ExcelWorkbook workbook) {
-    java.util.Optional<dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput> security =
-        switch (request.persistence()) {
-          case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
-          case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> saveAs.security();
-          case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> overwrite.security();
-        };
+  private static void validateSourcePersistencePolicy(WorkbookPlan request, XssfWorkbook workbook) {
+    java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
+        security =
+            switch (request.persistence()) {
+              case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
+              case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> saveAs.security();
+              case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> overwrite.security();
+            };
     if (security.isPresent()
         && security.orElseThrow().encryption()
             instanceof
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.PreserveSource
         && workbook.persistence().loadedPackageSecurity().encryption()
-            instanceof dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot.None) {
+            instanceof dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport.None) {
       throw new EncryptionSourceNotEncryptedException();
     }
     if (security.isPresent()
         && security.orElseThrow().encryption()
             instanceof
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource) {
-      ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.PreserveSource) {
+      SecurityAdapter.effectiveOptions(
           workbook.persistence().loadedPackageSecurity(),
           workbook.persistence().sourceEncryptionPassword(),
-          new ExcelOoxmlPersistenceOptions(
-              new ExcelOoxmlPersistenceEncryption.PreserveSource(),
-              new ExcelOoxmlPersistenceSignature.Unsigned()));
+          new ResolvedPersistenceSecurity(
+              new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+              new OoxmlPersistenceSignatureSpec.None()));
     }
   }
 }

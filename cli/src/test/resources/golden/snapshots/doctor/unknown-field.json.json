@@ -1,0 +1,35 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Unknown field 'unexpected'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 86,
+          "jsonPath" : "unexpected",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Unknown field 'unexpected'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Remove or rename unexpected field 'unexpected' so the request matches the protocol.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : 1,
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

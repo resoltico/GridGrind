@@ -1,0 +1,521 @@
+{
+  "exit" : 0,
+  "stderr" : "",
+  "stdout" : {
+    "matches" : [ {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_COMMENT",
+      "qualifiedId" : "mutationActionTypes:SET_COMMENT",
+      "summary" : "Replace the plain-text comment attached to a single cell.",
+      "supportingQualifiedIds" : [ "commentSpecType:CommentSpec", "plainTypes:commentSpecType", "cellFontPatchType:CellFontPatch", "richTextRunSpecType:RichTextRunSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "fontHeightSpecTypes:POINTS", "nestedTypes:textSourceSpecTypes", "plainTypes:cellFontPatchType", "plainTypes:richTextRunSpecType", "nestedTypes:fontHeightSpecTypes" ]
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "ALL_OF",
+      "qualifiedId" : "assertionTypes:ALL_OF",
+      "summary" : "Require every nested assertion to pass against the same step target."
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "ANY_OF",
+      "qualifiedId" : "assertionTypes:ANY_OF",
+      "summary" : "Require at least one nested assertion to pass against the same step target."
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "NOT",
+      "qualifiedId" : "assertionTypes:NOT",
+      "summary" : "Invert one nested assertion against the same step target."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "APPEND_ROW",
+      "qualifiedId" : "mutationActionTypes:APPEND_ROW",
+      "summary" : "Append a new row of typed or compact homogeneous values after the last occupied row.",
+      "supportingQualifiedIds" : [ "cellFontPatchType:CellFontPatch", "cellRowSpecTypes:BOOLEAN", "cellRowSpecTypes:DATE", "cellRowSpecTypes:DATE_TIME", "cellRowSpecTypes:ERROR", "cellRowSpecTypes:FORMULA", "cellRowSpecTypes:NUMBER", "cellRowSpecTypes:TEXT", "cellRowSpecTypes:TYPED", "cellValueSpecTypes:BLANK", "cellValueSpecTypes:BOOLEAN", "cellValueSpecTypes:DATE", "cellValueSpecTypes:DATE_TIME", "cellValueSpecTypes:ERROR", "cellValueSpecTypes:FORMULA", "cellValueSpecTypes:NUMBER", "cellValueSpecTypes:RAW_FORMULA", "cellValueSpecTypes:RICH_TEXT", "cellValueSpecTypes:TEXT", "richTextRunSpecType:RichTextRunSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "fontHeightSpecTypes:POINTS", "nestedTypes:cellRowSpecTypes", "nestedTypes:cellValueSpecTypes", "nestedTypes:textSourceSpecTypes", "plainTypes:cellFontPatchType", "plainTypes:richTextRunSpecType", "nestedTypes:fontHeightSpecTypes" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_RANGE",
+      "qualifiedId" : "mutationActionTypes:SET_RANGE",
+      "summary" : "Write a rectangular grid of typed or compact homogeneous values.",
+      "supportingQualifiedIds" : [ "cellFontPatchType:CellFontPatch", "cellGridSpecTypes:BOOLEAN", "cellGridSpecTypes:DATE", "cellGridSpecTypes:DATE_TIME", "cellGridSpecTypes:ERROR", "cellGridSpecTypes:FORMULA", "cellGridSpecTypes:NUMBER", "cellGridSpecTypes:TEXT", "cellGridSpecTypes:TYPED", "cellValueSpecTypes:BLANK", "cellValueSpecTypes:BOOLEAN", "cellValueSpecTypes:DATE", "cellValueSpecTypes:DATE_TIME", "cellValueSpecTypes:ERROR", "cellValueSpecTypes:FORMULA", "cellValueSpecTypes:NUMBER", "cellValueSpecTypes:RAW_FORMULA", "cellValueSpecTypes:RICH_TEXT", "cellValueSpecTypes:TEXT", "richTextRunSpecType:RichTextRunSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "fontHeightSpecTypes:POINTS", "nestedTypes:cellGridSpecTypes", "nestedTypes:cellValueSpecTypes", "nestedTypes:textSourceSpecTypes", "plainTypes:cellFontPatchType", "plainTypes:richTextRunSpecType", "nestedTypes:fontHeightSpecTypes" ]
+    }, {
+      "catalogGroup" : "workbookStepTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "ASSERTION",
+      "qualifiedId" : "workbookStepTypes:ASSERTION",
+      "summary" : "Verify one authored expectation against the selected workbook target."
+    }, {
+      "catalogGroup" : "workbookStepTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "MUTATION",
+      "qualifiedId" : "workbookStepTypes:MUTATION",
+      "summary" : "Execute one mutation action against the selected workbook target."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_SHEET_PRESENTATION",
+      "qualifiedId" : "mutationActionTypes:SET_SHEET_PRESENTATION",
+      "summary" : "Apply supported sheet-presentation state such as display flags and defaults.",
+      "supportingQualifiedIds" : [ "ignoredErrorSpecType:IgnoredErrorSpec", "plainTypes:ignoredErrorSpecType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_CHART",
+      "qualifiedId" : "mutationActionTypes:SET_CHART",
+      "summary" : "Create or mutate one supported simple chart on one sheet.",
+      "supportingQualifiedIds" : [ "nestedTypes:chartTitleSpecTypes", "chartTitleSpecTypes:TEXT", "drawingAnchorSpecTypes:TWO_CELL", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "chartSpecType:ChartSpec", "chartTitleSpecTypes:FORMULA", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:textSourceSpecTypes", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:chartSpecType", "plainTypes:drawingMarkerSpecType" ]
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_CELL_STYLE",
+      "qualifiedId" : "assertionTypes:EXPECT_CELL_STYLE",
+      "summary" : "Require every selected cell to have the exact style snapshot.",
+      "supportingQualifiedIds" : [ "cellAlignmentReportType:CellAlignmentReport", "cellBorderReportType:CellBorderReport", "cellBorderSideReportTypes:COLORED", "cellBorderSideReportTypes:DEFAULT_COLOR", "cellBorderSideReportTypes:NONE", "cellColorReportTypes:INDEXED", "cellColorReportTypes:RGB", "cellColorReportTypes:THEME", "cellFillReportTypes:GRADIENT", "cellFillReportTypes:PATTERN_BACKGROUND", "cellFillReportTypes:PATTERN_FOREGROUND", "cellFillReportTypes:PATTERN_FOREGROUND_BACKGROUND", "cellFillReportTypes:PATTERN_ONLY", "cellFontReportType:CellFontReport", "cellGradientFillReportTypes:LINEAR", "cellGradientFillReportTypes:PATH", "cellGradientStopReportType:CellGradientStopReport", "cellProtectionReportType:CellProtectionReport", "cellStyleReportType:CellStyleReport", "nestedTypes:cellBorderSideReportTypes", "nestedTypes:cellColorReportTypes", "nestedTypes:cellFillReportTypes", "nestedTypes:cellGradientFillReportTypes", "plainTypes:cellAlignmentReportType", "plainTypes:cellBorderReportType", "plainTypes:cellFontReportType", "plainTypes:cellGradientStopReportType", "plainTypes:cellProtectionReportType", "plainTypes:cellStyleReportType" ]
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_CELL_VALUE",
+      "qualifiedId" : "assertionTypes:EXPECT_CELL_VALUE",
+      "summary" : "Require every selected cell to have the exact effective value.",
+      "supportingQualifiedIds" : [ "cellValueTypes:BLANK", "cellValueTypes:BOOLEAN", "cellValueTypes:ERROR", "cellValueTypes:NUMBER", "cellValueTypes:TEXT", "nestedTypes:cellValueTypes" ]
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_FORMULA_TEXT",
+      "qualifiedId" : "assertionTypes:EXPECT_FORMULA_TEXT",
+      "summary" : "Require every selected cell to store the exact formula text."
+    }, {
+      "catalogGroup" : "inspectionQueryTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "GET_CELLS",
+      "qualifiedId" : "inspectionQueryTypes:GET_CELLS",
+      "summary" : "Return exact cell snapshots for explicit addresses. Omit projection for the default compact VALUE readback.",
+      "supportingQualifiedIds" : [ "cellReadProjectionType:CellReadProjection", "plainTypes:cellReadProjectionType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "MERGE_CELLS",
+      "qualifiedId" : "mutationActionTypes:MERGE_CELLS",
+      "summary" : "Merge a rectangular A1-style range."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_CELL",
+      "qualifiedId" : "mutationActionTypes:SET_CELL",
+      "summary" : "Write one typed value to a single cell.",
+      "supportingQualifiedIds" : [ "cellFontPatchType:CellFontPatch", "cellValueSpecTypes:BLANK", "cellValueSpecTypes:BOOLEAN", "cellValueSpecTypes:DATE", "cellValueSpecTypes:DATE_TIME", "cellValueSpecTypes:ERROR", "cellValueSpecTypes:FORMULA", "cellValueSpecTypes:NUMBER", "cellValueSpecTypes:RAW_FORMULA", "cellValueSpecTypes:RICH_TEXT", "cellValueSpecTypes:TEXT", "richTextRunSpecType:RichTextRunSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "fontHeightSpecTypes:POINTS", "nestedTypes:cellValueSpecTypes", "nestedTypes:textSourceSpecTypes", "plainTypes:cellFontPatchType", "plainTypes:richTextRunSpecType", "nestedTypes:fontHeightSpecTypes" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "UNMERGE_CELLS",
+      "qualifiedId" : "mutationActionTypes:UNMERGE_CELLS",
+      "summary" : "Remove one merged region by exact range match."
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_DISPLAY_VALUE",
+      "qualifiedId" : "assertionTypes:EXPECT_DISPLAY_VALUE",
+      "summary" : "Require every selected cell to have the exact formatted display string."
+    }, {
+      "catalogGroup" : "inspectionQueryTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "ANALYZE_FORMULA_HEALTH",
+      "qualifiedId" : "inspectionQueryTypes:ANALYZE_FORMULA_HEALTH",
+      "summary" : "Return analysis.checkedFormulaCellCount, a severity summary, and findings for formula errors, volatile usage, or evaluation failures."
+    }, {
+      "catalogGroup" : "inspectionQueryTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "GET_COMMENTS",
+      "qualifiedId" : "inspectionQueryTypes:GET_COMMENTS",
+      "summary" : "Return comment metadata for selected cells."
+    }, {
+      "catalogGroup" : "inspectionQueryTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "GET_FORMULA_SURFACE",
+      "qualifiedId" : "inspectionQueryTypes:GET_FORMULA_SURFACE",
+      "summary" : "Return surface.totalFormulaCellCount plus per-sheet formula usage groups. surface.sheets[*] includes sheetName, formulaCellCount, distinctFormulaCount, and grouped formulas with occurrenceCount and addresses."
+    }, {
+      "catalogGroup" : "inspectionQueryTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "GET_HYPERLINKS",
+      "qualifiedId" : "inspectionQueryTypes:GET_HYPERLINKS",
+      "summary" : "Return hyperlink metadata for selected cells."
+    }, {
+      "catalogGroup" : "inspectionQueryTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "GET_WINDOW",
+      "qualifiedId" : "inspectionQueryTypes:GET_WINDOW",
+      "summary" : "Return a rectangular window of cell snapshots. Omit projection for the default compact VALUE readback and omit includeBlanks for the sparse default.",
+      "supportingQualifiedIds" : [ "cellReadProjectionType:CellReadProjection", "plainTypes:cellReadProjectionType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "APPLY_STYLE",
+      "qualifiedId" : "mutationActionTypes:APPLY_STYLE",
+      "summary" : "Apply a style patch to every cell in the selected range.",
+      "supportingQualifiedIds" : [ "cellAlignmentPatchType:CellAlignmentPatch", "cellBorderPatchType:CellBorderPatch", "cellFillSpecTypes:GRADIENT", "cellFillSpecTypes:PATTERN_BACKGROUND", "cellFillSpecTypes:PATTERN_FOREGROUND", "cellFillSpecTypes:PATTERN_FOREGROUND_BACKGROUND", "cellFillSpecTypes:PATTERN_ONLY", "cellFontPatchType:CellFontPatch", "cellGradientFillSpecTypes:LINEAR", "cellGradientFillSpecTypes:PATH", "cellGradientStopSpecType:CellGradientStopSpec", "cellProtectionPatchType:CellProtectionPatch", "cellStylePatchType:CellStylePatch", "borderSidePatchType:BorderSidePatch", "fontHeightSpecTypes:POINTS", "nestedTypes:cellFillSpecTypes", "nestedTypes:cellGradientFillSpecTypes", "plainTypes:cellAlignmentPatchType", "plainTypes:cellBorderPatchType", "plainTypes:cellFontPatchType", "plainTypes:cellGradientStopSpecType", "plainTypes:cellProtectionPatchType", "plainTypes:cellStylePatchType", "nestedTypes:fontHeightSpecTypes", "plainTypes:borderSidePatchType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "CLEAR_ARRAY_FORMULA",
+      "qualifiedId" : "mutationActionTypes:CLEAR_ARRAY_FORMULA",
+      "summary" : "Remove the stored array-formula group targeted by any member cell."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "CLEAR_COMMENT",
+      "qualifiedId" : "mutationActionTypes:CLEAR_COMMENT",
+      "summary" : "Remove any comment attached to a single existing cell."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "CLEAR_HYPERLINK",
+      "qualifiedId" : "mutationActionTypes:CLEAR_HYPERLINK",
+      "summary" : "Remove any hyperlink attached to a single existing cell."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "CLEAR_RANGE",
+      "qualifiedId" : "mutationActionTypes:CLEAR_RANGE",
+      "summary" : "Clear all cell values and styles within the selected range."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_ARRAY_FORMULA",
+      "qualifiedId" : "mutationActionTypes:SET_ARRAY_FORMULA",
+      "summary" : "Author one contiguous single-cell or multi-cell array-formula group.",
+      "supportingQualifiedIds" : [ "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "arrayFormulaSpecType:ArrayFormulaSpec", "nestedTypes:textSourceSpecTypes", "plainTypes:arrayFormulaSpecType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_HYPERLINK",
+      "qualifiedId" : "mutationActionTypes:SET_HYPERLINK",
+      "summary" : "Replace the hyperlink attached to a single cell."
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_ANALYSIS_FINDING_ABSENT",
+      "qualifiedId" : "assertionTypes:EXPECT_ANALYSIS_FINDING_ABSENT",
+      "summary" : "Run one analysis query and require no matching finding."
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_ANALYSIS_FINDING_PRESENT",
+      "qualifiedId" : "assertionTypes:EXPECT_ANALYSIS_FINDING_PRESENT",
+      "summary" : "Run one analysis query and require at least one matching finding."
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_ANALYSIS_MAX_SEVERITY",
+      "qualifiedId" : "assertionTypes:EXPECT_ANALYSIS_MAX_SEVERITY",
+      "summary" : "Run one analysis query and require its highest severity to be no higher than maximumSeverity."
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_CHART_FACTS",
+      "qualifiedId" : "assertionTypes:EXPECT_CHART_FACTS",
+      "summary" : "Require the selected chart reports to match exactly and in order.",
+      "supportingQualifiedIds" : [ "drawingAnchorReportTypes:ONE_CELL", "drawingAnchorReportTypes:TWO_CELL", "titleTypes:TEXT", "chartReportType:ChartReport", "drawingMarkerReportType:DrawingMarkerReport", "titleTypes:FORMULA", "nestedTypes:drawingAnchorReportTypes", "nestedTypes:titleTypes", "plainTypes:chartReportType", "plainTypes:drawingMarkerReportType" ]
+    }, {
+      "catalogGroup" : "inspectionQueryTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "GET_SHEET_SCHEMA",
+      "qualifiedId" : "inspectionQueryTypes:GET_SHEET_SCHEMA",
+      "summary" : "Infer a simple schema from a rectangular sheet window. Omit projection for the default compact VALUE readback.",
+      "supportingQualifiedIds" : [ "cellReadProjectionType:CellReadProjection", "plainTypes:cellReadProjectionType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_DRAWING_OBJECT_ANCHOR",
+      "qualifiedId" : "mutationActionTypes:SET_DRAWING_OBJECT_ANCHOR",
+      "summary" : "Move one existing drawing object by replacing its anchor authoritatively.",
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:drawingMarkerSpecType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_NAMED_RANGE",
+      "qualifiedId" : "mutationActionTypes:SET_NAMED_RANGE",
+      "summary" : "Create or replace one typed named range in workbook or sheet scope.",
+      "supportingQualifiedIds" : [ "namedRangeTargetTypes:RANGE", "nestedTypes:namedRangeTargetTypes" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_SHAPE",
+      "qualifiedId" : "mutationActionTypes:SET_SHAPE",
+      "summary" : "Create or replace one simple-shape or connector drawing object on one sheet.",
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "drawingMarkerSpecType:DrawingMarkerSpec", "shapeSpecTypes:CONNECTOR", "shapeSpecTypes:SIMPLE_SHAPE", "nestedTypes:textSourceSpecTypes", "nestedTypes:drawingAnchorSpecTypes", "nestedTypes:shapeSpecTypes", "plainTypes:drawingMarkerSpecType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_SHEET_PROTECTION",
+      "qualifiedId" : "mutationActionTypes:SET_SHEET_PROTECTION",
+      "summary" : "Enable sheet protection with the exact supported lock flags.",
+      "supportingQualifiedIds" : [ "sheetProtectionSettingsType:SheetProtectionSettings", "plainTypes:sheetProtectionSettingsType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_TABLE",
+      "qualifiedId" : "mutationActionTypes:SET_TABLE",
+      "summary" : "Create or replace one workbook-global table definition.",
+      "supportingQualifiedIds" : [ "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "tableSpecType:TableSpec", "nestedTypes:textSourceSpecTypes", "plainTypes:tableSpecType" ]
+    }, {
+      "catalogGroup" : "workbookStepTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "INSPECTION",
+      "qualifiedId" : "workbookStepTypes:INSPECTION",
+      "summary" : "Run one factual or analytical inspection query against the selected workbook target."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "IMPORT_CUSTOM_XML_MAPPING",
+      "qualifiedId" : "mutationActionTypes:IMPORT_CUSTOM_XML_MAPPING",
+      "summary" : "Import one XML document into one existing workbook custom-XML mapping.",
+      "supportingQualifiedIds" : [ "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "nestedTypes:textSourceSpecTypes" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_AUTOFILTER",
+      "qualifiedId" : "mutationActionTypes:SET_AUTOFILTER",
+      "summary" : "Create or replace one sheet-level autofilter range.",
+      "supportingQualifiedIds" : [ "autofilterSortConditionSpecTypes:CELL_COLOR", "autofilterFilterCriterionSpecTypes:COLOR", "autofilterFilterCriterionSpecTypes:VALUES", "autofilterSortConditionSpecTypes:VALUE", "nestedTypes:autofilterFilterCriterionSpecTypes", "nestedTypes:autofilterSortConditionSpecTypes" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_CONDITIONAL_FORMATTING",
+      "qualifiedId" : "mutationActionTypes:SET_CONDITIONAL_FORMATTING",
+      "summary" : "Create or replace one logical conditional-formatting block over explicit sheet ranges.",
+      "supportingQualifiedIds" : [ "conditionalFormattingRuleSpecTypes:CELL_VALUE_RULE", "borderSidePatchType:BorderSidePatch", "fontHeightSpecTypes:POINTS", "nestedTypes:conditionalFormattingRuleSpecTypes", "nestedTypes:fontHeightSpecTypes", "plainTypes:borderSidePatchType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_DATA_VALIDATION",
+      "qualifiedId" : "mutationActionTypes:SET_DATA_VALIDATION",
+      "summary" : "Create or replace one data-validation rule over the requested sheet range.",
+      "supportingQualifiedIds" : [ "dataValidationRuleSpecTypes:TEXT_LENGTH", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "dataValidationErrorAlertSpecType:DataValidationErrorAlertSpec", "dataValidationPromptSpecType:DataValidationPromptSpec", "nestedTypes:textSourceSpecTypes", "nestedTypes:dataValidationRuleSpecTypes", "plainTypes:dataValidationErrorAlertSpecType", "plainTypes:dataValidationPromptSpecType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_EMBEDDED_OBJECT",
+      "qualifiedId" : "mutationActionTypes:SET_EMBEDDED_OBJECT",
+      "summary" : "Create or replace one embedded-object drawing object on one sheet.",
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:drawingMarkerSpecType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_PICTURE",
+      "qualifiedId" : "mutationActionTypes:SET_PICTURE",
+      "summary" : "Create or replace one picture-backed drawing object on one sheet.",
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:textSourceSpecTypes", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:drawingMarkerSpecType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_PRINT_LAYOUT",
+      "qualifiedId" : "mutationActionTypes:SET_PRINT_LAYOUT",
+      "summary" : "Apply supported print-layout state to a sheet.",
+      "supportingQualifiedIds" : [ "headerFooterTextSpecType:HeaderFooterTextSpec", "textSourceSpecTypes:INLINE", "textSourceSpecTypes:STANDARD_INPUT", "textSourceSpecTypes:UTF8_FILE", "nestedTypes:textSourceSpecTypes", "plainTypes:headerFooterTextSpecType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_SIGNATURE_LINE",
+      "qualifiedId" : "mutationActionTypes:SET_SIGNATURE_LINE",
+      "summary" : "Create or replace one signature-line drawing object on one sheet.",
+      "supportingQualifiedIds" : [ "drawingAnchorSpecTypes:TWO_CELL", "drawingMarkerSpecType:DrawingMarkerSpec", "nestedTypes:drawingAnchorSpecTypes", "plainTypes:drawingMarkerSpecType" ]
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_NAMED_RANGE_FACTS",
+      "qualifiedId" : "assertionTypes:EXPECT_NAMED_RANGE_FACTS",
+      "summary" : "Require the selected named-range reports to match exactly and in order.",
+      "supportingQualifiedIds" : [ "namedRangeTargetTypes:RANGE", "nestedTypes:namedRangeTargetTypes" ]
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_SHEET_STRUCTURE",
+      "qualifiedId" : "assertionTypes:EXPECT_SHEET_STRUCTURE",
+      "summary" : "Require the selected sheet summary report to match exactly.",
+      "supportingQualifiedIds" : [ "sheetProtectionSettingsType:SheetProtectionSettings", "plainTypes:sheetProtectionSettingsType" ]
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_TABLE_FACTS",
+      "qualifiedId" : "assertionTypes:EXPECT_TABLE_FACTS",
+      "summary" : "Require the selected table reports to match exactly and in order.",
+      "supportingQualifiedIds" : [ "tableEntryPresentationReportType:TableEntryPresentationReport", "plainTypes:tableEntryPresentationReportType" ]
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "SET_PIVOT_TABLE",
+      "qualifiedId" : "mutationActionTypes:SET_PIVOT_TABLE",
+      "summary" : "Create or replace one workbook-global pivot-table definition.",
+      "supportingQualifiedIds" : [ "pivotTableAnchorInputType:PivotTableAnchorInput", "plainTypes:pivotTableAnchorInputType" ]
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "executionProgressEventTypes",
+      "qualifiedId" : "nestedTypes:executionProgressEventTypes",
+      "summary" : "Nested type group with discriminator status and 3 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "outcomeTypes",
+      "qualifiedId" : "nestedTypes:outcomeTypes",
+      "summary" : "Nested type group with discriminator status and 2 variants."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "executionJournalFailureClassificationType",
+      "qualifiedId" : "plainTypes:executionJournalFailureClassificationType",
+      "summary" : "Structured problem-code classification for one failed step."
+    }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "TOP_LEVEL_GROUP",
+      "lookupId" : "assertionTypes",
+      "qualifiedId" : "assertionTypes",
+      "summary" : "Top-level type category with 26 entries."
+    }, {
+      "catalogGroup" : "mutationActionTypes",
+      "kind" : "TOP_LEVEL_GROUP",
+      "lookupId" : "mutationActionTypes",
+      "qualifiedId" : "mutationActionTypes",
+      "summary" : "Top-level type category with 65 entries."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "cellReportTypes",
+      "qualifiedId" : "nestedTypes:cellReportTypes",
+      "summary" : "Nested type group with discriminator type and 6 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "cellSelectorTypes",
+      "qualifiedId" : "nestedTypes:cellSelectorTypes",
+      "summary" : "Nested type group with discriminator type and 3 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "requestWarningLocationTypes",
+      "qualifiedId" : "nestedTypes:requestWarningLocationTypes",
+      "summary" : "Nested type group with discriminator type and 4 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "tableCellSelectorTypes",
+      "qualifiedId" : "nestedTypes:tableCellSelectorTypes",
+      "summary" : "Nested type group with discriminator type and 1 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "tableRowSelectorTypes",
+      "qualifiedId" : "nestedTypes:tableRowSelectorTypes",
+      "summary" : "Nested type group with discriminator type and 3 variants."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "cellTemporalReportType",
+      "qualifiedId" : "plainTypes:cellTemporalReportType",
+      "summary" : "Projected temporal facet for one numeric cell value, including whether Excel formatting marks it as date-like and any derived DATE, TIME, or DATE_TIME semantic kind."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "customXmlLinkedCellReportType",
+      "qualifiedId" : "plainTypes:customXmlLinkedCellReportType",
+      "summary" : "One single-cell binding linked to a custom-XML mapping."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "formulaCellTargetType",
+      "qualifiedId" : "plainTypes:formulaCellTargetType",
+      "summary" : "One exact workbook-qualified formula cell targeted by calculation policy."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "richTextRunReportType",
+      "qualifiedId" : "plainTypes:richTextRunReportType",
+      "summary" : "One factual rich-text run reported from a text cell or comment."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "calculationStrategySpecTypes",
+      "qualifiedId" : "nestedTypes:calculationStrategySpecTypes",
+      "summary" : "Nested type group with discriminator type and 6 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "ooxmlPersistenceEncryptionSpecTypes",
+      "qualifiedId" : "nestedTypes:ooxmlPersistenceEncryptionSpecTypes",
+      "summary" : "Nested type group with discriminator type and 3 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "rangeSelectorTypes",
+      "qualifiedId" : "nestedTypes:rangeSelectorTypes",
+      "summary" : "Nested type group with discriminator type and 4 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
+      "lookupId" : "windowReportTypes",
+      "qualifiedId" : "nestedTypes:windowReportTypes",
+      "summary" : "Nested type group with discriminator type and 2 variants."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "arrayFormulaReportType",
+      "qualifiedId" : "plainTypes:arrayFormulaReportType",
+      "summary" : "One factual array-formula group report returned by GET_ARRAY_FORMULAS."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "commentReportType",
+      "qualifiedId" : "plainTypes:commentReportType",
+      "summary" : "Exact factual comment report including optional rich-text runs and anchor bounds."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "customXmlMappingReportType",
+      "qualifiedId" : "plainTypes:customXmlMappingReportType",
+      "summary" : "One factual workbook custom-XML mapping report."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "dataValidationErrorAlertReportType",
+      "qualifiedId" : "plainTypes:dataValidationErrorAlertReportType",
+      "summary" : "Observed error-box text, style and display state."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "dataValidationPromptReportType",
+      "qualifiedId" : "plainTypes:dataValidationPromptReportType",
+      "summary" : "Observed prompt-box text and display state."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "formulaCapabilityReportType",
+      "qualifiedId" : "plainTypes:formulaCapabilityReportType",
+      "summary" : "One classified formula-cell capability entry from calculation preflight."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "windowDimensionsReportType",
+      "qualifiedId" : "plainTypes:windowDimensionsReportType",
+      "summary" : "Published row and column dimensions for one rectangular cell window."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "windowRowReportType",
+      "qualifiedId" : "plainTypes:windowRowReportType",
+      "summary" : "One dense window row preserving row index and ordered cell payloads."
+    }, {
+      "catalogGroup" : "inspectionQueryTypes",
+      "kind" : "TOP_LEVEL_GROUP",
+      "lookupId" : "inspectionQueryTypes",
+      "qualifiedId" : "inspectionQueryTypes",
+      "summary" : "Top-level type category with 35 entries."
+    } ],
+    "protocolVersion" : 1,
+    "query" : "cell text",
+    "totalCount" : 80
+  }
+}

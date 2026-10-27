@@ -1,0 +1,533 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static dev.erst.gridgrind.engine.runtime.ExecutionContextFixtureSupport.execute;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.ExecutionJournal;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.jupiter.api.Test;
+
+/** Coverage tests for the execution-journal helpers added in Phase 5. */
+class ExecutionJournalCoverageTest {
+  @Test
+  void executorBoundaryForwardsExplicitBindings() {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
+            List.of());
+    WorkbookResult.Success expected = WorkbookResults.success(List.of(), List.of(), List.of());
+    AtomicBoolean called = new AtomicBoolean(false);
+    GridGrindRequestExecutor executor =
+        (ignoredRequest, ignoredBindings, ignoredSink) -> {
+          called.set(true);
+          return expected;
+        };
+
+    assertSame(
+        expected,
+        executor.execute(
+            request, ExecutionContextFixtureSupport.defaultBindings(), ExecutionProgressSink.NOOP));
+    assertTrue(called.get());
+  }
+
+  @Test
+  void targetResolverSummarizesAndExpandsSelectorFamilies() {
+    InspectionStep workbookSummary =
+        new InspectionStep(
+            new StepId("step-1"),
+            new WorkbookSelector.Current(),
+            new WorkbookIntrospectionQuery.GetWorkbookSummary());
+    assertEquals(
+        List.of(new ExecutionJournal.Target("WORKBOOK", "Current workbook")),
+        ExecutionJournalTargetResolver.resolve(workbookSummary, ExecutionJournalLevel.SUMMARY));
+    assertEquals(
+        List.of(new ExecutionJournal.Target("WORKBOOK", "Current workbook")),
+        ExecutionJournalTargetResolver.resolve(workbookSummary, ExecutionJournalLevel.NORMAL));
+    assertEquals(
+        new ExecutionJournal.Target("SHEET", "Sheets [Budget, Ops]"),
+        summaryTarget(
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops")))));
+    assertEquals(
+        new ExecutionJournal.Target("SHEET", "All sheets"), summaryTarget(new SheetSelector.All()));
+    assertEquals(
+        new ExecutionJournal.Target("SHEET", "Sheet Budget"),
+        summaryTarget(new SheetSelector.ByName(new SheetName("Budget"))));
+    assertEquals(
+        new ExecutionJournal.Target("CELL", "All used cells on Budget"),
+        summaryTarget(new CellSelector.AllUsedInSheet(new SheetName("Budget"))));
+    assertEquals(
+        new ExecutionJournal.Target("CELL", "Cell Budget!B2"),
+        summaryTarget(new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2"))));
+    assertEquals(
+        new ExecutionJournal.Target("CELL", "Cells Budget![B2, C3]"),
+        summaryTarget(
+            new CellSelector.ByAddresses(
+                new SheetName("Budget"), List.of(new CellAddress("B2"), new CellAddress("C3")))));
+    assertEquals(
+        new ExecutionJournal.Target("RANGE", "All ranges on Budget"),
+        summaryTarget(new RangeSelector.AllOnSheet(new SheetName("Budget"))));
+    assertEquals(
+        new ExecutionJournal.Target("RANGE", "Range Budget!A1:B4"),
+        summaryTarget(new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B4"))));
+    assertEquals(
+        new ExecutionJournal.Target("RANGE", "Ranges Budget![A1:B4, D2:E3]"),
+        summaryTarget(
+            new RangeSelector.ByRanges(
+                new SheetName("Budget"), List.of(new RangeRef("A1:B4"), new RangeRef("D2:E3")))));
+    assertEquals(
+        new ExecutionJournal.Target("RANGE", "Window Budget!B2:C4"),
+        summaryTarget(
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("B2"), 3, 2)));
+    assertEquals(
+        new ExecutionJournal.Target("ROW_BAND", "Rows Budget[1:3]"),
+        summaryTarget(new RowBandSelector.Span(new SheetName("Budget"), 1, 3)));
+    assertEquals(
+        new ExecutionJournal.Target("ROW_BAND", "Row insertion Budget[before=2, count=4]"),
+        summaryTarget(new RowBandSelector.Insertion(new SheetName("Budget"), 2, 4)));
+    assertEquals(
+        new ExecutionJournal.Target("COLUMN_BAND", "Columns Budget[1:3]"),
+        summaryTarget(new ColumnBandSelector.Span(new SheetName("Budget"), 1, 3)));
+    assertEquals(
+        new ExecutionJournal.Target("COLUMN_BAND", "Column insertion Budget[before=2, count=4]"),
+        summaryTarget(new ColumnBandSelector.Insertion(new SheetName("Budget"), 2, 4)));
+    assertEquals(
+        new ExecutionJournal.Target("DRAWING", "All drawing objects on Budget"),
+        summaryTarget(new DrawingObjectSelector.AllOnSheet(new SheetName("Budget"))));
+    assertEquals(
+        new ExecutionJournal.Target("DRAWING", "Drawing object Budget!Logo"),
+        summaryTarget(new DrawingObjectSelector.ByName(new SheetName("Budget"), "Logo")));
+    assertEquals(
+        new ExecutionJournal.Target("CHART", "All charts on Budget"),
+        summaryTarget(new ChartSelector.AllOnSheet(new SheetName("Budget"))));
+    assertEquals(
+        new ExecutionJournal.Target("CHART", "Chart Budget!Revenue"),
+        summaryTarget(new ChartSelector.ByName(new SheetName("Budget"), "Revenue")));
+    assertEquals(
+        new ExecutionJournal.Target("TABLE", "Tables [BudgetTable, OpsTable]"),
+        summaryTarget(
+            new TableSelector.ByNames(
+                List.of(new TableName("BudgetTable"), new TableName("OpsTable")))));
+    assertEquals(
+        new ExecutionJournal.Target("TABLE", "All tables"), summaryTarget(new TableSelector.All()));
+    assertEquals(
+        new ExecutionJournal.Target("TABLE", "Table BudgetTable"),
+        summaryTarget(new TableSelector.ByName(new TableName("BudgetTable"))));
+    assertEquals(
+        new ExecutionJournal.Target("TABLE", "Table Budget!BudgetTable"),
+        summaryTarget(
+            new TableSelector.ByNameOnSheet(
+                new TableName("BudgetTable"), new SheetName("Budget"))));
+    assertEquals(
+        new ExecutionJournal.Target("PIVOT_TABLE", "Pivot tables [RevenuePivot, CostPivot]"),
+        summaryTarget(new PivotTableSelector.ByNames(List.of("RevenuePivot", "CostPivot"))));
+    assertEquals(
+        new ExecutionJournal.Target("PIVOT_TABLE", "All pivot tables"),
+        summaryTarget(new PivotTableSelector.All()));
+    assertEquals(
+        new ExecutionJournal.Target("PIVOT_TABLE", "Pivot table RevenuePivot"),
+        summaryTarget(new PivotTableSelector.ByName("RevenuePivot")));
+    assertEquals(
+        new ExecutionJournal.Target("PIVOT_TABLE", "Pivot table Budget!RevenuePivot"),
+        summaryTarget(
+            new PivotTableSelector.ByNameOnSheet("RevenuePivot", new SheetName("Budget"))));
+    assertEquals(
+        new ExecutionJournal.Target("NAMED_RANGE", "Named ranges [Gross, Margin]"),
+        summaryTarget(
+            new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("Gross"), new DefinedName("Margin")))));
+    assertEquals(
+        new ExecutionJournal.Target("NAMED_RANGE", "All named ranges"),
+        summaryTarget(new NamedRangeSelector.All()));
+    assertEquals(
+        new ExecutionJournal.Target("NAMED_RANGE", "Named range Gross"),
+        summaryTarget(new NamedRangeSelector.ByName(new DefinedName("Gross"))));
+    assertEquals(
+        new ExecutionJournal.Target("NAMED_RANGE", "Workbook-scoped named range Gross"),
+        summaryTarget(new NamedRangeSelector.WorkbookScope(new DefinedName("Gross"))));
+    assertEquals(
+        new ExecutionJournal.Target("NAMED_RANGE", "Sheet-scoped named range Budget!Margin"),
+        summaryTarget(
+            new NamedRangeSelector.SheetScope(new DefinedName("Margin"), new SheetName("Budget"))));
+
+    ExecutionJournal.Target anyOfSummary =
+        summaryTarget(
+            new NamedRangeSelector.AnyOf(
+                List.of(
+                    new NamedRangeSelector.ByName(new DefinedName("Gross")),
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("Margin")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("Net"), new SheetName("Budget")))));
+    assertEquals("NAMED_RANGE", anyOfSummary.kind());
+    assertTrue(anyOfSummary.label().startsWith("Named range selector ["));
+
+    assertEquals(
+        new ExecutionJournal.Target("TABLE_ROW", "All rows in Table BudgetTable"),
+        summaryTarget(
+            new TableRowSelector.AllRows(new TableSelector.ByName(new TableName("BudgetTable")))));
+    assertEquals(
+        new ExecutionJournal.Target("TABLE_ROW", "Row 3 in Table BudgetTable"),
+        summaryTarget(
+            new TableRowSelector.ByIndex(
+                new TableSelector.ByName(new TableName("BudgetTable")), 3)));
+    assertEquals(
+        new ExecutionJournal.Target(
+            "TABLE_ROW", "Row where Item=Text[text=Hosting] in Table BudgetTable"),
+        summaryTarget(
+            new TableRowSelector.ByKeyCell(
+                new TableSelector.ByName(new TableName("BudgetTable")),
+                "Item",
+                new CellValueSpec.Text(text("Hosting")))));
+    assertEquals(
+        new ExecutionJournal.Target("TABLE_ROW", "Row where Item=Blank[] in Table BudgetTable"),
+        summaryTarget(
+            new TableRowSelector.ByKeyCell(
+                new TableSelector.ByName(new TableName("BudgetTable")),
+                "Item",
+                new CellValueSpec.Blank())));
+    assertEquals(
+        new ExecutionJournal.Target(
+            "TABLE_ROW", "Row where Item=Number[number=42.0] in Table BudgetTable"),
+        summaryTarget(
+            new TableRowSelector.ByKeyCell(
+                new TableSelector.ByName(new TableName("BudgetTable")),
+                "Item",
+                new CellValueSpec.NumberValue(42.0d))));
+    assertEquals(
+        new ExecutionJournal.Target(
+            "TABLE_ROW", "Row where Item=Boolean[value=true] in Table BudgetTable"),
+        summaryTarget(
+            new TableRowSelector.ByKeyCell(
+                new TableSelector.ByName(new TableName("BudgetTable")),
+                "Item",
+                new CellValueSpec.BooleanValue(true))));
+    assertEquals(
+        new ExecutionJournal.Target(
+            "TABLE_ROW", "Row where Item=Formula[text=A1*2] in Table BudgetTable"),
+        summaryTarget(
+            new TableRowSelector.ByKeyCell(
+                new TableSelector.ByName(new TableName("BudgetTable")),
+                "Item",
+                new CellValueSpec.Formula(text("A1*2")))));
+    assertEquals(
+        new ExecutionJournal.Target("TABLE_CELL", "Column Amount in Row 3 in Table BudgetTable"),
+        summaryTarget(
+            new TableCellSelector.ByColumnName(
+                new TableRowSelector.ByIndex(
+                    new TableSelector.ByName(new TableName("BudgetTable")), 3),
+                "Amount")));
+
+    List<ExecutionJournal.Target> expandedPivotNames =
+        expandedTargets(new PivotTableSelector.ByNames(List.of("RevenuePivot", "CostPivot")));
+    assertEquals(
+        List.of(
+            new ExecutionJournal.Target("PIVOT_TABLE", "Pivot table RevenuePivot"),
+            new ExecutionJournal.Target("PIVOT_TABLE", "Pivot table CostPivot")),
+        expandedPivotNames);
+
+    List<ExecutionJournal.Target> expandedNamedRangeNames =
+        expandedTargets(
+            new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("Gross"), new DefinedName("Margin"))));
+    assertEquals(
+        List.of(
+            new ExecutionJournal.Target("NAMED_RANGE", "Named range Gross"),
+            new ExecutionJournal.Target("NAMED_RANGE", "Named range Margin")),
+        expandedNamedRangeNames);
+
+    List<ExecutionJournal.Target> expandedAnyOf =
+        expandedTargets(
+            new NamedRangeSelector.AnyOf(
+                List.of(
+                    new NamedRangeSelector.ByName(new DefinedName("Gross")),
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("Margin")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("Net"), new SheetName("Budget")))));
+    assertEquals(
+        List.of(
+            new ExecutionJournal.Target("NAMED_RANGE", "Named range Gross"),
+            new ExecutionJournal.Target("NAMED_RANGE", "Workbook-scoped named range Margin"),
+            new ExecutionJournal.Target("NAMED_RANGE", "Sheet-scoped named range Budget!Net")),
+        expandedAnyOf);
+
+    assertEquals(
+        List.of(new ExecutionJournal.Target("TABLE_ROW", "Row 3 in Table BudgetTable")),
+        expandedTargets(
+            new TableRowSelector.ByIndex(
+                new TableSelector.ByName(new TableName("BudgetTable")), 3)));
+  }
+
+  @Test
+  void recorderBuildsVerboseFailureAndGuardsPhaseReuse() {
+    WorkbookPlan request = verbosePlan();
+    List<dev.erst.gridgrind.core.result.ExecutionProgressEvent> emitted = new ArrayList<>();
+    ExecutionJournalRecorder recorder =
+        ExecutionContextFixtureSupport.startJournal(request, emitted::add);
+
+    ExecutionJournalRecorder.PhaseHandle validation = recorder.beginValidation();
+    validation.succeed();
+    assertThrows(IllegalStateException.class, validation::succeed);
+
+    InspectionStep successStep =
+        new InspectionStep(
+            new StepId("step-1"),
+            new WorkbookSelector.Current(),
+            new WorkbookIntrospectionQuery.GetWorkbookSummary());
+    recorder.beginStep(0, successStep).succeed();
+
+    InspectionStep failedWithoutCalculation =
+        new InspectionStep(
+            new StepId("step-2"),
+            new TableSelector.ByName(new TableName("BudgetTable")),
+            new WorkbookAssetIntrospectionQuery.GetTables());
+    recorder
+        .beginStep(1, failedWithoutCalculation)
+        .fail(
+            GridGrindProblemCode.INVALID_REQUEST,
+            GridGrindProblemCategory.REQUEST,
+            "EXECUTE_STEP",
+            "bad table");
+
+    InspectionStep failedWithCalculation =
+        new InspectionStep(
+            new StepId("step-3"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
+            new SheetIntrospectionQuery.GetCells());
+    ExecutionJournalRecorder.StepHandle stepHandle = recorder.beginStep(2, failedWithCalculation);
+    ExecutionJournalRecorder.PhaseHandle calculationPreflight =
+        recorder.beginCalculationPreflight();
+    calculationPreflight.succeed();
+    ExecutionJournalRecorder.PhaseHandle calculationExecution =
+        recorder.beginCalculationExecution();
+    calculationExecution.fail(GridGrindProblemCode.IO_ERROR);
+    stepHandle.fail(
+        GridGrindProblemCode.IO_ERROR, GridGrindProblemCategory.IO, "EXECUTE_STEP", "disk issue");
+
+    ExecutionJournal journal =
+        recorder.buildFailure(3, GridGrindProblemCode.IO_ERROR, 2, new StepId("step-3"));
+
+    assertFalse(emitted.isEmpty());
+    assertEquals(ExecutionJournal.Status.SUCCEEDED, journal.calculation().preflight().status());
+    assertEquals(ExecutionJournal.Status.FAILED, journal.calculation().execution().status());
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, journal.outcome());
+    assertEquals(ExecutionJournal.Status.FAILED, outcome.status());
+    assertEquals(GridGrindProblemCode.IO_ERROR, outcome.problemCode());
+  }
+
+  @Test
+  void recorderSupportsNullRequestAndCalculationIoFailures() throws Exception {
+    ExecutionJournalRecorder recorder =
+        ExecutionContextFixtureSupport.startJournal(null, ExecutionProgressSink.NOOP);
+    ExecutionJournal unknownJournal = recorder.buildSuccess(0);
+    assertEquals(java.util.Optional.empty(), unknownJournal.source().type());
+
+    WorkbookPlan request = verbosePlan();
+    ExecutionJournalRecorder verboseRecorder =
+        ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP);
+    ExecutionJournalRecorder.PhaseHandle calculationPreflight =
+        verboseRecorder.beginCalculationPreflight();
+    calculationPreflight.succeed();
+    ExecutionJournalRecorder.PhaseHandle calculationExecution =
+        verboseRecorder.beginCalculationExecution();
+    calculationExecution.fail(GridGrindProblemCode.IO_ERROR);
+    ExecutionJournalRecorder.StepHandle stepHandle =
+        verboseRecorder.beginStep(
+            0,
+            new InspectionStep(
+                new StepId("step-1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
+                new SheetIntrospectionQuery.GetCells()));
+    stepHandle.fail(
+        GridGrindProblemCode.IO_ERROR, GridGrindProblemCategory.IO, "EXECUTE_STEP", "boom");
+    ExecutionJournal journal =
+        verboseRecorder.buildFailure(1, GridGrindProblemCode.IO_ERROR, 0, new StepId("step-1"));
+    assertEquals(ExecutionJournal.Status.FAILED, journal.calculation().execution().status());
+  }
+
+  @Test
+  void recorderOmitsFailureStepWhenPlanFailureHasNoStepIdentity() {
+    ExecutionJournalRecorder recorder =
+        ExecutionContextFixtureSupport.startJournal(verbosePlan(), ExecutionProgressSink.NOOP);
+
+    ExecutionJournal journal =
+        recorder.buildFailure(1, GridGrindProblemCode.INVALID_REQUEST, null, null);
+
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, journal.outcome());
+    assertTrue(outcome.failedStep().isEmpty());
+
+    ExecutionJournal mixedIdentityJournal =
+        recorder.buildFailure(1, GridGrindProblemCode.INVALID_REQUEST, 0, null, false);
+    ExecutionJournal.Outcome.Failed mixedIdentityOutcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, mixedIdentityJournal.outcome());
+    assertTrue(mixedIdentityOutcome.failedStep().isEmpty());
+  }
+
+  @Test
+  void recorderKeepsCompactSummaryStepsWithoutTimingAndPreservesTimedNormalVerboseSteps() {
+    MutationStep selectionStep =
+        new MutationStep(
+            new StepId("step-1"),
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops"))),
+            new WorkbookMutationAction.SetSelectedSheets());
+
+    ExecutionJournal summary = completedJournal(ExecutionJournalLevel.SUMMARY, selectionStep);
+    ExecutionJournal.Step summaryStep = summary.steps().getFirst();
+    assertEquals(1, summary.steps().size());
+    assertEquals("Sheets [Budget, Ops]", summaryStep.resolvedTargets().getFirst().label());
+    assertEquals(ExecutionJournal.StepOutcome.SUCCEEDED, summaryStep.outcome());
+    assertTrue(
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, summaryStep.phase())
+            .timing()
+            .isEmpty());
+
+    ExecutionJournal normal = completedJournal(ExecutionJournalLevel.NORMAL, selectionStep);
+    ExecutionJournal.Step normalStep = normal.steps().getFirst();
+    assertEquals(2, normalStep.resolvedTargets().size());
+    assertEquals("Sheet Budget", normalStep.resolvedTargets().getFirst().label());
+    assertTrue(
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, normalStep.phase())
+            .timing()
+            .isPresent());
+
+    ExecutionJournal verbose = completedJournal(ExecutionJournalLevel.VERBOSE, selectionStep);
+    assertTrue(
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, verbose.steps().getFirst().phase())
+            .timing()
+            .isPresent());
+  }
+
+  @Test
+  void summarySuccessResponsesSerializeDeterministicallyAcrossRepeatedRuns() throws Exception {
+    WorkbookResult.Success firstResponse =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            execute(
+                new DefaultGridGrindRequestExecutor(),
+                planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
+    WorkbookResult.Success secondResponse =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            execute(
+                new DefaultGridGrindRequestExecutor(),
+                planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
+
+    ExecutionJournal.Step firstStep = firstResponse.journal().steps().getFirst();
+    assertEquals(ExecutionJournalLevel.SUMMARY, firstResponse.journal().level());
+    assertEquals(1, firstResponse.journal().steps().size());
+    assertEquals("Sheet Ledger", firstStep.resolvedTargets().getFirst().label());
+    assertEquals(ExecutionJournal.StepOutcome.SUCCEEDED, firstStep.outcome());
+    assertTrue(
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, firstStep.phase())
+            .timing()
+            .isEmpty());
+    assertArrayEquals(
+        GridGrindJsonOutput.writeWorkbookResultBytes(firstResponse),
+        GridGrindJsonOutput.writeWorkbookResultBytes(secondResponse));
+  }
+
+  private static WorkbookPlan verbosePlan() {
+    return planWithSteps("phase-5-plan", ExecutionJournalLevel.VERBOSE, List.of(), List.of());
+  }
+
+  private static ExecutionJournal completedJournal(
+      ExecutionJournalLevel level, dev.erst.gridgrind.core.plan.WorkbookStep step) {
+    ExecutionJournalRecorder recorder =
+        ExecutionContextFixtureSupport.startJournal(
+            planWithSteps("journal-level-" + level.name(), level, List.of(step), List.of()),
+            ExecutionProgressSink.NOOP);
+    recorder.beginStep(0, step).succeed();
+    return recorder.buildSuccess(1);
+  }
+
+  private static WorkbookPlan planForJournalLevel(ExecutionJournalLevel level) {
+    return planWithSteps(
+        "journal-response-" + level.name(),
+        level,
+        List.of(
+            new MutationStep(
+                new StepId("ensure-ledger"),
+                new SheetSelector.ByName(new SheetName("Ledger")),
+                new WorkbookMutationAction.EnsureSheet())),
+        List.of());
+  }
+
+  private static WorkbookPlan planWithSteps(
+      String planId,
+      ExecutionJournalLevel level,
+      List<dev.erst.gridgrind.core.plan.WorkbookStep> mutationsAndAssertions,
+      List<InspectionStep> inspections) {
+    List<dev.erst.gridgrind.core.plan.WorkbookStep> steps = new ArrayList<>(mutationsAndAssertions);
+    steps.addAll(inspections);
+    return WorkbookPlan.identified(
+        ProtocolVersion.CURRENT,
+        new PlanId(planId),
+        new WorkbookPlan.WorkbookSource.New(),
+        new WorkbookPlan.WorkbookPersistence.None(),
+        ExecutionPolicySpec.modeAndJournal(
+            ExecutionModeSpec.defaults(), new ExecutionJournalSpec(level)),
+        dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
+        List.copyOf(steps));
+  }
+
+  private static List<ExecutionJournal.Target> expandedTargets(Selector selector) {
+    return ExecutionJournalTargetResolver.expandedTargets(selector);
+  }
+
+  private static ExecutionJournal.Target summaryTarget(Selector selector) {
+    return ExecutionJournalTargetResolver.summaryTarget(selector);
+  }
+
+  private static dev.erst.gridgrind.core.source.TextSourceSpec text(String value) {
+    return dev.erst.gridgrind.core.source.TextSourceSpec.inline(value);
+  }
+}

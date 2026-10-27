@@ -1,0 +1,324 @@
+package dev.erst.gridgrind.fuzz.support;
+
+import static dev.erst.gridgrind.fuzz.support.OperationSequenceSelectorSupport.*;
+import static dev.erst.gridgrind.fuzz.support.OperationSequenceValueFactory.*;
+
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.*;
+import dev.erst.gridgrind.core.vocabulary.*;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+/** Generates layout-oriented authored and engine values for operation-sequence fuzzing. */
+final class OperationSequenceLayoutValues {
+  private OperationSequenceLayoutValues() {}
+
+  static PaneSpec nextPaneInput(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> new PaneSpec.None();
+      case 1 -> {
+        int splitColumn = data.consumeInt(1, 3);
+        yield new PaneSpec.Frozen(splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
+      }
+      case 2 -> {
+        int splitRow = data.consumeInt(1, 3);
+        yield new PaneSpec.Frozen(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
+      }
+      case 3 -> {
+        int splitColumn = data.consumeInt(1, 3);
+        int splitRow = data.consumeInt(1, 3);
+        yield new PaneSpec.Frozen(
+            splitColumn,
+            splitRow,
+            data.consumeInt(splitColumn, splitColumn + 2),
+            data.consumeInt(splitRow, splitRow + 2));
+      }
+      default ->
+          new PaneSpec.Split(
+              data.consumeInt(0, 2400),
+              data.consumeInt(1, 2400),
+              0,
+              data.consumeInt(1, 4),
+              nextProtocolPaneRegion(data));
+    };
+  }
+
+  static PaneSpec nextExcelSheetPane(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> new PaneSpec.None();
+      case 1 -> {
+        int splitColumn = data.consumeInt(1, 3);
+        yield new PaneSpec.Frozen(splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
+      }
+      case 2 -> {
+        int splitRow = data.consumeInt(1, 3);
+        yield new PaneSpec.Frozen(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
+      }
+      case 3 -> {
+        int splitColumn = data.consumeInt(1, 3);
+        int splitRow = data.consumeInt(1, 3);
+        yield new PaneSpec.Frozen(
+            splitColumn,
+            splitRow,
+            data.consumeInt(splitColumn, splitColumn + 2),
+            data.consumeInt(splitRow, splitRow + 2));
+      }
+      default ->
+          new PaneSpec.Split(
+              data.consumeInt(0, 2400),
+              data.consumeInt(1, 2400),
+              0,
+              data.consumeInt(1, 4),
+              nextPaneRegion(data));
+    };
+  }
+
+  static PrintLayoutSpec nextPrintLayoutInput(GridGrindFuzzData data) {
+    return PrintLayoutSpec.withDefaultSetup(
+        data.consumeBoolean()
+            ? new PrintAreaSpec.Range(new RangeRef("A1:C20"))
+            : new PrintAreaSpec.None(),
+        data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
+        data.consumeBoolean()
+            ? new PrintScalingSpec.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
+            : new PrintScalingSpec.Automatic(),
+        data.consumeBoolean()
+            ? new PrintTitleRowsSpec.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleRowsSpec.None(),
+        data.consumeBoolean()
+            ? new PrintTitleColumnsSpec.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleColumnsSpec.None(),
+        new HeaderFooterTextSpec(
+            TextSourceSpec.inline("L" + data.consumeInt(0, 9)),
+            TextSourceSpec.inline(""),
+            TextSourceSpec.inline("R" + data.consumeInt(0, 9))),
+        new HeaderFooterTextSpec(
+            TextSourceSpec.inline(""),
+            TextSourceSpec.inline("P" + data.consumeInt(0, 9)),
+            TextSourceSpec.inline("")));
+  }
+
+  static ResolvedPrintLayout nextExcelPrintLayout(GridGrindFuzzData data) {
+    return new ResolvedPrintLayout(
+        data.consumeBoolean()
+            ? new PrintAreaSpec.Range(new RangeRef("A1:C20"))
+            : new PrintAreaSpec.None(),
+        data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
+        data.consumeBoolean()
+            ? new PrintScalingSpec.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
+            : new PrintScalingSpec.Automatic(),
+        data.consumeBoolean()
+            ? new PrintTitleRowsSpec.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleRowsSpec.None(),
+        data.consumeBoolean()
+            ? new PrintTitleColumnsSpec.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleColumnsSpec.None(),
+        new HeaderFooterTextReport("L" + data.consumeInt(0, 9), "", "R" + data.consumeInt(0, 9)),
+        new HeaderFooterTextReport("", "P" + data.consumeInt(0, 9), ""));
+  }
+
+  static ExcelPaneRegion nextProtocolPaneRegion(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
+      case 0 -> ExcelPaneRegion.UPPER_LEFT;
+      case 1 -> ExcelPaneRegion.UPPER_RIGHT;
+      case 2 -> ExcelPaneRegion.LOWER_LEFT;
+      default -> ExcelPaneRegion.LOWER_RIGHT;
+    };
+  }
+
+  static ExcelPaneRegion nextPaneRegion(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
+      case 0 -> ExcelPaneRegion.UPPER_LEFT;
+      case 1 -> ExcelPaneRegion.UPPER_RIGHT;
+      case 2 -> ExcelPaneRegion.LOWER_LEFT;
+      default -> ExcelPaneRegion.LOWER_RIGHT;
+    };
+  }
+
+  static SheetCopyPosition nextSheetCopyPosition(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> new SheetCopyPosition.AppendAtEnd();
+      default -> new SheetCopyPosition.AtIndex(data.consumeInt(0, 2));
+    };
+  }
+
+  static SheetCopyPosition nextExcelSheetCopyPosition(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> new SheetCopyPosition.AppendAtEnd();
+      default -> new SheetCopyPosition.AtIndex(data.consumeInt(0, 2));
+    };
+  }
+
+  static List<String> nextSelectedSheetNames(
+      GridGrindFuzzData data, String primarySheet, String secondarySheet) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> List.of(primarySheet);
+      case 1 -> List.of(secondarySheet);
+      default -> List.of(primarySheet, secondarySheet);
+    };
+  }
+
+  static ExcelSheetVisibility nextProtocolSheetVisibility(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> ExcelSheetVisibility.VISIBLE;
+      case 1 -> ExcelSheetVisibility.HIDDEN;
+      default -> ExcelSheetVisibility.VERY_HIDDEN;
+    };
+  }
+
+  static ExcelSheetVisibility nextSheetVisibility(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> ExcelSheetVisibility.VISIBLE;
+      case 1 -> ExcelSheetVisibility.HIDDEN;
+      default -> ExcelSheetVisibility.VERY_HIDDEN;
+    };
+  }
+
+  static SheetProtectionSettings nextProtocolSheetProtectionSettings(GridGrindFuzzData data) {
+    return new SheetProtectionSettings(
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean());
+  }
+
+  static SheetProtectionSettings nextSheetProtectionSettings(GridGrindFuzzData data) {
+    return new SheetProtectionSettings(
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean());
+  }
+
+  static OperationSequenceValueFactory.WorkflowStorage nextWorkflowStorage(
+      String primarySheet, String secondarySheet, GridGrindFuzzData data) throws IOException {
+    Path directory = Files.createTempDirectory("gridgrind-jazzer-workflow-");
+    Path sourcePath = directory.resolve("source.xlsx");
+    Path saveAsPath = directory.resolve("output.xlsx");
+
+    try {
+      return switch (selectorSlot(nextSelectorByte(data))) {
+        case 0 ->
+            new OperationSequenceValueFactory.WorkflowStorage(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                directory);
+        case 1 ->
+            new OperationSequenceValueFactory.WorkflowStorage(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                directory);
+        case 2 -> {
+          writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
+          yield new OperationSequenceValueFactory.WorkflowStorage(
+              new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
+              new WorkbookPlan.WorkbookPersistence.None(),
+              directory);
+        }
+        case 3 -> {
+          writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
+          yield new OperationSequenceValueFactory.WorkflowStorage(
+              new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
+              new WorkbookPlan.WorkbookPersistence.Overwrite(
+                  dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec.none()),
+              directory);
+        }
+        default -> {
+          writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
+          yield new OperationSequenceValueFactory.WorkflowStorage(
+              new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
+              new WorkbookPlan.WorkbookPersistence.SaveAs(
+                  saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+              directory);
+        }
+      };
+    } catch (IOException | RuntimeException | Error failure) {
+      FuzzFilesystem.cleanupAfterFailure(directory, failure);
+      throw failure;
+    }
+  }
+
+  static void writeExistingWorkbook(
+      Path sourcePath, String primarySheet, String secondarySheet, GridGrindFuzzData data)
+      throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var primary = workbook.createSheet(primarySheet);
+      primary.createRow(0).createCell(0).setCellValue("Month");
+      primary.getRow(0).createCell(1).setCellValue("Plan");
+      primary.getRow(0).createCell(2).setCellValue("Actual");
+      primary.createRow(1).createCell(0).setCellValue("Jan");
+      primary.getRow(1).createCell(1).setCellValue(2.0d);
+      primary.getRow(1).createCell(2).setCellValue(4.0d);
+      primary.getRow(1).createCell(3).setCellFormula("B2*2");
+      primary.createRow(2).createCell(0).setCellValue("Feb");
+      primary.getRow(2).createCell(1).setCellValue(3.0d);
+      primary.getRow(2).createCell(2).setCellValue(6.0d);
+      primary.createRow(3).createCell(0).setCellValue("Mar");
+      primary.getRow(3).createCell(1).setCellValue(5.0d);
+      primary.getRow(3).createCell(2).setCellValue(7.0d);
+      primary.createRow(4).createCell(4).setCellValue("Queue");
+      primary.getRow(4).createCell(5).setCellValue("Owner");
+      primary.createRow(5).createCell(4).setCellValue("seed");
+      primary.getRow(5).createCell(5).setCellValue("GridGrind");
+      if (data.consumeBoolean()) {
+        var secondary = workbook.createSheet(secondarySheet);
+        secondary.createRow(0).createCell(0).setCellValue("Month");
+        secondary.getRow(0).createCell(1).setCellValue("Plan");
+        secondary.getRow(0).createCell(2).setCellValue("Actual");
+        secondary.createRow(1).createCell(0).setCellValue("Jan");
+        secondary.getRow(1).createCell(1).setCellValue(3.0d);
+        secondary.getRow(1).createCell(2).setCellValue(9.0d);
+        secondary.getRow(1).createCell(3).setCellFormula("B2*3");
+        secondary.createRow(2).createCell(0).setCellValue("Feb");
+        secondary.getRow(2).createCell(1).setCellValue(4.0d);
+        secondary.getRow(2).createCell(2).setCellValue(8.0d);
+        secondary.createRow(3).createCell(0).setCellValue("Mar");
+        secondary.getRow(3).createCell(1).setCellValue(6.0d);
+        secondary.getRow(3).createCell(2).setCellValue(10.0d);
+      }
+      Files.createDirectories(sourcePath.getParent());
+      try (OutputStream outputStream = Files.newOutputStream(sourcePath)) {
+        workbook.write(outputStream);
+      }
+    }
+  }
+}

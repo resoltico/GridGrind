@@ -1,0 +1,259 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
+import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.engine.backend.xssf.*;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+
+/** Mutation-context extraction coverage for the request executor. */
+class DefaultGridGrindRequestExecutorMutationContextTranslationTest
+    extends DefaultGridGrindRequestExecutorTestSupport {
+  @Test
+  void extractsSheetOnlyContextForDeleteSheetOperations() {
+    RuntimeException exception = new RuntimeException("test");
+    ExecutorTestPlanSupport.PendingMutation ensureSheet =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Archive")),
+            new WorkbookMutationAction.EnsureSheet());
+    ExecutorTestPlanSupport.PendingMutation deleteSheet =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Archive")),
+            new WorkbookMutationAction.DeleteSheet());
+
+    assertNull(formulaFor(ensureSheet, exception));
+    assertNull(formulaFor(deleteSheet, exception));
+    assertEquals("Archive", sheetNameFor(ensureSheet, exception));
+    assertEquals("Archive", sheetNameFor(deleteSheet, exception));
+    assertNull(addressFor(ensureSheet, exception));
+    assertNull(addressFor(deleteSheet, exception));
+    assertNull(rangeFor(ensureSheet, exception));
+    assertNull(rangeFor(deleteSheet, exception));
+  }
+
+  @Test
+  void extractsSheetStateContextForB1Operations() {
+    RuntimeException exception = new RuntimeException("test");
+    ExecutorTestPlanSupport.PendingMutation copySheet =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.CopySheet(
+                new SheetName("Budget Copy"), new SheetCopyPosition.AppendAtEnd()));
+    ExecutorTestPlanSupport.PendingMutation setActiveSheet =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget Copy")),
+            new WorkbookMutationAction.SetActiveSheet());
+    ExecutorTestPlanSupport.PendingMutation setSelectedSheets =
+        mutate(
+            new SheetSelector.ByNames(
+                List.of(new SheetName("Budget"), new SheetName("Budget Copy"))),
+            new WorkbookMutationAction.SetSelectedSheets());
+    ExecutorTestPlanSupport.PendingMutation setSheetVisibility =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN));
+    ExecutorTestPlanSupport.PendingMutation setSheetProtection =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.SetSheetProtection(protectionSettings()));
+    ExecutorTestPlanSupport.PendingMutation clearSheetProtection =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.ClearSheetProtection());
+
+    assertSheetOnlyContext(copySheet, exception, "Budget");
+    assertSheetOnlyContext(setActiveSheet, exception, "Budget Copy");
+    assertSheetOnlyContext(setSheetVisibility, exception, "Budget");
+    assertSheetOnlyContext(setSheetProtection, exception, "Budget");
+    assertSheetOnlyContext(clearSheetProtection, exception, "Budget");
+
+    assertNull(formulaFor(setSelectedSheets, exception));
+    assertNull(sheetNameFor(setSelectedSheets, exception));
+    assertNull(addressFor(setSelectedSheets, exception));
+    assertNull(rangeFor(setSelectedSheets, exception));
+
+    assertNull(namedRangeNameFor(copySheet, exception));
+    assertNull(namedRangeNameFor(setActiveSheet, exception));
+    assertNull(namedRangeNameFor(setSelectedSheets, exception));
+    assertNull(namedRangeNameFor(setSheetVisibility, exception));
+    assertNull(namedRangeNameFor(setSheetProtection, exception));
+    assertNull(namedRangeNameFor(clearSheetProtection, exception));
+  }
+
+  @Test
+  void extractsContextForStructuralLayoutOperations() {
+    RuntimeException exception = new RuntimeException("test");
+    ExecutorTestPlanSupport.PendingMutation mergeCells =
+        mutate(
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
+            new WorkbookMutationAction.MergeCells());
+    ExecutorTestPlanSupport.PendingMutation unmergeCells =
+        mutate(
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
+            new WorkbookMutationAction.UnmergeCells());
+    ExecutorTestPlanSupport.PendingMutation setColumnWidth =
+        mutate(
+            new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new WorkbookMutationAction.SetColumnWidth(16.0));
+    ExecutorTestPlanSupport.PendingMutation setRowHeight =
+        mutate(
+            new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new WorkbookMutationAction.SetRowHeight(28.5));
+    ExecutorTestPlanSupport.PendingMutation insertRows =
+        mutate(
+            new RowBandSelector.Insertion(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.InsertRows());
+    ExecutorTestPlanSupport.PendingMutation deleteRows =
+        mutate(
+            new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.DeleteRows());
+    ExecutorTestPlanSupport.PendingMutation shiftRows =
+        mutate(
+            new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.ShiftRows(1));
+    ExecutorTestPlanSupport.PendingMutation insertColumns =
+        mutate(
+            new ColumnBandSelector.Insertion(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.InsertColumns());
+    ExecutorTestPlanSupport.PendingMutation deleteColumns =
+        mutate(
+            new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.DeleteColumns());
+    ExecutorTestPlanSupport.PendingMutation shiftColumns =
+        mutate(
+            new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.ShiftColumns(-1));
+    ExecutorTestPlanSupport.PendingMutation setRowVisibility =
+        mutate(
+            new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.SetRowVisibility(true));
+    ExecutorTestPlanSupport.PendingMutation setColumnVisibility =
+        mutate(
+            new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.SetColumnVisibility(false));
+    ExecutorTestPlanSupport.PendingMutation groupRows =
+        mutate(
+            new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.GroupRows(true));
+    ExecutorTestPlanSupport.PendingMutation ungroupRows =
+        mutate(
+            new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.UngroupRows());
+    ExecutorTestPlanSupport.PendingMutation groupColumns =
+        mutate(
+            new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.GroupColumns(true));
+    ExecutorTestPlanSupport.PendingMutation ungroupColumns =
+        mutate(
+            new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
+            new WorkbookMutationAction.UngroupColumns());
+    ExecutorTestPlanSupport.PendingMutation setSheetPane =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 1, 1, 1)));
+    ExecutorTestPlanSupport.PendingMutation setSheetZoom =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.SetSheetZoom(125));
+    ExecutorTestPlanSupport.PendingMutation setSheetPresentation =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.SetSheetPresentation(
+                new SheetPresentationSpec(
+                    new SheetDisplaySpec(false, false, false, true, true),
+                    Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
+                    new SheetOutlineSummarySpec(false, false),
+                    new SheetDefaultsSpec(11, 18.5d),
+                    List.of(
+                        new IgnoredErrorSpec(
+                            new RangeRef("A1:B2"),
+                            List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))))));
+    ExecutorTestPlanSupport.PendingMutation setPrintLayout =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.SetPrintLayout(
+                PrintLayoutSpec.withDefaultSetup(
+                    new PrintAreaSpec.Range(new RangeRef("A1:B12")),
+                    ExcelPrintOrientation.LANDSCAPE,
+                    new PrintScalingSpec.Fit(1, 0),
+                    new PrintTitleRowsSpec.Band(0, 0),
+                    new PrintTitleColumnsSpec.Band(0, 0),
+                    headerFooter("Budget", "", ""),
+                    headerFooter("", "Page &P", ""))));
+    ExecutorTestPlanSupport.PendingMutation clearPrintLayout =
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.ClearPrintLayout());
+
+    assertRangeContext(mergeCells, exception, "Budget", "A1:B2");
+    assertRangeContext(unmergeCells, exception, "Budget", "A1:B2");
+
+    for (ExecutorTestPlanSupport.PendingMutation mutation :
+        List.of(
+            setColumnWidth,
+            setRowHeight,
+            insertRows,
+            deleteRows,
+            shiftRows,
+            insertColumns,
+            deleteColumns,
+            shiftColumns,
+            setRowVisibility,
+            setColumnVisibility,
+            groupRows,
+            ungroupRows,
+            groupColumns,
+            ungroupColumns,
+            setSheetPane,
+            setSheetZoom,
+            setSheetPresentation,
+            setPrintLayout,
+            clearPrintLayout)) {
+      assertSheetOnlyContext(mutation, exception, "Budget");
+    }
+  }
+
+  private static void assertSheetOnlyContext(
+      ExecutorTestPlanSupport.PendingMutation mutation,
+      Exception exception,
+      String expectedSheetName) {
+    assertNull(formulaFor(mutation, exception));
+    assertEquals(expectedSheetName, sheetNameFor(mutation, exception));
+    assertNull(addressFor(mutation, exception));
+    assertNull(rangeFor(mutation, exception));
+  }
+
+  private static void assertRangeContext(
+      ExecutorTestPlanSupport.PendingMutation mutation,
+      Exception exception,
+      String expectedSheetName,
+      String expectedRange) {
+    assertNull(formulaFor(mutation, exception));
+    assertEquals(expectedSheetName, sheetNameFor(mutation, exception));
+    assertNull(addressFor(mutation, exception));
+    assertEquals(expectedRange, rangeFor(mutation, exception));
+  }
+}

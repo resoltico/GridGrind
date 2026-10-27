@@ -4,22 +4,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -46,12 +48,12 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionPolicyInput(
-                ExecutionModeInput.defaults(),
-                new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-                CalculationPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults()),
-            FormulaEnvironmentInput.empty(),
+            new ExecutionPolicySpec(
+                ExecutionModeSpec.defaults(),
+                new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE),
+                CalculationPolicySpec.defaults(),
+                dev.erst.gridgrind.core.plan.AssertionModeSpec.defaults()),
+            FormulaEnvironmentSpec.empty(),
             List.of());
     AtomicBoolean removedPrivateSource = new AtomicBoolean();
 
@@ -81,11 +83,11 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            verbosePolicy(ExecutionModeInput.eventRead()),
-            FormulaEnvironmentInput.empty(),
+            verbosePolicy(ExecutionModeSpec.eventRead()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
     AtomicBoolean removedPrivateSource = new AtomicBoolean();
@@ -117,12 +119,12 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "output/result.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            verbosePolicy(ExecutionModeInput.streamingWrite()),
-            FormulaEnvironmentInput.empty(),
+            verbosePolicy(ExecutionModeSpec.streamingWrite()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-sheet",
-                    new SheetSelector.ByName("Budget"),
+                    new StepId("ensure-sheet"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.EnsureSheet())));
     AtomicBoolean replacedOutputDirectory = new AtomicBoolean();
 
@@ -156,12 +158,12 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "output/result.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            verbosePolicy(ExecutionModeInput.defaults()),
-            FormulaEnvironmentInput.empty(),
+            verbosePolicy(ExecutionModeSpec.defaults()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-sheet",
-                    new SheetSelector.ByName("Budget"),
+                    new StepId("ensure-sheet"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.EnsureSheet())));
     AtomicBoolean replacedOutputDirectory = new AtomicBoolean();
 
@@ -186,12 +188,12 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
     assertInstanceOf(ProblemContext.PersistWorkbook.class, failure.problem().context());
   }
 
-  private static ExecutionPolicyInput verbosePolicy(ExecutionModeInput mode) {
-    return new ExecutionPolicyInput(
+  private static ExecutionPolicySpec verbosePolicy(ExecutionModeSpec mode) {
+    return new ExecutionPolicySpec(
         mode,
-        new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-        CalculationPolicyInput.defaults(),
-        dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults());
+        new ExecutionJournalSpec(ExecutionJournalLevel.VERBOSE),
+        CalculationPolicySpec.defaults(),
+        dev.erst.gridgrind.core.plan.AssertionModeSpec.defaults());
   }
 
   private static void createWorkbook(Path source) throws java.io.IOException {
@@ -203,13 +205,13 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
   }
 
   private static void removeMaterializedSourceAfterPreflight(
-      dev.erst.gridgrind.contract.dto.ExecutionProgressEvent event,
+      dev.erst.gridgrind.core.result.ExecutionProgressEvent event,
       Path tempRoot,
       AtomicBoolean removedPrivateSource) {
     if (event.category()
-            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+            != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category.RESOLVE_INPUTS
         || event.status()
-            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
+            != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Status.SUCCEEDED) {
       return;
     }
     try (Stream<Path> files = Files.list(tempRoot)) {
@@ -232,13 +234,13 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
   }
 
   private static void replaceBoundOutputDirectory(
-      dev.erst.gridgrind.contract.dto.ExecutionProgressEvent event,
+      dev.erst.gridgrind.core.result.ExecutionProgressEvent event,
       Path outputDirectory,
       AtomicBoolean replacedOutputDirectory) {
     if (event.category()
-            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+            != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category.RESOLVE_INPUTS
         || event.status()
-            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
+            != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Status.SUCCEEDED) {
       return;
     }
     try {

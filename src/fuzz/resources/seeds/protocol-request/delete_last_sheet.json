@@ -1,0 +1,32 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "OnlySheet"
+      }
+    },
+    {
+      "stepId": "step-02-delete-sheet",
+      "action": {
+        "type": "DELETE_SHEET",
+        "sheetName": "Sheet1"
+      }
+    },
+    {
+      "stepId": "step-03-delete-sheet",
+      "action": {
+        "type": "DELETE_SHEET",
+        "sheetName": "OnlySheet"
+      }
+    }
+  ]
+}

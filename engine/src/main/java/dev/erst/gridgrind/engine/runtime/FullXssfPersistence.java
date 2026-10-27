@@ -1,20 +1,19 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Persists a verified full-XSSF workbook and preserves publication-state truth on failure. */
 final class FullXssfPersistence {
   private final FullXssfWorkbookPersistence workbookPersistence;
-  private final ExecutionResponseSupport responseSupport;
+  private final ExecutionResults responseSupport;
 
-  FullXssfPersistence(
-      ExecutionWorkbookSupport workbookSupport, ExecutionResponseSupport responseSupport) {
+  FullXssfPersistence(WorkbookLifecycle workbookSupport, ExecutionResults responseSupport) {
     this(
         Objects.requireNonNull(workbookSupport, "workbookSupport must not be null")
             ::persistWorkbook,
@@ -22,7 +21,7 @@ final class FullXssfPersistence {
   }
 
   FullXssfPersistence(
-      FullXssfWorkbookPersistence workbookPersistence, ExecutionResponseSupport responseSupport) {
+      FullXssfWorkbookPersistence workbookPersistence, ExecutionResults responseSupport) {
     this.workbookPersistence =
         Objects.requireNonNull(workbookPersistence, "workbookPersistence must not be null");
     this.responseSupport =
@@ -50,12 +49,12 @@ final class FullXssfPersistence {
       executionContext
           .preservation()
           .add(
-              new dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation.Failed(
+              new dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation.Failed(
                   exception.kind(), exception.identifiers()));
       return failure(executionContext, bindings, calculation, persistencePhase, exception, null);
     } catch (WorkbookPublicationException exception) {
       WorkbookResultPersistence.PersistenceOutcome persistence =
-          dev.erst.gridgrind.contract.dto.WorkbookResults.publicationPersistenceOutcome(
+          dev.erst.gridgrind.core.result.WorkbookResults.publicationPersistenceOutcome(
               executionContext.request(), exception.publication());
       return failure(
           executionContext, bindings, calculation, persistencePhase, exception, persistence);
@@ -72,18 +71,18 @@ final class FullXssfPersistence {
       Exception exception,
       WorkbookResultPersistence.@Nullable PersistenceOutcome persistence) {
     GridGrindProblemDetail.Problem problem =
-        ExecutionResponseSupport.problemFor(
+        GridGrindProblems.fromException(
             exception,
-            new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
+            new dev.erst.gridgrind.core.problem.ProblemContext.PersistWorkbook(
                 ExecutionRequestPaths.requestShape(executionContext.request()),
                 ExecutionRequestPaths.persistenceReference(
                     executionContext.request(), bindings.workingDirectory())));
     persistencePhase.fail(problem.code());
     WorkbookResult failure =
         persistence == null
-            ? ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+            ? ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
                 executionContext.failure(calculation, problem))
-            : ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+            : ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
                 executionContext.failure(calculation, problem), persistence);
     return new Result(
         null,
@@ -106,7 +105,7 @@ final class FullXssfPersistence {
   interface FullXssfWorkbookPersistence {
     /** Persists one workbook and returns the resulting persistence fact. */
     WorkbookResultPersistence.PersistenceOutcome persist(
-        dev.erst.gridgrind.excel.ExcelWorkbook workbook,
+        dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook workbook,
         WorkbookPlan.WorkbookSource source,
         WorkbookPlan.WorkbookPersistence persistence,
         ExecutionInputBindings bindings,

@@ -3,18 +3,21 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -31,23 +34,23 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-ops",
-                    new SheetSelector.ByName("Ops"),
+                    new StepId("ensure-ops"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
                     new WorkbookMutationAction.EnsureSheet()),
                 new MutationStep(
-                    "author-formula",
-                    new CellSelector.ByAddress("Ops", "A1"),
+                    new StepId("author-formula"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Formula(TextSourceInput.inline("1+1")))),
+                        new CellValueSpec.Formula(TextSourceSpec.inline("1+1")))),
                 new MutationStep(
-                    "reject-formula",
-                    new CellSelector.ByAddress("Ops", "A1"),
+                    new StepId("reject-formula"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
-                        new CellInput.Formula(TextSourceInput.inline("SUM("))))));
+                        new CellValueSpec.Formula(TextSourceSpec.inline("SUM("))))));
 
     WorkbookResult result =
         new DefaultGridGrindRequestExecutor()
@@ -63,7 +66,7 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
     WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, result);
     ProblemContext.ExecuteStep context =
         assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
-    assertEquals("author-formula", context.stepId());
-    assertEquals("reject-formula", context.surfacedAtStep().orElseThrow().stepId());
+    assertEquals("author-formula", context.stepId().value());
+    assertEquals("reject-formula", context.surfacedAtStep().orElseThrow().stepId().value());
   }
 }

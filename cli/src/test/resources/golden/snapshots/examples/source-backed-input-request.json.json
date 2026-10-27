@@ -1,0 +1,249 @@
+{
+  "exit" : 0,
+  "stderr" : "",
+  "stdout" : {
+    "assertions" : [ ],
+    "calculation" : {
+      "execution" : {
+        "cachesCleared" : false,
+        "evaluatedFormulaCount" : 0,
+        "markRecalculateOnOpenApplied" : false,
+        "status" : "NOT_REQUESTED"
+      },
+      "policy" : { }
+    },
+    "evidence" : {
+      "admission" : {
+        "materializedInputs" : [ {
+          "byteSize" : 17,
+          "path" : "<workspace>/recipe/source-backed-input-assets/title.txt",
+          "role" : "cell text",
+          "sha256" : "e87fb704a0b28d5bb4209c331dff7e50689c47836a37de28a4549127a8fe481d"
+        }, {
+          "byteSize" : 11,
+          "path" : "<workspace>/recipe/source-backed-input-assets/total-formula.txt",
+          "role" : "formula",
+          "sha256" : "d68c63a921e31e57eb0aada024c3e92b4224c1454651f1e5a585b598d30bafba"
+        }, {
+          "byteSize" : 32,
+          "path" : "<workspace>/recipe/source-backed-input-assets/payload.bin",
+          "role" : "embedded-object payload",
+          "sha256" : "96b954166aa396c16944515c9e7d87a676d3c0af8c2c465ae2c77805776c7d78"
+        } ],
+        "operations" : [ {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "ENSURE_SHEET"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_RANGE"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_CELL"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_CELL"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_EMBEDDED_OBJECT"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_CELLS"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_DRAWING_OBJECT_PAYLOAD"
+        } ]
+      },
+      "computational" : {
+        "status" : "NOT_REQUESTED"
+      },
+      "presentational" : {
+        "status" : "NOT_ASSESSED"
+      },
+      "preservation" : [ {
+        "status" : "NOT_REQUESTED"
+      } ],
+      "structural" : {
+        "status" : "NOT_ESTABLISHED"
+      },
+      "taskSpecific" : {
+        "status" : "NOT_REQUESTED"
+      }
+    },
+    "inspections" : [ {
+      "cells" : [ {
+        "address" : "A1",
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Quarterly Budget\n"
+        }
+      }, {
+        "address" : "B4",
+        "type" : "FORMULA",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 30.0
+        }
+      } ],
+      "sheetName" : "Inputs",
+      "stepId" : "read-cells",
+      "type" : "GET_CELLS"
+    }, {
+      "payload" : {
+        "base64Data" : "R3JpZEdyaW5kIHNvdXJjZS1iYWNrZWQgcGF5bG9hZAo=",
+        "command" : "open",
+        "contentType" : "application/octet-stream",
+        "fileName" : "inputs-payload.txt",
+        "label" : "Inputs payload",
+        "name" : "InputsPayload",
+        "packagingKind" : "OLE10_NATIVE",
+        "sha256" : "96b954166aa396c16944515c9e7d87a676d3c0af8c2c465ae2c77805776c7d78",
+        "type" : "EMBEDDED_OBJECT"
+      },
+      "sheetName" : "Inputs",
+      "stepId" : "read-payload",
+      "type" : "GET_DRAWING_OBJECT_PAYLOAD"
+    } ],
+    "journal" : {
+      "calculation" : {
+        "execution" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "preflight" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "close" : {
+        "status" : "SUCCEEDED"
+      },
+      "inputResolution" : {
+        "status" : "SUCCEEDED"
+      },
+      "level" : "SUMMARY",
+      "open" : {
+        "status" : "SUCCEEDED"
+      },
+      "outcome" : {
+        "completedStepCount" : 7,
+        "durationMillis" : "<durationMillis>",
+        "plannedStepCount" : 7,
+        "status" : "SUCCEEDED"
+      },
+      "persistencePhase" : {
+        "status" : "SUCCEEDED"
+      },
+      "source" : {
+        "type" : "NEW"
+      },
+      "steps" : [ {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Inputs"
+        } ],
+        "stepId" : "ensure-inputs",
+        "stepIndex" : 0,
+        "stepKind" : "MUTATION",
+        "stepType" : "ENSURE_SHEET"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "RANGE",
+          "label" : "Range Inputs!B2:B3"
+        } ],
+        "stepId" : "seed-values",
+        "stepIndex" : 1,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_RANGE"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CELL",
+          "label" : "Cell Inputs!A1"
+        } ],
+        "stepId" : "set-title-from-file",
+        "stepIndex" : 2,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_CELL"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CELL",
+          "label" : "Cell Inputs!B4"
+        } ],
+        "stepId" : "set-total-formula-from-file",
+        "stepIndex" : 3,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_CELL"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Inputs"
+        } ],
+        "stepId" : "attach-payload-from-file",
+        "stepIndex" : 4,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_EMBEDDED_OBJECT"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CELL",
+          "label" : "Cells Inputs![A1, B4]"
+        } ],
+        "stepId" : "read-cells",
+        "stepIndex" : 5,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_CELLS"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "DRAWING",
+          "label" : "Drawing object Inputs!InputsPayload"
+        } ],
+        "stepId" : "read-payload",
+        "stepIndex" : 6,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_DRAWING_OBJECT_PAYLOAD"
+      } ],
+      "validation" : {
+        "status" : "SUCCEEDED"
+      }
+    },
+    "persistence" : {
+      "type" : "NONE"
+    },
+    "planId" : "source-backed-input-workflow",
+    "protocolVersion" : 1,
+    "status" : "SUCCEEDED",
+    "warnings" : [ ]
+  }
+}

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.io.IOException;
-import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Base exception for failures while resolving source-backed authored inputs. */
@@ -17,7 +17,7 @@ abstract sealed class InputSourceException extends IOException
   InputSourceException(
       String message, String inputKind, @Nullable String inputPath, @Nullable Throwable cause) {
     super(message, cause);
-    this.inputKind = requireNonBlank(inputKind, "inputKind");
+    this.inputKind = TextValidation.requireNonBlank(inputKind, "inputKind");
     this.inputPath = inputPath;
   }
 
@@ -27,13 +27,5 @@ abstract sealed class InputSourceException extends IOException
 
   @Nullable String inputPath() {
     return inputPath;
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }

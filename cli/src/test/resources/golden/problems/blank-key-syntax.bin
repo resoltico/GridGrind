@@ -1,0 +1,7 @@
+{
+  "    "encryption": {
+        "type": "ENCRYPT",
+        "encryption": {
+          "passwordRef": { "id": "output-password" },
+          "cipher": "AES_256",
+          

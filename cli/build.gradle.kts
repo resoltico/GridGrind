@@ -5,7 +5,6 @@ import org.gradle.api.file.DuplicatesStrategy
 plugins {
     application
     id("gridgrind.java-conventions")
-    id("gridgrind.mutation-conventions")
     alias(libs.plugins.shadow)
 }
 
@@ -78,35 +77,11 @@ val reviewedNoticeMarkers =
 
 description = "CLI transport adapter for the GridGrind protocol"
 
-gridgrindMutation {
-    targetClasses.set(
-        setOf(
-            "dev.erst.gridgrind.cli.CliLookupImmediateCommandParser*",
-            "dev.erst.gridgrind.cli.GridGrindCliRecipeDiscoveryCommands*",
-            "dev.erst.gridgrind.cli.examples.RecipeWorkspacePublisher*",
-        ),
-    )
-    targetTests.set(
-        setOf(
-            "dev.erst.gridgrind.cli.CliArgumentsTest",
-            "dev.erst.gridgrind.cli.GridGrindCliAssetRecipeMaterializationTest",
-            "dev.erst.gridgrind.cli.GridGrindCliCatalogCommandTest",
-            "dev.erst.gridgrind.cli.GridGrindCliRecipeDiscoveryContractTest",
-            "dev.erst.gridgrind.cli.GridGrindCliRecipeTransportTest",
-            "dev.erst.gridgrind.cli.GridGrindCommandErrorClassificationTest",
-            "dev.erst.gridgrind.cli.examples.RecipeWorkspacePublisherTest",
-        ),
-    )
-    mutationThreshold.set(100)
-    coverageThreshold.set(100)
-    testStrengthThreshold.set(100)
-    maxSurviving.set(0)
-}
 
 dependencies {
-    implementation(project(":contract"))
+    testImplementation(testFixtures(project(":core")))
+    implementation(project(":json"))
     implementation(project(":engine"))
-    implementation(project(":excel-foundation"))
     implementation(libs.jackson.databind)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.poi.ooxml)
@@ -135,7 +110,6 @@ tasks.named("check") {
 }
 
 application {
-    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
     mainClass = "dev.erst.gridgrind.cli.App"
 }
 
@@ -144,24 +118,6 @@ distributions.named("shadow") {
     contents {
         from(packagedLegalFiles)
     }
-}
-
-val cleanShadowStartScripts = tasks.register<Delete>("cleanShadowStartScripts") {
-    delete(layout.buildDirectory.dir("scriptsShadow"))
-}
-
-val cleanLegacyCliDistribution = tasks.register<Delete>("cleanLegacyCliDistribution") {
-    delete(layout.buildDirectory.dir("scripts"))
-    delete(layout.buildDirectory.dir("install/cli"))
-    delete(layout.buildDirectory.dir("install/cli-shadow"))
-}
-
-val cleanInstalledShadowDist = tasks.register<Delete>("cleanInstalledShadowDist") {
-    delete(layout.buildDirectory.dir("install/gridgrind"))
-}
-
-val cleanDistributionArchives = tasks.register<Delete>("cleanDistributionArchives") {
-    delete(layout.buildDirectory.dir("distributions"))
 }
 
 tasks.named<JavaExec>("run") {
@@ -174,16 +130,10 @@ tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startScripts")
 
 tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startShadowScripts") {
     applicationName = "gridgrind"
-    dependsOn(cleanShadowStartScripts)
 }
 
 tasks.named<Sync>("installDist") {
     enabled = false
-}
-
-tasks.named<Sync>("installShadowDist") {
-    dependsOn(cleanLegacyCliDistribution)
-    dependsOn(cleanInstalledShadowDist)
 }
 
 tasks.named("distZip") {
@@ -194,16 +144,17 @@ tasks.named("distTar") {
     enabled = false
 }
 
-tasks.named("shadowDistZip") {
-    dependsOn(cleanDistributionArchives)
-}
-
-tasks.named("shadowDistTar") {
-    dependsOn(cleanDistributionArchives)
-}
-
 tasks.named<Test>("test") {
-    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    testLogging.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    dependsOn("shadowJar", "installShadowDist", "shadowDistZip", "shadowDistTar")
+    inputs.files(tasks.named("shadowJar"), tasks.named("installShadowDist"), tasks.named("shadowDistZip"), tasks.named("shadowDistTar"))
+        .withPropertyName("deliveredArtifacts")
+    inputs.dir(rootProject.layout.projectDirectory.dir("examples")).withPropertyName("repositoryExamples")
+    inputs.files(rootProject.file("README.md"), rootProject.file("docs/EXECUTION_MODEL.md"), rootProject.file("docs/QUICK_START.md"))
+        .withPropertyName("hostGuidance")
+    useJUnitPlatform { excludeTags("container", "devcontainer", "documentation") }
+    systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
+    systemProperty("gridgrind.golden.update", providers.gradleProperty("golden.update").getOrElse("false"))
 }
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
@@ -211,7 +162,6 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     archiveBaseName = "gridgrind"
     archiveVersion = ""
     archiveClassifier = ""
-    isReproducibleFileOrder = true
 
     // Merge ServiceLoader registrations from all bundled JARs.
     filesMatching("META-INF/services/**") {
@@ -228,7 +178,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     exclude("META-INF/DEPENDENCIES")
 
     // Bundle the curated attribution notice and license texts into META-INF/.
-    // LICENSE is the MIT license for GridGrind's own code.
+    // LICENSE is the MPL 2.0 license for GridGrind's own code.
     // The Apache, BSD 2-Clause, and component-specific BSD 3-Clause files cover all bundled
     // third-party license families not reproduced directly in NOTICE.
     packagedLegalFileNames.forEach { legalFileName ->
@@ -237,7 +187,6 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 
     manifest {
         attributes(
-            "Enable-Native-Access" to "ALL-UNNAMED",
             "Implementation-Title" to "GridGrind",
             "Implementation-Version" to project.version,
             "Implementation-Vendor" to "Ervins Strauhmanis",
@@ -272,7 +221,7 @@ pluginManager.withPlugin("java") {
     tasks.register<JavaExec>("writeRepositoryExamples") {
         group = "documentation"
         description =
-            "Regenerates the checkout-rooted examples/*.json fixtures from the CLI-owned example registry."
+            "Regenerates the checkout-rooted examples/*.json fixtures from the core-owned recipe registry."
         dependsOn(tasks.named("testClasses"))
         classpath =
             project.the<org.gradle.api.plugins.JavaPluginExtension>()
@@ -280,7 +229,7 @@ pluginManager.withPlugin("java") {
                 .named("test")
                 .get()
                 .runtimeClasspath
-        mainClass = "dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesWriter"
+        mainClass = "dev.erst.gridgrind.cli.io.ExampleRequestFixturesWriter"
         workingDir = rootProject.projectDir
     }
 }
@@ -288,3 +237,45 @@ pluginManager.withPlugin("java") {
 tasks.named("assemble") {
     dependsOn("shadowJar")
 }
+
+val hostTestSources = the<org.gradle.api.plugins.JavaPluginExtension>().sourceSets.named("test")
+for (suite in listOf("container", "devcontainer")) {
+    tasks.register<Test>(suite + "Test") {
+        group = "verification"
+        description = "Explicit Docker-backed " + suite + " verification."
+        dependsOn("testClasses", "shadowJar")
+        testClassesDirs = hostTestSources.get().output.classesDirs
+        classpath = hostTestSources.get().runtimeClasspath
+        useJUnitPlatform { includeTags(suite) }
+        systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
+        extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> { isEnabled = false }
+        outputs.upToDateWhen { false }
+        outputs.cacheIf { false }
+    }
+}
+
+for (operation in listOf("generateReferenceDocs", "verifyGeneratedDocs")) {
+    tasks.register<JavaExec>(operation) {
+        group = "documentation"
+        description = if (operation == "verifyGeneratedDocs") "Verifies reference documents and schemas against core metadata." else "Regenerates metadata-owned Markdown references."
+        dependsOn("testClasses")
+        classpath = hostTestSources.get().runtimeClasspath
+        mainClass.set("dev.erst.gridgrind.cli.io.ReferenceDocumentsWriter")
+        args(rootProject.projectDir.absolutePath, if (operation == "verifyGeneratedDocs") "--verify" else "--write")
+    }
+}
+
+val documentationTest = tasks.register<Test>("documentationTest") {
+    group = "verification"
+    description = "Validates handwritten JSON examples and local documentation links."
+    dependsOn("testClasses")
+    testClassesDirs = hostTestSources.get().output.classesDirs
+    classpath = hostTestSources.get().runtimeClasspath
+    useJUnitPlatform { includeTags("documentation") }
+    systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
+    inputs.dir(rootProject.layout.projectDirectory.dir("docs")).withPropertyName("documentation")
+    inputs.files(rootProject.file("README.md"), rootProject.file("CHANGELOG.md"), rootProject.file("CHANGELOG_ARCHIVE.md"), rootProject.file("PATENTS.md"), rootProject.file("core/VOCABULARY.md"))
+        .withPropertyName("entryDocuments")
+    extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> { isEnabled = false }
+}
+tasks.named("check") { dependsOn(documentationTest) }

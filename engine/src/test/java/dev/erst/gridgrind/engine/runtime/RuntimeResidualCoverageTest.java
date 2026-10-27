@@ -2,190 +2,112 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
-import dev.erst.gridgrind.contract.dto.BorderSideInput;
-import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
-import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.ChartLegendInput;
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
-import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
-import dev.erst.gridgrind.contract.dto.ChartTitleInput;
-import dev.erst.gridgrind.contract.dto.ColorInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
-import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.contract.dto.DataValidationInput;
-import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
-import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
-import dev.erst.gridgrind.contract.dto.DrawingMarkerInput;
-import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
-import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
-import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.PaneInput;
-import dev.erst.gridgrind.contract.dto.PictureDataInput;
-import dev.erst.gridgrind.contract.dto.PictureInput;
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
-import dev.erst.gridgrind.contract.dto.RichTextRunInput;
-import dev.erst.gridgrind.contract.dto.SecretReference;
-import dev.erst.gridgrind.contract.dto.ShapeInput;
-import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
-import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.contract.dto.SignatureLineInput;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.RowBandSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelBorder;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import java.math.BigDecimal;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
+import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused closure tests for runtime seams left uncovered by broader end-to-end suites. */
 class RuntimeResidualCoverageTest {
-  @Test
-  void secretBearingProtectionConversionsRequireExecutionBindings() {
-    WorkbookProtectionInput workbookProtection =
-        new WorkbookProtectionInput(
-            true,
-            false,
-            false,
-            Optional.of(new SecretReference("workbook-password")),
-            Optional.empty());
-    SheetProtectionSettings sheetProtection =
-        new SheetProtectionSettings(
-            false, false, false, false, false, false, false, false, false, false, false, false,
-            false, false, false);
-
-    assertThrows(
-        IllegalStateException.class,
-        () ->
-            WorkbookCommandLayoutInputConverter.toExcelWorkbookProtectionSettings(
-                workbookProtection, null));
-    assertThrows(
-        IllegalStateException.class,
-        () ->
-            WorkbookCommandWorkbookMutationConverter.toCommand(
-                new SheetSelector.ByName("Budget"),
-                new WorkbookMutationAction.SetSheetProtection(
-                    sheetProtection, Optional.of(new SecretReference("sheet-password"))),
-                null));
-  }
 
   @Test
-  void converterNullBranchesAndColorReportVariantsStayTyped() {
-    assertTrue(WorkbookCommandCellInputConverter.toExcelFontHeight(null).isEmpty());
-    assertTrue(WorkbookCommandCellInputConverter.toExcelBorder(null).isEmpty());
-    assertTrue(WorkbookCommandCellInputConverter.toExcelBorderSide(null).isEmpty());
-    assertTrue(WorkbookCommandCellInputConverter.toExcelColor(null).isEmpty());
-    assertTrue(WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(null).isEmpty());
-    assertTrue(
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(null).isEmpty());
-    assertTrue(WorkbookCommandStructuredInputConverter.toExcelAutofilterSortState(null).isEmpty());
+  void converterNullBranchesAndResolvedPromptFieldsStayTyped() {
+    assertTrue(MutationResolution.toResolvedValidationPrompt(null).isEmpty());
+    assertTrue(MutationResolution.toResolvedValidationErrorAlert(null).isEmpty());
 
-    Optional<ExcelFontHeight> fontHeight =
-        WorkbookCommandCellInputConverter.toExcelFontHeight(
-            new dev.erst.gridgrind.contract.dto.FontHeightInput.Points(BigDecimal.valueOf(12.5d)));
-    Optional<ExcelBorder> border =
-        WorkbookCommandCellInputConverter.toExcelBorder(
-            new CellBorderInput(
-                Optional.of(new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb("#112233"))),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()));
-    Optional<ExcelBorderSide> borderSide =
-        WorkbookCommandCellInputConverter.toExcelBorderSide(
-            new BorderSideInput(Optional.of(ExcelBorderStyle.DOUBLE), Optional.empty()));
-    Optional<ExcelColor> color =
-        WorkbookCommandCellInputConverter.toExcelColor(ColorInput.indexed(6, 0.25d));
-    Optional<ExcelDataValidationPrompt> prompt =
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(
-            new DataValidationPromptInput(
-                TextSourceInput.inline("Prompt title"),
-                TextSourceInput.inline("Prompt text"),
-                true));
-    Optional<ExcelDataValidationErrorAlert> alert =
-        WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(
-            new DataValidationErrorAlertInput(
+    Optional<ResolvedValidationPrompt> prompt =
+        MutationResolution.toResolvedValidationPrompt(
+            new DataValidationPromptSpec(
+                TextSourceSpec.inline("Prompt title"), TextSourceSpec.inline("Prompt text"), true));
+    Optional<ResolvedValidationErrorAlert> alert =
+        MutationResolution.toResolvedValidationErrorAlert(
+            new DataValidationErrorAlertSpec(
                 ExcelDataValidationErrorStyle.WARNING,
-                TextSourceInput.inline("Alert title"),
-                TextSourceInput.inline("Alert text"),
+                TextSourceSpec.inline("Alert title"),
+                TextSourceSpec.inline("Alert text"),
                 true));
 
-    assertEquals(Optional.of(new ExcelFontHeight(250)), fontHeight);
-    assertEquals(
-        Optional.of(ExcelBorderStyle.THIN), border.orElseThrow().all().orElseThrow().style());
-    assertEquals(Optional.of(ExcelBorderStyle.DOUBLE), borderSide.orElseThrow().style());
-    assertEquals(Optional.of(0.25d), color.orElseThrow().tint());
     assertEquals("Prompt title", prompt.orElseThrow().title());
     assertEquals(ExcelDataValidationErrorStyle.WARNING, alert.orElseThrow().style());
-
-    assertEquals(
-        Optional.empty(),
-        InspectionResultCellReportSupport.toCellColorReport((ExcelColorSnapshot) null));
-    assertEquals(
-        Optional.of(dev.erst.gridgrind.contract.dto.CellColorReport.rgb("#112233", 0.25d)),
-        InspectionResultCellReportSupport.toCellColorReport(
-            ExcelColorSnapshot.rgb("#112233", 0.25d)));
-    assertEquals(
-        Optional.of(dev.erst.gridgrind.contract.dto.CellColorReport.theme(3)),
-        InspectionResultCellReportSupport.toCellColorReport(ExcelColorSnapshot.theme(3)));
-    assertEquals(
-        Optional.of(dev.erst.gridgrind.contract.dto.CellColorReport.indexed(7, -0.5d)),
-        InspectionResultCellReportSupport.toCellColorReport(ExcelColorSnapshot.indexed(7, -0.5d)));
   }
 
   @Test
@@ -194,13 +116,13 @@ class RuntimeResidualCoverageTest {
         List.of(
             new CellMutationAction.ClearRange(),
             new CellMutationAction.SetArrayFormula(
-                new ArrayFormulaInput(TextSourceInput.inline("{=SUM(A1:A2)}"))),
+                new ArrayFormulaSpec(TextSourceSpec.inline("{=SUM(A1:A2)}"))),
             new CellMutationAction.ClearArrayFormula(),
             new CellMutationAction.SetHyperlink(new HyperlinkTarget.Url("https://example.com")),
             new CellMutationAction.ClearHyperlink(),
             new CellMutationAction.ClearComment(),
             new CellMutationAction.ApplyStyle(
-                new CellStylePatchInput(
+                new CellStylePatch(
                     Optional.of("0.00"),
                     Optional.empty(),
                     Optional.empty(),
@@ -213,67 +135,68 @@ class RuntimeResidualCoverageTest {
 
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CellMutationAction.SetCell(new CellInput.Text(TextSourceInput.standardInput()))));
+            new CellMutationAction.SetCell(
+                new CellValueSpec.Text(TextSourceSpec.standardInput()))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
-                    List.of(List.of(new CellInput.Text(TextSourceInput.standardInput())))))));
+                new dev.erst.gridgrind.core.model.value.CellGridSpec.Typed(
+                    List.of(List.of(new CellValueSpec.Text(TextSourceSpec.standardInput())))))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CellMutationAction.SetComment(
-                CommentInput.plain(TextSourceInput.standardInput(), "Ada", false))));
+                CommentSpec.plain(TextSourceSpec.standardInput(), "Ada", false))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CellMutationAction.AppendRow(
-                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
-                    List.of(new CellInput.Formula(TextSourceInput.standardInput()))))));
+                new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
+                    List.of(new CellValueSpec.Formula(TextSourceSpec.standardInput()))))));
 
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new DrawingMutationAction.SetPicture(
-                new PictureInput(
+                new PictureSpec(
                     "Banner",
-                    pictureData(BinarySourceInput.standardInput()),
+                    pictureData(BinarySourceSpec.standardInput()),
                     anchor(),
-                    Optional.of(TextSourceInput.inline("Preview"))))));
+                    Optional.of(TextSourceSpec.inline("Preview"))))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new PictureInput(
+            new PictureSpec(
                 "Described Banner",
-                pictureData(BinarySourceInput.file("banner.png")),
+                pictureData(BinarySourceSpec.file("banner.png")),
                 anchor(),
-                Optional.of(TextSourceInput.standardInput()))));
+                Optional.of(TextSourceSpec.standardInput()))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new PictureInput(
+            new PictureSpec(
                 "Inline Description",
-                pictureData(BinarySourceInput.file("banner.png")),
+                pictureData(BinarySourceSpec.file("banner.png")),
                 anchor(),
-                Optional.of(TextSourceInput.inline("Preview")))));
+                Optional.of(TextSourceSpec.inline("Preview")))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new DrawingMutationAction.SetSignatureLine(
-                signatureLine(Optional.of(pictureData(BinarySourceInput.standardInput()))))));
+                signatureLine(Optional.of(pictureData(BinarySourceSpec.standardInput()))))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new DrawingMutationAction.SetChart(
-                chartWithTitle(new ChartTitleInput.Text(TextSourceInput.standardInput())))));
+                chartWithTitle(new ChartTitleSpec.Text(TextSourceSpec.standardInput())))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new DrawingMutationAction.SetShape(
-                new ShapeInput.SimpleShape(
-                    "Callout", anchor(), "rect", Optional.of(TextSourceInput.standardInput())))));
+                new ShapeSpec.SimpleShape(
+                    "Callout", anchor(), "rect", Optional.of(TextSourceSpec.standardInput())))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new DrawingMutationAction.SetEmbeddedObject(
-                new EmbeddedObjectInput(
+                new EmbeddedObjectSpec(
                     "Attachment",
                     "Payload",
                     "payload.bin",
                     "open",
-                    BinarySourceInput.standardInput(),
-                    pictureData(BinarySourceInput.file("preview.png")),
+                    BinarySourceSpec.standardInput(),
+                    pictureData(BinarySourceSpec.file("preview.png")),
                     anchor()))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
@@ -285,9 +208,10 @@ class RuntimeResidualCoverageTest {
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.ImportCustomXmlMapping(
-                new CustomXmlImportInput(
-                    new CustomXmlMappingLocator(null, "root/item"),
-                    TextSourceInput.standardInput()))));
+                new CustomXmlImportSpec(
+                    new CustomXmlMappingLocator(
+                        java.util.Optional.empty(), java.util.Optional.of("root/item")),
+                    TextSourceSpec.standardInput()))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.SetPivotTable(pivotTable())));
@@ -300,9 +224,9 @@ class RuntimeResidualCoverageTest {
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingDefinitionInput(
+                new ConditionalFormattingSpec(
                     List.of(
-                        new ConditionalFormattingRuleInput.FormulaRule(
+                        new ConditionalFormattingRuleSpec.FormulaRule(
                             "TRUE", true, Optional.empty()))))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
@@ -315,7 +239,7 @@ class RuntimeResidualCoverageTest {
             new StructuredMutationAction.ClearAutofilter()));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new StructuredMutationAction.SetTable(table(TextSourceInput.standardInput()))));
+            new StructuredMutationAction.SetTable(table(TextSourceSpec.standardInput()))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.DeleteTable()));
@@ -325,7 +249,7 @@ class RuntimeResidualCoverageTest {
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.SetNamedRange(
-                "Budget",
+                new DefinedName("Budget"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.formula("SUM(Budget!A1:A3)"))));
     assertFalse(
@@ -335,22 +259,21 @@ class RuntimeResidualCoverageTest {
     List<WorkbookMutationAction> noInputWorkbookActions =
         List.of(
             new WorkbookMutationAction.EnsureSheet(),
-            new WorkbookMutationAction.RenameSheet("Renamed"),
+            new WorkbookMutationAction.RenameSheet(new SheetName("Renamed")),
             new WorkbookMutationAction.DeleteSheet(),
             new WorkbookMutationAction.MoveSheet(1),
-            new WorkbookMutationAction.CopySheet("Budget Copy"),
+            new WorkbookMutationAction.CopySheet(new SheetName("Budget Copy")),
             new WorkbookMutationAction.SetActiveSheet(),
             new WorkbookMutationAction.SetSelectedSheets(),
             new WorkbookMutationAction.SetSheetVisibility(
-                dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.HIDDEN),
+                dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.HIDDEN),
             new WorkbookMutationAction.SetSheetProtection(
                 new SheetProtectionSettings(
                     false, false, false, false, false, false, false, false, false, false, false,
                     false, false, false, false)),
             new WorkbookMutationAction.ClearSheetProtection(),
             new WorkbookMutationAction.SetWorkbookProtection(
-                new WorkbookProtectionInput(
-                    true, false, false, Optional.empty(), Optional.empty())),
+                new WorkbookProtectionSpec(true, false, false, Optional.empty(), Optional.empty())),
             new WorkbookMutationAction.ClearWorkbookProtection(),
             new WorkbookMutationAction.MergeCells(),
             new WorkbookMutationAction.UnmergeCells(),
@@ -368,9 +291,9 @@ class RuntimeResidualCoverageTest {
             new WorkbookMutationAction.UngroupRows(),
             WorkbookMutationAction.GroupColumns.expanded(),
             new WorkbookMutationAction.UngroupColumns(),
-            new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 0, 1, 0)),
+            new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 0, 1, 0)),
             new WorkbookMutationAction.SetSheetZoom(125),
-            new WorkbookMutationAction.SetSheetPresentation(SheetPresentationInput.defaults()),
+            new WorkbookMutationAction.SetSheetPresentation(SheetPresentationSpec.defaults()),
             new WorkbookMutationAction.ClearPrintLayout(),
             new WorkbookMutationAction.AutoSizeColumns());
     for (WorkbookMutationAction action : noInputWorkbookActions) {
@@ -379,134 +302,134 @@ class RuntimeResidualCoverageTest {
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new WorkbookMutationAction.SetPrintLayout(
-                new PrintLayoutInput(
-                    PrintLayoutInput.defaults().printArea(),
+                new PrintLayoutSpec(
+                    PrintLayoutSpec.defaults().printArea(),
                     ExcelPrintOrientation.PORTRAIT,
-                    PrintLayoutInput.defaults().scaling(),
-                    PrintLayoutInput.defaults().repeatingRows(),
-                    PrintLayoutInput.defaults().repeatingColumns(),
-                    new HeaderFooterTextInput(
-                        TextSourceInput.standardInput(),
-                        TextSourceInput.inline(""),
-                        TextSourceInput.inline("")),
-                    HeaderFooterTextInput.blank(),
-                    PrintLayoutInput.defaults().setup()))));
+                    PrintLayoutSpec.defaults().scaling(),
+                    PrintLayoutSpec.defaults().repeatingRows(),
+                    PrintLayoutSpec.defaults().repeatingColumns(),
+                    new HeaderFooterTextSpec(
+                        TextSourceSpec.standardInput(),
+                        TextSourceSpec.inline(""),
+                        TextSourceSpec.inline("")),
+                    HeaderFooterTextSpec.blank(),
+                    PrintLayoutSpec.defaults().setup()))));
 
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CellInput.RichText(
-                List.of(new RichTextRunInput(TextSourceInput.standardInput(), Optional.empty())))));
+            new CellValueSpec.RichText(
+                List.of(new RichTextRunSpec(TextSourceSpec.standardInput(), Optional.empty())))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new ChartTitleInput.Text(TextSourceInput.standardInput())));
-    for (ChartPlotInput plot : allPlotKindsWithStandardInputSeries()) {
+            new ChartTitleSpec.Text(TextSourceSpec.standardInput())));
+    for (ChartPlotSpec plot : allPlotKindsWithStandardInputSeries()) {
       assertTrue(SourceBackedInputRequirements.requiresStandardInput(plot));
     }
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new ShapeInput.SimpleShape(
+            new ShapeSpec.SimpleShape(
                 "StandardTextShape",
                 anchor(),
                 "rect",
-                Optional.of(TextSourceInput.standardInput()))));
+                Optional.of(TextSourceSpec.standardInput()))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new ShapeInput.Connector("Link", anchor())));
+            new ShapeSpec.Connector("Link", anchor())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new EmbeddedObjectInput(
+            new EmbeddedObjectSpec(
                 "Embed",
                 "Payload",
                 "payload.bin",
                 "open",
-                BinarySourceInput.standardInput(),
-                pictureData(BinarySourceInput.file("preview.png")),
+                BinarySourceSpec.standardInput(),
+                pictureData(BinarySourceSpec.file("preview.png")),
                 anchor())));
     assertTrue(SourceBackedInputRequirements.requiresStandardInput(validation()));
     assertTrue(
-        SourceBackedInputRequirements.requiresStandardInput(
-            table(TextSourceInput.standardInput())));
-    assertFalse(SourceBackedInputRequirements.requiresStandardInput(PrintLayoutInput.defaults()));
+        SourceBackedInputRequirements.requiresStandardInput(table(TextSourceSpec.standardInput())));
+    assertFalse(SourceBackedInputRequirements.requiresStandardInput(PrintLayoutSpec.defaults()));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new PrintLayoutInput(
-                PrintLayoutInput.defaults().printArea(),
+            new PrintLayoutSpec(
+                PrintLayoutSpec.defaults().printArea(),
                 ExcelPrintOrientation.PORTRAIT,
-                PrintLayoutInput.defaults().scaling(),
-                PrintLayoutInput.defaults().repeatingRows(),
-                PrintLayoutInput.defaults().repeatingColumns(),
-                new HeaderFooterTextInput(
-                    TextSourceInput.standardInput(),
-                    TextSourceInput.inline(""),
-                    TextSourceInput.inline("")),
-                HeaderFooterTextInput.blank(),
-                PrintLayoutInput.defaults().setup())));
+                PrintLayoutSpec.defaults().scaling(),
+                PrintLayoutSpec.defaults().repeatingRows(),
+                PrintLayoutSpec.defaults().repeatingColumns(),
+                new HeaderFooterTextSpec(
+                    TextSourceSpec.standardInput(),
+                    TextSourceSpec.inline(""),
+                    TextSourceSpec.inline("")),
+                HeaderFooterTextSpec.blank(),
+                PrintLayoutSpec.defaults().setup())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new CustomXmlImportInput(
-                new CustomXmlMappingLocator(null, "root/item"), TextSourceInput.standardInput())));
+            new CustomXmlImportSpec(
+                new CustomXmlMappingLocator(
+                    java.util.Optional.empty(), java.util.Optional.of("root/item")),
+                TextSourceSpec.standardInput())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new HeaderFooterTextInput(
-                TextSourceInput.inline(""),
-                TextSourceInput.standardInput(),
-                TextSourceInput.inline(""))));
-    assertTrue(
-        SourceBackedInputRequirements.requiresStandardInput(TextSourceInput.standardInput()));
+            new HeaderFooterTextSpec(
+                TextSourceSpec.inline(""),
+                TextSourceSpec.standardInput(),
+                TextSourceSpec.inline(""))));
+    assertTrue(SourceBackedInputRequirements.requiresStandardInput(TextSourceSpec.standardInput()));
     assertFalse(
-        SourceBackedInputRequirements.requiresStandardInput(TextSourceInput.inline("inline")));
+        SourceBackedInputRequirements.requiresStandardInput(TextSourceSpec.inline("inline")));
     assertTrue(
-        SourceBackedInputRequirements.requiresStandardInput(BinarySourceInput.standardInput()));
+        SourceBackedInputRequirements.requiresStandardInput(BinarySourceSpec.standardInput()));
     assertFalse(
-        SourceBackedInputRequirements.requiresStandardInput(BinarySourceInput.file("payload.bin")));
+        SourceBackedInputRequirements.requiresStandardInput(BinarySourceSpec.file("payload.bin")));
 
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByKeyCell(
-                    new TableSelector.ByName("BudgetTable"),
+                    new TableSelector.ByName(new TableName("BudgetTable")),
                     "Owner",
-                    new CellInput.Text(TextSourceInput.standardInput())),
+                    new CellValueSpec.Text(TextSourceSpec.standardInput())),
                 "Amount")));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"),
+                new TableSelector.ByName(new TableName("BudgetTable")),
                 "Owner",
-                new CellInput.Text(TextSourceInput.standardInput()))));
+                new CellValueSpec.Text(TextSourceSpec.standardInput()))));
     List<Selector> noInputSelectors =
         List.of(
-            new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
-            new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 1),
+            new TableRowSelector.AllRows(new TableSelector.ByName(new TableName("BudgetTable"))),
+            new TableRowSelector.ByIndex(new TableSelector.ByName(new TableName("BudgetTable")), 1),
             new WorkbookSelector.Current(),
-            new SheetSelector.ByName("Budget"),
-            new CellSelector.ByAddress("Budget", "A1"),
-            new RangeSelector.ByRange("Budget", "A1:B2"),
-            new RowBandSelector.Span("Budget", 0, 1),
-            new ColumnBandSelector.Span("Budget", 0, 1),
-            new DrawingObjectSelector.ByName("Budget", "Banner"),
-            new ChartSelector.ByName("Budget", "LoadChart"),
-            new TableSelector.ByName("BudgetTable"),
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
+            new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new DrawingObjectSelector.ByName(new SheetName("Budget"), "Banner"),
+            new ChartSelector.ByName(new SheetName("Budget"), "LoadChart"),
+            new TableSelector.ByName(new TableName("BudgetTable")),
             new PivotTableSelector.ByName("Sales Pivot"),
-            new NamedRangeSelector.ByName("BudgetRange"));
+            new NamedRangeSelector.ByName(new DefinedName("BudgetRange")));
     for (Selector selector : noInputSelectors) {
       assertFalse(SourceBackedInputRequirements.requiresStandardInput(selector));
     }
   }
 
-  private static DrawingAnchorInput.TwoCell anchor() {
-    return new DrawingAnchorInput.TwoCell(
-        new DrawingMarkerInput(0, 0),
-        new DrawingMarkerInput(2, 2),
+  private static DrawingAnchorSpec.TwoCell anchor() {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(0, 0),
+        new DrawingMarkerSpec(2, 2),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static PictureDataInput pictureData(BinarySourceInput source) {
-    return new PictureDataInput(ExcelPictureFormat.PNG, source);
+  private static PictureDataSpec pictureData(BinarySourceSpec source) {
+    return new PictureDataSpec(ExcelPictureFormat.PNG, source);
   }
 
-  private static SignatureLineInput signatureLine(Optional<PictureDataInput> plainSignature) {
-    return new SignatureLineInput(
+  private static SignatureLineSpec signatureLine(Optional<PictureDataSpec> plainSignature) {
+    return new SignatureLineSpec(
         "Approval Signature",
         anchor(),
         true,
@@ -519,32 +442,32 @@ class RuntimeResidualCoverageTest {
         plainSignature);
   }
 
-  private static ChartInput chartWithTitle(ChartTitleInput title) {
-    return new ChartInput(
+  private static ChartSpec chartWithTitle(ChartTitleSpec title) {
+    return new ChartSpec(
         "Load Chart",
         anchor(),
         title,
-        new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT),
+        new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT),
         ExcelChartDisplayBlanksAs.GAP,
         true,
         List.of(
-            new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(series(title)))));
+            new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(series(title)))));
   }
 
-  private static List<ChartPlotInput> allPlotKindsWithStandardInputSeries() {
-    ChartSeriesInput series = series(new ChartTitleInput.Text(TextSourceInput.standardInput()));
+  private static List<ChartPlotSpec> allPlotKindsWithStandardInputSeries() {
+    ChartSeriesSpec series = series(new ChartTitleSpec.Text(TextSourceSpec.standardInput()));
     return List.of(
-        new ChartPlotInput.Area(false, ExcelChartGrouping.STANDARD, List.of(series)),
-        new ChartPlotInput.Area3D(
+        new ChartPlotSpec.Area(false, ExcelChartGrouping.STANDARD, List.of(series)),
+        new ChartPlotSpec.Area3D(
             false, ExcelChartGrouping.STANDARD, Optional.empty(), List.of(series)),
-        new ChartPlotInput.Bar(
+        new ChartPlotSpec.Bar(
             false,
             ExcelChartBarDirection.COLUMN,
             ExcelChartBarGrouping.CLUSTERED,
             Optional.empty(),
             Optional.empty(),
             List.of(series)),
-        new ChartPlotInput.Bar3D(
+        new ChartPlotSpec.Bar3D(
             false,
             ExcelChartBarDirection.COLUMN,
             ExcelChartBarGrouping.CLUSTERED,
@@ -552,68 +475,68 @@ class RuntimeResidualCoverageTest {
             Optional.empty(),
             Optional.empty(),
             List.of(series)),
-        new ChartPlotInput.Doughnut(false, Optional.empty(), Optional.of(50), List.of(series)),
-        new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(series)),
-        new ChartPlotInput.Line3D(
+        new ChartPlotSpec.Doughnut(false, Optional.empty(), Optional.of(50), List.of(series)),
+        new ChartPlotSpec.Line(false, ExcelChartGrouping.STANDARD, List.of(series)),
+        new ChartPlotSpec.Line3D(
             false, ExcelChartGrouping.STANDARD, Optional.empty(), List.of(series)),
-        new ChartPlotInput.Pie(false, Optional.empty(), List.of(series)),
-        new ChartPlotInput.Pie3D(false, List.of(series)),
-        new ChartPlotInput.Radar(false, ExcelChartRadarStyle.STANDARD, List.of(series)),
-        new ChartPlotInput.Scatter(false, ExcelChartScatterStyle.LINE, List.of(series)),
-        new ChartPlotInput.Surface(false, false, List.of(series)),
-        new ChartPlotInput.Surface3D(false, false, List.of(series)));
+        new ChartPlotSpec.Pie(false, Optional.empty(), List.of(series)),
+        new ChartPlotSpec.Pie3D(false, List.of(series)),
+        new ChartPlotSpec.Radar(false, ExcelChartRadarStyle.STANDARD, List.of(series)),
+        new ChartPlotSpec.Scatter(false, ExcelChartScatterStyle.LINE, List.of(series)),
+        new ChartPlotSpec.Surface(false, false, List.of(series)),
+        new ChartPlotSpec.Surface3D(false, false, List.of(series)));
   }
 
-  private static ChartSeriesInput series(ChartTitleInput title) {
-    return new ChartSeriesInput(
+  private static ChartSeriesSpec series(ChartTitleSpec title) {
+    return new ChartSeriesSpec(
         title,
-        new ChartDataSourceInput.StringLiteral(List.of("Jan", "Feb")),
-        new ChartDataSourceInput.NumericLiteral(List.of(10d, 12d)),
+        new ChartDataSourceSpec.StringLiteral(List.of("Jan", "Feb")),
+        new ChartDataSourceSpec.NumericLiteral(List.of(10d, 12d)),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
   }
 
-  private static DataValidationInput validation() {
-    return new DataValidationInput(
-        new DataValidationRuleInput.WholeNumber(
+  private static DataValidationSpec validation() {
+    return new DataValidationSpec(
+        new DataValidationRuleSpec.WholeNumber(
             ExcelComparisonOperator.BETWEEN, "1", Optional.of("10")),
         false,
         false,
         Optional.of(
-            new DataValidationPromptInput(
-                TextSourceInput.standardInput(), TextSourceInput.inline("Prompt"), true)),
+            new DataValidationPromptSpec(
+                TextSourceSpec.standardInput(), TextSourceSpec.inline("Prompt"), true)),
         Optional.of(
-            new DataValidationErrorAlertInput(
+            new DataValidationErrorAlertSpec(
                 ExcelDataValidationErrorStyle.STOP,
-                TextSourceInput.inline("Alert"),
-                TextSourceInput.standardInput(),
+                TextSourceSpec.inline("Alert"),
+                TextSourceSpec.standardInput(),
                 true)));
   }
 
-  private static PivotTableInput pivotTable() {
-    return new PivotTableInput(
+  private static PivotTableSpec pivotTable() {
+    return new PivotTableSpec(
         "Sales Pivot 2026",
-        "Report",
-        new PivotTableInput.Source.Range("Data", "A1:D5"),
-        new PivotTableInput.Anchor("C5"),
+        new SheetName("Report"),
+        new PivotTableSpec.PivotSourceSpec.Range(new SheetName("Data"), new RangeRef("A1:D5")),
+        new PivotTableSpec.Anchor(new CellAddress("C5")),
         List.of("Region"),
         List.of("Stage"),
         List.of(),
         List.of(
-            new PivotTableInput.DataField(
+            new PivotTableSpec.DataField(
                 "Amount", ExcelPivotDataConsolidateFunction.SUM, "Amount", Optional.empty())));
   }
 
-  private static TableInput table(TextSourceInput comment) {
-    return new TableInput(
-        "BudgetTable",
-        "Budget",
-        "A1:C4",
+  private static TableSpec table(TextSourceSpec comment) {
+    return new TableSpec(
+        new TableName("BudgetTable"),
+        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+        new RangeRef("A1:C4"),
         false,
         false,
-        new TableStyleInput.None(),
+        new TableStyleSpec.None(),
         comment,
         false,
         false,

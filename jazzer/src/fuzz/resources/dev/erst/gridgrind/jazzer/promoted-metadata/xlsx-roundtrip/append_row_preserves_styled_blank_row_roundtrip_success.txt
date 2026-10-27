@@ -1,8 +1,0 @@
-Replay Result
-Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_preserves_styled_blank_row_roundtrip_success.bin
-Harness: xlsx-roundtrip
-Outcome: SUCCESS
-Input Bytes: 107
-Command Count: 1
-Style Kinds: (none)
-Command Kinds: SET_WORKBOOK_PROTECTION=1

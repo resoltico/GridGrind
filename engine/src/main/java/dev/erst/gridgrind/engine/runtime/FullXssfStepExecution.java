@@ -1,57 +1,57 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.AssertionModeInput;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.AssertionModeSpec;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.PreparedMutationStep;
+import dev.erst.gridgrind.core.plan.PreparedStep;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
 /** Executes one full-XSSF step and shapes its truthful terminal failure response. */
 final class FullXssfStepExecution {
-  private final ExecutionStepSupport stepSupport;
-  private final ExecutionResponseSupport responseSupport;
+  private final StepExecution stepSupport;
+  private final ExecutionResults responseSupport;
 
-  FullXssfStepExecution(
-      ExecutionStepSupport stepSupport, ExecutionResponseSupport responseSupport) {
+  FullXssfStepExecution(StepExecution stepSupport, ExecutionResults responseSupport) {
     this.stepSupport = Objects.requireNonNull(stepSupport, "stepSupport must not be null");
     this.responseSupport =
         Objects.requireNonNull(responseSupport, "responseSupport must not be null");
   }
 
   java.util.Optional<AssertionFailedException> execute(
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
-      ExecutionModeInput executionMode,
-      AssertionModeInput assertionMode,
+      ExecutionModeSpec executionMode,
+      AssertionModeSpec assertionMode,
       List<AssertionResult> assertions,
       List<InspectionResult> inspections,
-      WorkbookStep step,
+      PreparedStep step,
       FormulaOriginTracker formulaOrigins,
       int stepIndex)
       throws IOException, AssertionFailedException {
     return switch (step) {
-      case MutationStep mutationStep -> {
+      case PreparedMutationStep mutationStep -> {
         stepSupport
             .mutationStepExecutor()
             .execute(
                 workbook,
                 mutationStep,
                 formulaOrigins,
-                ExecutionStepContextFactory.referenceFor(stepIndex, mutationStep));
+                ExecutionStepContextFactory.referenceFor(stepIndex, mutationStep.authoredStep()));
         yield java.util.Optional.empty();
       }
       case AssertionStep assertionStep -> {
-        if (assertionMode == AssertionModeInput.FAIL_FAST) {
+        if (assertionMode == AssertionModeSpec.FAIL_FAST) {
           assertions.add(
               stepSupport.executeAssertionStep(
                   assertionStep, workbook, workbookLocation, executionMode));
@@ -75,7 +75,7 @@ final class FullXssfStepExecution {
     };
   }
 
-  dev.erst.gridgrind.contract.dto.WorkbookResult closeFailure(
+  dev.erst.gridgrind.core.result.WorkbookResult closeFailure(
       WorkbookWorkflowExecutionContext executionContext,
       CalculationReport calculation,
       int stepIndex,
@@ -83,25 +83,25 @@ final class FullXssfStepExecution {
       ExecutionJournalRecorder.StepHandle stepHandle,
       Exception exception,
       FormulaOriginTracker formulaOrigins) {
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep triggeringContext =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep triggeringContext =
         ExecutionStepContextFactory.contextFor(
             executionContext.request(), stepIndex, step, exception);
-    java.util.Optional<dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference>
+    java.util.Optional<dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference>
         formulaAuthor = formulaOrigins.originFor(exception);
     GridGrindProblemDetail.Problem problem =
-        ExecutionResponseSupport.problemFor(
+        GridGrindProblems.fromException(
             exception,
             formulaAuthor
                 .map(
                     author ->
-                        new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+                        new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
                             ExecutionRequestPaths.requestShape(executionContext.request()),
                             author,
                             triggeringContext.location(),
                             java.util.Optional.of(triggeringContext.step())))
                 .orElse(triggeringContext));
     stepHandle.fail(
-        problem.code(), problem.category(), problem.context().stage(), problem.message());
+        problem.code(), problem.category(), problem.context().type(), problem.message());
     if (exception instanceof AssertionFailedException assertionFailed) {
       executionContext
           .planAssertions()
@@ -113,7 +113,7 @@ final class FullXssfStepExecution {
     }
     return responseSupport.closeWorkbook(
         executionContext.workbook(),
-        ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+        ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
             executionContext.failure(calculation, problem, stepIndex, step.stepId())),
         executionContext.request(),
         executionContext.journal(),

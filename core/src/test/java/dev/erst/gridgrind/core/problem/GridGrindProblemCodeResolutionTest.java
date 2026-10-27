@@ -1,0 +1,88 @@
+package dev.erst.gridgrind.core.problem;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import org.junit.jupiter.api.Test;
+
+/** Covers cause-specific public resolution text for problem codes. */
+class GridGrindProblemCodeResolutionTest {
+  @Test
+  void resolutionForUsesCauseSpecificGuidanceAcrossAssertionAndIoContexts() {
+    ProblemContext.ExecuteStep assertionContext =
+        new ProblemContext.ExecuteStep(
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
+            new ProblemContextWorkbookSurfaces.StepReference(
+                0, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell(new SheetLabel("Budget"), "B2"));
+    ProblemContext.PersistWorkbook saveAsContext =
+        new ProblemContext.PersistWorkbook(
+            ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "SAVE_AS"),
+            ProblemContextWorkbookSurfaces.PersistenceReference.saveAs("/tmp/out.xlsx"));
+    ProblemContext.PersistWorkbook overwriteSourceContext =
+        new ProblemContext.PersistWorkbook(
+            ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "OVERWRITE"),
+            ProblemContextWorkbookSurfaces.PersistenceReference.overwrite("/tmp/source.xlsx"));
+    ProblemContext.OpenWorkbook openWorkbookContext =
+        new ProblemContext.OpenWorkbook(
+            ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "NONE"),
+            ProblemContextWorkbookSurfaces.WorkbookReference.existingFile("/tmp/source.xlsx"));
+    ProblemContext.OpenWorkbook newWorkbookContext =
+        new ProblemContext.OpenWorkbook(
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
+            ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook());
+    ProblemContext.WriteResponse writeResponseContext =
+        new ProblemContext.WriteResponse(
+            ProblemContextRequestSurfaces.ResponseOutput.responseFile("/tmp/report.json"));
+    ProblemContext.WriteResponse stdoutResponseContext =
+        new ProblemContext.WriteResponse(
+            ProblemContextRequestSurfaces.ResponseOutput.standardOutput());
+
+    assertEquals(
+        "Inspect problem.assertionFailure observations, then adjust the failing assertion or preceding workbook mutations and retry.",
+        GridGrindProblemCode.ASSERTION_FAILED.resolutionFor("assertion failed", assertionContext));
+    assertEquals(
+        "Choose a new SAVE_AS destination path, remove the conflicting file, or set SAVE_AS.ifExists=REPLACE before retrying.",
+        GridGrindProblemCode.IO_ERROR.resolutionFor(
+            "Could not write workbook: already exists", saveAsContext));
+    assertEquals(
+        "Check the SAVE_AS destination path, parent directory permissions, free disk space, and file locks before retrying.",
+        GridGrindProblemCode.IO_ERROR.resolutionFor("disk full", saveAsContext));
+    assertEquals(
+        "Check the destination workbook path, permissions, free disk space, and file locks before retrying.",
+        GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", overwriteSourceContext));
+    assertEquals(
+        "Check the source workbook path, permissions, and file locks before retrying.",
+        GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", openWorkbookContext));
+    assertEquals(
+        GridGrindProblemCode.IO_ERROR.resolution(),
+        GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", newWorkbookContext));
+    assertEquals(
+        "Choose a new response destination or remove the conflicting file, then retry.",
+        GridGrindProblemCode.IO_ERROR.resolutionFor(
+            "Could not write response: already exists", writeResponseContext));
+    assertEquals(
+        "Check the response destination path, parent directory permissions, free disk space, and file locks before retrying.",
+        GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", writeResponseContext));
+    assertEquals(
+        GridGrindProblemCode.IO_ERROR.resolution(),
+        GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", stdoutResponseContext));
+  }
+
+  @Test
+  void argumentRecoveryDoesNotInterpretOneHostsGrammar() {
+    var context =
+        new ProblemContext.ParseArguments(
+            ProblemContextRequestSurfaces.HostArgument.named("input"));
+    for (String message :
+        java.util.List.of(
+            "Unknown option: --request",
+            "Unknown recipe: workbook_health",
+            "Invalid keyword query")) {
+      assertEquals(
+          "Fix the host arguments and rerun the command.",
+          GridGrindProblemCode.INVALID_ARGUMENTS.resolutionFor(message, context));
+    }
+  }
+}

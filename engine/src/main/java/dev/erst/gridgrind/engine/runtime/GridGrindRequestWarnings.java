@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
+import dev.erst.gridgrind.core.problem.RequestWarning;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -45,15 +45,14 @@ final class GridGrindRequestWarnings {
     for (MutationStep step : steps) {
       switch (step.action()) {
         case WorkbookMutationAction.EnsureSheet _ -> {
-          if (step.target()
-              instanceof dev.erst.gridgrind.contract.selector.SheetSelector.ByName sheet) {
-            addIfSpaced(sheetNames, SelectorConverter.toSheetName(sheet));
+          if (step.target() instanceof dev.erst.gridgrind.core.plan.SheetSelector.ByName sheet) {
+            addIfSpaced(sheetNames, sheet.name().value());
           }
         }
         case WorkbookMutationAction.RenameSheet renameSheet ->
-            addIfSpaced(sheetNames, renameSheet.newSheetName());
+            addIfSpaced(sheetNames, renameSheet.newSheetName().value());
         case WorkbookMutationAction.CopySheet copySheet ->
-            addIfSpaced(sheetNames, copySheet.newSheetName());
+            addIfSpaced(sheetNames, copySheet.newSheetName().value());
         default -> {}
       }
     }
@@ -72,14 +71,14 @@ final class GridGrindRequestWarnings {
       case CellMutationAction.SetCell setCell ->
           collectFromCellInput(setCell.value(), spacedSheetNames, offendingSheetNames);
       case CellMutationAction.SetRange setRange -> {
-        for (List<CellInput> row : setRange.rows().toCellInputRows()) {
-          for (CellInput cellInput : row) {
+        for (List<CellValueSpec> row : setRange.rows().toCellInputRows()) {
+          for (CellValueSpec cellInput : row) {
             collectFromCellInput(cellInput, spacedSheetNames, offendingSheetNames);
           }
         }
       }
       case CellMutationAction.AppendRow appendRow -> {
-        for (CellInput cellInput : appendRow.values().toCellInputs()) {
+        for (CellValueSpec cellInput : appendRow.values().toCellInputs()) {
           collectFromCellInput(cellInput, spacedSheetNames, offendingSheetNames);
         }
       }
@@ -109,12 +108,11 @@ final class GridGrindRequestWarnings {
   }
 
   private static void collectFromCellInput(
-      CellInput input, Set<String> spacedSheetNames, Set<String> offendingSheetNames) {
-    if (!(input instanceof CellInput.Formula formula)) {
+      CellValueSpec input, Set<String> spacedSheetNames, Set<String> offendingSheetNames) {
+    if (!(input instanceof CellValueSpec.Formula formula)) {
       return;
     }
-    if (!(formula.source()
-        instanceof dev.erst.gridgrind.contract.source.TextSourceInput.Inline inline)) {
+    if (!(formula.value() instanceof dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline)) {
       return;
     }
     String formulaText = inline.text();

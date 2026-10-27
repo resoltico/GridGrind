@@ -1,0 +1,27 @@
+package dev.erst.gridgrind.core.authoring;
+
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import java.util.Objects;
+
+/** Window-scoped fluent target. */
+public final class WindowTarget {
+  private final RangeSelector.RectangularWindow selector;
+
+  WindowTarget(RangeSelector.RectangularWindow selector) {
+    this.selector = Objects.requireNonNull(selector, "selector must not be null");
+  }
+
+  RangeSelector.RectangularWindow selector() {
+    return selector;
+  }
+
+  /** Returns one rectangular-window inspection step. */
+  public PlannedInspection read() {
+    return new PlannedInspection(selector, SheetQueries.window());
+  }
+
+  /** Returns one sheet-schema inspection step for this window. */
+  public PlannedInspection schema() {
+    return new PlannedInspection(selector, InspectionSurfaceQueries.sheetSchema());
+  }
+}

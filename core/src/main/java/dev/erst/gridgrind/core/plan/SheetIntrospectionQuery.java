@@ -1,0 +1,160 @@
+package dev.erst.gridgrind.core.plan;
+
+import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.metadata.Variant;
+import dev.erst.gridgrind.core.metadata.WireDefault;
+import java.util.Objects;
+import java.util.Optional;
+
+/** Sheet-, cell-, and range-scoped factual inspection queries. */
+public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspection
+    permits SheetIntrospectionQuery.GetSheetSummary,
+        SheetIntrospectionQuery.GetArrayFormulas,
+        SheetIntrospectionQuery.GetCells,
+        SheetIntrospectionQuery.GetWindow,
+        SheetIntrospectionQuery.GetMergedRegions,
+        SheetIntrospectionQuery.GetHyperlinks,
+        SheetIntrospectionQuery.GetComments,
+        SheetIntrospectionQuery.GetSheetLayout,
+        SheetIntrospectionQuery.GetPrintLayout,
+        SheetIntrospectionQuery.GetDataValidations,
+        SheetIntrospectionQuery.GetConditionalFormatting,
+        SheetIntrospectionQuery.GetAutofilters {
+
+  @Variant(
+      id = "GET_SHEET_SUMMARY",
+      summary = "Return structural summary facts for one sheet.",
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetSheetSummary() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_ARRAY_FORMULAS",
+      summary = "Return factual array-formula group metadata for the selected sheets.",
+      targetSelectors = {SheetSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetArrayFormulas() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_CELLS",
+      summary =
+          "Return exact cell snapshots for explicit addresses."
+              + " Omit projection for the default compact VALUE readback.",
+      targetSelectors = {
+        CellSelector.ByAddress.class,
+        CellSelector.ByAddresses.class,
+        TableCellSelector.ByColumnName.class
+      },
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetCells(Optional<CellReadProjection> projection) implements SheetIntrospectionQuery {
+    /** Creates a cell-read query that relies on the default cell-read projection. */
+    public GetCells() {
+      this(Optional.empty());
+    }
+
+    public GetCells {
+      projection = Objects.requireNonNullElseGet(projection, Optional::empty);
+    }
+
+    /** Returns the effective projection after applying the default when omitted on the wire. */
+    public CellReadProjection resolvedProjection() {
+      return projection.orElseGet(CellReadProjection::defaults);
+    }
+  }
+
+  @Variant(
+      id = "GET_WINDOW",
+      summary =
+          "Return a rectangular window of cell snapshots."
+              + " Omit projection for the default compact VALUE readback and omit"
+              + " includeBlanks for the sparse default.",
+      targetSelectors = {RangeSelector.RectangularWindow.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetWindow(
+      Optional<CellReadProjection> projection,
+      @ProtocolField(optional = true) @WireDefault(value = "false", omit = true)
+          boolean includeBlanks)
+      implements SheetIntrospectionQuery {
+    /** Creates a sparse window query that relies on the default cell-read projection. */
+    public GetWindow() {
+      this(Optional.empty(), false);
+    }
+
+    public GetWindow {
+      projection = Objects.requireNonNullElseGet(projection, Optional::empty);
+    }
+
+    /** Returns the effective projection after applying the default when omitted on the wire. */
+    public CellReadProjection resolvedProjection() {
+      return projection.orElseGet(CellReadProjection::defaults);
+    }
+  }
+
+  @Variant(
+      id = "GET_MERGED_REGIONS",
+      summary = "Return the merged regions defined on one sheet.",
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetMergedRegions() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_HYPERLINKS",
+      summary = "Return hyperlink metadata for selected cells.",
+      targetSelectors = {
+        CellSelector.AllUsedInSheet.class,
+        CellSelector.ByAddress.class,
+        CellSelector.ByAddresses.class,
+        TableCellSelector.ByColumnName.class
+      },
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetHyperlinks() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_COMMENTS",
+      summary = "Return comment metadata for selected cells.",
+      targetSelectors = {
+        CellSelector.AllUsedInSheet.class,
+        CellSelector.ByAddress.class,
+        CellSelector.ByAddresses.class,
+        TableCellSelector.ByColumnName.class
+      },
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetComments() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_SHEET_LAYOUT",
+      summary =
+          "Return supported sheet-layout metadata for one sheet, including presentation, panes,"
+              + " tab color, defaults, ignored errors, and row or column outlineLevel state.",
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetSheetLayout() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_PRINT_LAYOUT",
+      summary = "Return supported print-layout metadata for one sheet.",
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetPrintLayout() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_DATA_VALIDATIONS",
+      summary = "Return factual data-validation structures for the selected sheet ranges.",
+      targetSelectors = {RangeSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetDataValidations() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_CONDITIONAL_FORMATTING",
+      summary = "Return factual conditional-formatting blocks for the selected sheet ranges.",
+      targetSelectors = {RangeSelector.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetConditionalFormatting() implements SheetIntrospectionQuery {}
+
+  @Variant(
+      id = "GET_AUTOFILTERS",
+      summary = "Return sheet- and table-owned autofilter metadata for one sheet.",
+      targetSelectors = {SheetSelector.ByName.class},
+      profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
+  record GetAutofilters() implements SheetIntrospectionQuery {}
+}

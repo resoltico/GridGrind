@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -50,7 +52,7 @@ class GridGrindEngineApiPreflightTest {
     RequestDoctorReport structurallyInvalid =
         doctor.diagnose(
             GridGrindJson.analyzeRequest(
-                "{\"protocolVersion\":\"V3\"}".getBytes(StandardCharsets.UTF_8)),
+                "{\"protocolVersion\":1}".getBytes(StandardCharsets.UTF_8)),
             requestInput,
             inputs());
 
@@ -92,13 +94,13 @@ class GridGrindEngineApiPreflightTest {
     assertEquals(
         0,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                dev.erst.gridgrind.core.result.ExecutionJournal.Outcome.Succeeded.class,
                 fullSuccess.journal().outcome())
             .completedStepCount());
     assertEquals(
         0,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                dev.erst.gridgrind.core.result.ExecutionJournal.Outcome.Succeeded.class,
                 eventReadSuccess.journal().outcome())
             .completedStepCount());
     assertTrue(fullSourceDeleted.get());
@@ -107,7 +109,7 @@ class GridGrindEngineApiPreflightTest {
 
   @Test
   void productionExecutorUsesTheDoctorOrderedPrimaryPreflightProblem() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(preflightFailureRequest().getBytes(StandardCharsets.UTF_8));
     ProblemContextRequestSurfaces.RequestInput requestInput =
         ProblemContextRequestSurfaces.RequestInput.standardInput();
@@ -121,9 +123,9 @@ class GridGrindEngineApiPreflightTest {
     assertFalse(doctorReport.valid());
     assertEquals(doctorReport.primaryProblem().orElseThrow(), executionFailure.problem());
     assertEquals(
-        "steps[0].action.rows.cells[0][0].source.path",
+        "steps[0].action.rows.cells[0][0].value.path",
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
+                dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs.class,
                 executionFailure.problem().context())
             .json()
             .orElseThrow()
@@ -135,21 +137,20 @@ class GridGrindEngineApiPreflightTest {
     return new GridGrindRequestInputs(
         temporaryDirectory,
         temporaryDirectory.resolve("temp-root"),
-        new GridGrindExecutionGrant.Bounded(
+        new ExecutionGrant(
             List.of(
-                new GridGrindExecutionGrant.ReadAuthority.File(
-                    temporaryDirectory.resolve("source.xlsx"))),
+                new ExecutionGrant.ReadAuthority.File(temporaryDirectory.resolve("source.xlsx"))),
             List.of("SET_RANGE"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            GridGrindHostAcceptancePolicy.minimum()));
+            AcceptancePolicy.minimum()));
   }
 
   private static String minimalRequest() {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -160,14 +161,14 @@ class GridGrindEngineApiPreflightTest {
   private static String staticTargetMismatchRequest() {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
             {
               "stepId": "set-value",
               "target": { "type": "WORKBOOK_CURRENT" },
-              "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "number": 1.0 } }
+              "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": 1.0 } }
             }
           ]
         }
@@ -177,7 +178,7 @@ class GridGrindEngineApiPreflightTest {
   private static String existingSourceRequest(String mode) {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "EXISTING", "path": "source.xlsx" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -193,7 +194,7 @@ class GridGrindEngineApiPreflightTest {
   private static String preflightFailureRequest() {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
@@ -205,8 +206,8 @@ class GridGrindEngineApiPreflightTest {
                 "rows": {
                   "type": "TYPED",
                   "cells": [[
-                    { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
-                    { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
+                    { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
+                    { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
                   ]]
                 }
               }
@@ -220,9 +221,9 @@ class GridGrindEngineApiPreflightTest {
       Path sourcePath, AtomicReference<Boolean> sourceDeleted) {
     return event -> {
       if (event.category()
-              == dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+              == dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category.RESOLVE_INPUTS
           && event.status()
-              == dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
+              == dev.erst.gridgrind.core.result.ExecutionProgressEvent.Status.SUCCEEDED) {
         try {
           Files.delete(sourcePath);
           sourceDeleted.set(true);

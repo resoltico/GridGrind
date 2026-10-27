@@ -1,0 +1,337 @@
+package dev.erst.gridgrind.engine.backend.xssf;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.engine.autofilter.AutofilterAdapter;
+import dev.erst.gridgrind.engine.charts.ChartAdapter;
+import dev.erst.gridgrind.engine.comments.CommentAdapter;
+import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
+import dev.erst.gridgrind.engine.pivots.PivotAdapter;
+import dev.erst.gridgrind.engine.pivots.PivotAdapter.PivotHandle;
+import dev.erst.gridgrind.engine.print.PrintAdapter;
+import dev.erst.gridgrind.engine.security.SecurityAdapter;
+import dev.erst.gridgrind.engine.styles.ColorAdapter;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.apache.poi.openxml4j.opc.PackagingURIHelper;
+import org.apache.poi.poifs.crypt.ChainingMode;
+import org.apache.poi.poifs.crypt.CipherAlgorithm;
+import org.apache.poi.poifs.crypt.EncryptionMode;
+import org.apache.poi.poifs.crypt.HashAlgorithm;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
+import org.apache.poi.xssf.model.CommentsTable;
+import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.xmlbeans.XmlObject;
+import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedName;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSortCondition;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortBy;
+
+/** Residual direct utility coverage for workbook engine helpers left outside broader workflows. */
+class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
+  @Test
+  void colorFactoriesShapeKindsAndConditionalFormattingBranchesRemainExplicit() {
+    assertEquals(Optional.of(0.25d), ColorSpec.rgb(new RgbHex("#112233"), 0.25d).tint());
+    assertEquals(Optional.of(0.25d), CellColorReport.rgb(new RgbHex("#112233"), 0.25d).tint());
+    assertEquals(Optional.of(-0.5d), CellColorReport.indexed(7, -0.5d).tint());
+
+    DrawingAnchorSpec.TwoCell anchor =
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(0, 0, 0, 0),
+            new DrawingMarkerSpec(2, 2, 0, 0),
+            dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    ResolvedShape.SimpleShape simpleShape =
+        new ResolvedShape.SimpleShape("Queue Banner", anchor, "rect", Optional.of("Ready"));
+    assertEquals(ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, simpleShape.kind());
+    assertEquals(
+        "name must not be blank",
+        assertThrows(IllegalArgumentException.class, () -> new ShapeSpec.Connector(" ", anchor))
+            .getMessage());
+    assertEquals(
+        "rank must be greater than 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ConditionalFormattingRuleSpec.Top10Rule(
+                        false, 0, false, false, Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "mode must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new OoxmlEncryptionReport.Encrypted(
+                        null,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        256,
+                        16,
+                        1))
+            .getMessage());
+  }
+
+  @Test
+  void poiBridgeAndSnapshotHelpersCoverResidualEnumAndErrorPaths() throws Exception {
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            EncryptionMode.agile, ExcelOoxmlEncryptionMode.AGILE,
+            EncryptionMode.standard, ExcelOoxmlEncryptionMode.STANDARD),
+        SecurityAdapter::fromPoi,
+        SecurityAdapter::toPoi);
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ExcelOoxmlSignatureDigestAlgorithm.SHA256, HashAlgorithm.sha256,
+            ExcelOoxmlSignatureDigestAlgorithm.SHA384, HashAlgorithm.sha384,
+            ExcelOoxmlSignatureDigestAlgorithm.SHA512, HashAlgorithm.sha512),
+        SecurityAdapter::toPoi);
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ExcelOoxmlWriteCipher.AES_256, CipherAlgorithm.aes256,
+            ExcelOoxmlWriteCipher.AES_192, CipherAlgorithm.aes192),
+        SecurityAdapter::toPoi);
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ExcelOoxmlWriteHash.SHA_512, HashAlgorithm.sha512,
+            ExcelOoxmlWriteHash.SHA_384, HashAlgorithm.sha384,
+            ExcelOoxmlWriteHash.SHA_256, HashAlgorithm.sha256),
+        SecurityAdapter::toPoi);
+
+    EnumMappingAssertions.assertMappings(
+        Map.ofEntries(
+            Map.entry(CipherAlgorithm.rc4, ExcelOoxmlCipherAlgorithm.RC4),
+            Map.entry(CipherAlgorithm.aes128, ExcelOoxmlCipherAlgorithm.AES_128),
+            Map.entry(CipherAlgorithm.aes192, ExcelOoxmlCipherAlgorithm.AES_192),
+            Map.entry(CipherAlgorithm.aes256, ExcelOoxmlCipherAlgorithm.AES_256),
+            Map.entry(CipherAlgorithm.rc2, ExcelOoxmlCipherAlgorithm.RC2),
+            Map.entry(CipherAlgorithm.des, ExcelOoxmlCipherAlgorithm.DES),
+            Map.entry(CipherAlgorithm.des3, ExcelOoxmlCipherAlgorithm.TRIPLE_DES),
+            Map.entry(CipherAlgorithm.des3_112, ExcelOoxmlCipherAlgorithm.TRIPLE_DES_112),
+            Map.entry(CipherAlgorithm.rsa, ExcelOoxmlCipherAlgorithm.RSA)),
+        SecurityAdapter::fromPoi);
+
+    EnumMappingAssertions.assertMappings(
+        Map.ofEntries(
+            Map.entry(HashAlgorithm.none, ExcelOoxmlHashAlgorithm.NONE),
+            Map.entry(HashAlgorithm.sha1, ExcelOoxmlHashAlgorithm.SHA_1),
+            Map.entry(HashAlgorithm.sha224, ExcelOoxmlHashAlgorithm.SHA_224),
+            Map.entry(HashAlgorithm.sha256, ExcelOoxmlHashAlgorithm.SHA_256),
+            Map.entry(HashAlgorithm.sha384, ExcelOoxmlHashAlgorithm.SHA_384),
+            Map.entry(HashAlgorithm.sha512, ExcelOoxmlHashAlgorithm.SHA_512),
+            Map.entry(HashAlgorithm.md2, ExcelOoxmlHashAlgorithm.MD2),
+            Map.entry(HashAlgorithm.md4, ExcelOoxmlHashAlgorithm.MD4),
+            Map.entry(HashAlgorithm.md5, ExcelOoxmlHashAlgorithm.MD5),
+            Map.entry(HashAlgorithm.ripemd128, ExcelOoxmlHashAlgorithm.RIPEMD_128),
+            Map.entry(HashAlgorithm.ripemd160, ExcelOoxmlHashAlgorithm.RIPEMD_160),
+            Map.entry(HashAlgorithm.ripemd256, ExcelOoxmlHashAlgorithm.RIPEMD_256),
+            Map.entry(HashAlgorithm.whirlpool, ExcelOoxmlHashAlgorithm.WHIRLPOOL)),
+        SecurityAdapter::fromPoi);
+
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ChainingMode.ecb, ExcelOoxmlChainingMode.ECB,
+            ChainingMode.cbc, ExcelOoxmlChainingMode.CBC,
+            ChainingMode.cfb, ExcelOoxmlChainingMode.CFB),
+        SecurityAdapter::fromPoi);
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      CTColor automatic = CTColor.Factory.newInstance();
+      automatic.setAuto(true);
+      IllegalStateException automaticFailure =
+          assertThrows(
+              IllegalStateException.class, () -> ColorAdapter.snapshot(workbook, automatic));
+      assertTrue(automaticFailure.getMessage().contains("automatic color"));
+    }
+  }
+
+  @Test
+  void utilityFallbacksCoverAnchorPreviewCommentAndChartEdges() throws Exception {
+    assertEquals(Optional.empty(), DrawingAdapter.parentAnchor((XmlObject) null));
+    assertEquals(Optional.empty(), DrawingAdapter.parentAnchor(XmlObject.Factory.newInstance()));
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var packagePart =
+          workbook
+              .getPackagePart()
+              .getPackage()
+              .createPart(
+                  PackagingURIHelper.createPartName("/xl/media/preview.bin"),
+                  "application/octet-stream");
+      assertFalse(DrawingAdapter.supportedPreviewImagePart(null));
+      assertFalse(DrawingAdapter.supportedPreviewImagePart(packagePart));
+
+      var sheet = workbook.createSheet("Budget");
+      CreationHelper creationHelper = workbook.getCreationHelper();
+      var anchor = creationHelper.createClientAnchor();
+      anchor.setRow1(0);
+      anchor.setRow2(2);
+      anchor.setCol1(0);
+      anchor.setCol2(2);
+      var commentCell = sheet.createRow(0).createCell(0);
+      var comment = sheet.createDrawingPatriarch().createCellComment(anchor);
+      comment.setString(creationHelper.createRichTextString("Note"));
+      commentCell.setCellComment(comment);
+      new CommentAdapter(sheet).replaceComments(List.of());
+      assertTrue(sheet.getCellComments().isEmpty());
+
+      var emptyCommentsSheet = workbook.createSheet("EmptyComments");
+      var emptyCommentCell = emptyCommentsSheet.createRow(0).createCell(0);
+      var emptyComment = emptyCommentsSheet.createDrawingPatriarch().createCellComment(anchor);
+      emptyComment.setString(creationHelper.createRichTextString("Temp"));
+      emptyCommentCell.setCellComment(emptyComment);
+      CommentsTable emptyCommentsTable =
+          emptyCommentsSheet.getRelations().stream()
+              .filter(CommentsTable.class::isInstance)
+              .map(CommentsTable.class::cast)
+              .findFirst()
+              .orElseThrow();
+      emptyCommentsTable.removeComment(emptyCommentCell.getAddress());
+      new CommentAdapter(emptyCommentsSheet).replaceComments(List.of());
+
+      CTSortCondition icon = CTSortCondition.Factory.newInstance();
+      icon.setRef("A1:A4");
+      icon.setSortBy(STSortBy.ICON);
+      icon.setIconId(3L);
+      assertInstanceOf(
+          AutofilterSortConditionReport.Icon.class,
+          AutofilterAdapter.sortConditionSnapshot(workbook, icon));
+
+      var printSheet = workbook.createSheet("Print");
+      int sheetIndex = workbook.getSheetIndex(printSheet);
+      assertEquals(Optional.empty(), PrintAdapter.rawPrintAreaFormula(workbook, sheetIndex));
+      workbook.getCTWorkbook().addNewDefinedNames();
+      CTDefinedName blankPrintArea = workbook.getCTWorkbook().getDefinedNames().addNewDefinedName();
+      blankPrintArea.setName("_xlnm.Print_Area");
+      blankPrintArea.setLocalSheetId(sheetIndex);
+      blankPrintArea.setStringValue(" ");
+      assertEquals(Optional.empty(), PrintAdapter.rawPrintAreaFormula(workbook, sheetIndex));
+
+      CTDefinedName invalidPrintArea =
+          workbook.getCTWorkbook().getDefinedNames().addNewDefinedName();
+      invalidPrintArea.setName("_xlnm.Print_Area");
+      invalidPrintArea.setLocalSheetId(sheetIndex);
+      invalidPrintArea.setStringValue("Broken");
+      assertEquals(Optional.empty(), PrintAdapter.storedPrintAreaFormula(printSheet));
+      var chartSheet = workbook.createSheet("Charts");
+      assertEquals(
+          List.of("cached-a", "cached-b"),
+          ChartAdapter.resolvedOrCachedReferenceValues(
+              chartSheet,
+              "[broken",
+              XDDFDataSourcesFactory.fromArray(new String[] {"cached-a", "cached-b"})));
+      assertEquals(
+          List.of("cached-null"),
+          ChartAdapter.resolvedOrCachedReferenceValues(
+              chartSheet,
+              null,
+              XDDFDataSourcesFactory.fromArray(new String[] {"cached-null"}),
+              null));
+      assertEquals(
+          List.of("cached-blank"),
+          ChartAdapter.resolvedOrCachedReferenceValues(
+              chartSheet,
+              " ",
+              XDDFDataSourcesFactory.fromArray(new String[] {"cached-blank"}),
+              null));
+      assertEquals(
+          List.of("cached-no-context"),
+          ChartAdapter.resolvedOrCachedReferenceValues(
+              null,
+              "Sheet1!$A$1:$A$2",
+              XDDFDataSourcesFactory.fromArray(new String[] {"cached-no-context"}),
+              null));
+    }
+  }
+
+  @Test
+  void utilityFallbacksCoverPrintAreaAndPivotRelationEdges() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var printSheet = workbook.createSheet("Print");
+      int sheetIndex = workbook.getSheetIndex(printSheet);
+      workbook.setPrintArea(sheetIndex, "$A$1:$B$2");
+      assertEquals(
+          Optional.of(workbook.getPrintArea(sheetIndex)),
+          PrintAdapter.rawPrintAreaFormula(workbook, sheetIndex));
+      assertEquals(
+          Optional.of(workbook.getPrintArea(sheetIndex)),
+          PrintAdapter.storedPrintAreaFormula(printSheet));
+    }
+
+    assertEquals(List.of(), PivotAdapter.snapshotPageFields(null, List.of("Region")));
+    assertTrue(
+        PivotAdapter.firstRelation(new NullDocumentPart(), XSSFPivotCacheDefinition.class)
+            .isEmpty());
+  }
+
+  @Test
+  void utilityFallbacksCoverPivotHealthEdges() throws Exception {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook.getOrCreateSheet("Report");
+      PivotHandle missingCacheHandle =
+          new PivotHandle(
+              workbook.xssfWorkbook().getSheetIndex("Report"),
+              0,
+              "Report",
+              workbook.xssfWorkbook().getSheet("Report"),
+              new CacheOnlyPivotTable(pivotTableDefinition("Missing Cache", "C5:F9", 11L), null));
+      List<AnalysisFindingCode> missingCacheCodes =
+          PivotAdapter.pivotTableHealthFindings(workbook.xssfWorkbook(), missingCacheHandle)
+              .stream()
+              .map(AnalysisFindingReport::code)
+              .toList();
+      assertTrue(
+          missingCacheCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_DEFINITION));
+      assertEquals(
+          "Pivot table is missing its cache definition relation.",
+          assertThrows(
+                  IllegalArgumentException.class,
+                  () -> PivotAdapter.requiredCacheDefinition(missingCacheHandle.table()))
+              .getMessage());
+
+      PivotHandle missingRecordsHandle =
+          new PivotHandle(
+              workbook.xssfWorkbook().getSheetIndex("Report"),
+              1,
+              "Report",
+              workbook.xssfWorkbook().getSheet("Report"),
+              new SyntheticPivotTable(
+                  pivotTableDefinition("Missing Records", "C10:F14", 12L),
+                  new XSSFPivotCacheDefinition()));
+      List<AnalysisFindingCode> missingRecordsCodes =
+          PivotAdapter.pivotTableHealthFindings(workbook.xssfWorkbook(), missingRecordsHandle)
+              .stream()
+              .map(AnalysisFindingReport::code)
+              .toList();
+      assertTrue(
+          missingRecordsCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_RECORDS));
+    }
+  }
+}

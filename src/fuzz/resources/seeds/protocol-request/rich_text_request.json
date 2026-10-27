@@ -1,0 +1,138 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "generated-workbooks/gridgrind-rich-text.xlsx",
+    "ifExists": "REPLACE"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Narrative"
+      }
+    },
+    {
+      "stepId": "step-02-apply-style",
+      "action": {
+        "type": "APPLY_STYLE",
+        "style": {
+          "alignment": {
+            "wrapText": true,
+            "verticalAlignment": "CENTER"
+          },
+          "font": {
+            "fontName": "Aptos",
+            "fontHeight": {
+              "type": "POINTS",
+              "points": 12
+            },
+            "fontColor": { "type": "RGB", "rgb": "#1F1F1F" }
+          }
+        }
+      },
+      "target": {
+        "type": "RANGE_BY_RANGE",
+        "sheetName": "Narrative",
+        "range": "A1:A2"
+      }
+    },
+    {
+      "stepId": "step-03-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "RICH_TEXT",
+          "runs": [
+            {
+              "font": {
+                "fontColor": { "type": "RGB", "rgb": "#44546A" }
+              },
+              "text": {
+                "type": "INLINE",
+                "text": "Q2 "
+              }
+            },
+            {
+              "font": {
+                "bold": true,
+                "fontColor": { "type": "RGB", "rgb": "#C00000" }
+              },
+              "text": {
+                "type": "INLINE",
+                "text": "Budget"
+              }
+            },
+            {
+              "font": {
+                "italic": true,
+                "underline": true
+              },
+              "text": {
+                "type": "INLINE",
+                "text": " Review"
+              }
+            }
+          ]
+        }
+      },
+      "target": {
+        "type": "CELL_BY_ADDRESS",
+        "sheetName": "Narrative",
+        "address": "A1"
+      }
+    },
+    {
+      "stepId": "step-04-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "value": {
+            "type": "INLINE",
+            "text": "Plain text stays plain."
+          }
+        }
+      },
+      "target": {
+        "type": "CELL_BY_ADDRESS",
+        "sheetName": "Narrative",
+        "address": "A2"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "cells",
+      "target": {
+        "type": "CELL_BY_ADDRESSES",
+        "sheetName": "Narrative",
+        "addresses": [
+          "A1",
+          "A2"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WINDOW"
+      },
+      "stepId": "window",
+      "target": {
+        "type": "RANGE_RECTANGULAR_WINDOW",
+        "sheetName": "Narrative",
+        "topLeftAddress": "A1",
+        "rowCount": 2,
+        "columnCount": 1
+      }
+    }
+  ]
+}

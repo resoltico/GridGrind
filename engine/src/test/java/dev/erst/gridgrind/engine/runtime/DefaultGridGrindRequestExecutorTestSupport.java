@@ -1,0 +1,376 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.ResolvedInspectionStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+
+/** Shared helpers for DefaultGridGrindRequestExecutor integration tests. */
+class DefaultGridGrindRequestExecutorTestSupport
+    extends DefaultGridGrindRequestExecutorReadSupport {
+  protected DefaultGridGrindRequestExecutorTestSupport() {}
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, execution, formulaEnvironment, mutations, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<ExecutorTestPlanSupport.PendingAssertion> assertions,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, execution, formulaEnvironment, mutations, assertions, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      ExecutionPolicySpec execution,
+      FormulaEnvironmentSpec formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      InspectionStep... inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, execution, formulaEnvironment, mutations, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<ExecutorTestPlanSupport.PendingAssertion> assertions,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(source, persistence, mutations, assertions, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(source, persistence, mutations, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      InspectionStep... inspections) {
+    return ExecutorTestPlanSupport.request(source, persistence, mutations, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      FormulaEnvironmentSpec formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<ExecutorTestPlanSupport.PendingAssertion> assertions,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, formulaEnvironment, mutations, assertions, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      FormulaEnvironmentSpec formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, formulaEnvironment, mutations, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      ExecutionModeSpec executionMode,
+      FormulaEnvironmentSpec formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<ExecutorTestPlanSupport.PendingAssertion> assertions,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, executionMode, formulaEnvironment, mutations, assertions, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      ExecutionModeSpec executionMode,
+      FormulaEnvironmentSpec formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, executionMode, formulaEnvironment, mutations, inspections);
+  }
+
+  static WorkbookResult.Success success(WorkbookResult response) {
+    return cast(WorkbookResult.Success.class, response);
+  }
+
+  static WorkbookResult.Failure failure(WorkbookResult response) {
+    return cast(WorkbookResult.Failure.class, response);
+  }
+
+  static ProblemContext.ReadRequest readRequestContext(GridGrindProblemDetail.Problem problem) {
+    return cast(ProblemContext.ReadRequest.class, problem.context());
+  }
+
+  static ProblemContext.ReadRequest readRequestContext(WorkbookResult.Failure failure) {
+    return readRequestContext(failure.problem());
+  }
+
+  static ProblemContext.OpenWorkbook openWorkbookContext(GridGrindProblemDetail.Problem problem) {
+    return cast(ProblemContext.OpenWorkbook.class, problem.context());
+  }
+
+  static ProblemContext.OpenWorkbook openWorkbookContext(WorkbookResult.Failure failure) {
+    return openWorkbookContext(failure.problem());
+  }
+
+  static ProblemContext.PersistWorkbook persistWorkbookContext(
+      GridGrindProblemDetail.Problem problem) {
+    return cast(ProblemContext.PersistWorkbook.class, problem.context());
+  }
+
+  static ProblemContext.PersistWorkbook persistWorkbookContext(WorkbookResult.Failure failure) {
+    return persistWorkbookContext(failure.problem());
+  }
+
+  static ProblemContext.ExecuteRequest executeRequestContext(
+      GridGrindProblemDetail.Problem problem) {
+    return cast(ProblemContext.ExecuteRequest.class, problem.context());
+  }
+
+  static ProblemContext.ExecuteRequest executeRequestContext(WorkbookResult.Failure failure) {
+    return executeRequestContext(failure.problem());
+  }
+
+  static ProblemContext.ExecuteStep executeStepContext(GridGrindProblemDetail.Problem problem) {
+    return cast(ProblemContext.ExecuteStep.class, problem.context());
+  }
+
+  static ProblemContext.ExecuteStep executeStepContext(WorkbookResult.Failure failure) {
+    return executeStepContext(failure.problem());
+  }
+
+  static ProblemContext.ExecuteCalculation.Preflight calculationPreflightContext(
+      GridGrindProblemDetail.Problem problem) {
+    return cast(ProblemContext.ExecuteCalculation.Preflight.class, problem.context());
+  }
+
+  static ProblemContext.ExecuteCalculation.Preflight calculationPreflightContext(
+      WorkbookResult.Failure failure) {
+    return calculationPreflightContext(failure.problem());
+  }
+
+  static ProblemContext.ExecuteCalculation.Execution calculationExecutionContext(
+      GridGrindProblemDetail.Problem problem) {
+    return cast(ProblemContext.ExecuteCalculation.Execution.class, problem.context());
+  }
+
+  static ProblemContext.ExecuteCalculation.Execution calculationExecutionContext(
+      WorkbookResult.Failure failure) {
+    return calculationExecutionContext(failure.problem());
+  }
+
+  static String savedPath(WorkbookResult.Success success) {
+    return writtenExecutionPath(success.persistence());
+  }
+
+  static String writtenExecutionPath(WorkbookResultPersistence.PersistenceOutcome persistence) {
+    return switch (persistence) {
+      case WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs ->
+          writtenExecutionPath(savedAs);
+      case WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten ->
+          writtenExecutionPath(overwritten);
+      case WorkbookResultPersistence.PersistenceOutcome.NotSaved _ ->
+          throw new AssertionError("expected persisted workbook");
+    };
+  }
+
+  static String writtenExecutionPath(WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs) {
+    return writtenExecutionPath(savedAs.publication());
+  }
+
+  static String writtenExecutionPath(
+      WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten) {
+    return writtenExecutionPath(overwritten.publication());
+  }
+
+  static String writtenExecutionPath(WorkbookResultPersistence.PublicationOutcome publication) {
+    return switch (publication) {
+      case WorkbookResultPersistence.PublicationOutcome.Published published ->
+          published.executionPath();
+      case WorkbookResultPersistence.PublicationOutcome.NotAttempted _,
+          WorkbookResultPersistence.PublicationOutcome.NotPublished _,
+          WorkbookResultPersistence.PublicationOutcome.Uncertain _ ->
+          throw new AssertionError("expected published workbook");
+    };
+  }
+
+  static List<String> stepIds(WorkbookResult.Success success) {
+    return inspectionIds(success);
+  }
+
+  static ExecutionInputBindings bindings(Path workingDirectory) {
+    return ExecutionInputBindingsFixtureSupport.bindings(workingDirectory);
+  }
+
+  static ExecutionInputBindings defaultBindings() {
+    return ExecutionContextFixtureSupport.defaultBindings();
+  }
+
+  static WorkbookTempFileFactory tempFileFactory(Path workingDirectory) {
+    return ExecutionContextFixtureSupport.tempFileFactory(workingDirectory);
+  }
+
+  static WorkbookTempFileFactory tempFileFactoryFor(Path anchoredPath) {
+    return ExecutionContextFixtureSupport.tempFileFactoryFor(anchoredPath);
+  }
+
+  static WorkbookLifecycle workbookSupport(Path workingDirectory) {
+    return ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
+  }
+
+  static ExecutionJournalRecorder startJournal(WorkbookPlan request) {
+    return ExecutionContextFixtureSupport.startJournal(request);
+  }
+
+  static ExecutionJournalRecorder startJournal(
+      WorkbookPlan request, ExecutionProgressSink sink, Path workingDirectory) {
+    return ExecutionContextFixtureSupport.startJournal(request, sink, workingDirectory);
+  }
+
+  static WorkbookResult execute(DefaultGridGrindRequestExecutor executor, WorkbookPlan request) {
+    return ExecutionContextFixtureSupport.execute(executor, request);
+  }
+
+  static WorkbookResult execute(
+      DefaultGridGrindRequestExecutor executor, WorkbookPlan request, Path workingDirectory) {
+    return ExecutionContextFixtureSupport.execute(executor, request, workingDirectory);
+  }
+
+  static void saveWorkbook(XssfWorkbook workbook, Path workbookPath) throws IOException {
+    ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
+  }
+
+  static ResolvedStep command(ExecutorTestPlanSupport.PendingMutation mutation) {
+    return command(mutation.target(), mutation.action());
+  }
+
+  static ResolvedStep command(Selector target, MutationAction action) {
+    return new ResolvedStep(
+        (ResolvedTarget) target,
+        MutationResolution.finish(
+            MutationResolution.prepare(action),
+            ExecutionInputBindingsFixtureSupport.bindings(Path.of("."))));
+  }
+
+  static ResolvedInspectionStep readCommand(InspectionStep step) {
+    return new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+        step.stepId(), (dev.erst.gridgrind.core.plan.ResolvedTarget) step.target(), step.query());
+  }
+
+  static String readType(InspectionStep step) {
+    return step.query().queryType();
+  }
+
+  static String sheetNameFor(WorkbookStep step) {
+    return ExecutionDiagnosticFields.sheetNameFor(step).orElse(null);
+  }
+
+  static String sheetNameFor(WorkbookStep step, Exception exception) {
+    return ExecutionDiagnosticFields.sheetNameFor(step, exception).orElse(null);
+  }
+
+  static String sheetNameFor(
+      ExecutorTestPlanSupport.PendingMutation mutation, Exception exception) {
+    return sheetNameFor(materializeMutation(mutation, 0), exception);
+  }
+
+  static String addressFor(WorkbookStep step, Exception exception) {
+    return ExecutionDiagnosticFields.addressFor(step, exception).orElse(null);
+  }
+
+  static String addressFor(ExecutorTestPlanSupport.PendingMutation mutation, Exception exception) {
+    return addressFor(materializeMutation(mutation, 0), exception);
+  }
+
+  static String rangeFor(WorkbookStep step, Exception exception) {
+    return ExecutionDiagnosticFields.rangeFor(step, exception).orElse(null);
+  }
+
+  static String rangeFor(ExecutorTestPlanSupport.PendingMutation mutation, Exception exception) {
+    return rangeFor(materializeMutation(mutation, 0), exception);
+  }
+
+  static String formulaFor(WorkbookStep step, Exception exception) {
+    return ExecutionDiagnosticFields.formulaFor(step, exception).orElse(null);
+  }
+
+  static String formulaFor(ExecutorTestPlanSupport.PendingMutation mutation, Exception exception) {
+    return formulaFor(materializeMutation(mutation, 0), exception);
+  }
+
+  static String namedRangeNameFor(
+      ExecutorTestPlanSupport.PendingMutation mutation, Exception exception) {
+    return namedRangeNameFor(materializeMutation(mutation, 0), exception);
+  }
+
+  static String namedRangeNameFor(WorkbookStep step, Exception exception) {
+    return ExecutionDiagnosticFields.namedRangeNameFor(step, exception).orElse(null);
+  }
+
+  static void assertReadContext(
+      InspectionStep step,
+      String expectedSheetName,
+      String expectedRuntimeAddress,
+      String expectedNamedRangeName,
+      RuntimeException runtimeException) {
+    assertEquals(expectedSheetName, sheetNameFor(step));
+    assertEquals(expectedRuntimeAddress, addressFor(step, runtimeException));
+    assertEquals(expectedNamedRangeName, namedRangeNameFor(step, runtimeException));
+  }
+
+  static void assertWriteContext(
+      ExecutorTestPlanSupport.PendingMutation mutation,
+      Exception exception,
+      String expectedSheetName,
+      String expectedAddress,
+      String expectedRange,
+      String expectedNamedRangeName) {
+    MutationStep step = materializeMutation(mutation, 0);
+    assertNull(formulaFor(step, exception));
+    assertEquals(expectedSheetName, sheetNameFor(step, exception));
+    assertEquals(expectedAddress, addressFor(step, exception));
+    assertEquals(expectedRange, rangeFor(step, exception));
+    assertEquals(expectedNamedRangeName, namedRangeNameFor(step, exception));
+  }
+}

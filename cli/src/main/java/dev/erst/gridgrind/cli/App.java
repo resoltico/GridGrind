@@ -1,5 +1,10 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.cli.command.CliArguments;
+import dev.erst.gridgrind.cli.command.CliPathArguments;
+import dev.erst.gridgrind.cli.command.CliUnexpectedFailureSupport;
+import dev.erst.gridgrind.cli.command.GridGrindCli;
+import dev.erst.gridgrind.cli.io.CliPrimaryOutputException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,7 +52,7 @@ public final class App {
           CliUnexpectedFailureSupport.emit(
               args,
               CliPathArguments.responsePathHint(args),
-              CliRenderArguments.prettyJsonHint(args),
+              CliArguments.prettyJsonHint(args),
               Objects.requireNonNull(stdout, "stdout must not be null"),
               Objects.requireNonNull(stderr, "stderr must not be null"),
               exception);

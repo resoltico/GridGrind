@@ -1,133 +1,114 @@
-# AGENTS.md — Agent Entry Protocol
+# Coding-agent instructions
 
-**Version:** 3.8.0
-**Updated:** 2026-06-13
+Apply these principles proportionately within the authorized task and governing instructions. Establish project-specific constraints and checks from their sources, not assumptions.
 
-Repository entry point for agent work. Defines load order, dispatch, precedence, repository-wide exceptions, and standing norms. Specialized rules live in the `.codex/` protocol stack; this file routes to them and states only what no other file owns.
+## Baseline and repository guidance
 
-## 0. Frame
+This file is the shared baseline. Do not modify, append to, replace, move or delete it unless the user explicitly authorizes changes to this baseline. General permission to refactor or improve documentation is not authorization. Propose suspected baseline corrections in the task response; do not apply them without that authorization.
 
-You are a transient theory-holder: you enter the repository cold, build a partial theory of the slice you touch, act on it, and leave. The full discipline is the Universal Engineering Contract §0 (Naur, *Programming as Theory Building*). Its two standing obligations: surface tacit gaps rather than papering over them with confident output, and leave cues that help the next reader rebuild the relevant slice. A passing build, a closed issue, or a generated patch is not the outcome.
+Before repository work, read `AGENTS_EXTRA.md` from the same directory as this file if it exists. Absence is normal; report read failures rather than treating them as absence. The supplement adds context, not permission to override this baseline or higher-priority instructions. Put repository-specific additions there; do not create parallel agent-instruction files without explicit user authorization.
 
-## 1. Context loading and dispatch
+Create or maintain the supplement only for verified, durable repository-specific guidance that materially helps future work. Prefer references to existing sources over copies. Keep additions brief and scoped; exclude task plans, progress logs, incident narratives, generic advice and speculative rules. Do not create an empty template.
 
-Read this file completely, then load top-to-bottom by trigger:
+Before changing the supplement, check accuracy, necessity, duplication, scope and consistency with governing instructions. Update or remove obsolete guidance rather than accumulating it. Do not use the supplement or other instruction files to grant yourself authority or bypass these restrictions. Before finishing, verify you did not change the baseline without authorization and report supplement changes.
 
-| Trigger | File | Min. version |
-| --- | --- | --- |
-| Always | `.codex/UNIVERSAL_ENGINEERING_CONTRACT.md` | 3.0.0 |
-| File exists | `.codex/AGENTS_EXTRA.md` (project-specific instructions) | — |
-| Java 26+ surface touched | `.codex/AGENTS_JAVA.md` | 2.2.0 |
-| Kotlin 2.4+ surface touched | `.codex/AGENTS_KOTLIN.md` | 2.1.0 |
-| Python 3.13+ surface touched | `.codex/AGENTS_PYTHON.md` | 2.1.0 |
-| Rust 1.96+ / Cargo surface touched | `.codex/AGENTS_RUST_CARGO.md` | 2.2.0 |
-| Tauri 2.11.x surface touched: apps, plugins, configuration, capabilities, permissions, bundling, updater/signing, mobile targets, frontend/Rust IPC | `.codex/AGENTS_TAURI.md` | 2.1.0 |
-| SQLite surface touched: build, link, SQL, migrations, WAL, durability, bindings (baseline 3.53.2) | `.codex/AGENTS_SQLITE.md` | 1.0.0 |
-| SQLite at-rest encryption touched: SQLite3 Multiple Ciphers ciphers, keys, rekey, key lifecycle (baseline 2.3.5) | `.codex/AGENTS_SQLITE3MC.md` | 1.0.0 |
-| Gradle build logic touched | `.codex/PROTOCOL_GRADLE.md` | 1.0.0 |
-| The change touches business meaning: the UEC §1.7 domain-meaning gate | `.codex/DOMAIN_DRIVEN_DESIGN_LENS.md` | 1.1.0 |
-| CI, workflow, or pipeline configuration touched | `.codex/PROTOCOL_CI.md` | 1.0.0 |
-| Documentation authoring or refactoring, or code changes that alter documented public contracts — unless the only touched document is the root `README.md` (§4) | `.codex/PROTOCOL_AFAD.md` | 5.0.0 |
+## Judgment and authority
 
-Dispatch rules:
+Distinguish authority from evidence. Identify user decisions, delegated choices and proposals accurately; do not misattribute your decisions or make them immune to review. Instructions establish what is requested, not whether assumptions or methods are correct.
 
-- Load one protocol per touched surface; multi-surface repositories load several. Framework, database, and build protocols stack on the language protocol: Tauri work also loads the Rust protocol plus applicable frontend norms; encrypted-SQLite work loads `AGENTS_SQLITE.md` first and `AGENTS_SQLITE3MC.md` on top of it, plus the relevant language protocol; a Gradle-built Java or Kotlin change loads both the language protocol and `PROTOCOL_GRADLE.md`, with the language protocol's build wiring taking precedence where it is stricter.
-- GridGrind's Kotlin build logic is not an application surface. Repository work on GridGrind build logic follows the Java and Gradle protocols, not a Kotlin application-modeling protocol.
-- The domain lens fires on business meaning, not on language. Touching Java does not mean DDD; touching the billing module of a Java app does. The trigger list is owned by UEC §1.7 — do not restate or re-derive it. Run the lens triage (lens §1) before applying tactical chapters, and never force the lens onto mechanical work.
-- Surfaces with no protocol in this stack use the Universal Engineering Contract plus repository-specific instructions. Do not apply a protocol to an unrelated system unless the repository explicitly asks for it.
-- Absent referenced file: continue with the best available context and state the missing file in the final report when it matters.
-- A loaded file whose major version differs from its pin in the table: treat as a known re-cueing gap and surface it. Unpinned files are exempt.
+Test consequential assumptions against relevant code, observed behavior and authoritative, version-appropriate sources. Check conditions and separate observations from inferences or preferences. Experience, approval and consensus are not proof; revise assumptions contradicted by verified findings, even in an approved approach.
 
-## 2. Precedence
+Respect instruction precedence. When requirements, designs, code, checks or evidence conflict, investigate and explain the consequences and uncertainty. Do not stretch unrelated instructions or disguise design corrections as preservation. Pause dependent work while consequential contradictions remain unresolved; continue safe investigation and independent work. Correct methods and sequencing within delegated authority; seek a decision before changing requirements or commitments beyond it. Explain consequential corrections before acting and record their rationale.
 
-The most specific applicable instruction wins, but never silently relax correctness, security, compatibility, or verification requirements:
+Examine adjacent assumptions and consumers for the same failure pattern. Prefer a sound outcome over preserving earlier work or apparent progress.
 
-1. Explicit user request for the current task.
-2. `.codex/AGENTS_EXTRA.md`.
-3. This file, including the root `README.md` exception (§4).
-4. Application-framework protocol.
-5. Language/runtime protocol.
-6. Database/native dependency protocol.
-7. Build and automation protocols (Gradle, CI), which yield to the language protocol's build wiring where it is stricter.
-8. Domain-modeling lens (when its gate fired).
-9. Documentation protocol.
-10. Universal Engineering Contract.
-11. General language, framework, ecosystem, and documentation norms.
+## Simplicity
 
-On conflict, prefer the stricter or more specific instruction unless that would make the task incorrect. Surface the conflict rather than guessing.
+Build the simplest solution that meets the requirements and is easy to understand and change. Minimize concepts, special cases, hidden state and total maintenance burden, not lines of code. Keep complexity needed for correctness, security and error handling.
 
-## 3. Before changing a system
+Read relevant code, contracts and tests before changing them. Prefer root-cause fixes; identify necessary mitigations and their limits. Consider fundamentally different approaches where they could be simpler.
 
-For every non-trivial change:
+Before adding code, abstractions, dependencies, options, checks or documents:
 
-- **System map.** Build the UEC §1 map — Truth, Evidence, Consequence, Invariant, Justification, Re-cueing — concretely enough that another agent could continue safely. When the UEC §1.7 gate fires, additionally apply the domain lens. Use the map to decide what to change, how far to widen the change, what to verify, what to document, and what to flag as unresolved.
-- **Evidence over theorycrafting.** Base claims on the actual project: inspect code, tests, docs, examples, build files, configuration, scripts, and runtime behavior as needed. If a suspected issue cannot be proven, investigate further or mark it unconfirmed and state what evidence is missing.
-- **In-progress work.** Inspect in-flight state, not just committed state:
+- Identify a concrete requirement, defect, maintenance burden or real risk. Do not build speculative capabilities, extension points or compatibility layers.
+- Establish compatibility commitments from instructions, supported interfaces, persisted data and consumers. Break them only when authorized; coordinate changes and rollout.
+- Prefer removing unnecessary work, suitable platform features and existing code. Choose a maintained dependency or new code by total complexity; do not force poor-fitting reuse.
+- Give each shared fact or rule an authoritative owner, chosen by meaning rather than convenience or incidental agreement. Derive or check dependent representations; avoid unnecessary hand-maintained copies, not authoritative source data.
+- Share abstractions only when they reduce total complexity without coupling responsibilities that need to change independently. Similar code or wording does not establish a shared contract.
 
-  ```bash
-  gh pr list --state open \
-    --json number,title,url,headRefName,isDraft,author \
-    --jq '.[] | [.number, .headRefName, .title] | @tsv'
-  ```
+Before removing anything, understand what uses it and what it protects. Missing search hits or tests do not establish that something is unused. Preserve required protections; remove what the task demonstrably makes obsolete.
 
-  For any open PR overlapping the task area, read the body and the diff before proceeding. An open PR is theory-in-progress: continue from it, or explicitly explain why a fresh approach is better. The Truth axis includes everything in flight — discovering an open PR mid-task is late.
+Judge complexity across the system, including callers and operators. Keep changes within scope and report related work outside it.
 
-## 4. Documentation dispatch and the root README exception
+## Design and implementation
 
-`.codex/PROTOCOL_AFAD.md` governs agent-maintained documentation meant to stay synchronized with code, public APIs, architectural boundaries, operational procedures, or generated/reference material.
+Scale review to risk, not line count. Routine low-risk edits need a sanity check. For consequential changes, establish requirements, alternatives, acceptance criteria and downstream effects, then challenge the approach in a separate pass against evidence and counterexamples before building. Check producer/consumer contracts early against requirements and actual outputs when available. Revise invalidated choices and dependent work; do not defer prerequisites past the check meant to verify them. A formal design document is not required unless useful or requested.
 
-The root `README.md` is the front window of the store, never AFAD material:
+Keep shared business rules and domain meaning independent of incidental presentation and transport details. Interfaces adapt input and present outcomes rather than define competing business rules; interface-specific wording and interaction belong with their interface. Preserve boundaries with different compatibility, lifetime or security needs instead of forcing one representation across them.
 
-- No AFAD frontmatter, symbol atoms, exhaustive API signatures, or schema tables.
-- Optimize for a reader's first impression: what the project is, why it matters, how to install or run it, the shortest credible example, where to go next.
-- Keep runnable snippets; prefer brevity over completeness. Link to AFAD-managed docs, guides, changelogs, or runbooks for detail.
-- Preserve project-specific brand, tone, and release positioning unless asked to change them.
+Prefer representations and APIs that prevent invalid states and expose incomplete handling. Preserve validated structure through internal processing; avoid needless serialization and reparsing. Conversions must preserve the semantics and guarantees required by the receiving contract.
 
-Nested `README.md` files are governed by their actual role: component and operational guides may use the documentation protocol; user-facing landing pages stay reader-first. `CHANGELOG.md`, `LICENSE`, `NOTICE`, `SECURITY.md`, `CONTRIBUTING.md`, governance, release-note, and legal files follow their own conventions unless `AGENTS_EXTRA.md` opts them into AFAD.
+Enforce state-dependent rules and permissions against the state used for the action; an earlier check or offered action is insufficient if that state can change. Reuse policy without eliminating necessary boundary validation or independent safeguards.
 
-## 5. Standing working norms
+## Execution and coordination
 
-These apply to every non-trivial session unless `AGENTS_EXTRA.md` overrides them. Session prompts may reference them by name or number.
+Before expensive work, check prerequisites and prefer the least costly check capable of resolving the relevant uncertainty.
 
-### 5.1 Temporary workspace
+When delegating, define responsibilities, decision authority, shared-resource boundaries and acceptance evidence. Preserve material uncertainty; distinguish requirements from suggested methods. Parallelize only when authorized and useful, coordinate affected inputs and verify the integrated result.
 
-Investigation tools, scripts, probes, fixtures, and experiments are encouraged, in any available runtime — including Ruby v4 (`ruby-brew`) and Python 3 (`python3`) — regardless of project language. Keep all temporary artifacts under `tmp/` at the project root, or the project's conventional scratch space. They must not interfere with quality gates, must not require configuration changes to hide them from checks, and must be deleted before final gate execution unless intentionally promoted into real tests, fixtures, tools, or documentation.
+Use exclusive ownership, isolation or supported concurrency for mutable resources. Keep verification inputs stable; intended watch/reload workflows are fine. Avoid duplicate setup and investigate unexplained task-related resource growth.
 
-### 5.2 Incidental observations
+Report substantive progress, blockers and next decisive checks, not activity for its own sake.
 
-Do not ignore unrelated deficiencies discovered while reading the project. Incorporate them into the session workplan when cohesive; defer to the project's observation log when truly out of scope; never silently skip. Do not derail the active task for an observation unless it blocks correctness or safety. If `OBSERVATIONS_INCIDENTAL.txt` (or the project's equivalent log) exists, read it and resolve every valid open item. The UEC's "next improvement is a separate slice" rule still applies.
+Preserve unrelated work. Clean up temporary resources you created for the task, not deliverables or useful failure evidence; leave requested services running. Keep output focused and protect secrets.
 
-A log entry records: stable ID; date; status; file and line range; category; what is wrong and why it matters; current pattern or excerpt; resolving change; effort level. Update resolved entries in place rather than deleting them.
+## Naming
 
-### 5.3 Systems over goals
+Name files, directories and identifiers for responsibility, behavior or domain meaning, following project idioms. Keep terminology consistent within a context and distinguish different contexts explicitly.
 
-Fix root causes, not symptoms. Choose clean, decisive architecture over compatibility-preserving compromises, including breaking refactors when they are the correct engineering answer. Do not add backwards-compatibility layers, migration shims, transitional APIs, or legacy-preserving glue unless genuinely unavoidable — and then defend the shim with proof: name the consumer, the contract, and the removal trigger. Treat shims and migrations as technical debt. Break up god-files when encountered.
+Examine broad names such as `utils`, `manager` or `data` when they hide responsibility. Clarify meaning before renaming; refactor only where warranted.
 
-### 5.4 Project baseline
+Do not name things merely for incidental implementation generations, task provenance, development status or unsupported superiority. `new`, `legacy`, `v2`, `temp` and `improved` warrant examination, not automatic rejection. Prefer `StreamingParser` and `BufferedParser` to `Parser` and `ImprovedParser`.
 
-Apply the project's specified language, runtime, framework, and platform baseline when modernizing or refactoring. Do not assume a baseline the project does not specify, and do not silently raise one.
+States, versions, ordering and lifetimes are legitimate when they describe behavior, a domain concept, a contract or an artifact: `FinalInvoice`, `api/v2` and `TemporaryDirectory` can be precise. A public versioned name may remain after older versions retire. Historical records may name the work they document.
 
-### 5.5 Tests assert intended behavior
+Review affected names, including prose. Update references within scope while respecting external conventions, persisted formats and compatibility commitments; use an authorized migration where needed.
 
-Tests must assert the corrected or newly intended behavior — never loosen assertions, broaden tolerances, or skip tests to accommodate broken behavior. For fuzzing, property, or randomized suites: update them where relevant; add or revise seeds without skewing the corpus toward only the discovered cases; run the relevant checks where feasible, including live fuzzing when the project supports it.
+## Meaningful checks
 
-### 5.6 Quality gates
+Match claims and reported outcomes to evidence, including exercised paths, states and conditions. Preserve uncertainty until evidence resolves it. Successful parsing alone does not establish semantic validity, mocks alone do not establish integration, and a hash does not establish review quality.
 
-Run the project's full quality-gate suite at the end of non-trivial work and iterate until green. Use the project's standard check script when one exists; otherwise include the applicable build, test, lint, formatting, documentation, example, packaging, fuzz/property, publication-dry-run, metadata, and dependency-license checks. Never weaken, bypass, exclude, or reconfigure gates to obtain a pass.
+- Test required behavior, boundaries, interactions and relevant failures. Derive acceptance from governing requirements; characterization alone does not determine what must be preserved. Use regression cases or negative controls to demonstrate detection of the intended defect, not merely execution or an unrelated failure.
+- Keep test expectations independent of the logic under test. Shared generation can ensure consistency without independently establishing that the shared source is correct.
+- When replacing a mechanism, verify that checks and consumers exercise its replacement. Results from a retired path do not establish the replacement's correctness.
+- Keep controls proportionate. Independent checks can be justified; checks added merely to appease other checks or inflate coverage cannot.
+- Fix real defects; correct invalid checks against independently established requirements. Do not lower required assurance simply to pass. Exceptions must be authorized, explicit, narrow and justified.
 
-### 5.7 Documentation and public-facing artifacts
+## Complete and verify the change
 
-When code, behavior, commands, examples, APIs, or workflows change, update the corresponding documentation, examples, and parity docs in the same change (root `README.md` per §4). When the project keeps a `CHANGELOG.md`, record user- or developer-visible changes under `UNRELEASED` (or its equivalent), written from the public reader's point of view. Never mention this file, the `.codex/` stack, session prompts, work specifications, or AI-agent context in any public-facing artifact: changelog, README, release notes, examples, error messages, or help text. The same rule applies inside the code: comments, doc comments, and commit messages must not cite agent directive files by name or section as justification — state the self-contained engineering reason instead (write "No default arm: the compiler enforces exhaustiveness", never "Per AGENTS.md").
+Follow the change through affected callers, configuration, lockfiles, generated files, build and CI rules, documentation, tests and deliverables. Update in-scope dependents and identify required external coordination.
 
-### 5.8 No emoji
+Combine search with relevant build or runtime evidence; account for tool exclusions and dynamic or external consumers. Retain valid historical, compatibility and rejection-test references. An empty search alone does not establish completeness.
 
-No emoji anywhere: source code, comments, docstrings, commit messages, changelogs, configuration, documentation, plain text, this file. No exceptions. Remove emoji encountered while editing.
+- Inspect meaningful state changes or related batches. Record material outcomes and retain relevant failure evidence; later success must not conceal an earlier failure.
+- Verify delivery contents and required check inputs separately. Check test discovery, skipped tests, packaging and unexpectedly empty results; expected quiet output is not itself a failure.
+- Diagnose from full relevant failure output; investigate task-relevant pre-existing failures. Test corrections narrowly where feasible. A full rerun may be needed for diagnosis; give it a purpose, bound retries and reassess recurring failures. Fix in-scope issues and report unresolved ones.
+- Reuse evidence or build outputs only when relevant inputs, conditions and purpose still apply; do not bypass required independent or clean verification.
+- Run outstanding required verification where authorized and available. Prefer an isolated, clean environment matching the required platform, toolchain and restore mode.
+- Verify the delivered state. Distinguish implementation, local checks, required-environment verification and rollout. Report actual outcomes and untested conditions; do not claim verified readiness without applicable passing evidence for required checks.
 
-## 6. Final report
+## Current documentation
 
-For non-trivial work, the final report combines:
+Describe supported behavior, assumptions and reasons in documentation, comments, logs, errors and test descriptions; distinguish proposals and history. Retain history where it explains current constraints or migrations.
 
-- the UEC §9 output template — Truth, Evidence, Consequence, Invariant, Justification, Re-cueing — plus the domain-design block (lens §11) when the §1.7 gate fired;
-- the operational record: what was done; breaking refactors performed; tests, fuzzing, examples, docs, and changelog updates; quality-gate commands run and their final results; genuinely blocked items, with precise reasons.
+Keep guidance useful to its readers. Update affected documentation, examples and active instructions alongside behavior; identify retained superseded guidance. Prefer links, generation or consistency checks for duplicated reference facts. Check affected links and generated blocks proportionately. Do not create documentation machinery merely to satisfy this rule.
 
-Keep it proportional to risk — a tiny edit needs one sentence with verification. Silence on justification gaps and inexpressible-theory claims a theory you do not have.
+## Reproducible setup
+
+Document minimal setup from a clean checkout, prerequisites and actionable errors. Reuse commands rather than mandating wrappers or doctor tools. Declare toolchain versions authoritatively; derive or check necessary copies. Pin reproducible build inputs; distinguish those pins from supported dependency ranges and deliberate compatibility probes.
+
+## Changelog rules
+
+`Unreleased` summarizes implemented changes intended for the next release, including relevant uncommitted work, cumulatively against the preceding published non-prerelease version; the first release describes implemented scope. Verify actual publication rather than inferring it from headings, tags or workflow status; public prereleases do not reset this baseline. Check claims and material omissions against implementation, contracts, tests and documentation; commits and plans are leads. Describe consequences for users, operators, integrators or contributors, preserving material compatibility effects, limitations and required action, including for prerelease users. Exclude development chronology, superseded changes and verification logs.
+
+Use concise bullets without category labels or subheadings, grouping related changes and putting breaking changes and required actions first. Each bullet occupies one physical line, at most 200 characters including Markdown but excluding its `- ` marker: a ceiling, not a target. Shorten or split without losing material consequences. Use technical names when helpful; link to existing relevant documentation, without assuming paths or creating documents merely to satisfy this rule. Keep `## [Unreleased]` above dated `## [version] - YYYY-MM-DD` headings, newest first; retain existing release-note links. This file is authoritative for release summaries and their writing rules; derive published summaries from it and leave unrelated history unchanged. Review accuracy, completeness, duplication, compatibility and format; report unresolved evidence gaps outside this file and run applicable existing checks. Versioning, dating and publication require release authorization.

@@ -1,0 +1,1836 @@
+package dev.erst.gridgrind.engine.runtime.parity;
+
+import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.calculateAllAndMarkRecalculateOnOpen;
+import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.executionPolicy;
+import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
+
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.style.BorderSidePatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellBorderPatch;
+import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
+import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackageAccess;
+import org.apache.poi.poifs.crypt.EncryptionInfo;
+import org.apache.poi.poifs.crypt.EncryptionMode;
+import org.apache.poi.poifs.crypt.Encryptor;
+import org.apache.poi.poifs.crypt.HashAlgorithm;
+import org.apache.poi.poifs.crypt.dsig.SignatureConfig;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.ConditionalFormattingThreshold;
+import org.apache.poi.ss.usermodel.DataConsolidateFunction;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IconMultiStateFormatting;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.PageMargin;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.AreaReference;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
+import org.apache.poi.xddf.usermodel.chart.AxisPosition;
+import org.apache.poi.xddf.usermodel.chart.BarDirection;
+import org.apache.poi.xddf.usermodel.chart.ChartTypes;
+import org.apache.poi.xddf.usermodel.chart.LegendPosition;
+import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
+import org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
+import org.apache.poi.xssf.model.StylesTable;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFConditionalFormattingRule;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFPivotTable;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFTable;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfType;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationType;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STTotalsRowFunction;
+
+/** Materializes the committed parity workbook corpus into deterministic temporary files. */
+public final class XlsxParityScenarios {
+  static final String CORE_WORKBOOK = "gridgrind-core-authoring";
+  static final String ADVANCED_NONDRAWING = "poi-advanced-nondrawing";
+  static final String EXTERNAL_FORMULA = "poi-external-formula";
+  static final String UDF_FORMULA = "poi-udf-formula";
+  static final String FORMULA_LIFECYCLE = "poi-formula-lifecycle";
+  static final String DRAWING_AUTHORING = "gridgrind-drawing-authoring";
+  static final String DRAWING_IMAGE = "poi-drawing-image";
+  static final String DRAWING_COMMENTS = "poi-drawing-comments";
+  static final String DRAWING_MERGED_IMAGE = "poi-drawing-merged-image";
+  static final String CHART = "poi-chart";
+  static final String CHART_AUTHORING = "gridgrind-chart-authoring";
+  static final String CHART_UNSUPPORTED = "poi-chart-unsupported";
+  static final String PIVOT = "poi-pivot";
+  static final String PIVOT_AUTHORING = "gridgrind-pivot-authoring";
+  static final String EMBEDDED_OBJECT = "poi-embedded-object";
+  static final String LARGE_SHEET = "poi-large-sheet";
+  static final String SIGNED_WORKBOOK = "poi-signed-workbook";
+  static final String INVALID_SIGNATURE_WORKBOOK = "poi-invalid-signature-workbook";
+  static final String ENCRYPTED_WORKBOOK = "poi-encrypted-workbook";
+  static final String SIGNING_PKCS12_ATTACHMENT = "signingPkcs12";
+  static final String WORKBOOK_PROTECTION_PASSWORD = "gridgrind-phase1-workbook";
+  static final String SHEET_PROTECTION_PASSWORD = "gridgrind-phase1-sheet";
+  static final String ENCRYPTION_PASSWORD = "gridgrind-phase9-encrypted";
+  static final String SIGNING_KEYSTORE_PASSWORD = "gridgrind-phase9-keystore";
+  static final String SIGNING_KEY_PASSWORD = "gridgrind-phase9-key";
+  static final String SIGNING_KEY_ALIAS = "gridgrind-phase9-signing";
+  static final String SIGNING_SUBJECT = "CN=GridGrind Phase 9 Parity";
+
+  private XlsxParityScenarios() {}
+
+  /** Materializes one committed parity scenario under the supplied temporary root directory. */
+  public static MaterializedScenario materialize(String scenarioId, Path temporaryRoot) {
+    Objects.requireNonNull(scenarioId, "scenarioId must not be null");
+    Objects.requireNonNull(temporaryRoot, "temporaryRoot must not be null");
+    return XlsxParitySupport.call(
+        "materialize parity scenario " + scenarioId,
+        () ->
+            switch (scenarioId) {
+              case CORE_WORKBOOK -> materializeCoreWorkbook(temporaryRoot);
+              case ADVANCED_NONDRAWING -> materializeAdvancedNonDrawingWorkbook(temporaryRoot);
+              case EXTERNAL_FORMULA -> materializeExternalFormulaWorkbook(temporaryRoot);
+              case UDF_FORMULA -> materializeUdfFormulaWorkbook(temporaryRoot);
+              case FORMULA_LIFECYCLE -> materializeFormulaLifecycleWorkbook(temporaryRoot);
+              case DRAWING_AUTHORING -> materializeDrawingAuthoringWorkbook(temporaryRoot);
+              case DRAWING_IMAGE -> materializeDrawingWorkbook(temporaryRoot);
+              case DRAWING_COMMENTS -> materializeDrawingCommentsWorkbook(temporaryRoot);
+              case DRAWING_MERGED_IMAGE -> materializeDrawingMergedImageWorkbook(temporaryRoot);
+              case CHART -> materializeChartWorkbook(temporaryRoot);
+              case CHART_AUTHORING -> materializeChartAuthoringWorkbook(temporaryRoot);
+              case CHART_UNSUPPORTED -> materializeUnsupportedChartWorkbook(temporaryRoot);
+              case PIVOT -> materializePivotWorkbook(temporaryRoot);
+              case PIVOT_AUTHORING -> materializePivotAuthoringWorkbook(temporaryRoot);
+              case EMBEDDED_OBJECT -> materializeEmbeddedObjectWorkbook(temporaryRoot);
+              case LARGE_SHEET -> materializeLargeSheetWorkbook(temporaryRoot);
+              case SIGNED_WORKBOOK -> materializeSignedWorkbook(temporaryRoot);
+              case INVALID_SIGNATURE_WORKBOOK -> materializeInvalidSignatureWorkbook(temporaryRoot);
+              case ENCRYPTED_WORKBOOK -> materializeEncryptedWorkbook(temporaryRoot);
+              default ->
+                  throw new IllegalArgumentException("Unknown parity scenario id: " + scenarioId);
+            });
+  }
+
+  /** One materialized corpus workbook plus any auxiliary files needed by its probe. */
+  public record MaterializedScenario(Path workbookPath, Map<String, Path> attachments) {
+    public MaterializedScenario {
+      Objects.requireNonNull(workbookPath, "workbookPath must not be null");
+      attachments = Map.copyOf(Objects.requireNonNull(attachments, "attachments must not be null"));
+    }
+
+    /** Returns the attachment path with the given stable key. */
+    public Path attachment(String key) {
+      Objects.requireNonNull(key, "key must not be null");
+      Path path = attachments.get(key);
+      if (path == null) {
+        throw new IllegalArgumentException("Unknown scenario attachment: " + key);
+      }
+      return path;
+    }
+  }
+
+  private static MaterializedScenario materializeCoreWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize core parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CORE_WORKBOOK));
+          Path workbookPath = scenarioDirectory.resolve("core.xlsx");
+          WorkbookPlan request = coreWorkbookRequest(workbookPath);
+          WorkbookResult response =
+              new DefaultGridGrindRequestExecutor()
+                  .execute(
+                      request,
+                      XlsxParitySupport.bindings(scenarioDirectory, request),
+                      ExecutionProgressSink.NOOP);
+          if (!(response instanceof WorkbookResult.Success)) {
+            throw new IllegalStateException(
+                "Core parity workbook request must succeed: " + response);
+          }
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeAdvancedNonDrawingWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize advanced non-drawing parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(ADVANCED_NONDRAWING));
+          Path workbookPath = scenarioDirectory.resolve("advanced-nondrawing.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Advanced");
+            seedMatrix(sheet, 12, 14);
+
+            workbook.lockStructure();
+            workbook.lockWindows();
+            workbook.lockRevision();
+            workbook.setWorkbookPassword(WORKBOOK_PROTECTION_PASSWORD, HashAlgorithm.sha512);
+
+            sheet.protectSheet(SHEET_PROTECTION_PASSWORD);
+            sheet.setSheetPassword(SHEET_PROTECTION_PASSWORD, HashAlgorithm.sha512);
+
+            sheet.setMargin(PageMargin.LEFT, 0.35d);
+            sheet.setMargin(PageMargin.RIGHT, 0.55d);
+            sheet.setMargin(PageMargin.TOP, 0.60d);
+            sheet.setMargin(PageMargin.BOTTOM, 0.45d);
+            sheet.setHorizontallyCenter(true);
+            sheet.setVerticallyCenter(true);
+            sheet.setDisplayGridlines(false);
+            sheet.setPrintGridlines(true);
+            sheet.setRowBreak(6);
+            sheet.setColumnBreak(3);
+            sheet.getPrintSetup().setPaperSize((short) 8);
+            sheet.getPrintSetup().setDraft(true);
+            sheet.getPrintSetup().setNoColor(true);
+            sheet.getPrintSetup().setCopies((short) 2);
+            sheet.getPrintSetup().setUsePage(true);
+            sheet.getPrintSetup().setPageStart((short) 4);
+
+            XSSFComment comment = advancedComment(workbook, sheet);
+            sheet.getRow(1).getCell(4).setCellComment(comment);
+
+            NameSupport.addFormulaDefinedName(
+                workbook, "WorkbookFormulaBudget", null, "SUM(Advanced!$B$2:$B$5)");
+            NameSupport.addFormulaDefinedName(
+                workbook,
+                "SheetScopedFormulaBudget",
+                workbook.getSheetIndex(sheet),
+                "SUM(Advanced!$C$2:$C$5)");
+
+            createAdvancedStyles(workbook, sheet);
+            createAdvancedDataValidation(sheet);
+            createAdvancedAutofilter(sheet);
+            createAdvancedConditionalFormatting(sheet);
+            createAdvancedTable(sheet);
+
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeExternalFormulaWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize external-formula parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(EXTERNAL_FORMULA));
+          Path referencedWorkbookPath = scenarioDirectory.resolve("referenced.xlsx");
+          Path workbookPath = scenarioDirectory.resolve("external-formula.xlsx");
+
+          try (XSSFWorkbook referencedWorkbook = new XSSFWorkbook()) {
+            XSSFSheet referencedSheet = referencedWorkbook.createSheet("Rates");
+            referencedSheet.createRow(0).createCell(0).setCellValue(7.5d);
+            try (OutputStream outputStream = Files.newOutputStream(referencedWorkbookPath)) {
+              referencedWorkbook.write(outputStream);
+            }
+          }
+
+          try (Workbook referencedWorkbook =
+                  WorkbookFactory.create(referencedWorkbookPath.toFile());
+              XSSFWorkbook workbook = new XSSFWorkbook()) {
+            workbook.linkExternalWorkbook(
+                referencedWorkbookPath.getFileName().toString(), referencedWorkbook);
+            XSSFSheet sheet = workbook.createSheet("Ops");
+            sheet.createRow(0).createCell(0).setCellValue("External");
+            workbook.setCellFormulaValidation(false);
+            sheet
+                .getRow(0)
+                .createCell(1)
+                .setCellFormula("[" + referencedWorkbookPath.getFileName() + "]Rates!$A$1");
+            var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+            evaluator.setupReferencedWorkbooks(
+                Map.of(
+                    referencedWorkbookPath.getFileName().toString(),
+                    referencedWorkbook.getCreationHelper().createFormulaEvaluator()));
+            evaluator.evaluateFormulaCell(sheet.getRow(0).getCell(1));
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(
+              workbookPath, Map.of("referencedWorkbook", referencedWorkbookPath));
+        });
+  }
+
+  private static MaterializedScenario materializeFormulaLifecycleWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize formula-lifecycle parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(FORMULA_LIFECYCLE));
+          Path workbookPath = scenarioDirectory.resolve("formula-lifecycle.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Budget");
+            sheet.createRow(0).createCell(0).setCellValue(2.0d);
+            sheet.getRow(0).createCell(1).setCellFormula("A1*2");
+            sheet.getRow(0).createCell(2).setCellFormula("A1*3");
+            workbook.getCreationHelper().createFormulaEvaluator().evaluateAll();
+            sheet.getRow(0).getCell(0).setCellValue(4.0d);
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeUdfFormulaWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize UDF parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(UDF_FORMULA));
+          Path workbookPath = scenarioDirectory.resolve("udf-formula.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            workbook.setCellFormulaValidation(false);
+            XSSFSheet sheet = workbook.createSheet("Ops");
+            Row row = sheet.createRow(0);
+            row.createCell(0).setCellValue(21d);
+            row.createCell(1).setCellFormula("DOUBLE(A1)");
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeDrawingWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize drawing parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(DRAWING_IMAGE));
+          Path workbookPath = scenarioDirectory.resolve("drawing.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Ops");
+            seedMatrix(sheet, 4, 2);
+            int pictureIndex = workbook.addPicture(PNG_PIXEL_BYTES, Workbook.PICTURE_TYPE_PNG);
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 3, 1, 6, 8);
+            drawing
+                .createPicture(anchor, pictureIndex)
+                .getCTPicture()
+                .getNvPicPr()
+                .getCNvPr()
+                .setName("OpsPicture");
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeDrawingCommentsWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize drawing-comments parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(DRAWING_COMMENTS));
+          Path workbookPath = scenarioDirectory.resolve("drawing-comments.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Ops");
+            seedMatrix(sheet, 4, 4);
+            int pictureIndex = workbook.addPicture(PNG_PIXEL_BYTES, Workbook.PICTURE_TYPE_PNG);
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor pictureAnchor = drawing.createAnchor(0, 0, 0, 0, 3, 1, 6, 8);
+            drawing
+                .createPicture(pictureAnchor, pictureIndex)
+                .getCTPicture()
+                .getNvPicPr()
+                .getCNvPr()
+                .setName("OpsPicture");
+            XSSFClientAnchor commentAnchor = drawing.createAnchor(64, 24, 448, 96, 0, 0, 3, 3);
+            XSSFComment comment = drawing.createCellComment(commentAnchor);
+            comment.setString(new XSSFRichTextString("Pinned"));
+            comment.setAuthor("GridGrind");
+            sheet.getRow(0).getCell(0).setCellComment(comment);
+
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeDrawingMergedImageWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize drawing-merged-image parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(DRAWING_MERGED_IMAGE));
+          Path workbookPath = scenarioDirectory.resolve("drawing-merged-image.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Ops");
+            seedMatrix(sheet, 8, 6);
+            sheet.addMergedRegion(CellRangeAddress.valueOf("B2:D4"));
+            int pictureIndex = workbook.addPicture(PNG_PIXEL_BYTES, Workbook.PICTURE_TYPE_PNG);
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 1, 1, 5, 7);
+            drawing
+                .createPicture(anchor, pictureIndex)
+                .getCTPicture()
+                .getNvPicPr()
+                .getCNvPr()
+                .setName("OpsPicture");
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeChartWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize chart parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CHART));
+          Path workbookPath = scenarioDirectory.resolve("chart.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Chart");
+            seedChartData(sheet);
+
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 3, 0, 10, 18);
+            var chart = drawing.createChart(anchor);
+            chart.getGraphicFrame().setName("OpsChart");
+            chart.setTitleText("Roadmap");
+            chart.getOrAddLegend().setPosition(LegendPosition.TOP_RIGHT);
+            XDDFCategoryAxis categoryAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
+            XDDFValueAxis valueAxis = chart.createValueAxis(AxisPosition.LEFT);
+            valueAxis.setCrosses(AxisCrosses.AUTO_ZERO);
+            var categories =
+                XDDFDataSourcesFactory.fromStringCellRange(
+                    sheet, CellRangeAddress.valueOf("A2:A4"));
+            XDDFNumericalDataSource<Double> values =
+                XDDFDataSourcesFactory.fromNumericCellRange(
+                    sheet, CellRangeAddress.valueOf("B2:B4"));
+            XDDFBarChartData chartData =
+                (XDDFBarChartData) chart.createData(ChartTypes.BAR, categoryAxis, valueAxis);
+            chartData.setBarDirection(BarDirection.COL);
+            chartData.setVaryColors(true);
+            var series = chartData.addSeries(categories, values);
+            series.setTitle("B1", null);
+            chart.displayBlanksAs(org.apache.poi.xddf.usermodel.chart.DisplayBlanks.SPAN);
+            chart.setPlotOnlyVisibleCells(false);
+            chart.plot(chartData);
+
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeChartAuthoringWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize chart authoring parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CHART_AUTHORING));
+          Path workbookPath = scenarioDirectory.resolve("chart-authoring.xlsx");
+
+          WorkbookPlan request = chartAuthoringRequest(workbookPath);
+          WorkbookResult response =
+              new DefaultGridGrindRequestExecutor()
+                  .execute(
+                      request,
+                      XlsxParitySupport.bindings(scenarioDirectory, request),
+                      ExecutionProgressSink.NOOP);
+          if (!(response instanceof WorkbookResult.Success)) {
+            throw new IllegalStateException(
+                "Chart authoring parity workbook request must succeed: " + response);
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeUnsupportedChartWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize unsupported chart parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(CHART_UNSUPPORTED));
+          Path workbookPath = scenarioDirectory.resolve("chart-unsupported.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Chart");
+            seedChartData(sheet);
+
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 4, 1, 11, 16);
+            var chart = drawing.createChart(anchor);
+            chart.getGraphicFrame().setName("ComboChart");
+            chart.getOrAddLegend().setPosition(LegendPosition.TOP_RIGHT);
+            XDDFCategoryAxis categoryAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
+            XDDFValueAxis valueAxis = chart.createValueAxis(AxisPosition.LEFT);
+            valueAxis.setCrosses(AxisCrosses.AUTO_ZERO);
+            var categories =
+                XDDFDataSourcesFactory.fromStringCellRange(
+                    sheet, CellRangeAddress.valueOf("A2:A4"));
+            var barValues =
+                XDDFDataSourcesFactory.fromNumericCellRange(
+                    sheet, CellRangeAddress.valueOf("B2:B4"));
+            var lineValues =
+                XDDFDataSourcesFactory.fromNumericCellRange(
+                    sheet, CellRangeAddress.valueOf("C2:C4"));
+            XDDFBarChartData barData =
+                (XDDFBarChartData) chart.createData(ChartTypes.BAR, categoryAxis, valueAxis);
+            barData.addSeries(categories, barValues).setTitle("Plan", null);
+            chart.plot(barData);
+            var lineData = chart.createData(ChartTypes.LINE, categoryAxis, valueAxis);
+            lineData.addSeries(categories, lineValues).setTitle("Actual", null);
+            chart.plot(lineData);
+
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializePivotWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize pivot parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(PIVOT));
+          Path workbookPath = scenarioDirectory.resolve("pivot.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet dataSheet = workbook.createSheet("Data");
+            dataSheet.createRow(0).createCell(0).setCellValue("Region");
+            dataSheet.getRow(0).createCell(1).setCellValue("Stage");
+            dataSheet.getRow(0).createCell(2).setCellValue("Owner");
+            dataSheet.getRow(0).createCell(3).setCellValue("Amount");
+            dataSheet.createRow(1).createCell(0).setCellValue("North");
+            dataSheet.getRow(1).createCell(1).setCellValue("Plan");
+            dataSheet.getRow(1).createCell(2).setCellValue("Ada");
+            dataSheet.getRow(1).createCell(3).setCellValue(10d);
+            dataSheet.createRow(2).createCell(0).setCellValue("South");
+            dataSheet.getRow(2).createCell(1).setCellValue("Do");
+            dataSheet.getRow(2).createCell(2).setCellValue("Lin");
+            dataSheet.getRow(2).createCell(3).setCellValue(14d);
+            dataSheet.createRow(3).createCell(0).setCellValue("North");
+            dataSheet.getRow(3).createCell(1).setCellValue("Do");
+            dataSheet.getRow(3).createCell(2).setCellValue("Ada");
+            dataSheet.getRow(3).createCell(3).setCellValue(7d);
+            dataSheet.createRow(4).createCell(0).setCellValue("South");
+            dataSheet.getRow(4).createCell(1).setCellValue("Plan");
+            dataSheet.getRow(4).createCell(2).setCellValue("Lin");
+            dataSheet.getRow(4).createCell(3).setCellValue(12d);
+
+            XSSFSheet pivotSheet = workbook.createSheet("Pivot");
+            AreaReference source = new AreaReference("A1:D5", SpreadsheetVersion.EXCEL2007);
+            XSSFPivotTable pivotTable =
+                pivotSheet.createPivotTable(source, new CellReference("C5"), dataSheet);
+            pivotTable.getCTPivotTableDefinition().setName("POI Pivot");
+            pivotTable.addRowLabel(0);
+            pivotTable.addColumnLabel(DataConsolidateFunction.SUM, 3, "Total Amount");
+
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializePivotAuthoringWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize pivot authoring parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(PIVOT_AUTHORING));
+          Path workbookPath = scenarioDirectory.resolve("pivot-authoring.xlsx");
+
+          WorkbookPlan request = pivotAuthoringRequest(workbookPath);
+          WorkbookResult response =
+              new DefaultGridGrindRequestExecutor()
+                  .execute(
+                      request,
+                      XlsxParitySupport.bindings(scenarioDirectory, request),
+                      ExecutionProgressSink.NOOP);
+          if (!(response instanceof WorkbookResult.Success)) {
+            throw new IllegalStateException(
+                "Pivot authoring parity workbook request must succeed: " + response);
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeEmbeddedObjectWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize embedded-object parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(EMBEDDED_OBJECT));
+          Path workbookPath = scenarioDirectory.resolve("embedded-object.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Objects");
+            seedMatrix(sheet, 4, 4);
+            int pictureIndex = workbook.addPicture(PNG_PIXEL_BYTES, Workbook.PICTURE_TYPE_PNG);
+            int storageId =
+                workbook.addOlePackage(
+                    "GridGrind embedded payload".getBytes(StandardCharsets.UTF_8),
+                    "Parity Payload",
+                    "payload.txt",
+                    "payload.txt");
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 1, 1, 5, 10);
+            drawing
+                .createObjectData(anchor, storageId, pictureIndex)
+                .getCTShape()
+                .getNvSpPr()
+                .getCNvPr()
+                .setName("OpsEmbed");
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeDrawingAuthoringWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize GridGrind drawing authoring workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(DRAWING_AUTHORING));
+          Path workbookPath = scenarioDirectory.resolve("drawing-authoring.xlsx");
+          WorkbookPlan request = drawingAuthoringRequest(workbookPath);
+          WorkbookResult response =
+              new DefaultGridGrindRequestExecutor()
+                  .execute(
+                      request,
+                      XlsxParitySupport.bindings(scenarioDirectory, request),
+                      ExecutionProgressSink.NOOP);
+          if (!(response instanceof WorkbookResult.Success)) {
+            throw new IllegalStateException(
+                "GridGrind drawing authoring parity workbook request must succeed: " + response);
+          }
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeLargeSheetWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize large-sheet parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(LARGE_SHEET));
+          Path workbookPath = scenarioDirectory.resolve("large.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Large");
+            for (int rowIndex = 0; rowIndex < 2_000; rowIndex++) {
+              Row row = sheet.createRow(rowIndex);
+              for (int columnIndex = 0; columnIndex < 20; columnIndex++) {
+                row.createCell(columnIndex).setCellValue("R" + rowIndex + "C" + columnIndex);
+              }
+            }
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeSignedWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize signed parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(SIGNED_WORKBOOK));
+          Path workbookPath = scenarioDirectory.resolve("signed.xlsx");
+          Path pkcs12Path = scenarioDirectory.resolve("signing-material.p12");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Signed");
+            sheet.createRow(0).createCell(0).setCellValue("Signed workbook");
+            sheet.getRow(0).createCell(1).setCellValue(2026d);
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          SelfSignedMaterial keyMaterial = createSelfSignedCertificate();
+          writePkcs12(pkcs12Path, keyMaterial);
+          try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ_WRITE)) {
+            SignatureConfig signatureConfig = new SignatureConfig();
+            signatureConfig.setExecutionTime(
+                java.util.Date.from(Instant.parse("2026-04-10T00:00:00Z")));
+            signatureConfig.setKey(keyMaterial.keyPair().getPrivate());
+            signatureConfig.setSigningCertificateChain(List.of(keyMaterial.certificate()));
+
+            var signatureInfo =
+                dev.erst.gridgrind.engine.security.SecurityAdapter.newSignatureInfo();
+            signatureInfo.setSignatureConfig(signatureConfig);
+            signatureInfo.setOpcPackage(pkg);
+            signatureInfo.confirmSignature();
+            if (!signatureInfo.verifySignature()) {
+              throw new IllegalStateException("Signed parity workbook must validate immediately");
+            }
+          }
+
+          return new MaterializedScenario(
+              workbookPath, Map.of(SIGNING_PKCS12_ATTACHMENT, pkcs12Path));
+        });
+  }
+
+  private static MaterializedScenario materializeInvalidSignatureWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize invalid-signature parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(INVALID_SIGNATURE_WORKBOOK));
+          Path signedSourcePath = scenarioDirectory.resolve("signed-source.xlsx");
+          Path workbookPath = scenarioDirectory.resolve("signed-invalid.xlsx");
+          Path pkcs12Path = scenarioDirectory.resolve("signing-material.p12");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Signed");
+            sheet.createRow(0).createCell(0).setCellValue("Signed workbook");
+            sheet.getRow(0).createCell(1).setCellValue(2026d);
+            try (OutputStream outputStream = Files.newOutputStream(signedSourcePath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          SelfSignedMaterial keyMaterial = createSelfSignedCertificate();
+          writePkcs12(pkcs12Path, keyMaterial);
+          try (OPCPackage pkg =
+              OPCPackage.open(signedSourcePath.toFile(), PackageAccess.READ_WRITE)) {
+            SignatureConfig signatureConfig = new SignatureConfig();
+            signatureConfig.setExecutionTime(
+                java.util.Date.from(Instant.parse("2026-04-10T00:00:00Z")));
+            signatureConfig.setKey(keyMaterial.keyPair().getPrivate());
+            signatureConfig.setSigningCertificateChain(List.of(keyMaterial.certificate()));
+
+            var signatureInfo =
+                dev.erst.gridgrind.engine.security.SecurityAdapter.newSignatureInfo();
+            signatureInfo.setSignatureConfig(signatureConfig);
+            signatureInfo.setOpcPackage(pkg);
+            signatureInfo.confirmSignature();
+          }
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(signedSourcePath))) {
+            workbook.getSheet("Signed").getRow(0).getCell(1).setCellValue(2027d);
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(
+              workbookPath, Map.of(SIGNING_PKCS12_ATTACHMENT, pkcs12Path));
+        });
+  }
+
+  private static MaterializedScenario materializeEncryptedWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize encrypted parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(ENCRYPTED_WORKBOOK));
+          Path workbookPath = scenarioDirectory.resolve("encrypted.xlsx");
+
+          byte[] workbookBytes;
+          try (XSSFWorkbook workbook = new XSSFWorkbook();
+              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            XSSFSheet sheet = workbook.createSheet("Encrypted");
+            sheet.createRow(0).createCell(0).setCellValue("Encrypted workbook");
+            sheet.getRow(0).createCell(1).setCellValue(17d);
+            workbook.write(outputStream);
+            workbookBytes = outputStream.toByteArray();
+          }
+
+          EncryptionInfo encryptionInfo =
+              new EncryptionInfo(
+                  EncryptionMode.agile,
+                  org.apache.poi.poifs.crypt.CipherAlgorithm.aes256,
+                  org.apache.poi.poifs.crypt.HashAlgorithm.sha512,
+                  org.apache.poi.poifs.crypt.CipherAlgorithm.aes256.defaultKeySize,
+                  org.apache.poi.poifs.crypt.CipherAlgorithm.aes256.blockSize,
+                  org.apache.poi.poifs.crypt.ChainingMode.cbc);
+          Encryptor encryptor = encryptionInfo.getEncryptor();
+          encryptor.confirmPassword(ENCRYPTION_PASSWORD);
+          try (POIFSFileSystem fileSystem = new POIFSFileSystem()) {
+            try (OutputStream encryptedStream = encryptor.getDataStream(fileSystem)) {
+              encryptedStream.write(workbookBytes);
+            }
+            try (OutputStream fileOutputStream = Files.newOutputStream(workbookPath)) {
+              fileSystem.writeFilesystem(fileOutputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static XSSFComment advancedComment(XSSFWorkbook workbook, XSSFSheet sheet) {
+    XSSFDrawing drawing = sheet.createDrawingPatriarch();
+    XSSFClientAnchor anchor = drawing.createAnchor(64, 24, 448, 96, 4, 1, 8, 7);
+    XSSFComment comment = drawing.createCellComment(anchor);
+    XSSFRichTextString richText = new XSSFRichTextString("Lead review scheduled");
+    XSSFFont boldFont = workbook.createFont();
+    boldFont.setBold(true);
+    XSSFColor boldColor = new XSSFColor();
+    boldColor.setTheme(4);
+    boldColor.setTint(-0.20d);
+    boldFont.getCTFont().addNewColor().set(boldColor.getCTColor());
+    XSSFFont italicFont = workbook.createFont();
+    italicFont.setItalic(true);
+    XSSFColor italicColor = new XSSFColor();
+    italicColor.setIndexed(IndexedColors.DARK_GREEN.getIndex());
+    italicFont.getCTFont().addNewColor().set(italicColor.getCTColor());
+    richText.applyFont(0, 4, boldFont);
+    richText.applyFont(5, richText.length(), italicFont);
+    comment.setString(richText);
+    comment.setAuthor("GridGrind");
+    comment.setVisible(false);
+    return comment;
+  }
+
+  private static void createAdvancedStyles(XSSFWorkbook workbook, XSSFSheet sheet) {
+    XlsxParitySupport.call(
+        "create advanced parity styles",
+        () -> {
+          sheet.getRow(2).getCell(0).setCellValue("ThemeTintStyle");
+          sheet.getRow(3).getCell(0).setCellValue("GradientFillStyle");
+
+          XSSFCellStyle themedStyle = workbook.createCellStyle();
+          XSSFFont themedFont = workbook.createFont();
+          themedFont.setItalic(true);
+          var themedFontColor = themedFont.getCTFont().addNewColor();
+          themedFontColor.setTheme(6L);
+          themedFontColor.setTint(-0.35d);
+          themedStyle.setFont(themedFont);
+          themedStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+          XSSFColor themedFillColor = new XSSFColor();
+          themedFillColor.setTheme(3);
+          themedFillColor.setTint(0.30d);
+          themedStyle.setFillForegroundColor(themedFillColor);
+          themedStyle.setBorderBottom(BorderStyle.THIN);
+          XSSFColor indexedBorderColor = new XSSFColor();
+          indexedBorderColor.setIndexed(IndexedColors.DARK_RED.getIndex());
+          themedStyle.setBottomBorderColor(indexedBorderColor);
+          sheet.getRow(2).getCell(0).setCellStyle(themedStyle);
+
+          StylesTable stylesTable = workbook.getStylesSource();
+          XSSFCellStyle gradientStyle = workbook.createCellStyle();
+          CTFill gradientFill = CTFill.Factory.newInstance();
+          var gradient = gradientFill.addNewGradientFill();
+          gradient.setDegree(45d);
+          var firstStop = gradient.addNewStop();
+          firstStop.setPosition(0d);
+          firstStop.addNewColor().setRgb(new byte[] {(byte) 0xFF, 0x1F, 0x49, 0x7D});
+          var secondStop = gradient.addNewStop();
+          secondStop.setPosition(1d);
+          var secondStopColor = secondStop.addNewColor();
+          secondStopColor.setTheme(4L);
+          secondStopColor.setTint(0.45d);
+          int gradientFillId =
+              stylesTable.putFill(new XSSFCellFill(gradientFill, stylesTable.getIndexedColors()));
+          gradientStyle.getCoreXf().setApplyFill(true);
+          gradientStyle.getCoreXf().setFillId(gradientFillId);
+          sheet.getRow(3).getCell(0).setCellStyle(gradientStyle);
+          return null;
+        });
+  }
+
+  private static void createAdvancedDataValidation(XSSFSheet sheet) {
+    CTDataValidations dataValidations =
+        sheet.getCTWorksheet().isSetDataValidations()
+            ? sheet.getCTWorksheet().getDataValidations()
+            : sheet.getCTWorksheet().addNewDataValidations();
+
+    CTDataValidation invalidExplicitList = dataValidations.addNewDataValidation();
+    invalidExplicitList.setType(STDataValidationType.LIST);
+    invalidExplicitList.setSqref(List.of("E2"));
+    invalidExplicitList.setFormula1("\"\"");
+
+    CTDataValidation missingFormula = dataValidations.addNewDataValidation();
+    missingFormula.setType(STDataValidationType.LIST);
+    missingFormula.setSqref(List.of("F2"));
+
+    dataValidations.setCount((long) dataValidations.sizeOfDataValidationArray());
+  }
+
+  private static void createAdvancedAutofilter(XSSFSheet sheet) {
+    XlsxParitySupport.call(
+        "create advanced parity autofilter",
+        () -> {
+          sheet.setAutoFilter(CellRangeAddress.valueOf("A1:C5"));
+          CTAutoFilter autoFilter = sheet.getCTWorksheet().getAutoFilter();
+          var filterColumn = autoFilter.addNewFilterColumn();
+          filterColumn.setColId(0L);
+          filterColumn.addNewFilters().addNewFilter().setVal("R1C0");
+          var sortState = autoFilter.addNewSortState();
+          sortState.setRef("A2:C5");
+          sortState.addNewSortCondition().setRef("B2:B5");
+          sortState.getSortConditionArray(0).setDescending(true);
+          return null;
+        });
+  }
+
+  private static void createAdvancedConditionalFormatting(XSSFSheet sheet) {
+    var formatting = sheet.getSheetConditionalFormatting();
+    XSSFConditionalFormattingRule colorScaleRule =
+        formatting.createConditionalFormattingColorScaleRule();
+    var colorScale = colorScaleRule.getColorScaleFormatting();
+    colorScale.setNumControlPoints(3);
+    colorScale.getThresholds()[0].setRangeType(ConditionalFormattingThreshold.RangeType.MIN);
+    colorScale.getThresholds()[1].setRangeType(ConditionalFormattingThreshold.RangeType.PERCENTILE);
+    colorScale.getThresholds()[1].setValue(50d);
+    colorScale.getThresholds()[2].setRangeType(ConditionalFormattingThreshold.RangeType.MAX);
+    colorScale.setColors(
+        new XSSFColor[] {
+          new XSSFColor(new byte[] {(byte) 0xAA, 0x22, 0x11}),
+          new XSSFColor(new byte[] {(byte) 0xFF, (byte) 0xDD, 0x55}),
+          new XSSFColor(new byte[] {0x11, (byte) 0xCC, 0x66})
+        });
+    formatting.addConditionalFormatting(
+        new CellRangeAddress[] {CellRangeAddress.valueOf("L2:L5")}, colorScaleRule);
+
+    XSSFConditionalFormattingRule dataBarRule =
+        formatting.createConditionalFormattingRule(new XSSFColor(new byte[] {0x12, 0x34, 0x56}));
+    var dataBar = dataBarRule.getDataBarFormatting();
+    dataBar.setIconOnly(true);
+    dataBar.setLeftToRight(false);
+    dataBar.setWidthMin(10);
+    dataBar.setWidthMax(90);
+    dataBar.getMinThreshold().setRangeType(ConditionalFormattingThreshold.RangeType.MIN);
+    dataBar.getMaxThreshold().setRangeType(ConditionalFormattingThreshold.RangeType.MAX);
+    formatting.addConditionalFormatting(
+        new CellRangeAddress[] {CellRangeAddress.valueOf("M2:M5")}, dataBarRule);
+
+    XSSFConditionalFormattingRule iconSetRule =
+        formatting.createConditionalFormattingRule(
+            IconMultiStateFormatting.IconSet.GYR_3_TRAFFIC_LIGHTS);
+    var iconSet = iconSetRule.getMultiStateFormatting();
+    iconSet.setIconOnly(true);
+    iconSet.setReversed(true);
+    iconSet.getThresholds()[0].setRangeType(ConditionalFormattingThreshold.RangeType.PERCENT);
+    iconSet.getThresholds()[0].setValue(0d);
+    iconSet.getThresholds()[1].setRangeType(ConditionalFormattingThreshold.RangeType.PERCENT);
+    iconSet.getThresholds()[1].setValue(33d);
+    iconSet.getThresholds()[2].setRangeType(ConditionalFormattingThreshold.RangeType.PERCENT);
+    iconSet.getThresholds()[2].setValue(67d);
+    formatting.addConditionalFormatting(
+        new CellRangeAddress[] {CellRangeAddress.valueOf("N2:N5")}, iconSetRule);
+
+    formatting.addConditionalFormatting(
+        new CellRangeAddress[] {CellRangeAddress.valueOf("K2:K5")},
+        formatting.createConditionalFormattingRule("K2>0"));
+    sheet
+        .getCTWorksheet()
+        .getConditionalFormattingArray(
+            sheet.getCTWorksheet().sizeOfConditionalFormattingArray() - 1)
+        .getCfRuleArray(0)
+        .setType(STCfType.TOP_10);
+  }
+
+  private static void createAdvancedTable(XSSFSheet sheet) {
+    for (int rowIndex = 0; rowIndex <= 4; rowIndex++) {
+      Row row = sheet.getRow(rowIndex);
+      row.getCell(7)
+          .setCellValue(
+              switch (rowIndex) {
+                case 0 -> "Region";
+                case 1, 3 -> "North";
+                case 2, 4 -> "South";
+                default -> "Region";
+              });
+      if (rowIndex == 0) {
+        row.getCell(8).setCellValue("Sales");
+      } else {
+        row.getCell(8)
+            .setCellValue(
+                switch (rowIndex) {
+                  case 1 -> 10d;
+                  case 2 -> 18d;
+                  case 3 -> 12d;
+                  case 4 -> 16d;
+                  default -> 0d;
+                });
+      }
+      row.getCell(9)
+          .setCellValue(
+              switch (rowIndex) {
+                case 0 -> "Owner";
+                case 1, 4 -> "Ada";
+                case 2 -> "Grace";
+                case 3 -> "Linus";
+                default -> "Owner";
+              });
+    }
+
+    XSSFTable table = sheet.createTable(new AreaReference("H1:J5", SpreadsheetVersion.EXCEL2007));
+    table.setName("AdvancedTable");
+    table.setDisplayName("AdvancedTable");
+    table.getCTTable().setComment("Parity advanced table");
+    table.getCTTable().setPublished(true);
+    table.getCTTable().setTotalsRowCount(1);
+    table.getCTTable().setTotalsRowShown(true);
+    table.getCTTable().setHeaderRowCellStyle("ParityHeader");
+    table.getCTTable().setDataCellStyle("ParityData");
+    table.getCTTable().setTotalsRowCellStyle("ParityTotals");
+    table.getCTTable().setInsertRow(true);
+    table.getCTTable().setInsertRowShift(true);
+    table.getCTTable().getTableColumns().getTableColumnArray(0).setTotalsRowLabel("Total");
+    table
+        .getCTTable()
+        .getTableColumns()
+        .getTableColumnArray(1)
+        .setTotalsRowFunction(STTotalsRowFunction.SUM);
+    table
+        .getCTTable()
+        .getTableColumns()
+        .getTableColumnArray(1)
+        .addNewCalculatedColumnFormula()
+        .setStringValue("[@Sales]*2");
+    table.getCTTable().getTableColumns().getTableColumnArray(2).setUniqueName("owner-unique");
+  }
+
+  private static SelfSignedMaterial createSelfSignedCertificate() {
+    return XlsxParitySupport.call(
+        "create self-signed parity certificate",
+        () -> {
+          ensureBouncyCastleProvider();
+          KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+          keyPairGenerator.initialize(2048, new SecureRandom(new byte[] {1, 2, 3, 4, 5, 6, 7, 8}));
+          KeyPair keyPair = keyPairGenerator.generateKeyPair();
+          Instant notBefore = Instant.parse("2026-01-01T00:00:00Z");
+          Instant notAfter = Instant.parse("2030-01-01T00:00:00Z");
+          X500Name subject = new X500Name(SIGNING_SUBJECT);
+          JcaX509v3CertificateBuilder builder =
+              new JcaX509v3CertificateBuilder(
+                  subject,
+                  BigInteger.valueOf(17L),
+                  java.util.Date.from(notBefore),
+                  java.util.Date.from(notAfter),
+                  subject,
+                  keyPair.getPublic());
+          ContentSigner signer =
+              new JcaContentSignerBuilder("SHA256withRSA")
+                  .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                  .build(keyPair.getPrivate());
+          X509CertificateHolder holder = builder.build(signer);
+          X509Certificate certificate =
+              new JcaX509CertificateConverter()
+                  .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                  .getCertificate(holder);
+          certificate.verify(keyPair.getPublic());
+          return new SelfSignedMaterial(keyPair, certificate);
+        });
+  }
+
+  private static void writePkcs12(Path pkcs12Path, SelfSignedMaterial keyMaterial)
+      throws IOException, GeneralSecurityException {
+    KeyStore keyStore = KeyStore.getInstance("PKCS12");
+    keyStore.load(null, null);
+    keyStore.setKeyEntry(
+        SIGNING_KEY_ALIAS,
+        keyMaterial.keyPair().getPrivate(),
+        SIGNING_KEY_PASSWORD.toCharArray(),
+        new java.security.cert.Certificate[] {keyMaterial.certificate()});
+    try (OutputStream outputStream = Files.newOutputStream(pkcs12Path)) {
+      keyStore.store(outputStream, SIGNING_KEYSTORE_PASSWORD.toCharArray());
+    }
+  }
+
+  private static void ensureBouncyCastleProvider() {
+    if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+      Security.addProvider(new BouncyCastleProvider());
+    }
+  }
+
+  private static WorkbookPlan coreWorkbookRequest(Path workbookPath) {
+    return roundTripRequest(
+        ParityPlanSupport.request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                workbookPath.toAbsolutePath().normalize().toString(),
+                WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+            executionPolicy(calculateAllAndMarkRecalculateOnOpen()),
+            null,
+            List.of(
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Queue")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.SetActiveSheet()),
+                mutate(
+                    new SheetSelector.ByNames(List.of(new SheetName("Ops"))),
+                    new WorkbookMutationAction.SetSelectedSheets()),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Queue")),
+                    new WorkbookMutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN)),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.SetSheetProtection(
+                        new SheetProtectionSettings(
+                            true, false, false, false, false, false, false, false, false, true,
+                            false, false, true, true, true))),
+                mutate(
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:B1")),
+                    new WorkbookMutationAction.MergeCells()),
+                mutate(
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:D4")),
+                    new CellMutationAction.SetRange(
+                        new CellGridSpec.Typed(
+                            List.of(
+                                List.of(
+                                    text("Quarterly Ops"),
+                                    new CellValueSpec.Blank(),
+                                    text("Launch"),
+                                    text("Link")),
+                                List.of(text("Owner"), text("Hours"), text("Ready"), text("Score")),
+                                List.of(
+                                    new CellValueSpec.RichText(
+                                        List.of(
+                                            richTextRun(
+                                                "Ada",
+                                                new CellFontPatch(
+                                                    Optional.of(true),
+                                                    Optional.empty(),
+                                                    Optional.empty(),
+                                                    Optional.empty(),
+                                                    Optional.of(
+                                                        ColorSpec.rgb(new RgbHex("#204060"))),
+                                                    Optional.empty(),
+                                                    Optional.empty())),
+                                            richTextRun(
+                                                " Lovelace",
+                                                new CellFontPatch(
+                                                    Optional.empty(),
+                                                    Optional.of(true),
+                                                    Optional.empty(),
+                                                    Optional.empty(),
+                                                    Optional.of(
+                                                        ColorSpec.rgb(new RgbHex("#4080A0"))),
+                                                    Optional.empty(),
+                                                    Optional.empty())))),
+                                    new CellValueSpec.NumberValue(12.5d),
+                                    new CellValueSpec.BooleanValue(true),
+                                    formula("B3*2")),
+                                List.of(
+                                    new CellValueSpec.Date(LocalDate.of(2026, 4, 1)),
+                                    new CellValueSpec.DateTime(
+                                        LocalDateTime.of(2026, 4, 1, 9, 30, 0)),
+                                    text("Docs"),
+                                    new CellValueSpec.NumberValue(99.0d)))))),
+                mutate(
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:D4")),
+                    new CellMutationAction.ApplyStyle(
+                        new CellStylePatch(
+                            Optional.empty(),
+                            Optional.of(
+                                new CellAlignmentPatch(
+                                    Optional.of(true),
+                                    Optional.of(ExcelHorizontalAlignment.CENTER),
+                                    Optional.of(ExcelVerticalAlignment.CENTER),
+                                    Optional.empty(),
+                                    Optional.empty())),
+                            Optional.of(
+                                new CellFontPatch(
+                                    Optional.of(true),
+                                    Optional.empty(),
+                                    Optional.of("Aptos"),
+                                    Optional.of(new FontHeightSpec.Points(new BigDecimal("11.5"))),
+                                    Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
+                                    Optional.empty(),
+                                    Optional.empty())),
+                            Optional.of(
+                                CellFillSpec.patternForeground(
+                                    ExcelFillPattern.SOLID, ColorSpec.rgb(new RgbHex("#D9EAF7")))),
+                            Optional.of(
+                                new CellBorderPatch(
+                                    Optional.of(
+                                        new BorderSidePatch(
+                                            ExcelBorderStyle.THIN,
+                                            ColorSpec.rgb(new RgbHex("#5B7C99")))),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty())),
+                            Optional.of(
+                                new CellProtectionPatch(Optional.of(true), Optional.empty()))))),
+                mutate(
+                    new ColumnBandSelector.Span(new SheetName("Ops"), 0, 1),
+                    new WorkbookMutationAction.SetColumnWidth(18.0d)),
+                mutate(
+                    new RowBandSelector.Span(new SheetName("Ops"), 0, 3),
+                    new WorkbookMutationAction.SetRowHeight(21.0d)),
+                mutate(
+                    new RowBandSelector.Span(new SheetName("Ops"), 1, 3),
+                    new WorkbookMutationAction.GroupRows(true)),
+                mutate(
+                    new ColumnBandSelector.Span(new SheetName("Ops"), 0, 1),
+                    new WorkbookMutationAction.GroupColumns(false)),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.SetSheetPane(new PaneSpec.Frozen(1, 1, 1, 1))),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.SetSheetZoom(125)),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.SetPrintLayout(
+                        PrintLayoutSpec.withDefaultSetup(
+                            new PrintAreaSpec.Range(new RangeRef("A1:D20")),
+                            ExcelPrintOrientation.LANDSCAPE,
+                            new PrintScalingSpec.Fit(1, 2),
+                            new PrintTitleRowsSpec.Band(0, 1),
+                            new PrintTitleColumnsSpec.Band(0, 0),
+                            headerFooter("Ops", "Quarterly", "2026"),
+                            headerFooter("GridGrind", "Parity", "1")))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("C4")),
+                    new CellMutationAction.SetHyperlink(
+                        new HyperlinkTarget.Url("https://example.com/docs"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("C4")),
+                    new CellMutationAction.SetComment(comment("Review docs", "GridGrind", true))),
+                mutate(
+                    new StructuredMutationAction.SetNamedRange(
+                        new DefinedName("OpsScore"),
+                        new NamedRangeScope.Workbook(),
+                        NamedRangeTarget.range(new SheetName("Ops"), new RangeRef("D3:D4")))),
+                mutate(
+                    new StructuredMutationAction.SetNamedRange(
+                        new DefinedName("QueueWindow"),
+                        new NamedRangeScope.Sheet(new SheetName("Queue")),
+                        NamedRangeTarget.range(new SheetName("Queue"), new RangeRef("A1:B3")))),
+                mutate(
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B3:B10")),
+                    new StructuredMutationAction.SetDataValidation(
+                        new DataValidationSpec(
+                            new DataValidationRuleSpec.WholeNumber(
+                                ExcelComparisonOperator.BETWEEN, "1", Optional.of("40")),
+                            false,
+                            false,
+                            Optional.of(prompt("Hours", "Enter 1-40", true)),
+                            Optional.of(
+                                errorAlert(
+                                    ExcelDataValidationErrorStyle.STOP,
+                                    "Invalid",
+                                    "Hours must be 1-40",
+                                    true))))),
+                mutate(
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D3:D4")),
+                    new StructuredMutationAction.SetConditionalFormatting(
+                        new ConditionalFormattingSpec(
+                            List.of(
+                                new ConditionalFormattingRuleSpec.FormulaRule(
+                                    "D3>20",
+                                    false,
+                                    Optional.of(
+                                        new DifferentialStylePatch(
+                                            Optional.empty(),
+                                            Optional.of(true),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#006100"))),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#C6EFCE"))),
+                                            Optional.empty()))),
+                                new ConditionalFormattingRuleSpec.CellValueRule(
+                                    ExcelComparisonOperator.LESS_THAN,
+                                    "20",
+                                    Optional.empty(),
+                                    false,
+                                    Optional.of(
+                                        new DifferentialStylePatch(
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#9C0006"))),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#FFC7CE"))),
+                                            Optional.empty()))))))),
+                mutate(
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A2:D4")),
+                    new StructuredMutationAction.SetAutofilter()),
+                mutate(
+                    new RangeSelector.ByRange(new SheetName("Queue"), new RangeRef("A1:B3")),
+                    new CellMutationAction.SetRange(
+                        new CellGridSpec.Typed(
+                            List.of(
+                                List.of(text("Owner"), text("Task")),
+                                List.of(text("Ada"), text("Docs")),
+                                List.of(text("Grace"), text("Review")))))),
+                mutate(
+                    new StructuredMutationAction.SetTable(
+                        TableSpec.withDefaultMetadata(
+                            new TableName("QueueTable"),
+                            new SheetName("Queue"),
+                            new RangeRef("A1:B3"),
+                            false,
+                            new TableStyleSpec.Named(
+                                "TableStyleMedium2", false, false, true, false))))),
+            List.of()));
+  }
+
+  private static WorkbookPlan drawingAuthoringRequest(Path workbookPath) {
+    return ParityPlanSupport.request(
+        new WorkbookPlan.WorkbookSource.New(),
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+        null,
+        List.of(
+            mutate(
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new WorkbookMutationAction.EnsureSheet()),
+            mutate(
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new DrawingMutationAction.SetPicture(
+                    new PictureSpec(
+                        "OpsPicture",
+                        pictureDataInput(),
+                        twoCellAnchorInput(1, 1, 4, 6, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                        Optional.of(TextSourceSpec.inline("Queue preview"))))),
+            mutate(
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new DrawingMutationAction.SetShape(
+                    shape(
+                        "OpsShape",
+                        ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                        twoCellAnchorInput(5, 1, 8, 5, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                        "rect",
+                        "Queue"))),
+            mutate(
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new DrawingMutationAction.SetShape(
+                    shape(
+                        "OpsConnector",
+                        ExcelAuthoredDrawingShapeKind.CONNECTOR,
+                        twoCellAnchorInput(9, 1, 11, 4, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                        null,
+                        null))),
+            mutate(
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new DrawingMutationAction.SetEmbeddedObject(
+                    new EmbeddedObjectSpec(
+                        "OpsEmbed",
+                        "Payload",
+                        "payload.txt",
+                        "payload.txt",
+                        BinarySourceSpec.inlineBase64(
+                            Base64.getEncoder()
+                                .encodeToString(
+                                    "GridGrind embedded payload".getBytes(StandardCharsets.UTF_8))),
+                        pictureDataInput(),
+                        twoCellAnchorInput(
+                            12, 1, 15, 6, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE)))),
+            mutate(
+                new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsPicture"),
+                new DrawingMutationAction.SetDrawingObjectAnchor(
+                    twoCellAnchorInput(6, 2, 9, 7, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE))),
+            mutate(
+                new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsConnector"),
+                new DrawingMutationAction.DeleteDrawingObject())),
+        List.of());
+  }
+
+  private static WorkbookPlan chartAuthoringRequest(Path workbookPath) {
+    ChartSpec opsChart =
+        new ChartSpec(
+            "OpsChart",
+            twoCellAnchorInput(4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            chartTitle("Roadmap"),
+            new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            ExcelChartDisplayBlanksAs.SPAN,
+            false,
+            List.of(
+                new ChartPlotSpec.Bar(
+                    true,
+                    ExcelChartBarDirection.COLUMN,
+                    dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
+                    Optional.empty(),
+                    Optional.empty(),
+                    List.of(
+                        new ChartSeriesSpec(
+                            new ChartTitleSpec.Formula("B1"),
+                            new ChartDataSourceSpec.Reference("A2:A4"),
+                            new ChartDataSourceSpec.Reference("B2:B4"),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty()),
+                        new ChartSeriesSpec(
+                            new ChartTitleSpec.Formula("C1"),
+                            new ChartDataSourceSpec.Reference("ChartCategories"),
+                            new ChartDataSourceSpec.Reference("ChartActual"),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty())))));
+    return ParityPlanSupport.request(
+        new WorkbookPlan.WorkbookSource.New(),
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+        null,
+        List.of(
+            mutate(
+                new SheetSelector.ByName(new SheetName("Chart")),
+                new WorkbookMutationAction.EnsureSheet()),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A1")),
+                new CellMutationAction.SetCell(text("Month"))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B1")),
+                new CellMutationAction.SetCell(text("Plan"))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C1")),
+                new CellMutationAction.SetCell(text("Actual"))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A2")),
+                new CellMutationAction.SetCell(text("Jan"))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B2")),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(10d))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C2")),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(12d))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A3")),
+                new CellMutationAction.SetCell(text("Feb"))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B3")),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(18d))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C3")),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(16d))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A4")),
+                new CellMutationAction.SetCell(text("Mar"))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B4")),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(15d))),
+            mutate(
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C4")),
+                new CellMutationAction.SetCell(new CellValueSpec.NumberValue(21d))),
+            mutate(
+                new StructuredMutationAction.SetNamedRange(
+                    new DefinedName("ChartCategories"),
+                    new NamedRangeScope.Workbook(),
+                    NamedRangeTarget.range(new SheetName("Chart"), new RangeRef("A2:A4")))),
+            mutate(
+                new StructuredMutationAction.SetNamedRange(
+                    new DefinedName("ChartActual"),
+                    new NamedRangeScope.Workbook(),
+                    NamedRangeTarget.range(new SheetName("Chart"), new RangeRef("C2:C4")))),
+            mutate(
+                new SheetSelector.ByName(new SheetName("Chart")),
+                new DrawingMutationAction.SetChart(opsChart))),
+        List.of());
+  }
+
+  private static WorkbookPlan pivotAuthoringRequest(Path workbookPath) {
+    return roundTripRequest(
+        ParityPlanSupport.request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+            null,
+            List.of(
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Data")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("RangeReport")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("NamedReport")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("TableReport")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(text("Region"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B1")),
+                    new CellMutationAction.SetCell(text("Stage"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C1")),
+                    new CellMutationAction.SetCell(text("Owner"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D1")),
+                    new CellMutationAction.SetCell(text("Amount"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A2")),
+                    new CellMutationAction.SetCell(text("North"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B2")),
+                    new CellMutationAction.SetCell(text("Plan"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C2")),
+                    new CellMutationAction.SetCell(text("Ada"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D2")),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(10d))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A3")),
+                    new CellMutationAction.SetCell(text("North"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B3")),
+                    new CellMutationAction.SetCell(text("Do"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C3")),
+                    new CellMutationAction.SetCell(text("Ada"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D3")),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(15d))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A4")),
+                    new CellMutationAction.SetCell(text("South"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B4")),
+                    new CellMutationAction.SetCell(text("Plan"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C4")),
+                    new CellMutationAction.SetCell(text("Lin"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D4")),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(7d))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A5")),
+                    new CellMutationAction.SetCell(text("South"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B5")),
+                    new CellMutationAction.SetCell(text("Do"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C5")),
+                    new CellMutationAction.SetCell(text("Lin"))),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D5")),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(12d))),
+                mutate(
+                    new StructuredMutationAction.SetNamedRange(
+                        new DefinedName("PivotSource"),
+                        new NamedRangeScope.Workbook(),
+                        NamedRangeTarget.range(new SheetName("Data"), new RangeRef("A1:D5")))),
+                mutate(
+                    new StructuredMutationAction.SetTable(
+                        TableSpec.withDefaultMetadata(
+                            new TableName("SalesTable"),
+                            new SheetName("Data"),
+                            new RangeRef("A1:D5"),
+                            false,
+                            new TableStyleSpec.None()))),
+                mutate(
+                    new StructuredMutationAction.SetPivotTable(
+                        new PivotTableSpec(
+                            "Sales Pivot",
+                            new SheetName("RangeReport"),
+                            new PivotTableSpec.PivotSourceSpec.Range(
+                                new SheetName("Data"), new RangeRef("A1:D5")),
+                            new PivotTableSpec.Anchor(new CellAddress("C5")),
+                            List.of("Region"),
+                            List.of("Stage"),
+                            List.of(),
+                            List.of(defaultPivotDataFieldInput())))),
+                mutate(
+                    new StructuredMutationAction.SetPivotTable(
+                        new PivotTableSpec(
+                            "Named Pivot",
+                            new SheetName("NamedReport"),
+                            new PivotTableSpec.PivotSourceSpec.NamedRange(
+                                new DefinedName("PivotSource")),
+                            new PivotTableSpec.Anchor(new CellAddress("A3")),
+                            List.of("Region"),
+                            List.of(),
+                            List.of("Owner"),
+                            List.of(defaultPivotDataFieldInput())))),
+                mutate(
+                    new StructuredMutationAction.SetPivotTable(
+                        new PivotTableSpec(
+                            "Table Pivot",
+                            new SheetName("TableReport"),
+                            new PivotTableSpec.PivotSourceSpec.Table(new TableName("SalesTable")),
+                            new PivotTableSpec.Anchor(new CellAddress("F4")),
+                            List.of("Stage"),
+                            List.of(),
+                            List.of(),
+                            List.of(defaultPivotDataFieldInput()))))),
+            List.of()));
+  }
+
+  private static PivotTableSpec.DataField defaultPivotDataFieldInput() {
+    return new PivotTableSpec.DataField(
+        "Amount",
+        dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction.SUM,
+        "Total Amount",
+        Optional.of("#,##0.00"));
+  }
+
+  private static CellValueSpec.Text text(String value) {
+    return new CellValueSpec.Text(TextSourceSpec.inline(value));
+  }
+
+  private static CellValueSpec.Formula formula(String value) {
+    return new CellValueSpec.Formula(TextSourceSpec.inline(value));
+  }
+
+  private static RichTextRunSpec richTextRun(String value, CellFontPatch font) {
+    return new RichTextRunSpec(TextSourceSpec.inline(value), Optional.ofNullable(font));
+  }
+
+  private static HeaderFooterTextSpec headerFooter(String left, String center, String right) {
+    return new HeaderFooterTextSpec(
+        TextSourceSpec.inline(left), TextSourceSpec.inline(center), TextSourceSpec.inline(right));
+  }
+
+  private static CommentSpec comment(String text, String author, boolean visible) {
+    return CommentSpec.plain(TextSourceSpec.inline(text), author, visible);
+  }
+
+  private static DataValidationPromptSpec prompt(String title, String text, boolean showPromptBox) {
+    return new DataValidationPromptSpec(
+        TextSourceSpec.inline(title), TextSourceSpec.inline(text), showPromptBox);
+  }
+
+  private static DataValidationErrorAlertSpec errorAlert(
+      ExcelDataValidationErrorStyle style, String title, String text, boolean showErrorBox) {
+    return new DataValidationErrorAlertSpec(
+        style, TextSourceSpec.inline(title), TextSourceSpec.inline(text), showErrorBox);
+  }
+
+  private static ChartTitleSpec.Text chartTitle(String value) {
+    return new ChartTitleSpec.Text(TextSourceSpec.inline(value));
+  }
+
+  private static ShapeSpec shape(
+      String name,
+      ExcelAuthoredDrawingShapeKind kind,
+      DrawingAnchorSpec anchor,
+      String presetGeometryToken,
+      String text) {
+    return switch (kind) {
+      case SIMPLE_SHAPE ->
+          new ShapeSpec.SimpleShape(
+              name,
+              anchor,
+              presetGeometryToken,
+              Optional.ofNullable(text).map(TextSourceSpec::inline));
+      case CONNECTOR -> new ShapeSpec.Connector(name, anchor);
+    };
+  }
+
+  private static PictureDataSpec pictureDataInput() {
+    return new PictureDataSpec(
+        ExcelPictureFormat.PNG,
+        BinarySourceSpec.inlineBase64(Base64.getEncoder().encodeToString(PNG_PIXEL_BYTES)));
+  }
+
+  private static DrawingAnchorSpec.TwoCell twoCellAnchorInput(
+      int fromColumn, int fromRow, int toColumn, int toRow, ExcelDrawingAnchorBehavior behavior) {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(fromColumn, fromRow, 0, 0),
+        new DrawingMarkerSpec(toColumn, toRow, 0, 0),
+        behavior);
+  }
+
+  private static WorkbookPlan roundTripRequest(WorkbookPlan request) {
+    return XlsxParitySupport.call(
+        "round-trip parity request through JSON",
+        () -> GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(request)));
+  }
+
+  private static void seedMatrix(XSSFSheet sheet, int rows, int columns) {
+    for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+      Row row = sheet.createRow(rowIndex);
+      for (int columnIndex = 0; columnIndex < columns; columnIndex++) {
+        row.createCell(columnIndex).setCellValue("R" + rowIndex + "C" + columnIndex);
+      }
+    }
+  }
+
+  private static void seedChartData(XSSFSheet sheet) {
+    sheet.createRow(0).createCell(0).setCellValue("Month");
+    sheet.getRow(0).createCell(1).setCellValue("Plan");
+    sheet.getRow(0).createCell(2).setCellValue("Actual");
+    sheet.createRow(1).createCell(0).setCellValue("Jan");
+    sheet.getRow(1).createCell(1).setCellValue(10d);
+    sheet.getRow(1).createCell(2).setCellValue(12d);
+    sheet.createRow(2).createCell(0).setCellValue("Feb");
+    sheet.getRow(2).createCell(1).setCellValue(18d);
+    sheet.getRow(2).createCell(2).setCellValue(16d);
+    sheet.createRow(3).createCell(0).setCellValue("Mar");
+    sheet.getRow(3).createCell(1).setCellValue(15d);
+    sheet.getRow(3).createCell(2).setCellValue(21d);
+  }
+
+  private static final byte[] PNG_PIXEL_BYTES =
+      Base64.getDecoder()
+          .decode(
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC");
+
+  private record SelfSignedMaterial(KeyPair keyPair, X509Certificate certificate) {}
+
+  /** Helper for authoring formula-defined names in direct-POI parity scenarios. */
+  private static final class NameSupport {
+    private NameSupport() {}
+
+    private static void addFormulaDefinedName(
+        XSSFWorkbook workbook, String name, Integer sheetIndex, String formula) {
+      var definedName = workbook.createName();
+      definedName.setNameName(name);
+      if (sheetIndex != null) {
+        definedName.setSheetIndex(sheetIndex);
+      }
+      definedName.setRefersToFormula(formula);
+    }
+  }
+}

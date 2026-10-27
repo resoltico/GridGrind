@@ -1,0 +1,913 @@
+{
+  "exit" : 0,
+  "readback" : {
+    "bounds" : [ {
+      "sheet" : {
+        "lastColumnIndex" : 2,
+        "lastRowIndex" : 2,
+        "physicalRowCount" : 3,
+        "protection" : {
+          "type" : "UNPROTECTED"
+        },
+        "sheetName" : "Ledger",
+        "visibility" : "VISIBLE"
+      },
+      "stepId" : "sheet-0",
+      "type" : "GET_SHEET_SUMMARY"
+    } ],
+    "facts" : [ {
+      "layout" : {
+        "columns" : [ {
+          "collapsed" : false,
+          "columnIndex" : 0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 8.0
+        }, {
+          "collapsed" : false,
+          "columnIndex" : 1,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 8.0
+        }, {
+          "collapsed" : false,
+          "columnIndex" : 2,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 8.0
+        } ],
+        "pane" : {
+          "type" : "NONE"
+        },
+        "presentation" : {
+          "display" : {
+            "displayFormulas" : false,
+            "displayGridlines" : true,
+            "displayRowColHeadings" : true,
+            "displayZeros" : true,
+            "rightToLeft" : false
+          },
+          "ignoredErrors" : [ ],
+          "outlineSummary" : {
+            "rowSumsBelow" : true,
+            "rowSumsRight" : true
+          },
+          "sheetDefaults" : {
+            "defaultColumnWidth" : 8,
+            "defaultRowHeightPoints" : 15.0
+          }
+        },
+        "rows" : [ {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 0
+        }, {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 1
+        }, {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 2
+        } ],
+        "sheetName" : "Ledger",
+        "zoomPercent" : 100
+      },
+      "stepId" : "sheet-0-layout",
+      "type" : "GET_SHEET_LAYOUT"
+    }, {
+      "layout" : {
+        "footer" : {
+          "center" : "",
+          "left" : "",
+          "right" : ""
+        },
+        "header" : {
+          "center" : "",
+          "left" : "",
+          "right" : ""
+        },
+        "orientation" : "PORTRAIT",
+        "printArea" : {
+          "type" : "NONE"
+        },
+        "repeatingColumns" : {
+          "type" : "NONE"
+        },
+        "repeatingRows" : {
+          "type" : "NONE"
+        },
+        "scaling" : {
+          "type" : "AUTOMATIC"
+        },
+        "setup" : {
+          "blackAndWhite" : false,
+          "columnBreaks" : [ ],
+          "copies" : 1,
+          "draft" : false,
+          "firstPageNumber" : 1,
+          "horizontallyCentered" : false,
+          "margins" : {
+            "bottom" : 0.75,
+            "footer" : 0.3,
+            "header" : 0.3,
+            "left" : 0.7,
+            "right" : 0.7,
+            "top" : 0.75
+          },
+          "paperSize" : 1,
+          "printGridlines" : false,
+          "rowBreaks" : [ ],
+          "useFirstPageNumber" : false,
+          "verticallyCentered" : false
+        },
+        "sheetName" : "Ledger"
+      },
+      "stepId" : "sheet-0-print",
+      "type" : "GET_PRINT_LAYOUT"
+    }, {
+      "charts" : [ ],
+      "sheetName" : "Ledger",
+      "stepId" : "sheet-0-charts",
+      "type" : "GET_CHARTS"
+    }, {
+      "drawingObjects" : [ ],
+      "sheetName" : "Ledger",
+      "stepId" : "sheet-0-drawing",
+      "type" : "GET_DRAWING_OBJECTS"
+    }, {
+      "cells" : [ {
+        "address" : "A1",
+        "displayValue" : "Team",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Team"
+        }
+      }, {
+        "address" : "B1",
+        "displayValue" : "Task",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Task"
+        }
+      }, {
+        "address" : "C1",
+        "displayValue" : "Hours",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Hours"
+        }
+      }, {
+        "address" : "A2",
+        "displayValue" : "Ops",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Ops"
+        }
+      }, {
+        "address" : "B2",
+        "displayValue" : "Badge prep",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Badge prep"
+        }
+      }, {
+        "address" : "C2",
+        "displayValue" : "6.5",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 6.5
+        }
+      }, {
+        "address" : "A3",
+        "displayValue" : "Facilities",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Facilities"
+        }
+      }, {
+        "address" : "B3",
+        "displayValue" : "Desk setup",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Desk setup"
+        }
+      }, {
+        "address" : "C3",
+        "displayValue" : "4",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "type" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 4.0
+        }
+      } ],
+      "sheetName" : "Ledger",
+      "stepId" : "sheet-0-cells",
+      "type" : "GET_CELLS"
+    }, {
+      "sheetName" : "Ledger",
+      "stepId" : "sheet-0-GET_DATA_VALIDATIONS",
+      "type" : "GET_DATA_VALIDATIONS",
+      "validations" : [ ]
+    }, {
+      "conditionalFormattingBlocks" : [ ],
+      "sheetName" : "Ledger",
+      "stepId" : "sheet-0-GET_CONDITIONAL_FORMATTING",
+      "type" : "GET_CONDITIONAL_FORMATTING"
+    }, {
+      "stepId" : "tables",
+      "tables" : [ ],
+      "type" : "GET_TABLES"
+    }, {
+      "pivotTables" : [ ],
+      "stepId" : "pivots",
+      "type" : "GET_PIVOT_TABLES"
+    }, {
+      "analysis" : {
+        "findings" : [ ],
+        "summary" : {
+          "errorCount" : 0,
+          "infoCount" : 0,
+          "totalCount" : 0,
+          "warningCount" : 0
+        }
+      },
+      "stepId" : "findings",
+      "type" : "ANALYZE_WORKBOOK_FINDINGS"
+    } ],
+    "summary" : [ {
+      "stepId" : "summary",
+      "type" : "GET_WORKBOOK_SUMMARY",
+      "workbook" : {
+        "activeSheetName" : "Ledger",
+        "forceFormulaRecalculationOnOpen" : true,
+        "namedRangeCount" : 0,
+        "selectedSheetNames" : [ "Ledger" ],
+        "sheetCount" : 1,
+        "sheetNames" : [ "Ledger" ],
+        "type" : "WITH_SHEETS"
+      }
+    } ]
+  },
+  "stderr" : "",
+  "stdout" : {
+    "assertions" : [ ],
+    "calculation" : {
+      "execution" : {
+        "cachesCleared" : false,
+        "evaluatedFormulaCount" : 0,
+        "markRecalculateOnOpenApplied" : true,
+        "status" : "SUCCEEDED"
+      },
+      "policy" : {
+        "markRecalculateOnOpen" : true
+      }
+    },
+    "evidence" : {
+      "admission" : {
+        "materializedInputs" : [ ],
+        "operations" : [ {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "ENSURE_SHEET"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "APPEND_ROW"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "APPEND_ROW"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "APPEND_ROW"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_WORKBOOK_SUMMARY"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_SHEET_SUMMARY"
+        } ]
+      },
+      "computational" : {
+        "status" : "ESTABLISHED"
+      },
+      "presentational" : {
+        "status" : "NOT_ASSESSED"
+      },
+      "preservation" : [ {
+        "status" : "NOT_REQUESTED"
+      } ],
+      "structural" : {
+        "status" : "ESTABLISHED"
+      },
+      "taskSpecific" : {
+        "status" : "NOT_REQUESTED"
+      }
+    },
+    "inspections" : [ {
+      "stepId" : "workbook",
+      "type" : "GET_WORKBOOK_SUMMARY",
+      "workbook" : {
+        "activeSheetName" : "Ledger",
+        "forceFormulaRecalculationOnOpen" : false,
+        "namedRangeCount" : 0,
+        "selectedSheetNames" : [ "Ledger" ],
+        "sheetCount" : 1,
+        "sheetNames" : [ "Ledger" ],
+        "type" : "WITH_SHEETS"
+      }
+    }, {
+      "sheet" : {
+        "lastColumnIndex" : 2,
+        "lastRowIndex" : 2,
+        "physicalRowCount" : 3,
+        "protection" : {
+          "type" : "UNPROTECTED"
+        },
+        "sheetName" : "Ledger",
+        "visibility" : "VISIBLE"
+      },
+      "stepId" : "ledger-sheet",
+      "type" : "GET_SHEET_SUMMARY"
+    } ],
+    "journal" : {
+      "calculation" : {
+        "execution" : {
+          "status" : "SUCCEEDED"
+        },
+        "preflight" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "close" : {
+        "status" : "NOT_STARTED"
+      },
+      "inputResolution" : {
+        "status" : "SUCCEEDED"
+      },
+      "level" : "SUMMARY",
+      "open" : {
+        "status" : "SUCCEEDED"
+      },
+      "outcome" : {
+        "completedStepCount" : 6,
+        "durationMillis" : "<durationMillis>",
+        "plannedStepCount" : 6,
+        "status" : "SUCCEEDED"
+      },
+      "persistencePhase" : {
+        "status" : "SUCCEEDED"
+      },
+      "source" : {
+        "type" : "NEW"
+      },
+      "steps" : [ {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Ledger"
+        } ],
+        "stepId" : "step-01-ensure-sheet",
+        "stepIndex" : 0,
+        "stepKind" : "MUTATION",
+        "stepType" : "ENSURE_SHEET"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Ledger"
+        } ],
+        "stepId" : "step-02-append-header",
+        "stepIndex" : 1,
+        "stepKind" : "MUTATION",
+        "stepType" : "APPEND_ROW"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Ledger"
+        } ],
+        "stepId" : "step-03-append-ops",
+        "stepIndex" : 2,
+        "stepKind" : "MUTATION",
+        "stepType" : "APPEND_ROW"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Ledger"
+        } ],
+        "stepId" : "step-04-append-facilities",
+        "stepIndex" : 3,
+        "stepKind" : "MUTATION",
+        "stepType" : "APPEND_ROW"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "WORKBOOK",
+          "label" : "Current workbook"
+        } ],
+        "stepId" : "workbook",
+        "stepIndex" : 4,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_WORKBOOK_SUMMARY"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Ledger"
+        } ],
+        "stepId" : "ledger-sheet",
+        "stepIndex" : 5,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_SHEET_SUMMARY"
+      } ],
+      "validation" : {
+        "status" : "SUCCEEDED"
+      }
+    },
+    "persistence" : {
+      "publication" : {
+        "byteSize" : "<byteSize>",
+        "durability" : {
+          "type" : "FILE_AND_DIRECTORY_SYNCED"
+        },
+        "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-large-file-modes.xlsx",
+        "sha256" : "<sha256>",
+        "stagedArtifactVerification" : { },
+        "status" : "PUBLISHED"
+      },
+      "requestedPath" : "generated-workbooks/gridgrind-large-file-modes.xlsx",
+      "type" : "SAVE_AS"
+    },
+    "planId" : "large-file-modes-workflow",
+    "protocolVersion" : 1,
+    "status" : "SUCCEEDED",
+    "warnings" : [ ]
+  }
+}

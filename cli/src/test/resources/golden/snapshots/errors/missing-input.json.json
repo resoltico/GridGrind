@@ -1,0 +1,112 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "assertions" : [ ],
+    "calculation" : {
+      "execution" : {
+        "cachesCleared" : false,
+        "evaluatedFormulaCount" : 0,
+        "markRecalculateOnOpenApplied" : false,
+        "status" : "NOT_REQUESTED"
+      },
+      "policy" : { }
+    },
+    "evidence" : {
+      "admission" : {
+        "materializedInputs" : [ ],
+        "operations" : [ ]
+      },
+      "computational" : {
+        "status" : "NOT_REQUESTED"
+      },
+      "presentational" : {
+        "status" : "NOT_ASSESSED"
+      },
+      "preservation" : [ {
+        "status" : "NOT_REQUESTED"
+      } ],
+      "structural" : {
+        "status" : "NOT_ESTABLISHED"
+      },
+      "taskSpecific" : {
+        "status" : "NOT_REQUESTED"
+      }
+    },
+    "inspections" : [ ],
+    "journal" : {
+      "calculation" : {
+        "execution" : {
+          "status" : "NOT_STARTED"
+        },
+        "preflight" : {
+          "status" : "NOT_STARTED"
+        }
+      },
+      "close" : {
+        "status" : "NOT_STARTED"
+      },
+      "inputResolution" : {
+        "status" : "FAILED"
+      },
+      "level" : "SUMMARY",
+      "open" : {
+        "status" : "NOT_STARTED"
+      },
+      "outcome" : {
+        "completedStepCount" : 0,
+        "durationMillis" : "<durationMillis>",
+        "plannedStepCount" : 2,
+        "problemCode" : "INPUT_SOURCE_NOT_FOUND",
+        "status" : "FAILED"
+      },
+      "persistencePhase" : {
+        "status" : "NOT_STARTED"
+      },
+      "source" : {
+        "type" : "NEW"
+      },
+      "steps" : [ ],
+      "validation" : {
+        "status" : "SUCCEEDED"
+      }
+    },
+    "persistence" : {
+      "type" : "NONE"
+    },
+    "problem" : {
+      "category" : "RESOURCE",
+      "causes" : [ {
+        "code" : "INPUT_SOURCE_NOT_FOUND",
+        "message" : "cell text file does not exist: missing.txt",
+        "stage" : "RESOLVE_INPUTS"
+      } ],
+      "code" : "INPUT_SOURCE_NOT_FOUND",
+      "context" : {
+        "input" : {
+          "inputKind" : "cell text",
+          "inputPath" : "missing.txt",
+          "type" : "PATH"
+        },
+        "json" : {
+          "byteOffset" : 354,
+          "jsonPath" : "steps[1].action.value.value.path",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "persistenceType" : "NONE",
+          "sourceType" : "NEW",
+          "type" : "KNOWN"
+        },
+        "type" : "RESOLVE_INPUTS"
+      },
+      "message" : "cell text file does not exist: missing.txt",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Provide an existing authored input file or correct its path. Relative request-owned paths resolve from the explicit execution root.",
+      "title" : "Input source not found"
+    },
+    "protocolVersion" : 1,
+    "status" : "FAILED",
+    "warnings" : [ ]
+  }
+}

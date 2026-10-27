@@ -1,13 +1,16 @@
-import dev.erst.gridgrind.authoring.GridGrindPlan;
-import dev.erst.gridgrind.authoring.ExpectedValues;
-import dev.erst.gridgrind.authoring.Tables;
-import dev.erst.gridgrind.authoring.Targets;
-import dev.erst.gridgrind.authoring.Values;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.core.authoring.GridGrindPlan;
+import dev.erst.gridgrind.core.authoring.ExpectedValues;
+import dev.erst.gridgrind.core.authoring.Tables;
+import dev.erst.gridgrind.core.authoring.Targets;
+import dev.erst.gridgrind.core.authoring.Values;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.IOException;
@@ -31,37 +34,37 @@ final class JavaAuthoringWorkflowExample {
     return GridGrindPlan.newWorkbook()
         .saveAs(workspace.resolve("budget.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE)
         .journal(ExecutionJournalLevel.VERBOSE)
-        .mutate(Targets.sheet("Budget").ensureExists())
+        .mutate(Targets.sheet(new SheetName("Budget")).ensureExists())
         .mutate(
-            Targets.range("Budget", "A1:B3")
+            Targets.range(new SheetName("Budget"), new RangeRef("A1:B3"))
                 .setRows(
                     List.of(
                         Values.row(Values.text("Item"), Values.text("Amount")),
                         Values.row(Values.text("Hosting"), Values.number(100.0)),
                         Values.row(Values.text("Travel"), Values.number(50.0)))))
         .mutate(
-            Targets.tableOnSheet("BudgetTable", "Budget")
+            Targets.tableOnSheet(new TableName("BudgetTable"), new SheetName("Budget"))
                 .define(
                     Tables.define(
-                        "BudgetTable",
-                        "Budget",
-                        "A1:B3",
+                        new TableName("BudgetTable"),
+                        new SheetName("Budget"),
+                        new RangeRef("A1:B3"),
                         false,
                         Tables.noStyle())))
         .mutate(
-            Targets.table("BudgetTable")
+            Targets.table(new TableName("BudgetTable"))
                 .rowByKey(
                     "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
                 .set(Values.number(125.0)))
         .inspect(
-            Targets.table("BudgetTable")
+            Targets.table(new TableName("BudgetTable"))
                 .rowByKey(
                     "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
                 .read())
         .assertThat(
-            Targets.table("BudgetTable")
+            Targets.table(new TableName("BudgetTable"))
                 .rowByKey(
                     "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
@@ -82,10 +85,10 @@ final class JavaAuthoringWorkflowExample {
     }
   }
 
-  private static GridGrindExecutionGrant executionGrant(Path workspace) {
-    return new GridGrindExecutionGrant.Bounded(
+  private static ExecutionGrant executionGrant(Path workspace) {
+    return new ExecutionGrant(
         List.of(
-            new GridGrindExecutionGrant.ReadAuthority.File(
+            new ExecutionGrant.ReadAuthority.File(
                 workspace.resolve("authored-inputs").resolve("item.txt"))),
         List.of(
             "ENSURE_SHEET",
@@ -94,12 +97,12 @@ final class JavaAuthoringWorkflowExample {
             "SET_CELL",
             "GET_CELLS",
             "EXPECT_CELL_VALUE"),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.SaveAs(
             workspace.resolve("budget.xlsx"),
             WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
         List.of(),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 
   private static void deleteTreeIfExists(Path root) throws IOException {

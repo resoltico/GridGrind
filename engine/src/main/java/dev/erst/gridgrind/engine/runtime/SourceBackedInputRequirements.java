@@ -1,48 +1,48 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
-import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
-import dev.erst.gridgrind.contract.dto.ChartTitleInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
-import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.contract.dto.DataValidationInput;
-import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
-import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
-import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
-import dev.erst.gridgrind.contract.dto.PictureDataInput;
-import dev.erst.gridgrind.contract.dto.PictureInput;
-import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
-import dev.erst.gridgrind.contract.dto.RichTextRunInput;
-import dev.erst.gridgrind.contract.dto.ShapeInput;
-import dev.erst.gridgrind.contract.dto.SignatureLineInput;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.RowBandSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.table.TableSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.util.List;
 import java.util.Objects;
 
@@ -77,7 +77,8 @@ final class SourceBackedInputRequirements {
                     .flatMap(List::stream)
                     .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
             case CellMutationAction.ClearRange _ -> false;
-            case CellMutationAction.SetArrayFormula _ -> false;
+            case CellMutationAction.SetArrayFormula setArrayFormula ->
+                requiresStandardInput(setArrayFormula.formula().source());
             case CellMutationAction.ClearArrayFormula _ -> false;
             case CellMutationAction.SetHyperlink _ -> false;
             case CellMutationAction.ClearHyperlink _ -> false;
@@ -162,140 +163,140 @@ final class SourceBackedInputRequirements {
     };
   }
 
-  static boolean requiresStandardInput(CellInput value) {
+  static boolean requiresStandardInput(CellValueSpec value) {
     return switch (value) {
-      case CellInput.Text text -> requiresStandardInput(text.source());
-      case CellInput.RichText richText ->
+      case CellValueSpec.Text text -> requiresStandardInput(text.value());
+      case CellValueSpec.RichText richText ->
           richText.runs().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case CellInput.Formula formula -> requiresStandardInput(formula.source());
-      case CellInput.RawFormula rawFormula -> requiresStandardInput(rawFormula.source());
+      case CellValueSpec.Formula formula -> requiresStandardInput(formula.value());
+      case CellValueSpec.RawFormula rawFormula -> requiresStandardInput(rawFormula.value());
       default -> false;
     };
   }
 
-  static boolean requiresStandardInput(RichTextRunInput run) {
-    return requiresStandardInput(run.source());
+  static boolean requiresStandardInput(RichTextRunSpec run) {
+    return requiresStandardInput(run.text());
   }
 
-  static boolean requiresStandardInput(CommentInput comment) {
+  static boolean requiresStandardInput(CommentSpec comment) {
     return requiresStandardInput(comment.text())
         || (comment.runs().isPresent()
             && comment.runs().orElseThrow().stream()
                 .anyMatch(SourceBackedInputRequirements::requiresStandardInput));
   }
 
-  static boolean requiresStandardInput(PictureInput picture) {
+  static boolean requiresStandardInput(PictureSpec picture) {
     return requiresStandardInput(picture.image())
-        || picture.description().stream().anyMatch(TextSourceInput.StandardInput.class::isInstance);
+        || picture.description().stream().anyMatch(TextSourceSpec.Stdin.class::isInstance);
   }
 
-  static boolean requiresStandardInput(SignatureLineInput signatureLine) {
+  static boolean requiresStandardInput(SignatureLineSpec signatureLine) {
     return signatureLine.plainSignature().isPresent()
         && requiresStandardInput(signatureLine.plainSignature().orElseThrow());
   }
 
-  static boolean requiresStandardInput(PictureDataInput pictureData) {
+  static boolean requiresStandardInput(PictureDataSpec pictureData) {
     return requiresStandardInput(pictureData.source());
   }
 
-  static boolean requiresStandardInput(ChartInput chart) {
+  static boolean requiresStandardInput(ChartSpec chart) {
     return requiresStandardInput(chart.title())
         || chart.plots().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
   }
 
-  static boolean requiresStandardInput(ChartTitleInput title) {
-    return title instanceof ChartTitleInput.Text text && requiresStandardInput(text.source());
+  static boolean requiresStandardInput(ChartTitleSpec title) {
+    return title instanceof ChartTitleSpec.Text text && requiresStandardInput(text.source());
   }
 
-  static boolean requiresStandardInput(ChartPlotInput plot) {
+  static boolean requiresStandardInput(ChartPlotSpec plot) {
     return switch (plot) {
-      case ChartPlotInput.Area area ->
+      case ChartPlotSpec.Area area ->
           area.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Area3D area3D ->
+      case ChartPlotSpec.Area3D area3D ->
           area3D.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Bar bar ->
+      case ChartPlotSpec.Bar bar ->
           bar.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Bar3D bar3D ->
+      case ChartPlotSpec.Bar3D bar3D ->
           bar3D.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Doughnut doughnut ->
+      case ChartPlotSpec.Doughnut doughnut ->
           doughnut.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Line line ->
+      case ChartPlotSpec.Line line ->
           line.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Line3D line3D ->
+      case ChartPlotSpec.Line3D line3D ->
           line3D.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Pie pie ->
+      case ChartPlotSpec.Pie pie ->
           pie.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Pie3D pie3D ->
+      case ChartPlotSpec.Pie3D pie3D ->
           pie3D.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Radar radar ->
+      case ChartPlotSpec.Radar radar ->
           radar.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Scatter scatter ->
+      case ChartPlotSpec.Scatter scatter ->
           scatter.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Surface surface ->
+      case ChartPlotSpec.Surface surface ->
           surface.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartPlotInput.Surface3D surface3D ->
+      case ChartPlotSpec.Surface3D surface3D ->
           surface3D.series().stream()
               .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
     };
   }
 
-  static boolean requiresStandardInput(ChartSeriesInput series) {
+  static boolean requiresStandardInput(ChartSeriesSpec series) {
     return requiresStandardInput(series.title());
   }
 
-  static boolean requiresStandardInput(ShapeInput shape) {
+  static boolean requiresStandardInput(ShapeSpec shape) {
     return switch (shape) {
-      case ShapeInput.SimpleShape simpleShape ->
+      case ShapeSpec.SimpleShape simpleShape ->
           simpleShape.text().isPresent() && requiresStandardInput(simpleShape.text().orElseThrow());
-      case ShapeInput.Connector _ -> false;
+      case ShapeSpec.Connector _ -> false;
     };
   }
 
-  static boolean requiresStandardInput(EmbeddedObjectInput embeddedObject) {
+  static boolean requiresStandardInput(EmbeddedObjectSpec embeddedObject) {
     return requiresStandardInput(embeddedObject.payload())
         || requiresStandardInput(embeddedObject.previewImage());
   }
 
-  static boolean requiresStandardInput(DataValidationInput validation) {
+  static boolean requiresStandardInput(DataValidationSpec validation) {
     return (validation.prompt().isPresent()
             && requiresStandardInput(validation.prompt().orElseThrow()))
         || (validation.errorAlert().isPresent()
             && requiresStandardInput(validation.errorAlert().orElseThrow()));
   }
 
-  static boolean requiresStandardInput(DataValidationPromptInput prompt) {
+  static boolean requiresStandardInput(DataValidationPromptSpec prompt) {
     return requiresStandardInput(prompt.title()) || requiresStandardInput(prompt.text());
   }
 
-  static boolean requiresStandardInput(DataValidationErrorAlertInput alert) {
+  static boolean requiresStandardInput(DataValidationErrorAlertSpec alert) {
     return requiresStandardInput(alert.title()) || requiresStandardInput(alert.text());
   }
 
-  static boolean requiresStandardInput(TableInput table) {
+  static boolean requiresStandardInput(TableSpec table) {
     return requiresStandardInput(table.comment());
   }
 
-  static boolean requiresStandardInput(PrintLayoutInput printLayout) {
+  static boolean requiresStandardInput(PrintLayoutSpec printLayout) {
     return requiresStandardInput(printLayout.header())
         || requiresStandardInput(printLayout.footer());
   }
 
-  static boolean requiresStandardInput(CustomXmlImportInput input) {
+  static boolean requiresStandardInput(CustomXmlImportSpec input) {
     return requiresStandardInput(input.xml());
   }
 
-  static boolean requiresStandardInput(HeaderFooterTextInput text) {
+  static boolean requiresStandardInput(HeaderFooterTextSpec text) {
     return requiresStandardInput(text.left())
         || requiresStandardInput(text.center())
         || requiresStandardInput(text.right());
   }
 
-  static boolean requiresStandardInput(TextSourceInput source) {
-    return source instanceof TextSourceInput.StandardInput;
+  static boolean requiresStandardInput(TextSourceSpec source) {
+    return source instanceof TextSourceSpec.Stdin;
   }
 
-  static boolean requiresStandardInput(BinarySourceInput source) {
-    return source instanceof BinarySourceInput.StandardInput;
+  static boolean requiresStandardInput(BinarySourceSpec source) {
+    return source instanceof BinarySourceSpec.Stdin;
   }
 
   static boolean requiresStandardInput(Selector selector) {

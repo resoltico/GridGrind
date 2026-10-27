@@ -1,0 +1,34 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Missing required field 'source'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "jsonPath" : "source",
+          "type" : "PATH_ONLY"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Missing required field 'source'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Add required field 'source' to the request payload.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : 1,
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

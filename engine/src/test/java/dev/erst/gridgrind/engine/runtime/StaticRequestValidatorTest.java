@@ -4,23 +4,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.semantics.BackendCapabilities;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -35,12 +38,12 @@ class StaticRequestValidatorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(new ExecutionModeInput.StreamingWrite()),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.mode(new ExecutionModeSpec.StreamingWrite()),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-sheet",
-                    new SheetSelector.ByName("Budget"),
+                    new StepId("ensure-sheet"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.EnsureSheet()),
                 setCell("set-first", "A1"),
                 setCell("set-second", "A2")));
@@ -48,7 +51,7 @@ class StaticRequestValidatorTest {
     List<String> messages =
         validator.validate(request).stream().map(GridGrindProblemDetail.Problem::message).toList();
     String unsupportedSetCell =
-        GridGrindExecutionModeMetadata.streamingWrite().unsupportedActionMessage("SET_CELL");
+        BackendCapabilities.streamingWrite().unsupportedActionMessage("SET_CELL");
 
     assertEquals(List.of(unsupportedSetCell, unsupportedSetCell), messages);
   }
@@ -59,15 +62,15 @@ class StaticRequestValidatorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
-                    "set-cell",
+                    new StepId("set-cell"),
                     new WorkbookSelector.Current(),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))),
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0))),
                 new MutationStep(
-                    "ensure-sheet",
+                    new StepId("ensure-sheet"),
                     new WorkbookSelector.Current(),
                     new WorkbookMutationAction.EnsureSheet())));
 
@@ -91,7 +94,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -100,7 +103,7 @@ class StaticRequestValidatorTest {
                   "target": { "type": "WORKBOOK_CURRENT" },
                   "action": {
                     "type": "SET_CELL",
-                    "value": { "type": "NUMBER", "number": 1.0 }
+                    "value": { "type": "NUMBER", "value": 1.0 }
                   }
                 },
                 {
@@ -134,7 +137,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "EXISTING", "path": "source.xlsx" },
               "persistence": { "type": "NONE" },
               "execution": { "mode": { "type": "EVENT_READ" } },
@@ -148,7 +151,7 @@ class StaticRequestValidatorTest {
                   "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
-                    "value": { "type": "NUMBER", "number": 1.0 }
+                    "value": { "type": "NUMBER", "value": 1.0 }
                   }
                 }
               ]
@@ -174,7 +177,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "OVERWRITE" },
               "steps": [
@@ -208,7 +211,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": null,
               "persistence": { "type": "NONE" },
               "execution": {
@@ -253,12 +256,12 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "steps": [
                 {
                   "stepId": "set-cell",
                   "target": { "type": "WORKBOOK_CURRENT" },
-                  "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "number": 1.0 } }
+                  "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": 1.0 } }
                 }
               ]
             }
@@ -268,7 +271,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": null,
@@ -280,13 +283,13 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "steps": [
                 {
                   "stepId": "set-cell",
                   "target": { "type": "WORKBOOK_CURRENT" },
-                  "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "number": 1.0 } }
+                  "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": 1.0 } }
                 }
               ]
             }
@@ -296,7 +299,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": null
@@ -308,13 +311,13 @@ class StaticRequestValidatorTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
             List.of(
                 new MutationStep(
-                    "set-cell",
+                    new StepId("set-cell"),
                     new WorkbookSelector.Current(),
-                    new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)))));
+                    new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0)))));
 
     List<GridGrindProblemDetail.Problem> rootProblems =
         validator.validate(
@@ -350,8 +353,8 @@ class StaticRequestValidatorTest {
 
   private static MutationStep setCell(String stepId, String address) {
     return new MutationStep(
-        stepId,
-        new CellSelector.ByAddress("Budget", address),
-        new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)));
+        new StepId(stepId),
+        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress(address)),
+        new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1.0)));
   }
 }

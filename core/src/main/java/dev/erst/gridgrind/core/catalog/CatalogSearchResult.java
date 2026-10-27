@@ -1,0 +1,34 @@
+package dev.erst.gridgrind.core.catalog;
+
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
+import java.util.List;
+import java.util.Objects;
+
+/** Case-insensitive protocol-catalog search result returned by discovery operations. */
+public record CatalogSearchResult(
+    ProtocolVersion protocolVersion,
+    String query,
+    int totalCount,
+    List<CatalogSearchMatch> matches) {
+  public CatalogSearchResult {
+    Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
+    query = TextValidation.requireNonBlank(query, "query");
+    Objects.requireNonNull(matches, "matches must not be null");
+    for (CatalogSearchMatch match : matches) {
+      if (match == null) {
+        throw new IllegalArgumentException("matches must not contain nulls");
+      }
+    }
+    matches = List.copyOf(matches);
+    if (totalCount != matches.size()) {
+      throw new IllegalArgumentException("totalCount must equal matches.size()");
+    }
+  }
+
+  /** Computes the match count for a search assembled by Java callers. */
+  public CatalogSearchResult(
+      ProtocolVersion protocolVersion, String query, List<CatalogSearchMatch> matches) {
+    this(protocolVersion, query, matches.size(), matches);
+  }
+}

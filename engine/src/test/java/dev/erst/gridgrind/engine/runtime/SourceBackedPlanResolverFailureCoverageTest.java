@@ -1,0 +1,545 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
+import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
+import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+/** Source-backed resolver failure and predicate coverage. */
+class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolverTestSupport {
+  @Test
+  void resolveRejectsWhitespaceDirectoryInvalidPathsAndEmptyBinarySources() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-errors-");
+    Files.writeString(workingDirectory.resolve("blank.txt"), "   ", StandardCharsets.UTF_8);
+    Files.writeString(workingDirectory.resolve("empty.txt"), "", StandardCharsets.UTF_8);
+    Path directory = Files.createDirectory(workingDirectory.resolve("dir"));
+    Path textLoop = workingDirectory.resolve("text-loop.txt");
+    Path binaryLoop = workingDirectory.resolve("binary-loop.bin");
+    Files.createSymbolicLink(textLoop, Path.of("text-loop.txt"));
+    Files.createSymbolicLink(binaryLoop, Path.of("binary-loop.bin"));
+
+    WorkbookPlan blankCellTextPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(
+                        new CellValueSpec.Text(TextSourceSpec.utf8File("blank.txt"))))));
+    assertEquals(
+        "cell text must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    SourceBackedPlanResolver.resolve(
+                        blankCellTextPlan,
+                        ExecutionInputBindingsFixtureSupport.bindings(
+                            workingDirectory, blankCellTextPlan)))
+            .getMessage());
+
+    WorkbookPlan emptyRichTextRunPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(
+                        new CellValueSpec.RichText(
+                            List.of(
+                                new RichTextRunSpec(
+                                    TextSourceSpec.utf8File("empty.txt"),
+                                    java.util.Optional.empty())))))));
+    assertEquals(
+        "rich-text run must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    SourceBackedPlanResolver.resolve(
+                        emptyRichTextRunPlan,
+                        ExecutionInputBindingsFixtureSupport.bindings(
+                            workingDirectory, emptyRichTextRunPlan)))
+            .getMessage());
+
+    WorkbookPlan directoryPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(
+                        new CellValueSpec.Text(
+                            TextSourceSpec.utf8File(directory.getFileName().toString()))))));
+    InputSourceReadException directoryFailure =
+        assertThrows(
+            InputSourceReadException.class,
+            () ->
+                SourceBackedPlanResolver.resolve(
+                    directoryPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, directoryPlan)));
+    assertTrue(directoryFailure.getMessage().contains("Failed to read cell text file"));
+
+    WorkbookPlan invalidPathPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(
+                        new CellValueSpec.Text(TextSourceSpec.utf8File("\0bad"))))));
+    InputSourceReadException invalidPathFailure =
+        assertThrows(
+            InputSourceReadException.class,
+            () ->
+                SourceBackedPlanResolver.resolve(
+                    invalidPathPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, invalidPathPlan)));
+    assertTrue(invalidPathFailure.getMessage().contains("Invalid cell text path"));
+
+    WorkbookPlan textLoopPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(
+                        new CellValueSpec.Text(TextSourceSpec.utf8File("text-loop.txt"))))));
+    UnsafePathAccessException textLoopFailure =
+        assertThrows(
+            UnsafePathAccessException.class,
+            () ->
+                SourceBackedPlanResolver.resolve(
+                    textLoopPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, textLoopPlan)));
+    assertTrue(textLoopFailure.getMessage().contains("symbolic links are not accepted"));
+
+    WorkbookPlan missingBinaryPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetPicture(
+                        picture(
+                            "Logo",
+                            new PictureDataSpec(
+                                ExcelPictureFormat.PNG, BinarySourceSpec.file("missing.bin")),
+                            twoCellAnchor(),
+                            null)))));
+    InputSourceNotFoundException missingBinaryFailure =
+        assertThrows(
+            InputSourceNotFoundException.class,
+            () ->
+                SourceBackedPlanResolver.resolve(
+                    missingBinaryPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, missingBinaryPlan)));
+    assertEquals("picture payload", missingBinaryFailure.inputKind());
+
+    WorkbookPlan binaryLoopPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetPicture(
+                        picture(
+                            "Logo",
+                            new PictureDataSpec(
+                                ExcelPictureFormat.PNG, BinarySourceSpec.file("binary-loop.bin")),
+                            twoCellAnchor(),
+                            null)))));
+    UnsafePathAccessException binaryLoopFailure =
+        assertThrows(
+            UnsafePathAccessException.class,
+            () ->
+                SourceBackedPlanResolver.resolve(
+                    binaryLoopPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, binaryLoopPlan)));
+    assertTrue(binaryLoopFailure.getMessage().contains("symbolic links are not accepted"));
+
+    // Exercise the IOException (not NoSuchFileException) path in the text and binary read helpers.
+    // On POSIX systems a mode-000 file passes path-security validation but fails at the actual
+    // read. These blocks are skipped when setReadable returns false (e.g. running as root).
+    Path unreadableTextFile = workingDirectory.resolve("unreadable-text.txt");
+    Files.writeString(unreadableTextFile, "some text content", StandardCharsets.UTF_8);
+    boolean textReadableRevoked = unreadableTextFile.toFile().setReadable(false, false);
+    if (textReadableRevoked) {
+      WorkbookPlan ioTextFailurePlan =
+          request(
+              new WorkbookPlan.WorkbookSource.New(),
+              new WorkbookPlan.WorkbookPersistence.None(),
+              mutations(
+                  mutate(
+                      new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                      new CellMutationAction.SetCell(
+                          new CellValueSpec.Text(
+                              TextSourceSpec.utf8File("unreadable-text.txt"))))));
+      InputSourceReadException ioTextFailure =
+          assertThrows(
+              InputSourceReadException.class,
+              () ->
+                  SourceBackedPlanResolver.resolve(
+                      ioTextFailurePlan,
+                      ExecutionInputBindingsFixtureSupport.bindings(
+                          workingDirectory, ioTextFailurePlan)));
+      assertTrue(ioTextFailure.getMessage().contains("Failed to read cell text file"));
+      unreadableTextFile.toFile().setReadable(true, false);
+    }
+
+    Path unreadableBinaryFile = workingDirectory.resolve("unreadable-binary.bin");
+    Files.write(unreadableBinaryFile, new byte[] {1, 2, 3});
+    boolean binaryReadableRevoked = unreadableBinaryFile.toFile().setReadable(false, false);
+    if (binaryReadableRevoked) {
+      WorkbookPlan ioBinaryFailurePlan =
+          request(
+              new WorkbookPlan.WorkbookSource.New(),
+              new WorkbookPlan.WorkbookPersistence.None(),
+              mutations(
+                  mutate(
+                      new SheetSelector.ByName(new SheetName("Budget")),
+                      new DrawingMutationAction.SetPicture(
+                          picture(
+                              "Logo",
+                              new PictureDataSpec(
+                                  ExcelPictureFormat.PNG,
+                                  BinarySourceSpec.file("unreadable-binary.bin")),
+                              twoCellAnchor(),
+                              null)))));
+      InputSourceReadException ioBinaryFailure =
+          assertThrows(
+              InputSourceReadException.class,
+              () ->
+                  SourceBackedPlanResolver.resolve(
+                      ioBinaryFailurePlan,
+                      ExecutionInputBindingsFixtureSupport.bindings(
+                          workingDirectory, ioBinaryFailurePlan)));
+      assertTrue(ioBinaryFailure.getMessage().contains("Failed to read picture payload file"));
+      unreadableBinaryFile.toFile().setReadable(true, false);
+    }
+
+    WorkbookPlan emptyBinaryPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Budget")),
+                    new DrawingMutationAction.SetEmbeddedObject(
+                        new EmbeddedObjectSpec(
+                            "Payload",
+                            "Payload",
+                            "payload.bin",
+                            "open",
+                            BinarySourceSpec.standardInput(),
+                            inlinePictureData(),
+                            twoCellAnchor())))));
+    assertEquals(
+        "embedded-object payload must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    SourceBackedPlanResolver.resolve(
+                        emptyBinaryPlan,
+                        ExecutionInputBindingsFixtureSupport.bindings(
+                            workingDirectory, new byte[0])))
+            .getMessage());
+  }
+
+  @Test
+  void helperPredicatesCoverRemainingSourceBackedBranches() throws IOException {
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new AssertionStep(
+                new StepId("assert-owner"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                new CellAssertion.Value(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new InspectionStep(
+                new StepId("inspect-cells"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                new SheetIntrospectionQuery.GetCells())));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(new CellValueSpec.NumberValue(1.0d)));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(new CellValueSpec.BooleanValue(true)));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellValueSpec.Date(LocalDate.of(2026, 4, 18))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellValueSpec.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellValueSpec.RawFormula(TextSourceSpec.standardInput())));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CommentSpec(
+                TextSourceSpec.inline("Ada"),
+                "Ada",
+                false,
+                java.util.Optional.of(
+                    List.of(
+                        new RichTextRunSpec(
+                            TextSourceSpec.inline("Ada"), java.util.Optional.empty()))),
+                java.util.Optional.empty())));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CommentSpec(
+                TextSourceSpec.inline("Ada"),
+                "Ada",
+                false,
+                java.util.Optional.of(
+                    List.of(
+                        new RichTextRunSpec(
+                            TextSourceSpec.standardInput(), java.util.Optional.empty()))),
+                java.util.Optional.empty())));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            picture("Logo", inlinePictureData(), twoCellAnchor(), TextSourceSpec.inline("Logo"))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            picture(
+                "Logo",
+                new PictureDataSpec(ExcelPictureFormat.PNG, BinarySourceSpec.standardInput()),
+                twoCellAnchor(),
+                null)));
+
+    assertFalse(SourceBackedInputRequirements.requiresStandardInput(new ChartTitleSpec.None()));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new ChartTitleSpec.Formula("Budget!$A$1")));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new ChartTitleSpec.Text(TextSourceSpec.inline("Title"))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new ChartTitleSpec.Text(TextSourceSpec.standardInput())));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            simpleShape("Shape", twoCellAnchor(), "roundRect", TextSourceSpec.inline("Shape"))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            simpleShape("Shape", twoCellAnchor(), "roundRect", null)));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            dataValidation(
+                new DataValidationRuleSpec.ExplicitList(List.of("Open")),
+                false,
+                false,
+                new DataValidationPromptSpec(
+                    TextSourceSpec.inline("Prompt"), TextSourceSpec.inline("Body"), false),
+                new DataValidationErrorAlertSpec(
+                    ExcelDataValidationErrorStyle.STOP,
+                    TextSourceSpec.inline("Alert"),
+                    TextSourceSpec.inline("Body"),
+                    false))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            dataValidation(
+                new DataValidationRuleSpec.ExplicitList(List.of("Open")),
+                false,
+                false,
+                null,
+                new DataValidationErrorAlertSpec(
+                    ExcelDataValidationErrorStyle.STOP,
+                    TextSourceSpec.standardInput(),
+                    TextSourceSpec.inline("Body"),
+                    false))));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationPromptSpec(
+                TextSourceSpec.inline("Prompt"), TextSourceSpec.inline("Body"), false)));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationPromptSpec(
+                TextSourceSpec.inline("Prompt"), TextSourceSpec.standardInput(), false)));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationErrorAlertSpec(
+                ExcelDataValidationErrorStyle.STOP,
+                TextSourceSpec.inline("Alert"),
+                TextSourceSpec.inline("Body"),
+                false)));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationErrorAlertSpec(
+                ExcelDataValidationErrorStyle.STOP,
+                TextSourceSpec.standardInput(),
+                TextSourceSpec.inline("Body"),
+                false)));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            printLayoutWithHeader(
+                new HeaderFooterTextSpec(
+                    TextSourceSpec.inline("left"),
+                    TextSourceSpec.inline("center"),
+                    TextSourceSpec.inline("right")))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            printLayoutWithFooter(
+                new HeaderFooterTextSpec(
+                    TextSourceSpec.standardInput(),
+                    TextSourceSpec.inline(""),
+                    TextSourceSpec.inline("")))));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new HeaderFooterTextSpec(
+                TextSourceSpec.inline("left"),
+                TextSourceSpec.inline("center"),
+                TextSourceSpec.inline("right"))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new HeaderFooterTextSpec(
+                TextSourceSpec.inline("left"),
+                TextSourceSpec.inline("center"),
+                TextSourceSpec.standardInput())));
+
+    Path absoluteFile = Files.createTempFile("gridgrind-source-backed-absolute-", ".txt");
+    try (RequestPathAccess access =
+        new RequestPathAccess(
+            Path.of(""),
+            (prefix, suffix) -> Files.createTempFile(prefix, suffix),
+            ExecutionInputBindingsFixtureSupport.noPublicationGrant())) {
+      assertThrows(
+          RequestPathEscapeException.class,
+          () ->
+              access.materializeRead(
+                  absoluteFile.toString(), "test input", "gridgrind-test-", ".txt"));
+    }
+  }
+
+  @Test
+  void rawFormulaResolutionRetainsAnUnresolvedSourceForBatchPreflightCollection()
+      throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-raw-formula-resolution-");
+    TextSourceSpec.Utf8File missingSource = TextSourceSpec.utf8File("missing-formula.txt");
+    InputResolutionFailures failures = new InputResolutionFailures();
+    ExecutionInputBindings bindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)
+            .collectingInputResolutionFailures(failures);
+
+    assertSame(
+        missingSource, SourceBackedPlanResolver.resolveRawFormulaSource(missingSource, bindings));
+    assertThrows(InputResolutionBatchException.class, failures::throwIfAny);
+  }
+
+  @Test
+  void resolveReportsMissingFilesAndUnavailableStandardInput() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-missing-");
+    WorkbookPlan missingFilePlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(
+                        new CellValueSpec.Text(new TextSourceSpec.Utf8File("missing.txt"))))));
+    InputSourceNotFoundException notFound =
+        assertThrows(
+            InputSourceNotFoundException.class,
+            () ->
+                SourceBackedPlanResolver.resolve(
+                    missingFilePlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+    assertEquals("cell text", notFound.inputKind());
+
+    WorkbookPlan standardInputPlan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new CellMutationAction.SetCell(
+                        new CellValueSpec.Text(new TextSourceSpec.Stdin())))));
+    InputSourceUnavailableException unavailable =
+        assertThrows(
+            InputSourceUnavailableException.class,
+            () ->
+                SourceBackedPlanResolver.resolve(
+                    standardInputPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+    assertEquals("cell text", unavailable.inputKind());
+  }
+
+  @Test
+  void binaryResolutionSupportsBothScopedAndPreparedPathCapabilities() throws Exception {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-binary-");
+    BinarySourceSpec.InlineBase64 inline = new BinarySourceSpec.InlineBase64("AQI=");
+    ExecutionInputBindings bindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory);
+
+    assertEquals(
+        inline, SourceBackedPlanResolver.resolveBinarySource(inline, bindings, "picture payload"));
+
+    try (RequestPathAccess access =
+        new RequestPathAccess(
+            workingDirectory, bindings.tempFileFactory(), bindings.executionGrant())) {
+      assertEquals(
+          inline,
+          SourceBackedPlanResolver.resolveBinarySource(
+              inline, bindings.withRequestPathAccess(access), "picture payload"));
+    }
+  }
+}

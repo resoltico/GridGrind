@@ -1,0 +1,59 @@
+package dev.erst.gridgrind.core.problem;
+
+import dev.erst.gridgrind.core.result.WorkbookResultSupport;
+import dev.erst.gridgrind.core.vocabulary.TextValidation;
+import java.util.List;
+import java.util.Objects;
+
+/** Deterministic problem payloads returned for unsuccessful executions. */
+public interface GridGrindProblemDetail {
+  /** Deterministic failure payload returned for unsuccessful executions. */
+  record Problem(
+      GridGrindProblemCode code,
+      GridGrindProblemCategory category,
+      GridGrindProblemRecovery recovery,
+      String title,
+      String message,
+      String resolution,
+      ProblemContext context,
+      List<ProblemCause> causes) {
+    /** Validates one deterministic problem payload and normalizes optional nested fields. */
+    public Problem {
+      Objects.requireNonNull(code, "code must not be null");
+      Objects.requireNonNull(category, "category must not be null");
+      Objects.requireNonNull(recovery, "recovery must not be null");
+      Objects.requireNonNull(title, "title must not be null");
+      Objects.requireNonNull(message, "message must not be null");
+      Objects.requireNonNull(resolution, "resolution must not be null");
+      Objects.requireNonNull(context, "context must not be null");
+      causes = WorkbookResultSupport.copyProblemCauses(causes);
+    }
+
+    /**
+     * Constructs a Problem from a code and message, deriving category, recovery, title, and
+     * resolution from the code.
+     */
+    public static Problem of(GridGrindProblemCode code, String message, ProblemContext context) {
+      return new Problem(
+          code,
+          code.category(),
+          code.recovery(),
+          code.title(),
+          message,
+          code.resolutionFor(message, context),
+          context,
+          List.of());
+    }
+  }
+
+  /** Individual GridGrind-classified diagnostic entries preserved for troubleshooting. */
+  record ProblemCause(GridGrindProblemCode code, String message, String stage) {
+    public ProblemCause {
+      Objects.requireNonNull(code, "code must not be null");
+      Objects.requireNonNull(message, "message must not be null");
+      Objects.requireNonNull(stage, "stage must not be null");
+      TextValidation.requireNonBlank(message, "message");
+      TextValidation.requireNonBlank(stage, "stage");
+    }
+  }
+}

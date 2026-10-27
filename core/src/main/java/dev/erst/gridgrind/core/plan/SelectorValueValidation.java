@@ -1,0 +1,53 @@
+package dev.erst.gridgrind.core.plan;
+
+/** Shared scalar validation for selector families. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_CELL_RETURNING_READ_COUNT
+})
+final class SelectorValueValidation {
+  private SelectorValueValidation() {}
+
+  static String requireNonBlank(String value, String fieldName) {
+    return SelectorTextValidation.requireNonBlank(value, fieldName);
+  }
+
+  static String requirePivotTableName(String value, String fieldName) {
+    return SelectorTextValidation.requirePivotTableName(value, fieldName);
+  }
+
+  static dev.erst.gridgrind.core.vocabulary.RangeRef requireOrderedRange(
+      dev.erst.gridgrind.core.vocabulary.RangeRef value, String fieldName) {
+    return SelectorTextValidation.requireOrderedRange(value, fieldName);
+  }
+
+  static int requirePositive(int value, String fieldName) {
+    return SelectorNumberValidation.requirePositive(value, fieldName);
+  }
+
+  static int requireNonNegative(int value, String fieldName) {
+    return SelectorNumberValidation.requireNonNegative(value, fieldName);
+  }
+
+  static int requireNonZero(int value, String fieldName) {
+    return SelectorNumberValidation.requireNonZero(value, fieldName);
+  }
+
+  static int requireRowIndexWithinBounds(int value, String fieldName) {
+    return SelectorNumberValidation.requireRowIndexWithinBounds(value, fieldName);
+  }
+
+  static int requireColumnIndexWithinBounds(int value, String fieldName) {
+    return SelectorNumberValidation.requireColumnIndexWithinBounds(value, fieldName);
+  }
+
+  static void requireWindowSize(int rowCount, int columnCount) {
+    SelectorNumberValidation.requireWindowSize(rowCount, columnCount);
+  }
+
+  static String prefixedValidationMessage(String fieldName, String message) {
+    if (message == null || message.isBlank() || message.startsWith(fieldName + " ")) {
+      return message;
+    }
+    return fieldName + " " + message;
+  }
+}

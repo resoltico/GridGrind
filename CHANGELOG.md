@@ -1,9 +1,25 @@
 # Changelog
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.md](docs/CHANGELOG_ARCHIVE.md).
+Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](CHANGELOG_ARCHIVE.md).
 
 ## [Unreleased]
+
+- JSON protocolVersion is now integer 1, replacing V3; regenerate requests from current templates and update consumers. Wire variants use type or status.
+- CellValueSpec variants use value for scalar or source payloads and runs for rich text; update request producers. Explicit null is rejected instead of applying omission defaults.
+- CLI automation must use explicit run, doctor, catalog, schema, recipe and template subcommands; flat command flags and implicit stdin selection are removed. See [CLI](docs/CLI.md).
+- Java integrations use core specs, patches, reports, typed scalar records and the canonical grant; update model imports and constructors. Engine model mirrors are removed.
+- GridGrind-owned code uses MPL-2.0, retaining third-party terms. Previously distributed MIT copies retain their permissions; review source-distribution duties in [LICENSE](LICENSE).
+- Request, grant and response JSON Schemas are available through schema subcommands; structured intake diagnostics preserve independent valid fragments and exact JSON locations.
+- Pure authoring, recipes and discovery live in core; JSON codecs and schema handling live in json, allowing model-only Java consumers to omit the workbook engine.
+- Build logic uses Kotlin and the shared Java 26 target. Runtime and POI parity tests live in engine; architecture-tests verifies product boundaries and record wire leaves.
+- Coverage and mutation scores are advisory; custom source-shape budgets are removed. Run ./gradlew mutationReport for the configured mutation scopes.
+- Fuzzing uses the root Gradle build: check replays committed seeds; ./gradlew fuzz selects opt-in active campaigns. The nested Jazzer build and its operator scripts are removed.
+- check.sh uses one Gradle task graph for deterministic checks, coverage and distributions. Docker and contributor-container suites are separate Gradle tasks.
+- Local builds use 0.0.0-dev. Version tags drive verified releases and multi-architecture containers; release notes require one nonempty, dated changelog entry matching the tag.
+- Active fuzzing defaults to 60 s, 10,000 executions and 32 KiB inputs, with one retained corpus. Unreviewed findings block another run; see [fuzzing](docs/FUZZING.md).
+- Mutation reports reuse unchanged inputs and cover native validation paths. PIT uses 512 MiB heaps and at most four workers; focused class/test/mutator selections support short probes.
+- Docker CI runs alongside deterministic checks while Gate requires both. Configuration-cache diagnostics retain three reports after check; shared cache writes stay on the default branch.
 
 ## [0.76.0] - 2026-09-09
 

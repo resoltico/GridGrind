@@ -1,14 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.ResolvedPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,6 +17,7 @@ import java.util.Objects;
 /** Request-scoped mutable facts for one full-XSSF execution; never shared beyond that execution. */
 final class FullXssfWorkflowState {
   private final WorkbookWorkflowExecutionContext executionContext;
+  private final ResolvedPlan plan;
   private final WorkbookLocation workbookLocation;
   private final List<AssertionResult> hostAssertions = new ArrayList<>();
   private final List<Preservation> hostPreservation = new ArrayList<>();
@@ -27,12 +29,14 @@ final class FullXssfWorkflowState {
   private HostAcceptanceSnapshot hostAcceptanceSnapshot = HostAcceptanceSnapshot.empty();
 
   FullXssfWorkflowState(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookPlan request,
-      ExcelWorkbook workbook,
+      ProtocolVersion protocolVersion,
+      ResolvedPlan plan,
+      XssfWorkbook workbook,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
+    this.plan = Objects.requireNonNull(plan, "plan must not be null");
+    WorkbookPlan request = plan.request();
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(workbook, "workbook must not be null");
@@ -56,6 +60,10 @@ final class FullXssfWorkflowState {
         ExecutionRequestPaths.workbookLocationFor(
             request.source(), request.persistence(), bindings.workingDirectory());
     calculation = CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
+  }
+
+  ResolvedPlan plan() {
+    return plan;
   }
 
   WorkbookWorkflowExecutionContext executionContext() {

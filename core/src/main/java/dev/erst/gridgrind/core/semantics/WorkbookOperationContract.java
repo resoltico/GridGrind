@@ -1,0 +1,118 @@
+package dev.erst.gridgrind.core.semantics;
+
+import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
+import dev.erst.gridgrind.core.plan.Assertion;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.InspectionQuery;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SelectorTypes;
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * The complete static targeting contract for one concrete workbook operation.
+ *
+ * <p>Step records deliberately model one syntactically valid operation-target pair even when the
+ * pair is not executable. This contract owns the later static compatibility decision so request
+ * analysis can retain independently bound sibling fragments.
+ */
+final class WorkbookOperationContract {
+  private static final BackendCapabilities.EventReadMode EVENT_READ =
+      BackendCapabilities.eventRead();
+  private static final BackendCapabilities.StreamingWriteMode STREAMING_WRITE =
+      BackendCapabilities.streamingWrite();
+
+  private final Class<? extends Record> operationType;
+  private final WorkbookOperationTargetContract targetSelectorContract;
+  private final OperationSemantics semantics;
+
+  WorkbookOperationContract(
+      Class<? extends Record> operationType,
+      WorkbookOperationTargetContract targetSelectorContract,
+      OperationSemantics semantics) {
+    this.operationType = Objects.requireNonNull(operationType, "operationType must not be null");
+    Objects.requireNonNull(targetSelectorContract, "targetSelectorContract must not be null");
+    this.targetSelectorContract = targetSelectorContract;
+    this.semantics = Objects.requireNonNull(semantics, "semantics must not be null");
+  }
+
+  /** Returns the target families published for this operation's catalog entry. */
+  WorkbookStepTargeting.TargetSurface targetSurface() {
+    return targetSelectorContract.targetSurface();
+  }
+
+  /** Returns the incompatibility message when this operation cannot act on {@code target}. */
+  Optional<String> targetViolation(Object operation, Selector target, String operationId) {
+    Objects.requireNonNull(operation, "operation must not be null");
+    Objects.requireNonNull(target, "target must not be null");
+    Objects.requireNonNull(operationId, "operationId must not be null");
+    var accepted = targetSelectorContract.acceptedSelectors(operation);
+    for (Class<? extends Selector> selectorType : accepted) {
+      if (selectorType.isInstance(target)) {
+        return Optional.empty();
+      }
+    }
+    return Optional.of(
+        operationId
+            + " requires target type "
+            + SelectorTargetingSupport.humanTargetTypes(toArray(accepted))
+            + " but got "
+            + SelectorTypes.typeIdFor(target.getClass()));
+  }
+
+  Class<? extends Selector>[] acceptedSelectors(Object operation) {
+    return toArray(targetSelectorContract.acceptedSelectors(operation));
+  }
+
+  /** Returns the static semantics owned by this concrete operation contract. */
+  OperationSemantics semantics() {
+    return semantics;
+  }
+
+  /** Returns the execution-mode incompatibility for this operation when one exists. */
+  Optional<String> executionModeViolation(ExecutionModeSpec executionMode) {
+    Objects.requireNonNull(executionMode, "executionMode must not be null");
+    return switch (executionMode) {
+      case ExecutionModeSpec.FullXssf _ -> Optional.empty();
+      case ExecutionModeSpec.EventRead _ -> eventReadViolation();
+      case ExecutionModeSpec.StreamingWrite _ -> streamingWriteViolation();
+    };
+  }
+
+  private Optional<String> eventReadViolation() {
+    if (!InspectionQuery.class.isAssignableFrom(operationType)) {
+      return Optional.of(EVENT_READ.unsupportedStepMessage(stepKind()));
+    }
+    @SuppressWarnings("unchecked")
+    Class<? extends InspectionQuery> queryType = (Class<? extends InspectionQuery>) operationType;
+    return EVENT_READ.allowedQueries().contains(queryType)
+        ? Optional.empty()
+        : Optional.of(
+            EVENT_READ.unsupportedQueryMessage(
+                ProtocolTypeMetadataSupport.requiredTypeId(operationType)));
+  }
+
+  private Optional<String> streamingWriteViolation() {
+    if (!MutationAction.class.isAssignableFrom(operationType)) {
+      return Optional.empty();
+    }
+    @SuppressWarnings("unchecked")
+    Class<? extends MutationAction> actionType = (Class<? extends MutationAction>) operationType;
+    return STREAMING_WRITE.allowedActions().contains(actionType)
+        ? Optional.empty()
+        : Optional.of(
+            STREAMING_WRITE.unsupportedActionMessage(
+                ProtocolTypeMetadataSupport.requiredTypeId(operationType)));
+  }
+
+  private String stepKind() {
+    return Assertion.class.isAssignableFrom(operationType) ? "ASSERTION" : "MUTATION";
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Class<? extends Selector>[] toArray(
+      java.util.List<Class<? extends Selector>> values) {
+    return values.toArray(new Class[0]);
+  }
+}

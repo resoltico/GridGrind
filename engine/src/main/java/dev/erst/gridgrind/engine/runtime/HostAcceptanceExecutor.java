@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -16,80 +16,78 @@ import org.jspecify.annotations.Nullable;
 
 /** Evaluates host-owned terminal acceptance after mutations and before final publication. */
 final class HostAcceptanceExecutor {
-  private final ExecutionStepSupport stepSupport;
+  private final StepExecution stepSupport;
 
-  HostAcceptanceExecutor(ExecutionStepSupport stepSupport) {
+  HostAcceptanceExecutor(StepExecution stepSupport) {
     this.stepSupport = Objects.requireNonNull(stepSupport, "stepSupport must not be null");
   }
 
   HostAcceptanceSnapshot captureBeforeMutation(
-      GridGrindHostAcceptancePolicy policy,
-      ExcelWorkbook workbook,
+      AcceptancePolicy policy,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       @Nullable Path materializedSourceArtifact)
       throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
     return switch (Objects.requireNonNull(policy, "policy must not be null")) {
-      case GridGrindHostAcceptancePolicy.MinimumOnly _ -> HostAcceptanceSnapshot.empty();
-      case GridGrindHostAcceptancePolicy.RequireAll requireAll ->
+      case AcceptancePolicy.MinimumOnly _ -> HostAcceptanceSnapshot.empty();
+      case AcceptancePolicy.RequireAll requireAll ->
           captureWorkbookRequirements(
               requireAll, workbook, workbookLocation, materializedSourceArtifact);
     };
   }
 
   HostAcceptanceVerification verifyWorkbook(
-      GridGrindHostAcceptancePolicy policy,
+      AcceptancePolicy policy,
       HostAcceptanceSnapshot snapshot,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation)
       throws IOException, AssertionFailedException, PreservationFailedException {
     return switch (Objects.requireNonNull(policy, "policy must not be null")) {
-      case GridGrindHostAcceptancePolicy.MinimumOnly _ -> verifyMinimumOnly();
-      case GridGrindHostAcceptancePolicy.RequireAll requireAll ->
+      case AcceptancePolicy.MinimumOnly _ -> verifyMinimumOnly();
+      case AcceptancePolicy.RequireAll requireAll ->
           verifyWorkbook(requireAll, snapshot, workbook, workbookLocation);
     };
   }
 
   /** Establishes any host-required opaque-part byte identity against a verified staged package. */
   List<WorkbookExecutionEvidence.Preservation> verifyStagedArtifact(
-      GridGrindHostAcceptancePolicy policy,
-      HostAcceptanceSnapshot snapshot,
-      Path stagedWorkbookArtifact)
+      AcceptancePolicy policy, HostAcceptanceSnapshot snapshot, Path stagedWorkbookArtifact)
       throws IOException, PreservationFailedException {
     Objects.requireNonNull(snapshot, "snapshot must not be null");
     Objects.requireNonNull(stagedWorkbookArtifact, "stagedWorkbookArtifact must not be null");
     return switch (Objects.requireNonNull(policy, "policy must not be null")) {
-      case GridGrindHostAcceptancePolicy.MinimumOnly _ -> List.of();
-      case GridGrindHostAcceptancePolicy.RequireAll requireAll ->
+      case AcceptancePolicy.MinimumOnly _ -> List.of();
+      case AcceptancePolicy.RequireAll requireAll ->
           verifyStagedOpaquePartPreservation(requireAll, snapshot, stagedWorkbookArtifact);
     };
   }
 
   HostAcceptanceVerification verifyWorkbook(
-      GridGrindHostAcceptancePolicy.RequireAll requireAll,
+      AcceptancePolicy.RequireAll requireAll,
       HostAcceptanceSnapshot snapshot,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation)
       throws IOException, AssertionFailedException, PreservationFailedException {
     List<AssertionResult> assertions = new ArrayList<>();
     List<WorkbookExecutionEvidence.Preservation> preservation = new ArrayList<>();
-    for (GridGrindHostAcceptancePolicy.Requirement requirement : requireAll.requirements()) {
+    for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
       switch (requirement) {
-        case GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions terminalAssertions -> {
+        case AcceptancePolicy.Requirement.TerminalAssertions terminalAssertions -> {
           for (var assertion : terminalAssertions.assertions()) {
             assertions.add(
                 stepSupport.executeAssertionStep(
                     assertion,
                     workbook,
                     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null"),
-                    new ExecutionModeInput.FullXssf()));
+                    new ExecutionModeSpec.FullXssf()));
           }
         }
-        case GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts facts ->
+        case AcceptancePolicy.Requirement.PreserveInspectionFacts facts ->
             verifyWorkbookSemanticPreservation(
                 facts, snapshot, workbook, workbookLocation, preservation);
-        case GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts _ -> {}
-        case GridGrindHostAcceptancePolicy.Requirement.RequireCalculation _ -> {}
+        case AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts _ -> {}
+        case AcceptancePolicy.Requirement.RequireCalculation _ -> {}
       }
     }
     return new HostAcceptanceVerification(assertions, preservation);
@@ -100,13 +98,12 @@ final class HostAcceptanceExecutor {
    * event-read or streaming-write execution.
    */
   HostAcceptanceVerification verifyMaterializedTerminalAcceptance(
-      GridGrindHostAcceptancePolicy policy, Path workbookPath, WorkbookLocation workbookLocation)
+      AcceptancePolicy policy, Path workbookPath, WorkbookLocation workbookLocation)
       throws IOException, AssertionFailedException {
     List<AssertionResult> assertions = new ArrayList<>();
-    if (policy instanceof GridGrindHostAcceptancePolicy.RequireAll requireAll) {
-      for (GridGrindHostAcceptancePolicy.Requirement requirement : requireAll.requirements()) {
-        if (requirement
-            instanceof GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions terminal) {
+    if (policy instanceof AcceptancePolicy.RequireAll requireAll) {
+      for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
+        if (requirement instanceof AcceptancePolicy.Requirement.TerminalAssertions terminal) {
           for (var assertion : terminal.assertions()) {
             assertions.add(
                 stepSupport.executeAssertionAgainstMaterializedPath(
@@ -125,23 +122,21 @@ final class HostAcceptanceExecutor {
   }
 
   private HostAcceptanceSnapshot captureWorkbookRequirements(
-      GridGrindHostAcceptancePolicy.RequireAll requireAll,
-      ExcelWorkbook workbook,
+      AcceptancePolicy.RequireAll requireAll,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       @Nullable Path materializedSourceArtifact)
       throws IOException {
     List<HostAcceptanceSnapshot.SemanticPreservation> baselines = new ArrayList<>();
     List<HostAcceptanceSnapshot.OpaquePartPreservation> opaquePartBaselines = new ArrayList<>();
-    for (GridGrindHostAcceptancePolicy.Requirement requirement : requireAll.requirements()) {
-      if (requirement
-          instanceof GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts facts) {
+    for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
+      if (requirement instanceof AcceptancePolicy.Requirement.PreserveInspectionFacts facts) {
         baselines.add(
             new HostAcceptanceSnapshot.SemanticPreservation(
                 facts,
                 captureWorkbookInspections(facts.inspections(), workbook, workbookLocation)));
       }
-      if (requirement
-          instanceof GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts parts) {
+      if (requirement instanceof AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts parts) {
         if (materializedSourceArtifact == null) {
           throw new IOException(
               "host opaque-part preservation requires a materialized source workbook");
@@ -154,14 +149,13 @@ final class HostAcceptanceExecutor {
   }
 
   private static List<WorkbookExecutionEvidence.Preservation> verifyStagedOpaquePartPreservation(
-      GridGrindHostAcceptancePolicy.RequireAll requireAll,
+      AcceptancePolicy.RequireAll requireAll,
       HostAcceptanceSnapshot snapshot,
       Path stagedWorkbookArtifact)
       throws IOException, PreservationFailedException {
     List<WorkbookExecutionEvidence.Preservation> preservation = new ArrayList<>();
-    for (GridGrindHostAcceptancePolicy.Requirement requirement : requireAll.requirements()) {
-      if (requirement
-          instanceof GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts parts) {
+    for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
+      if (requirement instanceof AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts parts) {
         preservation.add(
             OpaqueOoxmlPartPreservation.establish(
                 snapshot.sourceFor(parts), stagedWorkbookArtifact, parts.partNames()));
@@ -171,9 +165,9 @@ final class HostAcceptanceExecutor {
   }
 
   private void verifyWorkbookSemanticPreservation(
-      GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts facts,
+      AcceptancePolicy.Requirement.PreserveInspectionFacts facts,
       HostAcceptanceSnapshot snapshot,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       List<WorkbookExecutionEvidence.Preservation> preservation)
       throws IOException, PreservationFailedException {
@@ -183,30 +177,31 @@ final class HostAcceptanceExecutor {
   }
 
   private static void establishSemanticPreservation(
-      GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts facts,
+      AcceptancePolicy.Requirement.PreserveInspectionFacts facts,
       List<InspectionResult> baseline,
       List<InspectionResult> observed,
       List<WorkbookExecutionEvidence.Preservation> preservation)
       throws PreservationFailedException {
-    List<String> stepIds =
+    List<dev.erst.gridgrind.core.vocabulary.StepId> stepIds =
         facts.inspections().stream().map(inspection -> inspection.stepId()).toList();
     if (!baseline.equals(observed)) {
       throw new PreservationFailedException(
-          WorkbookExecutionEvidence.Preservation.Kind.SEMANTIC, stepIds);
+          WorkbookExecutionEvidence.Preservation.Kind.SEMANTIC,
+          stepIds.stream().map(dev.erst.gridgrind.core.vocabulary.StepId::value).toList());
     }
     preservation.add(new WorkbookExecutionEvidence.Preservation.SemanticEstablished(stepIds));
   }
 
   private List<InspectionResult> captureWorkbookInspections(
-      List<dev.erst.gridgrind.contract.step.InspectionStep> inspections,
-      ExcelWorkbook workbook,
+      List<dev.erst.gridgrind.core.plan.InspectionStep> inspections,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation)
       throws IOException {
     List<InspectionResult> results = new ArrayList<>(inspections.size());
     for (var inspection : inspections) {
       results.add(
           stepSupport.executeInspectionStep(
-              inspection, workbook, workbookLocation, new ExecutionModeInput.FullXssf()));
+              inspection, workbook, workbookLocation, new ExecutionModeSpec.FullXssf()));
     }
     return List.copyOf(results);
   }

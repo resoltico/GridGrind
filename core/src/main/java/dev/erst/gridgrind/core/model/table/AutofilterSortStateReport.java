@@ -1,0 +1,45 @@
+package dev.erst.gridgrind.core.model.table;
+
+import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+/** Factual sort-state metadata stored on one autofilter definition. */
+public record AutofilterSortStateReport(
+    RangeLabel range,
+    boolean caseSensitive,
+    boolean columnSort,
+    Optional<ExcelAutofilterSortMethod> sortMethod,
+    List<AutofilterSortConditionReport> conditions) {
+  /** Creates a report sort-state with no explicit sort-method override. */
+  public static AutofilterSortStateReport withoutSortMethod(
+      RangeLabel range,
+      boolean caseSensitive,
+      boolean columnSort,
+      List<AutofilterSortConditionReport> conditions) {
+    return new AutofilterSortStateReport(
+        range, caseSensitive, columnSort, Optional.empty(), conditions);
+  }
+
+  public AutofilterSortStateReport {
+    Objects.requireNonNull(range, "range must not be null");
+    Optional<ExcelAutofilterSortMethod> normalizedSortMethod =
+        Objects.requireNonNull(sortMethod, "sortMethod must not be null");
+    sortMethod = normalizedSortMethod;
+    conditions = copyConditions(conditions);
+  }
+
+  private static List<AutofilterSortConditionReport> copyConditions(
+      List<AutofilterSortConditionReport> conditions) {
+    Objects.requireNonNull(conditions, "conditions must not be null");
+    List<AutofilterSortConditionReport> copiedConditions = new ArrayList<>(conditions.size());
+    for (AutofilterSortConditionReport condition : conditions) {
+      copiedConditions.add(
+          Objects.requireNonNull(condition, "conditions must not contain null values"));
+    }
+    return List.copyOf(copiedConditions);
+  }
+}

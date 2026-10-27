@@ -2,9 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference;
+import dev.erst.gridgrind.core.source.BinarySourceSpec;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -17,32 +17,30 @@ class InputResolutionFailureTest {
     assertEquals(
         InputReference.path("source-backed text", "note.txt"),
         InputResolutionFailure.forSource(
-                failure, Optional.empty(), new TextSourceInput.Utf8File("note.txt"))
+                failure, Optional.empty(), new TextSourceSpec.Utf8File("note.txt"))
             .input());
     assertEquals(
         InputReference.kind("source-backed text"),
-        InputResolutionFailure.forSource(
-                failure, Optional.empty(), new TextSourceInput.StandardInput())
+        InputResolutionFailure.forSource(failure, Optional.empty(), new TextSourceSpec.Stdin())
             .input());
     assertEquals(
         InputReference.path("source-backed binary", "payload.bin"),
         InputResolutionFailure.forSource(
-                failure, Optional.empty(), new BinarySourceInput.File("payload.bin"))
+                failure, Optional.empty(), new BinarySourceSpec.File("payload.bin"))
             .input());
     assertEquals(
         InputReference.kind("source-backed binary"),
-        InputResolutionFailure.forSource(
-                failure, Optional.empty(), new BinarySourceInput.StandardInput())
+        InputResolutionFailure.forSource(failure, Optional.empty(), new BinarySourceSpec.Stdin())
             .input());
     assertEquals(
         InputReference.unknown(),
         InputResolutionFailure.forSource(
-                failure, Optional.empty(), new TextSourceInput.Inline("text"))
+                failure, Optional.empty(), new TextSourceSpec.Inline("text"))
             .input());
     assertEquals(
         InputReference.unknown(),
         InputResolutionFailure.forSource(
-                failure, Optional.empty(), new BinarySourceInput.InlineBase64("dGVzdA=="))
+                failure, Optional.empty(), new BinarySourceSpec.InlineBase64("dGVzdA=="))
             .input());
     assertEquals(
         InputReference.unknown(),

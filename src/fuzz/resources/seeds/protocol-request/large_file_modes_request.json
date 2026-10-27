@@ -1,0 +1,146 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "generated-workbooks/gridgrind-large-file-modes.xlsx",
+    "ifExists": "REPLACE"
+  },
+  "execution": {
+    "mode": {
+      "type": "STREAMING_WRITE"
+    },
+    "calculation": {
+      "markRecalculateOnOpen": true,
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      }
+    }
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      }
+    },
+    {
+      "stepId": "step-02-append-row",
+      "action": {
+        "type": "APPEND_ROW",
+        "values": [
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Team"
+            }
+          },
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Task"
+            }
+          },
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Hours"
+            }
+          }
+        ]
+      },
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      }
+    },
+    {
+      "stepId": "step-03-append-row",
+      "action": {
+        "type": "APPEND_ROW",
+        "values": [
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Ops"
+            }
+          },
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Badge prep"
+            }
+          },
+          {
+            "type": "NUMBER",
+            "number": 6.5
+          }
+        ]
+      },
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      }
+    },
+    {
+      "stepId": "step-04-append-row",
+      "action": {
+        "type": "APPEND_ROW",
+        "values": [
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Facilities"
+            }
+          },
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Desk setup"
+            }
+          },
+          {
+            "type": "NUMBER",
+            "number": 4.0
+          }
+        ]
+      },
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId": "workbook",
+      "target": {
+        "type": "WORKBOOK_CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_SUMMARY"
+      },
+      "stepId": "ledger-sheet",
+      "target": {
+        "type": "SHEET_BY_NAME",
+        "name": "Ledger"
+      }
+    }
+  ]
+}

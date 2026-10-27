@@ -1,0 +1,45 @@
+package dev.erst.gridgrind.core.model.value;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+/** Tests for HyperlinkTarget authored construction and normalization. */
+class HyperlinkTargetTest {
+  @Test
+  void normalizesEmailAndFileUriTargets() {
+    assertEquals("team@example.com", new HyperlinkTarget.Email("mailto:team@example.com").email());
+    assertEquals("/tmp/report.xlsx", new HyperlinkTarget.File("file:///tmp/report.xlsx").path());
+  }
+
+  @Test
+  void validatesHyperlinkTargetInputs() {
+    assertThrows(NullPointerException.class, () -> new HyperlinkTarget.Url(null));
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Url("relative/path"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new HyperlinkTarget.Url("https://exa mple.com"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new HyperlinkTarget.Url("file:///tmp/report.xlsx"));
+    assertThrows(NullPointerException.class, () -> new HyperlinkTarget.Email(null));
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Email("mailto:"));
+    assertThrows(NullPointerException.class, () -> new HyperlinkTarget.File(null));
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.File(" "));
+    assertThrows(
+        IllegalArgumentException.class, () -> new HyperlinkTarget.File("https://example.com"));
+    assertThrows(NullPointerException.class, () -> new HyperlinkTarget.Document(null));
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Document(" "));
+  }
+
+  @Test
+  void emailRejectsAddressWithoutAtSign() {
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Email("notanemail"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new HyperlinkTarget.Email("mailto:notanemail"));
+  }
+
+  @Test
+  void emailRejectsAddressWithEmptyLocalPartOrDomain() {
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Email("@example.com"));
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Email("user@"));
+  }
+}

@@ -1,0 +1,36 @@
+package dev.erst.gridgrind.core.plan;
+
+import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
+import dev.erst.gridgrind.core.problem.FieldValidationProblemMappers;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
+import java.util.Objects;
+import java.util.Optional;
+
+/** Text and naming validation for mutation actions. */
+final class MutationActionNameValidation {
+  private MutationActionNameValidation() {}
+
+  static void requireNonBlank(String value, String fieldName) {
+    Objects.requireNonNull(value, fieldName + " must not be null");
+    if (value.isBlank()) {
+      throw invalidField(
+          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_BLANK));
+    }
+  }
+
+  static void requirePivotTableName(String name) {
+    Objects.requireNonNull(name, "name must not be null");
+    ExcelPivotTableNaming.violation(name)
+        .ifPresent(
+            violation -> {
+              throw invalidField(FieldValidationProblemMappers.pivotTableName("name"));
+            });
+  }
+
+  static InvalidRequestException invalidField(FieldValidationProblem problem) {
+    return new InvalidRequestException(
+        problem, Optional.empty(), Optional.empty(), Optional.empty(), null);
+  }
+}

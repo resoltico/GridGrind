@@ -13,6 +13,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Binds one request-owned path to a no-follow directory descriptor chain during phase four. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_NO_FOLLOW_REQUEST_PATH_BINDING
+})
 final class RequestPathDescriptorBinder {
   private RequestPathDescriptorBinder() {}
 
@@ -21,7 +24,7 @@ final class RequestPathDescriptorBinder {
       String rawPath,
       Path executionRoot,
       boolean requireLeaf,
-      RequestPathBinding.DirectoryStreamFactory directoryStreams) // LIM-029
+      RequestPathBinding.DirectoryStreamFactory directoryStreams)
       throws IOException {
     Objects.requireNonNull(rawPath, "rawPath must not be null");
     Objects.requireNonNull(executionRoot, "executionRoot must not be null");

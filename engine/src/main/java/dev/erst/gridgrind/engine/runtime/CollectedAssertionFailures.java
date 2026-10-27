@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,7 +10,7 @@ import java.util.Objects;
 final class CollectedAssertionFailures {
   private final List<Failure> failures = new ArrayList<>();
 
-  void add(int stepIndex, String stepId, GridGrindProblemDetail.Problem problem) {
+  void add(int stepIndex, StepId stepId, GridGrindProblemDetail.Problem problem) {
     failures.add(new Failure(stepIndex, stepId, problem));
   }
 
@@ -22,7 +23,7 @@ final class CollectedAssertionFailures {
   }
 
   /** One collected assertion failure in authored step order. */
-  record Failure(int stepIndex, String stepId, GridGrindProblemDetail.Problem problem) {
+  record Failure(int stepIndex, StepId stepId, GridGrindProblemDetail.Problem problem) {
     Failure {
       Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(problem, "problem must not be null");

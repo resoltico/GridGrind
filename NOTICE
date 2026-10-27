@@ -1,7 +1,15 @@
 GridGrind
 Copyright (c) 2026 Ervins Strauhmanis
 
-Licensed under the MIT License. See LICENSE for the complete terms.
+GridGrind-owned files are licensed under the Mozilla Public License, v. 2.0
+(SPDX: MPL-2.0). See LICENSE for the complete terms and scope.
+
+Corresponding Source Code Form is available at
+https://github.com/resoltico/GridGrind; official release sources are at the
+matching v<version> tag and the source archives linked from
+https://github.com/resoltico/GridGrind/releases. Redistributors of modified
+executables must provide their corresponding modified sources and tell
+recipients how to obtain them under MPL 2.0 Section 3.2.
 
 This notice describes third-party software and artifacts distributed with
 GridGrind and identifies whether they belong to the executable JAR, source
@@ -514,7 +522,7 @@ https://launchpad.net/ubuntu/+sources
 
 The image's package copyright files and published SBOM identify the additional
 Ubuntu and font packages. GridGrind does not relicense those components or
-represent their terms as part of GridGrind's MIT license. Anyone redistributing
+represent their terms as part of GridGrind's MPL 2.0 license. Anyone redistributing
 the aggregate image must assess and satisfy the applicable notice, source-
 availability, trademark, patent, and other license conditions for that
 distribution.

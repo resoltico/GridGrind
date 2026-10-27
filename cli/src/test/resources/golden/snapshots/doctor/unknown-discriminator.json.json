@@ -1,0 +1,35 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Unknown type value 'MYSTERY'; valid values: EXISTING, NEW",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 31,
+          "jsonPath" : "source.type",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Unknown type value 'MYSTERY'; valid values: EXISTING, NEW",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Replace field 'source.type' with one supported type value. Inspect the protocol catalog when you need the allowed values.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : 1,
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

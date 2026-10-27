@@ -1,15 +1,17 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
+import static dev.erst.gridgrind.engine.runtime.ResolutionIdentity.sameReference;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CellGridInput;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CellRowInput;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
+import dev.erst.gridgrind.core.model.value.CellGridSpec;
+import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.io.IOException;
 import java.util.List;
 
@@ -33,6 +35,8 @@ final class SourceBackedMutationActionResolver {
     return switch (action) {
       case CellMutationAction.SetCell setCell -> resolveSetCell(setCell, bindings);
       case CellMutationAction.SetRange setRange -> resolveSetRange(setRange, bindings);
+      case CellMutationAction.SetArrayFormula setArrayFormula ->
+          resolveSetArrayFormula(setArrayFormula, bindings);
       case CellMutationAction.SetComment setComment -> resolveSetComment(setComment, bindings);
       case CellMutationAction.AppendRow appendRow -> resolveAppendRow(appendRow, bindings);
       default -> action;
@@ -75,7 +79,8 @@ final class SourceBackedMutationActionResolver {
 
   private static CellMutationAction resolveSetCell(
       CellMutationAction.SetCell setCell, ExecutionInputBindings bindings) throws IOException {
-    CellInput resolvedValue = SourceBackedPlanResolver.resolveCellInput(setCell.value(), bindings);
+    CellValueSpec resolvedValue =
+        SourceBackedPlanResolver.resolveCellInput(setCell.value(), bindings);
     return sameReference(resolvedValue, setCell.value())
         ? setCell
         : new CellMutationAction.SetCell(resolvedValue);
@@ -83,14 +88,33 @@ final class SourceBackedMutationActionResolver {
 
   private static CellMutationAction resolveSetRange(
       CellMutationAction.SetRange setRange, ExecutionInputBindings bindings) throws IOException {
-    if (!(setRange.rows() instanceof CellGridInput.Typed typedRows)) {
+    if (!(setRange.rows() instanceof CellGridSpec.Typed typedRows)) {
       return setRange;
     }
-    List<List<CellInput>> resolvedRows =
+    List<List<CellValueSpec>> resolvedRows =
         SourceBackedPlanResolver.resolveRows(typedRows.cells(), bindings);
     return sameReference(resolvedRows, typedRows.cells())
         ? setRange
-        : new CellMutationAction.SetRange(new CellGridInput.Typed(resolvedRows));
+        : new CellMutationAction.SetRange(new CellGridSpec.Typed(resolvedRows));
+  }
+
+  private static CellMutationAction resolveSetArrayFormula(
+      CellMutationAction.SetArrayFormula action, ExecutionInputBindings bindings)
+      throws IOException {
+    TextSourceSpec source = action.formula().source();
+    TextSourceSpec resolved =
+        SourceBackedPlanResolver.resolveTextSource(source, bindings, true, "array formula");
+    if (sameReference(resolved, source) || !(resolved instanceof TextSourceSpec.Inline)) {
+      return action;
+    }
+    try {
+      return new CellMutationAction.SetArrayFormula(new ArrayFormulaSpec(resolved));
+    } catch (IllegalArgumentException failure) {
+      if (bindings.collectInputResolutionFailure(failure, source)) {
+        return action;
+      }
+      throw failure;
+    }
   }
 
   private static CellMutationAction resolveSetComment(
@@ -105,14 +129,14 @@ final class SourceBackedMutationActionResolver {
 
   private static CellMutationAction resolveAppendRow(
       CellMutationAction.AppendRow appendRow, ExecutionInputBindings bindings) throws IOException {
-    if (!(appendRow.values() instanceof CellRowInput.Typed typedValues)) {
+    if (!(appendRow.values() instanceof CellRowSpec.Typed typedValues)) {
       return appendRow;
     }
-    List<CellInput> resolvedValues =
+    List<CellValueSpec> resolvedValues =
         SourceBackedPlanResolver.resolveCells(typedValues.cells(), bindings);
     return sameReference(resolvedValues, typedValues.cells())
         ? appendRow
-        : new CellMutationAction.AppendRow(new CellRowInput.Typed(resolvedValues));
+        : new CellMutationAction.AppendRow(new CellRowSpec.Typed(resolvedValues));
   }
 
   private static DrawingMutationAction resolveSetPicture(

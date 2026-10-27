@@ -1,8 +1,0 @@
-Replay Result
-Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/apply_style_formatting_depth_roundtrip_success.bin
-Harness: xlsx-roundtrip
-Outcome: SUCCESS
-Input Bytes: 17
-Command Count: 3
-Style Kinds: (none)
-Command Kinds: CREATE_SHEET=3

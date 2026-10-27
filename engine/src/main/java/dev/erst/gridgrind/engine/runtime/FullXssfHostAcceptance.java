@@ -1,12 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -15,17 +14,16 @@ import org.jspecify.annotations.Nullable;
 /** Applies the host-owned conditions that a full-XSSF plan cannot weaken or bypass. */
 final class FullXssfHostAcceptance {
   private final HostAcceptanceExecutor acceptanceExecutor;
-  private final ExecutionCalculationSupport calculationSupport;
+  private final CalculationWorkflow calculationSupport;
 
   FullXssfHostAcceptance(
-      HostAcceptanceExecutor acceptanceExecutor, ExecutionCalculationSupport calculationSupport) {
+      HostAcceptanceExecutor acceptanceExecutor, CalculationWorkflow calculationSupport) {
     this.acceptanceExecutor = acceptanceExecutor;
     this.calculationSupport = calculationSupport;
   }
 
   Context capture(FullXssfWorkflowState state, ExecutionInputBindings bindings) throws IOException {
-    GridGrindHostAcceptancePolicy policy =
-        ((GridGrindExecutionGrant.Bounded) bindings.executionGrant()).hostAcceptancePolicy();
+    AcceptancePolicy policy = bindings.executionGrant().acceptancePolicy();
     state.hostAcceptanceSnapshot(
         acceptanceExecutor.captureBeforeMutation(
             policy,
@@ -35,16 +33,16 @@ final class FullXssfHostAcceptance {
     return new Context(policy);
   }
 
-  Optional<dev.erst.gridgrind.contract.dto.GridGrindProblemDetail.Problem> requireCalculation(
+  Optional<dev.erst.gridgrind.core.problem.GridGrindProblemDetail.Problem> requireCalculation(
       FullXssfWorkflowState state, Context context) {
     if (!requiresStrictCalculation(context.policy())) {
       return Optional.empty();
     }
     var policy =
-        new CalculationPolicyInput(
-            new CalculationStrategyInput.RequireEvaluation(),
+        new CalculationPolicySpec(
+            new CalculationStrategySpec.RequireEvaluation(),
             state.executionContext().request().calculationPolicy().markRecalculateOnOpen());
-    ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
+    CalculationWorkflow.CalculationExecutionOutcome outcome =
         calculationSupport.executeCalculationPolicy(
             state.executionContext().workbook(),
             state.executionContext().request(),
@@ -107,15 +105,14 @@ final class FullXssfHostAcceptance {
     };
   }
 
-  private static boolean requiresStrictCalculation(GridGrindHostAcceptancePolicy policy) {
+  private static boolean requiresStrictCalculation(AcceptancePolicy policy) {
     return switch (policy) {
-      case GridGrindHostAcceptancePolicy.MinimumOnly _ -> false;
-      case GridGrindHostAcceptancePolicy.RequireAll requireAll ->
+      case AcceptancePolicy.MinimumOnly _ -> false;
+      case AcceptancePolicy.RequireAll requireAll ->
           requireAll.requirements().stream()
-              .anyMatch(
-                  GridGrindHostAcceptancePolicy.Requirement.RequireCalculation.class::isInstance);
+              .anyMatch(AcceptancePolicy.Requirement.RequireCalculation.class::isInstance);
     };
   }
 
-  record Context(GridGrindHostAcceptancePolicy policy) {}
+  record Context(AcceptancePolicy policy) {}
 }

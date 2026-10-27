@@ -1,0 +1,43 @@
+package dev.erst.gridgrind.core.model.table;
+
+import dev.erst.gridgrind.core.metadata.CatalogType;
+import java.util.Objects;
+import java.util.Optional;
+
+/** Factual metadata for one persisted workbook table column. */
+@CatalogType(id = "TableColumnReport", summary = "Exact table-column report.", displayOrder = 95)
+public record TableColumnReport(
+    long id,
+    String name,
+    Optional<String> uniqueName,
+    Optional<String> totalsRowLabel,
+    Optional<String> totalsRowFunction,
+    Optional<String> calculatedColumnFormula) {
+  /** Creates a table-column report with no auxiliary metadata. */
+  public TableColumnReport(long id, String name) {
+    this(id, name, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+  }
+
+  public TableColumnReport {
+    if (id < 0L) {
+      throw new IllegalArgumentException("id must not be negative");
+    }
+    Objects.requireNonNull(name, "name must not be null");
+    uniqueName = normalizeOptional(uniqueName);
+    totalsRowLabel = normalizeOptional(totalsRowLabel);
+    totalsRowFunction = normalizeOptional(totalsRowFunction);
+    calculatedColumnFormula = normalizeOptional(calculatedColumnFormula);
+  }
+
+  private static Optional<String> normalizeOptional(Optional<String> value) {
+    Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    if (normalized.isPresent()) {
+      String text = normalized.orElseThrow();
+      if (text.isBlank()) {
+        return Optional.empty();
+      }
+      return Optional.of(text);
+    }
+    return Optional.empty();
+  }
+}

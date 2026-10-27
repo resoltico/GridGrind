@@ -1,0 +1,28 @@
+package dev.erst.gridgrind.core.model.style;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+/** Protocol-facing factual report for one conditional-formatting differential border patch. */
+public record DifferentialBorderReport(
+    Optional<DifferentialBorderSideReport> all,
+    Optional<DifferentialBorderSideReport> top,
+    Optional<DifferentialBorderSideReport> right,
+    Optional<DifferentialBorderSideReport> bottom,
+    Optional<DifferentialBorderSideReport> left) {
+  public DifferentialBorderReport {
+    Objects.requireNonNull(all, "all must not be null");
+    Objects.requireNonNull(top, "top must not be null");
+    Objects.requireNonNull(right, "right must not be null");
+    Objects.requireNonNull(bottom, "bottom must not be null");
+    Objects.requireNonNull(left, "left must not be null");
+    if (hasNoSides(all, top, right, bottom, left)) {
+      throw new IllegalArgumentException("border must set at least one side");
+    }
+  }
+
+  private static boolean hasNoSides(Optional<?>... sides) {
+    return Stream.of(sides).allMatch(Optional::isEmpty);
+  }
+}

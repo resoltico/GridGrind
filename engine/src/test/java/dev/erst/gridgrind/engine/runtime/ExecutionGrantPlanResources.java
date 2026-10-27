@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -22,16 +22,16 @@ final class ExecutionGrantPlanResources {
     return java.util.stream.Stream.concat(source, externalWorkbooks).distinct().toList();
   }
 
-  static GridGrindExecutionGrant.PublicationAuthority publicationAuthority(
+  static ExecutionGrant.PublicationAuthority publicationAuthority(
       WorkbookPlan.WorkbookPersistence persistence, Path workingDirectory) {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ ->
-          new GridGrindExecutionGrant.PublicationAuthority.None();
+          new ExecutionGrant.PublicationAuthority.None();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+          new ExecutionGrant.PublicationAuthority.SaveAs(
               resolve(saveAs.path(), workingDirectory), saveAs.ifExists());
       case WorkbookPlan.WorkbookPersistence.Overwrite _ ->
-          new GridGrindExecutionGrant.PublicationAuthority.OverwriteSource();
+          new ExecutionGrant.PublicationAuthority.OverwriteSource();
     };
   }
 

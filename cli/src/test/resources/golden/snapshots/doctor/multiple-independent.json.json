@@ -1,0 +1,107 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Field 'source' must be omitted when absent; explicit null is not accepted.",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 21,
+          "jsonPath" : "source",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Field 'source' must be omitted when absent; explicit null is not accepted.",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Remove field 'source' entirely when it is absent; explicit null is not part of the request contract.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Unknown type value 'UNKNOWN'; valid values: NONE, OVERWRITE, SAVE_AS",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 50,
+          "jsonPath" : "persistence.type",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Unknown type value 'UNKNOWN'; valid values: NONE, OVERWRITE, SAVE_AS",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Replace field 'persistence.type' with one supported type value. Inspect the protocol catalog when you need the allowed values.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Field 'steps' must be a JSON array",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 68,
+          "jsonPath" : "steps",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Field 'steps' must be a JSON array",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Fix field 'steps' so it matches the published request shape.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Unknown field 'unexpected'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 79,
+          "jsonPath" : "unexpected",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "READ_REQUEST"
+      },
+      "message" : "Unknown field 'unexpected'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Remove or rename unexpected field 'unexpected' so the request matches the protocol.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : 1,
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

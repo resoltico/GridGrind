@@ -1,0 +1,349 @@
+package dev.erst.gridgrind.json.intake;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.InvalidEncodingException;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+
+/** Focused JSON problem-surface and limit-behavior tests for {@link GridGrindJson}. */
+@SuppressWarnings("NotJavadoc")
+class GridGrindJsonProblemSurfaceTest {
+  @Test
+  void validatesNullArgumentsAndDoesNotCloseOutputStreams() throws IOException {
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class, () -> GridGrindJson.readRequest((InputStream) null))
+            .getMessage());
+    assertEquals(
+        "bytes must not be null",
+        assertThrows(
+                NullPointerException.class, () -> GridGrindJson.readWorkbookResult((byte[]) null))
+            .getMessage());
+    assertEquals(
+        "catalog must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJsonOutput.writeProtocolCatalogBytes(null))
+            .getMessage());
+    assertEquals(
+        "value must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJsonOutput.writeTypeEntry(new ByteArrayOutputStream(), null))
+            .getMessage());
+
+    try (TrackingOutputStream outputStream = new TrackingOutputStream()) {
+      GridGrindJsonOutput.writeRequest(
+          outputStream,
+          WorkbookPlan.standard(
+              new WorkbookPlan.WorkbookSource.New(),
+              new WorkbookPlan.WorkbookPersistence.None(),
+              dev.erst.gridgrind.core.plan.ExecutionPolicySpec.defaults(),
+              dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
+              List.of()),
+          false);
+      assertFalse(outputStream.closed);
+    }
+  }
+
+  @Test
+  void rejectsOversizedRequestPayloads() {
+    byte[] oversized =
+        ("{\"source\":{\"type\":\"NEW\"},\"steps\":[],\"pad\":\""
+                + "x".repeat((int) GridGrindJson.maxRequestDocumentBytes())
+                + "\"}")
+            .getBytes(StandardCharsets.UTF_8);
+
+    InvalidRequestException failure =
+        assertThrows(InvalidRequestException.class, () -> GridGrindJson.readRequest(oversized));
+
+    assertEquals(
+        "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
+        failure.getMessage());
+  }
+
+  @Test
+  void rejectsOversizedRequestStreamsWithTheSameProductOwnedMessage() {
+    byte[] oversized =
+        ("{\"planId\":\""
+                + "x".repeat((int) GridGrindJson.maxRequestDocumentBytes())
+                + "\",\"source\":{\"type\":\"NEW\"},\"steps\":[]}")
+            .getBytes(StandardCharsets.UTF_8);
+
+    InvalidRequestException failure =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> GridGrindJson.readRequest(new ByteArrayInputStream(oversized)));
+
+    assertEquals(
+        "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
+        failure.getMessage());
+  }
+
+  @Test
+  void classifiesMalformedUtf8AsInvalidEncoding() {
+    byte[] malformedUtf8 = new byte[] {'{', '"', 'x', '"', ':', (byte) 0xC3, (byte) 0x28};
+
+    InvalidEncodingException failure =
+        assertThrows(
+            InvalidEncodingException.class, () -> GridGrindJson.readRequest(malformedUtf8));
+
+    assertEquals("Request bytes must be valid UTF-8", failure.getMessage());
+  }
+
+  @Test
+  void readsInvalidResponsesAndCatalogsUsingPublicProblemTypes() {
+    InvalidJsonException invalidResponse =
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readWorkbookResult("{".getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException invalidCatalog =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readProtocolCatalog(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "requestTemplate": { "source": { "type": "NEW" }, "steps": [] }
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(Optional.of(1), invalidResponse.jsonLine());
+    assertEquals(Optional.of(2), invalidResponse.jsonColumn());
+    assertTrue(invalidCatalog.getMessage().startsWith("Missing required field '"));
+  }
+
+  @Test
+  void surfacesSimilarValidTypeIdsForTyposInKnownActionTypes() {
+    InvalidRequestShapeException typo =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "typo",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "action": { "type": "COVE_SHEET" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(
+        typo.getMessage().contains("MOVE_SHEET") && typo.getMessage().contains("COPY_SHEET"),
+        "typo matching multiple action types should list all similar candidates");
+  }
+
+  @Test
+  void surfacesUnknownTypeMessageForAtJsonSubTypesAnnotatedFields() {
+    InvalidRequestShapeException badAnchor =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "bad-anchor",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "action": {
+                            "type": "SET_CHART",
+                            "chart": {
+                              "name": "C",
+                              "anchor": { "type": "ONE_CELL" },
+                              "title": { "type": "NONE" },
+                              "legend": { "type": "VISIBLE", "position": "RIGHT" },
+                              "displayBlanksAs": "GAP",
+                              "plotOnlyVisibleCells": true,
+                              "plots": [{"type": "BAR", "series": []}]
+                            }
+                          }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(
+        badAnchor.getMessage().startsWith("Unknown type value 'ONE_CELL'"),
+        "unknown anchor type from @JsonSubTypes-annotated field should be reported");
+  }
+
+  @Test
+  void requestUnknownFieldDiagnosticsPointAtTheOffendingFieldOnce() {
+    InvalidRequestShapeException topLevelUnknownField =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [],
+                      "bogus": 1
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException nestedUnknownField =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "summary",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "query": {
+                            "type": "GET_WORKBOOK_SUMMARY",
+                            "extra": true
+                          }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals("Unknown field 'bogus'", topLevelUnknownField.getMessage());
+    assertEquals(Optional.of("bogus"), topLevelUnknownField.jsonPath());
+    assertEquals("Unknown field 'steps[0].query.extra'", nestedUnknownField.getMessage());
+    assertEquals(Optional.of("steps[0].query.extra"), nestedUnknownField.jsonPath());
+  }
+
+  @Test
+  void rejectsAnEmptyRootMemberNameThroughTheNormalRequestShapeBoundary() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "": {}
+                    }
+                    """));
+
+    assertEquals("Unknown field '[\"\"]'", exception.getMessage());
+    assertEquals(Optional.of("[\"\"]"), exception.jsonPath());
+  }
+
+  @Test
+  void rejectsAnEmptyUnionDiscriminatorThroughTheNormalRequestShapeBoundary() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "blank-target-type",
+                          "target": { "type": "" },
+                          "action": { "type": "ENSURE_SHEET" }
+                        }
+                      ]
+                    }
+                    """));
+
+    assertEquals("Unknown type value ''", exception.getMessage());
+    assertEquals(Optional.of("steps[0].target.type"), exception.jsonPath());
+  }
+
+  @Test
+  void rejectsAnEmptyDuplicateKeyPayloadThroughTheNormalRequestShapeBoundary() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "": 1,
+                      "": 2
+                    }
+                    """));
+
+    assertEquals("Unknown field '[\"\"]'", exception.getMessage());
+    assertEquals(Optional.of("[\"\"]"), exception.jsonPath());
+  }
+
+  @Test
+  void rejectsAnEmptyEnumValueThroughTheNormalRequestShapeBoundary() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": 1,
+                      "execution": { "assertionMode": "" },
+                      "steps": [],
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" }
+                    }
+                    """));
+
+    assertTrue(
+        exception
+            .getMessage()
+            .startsWith("Unsupported value '' for field 'execution.assertionMode'"));
+    assertEquals(Optional.of("execution.assertionMode"), exception.jsonPath());
+  }
+
+  /** Tracks whether the request writer closes the destination stream after producing JSON. */
+  private static final class TrackingOutputStream extends ByteArrayOutputStream {
+    private boolean closed;
+
+    @Override
+    public void close() {
+      closed = true;
+    }
+  }
+}

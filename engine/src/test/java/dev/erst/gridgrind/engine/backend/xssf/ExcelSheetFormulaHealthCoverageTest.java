@@ -1,0 +1,363 @@
+package dev.erst.gridgrind.engine.backend.xssf;
+
+import static dev.erst.gridgrind.engine.backend.xssf.ExcelStyleTestAccess.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
+import dev.erst.gridgrind.core.model.layout.WindowRowReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.engine.formulas.FormulaContext;
+import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
+import dev.erst.gridgrind.engine.formulas.UnsupportedFormulaException;
+import dev.erst.gridgrind.engine.styles.StyleAdapter;
+import java.util.List;
+import java.util.Set;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.junit.jupiter.api.Test;
+
+/** XssfSheet formula readback and formula-health coverage. */
+class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
+  @Test
+  void wrapsFormulaFailuresDuringReadsAndSnapshots() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      Row row = poiSheet.createRow(0);
+      row.createCell(0).setCellFormula("1+1");
+
+      XssfSheet writeFailureSheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              poiWorkbook.getCreationHelper().createFormulaEvaluator());
+      InvalidFormulaException invalidWrite =
+          assertThrows(
+              InvalidFormulaException.class,
+              () -> writeFailureSheet.cells().setCell("B1", new ResolvedFormula("SUM(")));
+      assertEquals("SUM(", invalidWrite.formula());
+      InvalidFormulaException parserStateWrite =
+          assertThrows(
+              InvalidFormulaException.class,
+              () -> writeFailureSheet.cells().setCell("C1", new ResolvedFormula("[^owe_e`ffffff")));
+      assertEquals("[^owe_e`ffffff", parserStateWrite.formula());
+
+      FormulaEvaluator baseEvaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      XssfSheet invalidFormulaSheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              FormulaRuntimeTestDouble.failingEvaluation(
+                  baseEvaluator, new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula")));
+
+      InvalidFormulaException invalidSnapshot =
+          assertThrows(
+              InvalidFormulaException.class, () -> invalidFormulaSheet.cells().snapshotCell("A1"));
+      assertEquals("1+1", invalidSnapshot.formula());
+      InvalidFormulaException invalidNumber =
+          assertThrows(
+              InvalidFormulaException.class, () -> invalidFormulaSheet.cells().number("A1"));
+      assertEquals("1+1", invalidNumber.formula());
+      InvalidFormulaException invalidBoolean =
+          assertThrows(InvalidFormulaException.class, () -> invalidFormulaSheet.cells().bool("A1"));
+      assertEquals("1+1", invalidBoolean.formula());
+
+      XssfSheet displayFailureSheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              FormulaRuntimeTestDouble.alwaysFail(
+                  new org.apache.poi.ss.formula.FakeFormulaFailure("display failure")));
+      InvalidFormulaException displayFailure =
+          assertThrows(
+              InvalidFormulaException.class, () -> displayFailureSheet.cells().snapshotCell("A1"));
+      assertEquals("1+1", displayFailure.formula());
+
+      XssfSheet unsupportedFormulaSheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              FormulaRuntimeTestDouble.alwaysFail(
+                  new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException(
+                      "unsupported")));
+      UnsupportedFormulaException unsupported =
+          assertThrows(
+              UnsupportedFormulaException.class,
+              () -> unsupportedFormulaSheet.cells().snapshotCell("A1"));
+      assertEquals("1+1", unsupported.formula());
+
+      XssfSheet nullEvaluatedCellSheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
+      CellReport blankEvaluatedFormula = nullEvaluatedCellSheet.cells().snapshotCell("A1");
+      assertEquals("FORMULA", blankEvaluatedFormula.type());
+      assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().number("A1"));
+      assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().bool("A1"));
+      assertInstanceOf(
+          dev.erst.gridgrind.core.model.value.CellValue.Blank.class,
+          ((CellReport.FormulaReport) blankEvaluatedFormula).value().orElseThrow());
+    }
+  }
+
+  @Test
+  void previewRowReturnsEmptyCellsForGapRows() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Sparse");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
+
+      sheet.cells().setCell("A1", new CellValue.Text("first"));
+      sheet.cells().setCell("A3", new CellValue.Text("third"));
+
+      List<WindowRowReport> preview = sheet.cells().preview(3, 1);
+      assertEquals(3, preview.size());
+      assertEquals(1, preview.get(0).cells().size());
+      assertEquals(0, preview.get(1).cells().size());
+      assertEquals(1, preview.get(2).cells().size());
+    }
+  }
+
+  @Test
+  void derivesFormulaHealthFindingsAcrossExternalVolatileErrorAndFailureCases() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
+
+      sheet.cells().setCell("A1", new ResolvedFormula("INDIRECT(\"[External.xlsx]Sheet1!A1\")"));
+      sheet.cells().setCell("A2", new ResolvedFormula("NOW()"));
+      sheet.cells().setCell("A3", new ResolvedFormula("1/0"));
+
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
+
+      assertEquals(3, sheet.diagnostics().formulaCellCount());
+      assertTrue(
+          findings.stream()
+              .map(AnalysisFindingReport::code)
+              .toList()
+              .containsAll(
+                  List.of(
+                      AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+                      AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+                      AnalysisFindingCode.FORMULA_ERROR_RESULT)));
+    }
+  }
+
+  @Test
+  void derivesFormulaEvaluationFailureFindingWithFallbackExceptionMessage() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellFormula("1+1");
+      XssfSheet sheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException()));
+
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      AnalysisFindingReport finding = findings.getFirst();
+      assertEquals(AnalysisFindingCode.FORMULA_EVALUATION_FAILURE, finding.code());
+      assertEquals(List.of("1+1", "IllegalStateException"), finding.evidence());
+      assertEquals("Formula evaluation failed: IllegalStateException", finding.message());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsPublishCanonicalCircularReferenceErrorLiteral() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      XssfSheet sheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              poiWorkbook.getCreationHelper().createFormulaEvaluator());
+
+      sheet.cells().setCell("A1", new ResolvedFormula("B1+1"));
+      sheet.cells().setCell("B1", new ResolvedFormula("A1+1"));
+
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
+
+      AnalysisFindingReport circularFinding =
+          findings.stream()
+              .filter(finding -> finding.code() == AnalysisFindingCode.FORMULA_ERROR_RESULT)
+              .findFirst()
+              .orElseThrow();
+      assertTrue(circularFinding.message().contains("#CIRCULAR_REF!"));
+      assertFalse(circularFinding.message().contains("~CIRCULAR~REF~"));
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsIgnoreSuccessfulAndNullEvaluations() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet successSheet = poiWorkbook.createSheet("Success");
+      successSheet.createRow(0).createCell(0).setCellFormula("1+1");
+      XssfSheet successful =
+          new XssfSheet(
+              successSheet,
+              new StyleAdapter(poiWorkbook),
+              poiWorkbook.getCreationHelper().createFormulaEvaluator());
+      assertEquals(List.of(), successful.diagnostics().formulaHealthFindings());
+
+      Sheet nullSheet = poiWorkbook.createSheet("NullEval");
+      nullSheet.createRow(0).createCell(0).setCellFormula("1+1");
+      FormulaEvaluator baseEvaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      XssfSheet nullEvaluated =
+          new XssfSheet(
+              nullSheet,
+              new StyleAdapter(poiWorkbook),
+              FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
+      assertEquals(List.of(), nullEvaluated.diagnostics().formulaHealthFindings());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsDoNotDuplicateStaticMissingExternalWorkbookFindings() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      poiWorkbook.setCellFormulaValidation(false);
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellFormula("[Rates.xlsx]Sheet1!A1");
+      XssfSheet sheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              FormulaRuntimeTestDouble.alwaysFail(
+                  new IllegalStateException(
+                      "outer",
+                      new LocalWorkbookNotFoundException(
+                          "Could not resolve external workbook name 'Rates.xlsx'."))));
+
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK, findings.getFirst().code());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsDoNotDuplicateStaticUnregisteredUdfFindings() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellValue(21.0d);
+      poiSheet.getRow(0).createCell(1).setCellFormula("DOUBLE(A1)");
+      XssfSheet sheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              FormulaRuntimeTestDouble.alwaysFail(
+                  new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException(
+                      "DOUBLE")));
+
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          AnalysisFindingCode.FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
+          findings.getFirst().code());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsRespectBoundAndCachedExternalWorkbookPolicies() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      poiWorkbook.setCellFormulaValidation(false);
+
+      Sheet boundSheet = poiWorkbook.createSheet("Bound");
+      boundSheet.createRow(0).createCell(0).setCellFormula("[Rates.xlsx]Sheet1!A1");
+      XssfSheet bound =
+          new XssfSheet(
+              boundSheet,
+              new StyleAdapter(poiWorkbook),
+              new StaticContextFormulaRuntime(
+                  new FormulaContext(
+                      Set.of("Rates.xlsx"), FormulaMissingWorkbookPolicy.ERROR, Set.of()),
+                  null,
+                  null));
+      assertEquals(List.of(), bound.diagnostics().formulaHealthFindings());
+
+      Sheet cachedSheet = poiWorkbook.createSheet("Cached");
+      cachedSheet.createRow(0).createCell(0).setCellFormula("[Forecast.xlsx]Sheet1!A1");
+      XssfSheet cached =
+          new XssfSheet(
+              cachedSheet,
+              new StyleAdapter(poiWorkbook),
+              new StaticContextFormulaRuntime(
+                  new FormulaContext(
+                      Set.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, Set.of()),
+                  null,
+                  null));
+
+      List<AnalysisFindingReport> findings = cached.diagnostics().formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          AnalysisFindingCode.FORMULA_USES_CACHED_EXTERNAL_VALUE, findings.getFirst().code());
+      assertEquals(AnalysisSeverity.INFO, findings.getFirst().severity());
+      assertEquals(
+          List.of("[Forecast.xlsx]Sheet1!A1", "Forecast.xlsx"), findings.getFirst().evidence());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsReportRuntimeMissingExternalWorkbookWhenStaticScanCannotInferIt()
+      throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellFormula("SUM(A2)");
+      XssfSheet sheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              new StaticContextFormulaRuntime(
+                  FormulaContext.from(ResolvedFormulaEnvironment.defaults()),
+                  new IllegalStateException(
+                      "outer",
+                      new LocalWorkbookNotFoundException(
+                          "Could not resolve external workbook name 'Rates.xlsx'.")),
+                  null));
+
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK, findings.getFirst().code());
+      assertEquals(List.of("SUM(A2)", "Rates.xlsx"), findings.getFirst().evidence());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsLeaveMissingWorkbookEvidenceBlankWhenWorkbookNameCannotBeDerived()
+      throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellFormula("SUM(A2)");
+      XssfSheet sheet =
+          new XssfSheet(
+              poiSheet,
+              new StyleAdapter(poiWorkbook),
+              new StaticContextFormulaRuntime(
+                  FormulaContext.from(ResolvedFormulaEnvironment.defaults()),
+                  new IllegalStateException("outer", new LocalWorkbookNotFoundException(null)),
+                  null));
+
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK, findings.getFirst().code());
+      assertEquals(List.of("SUM(A2)", ""), findings.getFirst().evidence());
+    }
+  }
+}

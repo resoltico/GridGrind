@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.problem.RequestWarning;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,7 +26,7 @@ public final class GridGrindRequestDoctor {
   }
 
   /** Returns all independently provable static findings from one tolerant request analysis. */
-  public RequestDoctorReport diagnose(RequestAnalysis analysis, RequestInput requestInput) {
+  public RequestDoctorReport diagnose(RequestIntake analysis, RequestInput requestInput) {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(requestInput, "requestInput must not be null");
     List<GridGrindProblemDetail.Problem> problems =
@@ -40,7 +40,7 @@ public final class GridGrindRequestDoctor {
 
   /** Returns static and source/input preflight findings from one tolerant request analysis. */
   public RequestDoctorReport diagnose(
-      RequestAnalysis analysis, RequestInput requestInput, ExecutionInputBindings bindings) {
+      RequestIntake analysis, RequestInput requestInput, ExecutionInputBindings bindings) {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(requestInput, "requestInput must not be null");
     Objects.requireNonNull(bindings, "bindings must not be null");
@@ -75,7 +75,7 @@ public final class GridGrindRequestDoctor {
   private RequestDoctorReport diagnose(
       WorkbookPlan request,
       Optional<ExecutionInputBindings> bindings,
-      Optional<RequestAnalysis> analysis,
+      Optional<RequestIntake> analysis,
       List<GridGrindProblemDetail.Problem> staticProblems) {
     RequestDoctorReport.Summary summary = summaryFor(request);
     List<RequestWarning> warnings =
@@ -104,7 +104,7 @@ public final class GridGrindRequestDoctor {
   }
 
   private static RequestDoctorReport invalidAnalysisReport(
-      RequestAnalysis analysis, List<GridGrindProblemDetail.Problem> problems) {
+      RequestIntake analysis, List<GridGrindProblemDetail.Problem> problems) {
     return analysis
         .completePlan()
         .map(
@@ -116,7 +116,7 @@ public final class GridGrindRequestDoctor {
 
   private static RequestDoctorReport.Summary summaryFor(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
-    ExecutionModeInput executionMode = ExecutionWorkflowRouting.executionMode(request);
+    ExecutionModeSpec executionMode = request.effectiveExecutionMode();
     WorkbookPlan.StepPartition stepPartition = request.stepPartition();
     int mutationStepCount = stepPartition.mutations().size();
     int assertionStepCount = stepPartition.assertions().size();

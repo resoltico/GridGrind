@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSigningMaterialSupport;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.engine.security.SecurityAdapter;
 import java.io.IOException;
 import java.util.List;
 
@@ -57,7 +57,7 @@ final class RequestPreflightPaths {
 
   private static void addFormulaPathProblem(
       WorkbookPlan request,
-      dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput externalWorkbook,
+      dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec externalWorkbook,
       Exception exception,
       List<GridGrindProblemDetail.Problem> problems) {
     problems.add(
@@ -73,7 +73,7 @@ final class RequestPreflightPaths {
       ExecutionInputBindings bindings,
       List<GridGrindProblemDetail.Problem> problems) {
     try {
-      ExcelOoxmlPersistenceOptions options =
+      ResolvedPersistenceSecurity options =
           ExecutionRequestPaths.persistenceOptions(request.persistence(), bindings);
       verifySigningMaterial(options.signature());
     } catch (Exception exception) {
@@ -87,9 +87,9 @@ final class RequestPreflightPaths {
     }
   }
 
-  static void verifySigningMaterial(ExcelOoxmlPersistenceSignature signature) {
-    if (signature instanceof ExcelOoxmlPersistenceSignature.Sign sign) {
-      ExcelOoxmlSigningMaterialSupport.signingMaterial(sign.options());
+  static void verifySigningMaterial(ResolvedPersistenceSignature signature) {
+    if (signature instanceof ResolvedPersistenceSignature.Sign sign) {
+      SecurityAdapter.signingMaterial(sign.options());
     }
   }
 

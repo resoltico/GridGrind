@@ -1,0 +1,28 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Big"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WINDOW",
+        "sheetName": "Big",
+        "topLeftAddress": "A1",
+        "rowCount": 1000,
+        "columnCount": 1000
+      },
+      "stepId": "oversized"
+    }
+  ]
+}

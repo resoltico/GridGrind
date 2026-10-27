@@ -1,20 +1,20 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Runs the required pre-observation calculation checkpoint for a full-XSSF workflow. */
 final class FullXssfCalculationCheckpoint {
-  private final ExecutionCalculationSupport calculationSupport;
-  private final ExecutionResponseSupport responseSupport;
+  private final CalculationWorkflow calculationSupport;
+  private final ExecutionResults responseSupport;
 
   FullXssfCalculationCheckpoint(
-      ExecutionCalculationSupport calculationSupport, ExecutionResponseSupport responseSupport) {
+      CalculationWorkflow calculationSupport, ExecutionResults responseSupport) {
     this.calculationSupport =
         Objects.requireNonNull(calculationSupport, "calculationSupport must not be null");
     this.responseSupport =
@@ -34,7 +34,7 @@ final class FullXssfCalculationCheckpoint {
         || step instanceof MutationStep) {
       return new Result(currentCalculation, calculationExecuted, null);
     }
-    ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
+    CalculationWorkflow.CalculationExecutionOutcome outcome =
         calculationSupport.executeCalculationPolicy(
             executionContext.workbook(),
             executionContext.request(),
@@ -51,7 +51,7 @@ final class FullXssfCalculationCheckpoint {
         true,
         responseSupport.closeWorkbook(
             executionContext.workbook(),
-            ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+            ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
                 executionContext.failure(outcome.report(), problem)),
             executionContext.request(),
             executionContext.journal(),

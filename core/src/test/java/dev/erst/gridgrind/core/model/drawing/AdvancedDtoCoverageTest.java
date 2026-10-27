@@ -1,0 +1,779 @@
+package dev.erst.gridgrind.core.model.drawing;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterHealthReport;
+import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+
+/** Broad constructor and validation coverage for advanced protocol DTO families. */
+class AdvancedDtoCoverageTest {
+  @Test
+  void drawingReportsValidatePayloadAndAnchorSemantics() {
+    DrawingMarkerReport from = new DrawingMarkerReport(0, 0, 0, 0);
+    DrawingMarkerReport to = new DrawingMarkerReport(1, 1, 0, 0);
+    DrawingAnchorReport.TwoCell twoCell =
+        new DrawingAnchorReport.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    DrawingAnchorReport.OneCell oneCell =
+        new DrawingAnchorReport.OneCell(from, 1L, 2L, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    DrawingAnchorReport.Absolute absolute =
+        new DrawingAnchorReport.Absolute(
+            1L, 2L, 3L, 4L, ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE);
+
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, twoCell.behavior());
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, oneCell.behavior());
+    assertEquals(ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE, absolute.behavior());
+    assertEquals(
+        "columnIndex must not be negative",
+        assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0))
+            .getMessage());
+    assertEquals(
+        "lastColumn must be greater than or equal to firstColumn",
+        assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(1, 0, 0, 0))
+            .getMessage());
+
+    DrawingObjectReport.Picture picture =
+        new DrawingObjectReport.Picture(
+            "Picture 1",
+            twoCell,
+            ExcelPictureFormat.PNG,
+            "image/png",
+            10L,
+            "abc123",
+            Optional.of(32),
+            Optional.of(16),
+            Optional.of("Preview"));
+    assertEquals(Optional.of(32), picture.widthPixels());
+    assertEquals(
+        "widthPixels must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingObjectReport.Picture(
+                        "Picture 1",
+                        twoCell,
+                        ExcelPictureFormat.PNG,
+                        "image/png",
+                        10L,
+                        "abc123",
+                        Optional.of(-1),
+                        Optional.of(16),
+                        Optional.empty()))
+            .getMessage());
+
+    DrawingObjectReport.Shape shape =
+        new DrawingObjectReport.Shape(
+            "Shape 1",
+            oneCell,
+            ExcelDrawingShapeKind.SIMPLE_SHAPE,
+            Optional.of("rect"),
+            Optional.of("Hello"),
+            0);
+    assertEquals(Optional.of("Hello"), shape.text());
+    assertEquals(
+        "childCount must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingObjectReport.Shape(
+                        "Shape 1",
+                        oneCell,
+                        ExcelDrawingShapeKind.SIMPLE_SHAPE,
+                        Optional.empty(),
+                        Optional.empty(),
+                        -1))
+            .getMessage());
+
+    DrawingObjectReport.EmbeddedObject embedded =
+        new DrawingObjectReport.EmbeddedObject(
+            "Object 1",
+            absolute,
+            ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+            Optional.of("Label"),
+            Optional.of("object.bin"),
+            Optional.empty(),
+            "application/octet-stream",
+            12L,
+            "def456",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    assertEquals(Optional.of("object.bin"), embedded.fileName());
+    assertEquals(
+        "previewByteSize requires previewFormat",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingObjectReport.EmbeddedObject(
+                        "Object 1",
+                        absolute,
+                        ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        "application/octet-stream",
+                        12L,
+                        "def456",
+                        Optional.empty(),
+                        Optional.of(4L),
+                        Optional.empty()))
+            .getMessage());
+
+    DrawingObjectReport.SignatureLine signatureLine =
+        DrawingObjectReportTestSupport.signatureLine(
+            "Signature 1",
+            twoCell,
+            DrawingObjectReportTestSupport.signatureSetup(
+                "{ABC}",
+                false,
+                "Review before signing.",
+                "Ada Lovelace",
+                "Finance",
+                "ada@example.com"),
+            DrawingObjectReportTestSupport.signaturePreview(
+                ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 400, 150));
+    assertFalse(signatureLine.setup().orElseThrow().allowComments().orElseThrow());
+    assertEquals(
+        "previewByteSize requires previewFormat",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    DrawingObjectReportTestSupport.signatureLine(
+                        "Signature 1",
+                        twoCell,
+                        Optional.empty(),
+                        DrawingObjectReportTestSupport.signaturePreview(
+                            null, null, 1L, null, null, null)))
+            .getMessage());
+
+    String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3});
+    DrawingObjectPayloadReport.Picture picturePayload =
+        new DrawingObjectPayloadReport.Picture(
+            "Picture 1",
+            ExcelPictureFormat.PNG,
+            "image/png",
+            "picture.png",
+            "abc123",
+            base64,
+            Optional.empty());
+    assertEquals(base64, picturePayload.base64Data());
+    assertEquals(
+        "",
+        new DrawingObjectPayloadReport.Picture(
+                "Picture 2",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                "empty.png",
+                "sha",
+                "",
+                Optional.empty())
+            .base64Data());
+    DrawingObjectPayloadReport.EmbeddedObject embeddedPayload =
+        new DrawingObjectPayloadReport.EmbeddedObject(
+            "Object 1",
+            ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+            "application/octet-stream",
+            Optional.empty(),
+            "sha",
+            base64,
+            Optional.of("Label"),
+            Optional.of("open"));
+    assertEquals(Optional.of("open"), embeddedPayload.command());
+    assertEquals(
+        java.util.Optional.empty(),
+        new DrawingObjectPayloadReport.EmbeddedObject(
+                "Object 2",
+                ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                "application/octet-stream",
+                Optional.of("payload.bin"),
+                "sha",
+                base64,
+                Optional.of("Label"),
+                Optional.empty())
+            .command());
+    assertEquals(
+        "base64Data must be valid base64",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingObjectPayloadReport.Picture(
+                        "Picture 1",
+                        ExcelPictureFormat.PNG,
+                        "image/png",
+                        "picture.png",
+                        "abc123",
+                        "%%%notbase64%%%",
+                        Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "fileName must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingObjectPayloadReport.EmbeddedObject(
+                        "Object 1",
+                        ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                        "application/octet-stream",
+                        Optional.of(" "),
+                        "sha",
+                        base64,
+                        Optional.empty(),
+                        Optional.empty()))
+            .getMessage());
+  }
+
+  @Test
+  void encryptionPaneAndColorReportsValidateBoundaries() {
+    assertInstanceOf(OoxmlEncryptionReport.None.class, new OoxmlEncryptionReport.None());
+    assertEquals(
+        "keyBits must be positive",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        0,
+                        16,
+                        100))
+            .getMessage());
+    assertEquals(
+        "blockSize must be positive",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        128,
+                        0,
+                        100))
+            .getMessage());
+    assertEquals(
+        "spinCount must be zero or positive",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        128,
+                        16,
+                        -1))
+            .getMessage());
+
+    PaneSpec.Frozen frozen = new PaneSpec.Frozen(1, 0, 1, 0);
+    assertEquals(1, frozen.leftmostColumn());
+    assertEquals(
+        "splitColumn and splitRow must not both be 0",
+        assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(0, 0, 0, 0))
+            .getMessage());
+    assertEquals(
+        "leftmostColumn must be 0 when splitColumn is 0: 1",
+        assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(0, 1, 1, 1))
+            .getMessage());
+    assertEquals(
+        "topRow must be 0 when splitRow is 0: 1",
+        assertThrows(IllegalArgumentException.class, () -> new PaneSpec.Frozen(1, 0, 1, 1))
+            .getMessage());
+    assertEquals(
+        "leftmostColumn must be 0 when xSplitPosition is 0: 1",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new PaneSpec.Split(0, 1, 1, 0, ExcelPaneRegion.LOWER_RIGHT))
+            .getMessage());
+    assertEquals(0, new PaneSpec.Split(1, 0, 0, 0, ExcelPaneRegion.UPPER_RIGHT).topRow());
+
+    CellColorReport.Rgb rgb = CellColorReport.rgb(new RgbHex("#a1b2c3"));
+    assertEquals("#A1B2C3", rgb.rgb().value());
+    assertEquals(
+        "tint must be finite",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellColorReport.rgb(new RgbHex("#ABCDEF"), Double.NaN))
+            .getMessage());
+
+    CellGradientFillReport gradient =
+        CellGradientFillReport.linear(
+            Optional.of(45.0d),
+            List.of(
+                new CellGradientStopReport(0.0d, rgb),
+                new CellGradientStopReport(1.0d, CellColorReport.theme(1))));
+    assertEquals(2, gradient.stops().size());
+    assertEquals(
+        "stops must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellGradientFillReport.linear(Optional.empty(), List.of()))
+            .getMessage());
+    assertEquals(
+        "position must be finite and between 0.0 and 1.0",
+        assertThrows(IllegalArgumentException.class, () -> new CellGradientStopReport(2.0d, rgb))
+            .getMessage());
+    assertEquals(
+        "gradient must not be null",
+        assertThrows(NullPointerException.class, () -> CellFillReport.gradient(null)).getMessage());
+    assertEquals(
+        "foregroundColor must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> CellFillReport.patternForeground(ExcelFillPattern.SOLID, null))
+            .getMessage());
+    assertEquals(
+        "fill pattern NONE does not accept colors",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellFillReport.patternForeground(ExcelFillPattern.NONE, rgb))
+            .getMessage());
+    assertEquals(
+        "fill backgroundColor is not supported for SOLID fills",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellFillReport.patternColors(ExcelFillPattern.SOLID, rgb, rgb))
+            .getMessage());
+    assertEquals(
+        "fill pattern NONE does not accept colors",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellFillReport.patternBackground(ExcelFillPattern.NONE, rgb))
+            .getMessage());
+    CellFillReport.PatternBackground backgroundOnly =
+        assertInstanceOf(
+            CellFillReport.PatternBackground.class,
+            CellFillReport.patternBackground(ExcelFillPattern.BRICKS, CellColorReport.indexed(64)));
+    assertEquals(ExcelFillPattern.BRICKS, backgroundOnly.pattern());
+    assertEquals(CellColorReport.indexed(64), backgroundOnly.backgroundColor());
+    assertEquals(
+        "degree must be finite when provided",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    CellGradientFillReport.linear(
+                        Optional.of(Double.POSITIVE_INFINITY),
+                        List.of(new CellGradientStopReport(0.0d, rgb))))
+            .getMessage());
+    assertEquals(
+        "position must be finite and between 0.0 and 1.0",
+        assertThrows(
+                IllegalArgumentException.class, () -> new CellGradientStopReport(Double.NaN, rgb))
+            .getMessage());
+    assertEquals(
+        "position must be finite and between 0.0 and 1.0",
+        assertThrows(IllegalArgumentException.class, () -> new CellGradientStopReport(-0.1d, rgb))
+            .getMessage());
+  }
+
+  @Test
+  void arrayFormulaReportsValidateRequiredFields() {
+    ArrayFormulaReport report =
+        new ArrayFormulaReport(
+            new SheetLabel("Calc"),
+            new RangeLabel("D2:D4"),
+            new CellAddress("D2"),
+            "B2:B4*C2:C4",
+            false);
+
+    assertEquals("Calc", report.sheetName().value());
+    assertEquals("D2:D4", report.range().value());
+    assertEquals("D2", report.topLeftAddress().value());
+    assertEquals("B2:B4*C2:C4", report.formula());
+    assertFalse(report.singleCell());
+    assertDoesNotThrow(
+        () ->
+            new ArrayFormulaReport(
+                new SheetLabel("Calc"),
+                new RangeLabel(" "),
+                new CellAddress("D2"),
+                "SUM(B2:C2)",
+                true));
+  }
+
+  @Test
+  void customXmlReportsValidateRequiredFields() {
+    CustomXmlDataBindingReport dataBinding =
+        new CustomXmlDataBindingReport(
+            Optional.of("binding"),
+            Optional.of(true),
+            Optional.of(7L),
+            Optional.of("binding.xml"),
+            2L);
+    CustomXmlLinkedCellReport linkedCell =
+        new CustomXmlLinkedCellReport(
+            new SheetLabel("Foglio1"), new CellAddress("A1"), "/CORSO/NOME", "string");
+    CustomXmlMappingReport mapping =
+        mappingReport(
+            null, null, null, "<xsd:schema/>", dataBinding, List.of(linkedCell), List.of());
+    CustomXmlExportReport exported =
+        new CustomXmlExportReport(mapping, "UTF-8", true, "<CORSO><NOME>Grid</NOME></CORSO>");
+
+    assertEquals(2L, dataBinding.loadMode());
+    assertEquals("A1", mapping.linkedCells().getFirst().address().value());
+    assertEquals("UTF-8", exported.encoding());
+    assertEquals(
+        "mapId must be greater than 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    mappingReport(0L, null, null, null, null, null, List.of(linkedCell), List.of()))
+            .getMessage());
+    assertEquals(
+        "loadMode must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CustomXmlDataBindingReport(
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        -1L))
+            .getMessage());
+    assertEquals(
+        "xml must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CustomXmlExportReport(mapping, "UTF-8", false, " "))
+            .getMessage());
+  }
+
+  @Test
+  void autofilterChartPivotAndTableReportsCoverValidAndInvalidShapes() {
+    AutofilterFilterCriterionReport.Values values =
+        new AutofilterFilterCriterionReport.Values(List.of("A", "B"), true);
+    assertEquals(2, values.values().size());
+    assertEquals(
+        "conditions must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AutofilterFilterCriterionReport.Custom(false, List.of()))
+            .getMessage());
+    assertEquals(
+        "dynamicType must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new AutofilterFilterCriterionReport.Dynamic(
+                        " ", Optional.empty(), Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "value must be finite and non-negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new AutofilterFilterCriterionReport.Top10(true, false, -1.0d, Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "value must be finite and non-negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new AutofilterFilterCriterionReport.Top10(
+                        true, false, Double.POSITIVE_INFINITY, Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "value must be finite when provided",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new AutofilterFilterCriterionReport.Dynamic(
+                        "ABOVE_AVERAGE", Optional.of(Double.POSITIVE_INFINITY), Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "maxValue must be finite when provided",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new AutofilterFilterCriterionReport.Dynamic(
+                        "ABOVE_AVERAGE", Optional.empty(), Optional.of(Double.POSITIVE_INFINITY)))
+            .getMessage());
+    assertEquals(
+        "iconId must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AutofilterFilterCriterionReport.Icon("3TrafficLights1", -1))
+            .getMessage());
+
+    DrawingAnchorReport.Absolute anchor =
+        new DrawingAnchorReport.Absolute(
+            1L, 2L, 3L, 4L, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    ChartReport bar =
+        new ChartReport(
+            "Revenue",
+            anchor,
+            new ChartReport.Title.Text("Revenue"),
+            new ChartReport.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+            ExcelChartDisplayBlanksAs.GAP,
+            true,
+            List.of(
+                new ChartReport.Bar(
+                    false,
+                    ExcelChartBarDirection.COLUMN,
+                    ExcelChartBarGrouping.CLUSTERED,
+                    Optional.empty(),
+                    Optional.empty(),
+                    List.of(
+                        new ChartReport.Axis(
+                            ExcelChartAxisKind.CATEGORY,
+                            ExcelChartAxisPosition.BOTTOM,
+                            ExcelChartAxisCrosses.AUTO_ZERO,
+                            true)),
+                    List.of(
+                        chartSeries(
+                            new ChartReport.Title.Text("Series 1"),
+                            new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                            new ChartReport.DataSource.NumericLiteral(
+                                Optional.of("#,##0"), List.of("1", "2")))))));
+    assertEquals("Revenue", bar.name());
+    assertEquals(
+        "firstSliceAngle must be between 0 and 360",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ChartReport.Pie(
+                        false,
+                        Optional.of(361),
+                        List.of(
+                            chartSeries(
+                                new ChartReport.Title.Text("Series 1"),
+                                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                                new ChartReport.DataSource.NumericLiteral(
+                                    Optional.empty(), List.of("1"))))))
+            .getMessage());
+    assertEquals(
+        "series must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ChartReport.Line(
+                        false,
+                        ExcelChartGrouping.STANDARD,
+                        List.of(
+                            new ChartReport.Axis(
+                                ExcelChartAxisKind.CATEGORY,
+                                ExcelChartAxisPosition.BOTTOM,
+                                ExcelChartAxisCrosses.AUTO_ZERO,
+                                true)),
+                        List.of()))
+            .getMessage());
+    assertEquals(
+        Optional.of(180),
+        new ChartReport.Pie(
+                false,
+                Optional.of(180),
+                List.of(
+                    chartSeries(
+                        new ChartReport.Title.Text("Series 1"),
+                        new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("1")))))
+            .firstSliceAngle());
+    assertEquals(
+        Optional.empty(),
+        new ChartReport.Pie(
+                false,
+                Optional.empty(),
+                List.of(
+                    chartSeries(
+                        new ChartReport.Title.Text("Series 1"),
+                        new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("1")))))
+            .firstSliceAngle());
+
+    PivotTableReport.Supported pivot =
+        new PivotTableReport.Supported(
+            "Sales Pivot 2026",
+            new SheetName("Report"),
+            new PivotTableReport.Anchor(new CellAddress("C5"), new RangeLabel("C5:G9")),
+            new PivotTableReport.PivotSourceReport.Range(
+                new SheetName("Data"), new RangeLabel("A1:D5")),
+            List.of(new PivotTableReport.Field(0, "Region")),
+            List.of(new PivotTableReport.Field(1, "Stage")),
+            List.of(new PivotTableReport.Field(2, "Owner")),
+            List.of(
+                new PivotTableReport.DataField(
+                    3,
+                    "Amount",
+                    ExcelPivotDataConsolidateFunction.SUM,
+                    "Total Amount",
+                    Optional.of("#,##0.00"))),
+            true);
+    assertEquals("Report", pivot.sheetName().value());
+    assertEquals(
+        "valueFormat must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new PivotTableReport.DataField(
+                        0,
+                        "Amount",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total",
+                        Optional.of(" ")))
+            .getMessage());
+
+    TableColumnReport tableColumn =
+        new TableColumnReport(
+            1L, "Amount", Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    assertEquals(Optional.empty(), tableColumn.uniqueName());
+    assertEquals(
+        "id must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new TableColumnReport(
+                        -1L,
+                        "Amount",
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
+            .getMessage());
+
+    PrintSetupReport defaults = PrintSetupReport.defaults();
+    assertEquals(1, defaults.paperSize());
+    assertEquals(
+        "rowBreaks must not contain negative indexes",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new PrintSetupReport(
+                        PrintMarginsReport.defaults(),
+                        false,
+                        false,
+                        false,
+                        1,
+                        false,
+                        false,
+                        1,
+                        false,
+                        1,
+                        List.of(-1),
+                        List.of()))
+            .getMessage());
+
+    AnalysisSummaryReport summary = new AnalysisSummaryReport(1, 0, 1, 0);
+    AnalysisFindingReport finding =
+        new AnalysisFindingReport(
+            AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
+            AnalysisSeverity.WARNING,
+            "Autofilter spans multiple ranges",
+            "Autofilter found on disjoint ranges.",
+            new AnalysisLocationReport.Sheet(new SheetLabel("Budget")),
+            List.of("A1:B4"));
+    AutofilterHealthReport report = new AutofilterHealthReport(1, summary, List.of(finding));
+    assertEquals(1, report.checkedAutofilterCount());
+    assertEquals(
+        "checkedAutofilterCount must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AutofilterHealthReport(-1, summary, List.of(finding)))
+            .getMessage());
+  }
+
+  private static ChartReport.Series chartSeries(
+      ChartReport.Title title, ChartReport.DataSource categories, ChartReport.DataSource values) {
+    return new ChartReport.Series(
+        title,
+        categories,
+        values,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
+  }
+
+  private static CustomXmlMappingReport mappingReport(
+      String namespace,
+      String language,
+      String reference,
+      String xml,
+      CustomXmlDataBindingReport dataBinding,
+      List<CustomXmlLinkedCellReport> linkedCells,
+      List<CustomXmlLinkedTableReport> linkedTables) {
+    return mappingReport(
+        1L, namespace, language, reference, xml, dataBinding, linkedCells, linkedTables);
+  }
+
+  private static CustomXmlMappingReport mappingReport(
+      long mapId,
+      String namespace,
+      String language,
+      String reference,
+      String xml,
+      CustomXmlDataBindingReport dataBinding,
+      List<CustomXmlLinkedCellReport> linkedCells,
+      List<CustomXmlLinkedTableReport> linkedTables) {
+    return new CustomXmlMappingReport(
+        mapId,
+        "CORSO_mapping",
+        "CORSO",
+        "Schema1",
+        new CustomXmlMappingReport.Settings(false, true, false, true, true),
+        new CustomXmlMappingReport.Schema(
+            Optional.ofNullable(namespace),
+            Optional.ofNullable(language),
+            Optional.ofNullable(reference),
+            Optional.ofNullable(xml)),
+        Optional.ofNullable(dataBinding),
+        linkedCells,
+        linkedTables);
+  }
+}

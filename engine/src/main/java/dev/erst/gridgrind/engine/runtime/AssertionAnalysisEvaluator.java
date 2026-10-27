@@ -1,14 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.AnalysisFindingReport;
-import dev.erst.gridgrind.contract.dto.AnalysisSummaryReport;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
+import dev.erst.gridgrind.core.plan.InspectionQuery;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
+import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,11 +23,11 @@ final class AssertionAnalysisEvaluator {
   }
 
   AssertionEvaluation evaluateAnalysisMaxSeverity(
-      String stepId,
+      StepId stepId,
       Selector target,
       InspectionQuery query,
       AnalysisSeverity maximumSeverity,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAnalysisResult result =
         (WorkbookAnalysisResult)
@@ -43,14 +44,14 @@ final class AssertionAnalysisEvaluator {
   }
 
   AssertionEvaluation evaluateFindingPresence(
-      String stepId,
+      StepId stepId,
       Selector target,
       InspectionQuery query,
       AnalysisFindingCode code,
       Optional<AnalysisSeverity> severity,
       Optional<String> messageContains,
       boolean shouldExist,
-      ExcelWorkbook workbook,
+      XssfWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAnalysisResult result =
         (WorkbookAnalysisResult)
@@ -95,48 +96,64 @@ final class AssertionAnalysisEvaluator {
 
   static AnalysisSummaryReport analysisSummary(WorkbookAnalysisResult result) {
     return switch (result) {
-      case WorkbookAnalysisResult.FormulaHealthResult formulaHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult
+              formulaHealthResult ->
           formulaHealthResult.analysis().summary();
-      case WorkbookAnalysisResult.DataValidationHealthResult dataValidationHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult
+              dataValidationHealthResult ->
           dataValidationHealthResult.analysis().summary();
-      case WorkbookAnalysisResult.ConditionalFormattingHealthResult
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
               conditionalFormattingHealthResult ->
           conditionalFormattingHealthResult.analysis().summary();
-      case WorkbookAnalysisResult.AutofilterHealthResult autofilterHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult
+              autofilterHealthResult ->
           autofilterHealthResult.analysis().summary();
-      case WorkbookAnalysisResult.TableHealthResult tableHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult
+              tableHealthResult ->
           tableHealthResult.analysis().summary();
-      case WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult
+              pivotTableHealthResult ->
           pivotTableHealthResult.analysis().summary();
-      case WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult
+              hyperlinkHealthResult ->
           hyperlinkHealthResult.analysis().summary();
-      case WorkbookAnalysisResult.NamedRangeHealthResult namedRangeHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult
+              namedRangeHealthResult ->
           namedRangeHealthResult.analysis().summary();
-      case WorkbookAnalysisResult.WorkbookFindingsResult workbookFindingsResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult
+              workbookFindingsResult ->
           workbookFindingsResult.analysis().summary();
     };
   }
 
   static List<AnalysisFindingReport> analysisFindings(WorkbookAnalysisResult result) {
     return switch (result) {
-      case WorkbookAnalysisResult.FormulaHealthResult formulaHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult
+              formulaHealthResult ->
           formulaHealthResult.analysis().findings();
-      case WorkbookAnalysisResult.DataValidationHealthResult dataValidationHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult
+              dataValidationHealthResult ->
           dataValidationHealthResult.analysis().findings();
-      case WorkbookAnalysisResult.ConditionalFormattingHealthResult
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
               conditionalFormattingHealthResult ->
           conditionalFormattingHealthResult.analysis().findings();
-      case WorkbookAnalysisResult.AutofilterHealthResult autofilterHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult
+              autofilterHealthResult ->
           autofilterHealthResult.analysis().findings();
-      case WorkbookAnalysisResult.TableHealthResult tableHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult
+              tableHealthResult ->
           tableHealthResult.analysis().findings();
-      case WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult
+              pivotTableHealthResult ->
           pivotTableHealthResult.analysis().findings();
-      case WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult
+              hyperlinkHealthResult ->
           hyperlinkHealthResult.analysis().findings();
-      case WorkbookAnalysisResult.NamedRangeHealthResult namedRangeHealthResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult
+              namedRangeHealthResult ->
           namedRangeHealthResult.analysis().findings();
-      case WorkbookAnalysisResult.WorkbookFindingsResult workbookFindingsResult ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult
+              workbookFindingsResult ->
           workbookFindingsResult.analysis().findings();
     };
   }

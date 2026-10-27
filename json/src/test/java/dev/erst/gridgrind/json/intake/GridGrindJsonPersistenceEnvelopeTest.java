@@ -1,0 +1,131 @@
+package dev.erst.gridgrind.json.intake;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import tools.jackson.databind.node.ObjectNode;
+
+/** Locks the top-level-only persistence envelope contract for success and failure responses. */
+class GridGrindJsonPersistenceEnvelopeTest {
+  @Test
+  void successResponsesKeepPersistenceOnlyAtTheTopLevel() throws IOException {
+    WorkbookResult persistSuccess =
+        WorkbookResults.success(
+            ProtocolVersion.CURRENT,
+            new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                "out/report.xlsx", published("/work/out/report.xlsx")),
+            List.of(),
+            List.of(),
+            List.of());
+
+    byte[] responseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(persistSuccess);
+    String rendered = new String(responseBytes, StandardCharsets.UTF_8);
+    ObjectNode responseTree =
+        (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(responseBytes);
+    ObjectNode journal = (ObjectNode) responseTree.path("journal");
+
+    assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
+    assertEquals("SAVE_AS", responseTree.path("persistence").path("type").asText());
+    assertEquals(
+        "PUBLISHED", responseTree.path("persistence").path("publication").path("status").asText());
+    assertEquals(
+        "/work/out/report.xlsx",
+        responseTree.path("persistence").path("publication").path("executionPath").asText());
+    assertFalse(journal.has("persistence"));
+  }
+
+  @Test
+  void persistFailureContextsDoNotDuplicateTheTopLevelPersistenceBlock() throws IOException {
+    WorkbookResult persistFailure =
+        WorkbookResults.failure(
+            ProtocolVersion.CURRENT,
+            new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                "out/report.xlsx", new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
+            new GridGrindProblemDetail.Problem(
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR,
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR.category(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR.recovery(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR.title(),
+                "write failed",
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR.resolution(),
+                new dev.erst.gridgrind.core.problem.ProblemContext.PersistWorkbook(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
+                        .known("NEW", "SAVE_AS"),
+                    dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
+                        .PersistenceReference.saveAs("/work/out/report.xlsx")),
+                List.of()));
+
+    byte[] responseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(persistFailure);
+    String rendered = new String(responseBytes, StandardCharsets.UTF_8);
+    ObjectNode responseTree =
+        (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(responseBytes);
+    ObjectNode context = (ObjectNode) responseTree.path("problem").path("context");
+
+    assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
+    assertEquals("SAVE_AS", responseTree.path("persistence").path("type").asText());
+    assertEquals(
+        "NOT_ATTEMPTED",
+        responseTree.path("persistence").path("publication").path("status").asText());
+    assertFalse(context.has("persistence"));
+    assertEquals("/work/out/report.xlsx", context.path("persistencePath").asText());
+    assertFalse(context.has("sourceWorkbookPath"));
+  }
+
+  @Test
+  void overwriteFailuresWithoutASourcePathStillKeepTheTopLevelPersistenceEnvelope()
+      throws IOException {
+    WorkbookResult persistFailure =
+        WorkbookResults.failure(
+            ProtocolVersion.CURRENT,
+            new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
+                Optional.empty(), new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
+            new GridGrindProblemDetail.Problem(
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST,
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST.category(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST.recovery(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST.title(),
+                "OVERWRITE persistence requires an EXISTING source",
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST.resolution(),
+                new dev.erst.gridgrind.core.problem.ProblemContext.ValidateRequest(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
+                        .known("NEW", "OVERWRITE")),
+                List.of()));
+
+    byte[] responseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(persistFailure);
+    String rendered = new String(responseBytes, StandardCharsets.UTF_8);
+    ObjectNode responseTree =
+        (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(responseBytes);
+
+    assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
+    assertEquals("OVERWRITE", responseTree.path("persistence").path("type").asText());
+    assertEquals(
+        "NOT_ATTEMPTED",
+        responseTree.path("persistence").path("publication").path("status").asText());
+    assertFalse(responseTree.path("persistence").has("sourcePath"));
+    assertEquals(persistFailure, GridGrindJson.readWorkbookResult(responseBytes));
+  }
+
+  private static WorkbookResultPersistence.PublicationOutcome.Published published(
+      String executionPath) {
+    return new WorkbookResultPersistence.PublicationOutcome.Published(
+        executionPath,
+        "0".repeat(64),
+        0,
+        new WorkbookResultPersistence.PublicationOutcome.StagedArtifactVerification(),
+        new WorkbookResultPersistence.PublicationOutcome.DurabilityEvidence
+            .FileSyncedDirectoryUnestablished());
+  }
+}

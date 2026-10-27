@@ -1,14 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.Assertion;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Optional;
 
 /** Resolves workbook-step and exception facts into journal-friendly diagnostic locations. */
@@ -162,7 +163,7 @@ final class ExecutionDiagnosticFields {
     if (parts.namedRange().isPresent() && parts.sheetName().isPresent()) {
       return Optional.of(
           ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(
-              parts.sheetName().orElseThrow(), parts.namedRange().orElseThrow()));
+              new SheetLabel(parts.sheetName().orElseThrow()), parts.namedRange().orElseThrow()));
     }
     if (parts.namedRange().isPresent()) {
       return Optional.of(
@@ -179,7 +180,7 @@ final class ExecutionDiagnosticFields {
         && parts.formula().isPresent()) {
       return Optional.of(
           ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
-              parts.sheetName().orElseThrow(),
+              new SheetLabel(parts.sheetName().orElseThrow()),
               parts.address().orElseThrow(),
               parts.formula().orElseThrow()));
     }
@@ -191,7 +192,7 @@ final class ExecutionDiagnosticFields {
     if (parts.sheetName().isPresent() && parts.address().isPresent()) {
       return Optional.of(
           ProblemContextWorkbookSurfaces.ProblemLocation.cell(
-              parts.sheetName().orElseThrow(), parts.address().orElseThrow()));
+              new SheetLabel(parts.sheetName().orElseThrow()), parts.address().orElseThrow()));
     }
     return Optional.empty();
   }
@@ -201,14 +202,17 @@ final class ExecutionDiagnosticFields {
     if (parts.sheetName().isPresent() && parts.range().isPresent()) {
       return Optional.of(
           ProblemContextWorkbookSurfaces.ProblemLocation.range(
-              parts.sheetName().orElseThrow(), parts.range().orElseThrow()));
+              new SheetLabel(parts.sheetName().orElseThrow()), parts.range().orElseThrow()));
     }
     return Optional.empty();
   }
 
   private static Optional<ProblemContextWorkbookSurfaces.ProblemLocation> sheetLocation(
       DiagnosticLocationParts parts) {
-    return parts.sheetName().map(ProblemContextWorkbookSurfaces.ProblemLocation::sheet);
+    return parts
+        .sheetName()
+        .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+        .map(ProblemContextWorkbookSurfaces.ProblemLocation::sheet);
   }
 
   private static Optional<ProblemContextWorkbookSurfaces.ProblemLocation> addressLocation(

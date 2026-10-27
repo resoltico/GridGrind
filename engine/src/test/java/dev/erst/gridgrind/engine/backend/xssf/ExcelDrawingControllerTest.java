@@ -1,0 +1,1395 @@
+package dev.erst.gridgrind.engine.backend.xssf;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
+import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
+import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
+import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.source.BinaryContent;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
+import org.apache.poi.xddf.usermodel.chart.AxisPosition;
+import org.apache.poi.xddf.usermodel.chart.BarDirection;
+import org.apache.poi.xddf.usermodel.chart.ChartTypes;
+import org.apache.poi.xddf.usermodel.chart.LegendPosition;
+import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
+import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
+import org.apache.poi.xssf.usermodel.XSSFChart;
+import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFObjectData;
+import org.apache.poi.xssf.usermodel.XSSFRelation;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.xmlbeans.XmlCursor;
+import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STTrueFalse;
+
+/** Integration tests for drawing, picture, and embedded-object sheet workflows. */
+class ExcelDrawingControllerTest {
+  private static final byte[] PNG_PIXEL_BYTES =
+      Base64.getDecoder()
+          .decode(
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC");
+
+  @Test
+  void drawingObjectsSupportReadMoveDeleteAndRoundTrip() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-drawing-roundtrip-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet
+          .drawings()
+          .setPicture(
+              new ResolvedPicture(
+                  "OpsPicture",
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")))
+          .setShape(
+              new ResolvedShape.SimpleShape(
+                  "OpsShape", anchor(5, 1, 8, 5), "rect", Optional.of("Queue")))
+          .setShape(new ShapeSpec.Connector("OpsConnector", anchor(9, 1, 11, 4)))
+          .setEmbeddedObject(
+              new ResolvedEmbeddedObject(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  anchor(12, 1, 15, 6)));
+
+      List<DrawingObjectReport> snapshots = sheet.drawings().drawingObjects();
+      assertEquals(
+          List.of("OpsPicture", "OpsShape", "OpsConnector", "OpsEmbed"),
+          snapshots.stream().map(DrawingObjectReport::name).toList());
+      DrawingObjectReport.Picture pictureSnapshot =
+          assertInstanceOf(DrawingObjectReport.Picture.class, snapshots.getFirst());
+      assertEquals(1, pictureSnapshot.widthPixels().orElseThrow());
+      assertEquals(1, pictureSnapshot.heightPixels().orElseThrow());
+      assertEquals(
+          ExcelDrawingShapeKind.SIMPLE_SHAPE,
+          assertInstanceOf(DrawingObjectReport.Shape.class, snapshots.get(1)).kind());
+      assertEquals(
+          ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+          assertInstanceOf(DrawingObjectReport.EmbeddedObject.class, snapshots.get(3))
+              .packagingKind());
+
+      DrawingObjectPayloadReport.Picture picturePayload =
+          assertInstanceOf(
+              DrawingObjectPayloadReport.Picture.class,
+              sheet.drawings().drawingObjectPayload("OpsPicture"));
+      DrawingObjectPayloadReport.EmbeddedObject embeddedPayload =
+          assertInstanceOf(
+              DrawingObjectPayloadReport.EmbeddedObject.class,
+              sheet.drawings().drawingObjectPayload("OpsEmbed"));
+      assertArrayEquals(
+          PNG_PIXEL_BYTES, java.util.Base64.getDecoder().decode(picturePayload.base64Data()));
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(embeddedPayload.base64Data()));
+
+      DrawingAnchorSpec.TwoCell movedAnchor = anchor(6, 2, 10, 7);
+      sheet.drawings().setDrawingObjectAnchor("OpsShape", movedAnchor);
+      DrawingObjectReport.Shape movedShape =
+          assertInstanceOf(
+              DrawingObjectReport.Shape.class,
+              sheet.drawings().drawingObjects().stream()
+                  .filter(snapshot -> "OpsShape".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(DrawingGeometryFixtures.report(movedAnchor), movedShape.anchor());
+
+      sheet.drawings().deleteDrawingObject("OpsConnector");
+      assertEquals(3, sheet.drawings().drawingObjects().size());
+
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFDrawing drawing = reopened.getSheet("Ops").getDrawingPatriarch();
+      assertNotNull(drawing);
+      assertEquals(
+          List.of("OpsPicture", "OpsShape", "OpsEmbed"),
+          drawing.getShapes().stream().map(XSSFShape::getShapeName).toList());
+    }
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      DrawingObjectReport.Picture pictureSnapshot =
+          assertInstanceOf(
+              DrawingObjectReport.Picture.class,
+              reopened.sheet("Ops").drawings().drawingObjects().stream()
+                  .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(1, pictureSnapshot.widthPixels().orElseThrow());
+      assertEquals(1, pictureSnapshot.heightPixels().orElseThrow());
+    }
+  }
+
+  @Test
+  void signatureLinesSupportReadMoveDeleteAndRoundTrip() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-signature-line-roundtrip-");
+    DrawingAnchorSpec.TwoCell movedAnchor = anchor(6, 2, 10, 7);
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet
+          .drawings()
+          .setSignatureLine(
+              new ResolvedSignatureLine(
+                  "OpsSignature",
+                  anchor(1, 1, 4, 6),
+                  false,
+                  Optional.of("Review the numbers before signing."),
+                  Optional.of("Ada Lovelace"),
+                  Optional.of("Finance"),
+                  Optional.of("ada@example.com"),
+                  Optional.empty(),
+                  Optional.of("invalid"),
+                  Optional.of(ExcelPictureFormat.PNG),
+                  Optional.of(new BinaryContent(PNG_PIXEL_BYTES))));
+
+      List<DrawingObjectReport> snapshots = sheet.drawings().drawingObjects();
+      assertEquals(
+          List.of("OpsSignature"), snapshots.stream().map(DrawingObjectReport::name).toList());
+      DrawingObjectReport.SignatureLine signatureLine =
+          assertInstanceOf(DrawingObjectReport.SignatureLine.class, snapshots.getFirst());
+      assertFalse(signatureLine.setup().orElseThrow().allowComments().orElseThrow());
+      assertEquals(
+          "Review the numbers before signing.",
+          signatureLine.setup().orElseThrow().signingInstructions().orElseThrow());
+      assertEquals(
+          "Ada Lovelace", signatureLine.setup().orElseThrow().suggestedSigner().orElseThrow());
+      assertEquals(ExcelPictureFormat.PNG, signatureLine.preview().orElseThrow().format());
+      assertEquals(400, signatureLine.preview().orElseThrow().widthPixels().orElseThrow());
+      assertEquals(150, signatureLine.preview().orElseThrow().heightPixels().orElseThrow());
+
+      IllegalArgumentException noPayload =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> sheet.drawings().drawingObjectPayload("OpsSignature"));
+      assertTrue(noPayload.getMessage().contains("does not expose a binary payload"));
+
+      sheet.drawings().setDrawingObjectAnchor("OpsSignature", movedAnchor);
+      DrawingObjectReport.SignatureLine movedSignature =
+          assertInstanceOf(
+              DrawingObjectReport.SignatureLine.class,
+              sheet.drawings().drawingObjects().stream()
+                  .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(DrawingGeometryFixtures.report(movedAnchor), movedSignature.anchor());
+
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFVMLDrawing vmlDrawing = reopened.getSheet("Ops").getVMLDrawing(false);
+      assertNotNull(vmlDrawing);
+      CTShape signatureShape = firstSignatureShape(vmlDrawing);
+      assertEquals("OpsSignature", signatureShape.getAlt());
+      assertEquals(STTrueFalse.F, signatureShape.getSignaturelineArray(0).getAllowcomments());
+    }
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      XssfSheet sheet = reopened.sheet("Ops");
+      DrawingObjectReport.SignatureLine signatureLine =
+          assertInstanceOf(
+              DrawingObjectReport.SignatureLine.class,
+              sheet.drawings().drawingObjects().stream()
+                  .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(DrawingGeometryFixtures.report(movedAnchor), signatureLine.anchor());
+      assertEquals("Finance", signatureLine.setup().orElseThrow().suggestedSigner2().orElseThrow());
+      assertEquals(
+          "ada@example.com",
+          signatureLine.setup().orElseThrow().suggestedSignerEmail().orElseThrow());
+
+      sheet.drawings().deleteDrawingObject("OpsSignature");
+      reopened
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFVMLDrawing vmlDrawing = reopened.getSheet("Ops").getVMLDrawing(false);
+      assertNotNull(vmlDrawing);
+      assertEquals(0, signatureShapeCount(vmlDrawing));
+    }
+  }
+
+  @Test
+  void formulaBackedNumericChartTitlePersistsExplicitCacheAcrossSaveAndLoad() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-title-cache-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.cells().setCell("B1", new CellValue.NumberValue(1d));
+      sheet.cells().setCell("A2", new CellValue.Text("Jan"));
+      sheet.cells().setCell("A3", new CellValue.Text("Feb"));
+      sheet.cells().setCell("A4", new CellValue.Text("Mar"));
+      sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
+      sheet.cells().setCell("B3", new CellValue.NumberValue(12d));
+      sheet.cells().setCell("B4", new CellValue.NumberValue(14d));
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  anchor(0, 0, 3, 4),
+                  new ChartTitleSpec.Formula("B1"),
+                  new ChartLegendSpec.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.None(),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFDrawing drawing = reopened.getSheet("Ops").getDrawingPatriarch();
+      assertNotNull(drawing);
+      XSSFChart chart = drawing.getCharts().getFirst();
+      assertEquals("Ops!$B$1", chart.getTitleFormula());
+      assertTrue(chart.getCTChart().getTitle().getTx().getStrRef().isSetStrCache());
+      assertEquals(
+          "1.0",
+          chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
+    }
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      ChartReport chart = reopened.sheet("Ops").drawings().charts().getFirst();
+      ChartReport.Title.Formula title =
+          assertInstanceOf(ChartReport.Title.Formula.class, chart.title());
+      assertEquals("Ops!$B$1", title.formula());
+      assertEquals("1.0", title.cachedText());
+
+      DrawingObjectReport.Chart drawingChart =
+          assertInstanceOf(
+              DrawingObjectReport.Chart.class,
+              reopened.sheet("Ops").drawings().drawingObjects().getFirst());
+      assertEquals("1.0", drawingChart.title());
+    }
+  }
+
+  @Test
+  void formulaChartTitleUpdateReplacesExistingRichTextAndExistingStringCache() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-title-rewrite-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Chart");
+      seedChartData(sheet);
+      sheet.cells().setCell("D1", new CellValue.NumberValue(1d));
+      sheet.cells().setCell("E1", new CellValue.NumberValue(2d));
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  anchor(4, 1, 11, 16),
+                  new ResolvedChartTitle.Text("Roadmap"),
+                  new ChartLegendSpec.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.None(),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XssfWorkbook workbook =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      XssfSheet sheet = workbook.sheet("Chart");
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  anchor(4, 1, 11, 16),
+                  new ChartTitleSpec.Formula("D1"),
+                  new ChartLegendSpec.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.None(),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  anchor(4, 1, 11, 16),
+                  new ChartTitleSpec.Formula("E1"),
+                  new ChartLegendSpec.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.None(),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFDrawing drawing = reopened.getSheet("Chart").getDrawingPatriarch();
+      assertNotNull(drawing);
+      XSSFChart chart = drawing.getCharts().getFirst();
+      assertEquals("Chart!$E$1", chart.getTitleFormula());
+      assertFalse(chart.getCTChart().getTitle().getTx().isSetRich());
+      assertTrue(chart.getCTChart().getTitle().getTx().isSetStrRef());
+      assertTrue(chart.getCTChart().getTitle().getTx().getStrRef().isSetStrCache());
+      assertEquals(
+          1, chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().sizeOfPtArray());
+      assertEquals(
+          "2.0",
+          chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
+    }
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      ChartReport chart = reopened.sheet("Chart").drawings().charts().getFirst();
+      ChartReport.Title.Formula title =
+          assertInstanceOf(ChartReport.Title.Formula.class, chart.title());
+      assertEquals("Chart!$E$1", title.formula());
+      assertEquals("2.0", title.cachedText());
+    }
+  }
+
+  @Test
+  void chartAuthoringSupportsMultiPlotComboCharts() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-combo-authored-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Chart");
+      seedChartData(sheet);
+      sheet
+          .drawings()
+          .setChart(
+              new ResolvedChart(
+                  "ComboChart",
+                  anchor(4, 1, 11, 16),
+                  new ResolvedChartTitle.Text("Roadmap"),
+                  new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  List.of(
+                      new ResolvedChart.Bar(
+                          true,
+                          ExcelChartBarDirection.COLUMN,
+                          ExcelChartBarGrouping.CLUSTERED,
+                          Optional.empty(),
+                          Optional.empty(),
+                          List.of(
+                              new ChartAxisSpec(
+                                  ExcelChartAxisKind.CATEGORY,
+                                  ExcelChartAxisPosition.BOTTOM,
+                                  ExcelChartAxisCrosses.AUTO_ZERO,
+                                  true),
+                              new ChartAxisSpec(
+                                  ExcelChartAxisKind.VALUE,
+                                  ExcelChartAxisPosition.LEFT,
+                                  ExcelChartAxisCrosses.AUTO_ZERO,
+                                  true)),
+                          List.of(
+                              new ResolvedChart.Series(
+                                  new ResolvedChartTitle.Text("Plan"),
+                                  ExcelChartTestSupport.ref("A2:A4"),
+                                  ExcelChartTestSupport.ref("B2:B4")))),
+                      new ResolvedChart.Line(
+                          false,
+                          ExcelChartGrouping.STANDARD,
+                          List.of(
+                              new ChartAxisSpec(
+                                  ExcelChartAxisKind.CATEGORY,
+                                  ExcelChartAxisPosition.BOTTOM,
+                                  ExcelChartAxisCrosses.AUTO_ZERO,
+                                  true),
+                              new ChartAxisSpec(
+                                  ExcelChartAxisKind.VALUE,
+                                  ExcelChartAxisPosition.LEFT,
+                                  ExcelChartAxisCrosses.AUTO_ZERO,
+                                  true)),
+                          List.of(
+                              new ResolvedChart.Series(
+                                  new ResolvedChartTitle.Text("Actual"),
+                                  ExcelChartTestSupport.ref("A2:A4"),
+                                  ExcelChartTestSupport.ref("C2:C4")))))));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      ChartReport comboChart = reopened.sheet("Chart").drawings().charts().getFirst();
+      assertEquals("ComboChart", comboChart.name());
+      assertEquals(
+          List.of("BAR", "LINE"),
+          comboChart.plots().stream()
+              .map(
+                  plot ->
+                      switch (plot) {
+                        case ChartReport.Bar _ -> "BAR";
+                        case ChartReport.Line _ -> "LINE";
+                        case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
+                        default -> throw new AssertionError("Unexpected plot type: " + plot);
+                      })
+              .toList());
+      ChartReport.Bar barPlot =
+          assertInstanceOf(ChartReport.Bar.class, comboChart.plots().getFirst());
+      ChartReport.Line linePlot =
+          assertInstanceOf(ChartReport.Line.class, comboChart.plots().get(1));
+      assertEquals(
+          "Plan",
+          assertInstanceOf(ChartReport.Title.Text.class, barPlot.series().getFirst().title())
+              .text());
+      assertEquals(
+          "Actual",
+          assertInstanceOf(ChartReport.Title.Text.class, linePlot.series().getFirst().title())
+              .text());
+    }
+  }
+
+  @Test
+  void commentOperationsPreserveRealDrawingObjects() throws IOException {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet commentOnly = workbook.getOrCreateSheet("Comments");
+      commentOnly.comments().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
+
+      assertTrue(commentOnly.cells().snapshotCell("A1").comment().isPresent());
+
+      commentOnly.comments().clearComment("A1");
+      assertFalse(commentOnly.cells().snapshotCell("A1").comment().isPresent());
+
+      XssfSheet withDrawing = workbook.getOrCreateSheet("Ops");
+      withDrawing
+          .drawings()
+          .setPicture(
+              new ResolvedPicture(
+                  "OpsPicture",
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
+      List<DrawingObjectReport> before = withDrawing.drawings().drawingObjects();
+
+      withDrawing.comments().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
+      assertEquals(before, withDrawing.drawings().drawingObjects());
+
+      withDrawing.comments().clearComment("A1");
+      assertEquals(before, withDrawing.drawings().drawingObjects());
+    }
+  }
+
+  @Test
+  void clearCommentSupportsReopenedPoiCommentWorkbooks() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-clear-comment-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Ops");
+      sheet.createRow(0).createCell(0).setCellValue("Lead");
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      var anchor = drawing.createAnchor(64, 24, 448, 96, 0, 0, 3, 3);
+      XSSFComment comment = drawing.createCellComment(anchor);
+      comment.setString(new XSSFRichTextString("Review"));
+      comment.setAuthor("GridGrind");
+      sheet.getRow(0).getCell(0).setCellComment(comment);
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (XssfWorkbook workbook =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      workbook.sheet("Ops").comments().clearComment("A1");
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      assertNull(workbook.getSheet("Ops").getRow(0).getCell(0).getCellComment());
+    }
+  }
+
+  @Test
+  void embeddedObjectReadbackFallsBackToDrawingPreviewWhenSheetPreviewMetadataIsMissing()
+      throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-preview-gap-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Ops")
+          .drawings()
+          .setEmbeddedObject(
+              new ResolvedEmbeddedObject(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  anchor(1, 1, 4, 6)));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFObjectData objectData =
+          workbook.getSheet("Ops").createDrawingPatriarch().getShapes().stream()
+              .filter(XSSFObjectData.class::isInstance)
+              .map(XSSFObjectData.class::cast)
+              .findFirst()
+              .orElseThrow();
+      try (XmlCursor cursor = objectData.getOleObject().newCursor()) {
+        assertTrue(cursor.toChild(XSSFRelation.NS_SPREADSHEETML, "objectPr"));
+        cursor.removeXml();
+      }
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (XssfWorkbook workbook =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      DrawingObjectReport.EmbeddedObject snapshot =
+          assertInstanceOf(
+              DrawingObjectReport.EmbeddedObject.class,
+              workbook.sheet("Ops").drawings().drawingObjects().getFirst());
+      DrawingObjectPayloadReport.EmbeddedObject payload =
+          assertInstanceOf(
+              DrawingObjectPayloadReport.EmbeddedObject.class,
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
+
+      assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat().orElseThrow());
+      org.junit.jupiter.api.Assertions.assertTrue(snapshot.previewByteSize().isPresent());
+      org.junit.jupiter.api.Assertions.assertTrue(snapshot.previewSha256().isPresent());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
+    }
+  }
+
+  @Test
+  void embeddedObjectReadbackSurvivesMissingPreviewImageMetadata() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-preview-missing-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Ops")
+          .drawings()
+          .setEmbeddedObject(
+              new ResolvedEmbeddedObject(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  anchor(1, 1, 4, 6)));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFObjectData objectData =
+          workbook.getSheet("Ops").createDrawingPatriarch().getShapes().stream()
+              .filter(XSSFObjectData.class::isInstance)
+              .map(XSSFObjectData.class::cast)
+              .findFirst()
+              .orElseThrow();
+      try (XmlCursor cursor = objectData.getOleObject().newCursor()) {
+        assertTrue(cursor.toChild(XSSFRelation.NS_SPREADSHEETML, "objectPr"));
+        cursor.removeXml();
+      }
+      objectData.getCTShape().getSpPr().unsetBlipFill();
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (XssfWorkbook workbook =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      DrawingObjectReport.EmbeddedObject snapshot =
+          assertInstanceOf(
+              DrawingObjectReport.EmbeddedObject.class,
+              workbook.sheet("Ops").drawings().drawingObjects().getFirst());
+      DrawingObjectPayloadReport.EmbeddedObject payload =
+          assertInstanceOf(
+              DrawingObjectPayloadReport.EmbeddedObject.class,
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
+
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.previewFormat());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.previewByteSize());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          java.util.Optional.empty(), snapshot.previewSha256());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
+    }
+  }
+
+  @Test
+  void embeddedObjectReadbackFallsBackWhenSheetPreviewIdTargetsSheetDrawing() throws IOException {
+    Path workbookPath =
+        XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-preview-sheet-drawing-fallback-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Ops")
+          .drawings()
+          .setEmbeddedObject(
+              new ResolvedEmbeddedObject(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  anchor(1, 1, 4, 6)));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFSheet sheet = workbook.getSheet("Ops");
+      XSSFObjectData objectData = firstEmbeddedObject(sheet);
+      DrawingAdapter.setPreviewSheetRelationId(
+          objectData.getOleObject(), sheetDrawingRelationId(sheet));
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (XssfWorkbook workbook =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      DrawingObjectReport.EmbeddedObject snapshot =
+          assertInstanceOf(
+              DrawingObjectReport.EmbeddedObject.class,
+              workbook.sheet("Ops").drawings().drawingObjects().getFirst());
+      DrawingObjectPayloadReport.EmbeddedObject payload =
+          assertInstanceOf(
+              DrawingObjectPayloadReport.EmbeddedObject.class,
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
+
+      assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat().orElseThrow());
+      org.junit.jupiter.api.Assertions.assertTrue(snapshot.previewByteSize().isPresent());
+      org.junit.jupiter.api.Assertions.assertTrue(snapshot.previewSha256().isPresent());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
+    }
+  }
+
+  @Test
+  void deleteEmbeddedObjectPreservesSheetDrawingWhenSheetPreviewIdTargetsSheetDrawing()
+      throws IOException {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet
+          .drawings()
+          .setPicture(
+              new ResolvedPicture(
+                  "OpsPicture",
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
+      sheet
+          .drawings()
+          .setEmbeddedObject(
+              new ResolvedEmbeddedObject(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  anchor(5, 1, 8, 6)));
+
+      XSSFSheet poiSheet = sheet.xssfSheet();
+      XSSFObjectData objectData = firstEmbeddedObject(poiSheet);
+      DrawingAdapter.setPreviewSheetRelationId(
+          objectData.getOleObject(), sheetDrawingRelationId(poiSheet));
+
+      sheet.drawings().deleteDrawingObject("OpsEmbed");
+
+      assertEquals(
+          List.of("OpsPicture"),
+          sheet.drawings().drawingObjects().stream().map(DrawingObjectReport::name).toList());
+      assertNotNull(poiSheet.getDrawingPatriarch());
+      assertEquals(1, poiSheet.getDrawingPatriarch().getShapes().size());
+      assertNotNull(sheet.drawings().drawingObjectPayload("OpsPicture"));
+    }
+  }
+
+  @Test
+  void embeddedObjectReadbackSurvivesEmptyPackageBytes() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-empty-package-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Ops")
+          .drawings()
+          .setEmbeddedObject(
+              new ResolvedEmbeddedObject(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new BinaryContent(PNG_PIXEL_BYTES),
+                  anchor(1, 1, 4, 6)));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFObjectData objectData =
+          workbook.getSheet("Ops").createDrawingPatriarch().getShapes().stream()
+              .filter(XSSFObjectData.class::isInstance)
+              .map(XSSFObjectData.class::cast)
+              .findFirst()
+              .orElseThrow();
+      org.apache.poi.openxml4j.opc.PackagePart objectPart =
+          DrawingAdapter.oleObjectPart(objectData).orElseThrow();
+      try (var outputStream = objectPart.getOutputStream()) {
+        outputStream.write(new byte[0]);
+      }
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (XssfWorkbook workbook =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      DrawingObjectReport.EmbeddedObject snapshot =
+          assertInstanceOf(
+              DrawingObjectReport.EmbeddedObject.class,
+              workbook.sheet("Ops").drawings().drawingObjects().getFirst());
+      DrawingObjectPayloadReport.EmbeddedObject payload =
+          assertInstanceOf(
+              DrawingObjectPayloadReport.EmbeddedObject.class,
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
+
+      assertEquals(0L, snapshot.byteSize());
+      assertEquals(DrawingAdapter.sha256(new byte[0]), snapshot.sha256());
+      assertEquals(0, java.util.Base64.getDecoder().decode(payload.base64Data()).length);
+      assertArrayEquals(new byte[0], java.util.Base64.getDecoder().decode(payload.base64Data()));
+    }
+  }
+
+  @Test
+  void chartOperationsSupportAuthoringMutationAndDeletion() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-roundtrip-");
+
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Chart");
+      seedChartData(sheet);
+      workbook
+          .names()
+          .setNamedRange(
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("ChartCategories"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Chart"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A4"))))
+          .setNamedRange(
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("ChartActual"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Chart"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C4"))));
+
+      sheet.drawings().setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
+
+      assertInitialChartSnapshot(sheet);
+      assertInitialChartDrawingObject(sheet);
+
+      DrawingAnchorSpec.TwoCell movedAnchor = anchor(6, 2, 12, 18);
+      sheet.drawings().setDrawingObjectAnchor("OpsChart", movedAnchor);
+      sheet.drawings().setChart(updatedChartDefinition(movedAnchor));
+
+      assertUpdatedChartSnapshot(sheet, movedAnchor);
+
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    assertPersistedChartWorkbook(workbookPath);
+
+    try (XssfWorkbook reopened =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      reopened.sheet("Chart").drawings().deleteDrawingObject("OpsChart");
+      reopened
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFDrawing drawing = reopened.getSheet("Chart").getDrawingPatriarch();
+      assertTrue(drawing == null || drawing.getCharts().isEmpty());
+    }
+  }
+
+  @Test
+  void unsupportedChartsStayReadableAndRejectAuthoritativeMutation() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-unsupported-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Chart");
+      seedChartData(sheet);
+
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      var anchor = drawing.createAnchor(0, 0, 0, 0, 4, 1, 11, 16);
+      XSSFChart chart = drawing.createChart(anchor);
+      chart.getGraphicFrame().setName("ComboChart");
+      chart.getOrAddLegend().setPosition(LegendPosition.TOP_RIGHT);
+      XDDFCategoryAxis categoryAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
+      XDDFValueAxis valueAxis = chart.createValueAxis(AxisPosition.LEFT);
+      valueAxis.setCrosses(AxisCrosses.AUTO_ZERO);
+      var categories =
+          XDDFDataSourcesFactory.fromStringCellRange(sheet, CellRangeAddress.valueOf("A2:A4"));
+      var barValues =
+          XDDFDataSourcesFactory.fromNumericCellRange(sheet, CellRangeAddress.valueOf("B2:B4"));
+      var lineValues =
+          XDDFDataSourcesFactory.fromNumericCellRange(sheet, CellRangeAddress.valueOf("C2:C4"));
+      XDDFBarChartData barData =
+          (XDDFBarChartData) chart.createData(ChartTypes.BAR, categoryAxis, valueAxis);
+      barData.addSeries(categories, barValues).setTitle("Plan", null);
+      chart.plot(barData);
+      XDDFLineChartData lineData =
+          (XDDFLineChartData) chart.createData(ChartTypes.LINE, categoryAxis, valueAxis);
+      lineData.addSeries(categories, lineValues).setTitle("Actual", null);
+      chart.plot(lineData);
+
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (XssfWorkbook workbook =
+        XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      XssfSheet sheet = workbook.sheet("Chart");
+      ChartReport comboChart = sheet.drawings().charts().getFirst();
+      assertEquals("ComboChart", comboChart.name());
+      assertEquals(
+          List.of("BAR", "LINE"),
+          comboChart.plots().stream()
+              .map(
+                  plot ->
+                      switch (plot) {
+                        case ChartReport.Bar _ -> "BAR";
+                        case ChartReport.Line _ -> "LINE";
+                        case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
+                        default -> throw new AssertionError("Unexpected plot type: " + plot);
+                      })
+              .toList());
+
+      DrawingObjectReport.Chart drawingChart =
+          assertInstanceOf(
+              DrawingObjectReport.Chart.class, sheet.drawings().drawingObjects().getFirst());
+      assertTrue(drawingChart.supported());
+      assertEquals(List.of("BAR", "LINE"), drawingChart.plotTypeTokens());
+
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "ComboChart",
+                  anchor(4, 1, 11, 16),
+                  new ResolvedChartTitle.Text("Roadmap"),
+                  new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                  ExcelChartDisplayBlanksAs.SPAN,
+                  false,
+                  true,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ResolvedChart.Series(
+                          new ChartTitleSpec.Formula("B1"),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      ChartReport replaced = sheet.drawings().charts().getFirst();
+      assertEquals("ComboChart", replaced.name());
+      assertInstanceOf(
+          ChartReport.Bar.class, ExcelChartTestSupport.singlePlot(replaced, ChartReport.Bar.class));
+
+      sheet.cells().setCell("F1", new CellValue.Text("Touch"));
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition
+                  .REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFDrawing drawing = workbook.getSheet("Chart").getDrawingPatriarch();
+      assertNotNull(drawing);
+      assertEquals(1, drawing.getCharts().size());
+      assertEquals(1, drawing.getCharts().getFirst().getChartSeries().size());
+    }
+  }
+
+  @Test
+  void failedShapeAndChartValidationIsNonMutating() throws IOException {
+    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      XssfSheet sheet = workbook.getOrCreateSheet("Chart");
+      seedChartData(sheet);
+      seedChartNamedRanges(workbook);
+
+      IllegalArgumentException invalidShape =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  sheet
+                      .drawings()
+                      .setShape(
+                          new ResolvedShape.SimpleShape(
+                              "OpsBrokenShape",
+                              anchor(1, 1, 3, 3),
+                              "invalid-shape",
+                              Optional.empty())));
+      assertTrue(invalidShape.getMessage().contains("Unsupported presetGeometryToken"));
+      assertEquals(List.of(), sheet.drawings().drawingObjects());
+      assertEquals(List.of(), sheet.drawings().charts());
+
+      IllegalArgumentException invalidChartCreate =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  sheet
+                      .drawings()
+                      .setChart(invalidBarChartDefinition("OpsBrokenChart", anchor(4, 1, 11, 16))));
+      assertTrue(
+          invalidChartCreate
+              .getMessage()
+              .contains("Chart value source must resolve to numeric cells"));
+      assertEquals(List.of(), sheet.drawings().drawingObjects());
+      assertEquals(List.of(), sheet.drawings().charts());
+
+      sheet.drawings().setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
+      sheet.drawings().setChart(lineChartDefinition(anchor(7, 3, 13, 20)));
+      ChartReport typeChanged = sheet.drawings().charts().getFirst();
+      List<DrawingObjectReport> drawingObjectsBeforeFailure = sheet.drawings().drawingObjects();
+      List<ChartReport> chartsBeforeFailure = sheet.drawings().charts();
+      assertEquals("OpsChart", typeChanged.name());
+      assertInstanceOf(
+          ChartReport.Line.class,
+          ExcelChartTestSupport.singlePlot(typeChanged, ChartReport.Line.class));
+
+      IllegalArgumentException invalidChartMutation =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  sheet
+                      .drawings()
+                      .setChart(invalidBarChartDefinition("OpsChart", anchor(7, 3, 13, 20))));
+      assertTrue(
+          invalidChartMutation
+              .getMessage()
+              .contains("Chart value source must resolve to numeric cells"));
+      assertEquals(drawingObjectsBeforeFailure, sheet.drawings().drawingObjects());
+      assertEquals(chartsBeforeFailure, sheet.drawings().charts());
+    }
+  }
+
+  private static DrawingAnchorSpec.TwoCell anchor(
+      int fromColumn, int fromRow, int toColumn, int toRow) {
+    return new DrawingAnchorSpec.TwoCell(
+        new DrawingMarkerSpec(fromColumn, fromRow, 0, 0),
+        new DrawingMarkerSpec(toColumn, toRow, 0, 0),
+        ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+  }
+
+  private static XSSFObjectData firstEmbeddedObject(XSSFSheet sheet) {
+    return sheet.createDrawingPatriarch().getShapes().stream()
+        .filter(XSSFObjectData.class::isInstance)
+        .map(XSSFObjectData.class::cast)
+        .findFirst()
+        .orElseThrow();
+  }
+
+  private static String sheetDrawingRelationId(XSSFSheet sheet) {
+    assertTrue(sheet.getCTWorksheet().isSetDrawing());
+    return sheet.getCTWorksheet().getDrawing().getId();
+  }
+
+  private static void seedChartData(XssfSheet sheet) {
+    sheet.cells().setCell("A1", new CellValue.Text("Month"));
+    sheet.cells().setCell("B1", new CellValue.Text("Plan"));
+    sheet.cells().setCell("C1", new CellValue.Text("Actual"));
+    sheet.cells().setCell("A2", new CellValue.Text("Jan"));
+    sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
+    sheet.cells().setCell("C2", new CellValue.NumberValue(12d));
+    sheet.cells().setCell("A3", new CellValue.Text("Feb"));
+    sheet.cells().setCell("B3", new CellValue.NumberValue(18d));
+    sheet.cells().setCell("C3", new CellValue.NumberValue(16d));
+    sheet.cells().setCell("A4", new CellValue.Text("Mar"));
+    sheet.cells().setCell("B4", new CellValue.NumberValue(15d));
+    sheet.cells().setCell("C4", new CellValue.NumberValue(21d));
+  }
+
+  private static CTShape firstSignatureShape(XSSFVMLDrawing vmlDrawing) {
+    try (XmlCursor cursor = vmlDrawing.getDocument().getXml().newCursor()) {
+      for (boolean found = cursor.toFirstChild(); found; found = cursor.toNextSibling()) {
+        if (cursor.getObject() instanceof CTShape shape && shape.sizeOfSignaturelineArray() > 0) {
+          return shape;
+        }
+      }
+    }
+    fail("Expected one signature-line VML shape");
+    throw new AssertionError("unreachable");
+  }
+
+  private static int signatureShapeCount(XSSFVMLDrawing vmlDrawing) {
+    int count = 0;
+    try (XmlCursor cursor = vmlDrawing.getDocument().getXml().newCursor()) {
+      for (boolean found = cursor.toFirstChild(); found; found = cursor.toNextSibling()) {
+        if (cursor.getObject() instanceof CTShape shape && shape.sizeOfSignaturelineArray() > 0) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  private static void seedChartData(org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
+    sheet.createRow(0).createCell(0).setCellValue("Month");
+    sheet.getRow(0).createCell(1).setCellValue("Plan");
+    sheet.getRow(0).createCell(2).setCellValue("Actual");
+    sheet.createRow(1).createCell(0).setCellValue("Jan");
+    sheet.getRow(1).createCell(1).setCellValue(10d);
+    sheet.getRow(1).createCell(2).setCellValue(12d);
+    sheet.createRow(2).createCell(0).setCellValue("Feb");
+    sheet.getRow(2).createCell(1).setCellValue(18d);
+    sheet.getRow(2).createCell(2).setCellValue(16d);
+    sheet.createRow(3).createCell(0).setCellValue("Mar");
+    sheet.getRow(3).createCell(1).setCellValue(15d);
+    sheet.getRow(3).createCell(2).setCellValue(21d);
+  }
+
+  private static void seedChartNamedRanges(XssfWorkbook workbook) {
+    workbook
+        .names()
+        .setNamedRange(
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("ChartCategories"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Chart"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A4"))))
+        .setNamedRange(
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("ChartActual"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Chart"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C4"))));
+  }
+
+  private static void assertInitialChartSnapshot(XssfSheet sheet) {
+    ChartReport initial = sheet.drawings().charts().getFirst();
+    ChartReport.Bar bar = ExcelChartTestSupport.singlePlot(initial, ChartReport.Bar.class);
+    assertEquals("OpsChart", initial.name());
+    assertEquals(new ChartReport.Title.Text("Roadmap"), initial.title());
+    assertEquals(ExcelChartDisplayBlanksAs.SPAN, initial.displayBlanksAs());
+    assertFalse(initial.plotOnlyVisibleCells());
+    assertTrue(bar.varyColors());
+    assertEquals(ExcelChartBarDirection.COLUMN, bar.barDirection());
+    assertEquals(2, bar.axes().size());
+    assertEquals(2, bar.series().size());
+    assertEquals(
+        "A2:A4",
+        assertInstanceOf(
+                ChartReport.DataSource.StringReference.class, bar.series().getFirst().categories())
+            .formula());
+    ChartReport.Series namedRangeSeries = bar.series().get(1);
+    ChartReport.Title.Formula namedRangeSeriesTitle =
+        assertInstanceOf(ChartReport.Title.Formula.class, namedRangeSeries.title());
+    assertTrue(namedRangeSeriesTitle.formula().endsWith("$C$1"));
+    assertEquals("Actual", namedRangeSeriesTitle.cachedText());
+    assertEquals(
+        "ChartCategories",
+        assertInstanceOf(
+                ChartReport.DataSource.StringReference.class, namedRangeSeries.categories())
+            .formula());
+    assertEquals(
+        "ChartActual",
+        assertInstanceOf(ChartReport.DataSource.NumericReference.class, namedRangeSeries.values())
+            .formula());
+  }
+
+  private static void assertInitialChartDrawingObject(XssfSheet sheet) {
+    DrawingObjectReport.Chart drawingChart =
+        assertInstanceOf(
+            DrawingObjectReport.Chart.class, sheet.drawings().drawingObjects().getFirst());
+    assertTrue(drawingChart.supported());
+    assertEquals(List.of("BAR"), drawingChart.plotTypeTokens());
+    assertEquals("Roadmap", drawingChart.title());
+  }
+
+  private static void assertUpdatedChartSnapshot(
+      XssfSheet sheet, DrawingAnchorSpec.TwoCell movedAnchor) {
+    ChartReport updated = sheet.drawings().charts().getFirst();
+    ChartReport.Bar bar = ExcelChartTestSupport.singlePlot(updated, ChartReport.Bar.class);
+    assertEquals(DrawingGeometryFixtures.report(movedAnchor), updated.anchor());
+    assertEquals(new ChartReport.Title.Text("Actual focus"), updated.title());
+    assertInstanceOf(ChartReport.Legend.Hidden.class, updated.legend());
+    assertEquals(ExcelChartDisplayBlanksAs.ZERO, updated.displayBlanksAs());
+    assertTrue(updated.plotOnlyVisibleCells());
+    assertFalse(bar.varyColors());
+    assertEquals(ExcelChartBarDirection.BAR, bar.barDirection());
+    assertEquals(1, bar.series().size());
+    assertEquals(
+        "ChartCategories",
+        assertInstanceOf(
+                ChartReport.DataSource.StringReference.class, bar.series().getFirst().categories())
+            .formula());
+    assertEquals(
+        "ChartActual",
+        assertInstanceOf(
+                ChartReport.DataSource.NumericReference.class, bar.series().getFirst().values())
+            .formula());
+  }
+
+  private static void assertPersistedChartWorkbook(Path workbookPath) throws IOException {
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFDrawing drawing = reopened.getSheet("Chart").getDrawingPatriarch();
+      assertNotNull(drawing);
+      drawing.getShapes();
+      assertEquals(1, drawing.getCharts().size());
+      XSSFChart chart = drawing.getCharts().getFirst();
+      assertEquals("OpsChart", chart.getGraphicFrame().getName());
+      assertEquals("Actual focus", chart.getTitleText().getString());
+      assertFalse(chart.getCTChart().isSetLegend());
+      XDDFBarChartData data =
+          assertInstanceOf(XDDFBarChartData.class, chart.getChartSeries().getFirst());
+      assertEquals(BarDirection.BAR, data.getBarDirection());
+      assertEquals(1, data.getSeriesCount());
+      assertTrue(chart.isPlotOnlyVisibleCells());
+      assertEquals(CellType.STRING, reopened.getSheet("Chart").getRow(0).getCell(0).getCellType());
+    }
+  }
+
+  private static ResolvedChart initialChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
+    return ExcelChartTestSupport.barChart(
+        "OpsChart",
+        anchor,
+        new ResolvedChartTitle.Text("Roadmap"),
+        new ChartLegendSpec.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+        ExcelChartDisplayBlanksAs.SPAN,
+        false,
+        true,
+        ExcelChartBarDirection.COLUMN,
+        List.of(
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("B1"),
+                ExcelChartTestSupport.ref("A2:A4"),
+                ExcelChartTestSupport.ref("B2:B4")),
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("C1"),
+                ExcelChartTestSupport.ref("ChartCategories"),
+                ExcelChartTestSupport.ref("ChartActual"))));
+  }
+
+  private static ResolvedChart updatedChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
+    return ExcelChartTestSupport.barChart(
+        "OpsChart",
+        anchor,
+        new ResolvedChartTitle.Text("Actual focus"),
+        new ChartLegendSpec.Hidden(),
+        ExcelChartDisplayBlanksAs.ZERO,
+        true,
+        false,
+        ExcelChartBarDirection.BAR,
+        List.of(
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("C1"),
+                ExcelChartTestSupport.ref("ChartCategories"),
+                ExcelChartTestSupport.ref("ChartActual"))));
+  }
+
+  private static ResolvedChart lineChartDefinition(DrawingAnchorSpec.TwoCell anchor) {
+    return ExcelChartTestSupport.lineChart(
+        "OpsChart",
+        anchor,
+        new ResolvedChartTitle.Text("Line focus"),
+        new ChartLegendSpec.Hidden(),
+        ExcelChartDisplayBlanksAs.ZERO,
+        true,
+        false,
+        List.of(
+            new ResolvedChart.Series(
+                new ChartTitleSpec.Formula("C1"),
+                ExcelChartTestSupport.ref("ChartCategories"),
+                ExcelChartTestSupport.ref("ChartActual"))));
+  }
+
+  private static ResolvedChart invalidBarChartDefinition(
+      String name, DrawingAnchorSpec.TwoCell anchor) {
+    return ExcelChartTestSupport.barChart(
+        name,
+        anchor,
+        new ResolvedChartTitle.Text("Broken"),
+        new ChartLegendSpec.Hidden(),
+        ExcelChartDisplayBlanksAs.SPAN,
+        false,
+        true,
+        ExcelChartBarDirection.COLUMN,
+        List.of(
+            new ResolvedChart.Series(
+                new ResolvedChartTitle.Text("Broken"),
+                ExcelChartTestSupport.ref("A2:A4"),
+                ExcelChartTestSupport.ref("A2:A4"))));
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "protocolVersion": 1,
+  "source": {
+    "type": "EXISTING",
+    "path": "fixtures/secured-source.xlsx",
+    "security": {
+      "passwordRef": { "id": "source-open-password" }
+    }
+  },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "fixtures/secured-copy.xlsx",
+    "ifExists": "REPLACE",
+    "security": {
+      "encryption": {
+        "type": "ENCRYPT",
+        "encryption": {
+          "passwordRef": { "id": "output-password" },
+          "cipher": "AES_256",
+          "hash": "SHA_512"
+        }
+      },
+      "signature": {
+        "type": "SIGN",
+        "signature": {
+          "pkcs12Path": "fixtures/signing-material.p12",
+          "keystorePasswordRef": { "id": "keystore-password" },
+          "keyPasswordRef": { "id": "key-password" },
+          "alias": "gridgrind-signing",
+          "description": "GridGrind Jazzer replay seed"
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "stepId": "step-01-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "value": {
+            "type": "INLINE",
+            "text": "Rotated"
+          }
+        }
+      },
+      "target": {
+        "type": "CELL_BY_ADDRESS",
+        "sheetName": "Secure",
+        "address": "B2"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_PACKAGE_SECURITY"
+      },
+      "stepId": "security",
+      "target": {
+        "type": "WORKBOOK_CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "secure-cells",
+      "target": {
+        "type": "CELL_BY_ADDRESSES",
+        "sheetName": "Secure",
+        "addresses": [
+          "A1",
+          "B2"
+        ]
+      }
+    }
+  ]
+}

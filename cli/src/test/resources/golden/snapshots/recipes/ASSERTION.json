@@ -1,0 +1,694 @@
+{
+  "detail" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "advisory" : "SELF_CONTAINED",
+      "id" : "ASSERTION",
+      "intentTags" : [ "assertion", "verification", "fact-readback", "quality" ],
+      "protocolVersion" : 1,
+      "requestFileName" : "assertion-request.json",
+      "requestProfile" : {
+        "assertionTypes" : [ "EXPECT_CELL_VALUE", "EXPECT_ANALYSIS_MAX_SEVERITY" ],
+        "calculationStrategy" : "DO_NOT_CALCULATE",
+        "executionMode" : "FULL_XSSF",
+        "inspectionQueryTypes" : [ "GET_CELLS" ],
+        "journalLevel" : "VERBOSE",
+        "markRecalculateOnOpen" : false,
+        "mutationActionTypes" : [ "ENSURE_SHEET", "SET_CELL" ],
+        "persistenceType" : "NONE",
+        "sourceType" : "NEW",
+        "stepCount" : 7
+      },
+      "requiredWorkspacePaths" : [ ],
+      "summary" : "Mutate then verify with first-class assertions, verbose journaling, and factual readback.",
+      "type" : "EXAMPLE"
+    }
+  },
+  "execution" : {
+    "exit" : 0,
+    "stderr" : [ {
+      "category" : "PLAN",
+      "status" : "STARTED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "VALIDATION",
+      "status" : "STARTED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "VALIDATION",
+      "status" : "SUCCEEDED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "RESOLVE_INPUTS",
+      "status" : "STARTED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "RESOLVE_INPUTS",
+      "status" : "SUCCEEDED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "OPEN",
+      "status" : "STARTED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "OPEN",
+      "status" : "SUCCEEDED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "STARTED",
+      "stepId" : "ensure-budget",
+      "stepIndex" : 0,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "SUCCEEDED",
+      "stepId" : "ensure-budget",
+      "stepIndex" : 0,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "STARTED",
+      "stepId" : "set-title",
+      "stepIndex" : 1,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "SUCCEEDED",
+      "stepId" : "set-title",
+      "stepIndex" : 1,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "STARTED",
+      "stepId" : "set-total",
+      "stepIndex" : 2,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "SUCCEEDED",
+      "stepId" : "set-total",
+      "stepIndex" : 2,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "STARTED",
+      "stepId" : "assert-title",
+      "stepIndex" : 3,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "SUCCEEDED",
+      "stepId" : "assert-title",
+      "stepIndex" : 3,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "STARTED",
+      "stepId" : "assert-total",
+      "stepIndex" : 4,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "SUCCEEDED",
+      "stepId" : "assert-total",
+      "stepIndex" : 4,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "STARTED",
+      "stepId" : "assert-formula-health",
+      "stepIndex" : 5,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "SUCCEEDED",
+      "stepId" : "assert-formula-health",
+      "stepIndex" : 5,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "STARTED",
+      "stepId" : "read-budget",
+      "stepIndex" : 6,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "STEP",
+      "status" : "SUCCEEDED",
+      "stepId" : "read-budget",
+      "stepIndex" : 6,
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "PERSIST",
+      "status" : "STARTED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "PERSIST",
+      "status" : "SUCCEEDED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "CLOSE",
+      "status" : "STARTED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "CLOSE",
+      "status" : "SUCCEEDED",
+      "timestamp" : "<timestamp>"
+    }, {
+      "category" : "PLAN",
+      "status" : "SUCCEEDED",
+      "timestamp" : "<timestamp>"
+    } ],
+    "stdout" : {
+      "assertions" : [ {
+        "assertionType" : "EXPECT_CELL_VALUE",
+        "status" : "PASSED",
+        "stepId" : "assert-title"
+      }, {
+        "assertionType" : "EXPECT_CELL_VALUE",
+        "status" : "PASSED",
+        "stepId" : "assert-total"
+      }, {
+        "assertionType" : "EXPECT_ANALYSIS_MAX_SEVERITY",
+        "status" : "PASSED",
+        "stepId" : "assert-formula-health"
+      } ],
+      "calculation" : {
+        "execution" : {
+          "cachesCleared" : false,
+          "evaluatedFormulaCount" : 0,
+          "markRecalculateOnOpenApplied" : false,
+          "status" : "NOT_REQUESTED"
+        },
+        "policy" : { }
+      },
+      "evidence" : {
+        "admission" : {
+          "materializedInputs" : [ ],
+          "operations" : [ {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "ENSURE_SHEET"
+          }, {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "SET_CELL"
+          }, {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "SET_CELL"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "EXPECT_CELL_VALUE"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "EXPECT_CELL_VALUE"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "EXPECT_ANALYSIS_MAX_SEVERITY"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_CELLS"
+          } ]
+        },
+        "computational" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "presentational" : {
+          "status" : "NOT_ASSESSED"
+        },
+        "preservation" : [ {
+          "status" : "NOT_REQUESTED"
+        } ],
+        "structural" : {
+          "status" : "NOT_ESTABLISHED"
+        },
+        "taskSpecific" : {
+          "assertions" : [ {
+            "origin" : "PLAN_AUTHORED",
+            "result" : {
+              "assertionType" : "EXPECT_CELL_VALUE",
+              "status" : "PASSED",
+              "stepId" : "assert-title"
+            }
+          }, {
+            "origin" : "PLAN_AUTHORED",
+            "result" : {
+              "assertionType" : "EXPECT_CELL_VALUE",
+              "status" : "PASSED",
+              "stepId" : "assert-total"
+            }
+          }, {
+            "origin" : "PLAN_AUTHORED",
+            "result" : {
+              "assertionType" : "EXPECT_ANALYSIS_MAX_SEVERITY",
+              "status" : "PASSED",
+              "stepId" : "assert-formula-health"
+            }
+          } ],
+          "status" : "ESTABLISHED"
+        }
+      },
+      "inspections" : [ {
+        "cells" : [ {
+          "address" : "A1",
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Quarterly Budget"
+          }
+        }, {
+          "address" : "B2",
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 1200.0
+          }
+        } ],
+        "sheetName" : "Budget",
+        "stepId" : "read-budget",
+        "type" : "GET_CELLS"
+      } ],
+      "journal" : {
+        "calculation" : {
+          "execution" : {
+            "status" : "NOT_REQUESTED"
+          },
+          "preflight" : {
+            "status" : "NOT_REQUESTED"
+          }
+        },
+        "close" : {
+          "status" : "SUCCEEDED",
+          "timing" : {
+            "durationMillis" : "<durationMillis>",
+            "finishedAt" : "<finishedAt>",
+            "startedAt" : "<startedAt>"
+          }
+        },
+        "inputResolution" : {
+          "status" : "SUCCEEDED",
+          "timing" : {
+            "durationMillis" : "<durationMillis>",
+            "finishedAt" : "<finishedAt>",
+            "startedAt" : "<startedAt>"
+          }
+        },
+        "level" : "VERBOSE",
+        "open" : {
+          "status" : "SUCCEEDED",
+          "timing" : {
+            "durationMillis" : "<durationMillis>",
+            "finishedAt" : "<finishedAt>",
+            "startedAt" : "<startedAt>"
+          }
+        },
+        "outcome" : {
+          "completedStepCount" : 7,
+          "durationMillis" : "<durationMillis>",
+          "plannedStepCount" : 7,
+          "status" : "SUCCEEDED"
+        },
+        "persistencePhase" : {
+          "status" : "SUCCEEDED",
+          "timing" : {
+            "durationMillis" : "<durationMillis>",
+            "finishedAt" : "<finishedAt>",
+            "startedAt" : "<startedAt>"
+          }
+        },
+        "source" : {
+          "type" : "NEW"
+        },
+        "steps" : [ {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED",
+            "timing" : {
+              "durationMillis" : "<durationMillis>",
+              "finishedAt" : "<finishedAt>",
+              "startedAt" : "<startedAt>"
+            }
+          },
+          "resolvedTargets" : [ {
+            "kind" : "SHEET",
+            "label" : "Sheet Budget"
+          } ],
+          "stepId" : "ensure-budget",
+          "stepIndex" : 0,
+          "stepKind" : "MUTATION",
+          "stepType" : "ENSURE_SHEET"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED",
+            "timing" : {
+              "durationMillis" : "<durationMillis>",
+              "finishedAt" : "<finishedAt>",
+              "startedAt" : "<startedAt>"
+            }
+          },
+          "resolvedTargets" : [ {
+            "kind" : "CELL",
+            "label" : "Cell Budget!A1"
+          } ],
+          "stepId" : "set-title",
+          "stepIndex" : 1,
+          "stepKind" : "MUTATION",
+          "stepType" : "SET_CELL"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED",
+            "timing" : {
+              "durationMillis" : "<durationMillis>",
+              "finishedAt" : "<finishedAt>",
+              "startedAt" : "<startedAt>"
+            }
+          },
+          "resolvedTargets" : [ {
+            "kind" : "CELL",
+            "label" : "Cell Budget!B2"
+          } ],
+          "stepId" : "set-total",
+          "stepIndex" : 2,
+          "stepKind" : "MUTATION",
+          "stepType" : "SET_CELL"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED",
+            "timing" : {
+              "durationMillis" : "<durationMillis>",
+              "finishedAt" : "<finishedAt>",
+              "startedAt" : "<startedAt>"
+            }
+          },
+          "resolvedTargets" : [ {
+            "kind" : "CELL",
+            "label" : "Cell Budget!A1"
+          } ],
+          "stepId" : "assert-title",
+          "stepIndex" : 3,
+          "stepKind" : "ASSERTION",
+          "stepType" : "EXPECT_CELL_VALUE"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED",
+            "timing" : {
+              "durationMillis" : "<durationMillis>",
+              "finishedAt" : "<finishedAt>",
+              "startedAt" : "<startedAt>"
+            }
+          },
+          "resolvedTargets" : [ {
+            "kind" : "CELL",
+            "label" : "Cell Budget!B2"
+          } ],
+          "stepId" : "assert-total",
+          "stepIndex" : 4,
+          "stepKind" : "ASSERTION",
+          "stepType" : "EXPECT_CELL_VALUE"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED",
+            "timing" : {
+              "durationMillis" : "<durationMillis>",
+              "finishedAt" : "<finishedAt>",
+              "startedAt" : "<startedAt>"
+            }
+          },
+          "resolvedTargets" : [ {
+            "kind" : "SHEET",
+            "label" : "Sheet Budget"
+          } ],
+          "stepId" : "assert-formula-health",
+          "stepIndex" : 5,
+          "stepKind" : "ASSERTION",
+          "stepType" : "EXPECT_ANALYSIS_MAX_SEVERITY"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED",
+            "timing" : {
+              "durationMillis" : "<durationMillis>",
+              "finishedAt" : "<finishedAt>",
+              "startedAt" : "<startedAt>"
+            }
+          },
+          "resolvedTargets" : [ {
+            "kind" : "CELL",
+            "label" : "Cell Budget!A1"
+          }, {
+            "kind" : "CELL",
+            "label" : "Cell Budget!B2"
+          } ],
+          "stepId" : "read-budget",
+          "stepIndex" : 6,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_CELLS"
+        } ],
+        "validation" : {
+          "status" : "SUCCEEDED",
+          "timing" : {
+            "durationMillis" : "<durationMillis>",
+            "finishedAt" : "<finishedAt>",
+            "startedAt" : "<startedAt>"
+          }
+        }
+      },
+      "persistence" : {
+        "type" : "NONE"
+      },
+      "planId" : "assertion-workflow",
+      "protocolVersion" : 1,
+      "status" : "SUCCEEDED",
+      "warnings" : [ ]
+    }
+  },
+  "materializedRequest" : {
+    "execution" : {
+      "journal" : {
+        "level" : "VERBOSE"
+      }
+    },
+    "persistence" : {
+      "type" : "NONE"
+    },
+    "planId" : "assertion-workflow",
+    "protocolVersion" : 1,
+    "source" : {
+      "type" : "NEW"
+    },
+    "steps" : [ {
+      "action" : {
+        "type" : "ENSURE_SHEET"
+      },
+      "stepId" : "ensure-budget",
+      "target" : {
+        "name" : "Budget",
+        "type" : "SHEET_BY_NAME"
+      }
+    }, {
+      "action" : {
+        "type" : "SET_CELL",
+        "value" : {
+          "type" : "TEXT",
+          "value" : {
+            "text" : "Quarterly Budget",
+            "type" : "INLINE"
+          }
+        }
+      },
+      "stepId" : "set-title",
+      "target" : {
+        "address" : "A1",
+        "sheetName" : "Budget",
+        "type" : "CELL_BY_ADDRESS"
+      }
+    }, {
+      "action" : {
+        "type" : "SET_CELL",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 1200.0
+        }
+      },
+      "stepId" : "set-total",
+      "target" : {
+        "address" : "B2",
+        "sheetName" : "Budget",
+        "type" : "CELL_BY_ADDRESS"
+      }
+    }, {
+      "assertion" : {
+        "expectedValue" : {
+          "type" : "TEXT",
+          "value" : "Quarterly Budget"
+        },
+        "type" : "EXPECT_CELL_VALUE"
+      },
+      "stepId" : "assert-title",
+      "target" : {
+        "address" : "A1",
+        "sheetName" : "Budget",
+        "type" : "CELL_BY_ADDRESS"
+      }
+    }, {
+      "assertion" : {
+        "expectedValue" : {
+          "type" : "NUMBER",
+          "value" : 1200.0
+        },
+        "type" : "EXPECT_CELL_VALUE"
+      },
+      "stepId" : "assert-total",
+      "target" : {
+        "address" : "B2",
+        "sheetName" : "Budget",
+        "type" : "CELL_BY_ADDRESS"
+      }
+    }, {
+      "assertion" : {
+        "maximumSeverity" : "INFO",
+        "query" : {
+          "type" : "ANALYZE_FORMULA_HEALTH"
+        },
+        "type" : "EXPECT_ANALYSIS_MAX_SEVERITY"
+      },
+      "stepId" : "assert-formula-health",
+      "target" : {
+        "name" : "Budget",
+        "type" : "SHEET_BY_NAME"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_CELLS"
+      },
+      "stepId" : "read-budget",
+      "target" : {
+        "addresses" : [ "A1", "B2" ],
+        "sheetName" : "Budget",
+        "type" : "CELL_BY_ADDRESSES"
+      }
+    } ]
+  },
+  "print" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "execution" : {
+        "journal" : {
+          "level" : "VERBOSE"
+        }
+      },
+      "persistence" : {
+        "type" : "NONE"
+      },
+      "planId" : "assertion-workflow",
+      "protocolVersion" : 1,
+      "source" : {
+        "type" : "NEW"
+      },
+      "steps" : [ {
+        "action" : {
+          "type" : "ENSURE_SHEET"
+        },
+        "stepId" : "ensure-budget",
+        "target" : {
+          "name" : "Budget",
+          "type" : "SHEET_BY_NAME"
+        }
+      }, {
+        "action" : {
+          "type" : "SET_CELL",
+          "value" : {
+            "type" : "TEXT",
+            "value" : {
+              "text" : "Quarterly Budget",
+              "type" : "INLINE"
+            }
+          }
+        },
+        "stepId" : "set-title",
+        "target" : {
+          "address" : "A1",
+          "sheetName" : "Budget",
+          "type" : "CELL_BY_ADDRESS"
+        }
+      }, {
+        "action" : {
+          "type" : "SET_CELL",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 1200.0
+          }
+        },
+        "stepId" : "set-total",
+        "target" : {
+          "address" : "B2",
+          "sheetName" : "Budget",
+          "type" : "CELL_BY_ADDRESS"
+        }
+      }, {
+        "assertion" : {
+          "expectedValue" : {
+            "type" : "TEXT",
+            "value" : "Quarterly Budget"
+          },
+          "type" : "EXPECT_CELL_VALUE"
+        },
+        "stepId" : "assert-title",
+        "target" : {
+          "address" : "A1",
+          "sheetName" : "Budget",
+          "type" : "CELL_BY_ADDRESS"
+        }
+      }, {
+        "assertion" : {
+          "expectedValue" : {
+            "type" : "NUMBER",
+            "value" : 1200.0
+          },
+          "type" : "EXPECT_CELL_VALUE"
+        },
+        "stepId" : "assert-total",
+        "target" : {
+          "address" : "B2",
+          "sheetName" : "Budget",
+          "type" : "CELL_BY_ADDRESS"
+        }
+      }, {
+        "assertion" : {
+          "maximumSeverity" : "INFO",
+          "query" : {
+            "type" : "ANALYZE_FORMULA_HEALTH"
+          },
+          "type" : "EXPECT_ANALYSIS_MAX_SEVERITY"
+        },
+        "stepId" : "assert-formula-health",
+        "target" : {
+          "name" : "Budget",
+          "type" : "SHEET_BY_NAME"
+        }
+      }, {
+        "query" : {
+          "type" : "GET_CELLS"
+        },
+        "stepId" : "read-budget",
+        "target" : {
+          "addresses" : [ "A1", "B2" ],
+          "sheetName" : "Budget",
+          "type" : "CELL_BY_ADDRESSES"
+        }
+      } ]
+    }
+  }
+}

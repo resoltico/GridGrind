@@ -8,10 +8,8 @@ target/
 # IDE compiler output (VSCode Java extension, Eclipse)
 bin/
 **/bin/
-!jazzer/bin/
-!jazzer/bin/*
 
-# Kotlin daemon sessions (buildSrc)
+# Kotlin daemon sessions
 .kotlin/
 
 # JVM and compiler artifacts
@@ -32,7 +30,6 @@ replay_pid*
 # Temporary and scratch directories
 .tmp-*/
 /tmp/
-/jazzer/.local/
 
 # Gradle-created project-discovery root that contains no tracked source in this repo.
 /buildSrc/
@@ -40,7 +37,7 @@ replay_pid*
 # Project-local Gradle user home when GRADLE_USER_HOME is pointed at the project root.
 /.gradle-home/
 
-# Generated workbooks produced by sync-generated-examples.sh and local runs.
+# Generated local workbook outputs.
 /generated-workbooks/
 
 # OS and local scratch files
@@ -49,8 +46,6 @@ replay_pid*
 
 # Repository-owned agent instructions are source files, not local assistant scratch.
 !/AGENTS.md
-!/.codex/
-!/.codex/**
 
 .DS_Store
 *.swp

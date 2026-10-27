@@ -30,20 +30,29 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
-          # On PRs, only read from the cache to avoid cache poisoning from untrusted code.
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
-
-      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+          cache-cleanup: always
+          # Only the default branch writes shared caches; other refs restore read-only.
+          cache-read-only: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: Run the supported whole-repo deterministic gate
-        # Active fuzzing remains local-only. CI exercises only the deterministic nested Jazzer,
-        # packaging, shell, and Docker stages shipped by the root check.sh contract.
+        # Ordinary checks include deterministic seed replay; active campaigns remain opt-in.
         run: ./check.sh
+
+      - name: Retain failed check diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: check-diagnostics
+          path: |
+            **/build/test-results/**/*.xml
+            **/build/reports/tests/**
+            build/reports/configuration-cache/**
+          if-no-files-found: warn
+          retention-days: 7
 
   docker-smoke:
     name: Docker smoke
     runs-on: ubuntu-24.04
-    needs: check
     timeout-minutes: 15
 
     steps:
@@ -56,12 +65,13 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          cache-cleanup: always
+          cache-read-only: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Run Docker smoke separately so branch protection keeps an honest Docker-specific gate
-        run: ./scripts/docker-smoke.sh
+        run: ./gradlew containerTest
 
   devcontainer-changes:
     name: Detect devcontainer changes
@@ -87,7 +97,9 @@ jobs:
           fi
           changed=$(git diff --name-only "$base" "${{ github.sha }}" -- \
             '.devcontainer' \
-            'scripts/validate-devcontainer.sh' \
+            'scripts/lib/common.sh' \
+            'cli/src/test/java/dev/erst/gridgrind/cli/golden/DevcontainerTest.java' \
+            'cli/src/test/java/dev/erst/gridgrind/cli/golden/DockerFixture.java' \
             'scripts/devcontainer-prepare-user-home.sh')
           if [[ -n "$changed" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -105,10 +117,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version: '26'
+          distribution: zulu
+
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-cleanup: always
+
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Validate the committed contributor devcontainer surface
-        run: ./scripts/validate-devcontainer.sh
+        run: ./gradlew devcontainerTest
 
   gate:
     name: Gate
