@@ -3,6 +3,12 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
+import dev.erst.gridgrind.core.model.security.ResolvedSignature;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -18,12 +24,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageInspectionSupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -67,13 +68,13 @@ class ExcelOoxmlPackageSecuritySupportTest {
         () ->
             ExcelWorkbooks.open(
                 encryptedWorkbook.workbookPath(),
-                new ExcelOoxmlOpenOptions.Encrypted("wrong-password"),
+                new ResolvedOpenSecurity.Encrypted("wrong-password"),
                 ExcelTempFileFactoryTestSupport.tempFileFactory()));
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
+            new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           "Encrypted workbook",
@@ -119,7 +120,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
+            new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult securityResult =
           assertInstanceOf(
@@ -151,7 +152,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
+            new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult securityResult =
           assertInstanceOf(
@@ -185,16 +186,16 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
+            new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook
           .persistence()
           .save(
               unchangedCopy,
               dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
-              new ExcelOoxmlPersistenceOptions(
-                  new ExcelOoxmlPersistenceEncryption.PreserveSource(),
-                  new ExcelOoxmlPersistenceSignature.Unsigned()),
+              new ResolvedPersistenceSecurity(
+                  new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+                  new OoxmlPersistenceSignatureSpec.None()),
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     assertEquals(
@@ -205,7 +206,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
+            new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       new WorkbookExecutionEngine()
           .apply(
@@ -218,9 +219,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
           .save(
               mutatedCopy,
               dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
-              new ExcelOoxmlPersistenceOptions(
-                  new ExcelOoxmlPersistenceEncryption.PreserveSource(),
-                  new ExcelOoxmlPersistenceSignature.Unsigned()),
+              new ResolvedPersistenceSecurity(
+                  new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+                  new OoxmlPersistenceSignatureSpec.None()),
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
@@ -288,7 +289,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
           .save(
               unsignedOutput,
               dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
-              ExcelOoxmlPersistenceOptions.none(),
+              ResolvedPersistenceSecurity.none(),
               ExcelTempFileFactoryTestSupport.tempFileFactory());
 
       workbook
@@ -296,16 +297,16 @@ class ExcelOoxmlPackageSecuritySupportTest {
           .save(
               resignedOutput,
               dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
-              new ExcelOoxmlPersistenceOptions(
-                  new ExcelOoxmlPersistenceEncryption.Plaintext(),
-                  new ExcelOoxmlPersistenceSignature.Sign(
-                      new ExcelOoxmlSignatureOptions(
+              new ResolvedPersistenceSecurity(
+                  new OoxmlPersistenceEncryptionSpec.None(),
+                  new ResolvedPersistenceSignature.Sign(
+                      new ResolvedSignature(
                           signedWorkbook.pkcs12Path(),
                           signedWorkbook.keystorePassword(),
                           signedWorkbook.keyPassword(),
-                          signedWorkbook.alias(),
+                          java.util.Optional.of(signedWorkbook.alias()),
                           ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                          "GridGrind test signature"))),
+                          java.util.Optional.of("GridGrind test signature")))),
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 

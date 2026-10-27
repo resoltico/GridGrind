@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
@@ -62,7 +63,6 @@ import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -389,10 +389,10 @@ class ExecutorPolicyCoverageTest {
             java.util.Map.of(
                 new dev.erst.gridgrind.core.source.SecretReference("output-password"),
                 "output-secret"))) {
-      ExcelOoxmlPersistenceOptions noneOptions =
+      ResolvedPersistenceSecurity noneOptions =
           ExecutionRequestPaths.persistenceOptions(
               new WorkbookPlan.WorkbookPersistence.None(), prepared.bindings());
-      ExcelOoxmlPersistenceOptions saveAsOptions =
+      ResolvedPersistenceSecurity saveAsOptions =
           ExecutionRequestPaths.persistenceOptions(
               new WorkbookPlan.WorkbookPersistence.SaveAs(
                   "/tmp/out.xlsx",
@@ -407,7 +407,7 @@ class ExecutorPolicyCoverageTest {
                       new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec
                           .None())),
               prepared.bindings());
-      ExcelOoxmlPersistenceOptions overwriteOptions =
+      ResolvedPersistenceSecurity overwriteOptions =
           ExecutionRequestPaths.persistenceOptions(
               new WorkbookPlan.WorkbookPersistence.Overwrite(
                   new OoxmlPersistenceSecuritySpec(

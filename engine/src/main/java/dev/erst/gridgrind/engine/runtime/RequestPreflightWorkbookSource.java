@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
@@ -7,9 +10,6 @@ import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackagePersistenceSupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
 import java.util.List;
 
 /**
@@ -90,9 +90,9 @@ final class RequestPreflightWorkbookSource {
       ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
           workbook.persistence().loadedPackageSecurity(),
           workbook.persistence().sourceEncryptionPassword(),
-          new ExcelOoxmlPersistenceOptions(
-              new ExcelOoxmlPersistenceEncryption.PreserveSource(),
-              new ExcelOoxmlPersistenceSignature.Unsigned()));
+          new ResolvedPersistenceSecurity(
+              new OoxmlPersistenceEncryptionSpec.PreserveSource(),
+              new OoxmlPersistenceSignatureSpec.None()));
     }
   }
 }

@@ -2792,3 +2792,27 @@ core387, JSON353, engine1365 plus14 parity, CLI588, architecture14, no failures/
 goldens unchanged. No active campaigns. Baseline diff empty. Inventories: converter177→100 (only package
 security remains), blank282→279, main112246→112120, test150613→150527; Support194, definitions0 and
 runtime snapshots2 unchanged. ResolvedPlan, package security and the remainder of Phase4 remain open.
+
+### WP-40 canonical package security
+
+Deleted six native security option families and OoxmlPackageSecurityConverter. Native open/sign/encrypt/
+persist adapters consume core resolved security records. Authored plaintext/preserve-source/unsigned
+records also implement the unannotated resolved policy interfaces, preserving identity without new
+wire alternatives. Only credential/path-bearing operands receive resolved records. Credentials are
+redacted in nested record rendering. Signing alias/description use Optional; the native alias helper
+unwraps only at its nullable boundary. Secret provider calls, authorized signing-path materialization,
+missing-file context, preserve-source envelope checks and operation timing remain in execution/native
+owners. Removed the unused binding-free open-options overload and its constructor-only coverage.
+
+Retained real encrypted-open/wrong-password/sign/verify/persist/readback/resource checks and signing
+path/secret materialization cases. Moved genuine bounds and nested-redaction checks into core. Initial
+mechanical script stopped on a constructor arity mistake before verification; corrected continuation
+and failure evidence remain external. Focused behavior/PMD passes1m18s, all94 retained seeds pass28s,
+full ./gradlew check passes5m12s: core389, JSON353, engine1364 plus14 parity, CLI588, zero failures/
+errors/skips. All143 golden cases unchanged; no snapshots re-recorded or active campaigns. Five built
+JARs contain none of the6 deleted model families or converter. Baseline diff empty.
+
+Inventories: converter100→0, main112120→112123, test150527→150534; blank279/Support194/definitions0/
+runtime snapshots2 unchanged. Necessary path and credential resolution moved to ExecutionRequestPaths;
+the zero converter count does not claim that materialization work vanished. ResolvedPlan and Phase4
+feature packaging/backends remain open; engine-excel-types still lists the adapters to reorganize.

@@ -3,6 +3,10 @@ package dev.erst.gridgrind.excel.ooxml;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceEncryption;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
 import dev.erst.gridgrind.excel.ExcelDeterministicWorkbookArtifactSupport;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -29,7 +33,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
   public static ExcelWorkbook openWorkbook(
       Path workbookPath,
       ResolvedFormulaEnvironment formulaEnvironment,
-      ExcelOoxmlOpenOptions openOptions,
+      ResolvedOpenSecurity openOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     try (ReadableWorkbook materialized =
@@ -47,7 +51,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
    * Opens one workbook without an explicit formula environment but with package security support.
    */
   public static ExcelWorkbook openWorkbook(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
+      Path workbookPath, ResolvedOpenSecurity openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     try (ReadableWorkbook materialized =
         materializeReadableWorkbook(workbookPath, openOptions, tempFileFactory)) {
@@ -61,11 +65,11 @@ public final class ExcelOoxmlPackageSecuritySupport {
 
   /** Materializes one readable plain `.xlsx` path from a plain or encrypted source workbook. */
   public static ReadableWorkbook materializeReadableWorkbook(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
+      Path workbookPath, ResolvedOpenSecurity openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
-    ExcelOoxmlOpenOptions effectiveOpenOptions =
+    ResolvedOpenSecurity effectiveOpenOptions =
         ExcelOoxmlPackageSecurityInternals.normalizeOpenOptions(openOptions);
 
     Path absolutePath = workbookPath.toAbsolutePath().normalize();
@@ -96,7 +100,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
       ExcelWorkbook workbook,
       Path targetPath,
       WorkbookArtifactWriteDisposition writeDisposition,
-      ExcelOoxmlPersistenceOptions persistenceOptions,
+      ResolvedPersistenceSecurity persistenceOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
@@ -107,10 +111,10 @@ public final class ExcelOoxmlPackageSecuritySupport {
     Path normalizedTarget = targetPath.toAbsolutePath().normalize();
     ExcelOoxmlPackageSecurityInternals.createTargetParentDirectories(normalizedTarget);
 
-    ExcelOoxmlPersistenceOptions explicitOptions =
-        persistenceOptions == null ? ExcelOoxmlPersistenceOptions.none() : persistenceOptions;
+    ResolvedPersistenceSecurity explicitOptions =
+        persistenceOptions == null ? ResolvedPersistenceSecurity.none() : persistenceOptions;
 
-    ExcelOoxmlPersistenceOptions effectiveOptions =
+    ResolvedPersistenceSecurity effectiveOptions =
         ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
             workbook.persistence().loadedPackageSecurity(),
             workbook.persistence().sourceEncryptionPassword(),
@@ -148,7 +152,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
       OoxmlPackageSecurityReport sourceSecurity,
       Optional<String> sourceEncryptionPassword,
       WorkbookArtifactWriteDisposition writeDisposition,
-      ExcelOoxmlPersistenceOptions persistenceOptions)
+      ResolvedPersistenceSecurity persistenceOptions)
       throws IOException {
     Objects.requireNonNull(plainWorkbookPath, "plainWorkbookPath must not be null");
     Objects.requireNonNull(targetPath, "targetPath must not be null");
@@ -159,15 +163,15 @@ public final class ExcelOoxmlPackageSecuritySupport {
     Path normalizedTarget = targetPath.toAbsolutePath().normalize();
     ExcelOoxmlPackageSecurityInternals.createTargetParentDirectories(normalizedTarget);
 
-    ExcelOoxmlPersistenceOptions effectiveOptions =
+    ResolvedPersistenceSecurity effectiveOptions =
         ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
             sourceSecurity, sourceEncryptionPassword, persistenceOptions);
     ExcelOoxmlPackageSigningSupport.removeSignatures(plainWorkbookPath);
     ExcelDeterministicWorkbookArtifactSupport.normalizeWorkbookPackage(plainWorkbookPath);
-    if (effectiveOptions.signature() instanceof ExcelOoxmlPersistenceSignature.Sign sign) {
+    if (effectiveOptions.signature() instanceof ResolvedPersistenceSignature.Sign sign) {
       ExcelOoxmlPackageSigningSupport.signWorkbook(plainWorkbookPath, sign.options());
     }
-    if (effectiveOptions.encryption() instanceof ExcelOoxmlPersistenceEncryption.Encrypt encrypt) {
+    if (effectiveOptions.encryption() instanceof ResolvedPersistenceEncryption.Encrypt encrypt) {
       ExcelOoxmlPackageEncryptionSupport.encryptWorkbook(
           plainWorkbookPath, normalizedTarget, writeDisposition, encrypt.options());
     } else {

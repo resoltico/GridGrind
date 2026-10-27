@@ -23,6 +23,7 @@ import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
@@ -68,7 +69,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.FileAlreadyExistsException;
@@ -975,7 +975,7 @@ class ExcelWorkbookTest {
             .save(
                 workbookPath,
                 dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
-                ExcelOoxmlPersistenceOptions.none(),
+                ResolvedPersistenceSecurity.none(),
                 ExcelTempFileFactoryTestSupport.tempFileFactory());
       }
       try (ExcelWorkbook reopened =

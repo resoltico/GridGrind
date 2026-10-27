@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageFileSupport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -19,7 +19,7 @@ final class ExcelWorkbookPersistenceSupport {
       ExcelWorkbook workbook,
       Path workbookPath,
       WorkbookArtifactWriteDisposition writeDisposition,
-      ExcelOoxmlPersistenceOptions persistenceOptions,
+      ResolvedPersistenceSecurity persistenceOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");

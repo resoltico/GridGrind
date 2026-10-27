@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel.ooxml;
 
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
 import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
 import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
@@ -18,12 +19,12 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 final class ExcelOoxmlPackageSecurityInternals {
   private ExcelOoxmlPackageSecurityInternals() {}
 
-  static ExcelOoxmlOpenOptions normalizeOpenOptions(ExcelOoxmlOpenOptions openOptions) {
-    return openOptions == null ? new ExcelOoxmlOpenOptions.Unencrypted() : openOptions;
+  static ResolvedOpenSecurity normalizeOpenOptions(ResolvedOpenSecurity openOptions) {
+    return openOptions == null ? new ResolvedOpenSecurity.Unencrypted() : openOptions;
   }
 
   static ExcelOoxmlPackageSecuritySupport.ReadableWorkbook decryptWorkbook(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions) throws IOException {
+      Path workbookPath, ResolvedOpenSecurity openOptions) throws IOException {
     try (ExcelOoxmlPrivateTempWorkbook privateWorkbook =
             ExcelOoxmlPrivateTempWorkbook.create("gridgrind-ooxml-decrypted-", ".xlsx");
         POIFSFileSystem fileSystem = new POIFSFileSystem(workbookPath.toFile())) {
@@ -73,10 +74,10 @@ final class ExcelOoxmlPackageSecurityInternals {
     return fileSystem.getRoot().hasEntryCaseInsensitive(Decryptor.DEFAULT_POIFS_ENTRY);
   }
 
-  private static String openPassword(ExcelOoxmlOpenOptions openOptions) {
+  private static String openPassword(ResolvedOpenSecurity openOptions) {
     return switch (normalizeOpenOptions(openOptions)) {
-      case ExcelOoxmlOpenOptions.Unencrypted _ -> throw new WorkbookPasswordRequiredException();
-      case ExcelOoxmlOpenOptions.Encrypted encrypted -> encrypted.password();
+      case ResolvedOpenSecurity.Unencrypted _ -> throw new WorkbookPasswordRequiredException();
+      case ResolvedOpenSecurity.Encrypted encrypted -> encrypted.password();
     };
   }
 }

@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -23,7 +23,7 @@ public final class WorkbookArtifactIo {
 
   /** Materializes one readable plain `.xlsx` path from a plain or encrypted source workbook. */
   public static MaterializedWorkbook materializeWorkbook(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
+      Path workbookPath, ResolvedOpenSecurity openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
@@ -40,7 +40,7 @@ public final class WorkbookArtifactIo {
       OoxmlPackageSecurityReport sourceSecurity,
       Optional<String> sourceEncryptionPassword,
       WorkbookArtifactWriteDisposition writeDisposition,
-      ExcelOoxmlPersistenceOptions persistenceOptions)
+      ResolvedPersistenceSecurity persistenceOptions)
       throws IOException {
     WorkbookPackageIo.persistMaterializedWorkbook(
         plainWorkbookPath,

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.model.security.ResolvedSignature;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,7 +22,7 @@ public final class ExcelOoxmlPackageSigningSupport {
   }
 
   /** Signs one materialized workbook package with the supplied PKCS#12 credentials. */
-  public static void signWorkbook(Path workbookPath, ExcelOoxmlSignatureOptions signatureOptions)
+  public static void signWorkbook(Path workbookPath, ResolvedSignature signatureOptions)
       throws IOException {
     ExcelOoxmlSigningMaterialSupport.SigningMaterial signingMaterial =
         ExcelOoxmlSigningMaterialSupport.signingMaterial(signatureOptions);
@@ -31,8 +32,8 @@ public final class ExcelOoxmlPackageSigningSupport {
       signatureConfig.setSigningCertificateChain(signingMaterial.certificateChain());
       signatureConfig.setDigestAlgo(
           ExcelOoxmlSecurityPoiBridge.toPoi(signatureOptions.digestAlgorithm()));
-      if (signatureOptions.description() != null) {
-        signatureConfig.setSignatureDescription(signatureOptions.description());
+      if (signatureOptions.description().isPresent()) {
+        signatureConfig.setSignatureDescription(signatureOptions.description().orElseThrow());
       }
 
       SignatureInfo signatureInfo = ExcelOoxmlDsigProviderSupport.newSignatureInfo();

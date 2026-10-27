@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
@@ -13,10 +14,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSecurityPoiBridge;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -30,50 +28,6 @@ import org.junit.jupiter.api.Test;
 
 /** Direct validation tests for OOXML package-security engine value types. */
 class ExcelOoxmlPackageSecurityTypesTest {
-  @Test
-  void openOptionsEncryptionOptionsAndSignatureOptionsNormalizeInputs() {
-    String blankValue = Character.toString(' ');
-    ExcelOoxmlOpenOptions openOptions = new ExcelOoxmlOpenOptions.Encrypted("secret");
-    ExcelOoxmlEncryptionOptions encryptionOptions =
-        new ExcelOoxmlEncryptionOptions("secret", null, null);
-    ExcelOoxmlSignatureOptions signatureOptions =
-        new ExcelOoxmlSignatureOptions(
-            Path.of("/tmp/signing-material.p12"), "store-pass", null, null, null, null);
-
-    assertEquals(
-        "secret", assertInstanceOf(ExcelOoxmlOpenOptions.Encrypted.class, openOptions).password());
-    assertEquals(ExcelOoxmlWriteCipher.AES_256, encryptionOptions.cipher());
-    assertEquals(ExcelOoxmlWriteHash.SHA_512, encryptionOptions.hash());
-    assertEquals("store-pass", signatureOptions.keyPassword());
-    assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signatureOptions.digestAlgorithm());
-    assertNull(signatureOptions.alias());
-    assertNull(signatureOptions.description());
-
-    assertInstanceOf(
-        ExcelOoxmlOpenOptions.Unencrypted.class, new ExcelOoxmlOpenOptions.Unencrypted());
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelOoxmlOpenOptions.Encrypted(blankValue));
-    assertThrows(NullPointerException.class, () -> new ExcelOoxmlOpenOptions.Encrypted(null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelOoxmlEncryptionOptions(blankValue, null, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelOoxmlSignatureOptions(
-                Path.of("/tmp/signing-material.p12"), "store-pass", blankValue, null, null, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelOoxmlSignatureOptions(
-                Path.of("/tmp/signing-material.p12"), "store-pass", null, blankValue, null, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelOoxmlSignatureOptions(
-                Path.of("/tmp/signing-material.p12"), "store-pass", null, null, null, blankValue));
-  }
-
   @Test
   void encryptionAndSignatureSnapshotsValidateSecurityFacts() {
     String blankValue = Character.toString(' ');
@@ -169,7 +123,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
   @Test
   void coverageBranchesForSecurityTypesAndExceptionsStayExplicit() throws IOException {
     assertInstanceOf(
-        ExcelOoxmlOpenOptions.Unencrypted.class, new ExcelOoxmlOpenOptions.Unencrypted());
+        ResolvedOpenSecurity.Unencrypted.class, new ResolvedOpenSecurity.Unencrypted());
     assertEquals(
         EncryptionMode.agile, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlEncryptionMode.AGILE));
     assertEquals(

@@ -81,7 +81,7 @@ final class ExecutionDirectEventReadWorkflow {
               bindings
                   .requestPathAccess()
                   .materializeRead(source.path(), "source", "gridgrind-source-workbook-", ".xlsx"),
-              OoxmlPackageSecurityConverter.toExcelOpenOptions(
+              ExecutionRequestPaths.materializeOpenSecurity(
                   source.security().orElse(null), bindings),
               tempFileFactory::createTempFile);
     } catch (Exception exception) {

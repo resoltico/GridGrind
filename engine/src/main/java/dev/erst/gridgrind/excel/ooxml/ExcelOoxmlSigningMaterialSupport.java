@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.model.security.ResolvedSignature;
 import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +22,7 @@ public final class ExcelOoxmlSigningMaterialSupport {
   private ExcelOoxmlSigningMaterialSupport() {}
 
   /** Resolves one complete signing bundle from the supplied signature options. */
-  public static SigningMaterial signingMaterial(ExcelOoxmlSignatureOptions signatureOptions) {
+  public static SigningMaterial signingMaterial(ResolvedSignature signatureOptions) {
     Path keyStorePath = signatureOptions.pkcs12Path().toAbsolutePath().normalize();
     if (!Files.exists(keyStorePath)) {
       throw new InvalidSigningConfigurationException(
@@ -36,7 +37,7 @@ public final class ExcelOoxmlSigningMaterialSupport {
 
   /** Loads the configured PKCS#12 keystore from disk. */
   public static KeyStore loadSigningKeyStore(
-      Path keyStorePath, ExcelOoxmlSignatureOptions signatureOptions) {
+      Path keyStorePath, ResolvedSignature signatureOptions) {
     try {
       KeyStore keyStore = KeyStore.getInstance("PKCS12");
       try (java.io.InputStream inputStream = Files.newInputStream(keyStorePath)) {
@@ -51,9 +52,9 @@ public final class ExcelOoxmlSigningMaterialSupport {
 
   /** Resolves the concrete signing alias that will be used from one keystore. */
   public static String resolveSigningAlias(
-      KeyStore keyStore, Path keyStorePath, ExcelOoxmlSignatureOptions signatureOptions) {
+      KeyStore keyStore, Path keyStorePath, ResolvedSignature signatureOptions) {
     try {
-      return resolveAlias(keyStore, signatureOptions.alias(), signatureOptions);
+      return resolveAlias(keyStore, signatureOptions.alias().orElse(null), signatureOptions);
     } catch (GeneralSecurityException exception) {
       throw new InvalidSigningConfigurationException(
           "Failed to inspect signing aliases in " + keyStorePath, exception);
@@ -62,10 +63,7 @@ public final class ExcelOoxmlSigningMaterialSupport {
 
   /** Reads the private signing key for one resolved alias. */
   public static PrivateKey signingPrivateKey(
-      KeyStore keyStore,
-      Path keyStorePath,
-      String alias,
-      ExcelOoxmlSignatureOptions signatureOptions) {
+      KeyStore keyStore, Path keyStorePath, String alias, ResolvedSignature signatureOptions) {
     Key key;
     try {
       key = keyStore.getKey(alias, signatureOptions.keyPassword().toCharArray());
@@ -108,9 +106,7 @@ public final class ExcelOoxmlSigningMaterialSupport {
 
   /** Resolves the requested alias or the only usable private-key alias in the keystore. */
   public static String resolveAlias(
-      KeyStore keyStore,
-      @Nullable String requestedAlias,
-      ExcelOoxmlSignatureOptions signatureOptions)
+      KeyStore keyStore, @Nullable String requestedAlias, ResolvedSignature signatureOptions)
       throws GeneralSecurityException {
     if (requestedAlias != null) {
       if (!keyStore.containsAlias(requestedAlias)) {

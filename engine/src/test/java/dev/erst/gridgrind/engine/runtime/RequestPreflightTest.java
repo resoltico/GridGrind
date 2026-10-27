@@ -10,6 +10,8 @@ import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
+import dev.erst.gridgrind.core.model.security.ResolvedSignature;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -29,8 +31,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,15 +87,15 @@ class RequestPreflightTest {
         InvalidSigningConfigurationException.class,
         () ->
             RequestPreflightPaths.verifySigningMaterial(
-                new ExcelOoxmlPersistenceSignature.Sign(
-                    new ExcelOoxmlSignatureOptions(
+                new ResolvedPersistenceSignature.Sign(
+                    new ResolvedSignature(
                         temporaryDirectory.resolve("missing-signing-material.p12"),
                         "password",
                         "password",
-                        null,
+                        java.util.Optional.empty(),
                         ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                        null))));
-    RequestPreflightPaths.verifySigningMaterial(new ExcelOoxmlPersistenceSignature.Unsigned());
+                        java.util.Optional.empty()))));
+    RequestPreflightPaths.verifySigningMaterial(new OoxmlPersistenceSignatureSpec.None());
   }
 
   @Test

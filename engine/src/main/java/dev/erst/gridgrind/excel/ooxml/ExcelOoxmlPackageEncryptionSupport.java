@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel.ooxml;
 
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.ResolvedEncryption;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
@@ -76,7 +77,7 @@ public final class ExcelOoxmlPackageEncryptionSupport {
       Path plainWorkbookPath,
       Path targetPath,
       WorkbookArtifactWriteDisposition writeDisposition,
-      ExcelOoxmlEncryptionOptions encryptionOptions)
+      ResolvedEncryption encryptionOptions)
       throws IOException {
     CipherAlgorithm cipherAlgorithm = ExcelOoxmlSecurityPoiBridge.toPoi(encryptionOptions.cipher());
     EncryptionInfo encryptionInfo =

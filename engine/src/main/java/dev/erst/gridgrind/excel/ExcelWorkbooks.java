@@ -2,7 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,14 +34,14 @@ public final class ExcelWorkbooks {
   /** Opens an existing workbook file from disk with explicit temp-file ownership. */
   public static ExcelWorkbook open(Path workbookPath, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
-    return open(workbookPath, new ExcelOoxmlOpenOptions.Unencrypted(), tempFileFactory);
+    return open(workbookPath, new ResolvedOpenSecurity.Unencrypted(), tempFileFactory);
   }
 
   /**
    * Opens an existing workbook with explicit package-open settings and a custom temp-file factory.
    */
   public static ExcelWorkbook open(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
+      Path workbookPath, ResolvedOpenSecurity openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     return ExcelOoxmlPackageSecuritySupport.openWorkbook(
         workbookPath, openOptions, tempFileFactory);
@@ -65,7 +65,7 @@ public final class ExcelWorkbooks {
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     return open(
-        workbookPath, formulaEnvironment, new ExcelOoxmlOpenOptions.Unencrypted(), tempFileFactory);
+        workbookPath, formulaEnvironment, new ResolvedOpenSecurity.Unencrypted(), tempFileFactory);
   }
 
   /**
@@ -75,7 +75,7 @@ public final class ExcelWorkbooks {
   public static ExcelWorkbook open(
       Path workbookPath,
       ResolvedFormulaEnvironment formulaEnvironment,
-      ExcelOoxmlOpenOptions openOptions,
+      ResolvedOpenSecurity openOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     return ExcelOoxmlPackageSecuritySupport.openWorkbook(

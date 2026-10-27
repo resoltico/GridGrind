@@ -2,6 +2,10 @@ package dev.erst.gridgrind.excel.ooxml;
 
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.ResolvedEncryption;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceEncryption;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.excel.UnsupportedSourceEncryptionPreservationException;
 
 /** Resolves how a saved workbook should preserve or replace source OOXML security settings. */
@@ -9,22 +13,22 @@ public final class ExcelOoxmlPackagePersistenceSupport {
   private ExcelOoxmlPackagePersistenceSupport() {}
 
   /** Computes the effective encryption and signing settings for one persistence request. */
-  public static ExcelOoxmlPersistenceOptions effectiveOptions(
+  public static ResolvedPersistenceSecurity effectiveOptions(
       OoxmlPackageSecurityReport sourceSecurity,
       java.util.Optional<String> sourceEncryptionPassword,
-      ExcelOoxmlPersistenceOptions persistenceOptions) {
+      ResolvedPersistenceSecurity persistenceOptions) {
     return switch (persistenceOptions.encryption()) {
-      case ExcelOoxmlPersistenceEncryption.Plaintext _ -> persistenceOptions;
-      case ExcelOoxmlPersistenceEncryption.Encrypt _ -> persistenceOptions;
-      case ExcelOoxmlPersistenceEncryption.PreserveSource _ ->
-          new ExcelOoxmlPersistenceOptions(
-              new ExcelOoxmlPersistenceEncryption.Encrypt(
+      case OoxmlPersistenceEncryptionSpec.None _ -> persistenceOptions;
+      case ResolvedPersistenceEncryption.Encrypt _ -> persistenceOptions;
+      case OoxmlPersistenceEncryptionSpec.PreserveSource _ ->
+          new ResolvedPersistenceSecurity(
+              new ResolvedPersistenceEncryption.Encrypt(
                   preservedSourceEncryption(sourceSecurity, sourceEncryptionPassword)),
               persistenceOptions.signature());
     };
   }
 
-  private static ExcelOoxmlEncryptionOptions preservedSourceEncryption(
+  private static ResolvedEncryption preservedSourceEncryption(
       OoxmlPackageSecurityReport sourceSecurity,
       java.util.Optional<String> sourceEncryptionPassword) { // LIM-038
     if (!(sourceSecurity.encryption()
@@ -54,7 +58,7 @@ public final class ExcelOoxmlPackagePersistenceSupport {
               + " set persistence.security.encryption explicitly to author a supported AGILE"
               + " package instead.");
     }
-    return new ExcelOoxmlEncryptionOptions(
+    return new ResolvedEncryption(
         sourceEncryptionPassword.orElseThrow(),
         ExcelOoxmlSecurityPoiBridge.toWriteCipher(sourceEncryption.cipherAlgorithm())
             .orElseThrow(

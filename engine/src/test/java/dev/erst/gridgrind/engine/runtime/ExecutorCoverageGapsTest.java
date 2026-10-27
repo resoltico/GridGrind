@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
@@ -32,7 +33,6 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -104,9 +104,9 @@ class ExecutorCoverageGapsTest {
         List.of(new ExecutionJournal.Target("WORKBOOK", "Current workbook")),
         ExecutionJournalTargetResolver.expandedTargets(workbookSelector));
     assertInstanceOf(
-        ExcelOoxmlOpenOptions.Unencrypted.class,
-        OoxmlPackageSecurityConverter.toExcelOpenOptions(
-            new OoxmlOpenSecuritySpec(Optional.empty())));
+        ResolvedOpenSecurity.Unencrypted.class,
+        ExecutionRequestPaths.materializeOpenSecurity(
+            new OoxmlOpenSecuritySpec(Optional.empty()), bindings));
 
     GridGrindRequestDoctor defaultDoctor = new GridGrindRequestDoctor();
     GridGrindRequestDoctor validationOnlyDoctor =

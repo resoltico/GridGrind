@@ -12,7 +12,7 @@ public sealed interface OoxmlPersistenceEncryptionSpec
         dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.PreserveSource {
   /** Deliberately persist plaintext. */
   @Variant(id = "NONE", summary = "Deliberately persist plaintext.")
-  record None() implements OoxmlPersistenceEncryptionSpec {}
+  record None() implements OoxmlPersistenceEncryptionSpec, ResolvedPersistenceEncryption {}
 
   /** Encrypt with one explicitly supplied strong OOXML write envelope. */
   @Variant(
@@ -29,5 +29,6 @@ public sealed interface OoxmlPersistenceEncryptionSpec
       id = "PRESERVE_SOURCE",
       summary =
           "Reapply the verified source encryption envelope when it is compatible with the AGILE write contract.")
-  record PreserveSource() implements OoxmlPersistenceEncryptionSpec {}
+  record PreserveSource()
+      implements OoxmlPersistenceEncryptionSpec, ResolvedPersistenceEncryption {}
 }

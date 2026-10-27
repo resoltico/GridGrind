@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -21,14 +21,14 @@ public final class ExcelWorkbookPersistence {
       WorkbookArtifactWriteDisposition writeDisposition,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
-    save(workbookPath, writeDisposition, ExcelOoxmlPersistenceOptions.none(), tempFileFactory);
+    save(workbookPath, writeDisposition, ResolvedPersistenceSecurity.none(), tempFileFactory);
   }
 
   /** Saves the workbook to disk with explicit package-security and write ownership. */
   public void save(
       Path workbookPath,
       WorkbookArtifactWriteDisposition writeDisposition,
-      ExcelOoxmlPersistenceOptions persistenceOptions,
+      ResolvedPersistenceSecurity persistenceOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     ExcelWorkbookPersistenceSupport.save(

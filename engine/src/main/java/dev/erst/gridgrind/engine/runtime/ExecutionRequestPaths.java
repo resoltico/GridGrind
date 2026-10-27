@@ -1,10 +1,21 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec;
+import dev.erst.gridgrind.core.model.security.ResolvedEncryption;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceEncryption;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
+import dev.erst.gridgrind.core.model.security.ResolvedSignature;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -15,17 +26,15 @@ import org.jspecify.annotations.Nullable;
 final class ExecutionRequestPaths {
   private ExecutionRequestPaths() {}
 
-  static ExcelOoxmlPersistenceOptions persistenceOptions(
+  static ResolvedPersistenceSecurity persistenceOptions(
       WorkbookPlan.WorkbookPersistence persistence, ExecutionInputBindings bindings)
       throws IOException {
     return switch (persistence) {
-      case WorkbookPlan.WorkbookPersistence.None _ -> ExcelOoxmlPersistenceOptions.none();
+      case WorkbookPlan.WorkbookPersistence.None _ -> ResolvedPersistenceSecurity.none();
       case WorkbookPlan.WorkbookPersistence.Overwrite overwrite ->
-          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
-              overwrite.security().orElse(null), bindings);
+          materializePersistenceSecurity(overwrite.security().orElse(null), bindings);
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
-              saveAs.security().orElse(null), bindings);
+          materializePersistenceSecurity(saveAs.security().orElse(null), bindings);
     };
   }
 
@@ -176,5 +185,75 @@ final class ExecutionRequestPaths {
               ? normalizePath(existingFile.path(), workingDirectory).toString()
               : null;
     };
+  }
+
+  static ResolvedOpenSecurity materializeOpenSecurity(
+      @Nullable OoxmlOpenSecuritySpec input, ExecutionInputBindings bindings) {
+    return input == null || input.passwordRef().isEmpty()
+        ? new ResolvedOpenSecurity.Unencrypted()
+        : new ResolvedOpenSecurity.Encrypted(
+            bindings.resolveSecret(input.passwordRef().orElseThrow()));
+  }
+
+  static ResolvedPersistenceSecurity materializePersistenceSecurity(
+      @Nullable OoxmlPersistenceSecuritySpec input, ExecutionInputBindings bindings)
+      throws IOException {
+    if (input == null) {
+      return ResolvedPersistenceSecurity.none();
+    }
+    return new ResolvedPersistenceSecurity(
+        encryptionPolicy(input.encryption(), bindings),
+        signaturePolicy(input.signature(), bindings));
+  }
+
+  private static ResolvedPersistenceEncryption encryptionPolicy(
+      OoxmlPersistenceEncryptionSpec input, ExecutionInputBindings bindings) {
+    return switch (input) {
+      case OoxmlPersistenceEncryptionSpec.None none -> none;
+      case OoxmlPersistenceEncryptionSpec.Encrypt encrypt ->
+          new ResolvedPersistenceEncryption.Encrypt(
+              materializeEncryption(encrypt.encryption(), bindings));
+      case OoxmlPersistenceEncryptionSpec.PreserveSource preserve -> preserve;
+    };
+  }
+
+  private static ResolvedPersistenceSignature signaturePolicy(
+      OoxmlPersistenceSignatureSpec input, ExecutionInputBindings bindings) throws IOException {
+    return switch (input) {
+      case OoxmlPersistenceSignatureSpec.None none -> none;
+      case OoxmlPersistenceSignatureSpec.Sign sign ->
+          new ResolvedPersistenceSignature.Sign(materializeSignature(sign.signature(), bindings));
+    };
+  }
+
+  private static ResolvedEncryption materializeEncryption(
+      OoxmlEncryptionSpec input, ExecutionInputBindings bindings) {
+    return new ResolvedEncryption(
+        bindings.resolveSecret(input.passwordRef()), input.cipher(), input.hash());
+  }
+
+  private static ResolvedSignature materializeSignature(
+      OoxmlSignatureSpec input, ExecutionInputBindings bindings) throws IOException {
+    try {
+      return new ResolvedSignature(
+          bindings
+              .requestPathAccess()
+              .materializeRead(
+                  input.pkcs12Path(),
+                  "persistence.security.signature.signature.pkcs12Path",
+                  "gridgrind-signing-material-",
+                  ".p12"),
+          bindings.resolveSecret(input.keystorePasswordRef()),
+          input
+              .keyPasswordRef()
+              .map(bindings::resolveSecret)
+              .orElseGet(() -> bindings.resolveSecret(input.keystorePasswordRef())),
+          input.alias(),
+          input.digestAlgorithm(),
+          input.description());
+    } catch (java.nio.file.NoSuchFileException exception) {
+      throw new dev.erst.gridgrind.excel.InvalidSigningConfigurationException(
+          "Signing material does not exist: " + input.pkcs12Path(), exception);
+    }
   }
 }

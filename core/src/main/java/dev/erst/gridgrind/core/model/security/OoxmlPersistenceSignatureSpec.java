@@ -11,7 +11,7 @@ public sealed interface OoxmlPersistenceSignatureSpec
         dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.Sign {
   /** Deliberately persist an unsigned package. */
   @Variant(id = "NONE", summary = "Deliberately persist without an OOXML package signature.")
-  record None() implements OoxmlPersistenceSignatureSpec {}
+  record None() implements OoxmlPersistenceSignatureSpec, ResolvedPersistenceSignature {}
 
   /** Sign the package with explicitly supplied material. */
   @Variant(id = "SIGN", summary = "Sign with explicitly supplied PKCS#12 material.")

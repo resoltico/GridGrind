@@ -4,6 +4,10 @@ import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
+import dev.erst.gridgrind.core.model.security.ResolvedOpenSecurity;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceEncryption;
+import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
@@ -11,9 +15,6 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,7 +57,7 @@ final class ExecutionWorkbookSupport {
           yield ExcelWorkbooks.open(
               materializedSource,
               materializeFormulaEnvironment(formulaEnvironment, bindings),
-              OoxmlPackageSecurityConverter.toExcelOpenOptions(
+              ExecutionRequestPaths.materializeOpenSecurity(
                   existingFile.security().orElse(null), bindings),
               tempFileFactory::createTempFile);
         } catch (dev.erst.gridgrind.excel.WorkbookNotOpenableException exception) {
@@ -213,7 +214,7 @@ final class ExecutionWorkbookSupport {
       ExecutionInputBindings bindings,
       StagedArtifactAcceptance stagedArtifactAcceptance)
       throws IOException {
-    ExcelOoxmlPersistenceOptions persistenceOptions =
+    ResolvedPersistenceSecurity persistenceOptions =
         ExecutionRequestPaths.persistenceOptions(persistence, bindings);
     try (WorkbookArtifactIo.MaterializedWorkbook materialized =
         WorkbookArtifactIo.materializeWorkbook(
@@ -239,16 +240,16 @@ final class ExecutionWorkbookSupport {
   }
 
   /** Derives the only valid reopen options for an already serialized staged artifact. */
-  static ExcelOoxmlOpenOptions stagedArtifactOpenOptions(
-      ExcelOoxmlPersistenceOptions persistenceOptions,
+  static ResolvedOpenSecurity stagedArtifactOpenOptions(
+      ResolvedPersistenceSecurity persistenceOptions,
       WorkbookPlan.WorkbookSource source,
       ExecutionInputBindings bindings) {
     return switch (persistenceOptions.encryption()) {
-      case ExcelOoxmlPersistenceEncryption.Plaintext _ -> new ExcelOoxmlOpenOptions.Unencrypted();
-      case ExcelOoxmlPersistenceEncryption.Encrypt encrypt ->
-          new ExcelOoxmlOpenOptions.Encrypted(encrypt.options().password());
-      case ExcelOoxmlPersistenceEncryption.PreserveSource _ ->
-          new ExcelOoxmlOpenOptions.Encrypted(
+      case OoxmlPersistenceEncryptionSpec.None _ -> new ResolvedOpenSecurity.Unencrypted();
+      case ResolvedPersistenceEncryption.Encrypt encrypt ->
+          new ResolvedOpenSecurity.Encrypted(encrypt.options().password());
+      case OoxmlPersistenceEncryptionSpec.PreserveSource _ ->
+          new ResolvedOpenSecurity.Encrypted(
               ExecutionRequestPaths.sourceEncryptionPassword(source, bindings)
                   .orElseThrow(
                       () ->
