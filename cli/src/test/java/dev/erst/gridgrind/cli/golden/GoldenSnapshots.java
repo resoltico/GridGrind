@@ -28,7 +28,17 @@ final class GoldenSnapshots {
 
   static void verify(String id, GoldenLauncher launcher, Path workspace, ObjectNode observation)
       throws IOException {
-    String actual = canonical(observation, workspace);
+    verify(id, launcher, workspace, observation, Set.of());
+  }
+
+  static void verify(
+      String id,
+      GoldenLauncher launcher,
+      Path workspace,
+      ObjectNode observation,
+      Set<String> certifiedGeneratedPreviews)
+      throws IOException {
+    String actual = canonical(observation, workspace, certifiedGeneratedPreviews);
     Path snapshot = DIRECTORY.resolve(id + ".json");
     if (launcher == GoldenLauncher.IN_PROCESS && Boolean.getBoolean("gridgrind.golden.update")) {
       Files.createDirectories(snapshot.getParent());
@@ -51,8 +61,13 @@ final class GoldenSnapshots {
   }
 
   static String canonical(JsonNode node, Path workspace) {
+    return canonical(node, workspace, Set.of());
+  }
+
+  static String canonical(JsonNode node, Path workspace, Set<String> certifiedGeneratedPreviews) {
     return JSON.writerWithDefaultPrettyPrinter()
-            .writeValueAsString(normalize(node, workspace, new LinkedHashMap<>()))
+            .writeValueAsString(
+                normalize(node, workspace, new NormalizationState(certifiedGeneratedPreviews)))
         + "\n";
   }
 
@@ -75,7 +90,7 @@ final class GoldenSnapshots {
     }
   }
 
-  private static JsonNode normalize(JsonNode node, Path workspace, Map<String, String> setupIds) {
+  private static JsonNode normalize(JsonNode node, Path workspace, NormalizationState state) {
     if (node.isObject()) {
       ObjectNode normalized = JSON.createObjectNode();
       node.properties().stream()
@@ -94,16 +109,22 @@ final class GoldenSnapshots {
                   UUID.fromString(id.substring(1, id.length() - 1));
                   normalized.put(
                       name,
-                      setupIds.computeIfAbsent(id, ignored -> "<setupId-" + setupIds.size() + ">"));
+                      state.setupIds.computeIfAbsent(
+                          id, ignored -> "<setupId-" + state.setupIds.size() + ">"));
+                } else if ("preview".equals(name)
+                    && "SIGNATURE_LINE".equals(node.path("type").asString(""))
+                    && state.certifiedGeneratedPreviews.contains(
+                        value.path("sha256").asString(""))) {
+                  normalized.set(name, signaturePreview(value, workspace, state));
                 } else {
-                  normalized.set(name, normalize(value, workspace, setupIds));
+                  normalized.set(name, normalize(value, workspace, state));
                 }
               });
       return normalized;
     }
     if (node.isArray()) {
       ArrayNode normalized = JSON.createArrayNode();
-      node.forEach(value -> normalized.add(normalize(value, workspace, setupIds)));
+      node.forEach(value -> normalized.add(normalize(value, workspace, state)));
       return normalized;
     }
     if (node.isString()) {
@@ -116,4 +137,39 @@ final class GoldenSnapshots {
     }
     return node;
   }
+
+  private static JsonNode signaturePreview(
+      JsonNode preview, Path workspace, NormalizationState state) {
+    assertTrue(preview.path("sha256").isString(), "Signature preview hash must be a string");
+    assertTrue(
+        preview.path("byteSize").isIntegralNumber(),
+        "Signature preview byte size must be an integer");
+    String hash = preview.path("sha256").asString();
+    long byteSize = preview.path("byteSize").asLong();
+    assertTrue(hash.matches("[0-9a-f]{64}"), "Signature preview must carry a SHA-256");
+    assertTrue(byteSize > 0, "Signature preview must contain image bytes");
+    PreviewIdentity identity =
+        state.previews.computeIfAbsent(
+            hash, ignored -> new PreviewIdentity(state.previews.size(), byteSize));
+    assertEquals(identity.byteSize(), byteSize, "The same preview hash must retain its byte size");
+    ObjectNode normalized = (ObjectNode) normalize(preview, workspace, state);
+    normalized.put("sha256", "<signature-preview-sha256-" + identity.index() + ">");
+    normalized.put("byteSize", "<signature-preview-byteSize-" + identity.index() + ">");
+    return normalized;
+  }
+
+  /** Identity relationships retained across one execution and its readback. */
+  private static final class NormalizationState {
+    private final Set<String> certifiedGeneratedPreviews;
+
+    private NormalizationState(Set<String> certifiedGeneratedPreviews) {
+      this.certifiedGeneratedPreviews = Set.copyOf(certifiedGeneratedPreviews);
+    }
+
+    private final Map<String, String> setupIds = new LinkedHashMap<>();
+    private final Map<String, PreviewIdentity> previews = new LinkedHashMap<>();
+  }
+
+  /** One generated image identity with a consistent reported byte count. */
+  private record PreviewIdentity(int index, long byteSize) {}
 }

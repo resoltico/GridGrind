@@ -147,11 +147,11 @@
           },
           "name" : "BudgetSignature",
           "preview" : {
-            "byteSize" : 2546,
+            "byteSize" : "<signature-preview-byteSize-0>",
             "contentType" : "image/png",
             "format" : "PNG",
             "heightPixels" : 150,
-            "sha256" : "ed0e520fd0f9bbe525730aa1f58854c31c6ec1bec05fb9f77c5209ae54c22a00",
+            "sha256" : "<signature-preview-sha256-0>",
             "widthPixels" : 400
           },
           "setup" : {
@@ -275,11 +275,11 @@
           },
           "name" : "BudgetSignature",
           "preview" : {
-            "byteSize" : 2546,
+            "byteSize" : "<signature-preview-byteSize-0>",
             "contentType" : "image/png",
             "format" : "PNG",
             "heightPixels" : 150,
-            "sha256" : "ed0e520fd0f9bbe525730aa1f58854c31c6ec1bec05fb9f77c5209ae54c22a00",
+            "sha256" : "<signature-preview-sha256-0>",
             "widthPixels" : 400
           },
           "setup" : {
@@ -315,11 +315,11 @@
           },
           "name" : "BudgetSignature",
           "preview" : {
-            "byteSize" : 2546,
+            "byteSize" : "<signature-preview-byteSize-0>",
             "contentType" : "image/png",
             "format" : "PNG",
             "heightPixels" : 150,
-            "sha256" : "ed0e520fd0f9bbe525730aa1f58854c31c6ec1bec05fb9f77c5209ae54c22a00",
+            "sha256" : "<signature-preview-sha256-0>",
             "widthPixels" : 400
           },
           "setup" : {

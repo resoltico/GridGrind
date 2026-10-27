@@ -217,11 +217,15 @@ class GoldenCorpusTest {
         "materializedRequest",
         GoldenSnapshots.JSON.readTree(
             Files.readAllBytes(materialized.resolve(recipe.requestFileName()))));
-    observation.set(
-        "execution",
-        GoldenWorkbook.execute(
-            launcher, materialized, materialized.resolve(recipe.requestFileName())));
-    GoldenSnapshots.verify(id, launcher, workspace, observation);
+    Path request = materialized.resolve(recipe.requestFileName());
+    ObjectNode execution = GoldenWorkbook.execute(launcher, materialized, request);
+    observation.set("execution", execution);
+    GoldenSnapshots.verify(
+        id,
+        launcher,
+        workspace,
+        observation,
+        GoldenSignaturePreviews.certify(request, materialized, execution));
   }
 
   private void example(Path file, Recipe recipe, GoldenLauncher launcher)
@@ -231,8 +235,13 @@ class GoldenCorpusTest {
     Path materialized = materialize(recipe, launcher, workspace);
     Path request = materialized.resolve(recipe.requestFileName());
     Files.write(request, Files.readAllBytes(file));
+    ObjectNode execution = GoldenWorkbook.execute(launcher, materialized, request);
     GoldenSnapshots.verify(
-        id, launcher, workspace, GoldenWorkbook.execute(launcher, materialized, request));
+        id,
+        launcher,
+        workspace,
+        execution,
+        GoldenSignaturePreviews.certify(request, materialized, execution));
   }
 
   private static Path materialize(Recipe recipe, GoldenLauncher launcher, Path workspace)

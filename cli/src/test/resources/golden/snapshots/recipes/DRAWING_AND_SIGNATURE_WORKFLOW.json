@@ -207,11 +207,11 @@
           },
           "name" : "WorkflowSignature",
           "preview" : {
-            "byteSize" : 2949,
+            "byteSize" : "<signature-preview-byteSize-0>",
             "contentType" : "image/png",
             "format" : "PNG",
             "heightPixels" : 150,
-            "sha256" : "b84ef1b814ca65cb72076f4e70b4bf42ca356f9636a37c67f328dca0ea198b2d",
+            "sha256" : "<signature-preview-sha256-0>",
             "widthPixels" : 400
           },
           "setup" : {
@@ -335,11 +335,11 @@
           },
           "name" : "WorkflowSignature",
           "preview" : {
-            "byteSize" : 2949,
+            "byteSize" : "<signature-preview-byteSize-0>",
             "contentType" : "image/png",
             "format" : "PNG",
             "heightPixels" : 150,
-            "sha256" : "b84ef1b814ca65cb72076f4e70b4bf42ca356f9636a37c67f328dca0ea198b2d",
+            "sha256" : "<signature-preview-sha256-0>",
             "widthPixels" : 400
           },
           "setup" : {
@@ -375,11 +375,11 @@
           },
           "name" : "WorkflowSignature",
           "preview" : {
-            "byteSize" : 2949,
+            "byteSize" : "<signature-preview-byteSize-0>",
             "contentType" : "image/png",
             "format" : "PNG",
             "heightPixels" : 150,
-            "sha256" : "b84ef1b814ca65cb72076f4e70b4bf42ca356f9636a37c67f328dca0ea198b2d",
+            "sha256" : "<signature-preview-sha256-0>",
             "widthPixels" : 400
           },
           "setup" : {
