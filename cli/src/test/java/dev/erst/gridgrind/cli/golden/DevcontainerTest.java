@@ -17,12 +17,11 @@ import org.junit.jupiter.api.io.TempDir;
 @Tag("devcontainer")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DevcontainerTest {
-  @TempDir Path workspace;
   private DockerFixture docker;
 
   @BeforeAll
-  void buildContributorImage() throws Exception {
-    docker = new DockerFixture(workspace);
+  void buildContributorImage(@TempDir Path directory) throws Exception {
+    docker = new DockerFixture(directory);
     Path context = GoldenLauncher.REPOSITORY.resolve(".devcontainer");
     docker.build(context, List.of("--file", context.resolve("Dockerfile").toString()));
   }

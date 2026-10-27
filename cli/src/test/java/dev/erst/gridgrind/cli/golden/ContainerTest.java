@@ -23,11 +23,12 @@ import org.junit.jupiter.api.io.TempDir;
 @Tag("container")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ContainerTest {
-  @TempDir Path workspace;
+  private Path workspace;
   private DockerFixture docker;
 
   @BeforeAll
-  void buildImage() throws Exception {
+  void buildImage(@TempDir Path directory) throws Exception {
+    workspace = directory;
     docker = new DockerFixture(workspace);
     verifyPinnedPlatforms();
     docker.build(
@@ -116,6 +117,10 @@ class ContainerTest {
       DockerFixture.assertSuccess(
           docker.runWorkbook(
               root, "recipe", "materialize", recipe.id(), "--workspace", materialized.toString()));
+      if ("PACKAGE_SECURITY_INSPECTION".equals(recipe.id())) {
+        Path secrets = Files.createDirectories(materialized.resolve("fixture-secrets"));
+        Files.writeString(secrets.resolve("source-open-password"), "GridGrind-2026");
+      }
       GoldenWorkbook.execute(
           docker::runWorkbook, materialized, materialized.resolve(recipe.requestFileName()));
     }
