@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -376,7 +377,7 @@ class ExcelChartFallbackCoverageTest {
 
     @Override
     public ExcelFormulaRuntimeContext context() {
-      return ExcelFormulaEnvironment.defaults().runtimeContext();
+      return ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults());
     }
   }
 }

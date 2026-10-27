@@ -225,7 +225,7 @@ final class ExecutionStepSupport {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             materializedPath,
-            dev.erst.gridgrind.excel.ExcelFormulaEnvironment.defaults(),
+            dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment.defaults(),
             tempFileFactory::createTempFile)) {
       return executeFullInspectionStep(inspectionStep, workbook, workbookLocation);
     }
@@ -237,7 +237,7 @@ final class ExecutionStepSupport {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             materializedPath,
-            dev.erst.gridgrind.excel.ExcelFormulaEnvironment.defaults(),
+            dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment.defaults(),
             tempFileFactory::createTempFile)) {
       return assertionExecutor.execute(assertionStep, workbook, workbookLocation);
     }
@@ -249,7 +249,7 @@ final class ExecutionStepSupport {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             materializedPath,
-            dev.erst.gridgrind.excel.ExcelFormulaEnvironment.defaults(),
+            dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment.defaults(),
             tempFileFactory::createTempFile)) {
       return assertionExecutor.executeCollecting(assertionStep, workbook, workbookLocation);
     }

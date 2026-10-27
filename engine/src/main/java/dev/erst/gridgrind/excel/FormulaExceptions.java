@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -39,7 +40,7 @@ final class FormulaExceptions {
   static RuntimeException wrap(
       String sheetName, String address, @Nullable String formula, RuntimeException exception) {
     return wrap(
-        ExcelFormulaEnvironment.defaults().runtimeContext(),
+        ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults()),
         sheetName,
         address,
         formula,

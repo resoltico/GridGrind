@@ -11,6 +11,9 @@ import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -19,9 +22,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
-import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
-import dev.erst.gridgrind.excel.ExcelFormulaExternalWorkbookBinding;
-import dev.erst.gridgrind.excel.ExcelFormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.OutputStream;
@@ -182,11 +182,11 @@ final class XlsxParityTest {
             try (ExcelWorkbook workbook =
                 ExcelWorkbooks.open(
                     scenario.workbookPath(),
-                    new ExcelFormulaEnvironment(
+                    new ResolvedFormulaEnvironment(
                         List.of(
-                            new ExcelFormulaExternalWorkbookBinding(
+                            new ResolvedExternalWorkbook(
                                 "referenced.xlsx", scenario.attachment("referencedWorkbook"))),
-                        ExcelFormulaMissingWorkbookPolicy.ERROR,
+                        FormulaMissingWorkbookPolicy.ERROR,
                         List.of()),
                     XlsxParitySupport.tempFileFactory(temporaryRoot))) {
               workbook.formulas().evaluateAll();

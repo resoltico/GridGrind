@@ -2,7 +2,12 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,10 +16,8 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -24,154 +27,6 @@ import org.junit.jupiter.api.Test;
 
 /** Regression tests for the workbook formula environment and lifecycle controls. */
 class ExcelFormulaEnvironmentTest {
-  @Test
-  void formulaEnvironmentDomainModelNormalizesAndValidatesInputs() {
-    Path externalWorkbookPath = Path.of("tmp", "rates.xlsx");
-    List<ExcelFormulaExternalWorkbookBinding> externalWorkbooks =
-        new ArrayList<>(
-            List.of(new ExcelFormulaExternalWorkbookBinding("Rates.xlsx", externalWorkbookPath)));
-    List<ExcelFormulaUdfToolpack> udfToolpacks =
-        new ArrayList<>(
-            List.of(
-                new ExcelFormulaUdfToolpack(
-                    "math",
-                    List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 2, " = ARG1 + ARG2 ")))));
-
-    ExcelFormulaEnvironment environment =
-        new ExcelFormulaEnvironment(externalWorkbooks, null, udfToolpacks);
-    externalWorkbooks.clear();
-    udfToolpacks.clear();
-
-    assertFalse(environment.isDefault());
-    assertEquals(ExcelFormulaMissingWorkbookPolicy.ERROR, environment.missingWorkbookPolicy());
-    assertEquals(
-        "ARG1 + ARG2",
-        environment.udfToolpacks().getFirst().functions().getFirst().formulaTemplate());
-    assertThrows(
-        UnsupportedOperationException.class,
-        () ->
-            environment
-                .externalWorkbooks()
-                .add(new ExcelFormulaExternalWorkbookBinding("Other.xlsx", externalWorkbookPath)));
-
-    ExcelFormulaRuntimeContext runtimeContext = environment.runtimeContext();
-    assertTrue(runtimeContext.hasExternalWorkbookBinding("RATES.XLSX"));
-    assertTrue(runtimeContext.hasUserDefinedFunction("double"));
-    assertThrows(NullPointerException.class, () -> runtimeContext.hasExternalWorkbookBinding(null));
-    assertThrows(NullPointerException.class, () -> runtimeContext.hasUserDefinedFunction(null));
-    assertTrue(new ExcelFormulaEnvironment(null, null, null).isDefault());
-    assertFalse(
-        new ExcelFormulaEnvironment(null, ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, null)
-            .isDefault());
-    assertFalse(
-        new ExcelFormulaEnvironment(
-                null,
-                null,
-                List.of(
-                    new ExcelFormulaUdfToolpack(
-                        "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1")))))
-            .isDefault());
-    assertEquals(
-        Set.of(),
-        new ExcelFormulaEnvironment(null, null, null).runtimeContext().externalWorkbookNames());
-  }
-
-  @Test
-  void formulaEnvironmentDomainModelRejectsInvalidInputs() {
-    Path externalWorkbookPath = Path.of("tmp", "rates.xlsx");
-
-    assertThrows(
-        NullPointerException.class,
-        () -> new ExcelFormulaExternalWorkbookBinding(null, externalWorkbookPath));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelFormulaExternalWorkbookBinding(" ", externalWorkbookPath));
-    assertThrows(
-        NullPointerException.class,
-        () -> new ExcelFormulaExternalWorkbookBinding("Rates.xlsx", null));
-
-    assertThrows(NullPointerException.class, () -> new ExcelFormulaUdfFunction(null, 1, 1, "ARG1"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelFormulaUdfFunction(" ", 1, 1, "ARG1"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelFormulaUdfFunction("1BAD", 1, 1, "ARG1"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelFormulaUdfFunction("DOUBLE", -1, 1, "ARG1"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelFormulaUdfFunction("DOUBLE", 2, 1, "ARG1"));
-    assertThrows(
-        NullPointerException.class, () -> new ExcelFormulaUdfFunction("DOUBLE", 1, 1, null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelFormulaUdfFunction("DOUBLE", 1, 1, " "));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG2"));
-
-    assertThrows(NullPointerException.class, () -> new ExcelFormulaUdfToolpack(null, List.of()));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelFormulaUdfToolpack(" ", List.of()));
-    assertThrows(NullPointerException.class, () -> new ExcelFormulaUdfToolpack("math", null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelFormulaUdfToolpack("math", List.of()));
-    assertThrows(
-        NullPointerException.class,
-        () -> new ExcelFormulaUdfToolpack("math", List.of((ExcelFormulaUdfFunction) null)));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelFormulaUdfToolpack(
-                "math",
-                List.of(
-                    new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1"),
-                    new ExcelFormulaUdfFunction("double", 1, 1, "ARG1"))));
-
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelFormulaEnvironment(
-                List.of(
-                    new ExcelFormulaExternalWorkbookBinding("Rates.xlsx", externalWorkbookPath),
-                    new ExcelFormulaExternalWorkbookBinding("rates.xlsx", externalWorkbookPath)),
-                ExcelFormulaMissingWorkbookPolicy.ERROR,
-                List.of()));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new ExcelFormulaEnvironment(
-                List.of((ExcelFormulaExternalWorkbookBinding) null),
-                ExcelFormulaMissingWorkbookPolicy.ERROR,
-                List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelFormulaEnvironment(
-                List.of(),
-                ExcelFormulaMissingWorkbookPolicy.ERROR,
-                List.of(
-                    new ExcelFormulaUdfToolpack(
-                        "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1"))),
-                    new ExcelFormulaUdfToolpack(
-                        "Math", List.of(new ExcelFormulaUdfFunction("TRIPLE", 1, 1, "ARG1*3"))))));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new ExcelFormulaEnvironment(
-                List.of(),
-                ExcelFormulaMissingWorkbookPolicy.ERROR,
-                List.of((ExcelFormulaUdfToolpack) null)));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelFormulaEnvironment(
-                List.of(),
-                ExcelFormulaMissingWorkbookPolicy.ERROR,
-                List.of(
-                    new ExcelFormulaUdfToolpack(
-                        "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1"))),
-                    new ExcelFormulaUdfToolpack(
-                        "stats", List.of(new ExcelFormulaUdfFunction("double", 1, 1, "ARG1"))))));
-
-    ExcelFormulaUdfFunction dottedFunction = new ExcelFormulaUdfFunction("_pkg.DOUBLE2", 0, 0, "1");
-    assertEquals("_pkg.DOUBLE2", dottedFunction.name());
-  }
 
   @Test
   void evaluatesExternalWorkbookBindingsAndPersistsCachedResults() throws Exception {
@@ -181,11 +36,11 @@ class ExcelFormulaEnvironmentTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             scenario.workbookPath(),
-            new ExcelFormulaEnvironment(
+            new ResolvedFormulaEnvironment(
                 List.of(
-                    new ExcelFormulaExternalWorkbookBinding(
+                    new ResolvedExternalWorkbook(
                         "referenced.xlsx", scenario.referencedWorkbookPath())),
-                ExcelFormulaMissingWorkbookPolicy.ERROR,
+                FormulaMissingWorkbookPolicy.ERROR,
                 List.of()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
@@ -208,8 +63,8 @@ class ExcelFormulaEnvironmentTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             scenario.workbookPath(),
-            new ExcelFormulaEnvironment(
-                List.of(), ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()),
+            new ResolvedFormulaEnvironment(
+                List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
       workbook
@@ -231,12 +86,12 @@ class ExcelFormulaEnvironmentTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             workbookPath,
-            new ExcelFormulaEnvironment(
+            new ResolvedFormulaEnvironment(
                 List.of(),
-                ExcelFormulaMissingWorkbookPolicy.ERROR,
+                FormulaMissingWorkbookPolicy.ERROR,
                 List.of(
-                    new ExcelFormulaUdfToolpack(
-                        "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2"))))),
+                    new FormulaUdfToolpackSpec(
+                        "math", List.of(new FormulaUdfFunctionSpec("DOUBLE", 1, 1, "ARG1*2"))))),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
       workbook

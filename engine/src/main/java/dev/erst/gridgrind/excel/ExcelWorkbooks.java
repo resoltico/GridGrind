@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
@@ -25,7 +26,7 @@ public final class ExcelWorkbooks {
   }
 
   /** Creates an empty XLSX workbook with the supplied formula-evaluation environment. */
-  public static ExcelWorkbook create(ExcelFormulaEnvironment formulaEnvironment)
+  public static ExcelWorkbook create(ResolvedFormulaEnvironment formulaEnvironment)
       throws IOException {
     return new ExcelWorkbook(new XSSFWorkbook(), formulaEnvironment);
   }
@@ -60,7 +61,7 @@ public final class ExcelWorkbooks {
   /** Opens an existing workbook file from disk with formula evaluation and temp ownership. */
   public static ExcelWorkbook open(
       Path workbookPath,
-      ExcelFormulaEnvironment formulaEnvironment,
+      ResolvedFormulaEnvironment formulaEnvironment,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     return open(
@@ -73,7 +74,7 @@ public final class ExcelWorkbooks {
    */
   public static ExcelWorkbook open(
       Path workbookPath,
-      ExcelFormulaEnvironment formulaEnvironment,
+      ResolvedFormulaEnvironment formulaEnvironment,
       ExcelOoxmlOpenOptions openOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
@@ -84,7 +85,7 @@ public final class ExcelWorkbooks {
   /** Opens one materialized plain OOXML package with explicit source-security metadata. */
   public static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
-      ExcelFormulaEnvironment formulaEnvironment,
+      ResolvedFormulaEnvironment formulaEnvironment,
       Optional<Path> sourcePath,
       OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)

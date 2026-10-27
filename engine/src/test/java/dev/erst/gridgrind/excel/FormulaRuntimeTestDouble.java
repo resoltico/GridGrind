@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -110,7 +111,7 @@ final class FormulaRuntimeTestDouble implements ExcelFormulaRuntime {
   @Override
   public ExcelFormulaRuntimeContext context() {
     return delegate == null
-        ? ExcelFormulaEnvironment.defaults().runtimeContext()
+        ? ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults())
         : delegate.context();
   }
 }

@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
@@ -14,6 +17,8 @@ import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -33,8 +38,7 @@ final class ExecutionWorkbookSupport {
       throws IOException {
     return switch (source) {
       case WorkbookPlan.WorkbookSource.New _ ->
-          ExcelWorkbooks.create(
-              FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment, bindings));
+          ExcelWorkbooks.create(materializeFormulaEnvironment(formulaEnvironment, bindings));
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile -> {
         Path sourcePath =
             ExecutionRequestPaths.normalizePath(existingFile.path(), bindings.workingDirectory());
@@ -51,7 +55,7 @@ final class ExecutionWorkbookSupport {
         try {
           yield ExcelWorkbooks.open(
               materializedSource,
-              FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment, bindings),
+              materializeFormulaEnvironment(formulaEnvironment, bindings),
               OoxmlPackageSecurityConverter.toExcelOpenOptions(
                   existingFile.security().orElse(null), bindings),
               tempFileFactory::createTempFile);
@@ -273,5 +277,38 @@ final class ExecutionWorkbookSupport {
     } catch (IOException ignored) {
       // Best-effort cleanup for internal temporary files only.
     }
+  }
+
+  static ResolvedFormulaEnvironment materializeFormulaEnvironment(
+      @Nullable FormulaEnvironmentSpec input, ExecutionInputBindings bindings) throws IOException {
+    if (input == null) {
+      return ResolvedFormulaEnvironment.defaults();
+    }
+    return new ResolvedFormulaEnvironment(
+        externalWorkbookBindings(input, bindings),
+        input.missingWorkbookPolicy(),
+        input.udfToolpacks());
+  }
+
+  private static List<ResolvedExternalWorkbook> externalWorkbookBindings(
+      FormulaEnvironmentSpec input, ExecutionInputBindings bindings) throws IOException {
+    List<ResolvedExternalWorkbook> bindingsByName = new ArrayList<>();
+    for (FormulaExternalWorkbookSpec externalWorkbook : input.externalWorkbooks()) {
+      bindingsByName.add(materializeExternalWorkbook(externalWorkbook, bindings));
+    }
+    return List.copyOf(bindingsByName);
+  }
+
+  private static ResolvedExternalWorkbook materializeExternalWorkbook(
+      FormulaExternalWorkbookSpec input, ExecutionInputBindings bindings) throws IOException {
+    return new ResolvedExternalWorkbook(
+        input.workbookName(),
+        bindings
+            .requestPathAccess()
+            .materializeRead(
+                input.path(),
+                "formulaEnvironment.externalWorkbooks",
+                "gridgrind-formula-workbook-",
+                ".xlsx"));
   }
 }

@@ -2776,3 +2776,19 @@ Inventories: converters505→177, blank284→282, main112826→112246, tests1510
 definitions0, snapshots2(runtime) unchanged. Remaining converter inventory is FormulaEnvironmentConverter
 and OoxmlPackageSecurityConverter, not the removed command/result/selection seams. WP-40 remains open
 for ResolvedPlan and those final converter contracts; Phase4 feature packaging/backends still follow.
+
+### WP-40 canonical formula environment
+
+Native formula evaluation now consumes core ResolvedFormulaEnvironment, materialized external workbook
+paths, shared FormulaMissingWorkbookPolicy and the existing source-free UDF records. Deleted five native
+formula model families and FormulaEnvironmentConverter; authorized file materialization lives in the
+existing ExecutionWorkbookSupport owner. Runtime evaluator-name context remains derived native state.
+Kept real external workbook/UDF/evaluation/cache/persistence/resource checks and the relative-path
+capability test; removed only two mirror-constructor methods. Core ownership/sharing/distinct-name
+checks cover the replacement. A local evaluator import-budget suppression documents its canonical
+boundary; no global PMD threshold changed. Earlier failure evidence remains outside the repository.
+Focused behavior/PMD passes 1m17s, all94 retained seeds pass30s, delivered ./gradlew check passes4m20s:
+core387, JSON353, engine1365 plus14 parity, CLI588, architecture14, no failures/errors/skips. All143
+goldens unchanged. No active campaigns. Baseline diff empty. Inventories: converter177→100 (only package
+security remains), blank282→279, main112246→112120, test150613→150527; Support194, definitions0 and
+runtime snapshots2 unchanged. ResolvedPlan, package security and the remainder of Phase4 remain open.

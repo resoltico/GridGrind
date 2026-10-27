@@ -2,6 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,13 +34,13 @@ class ExcelFormulaRuntimeTest {
   @Test
   void formulaRuntimeRejectsInvalidTemplatesAndClosesOpenedBindingsOnSetupFailure()
       throws Exception {
-    ExcelFormulaEnvironment invalidTemplateEnvironment =
-        new ExcelFormulaEnvironment(
+    ResolvedFormulaEnvironment invalidTemplateEnvironment =
+        new ResolvedFormulaEnvironment(
             List.of(),
-            ExcelFormulaMissingWorkbookPolicy.ERROR,
+            FormulaMissingWorkbookPolicy.ERROR,
             List.of(
-                new ExcelFormulaUdfToolpack(
-                    "math", List.of(new ExcelFormulaUdfFunction("BROKEN", 1, 1, "SUM(")))));
+                new FormulaUdfToolpackSpec(
+                    "math", List.of(new FormulaUdfFunctionSpec("BROKEN", 1, 1, "SUM(")))));
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       IllegalArgumentException failure =
@@ -56,12 +61,12 @@ class ExcelFormulaRuntimeTest {
       }
     }
 
-    ExcelFormulaEnvironment failingBindingEnvironment =
-        new ExcelFormulaEnvironment(
+    ResolvedFormulaEnvironment failingBindingEnvironment =
+        new ResolvedFormulaEnvironment(
             List.of(
-                new ExcelFormulaExternalWorkbookBinding("valid.xlsx", validWorkbookPath),
-                new ExcelFormulaExternalWorkbookBinding("missing.xlsx", missingWorkbookPath)),
-            ExcelFormulaMissingWorkbookPolicy.ERROR,
+                new ResolvedExternalWorkbook("valid.xlsx", validWorkbookPath),
+                new ResolvedExternalWorkbook("missing.xlsx", missingWorkbookPath)),
+            FormulaMissingWorkbookPolicy.ERROR,
             List.of());
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -78,10 +83,10 @@ class ExcelFormulaRuntimeTest {
   void templateFormulaHelpersCoverSupportedAndRejectedValueEvalShapes() throws Exception {
     ExcelFormulaRuntime.TemplateFormulaUdfFunction identity =
         new ExcelFormulaRuntime.TemplateFormulaUdfFunction(
-            new ExcelFormulaUdfFunction("IDENTITY", 1, 1, "ARG1"));
+            new FormulaUdfFunctionSpec("IDENTITY", 1, 1, "ARG1"));
     ExcelFormulaRuntime.TemplateFormulaUdfFunction sumFunction =
         new ExcelFormulaRuntime.TemplateFormulaUdfFunction(
-            new ExcelFormulaUdfFunction("SUM_AREA", 1, 1, "SUM(ARG1)"));
+            new FormulaUdfFunctionSpec("SUM_AREA", 1, 1, "SUM(ARG1)"));
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Args");
@@ -124,7 +129,9 @@ class ExcelFormulaRuntimeTest {
       throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook();
         ExcelFormulaRuntime runtime = ExcelFormulaRuntime.poi(workbook, null)) {
-      assertEquals(ExcelFormulaEnvironment.defaults().runtimeContext(), runtime.context());
+      assertEquals(
+          ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults()),
+          runtime.context());
     }
 
     try (XSSFWorkbook scratchWorkbook = new XSSFWorkbook()) {
@@ -147,7 +154,7 @@ class ExcelFormulaRuntimeTest {
 
     ExcelFormulaRuntime.TemplateFormulaUdfFunction identity =
         new ExcelFormulaRuntime.TemplateFormulaUdfFunction(
-            new ExcelFormulaUdfFunction("IDENTITY", 1, 1, "ARG1"));
+            new FormulaUdfFunctionSpec("IDENTITY", 1, 1, "ARG1"));
     assertSame(ErrorEval.VALUE_INVALID, identity.evaluate(new ValueEval[] {}, null));
     assertSame(
         ErrorEval.VALUE_INVALID,
@@ -188,7 +195,7 @@ class ExcelFormulaRuntimeTest {
       ExcelFormulaRuntime runtime =
           new ExcelFormulaRuntime.PoiExcelFormulaRuntime(
               ownerWorkbook.getCreationHelper().createFormulaEvaluator(),
-              ExcelFormulaEnvironment.defaults().runtimeContext(),
+              ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults()),
               List.of(firstReferencedWorkbook, secondReferencedWorkbook));
       IOException runtimeCloseFailure = assertThrows(IOException.class, runtime::close);
       assertEquals("first close failure", runtimeCloseFailure.getMessage());

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Tests request-scoped formula workbooks are materialized through prepared file capabilities. */
-class FormulaEnvironmentConverterTest {
+class FormulaEnvironmentMaterializationTest {
   @TempDir Path temporaryDirectory;
 
   @Test
@@ -30,7 +30,7 @@ class FormulaEnvironmentConverterTest {
         ExecutionInputBindingsFixtureSupport.preparedBindings(
             temporaryDirectory, List.of(externalWorkbook))) {
       Path materialized =
-          FormulaEnvironmentConverter.toExcelFormulaEnvironment(input, prepared.bindings())
+          ExecutionWorkbookSupport.materializeFormulaEnvironment(input, prepared.bindings())
               .externalWorkbooks()
               .getFirst()
               .path();

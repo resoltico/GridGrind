@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
@@ -37,7 +38,7 @@ public final class ExcelWorkbook implements AutoCloseable {
         Optional.empty());
   }
 
-  ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaEnvironment formulaEnvironment)
+  ExcelWorkbook(XSSFWorkbook workbook, ResolvedFormulaEnvironment formulaEnvironment)
       throws IOException {
     this(
         workbook,

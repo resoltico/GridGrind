@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.excel.ExcelDeterministicWorkbookArtifactSupport;
-import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -28,7 +28,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
   /** Opens one workbook through the full formula runtime plus any required package security. */
   public static ExcelWorkbook openWorkbook(
       Path workbookPath,
-      ExcelFormulaEnvironment formulaEnvironment,
+      ResolvedFormulaEnvironment formulaEnvironment,
       ExcelOoxmlOpenOptions openOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {

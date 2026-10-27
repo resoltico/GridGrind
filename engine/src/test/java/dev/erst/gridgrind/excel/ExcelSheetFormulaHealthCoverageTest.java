@@ -3,7 +3,9 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
@@ -277,7 +279,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               new WorkbookStyleRegistry(poiWorkbook),
               new StaticContextFormulaRuntime(
                   new ExcelFormulaRuntimeContext(
-                      Set.of("Rates.xlsx"), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of()),
+                      Set.of("Rates.xlsx"), FormulaMissingWorkbookPolicy.ERROR, Set.of()),
                   null,
                   null));
       assertEquals(List.of(), bound.diagnostics().formulaHealthFindings());
@@ -290,7 +292,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               new WorkbookStyleRegistry(poiWorkbook),
               new StaticContextFormulaRuntime(
                   new ExcelFormulaRuntimeContext(
-                      Set.of(), ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, Set.of()),
+                      Set.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, Set.of()),
                   null,
                   null));
 
@@ -316,7 +318,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
               new StaticContextFormulaRuntime(
-                  ExcelFormulaEnvironment.defaults().runtimeContext(),
+                  ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults()),
                   new IllegalStateException(
                       "outer",
                       new LocalWorkbookNotFoundException(
@@ -343,7 +345,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
               new StaticContextFormulaRuntime(
-                  ExcelFormulaEnvironment.defaults().runtimeContext(),
+                  ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults()),
                   new IllegalStateException("outer", new LocalWorkbookNotFoundException(null)),
                   null));
 

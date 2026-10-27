@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -196,7 +197,7 @@ class FormulaExceptionsTest {
 
     ExcelFormulaRuntimeContext registeredContext =
         new ExcelFormulaRuntimeContext(
-            Set.of(), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of("DOUBLE"));
+            Set.of(), FormulaMissingWorkbookPolicy.ERROR, Set.of("DOUBLE"));
     assertFalse(
         FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
             registeredContext,
@@ -216,7 +217,7 @@ class FormulaExceptionsTest {
     assertTrue(FormulaExceptions.isKnownBuiltinFunction("_XLFN.LET"));
 
     ExcelFormulaRuntimeContext emptyContext =
-        new ExcelFormulaRuntimeContext(Set.of(), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of());
+        new ExcelFormulaRuntimeContext(Set.of(), FormulaMissingWorkbookPolicy.ERROR, Set.of());
 
     assertFalse(
         FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(

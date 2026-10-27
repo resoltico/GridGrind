@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
@@ -301,7 +302,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             () ->
                 ExcelWorkbooks.openMaterializedWorkbook(
                     missingWorkbookPath,
-                    ExcelFormulaEnvironment.defaults(),
+                    ResolvedFormulaEnvironment.defaults(),
                     Optional.of(missingWorkbookPath),
                     OoxmlPackageSecurityReport.none(),
                     Optional.empty()));
@@ -332,7 +333,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             () ->
                 ExcelWorkbooks.openMaterializedWorkbook(
                     nonXlsxPath,
-                    ExcelFormulaEnvironment.defaults(),
+                    ResolvedFormulaEnvironment.defaults(),
                     Optional.of(nonXlsxPath),
                     OoxmlPackageSecurityReport.none(),
                     Optional.empty()));
@@ -360,7 +361,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         ExcelWorkbook workbookWithEnvironment =
             ExcelWorkbooks.open(
                 encryptedWorkbook.workbookPath(),
-                ExcelFormulaEnvironment.defaults(),
+                ResolvedFormulaEnvironment.defaults(),
                 new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
                 tempFileFactory)) {
       assertEquals("Encrypted workbook", workbook.sheet("Encrypted").cells().text("A1"));
@@ -390,7 +391,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         ExcelWorkbook workbookWithEnvironment =
             ExcelWorkbooks.openMaterializedWorkbook(
                 materializedWorkbookPath,
-                ExcelFormulaEnvironment.defaults(),
+                ResolvedFormulaEnvironment.defaults(),
                 Optional.of(materializedWorkbookPath),
                 OoxmlPackageSecurityReport.none(),
                 Optional.empty())) {
@@ -435,7 +436,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                 () ->
                     ExcelWorkbookOpenSupport.openMaterializedWorkbook(
                         throwingFormulaWorkbook,
-                        ExcelFormulaEnvironment.defaults(),
+                        ResolvedFormulaEnvironment.defaults(),
                         Optional.empty(),
                         null,
                         Optional.empty()));

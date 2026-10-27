@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -60,8 +61,7 @@ final class ExcelFormulaHealthSupport {
       if (formulaContext.hasExternalWorkbookBinding(workbookName)) {
         continue;
       }
-      if (formulaContext.missingWorkbookPolicy()
-          == ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE) {
+      if (formulaContext.missingWorkbookPolicy() == FormulaMissingWorkbookPolicy.USE_CACHED_VALUE) {
         findings.add(cachedExternalWorkbookFinding(formula, workbookName, location));
       } else {
         missingExternalWorkbook = true;

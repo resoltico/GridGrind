@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +53,7 @@ final class ExcelWorkbookOpenSupport {
 
   static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
-      ExcelFormulaEnvironment formulaEnvironment,
+      ResolvedFormulaEnvironment formulaEnvironment,
       Optional<Path> sourcePath,
       OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)
@@ -100,7 +101,7 @@ final class ExcelWorkbookOpenSupport {
 
   static ExcelWorkbook openMaterializedWorkbook(
       XSSFWorkbook xssfWorkbook,
-      ExcelFormulaEnvironment formulaEnvironment,
+      ResolvedFormulaEnvironment formulaEnvironment,
       Optional<Path> sourcePath,
       OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)

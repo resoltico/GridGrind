@@ -1,5 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +33,9 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Abstracts formula evaluation, caching, and environment setup behind a GridGrind-owned seam. */
+@SuppressWarnings(
+    "PMD.ExcessiveImports") // Evaluator boundary spans canonical UDF and external-workbook
+// contracts.
 public interface ExcelFormulaRuntime extends AutoCloseable {
   Pattern ARGUMENT_PLACEHOLDER_PATTERN =
       Pattern.compile("\\bARG([1-9][0-9]*)\\b", Pattern.CASE_INSENSITIVE);
@@ -56,16 +64,18 @@ public interface ExcelFormulaRuntime extends AutoCloseable {
   /** Creates the default runtime backed only by the supplied Apache POI evaluator. */
   static ExcelFormulaRuntime poi(FormulaEvaluator formulaEvaluator) {
     return new PoiExcelFormulaRuntime(
-        formulaEvaluator, ExcelFormulaEnvironment.defaults().runtimeContext(), List.of());
+        formulaEvaluator,
+        ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults()),
+        List.of());
   }
 
   /** Creates the production runtime backed by Apache POI plus GridGrind formula environment. */
   @SuppressWarnings("PMD.CloseResource")
-  static ExcelFormulaRuntime poi(XSSFWorkbook workbook, ExcelFormulaEnvironment environment)
+  static ExcelFormulaRuntime poi(XSSFWorkbook workbook, ResolvedFormulaEnvironment environment)
       throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    ExcelFormulaEnvironment configuredEnvironment =
-        environment == null ? ExcelFormulaEnvironment.defaults() : environment;
+    ResolvedFormulaEnvironment configuredEnvironment =
+        environment == null ? ResolvedFormulaEnvironment.defaults() : environment;
     validateUdfTemplates(configuredEnvironment.udfToolpacks());
     registerUdfToolpacks(workbook, configuredEnvironment.udfToolpacks());
 
@@ -73,8 +83,7 @@ public interface ExcelFormulaRuntime extends AutoCloseable {
     Map<String, FormulaEvaluator> referencedEvaluators = new ConcurrentHashMap<>();
     if (!configuredEnvironment.externalWorkbooks().isEmpty()) {
       try {
-        for (ExcelFormulaExternalWorkbookBinding binding :
-            configuredEnvironment.externalWorkbooks()) {
+        for (ResolvedExternalWorkbook binding : configuredEnvironment.externalWorkbooks()) {
           ReferencedWorkbookHandle referencedWorkbook =
               openReferencedWorkbook(binding, configuredEnvironment);
           referencedWorkbooks.add(referencedWorkbook);
@@ -89,7 +98,7 @@ public interface ExcelFormulaRuntime extends AutoCloseable {
     FormulaEvaluator formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
     formulaEvaluator.setIgnoreMissingWorkbooks(
         configuredEnvironment.missingWorkbookPolicy()
-            == ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE);
+            == FormulaMissingWorkbookPolicy.USE_CACHED_VALUE);
 
     if (!referencedWorkbooks.isEmpty()) {
       for (ReferencedWorkbookHandle referencedWorkbook : referencedWorkbooks) {
@@ -101,14 +110,14 @@ public interface ExcelFormulaRuntime extends AutoCloseable {
 
     return new PoiExcelFormulaRuntime(
         formulaEvaluator,
-        configuredEnvironment.runtimeContext(),
+        ExcelFormulaRuntimeContext.from(configuredEnvironment),
         referencedWorkbooks.stream().map(ReferencedWorkbookHandle::workbook).toList());
   }
 
   /** Validates every authored UDF template against a scratch workbook before runtime setup. */
-  static void validateUdfTemplates(List<ExcelFormulaUdfToolpack> udfToolpacks) {
-    for (ExcelFormulaUdfToolpack toolpack : udfToolpacks) {
-      for (ExcelFormulaUdfFunction function : toolpack.functions()) {
+  static void validateUdfTemplates(List<FormulaUdfToolpackSpec> udfToolpacks) {
+    for (FormulaUdfToolpackSpec toolpack : udfToolpacks) {
+      for (FormulaUdfFunctionSpec function : toolpack.functions()) {
         validateUdfTemplate(function);
       }
     }
@@ -132,7 +141,7 @@ public interface ExcelFormulaRuntime extends AutoCloseable {
   }
 
   /** Parses one UDF template inside a scratch workbook to reject invalid formulas early. */
-  static void validateUdfTemplate(ExcelFormulaUdfFunction function) {
+  static void validateUdfTemplate(FormulaUdfFunctionSpec function) {
     try (XSSFWorkbook scratchWorkbook = new XSSFWorkbook()) {
       org.apache.poi.xssf.usermodel.XSSFSheet argsSheet = scratchWorkbook.createSheet("Args");
       org.apache.poi.xssf.usermodel.XSSFSheet calcSheet = scratchWorkbook.createSheet("Calc");
@@ -171,15 +180,15 @@ public interface ExcelFormulaRuntime extends AutoCloseable {
   }
 
   /** Registers authored UDF toolpacks with the target workbook's evaluator environment. */
-  static void registerUdfToolpacks(Workbook workbook, List<ExcelFormulaUdfToolpack> udfToolpacks) {
+  static void registerUdfToolpacks(Workbook workbook, List<FormulaUdfToolpackSpec> udfToolpacks) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     if (udfToolpacks.isEmpty()) {
       return;
     }
     List<String> names = new ArrayList<>();
     List<FreeRefFunction> functions = new ArrayList<>();
-    for (ExcelFormulaUdfToolpack toolpack : udfToolpacks) {
-      for (ExcelFormulaUdfFunction function : toolpack.functions()) {
+    for (FormulaUdfToolpackSpec toolpack : udfToolpacks) {
+      for (FormulaUdfFunctionSpec function : toolpack.functions()) {
         names.add(function.name());
         functions.add(new TemplateFormulaUdfFunction(function));
       }
@@ -191,15 +200,14 @@ public interface ExcelFormulaRuntime extends AutoCloseable {
 
   /** Opens and configures one externally linked workbook required for formula evaluation. */
   static ReferencedWorkbookHandle openReferencedWorkbook(
-      ExcelFormulaExternalWorkbookBinding binding, ExcelFormulaEnvironment environment)
-      throws IOException {
+      ResolvedExternalWorkbook binding, ResolvedFormulaEnvironment environment) throws IOException {
     Workbook referencedWorkbook =
         org.apache.poi.ss.usermodel.WorkbookFactory.create(binding.path().toFile());
     registerUdfToolpacks(referencedWorkbook, environment.udfToolpacks());
     FormulaEvaluator referencedEvaluator =
         referencedWorkbook.getCreationHelper().createFormulaEvaluator();
     referencedEvaluator.setIgnoreMissingWorkbooks(
-        environment.missingWorkbookPolicy() == ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE);
+        environment.missingWorkbookPolicy() == FormulaMissingWorkbookPolicy.USE_CACHED_VALUE);
     return new ReferencedWorkbookHandle(
         binding.workbookName(), referencedWorkbook, referencedEvaluator);
   }
@@ -307,9 +315,9 @@ public interface ExcelFormulaRuntime extends AutoCloseable {
 
   /** Safe template-backed UDF adapter built on top of a tiny scratch workbook. */
   final class TemplateFormulaUdfFunction implements FreeRefFunction {
-    private final ExcelFormulaUdfFunction function;
+    private final FormulaUdfFunctionSpec function;
 
-    TemplateFormulaUdfFunction(ExcelFormulaUdfFunction function) {
+    TemplateFormulaUdfFunction(FormulaUdfFunctionSpec function) {
       this.function = Objects.requireNonNull(function, "function must not be null");
     }
 

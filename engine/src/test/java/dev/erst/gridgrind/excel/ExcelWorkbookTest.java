@@ -4,10 +4,15 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionSpec;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
@@ -189,13 +194,13 @@ class ExcelWorkbookTest {
       }
     }
 
-    ExcelFormulaEnvironment environment =
-        new ExcelFormulaEnvironment(
-            List.of(new ExcelFormulaExternalWorkbookBinding("rates.xlsx", referencedWorkbookPath)),
-            ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
+    ResolvedFormulaEnvironment environment =
+        new ResolvedFormulaEnvironment(
+            List.of(new ResolvedExternalWorkbook("rates.xlsx", referencedWorkbookPath)),
+            FormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
             List.of(
-                new ExcelFormulaUdfToolpack(
-                    "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2")))));
+                new FormulaUdfToolpackSpec(
+                    "math", List.of(new FormulaUdfFunctionSpec("DOUBLE", 1, 1, "ARG1*2")))));
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create(environment)) {
       assertTrue(workbook.formulaRuntimeContext().hasExternalWorkbookBinding("RATES.XLSX"));
@@ -842,7 +847,7 @@ class ExcelWorkbookTest {
   @SuppressWarnings({"PMD.CloseResource", "PMD.UseTryWithResources"})
   @Test
   void validatesFormulaEnvironmentOverloadsAndCloseFailureAggregation() throws Exception {
-    ExcelFormulaEnvironment defaults = ExcelFormulaEnvironment.defaults();
+    ResolvedFormulaEnvironment defaults = ResolvedFormulaEnvironment.defaults();
 
     assertThrows(
         NullPointerException.class,
@@ -878,7 +883,8 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create(null)) {
       assertEquals(
-          ExcelFormulaEnvironment.defaults().runtimeContext(), workbook.formulaRuntimeContext());
+          ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults()),
+          workbook.formulaRuntimeContext());
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Header"));
       assertThrows(
           CellNotFoundException.class,
@@ -1572,7 +1578,7 @@ class ExcelWorkbookTest {
 
     @Override
     public ExcelFormulaRuntimeContext context() {
-      return ExcelFormulaEnvironment.defaults().runtimeContext();
+      return ExcelFormulaRuntimeContext.from(ResolvedFormulaEnvironment.defaults());
     }
 
     @Override
