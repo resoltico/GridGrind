@@ -17,6 +17,9 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 - Fuzzing uses the root Gradle build: check replays committed seeds; ./gradlew fuzz selects opt-in active campaigns. The nested Jazzer build and its operator scripts are removed.
 - check.sh uses one Gradle task graph for deterministic checks, coverage and distributions. Docker and contributor-container suites are separate Gradle tasks.
 - Local builds use 0.0.0-dev. Version tags drive verified releases and multi-architecture containers; release notes require one nonempty, dated changelog entry matching the tag.
+- Active fuzzing defaults to 60 s, 10,000 executions and 32 KiB inputs, with one retained corpus. Unreviewed findings block another run; see [fuzzing](docs/FUZZING.md).
+- Mutation reports reuse unchanged inputs and cover native validation paths. PIT uses 512 MiB heaps and at most four workers; focused class/test/mutator selections support short probes.
+- Docker CI runs alongside deterministic checks while Gate requires both. Configuration-cache diagnostics retain three reports after check; shared cache writes stay on the default branch.
 
 ## [0.76.0] - 2026-09-09
 

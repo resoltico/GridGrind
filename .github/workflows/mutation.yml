@@ -24,6 +24,8 @@ jobs:
           java-version: '26'
           distribution: 'zulu'
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-cleanup: always
       - name: Generate advisory mutation reports
         run: ./gradlew mutationReport --no-parallel
       - name: Retain mutation reports

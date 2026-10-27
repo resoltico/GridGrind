@@ -32,6 +32,40 @@ and coverage prerequisites. Mutation and coverage reports are advisory, without 
 Active fuzzing is described in [FUZZING.md](./FUZZING.md); ordinary check includes all committed
 seed inputs and generator/invariant regressions.
 
+## Campaign resources
+
+PIT uses at most four workers, further limited by available CPUs and Gradle's `--max-workers`.
+The core and engine scopes run sequentially; each PIT coordinator and worker has a 512 MiB
+heap ceiling. Unchanged inputs reuse the fixed report directory instead of rerunning PIT.
+Temporary PIT state is reset only for a real execution, removed on success and retained on
+failure until the next run.
+
+Use a narrow class, test and mutator selection when checking the machinery:
+
+    ./gradlew :core:pitest -PmutationClasses=dev.erst.gridgrind.core.vocabulary.RgbHex -PmutationTests=dev.erst.gridgrind.core.vocabulary.RgbHexTest -PmutationMutators=MATH --max-workers=1
+
+The comma-separated selectors override the module defaults for that invocation. A narrow run
+is not evidence for a complete campaign. Active fuzzing has its own limits in [FUZZING.md](FUZZING.md).
+
+## CI and cache ownership
+
+GitHub runs deterministic checks, product Docker smoke and applicable contributor-container
+checks independently; the aggregate Gate requires all applicable results. The deterministic
+job does not install Docker build tooling. Gradle cache writes are restricted to the default
+branch; other refs restore read-only. Setup-gradle removes unused user-home cache entries
+before a permitted cache save, including after a failed build. Failed check reports are
+retained as a seven-day artifact.
+
+The root check finalizer retains three configuration-cache reports: the current input report
+and two preceding comparisons. This limits retained diagnostics after checks, not active
+writes or arbitrary standalone Gradle invocations. Project test reports and campaign findings
+have separate ownership and are not removed by that finalizer.
+
+Gradle owns shared user-home dependency and local build caches; the repository does not impose
+a byte quota on that shared directory. The included build reuses one workspace-local TestKit
+home across its functional tests. Deleting these caches routinely forces downloads and build
+setup again. Preserve useful failure evidence before deliberately cleaning project outputs.
+
 ## Architecture
 
 Core contains the pure model, metadata, validation, discovery, grants and executable resolved

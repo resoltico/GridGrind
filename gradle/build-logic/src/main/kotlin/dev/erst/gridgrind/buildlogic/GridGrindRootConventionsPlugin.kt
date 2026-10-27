@@ -138,7 +138,9 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             val architectureCheck = registerGridGrindArchitectureCheck()
             registerGridGrindMutationReport()
 
+            val reportRetention = registerGridGrindReportRetention()
             tasks.named("check") { checkTask ->
+                checkTask.finalizedBy(reportRetention)
                 checkTask.dependsOn("spotlessCheck")
                 checkTask.dependsOn(verifyExplicitImports)
                 checkTask.dependsOn(verifyNoLegacyBuildSrc)

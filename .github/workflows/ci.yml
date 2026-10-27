@@ -30,10 +30,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
-          # On PRs, only read from the cache to avoid cache poisoning from untrusted code.
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
-
-      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+          cache-cleanup: always
+          # Only the default branch writes shared caches; other refs restore read-only.
+          cache-read-only: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: Run the supported whole-repo deterministic gate
         # Ordinary checks include deterministic seed replay; active campaigns remain opt-in.
@@ -47,13 +46,13 @@ jobs:
           path: |
             **/build/test-results/**/*.xml
             **/build/reports/tests/**
+            build/reports/configuration-cache/**
           if-no-files-found: warn
           retention-days: 7
 
   docker-smoke:
     name: Docker smoke
     runs-on: ubuntu-24.04
-    needs: check
     timeout-minutes: 15
 
     steps:
@@ -66,7 +65,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          cache-cleanup: always
+          cache-read-only: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
@@ -123,6 +123,8 @@ jobs:
           distribution: zulu
 
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-cleanup: always
 
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
