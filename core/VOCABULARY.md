@@ -12,7 +12,7 @@ required operands for that operation.
 `Report` names observed effective state. Authored identifiers and observed labels have distinct
 contracts: for example, `SheetName` enforces worksheet-authoring rules while `SheetLabel` preserves
 an observed name, and `RangeLabel` preserves blank stored text and unsupported references such as `#REF!`.
-Authored `RangeRef` still rejects blank and malformed coordinates.
+Authored `RangeRef` rejects blank and malformed coordinates.
 Named-range scope specs use authored `SheetName`; `NamedRangeScopeReport` retains observed
 `SheetLabel` values. Formula-backed name reports can preserve an empty stored reference.
 
