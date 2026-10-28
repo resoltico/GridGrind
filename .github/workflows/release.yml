@@ -123,17 +123,34 @@ jobs:
           SOURCE_DATE_EPOCH: ${{ steps.release.outputs.epoch }}
         run: |
           set -euo pipefail
+          declare -A image_ids
           for arch in amd64 arm64; do
             docker buildx build --load --platform "linux/$arch" --tag "gridgrind-release:$arch" \
               --build-arg "GRIDGRIND_VERSION=$RELEASE_VERSION" \
               --build-arg "GRIDGRIND_REVISION=$RELEASE_COMMIT" \
-              --build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" .
+              --build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" \
+              --cache-to "type=local,dest=build/runtime-cache-$arch,mode=min" .
             image_id=$(docker image inspect --format '{{.Id}}' "gridgrind-release:$arch")
             echo "$arch=$image_id" >> "$GITHUB_OUTPUT"
             expected=$(sha256sum cli/build/libs/gridgrind.jar | awk '{print $1}')
             actual=$(docker run --rm --platform "linux/$arch" --entrypoint sha256sum "$image_id" /app/gridgrind.jar | awk '{print $1}')
             test "$actual" = "$expected"
+            image_ids[$arch]=$image_id
           done
+          export AMD64_IMAGE="${image_ids[amd64]}" ARM64_IMAGE="${image_ids[arm64]}"
+          python3 - <<'PYTHON'
+          import json, os
+          from pathlib import Path
+          Path('build/verified-images.json').write_text(json.dumps({
+              'version': os.environ['RELEASE_VERSION'],
+              'commit': os.environ['RELEASE_COMMIT'],
+              'epoch': int(os.environ['SOURCE_DATE_EPOCH']),
+              'images': {
+                  'linux/amd64': os.environ['AMD64_IMAGE'],
+                  'linux/arm64': os.environ['ARM64_IMAGE'],
+              },
+          }, indent=2) + '\n')
+          PYTHON
 
       - name: Verify the exact staged images on both architectures
         run: |
@@ -178,6 +195,26 @@ jobs:
               return h.hexdigest()
           Path('build/SHA256SUMS').write_text(''.join(f'{digest(path)}  {path.name}\n' for path in assets))
           PY
+
+      - name: Retain verified delivery inputs before publication
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verified-delivery-${{ steps.release.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/runtime-cache-amd64/
+            build/runtime-cache-arm64/
+            cli/build/libs/gridgrind.jar
+            cli/build/distributions/gridgrind-${{ steps.release.outputs.version }}.zip
+            cli/build/distributions/gridgrind-${{ steps.release.outputs.version }}.tar
+            build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.tar.gz
+            build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.manifest.json
+            build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.sha256
+            build/SHA256SUMS
+            build/release-notes.md
+            build/verified-images.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
       - name: Validate retention access and incoming-release plan without deleting
         if: env.PUBLISH_RELEASE == 'true'

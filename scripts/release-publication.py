@@ -226,6 +226,16 @@ class Publication:
             raise PublicationError("Release is no longer the expected draft; no public assets will be overwritten")
         return current
 
+    def release_fields(self, draft, prerelease, latest):
+        # Send the complete intended release identity/state on every mutation.
+        # GitHub's observed draft PATCH semantics can reset an omitted tag name.
+        return {
+            "tag_name": self.tag, "target_commitish": self.commit,
+            "name": "GridGrind " + self.version, "body": self.notes,
+            "draft": draft, "prerelease": prerelease,
+            "make_latest": "true" if latest else "false",
+        }
+
     def run(self, stage):
         self.validate_tag()
         release = self.release()
@@ -236,11 +246,7 @@ class Publication:
                 self.verify(release, "prerelease")
                 return
             if release is None:
-                self.api.request("POST", "/releases", {
-                    "tag_name": self.tag, "target_commitish": self.commit,
-                    "name": "GridGrind " + self.version, "body": self.notes,
-                    "draft": True, "prerelease": True, "make_latest": "false",
-                })
+                self.api.request("POST", "/releases", self.release_fields(True, True, False))
                 release = self.release()
             if release is None:
                 raise PublicationError("Draft creation returned no observable release; inspect remote state")
@@ -249,10 +255,7 @@ class Publication:
             if names - {asset.name for asset in self.assets}:
                 raise PublicationError("Draft has unexpected assets; review them before resuming")
             self.require_draft(release["id"])
-            self.api.request("PATCH", "/releases/" + str(release["id"]), {
-                "name": "GridGrind " + self.version, "body": self.notes,
-                "prerelease": True, "make_latest": "false",
-            })
+            self.api.request("PATCH", "/releases/" + str(release["id"]), self.release_fields(True, True, False))
             self.require_draft(release["id"])
             self.uploader(self.repo, self.tag, self.assets)
             self.verify(self.release(), "draft")
@@ -263,15 +266,11 @@ class Publication:
             self.verify(release, state)
             if state == "draft":
                 self.require_draft(release["id"])
-                self.api.request("PATCH", "/releases/" + str(release["id"]), {
-                    "draft": False, "prerelease": True, "make_latest": "false",
-                })
+                self.api.request("PATCH", "/releases/" + str(release["id"]), self.release_fields(False, True, False))
             self.verify(self.release(), "prerelease")
         elif stage == "finalize":
             self.verify(release, "prerelease")
-            self.api.request("PATCH", "/releases/" + str(release["id"]), {
-                "prerelease": False, "make_latest": "true",
-            })
+            self.api.request("PATCH", "/releases/" + str(release["id"]), self.release_fields(False, False, True))
             self.verify(self.release(), "stable")
             latest = self.api.request("GET", "/releases/latest")
             if not isinstance(latest, dict) or latest.get("id") != release["id"] or latest.get("tag_name") != self.tag:

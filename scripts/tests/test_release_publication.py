@@ -69,6 +69,8 @@ class Api:
             self.current = {"id": 7, **body}
         elif method == "PATCH" and self.current is not None and route == "/releases/" + str(self.current["id"]):
             self.current.update(body)
+            # Observed GitHub draft behavior: an omitted tag resets its identity.
+            self.current["tag_name"] = body.get("tag_name", "untagged-fixture")
         else:
             raise AssertionError("Unexpected fixture request: " + method + " " + route)
         return copy.deepcopy(self.current)
@@ -152,6 +154,26 @@ class PublicationTest(unittest.TestCase):
         self.assertEqual(1, sum(method == "POST" for method, _, _ in api.mutations))
         self.assertTrue(api.current["draft"])
         self.assertGreaterEqual(api.reads.count("/releases?per_page=100&page=1"), 2)
+
+    def test_every_patch_sends_complete_explicit_identity_and_desired_state(self):
+        api = Api()
+        helper = self.helper(api)
+        for stage in ("prepare", "expose", "finalize"):
+            helper.run(stage)
+        patches = [body for method, _, body in api.mutations if method == "PATCH"]
+        self.assertEqual(3, len(patches))
+        for body, state in zip(patches, ((True, True, "false"), (False, True, "false"), (False, False, "true"))):
+            self.assertEqual({
+                "tag_name": "v0.77.0", "target_commitish": COMMIT,
+                "name": "GridGrind 0.77.0", "body": NOTES,
+                "draft": state[0], "prerelease": state[1], "make_latest": state[2],
+            }, body)
+        self.assertEqual("v0.77.0", api.current["tag_name"])
+
+    def test_fixture_reproduces_observed_missing_tag_reset(self):
+        api = Api(release())
+        api.request("PATCH", "/releases/7", {"name": "GridGrind 0.77.0"})
+        self.assertEqual("untagged-fixture", api.current["tag_name"])
 
     def test_wrong_tag_commit_prevents_every_mutation(self):
         api = Api()
