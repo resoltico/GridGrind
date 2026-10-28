@@ -28,6 +28,11 @@ publication creates a new file; choose a fresh response path on each run.
 
 ## Container
 
+Published versions are at `ghcr.io/resoltico/gridgrind:X.Y.Z`; use an explicit version for
+reproducible runs. The current release workflow supplies matching container sources under
+`X.Y.Z-sources` and in the [GitHub release](https://github.com/resoltico/GridGrind/releases).
+The source tag is a data-only image; see [source retrieval](RELEASING.md#container-source-delivery).
+
 Build the local image and mount the caller-owned workspace at its identical absolute path.
 This keeps absolute grant paths valid inside the container. Match the host uid/gid so output
 files remain caller-owned:

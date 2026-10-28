@@ -973,42 +973,47 @@ in LICENSE-APACHE-2.0.
 Container-Only Software
 ================================================================================
 
-The runtime container adds an Azul Zulu build of OpenJDK and Debian operating-
-system/font packages that are not part of the executable GridGrind JAR. Their
-licenses are not represented by a single GridGrind license expression. The
-image retains the JRE legal directory and readme.txt under JAVA_HOME and
-package copyright files under /usr/share/doc. GridGrind-specific legal files
-are copied to /usr/share/doc/gridgrind. The release workflow attaches
-provenance and an SBOM for the image contents.
+The runtime container adds an Amazon Corretto build of OpenJDK and Debian
+operating-system/font packages that are not part of the executable GridGrind
+JAR. Their licenses are not represented by a single GridGrind license
+expression. The image retains vendor legal files under JAVA_HOME and package
+copyright files under /usr/share/doc. GridGrind-specific legal files are
+copied to /usr/share/doc/gridgrind.
 
-The corresponding release's Dockerfile identifies the exact official
-azul-zulu JRE variant and manifest-list digest. The runtime uses Debian 13;
-the contributor container has a separate base and distribution scope.
+The corresponding release's Dockerfile and release/container-runtime.properties
+identify the exact Debian base, Corretto binaries, public vendor source commit
+and SHA-256 inputs. The runtime is linked from all vendor modules, retaining
+the module inventory while omitting duplicated development payloads. The build
+and contributor toolchains have separate distribution scope.
 
-Base-image definitions and upstream legal/source materials:
+Releases built with this source-delivery workflow supply
+gridgrind-container-sources-<version>.tar.gz, a source
+manifest and checksums alongside the executable artifacts at:
 
-https://github.com/AzulSystems/azul-zulu-images
-https://docs.azul.com/core/tpl
-https://www.azul.com/products/core/openjdk-terms-of-use/
+https://github.com/resoltico/GridGrind/releases
+
+The same source files are also offered in the same container registry as the
+runtime, under ghcr.io/resoltico/gridgrind:<version>-sources. This is a data-only
+image; use docker create/cp to retrieve /sources rather than running it.
+
+The source archive contains the complete matching Corretto source/build tree
+and every source part named by the authenticated Debian .dsc records for the
+installed packages. The manifest records both architecture configurations,
+JRE commit identity, binary-package/source-version mapping and source hashes.
+The archive also supplies the GridGrind Dockerfile and runtime build/install
+inputs; the matching GridGrind source tag supplies its application source. This is delivered source material, not a new written source offer.
+The release workflow also attaches image provenance and an SBOM.
+
+Upstream source and legal materials:
+
+https://github.com/corretto/corretto-27
 https://sources.debian.org/
 https://snapshot.debian.org/
 
-The JRE readme.txt retains Azul's written offer for its OpenJDK-derived
-portions, including the source-request address and build-specific version
-code. Debian package copyright files identify package-specific terms;
-the image SBOM and package metadata identify the installed versions.
-
-Build and fuzz tools, including JQF, are resolved separately by Gradle and are
-not bundled in the product JAR, launcher archives or final runtime image.
-Those tools are governed by their upstream licenses; this notice does not
+Gradle build and fuzz tools, including JQF and the Azul build JDK, are resolved
+separately and are not bundled in the product JAR, launcher archives or final
+runtime image. They retain their upstream licenses; this notice does not
 relicense them as GridGrind software.
-
-GridGrind makes no separate written source-code offer for third-party
-container components. Retained vendor materials and source pointers do not
-by themselves establish fulfillment of every redistributor's source-delivery
-obligations. Those obligations depend on the actual components and method of
-distribution; the upstream offers must not be represented as a new GridGrind
-promise.
 
 ================================================================================
 Cryptography and Export Notice

@@ -57,7 +57,7 @@ scope of both artifacts.
 
 ## Container Image
 
-The published container image includes the GridGrind JAR, an Azul Zulu build of OpenJDK, and
+The published container image includes the GridGrind JAR, an Amazon Corretto build of OpenJDK, and
 operating-system and font packages. Those additional components retain their own license and patent
 terms; they are not covered by GridGrind's MPL 2.0 license or by one combined patent statement. Their
 legal materials remain in the image's JRE legal directory and package documentation directories,

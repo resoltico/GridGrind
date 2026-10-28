@@ -1,0 +1,11 @@
+# syntax=docker/dockerfile:1.28.0@sha256:bb22d9815c728170f72750f4e5b0d672e06176142e1d602c7e66c050100b7e5b
+# Data-only corresponding source, offered next to the runtime in the same registry.
+FROM scratch
+ARG GRIDGRIND_VERSION
+ARG GRIDGRIND_REVISION
+LABEL org.opencontainers.image.title="GridGrind corresponding container source"
+LABEL org.opencontainers.image.version="${GRIDGRIND_VERSION}"
+LABEL org.opencontainers.image.revision="${GRIDGRIND_REVISION}"
+LABEL org.opencontainers.image.source="https://github.com/resoltico/GridGrind"
+LABEL org.opencontainers.image.description="Data-only source archive; retrieve with docker create/cp, do not run"
+COPY . /sources/

@@ -34,3 +34,8 @@
 tmp/
 **/.local/
 **/build/
+
+# Hash-pinned container runtime/source inputs; no release payloads in build context.
+!release/
+release/*
+!release/container-runtime.properties

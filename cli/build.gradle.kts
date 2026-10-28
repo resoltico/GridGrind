@@ -158,6 +158,7 @@ tasks.named<Test>("test") {
         .withPropertyName("hostGuidance")
     useJUnitPlatform { excludeTags("container", "devcontainer", "documentation") }
     systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
+    systemProperty("gridgrind.test.expectedVersion", providers.gradleProperty("version").get())
     systemProperty("gridgrind.golden.update", providers.gradleProperty("golden.update").getOrElse("false"))
 }
 
@@ -255,6 +256,9 @@ for (suite in listOf("container", "devcontainer")) {
         testClassesDirs = hostTestSources.get().output.classesDirs
         classpath = hostTestSources.get().runtimeClasspath
         useJUnitPlatform { includeTags(suite) }
+        if (suite == "container") {
+            systemProperty("gridgrind.container.image", providers.gradleProperty("containerImage").orElse("").get())
+        }
         systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
         extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> { isEnabled = false }
         outputs.upToDateWhen { false }
