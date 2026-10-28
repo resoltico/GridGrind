@@ -66,6 +66,10 @@ val reviewedNoticeMarkers =
         "Jackson Databind 3.2.4, Jackson Core 3.2.4, and Jackson Annotations 2.22",
         "SparseBitSet 1.3",
         "Woodstox Core 7.3.0",
+        "Woodstox 7.3.0 Shaded Components",
+        "ISO-RELAX 20090621",
+        "RELAX NG datatype API 20020414",
+        "The Apache Software License, Version 1.1",
         "Bouncy Castle (bcpkix-jdk18on 1.86, bcprov-jdk18on 1.86, bcutil-jdk18on 1.86)",
         "SLF4J API 2.0.20",
         "Stax2 API 4.3.2",
@@ -176,6 +180,10 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     exclude("META-INF/LICENSE", "META-INF/LICENSE.txt", "META-INF/LICENSE.md")
     exclude("META-INF/NOTICE", "META-INF/NOTICE.txt", "META-INF/NOTICE.md")
     exclude("META-INF/DEPENDENCIES")
+    // These unused shaded build/interactive-tool artifacts have separate, ambiguous terms.
+    // Keep runtime providers and Maven provenance properties; neither needs these entries.
+    exclude("com/ctc/wstx/shaded/msv_core/datatype/xsd/CommandLineTester.class")
+    exclude("META-INF/maven/com.sun.xml.bind.jaxb/isorelax/pom.xml")
 
     // Bundle the curated attribution notice and license texts into META-INF/.
     // LICENSE is the MPL 2.0 license for GridGrind's own code.

@@ -80,7 +80,7 @@ class ContainerTest {
         docker.run(
             List.of("--entrypoint", "sh"),
             "-c",
-            "for f in LICENSE NOTICE PATENTS.md LICENSE-APACHE-2.0 LICENSE-BSD-2-CLAUSE LICENSE-BSD-3-CLAUSE; do test -s /usr/share/doc/gridgrind/$f || exit 1; done; test -f /usr/share/doc/base-files/copyright; find /usr/lib/jvm -name LICENSE -type f -print -quit | grep -q ."));
+            "set -eu; for f in LICENSE NOTICE PATENTS.md LICENSE-APACHE-2.0 LICENSE-BSD-2-CLAUSE LICENSE-BSD-3-CLAUSE; do test -s /usr/share/doc/gridgrind/$f || exit 1; done; test -f /usr/share/doc/base-files/copyright; test -s \"$JAVA_HOME/readme.txt\"; grep -q azul_openjdk@azul.com \"$JAVA_HOME/readme.txt\"; find /usr/lib/jvm -name LICENSE -type f -print -quit | grep -q ."));
   }
 
   @SuppressWarnings(

@@ -1,16 +1,23 @@
 package dev.erst.gridgrind.cli.golden;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipFile;
@@ -35,19 +42,19 @@ class DistributionTest {
     verifyJar(GoldenLauncher.REPOSITORY.resolve("cli/build/libs/gridgrind.jar"));
   }
 
-  @SuppressWarnings(
-      "PMD.AvoidInstantiatingObjectsInLoops") // Decode each retained legal text independently.
   static void verifyJar(Path path) throws IOException, java.security.NoSuchAlgorithmException {
     try (JarFile jar = new JarFile(path.toFile())) {
       var attributes = jar.getManifest().getMainAttributes();
       assertEquals("dev.erst.gridgrind.cli.App", attributes.getValue("Main-Class"));
       assertEquals("Multiple; see META-INF/NOTICE", attributes.getValue("Implementation-License"));
       for (String name : LEGAL) {
-        assertEquals(
-            Files.readString(GoldenLauncher.REPOSITORY.resolve(name)),
-            new String(
-                jar.getInputStream(jar.getJarEntry("META-INF/" + name)).readAllBytes(),
-                java.nio.charset.StandardCharsets.UTF_8));
+        byte[] expected = Files.readAllBytes(GoldenLauncher.REPOSITORY.resolve(name));
+        for (String prefix : List.of("META-INF/", "licenses/")) {
+          assertArrayEquals(
+              expected,
+              jar.getInputStream(jar.getJarEntry(prefix + name)).readAllBytes(),
+              prefix + name);
+        }
       }
       for (String name :
           List.of(
@@ -55,6 +62,36 @@ class DistributionTest {
               "FastDoubleParser-ThirdParty-LICENSE",
               "Schubfach-LICENSE")) {
         assertTrue(jar.getJarEntry("META-INF/" + name) != null, name);
+      }
+      for (String excluded :
+          List.of(
+              "com/ctc/wstx/shaded/msv_core/datatype/xsd/CommandLineTester.class",
+              "META-INF/maven/com.sun.xml.bind.jaxb/isorelax/pom.xml")) {
+        assertTrue(jar.getJarEntry(excluded) == null, excluded);
+      }
+      for (String retained :
+          List.of(
+              "META-INF/maven/com.sun.xml.bind.jaxb/isorelax/pom.properties",
+              "com/ctc/wstx/shaded/msv/org_isorelax/dispatcher/SchemaProvider.class",
+              "com/ctc/wstx/stax/WstxInputFactory.class",
+              "com/ctc/wstx/stax/WstxOutputFactory.class",
+              "com/ctc/wstx/stax/WstxEventFactory.class",
+              "com/ctc/wstx/dtd/DTDSchemaFactory.class",
+              "com/ctc/wstx/msv/RelaxNGSchemaFactory.class",
+              "com/ctc/wstx/msv/W3CSchemaFactory.class",
+              "com/ctc/wstx/shaded/msv_core/datatype/xsd/ngimpl/DataTypeLibraryImpl.class")) {
+        assertTrue(jar.getJarEntry(retained) != null, retained);
+      }
+      for (String toolPackage :
+          List.of(
+              "edu/berkeley/cs/jqf/",
+              "com/code_intelligence/jazzer/",
+              "org/junit/",
+              "org/pitest/",
+              "net/sourceforge/pmd/",
+              "dev/erst/gridgrind/fuzz/")) {
+        assertFalse(
+            jar.stream().anyMatch(entry -> entry.getName().startsWith(toolPackage)), toolPackage);
       }
       assertFalse(jar.stream().anyMatch(entry -> entry.getName().contains("LICENSE-EDL-1.0")));
       byte[] fixture =
@@ -73,34 +110,57 @@ class DistributionTest {
   }
 
   @Test
-  void zipAndTarContainTheSameRunnableDistribution() throws IOException {
+  @SuppressWarnings("PMD.UseConcurrentHashMap") // One invocation owns both sequential digest maps.
+  void zipAndTarContainTheSameRunnableDistribution() throws IOException, NoSuchAlgorithmException {
     Path directory = GoldenLauncher.REPOSITORY.resolve("cli/build/distributions");
-    Set<String> zipNames = new HashSet<>();
+    Map<String, String> zipContents = new HashMap<>();
     try (ZipFile archive = new ZipFile(singleArchive(directory, ".zip").toFile())) {
-      archive.stream()
-          .filter(entry -> !entry.isDirectory())
-          .forEach(entry -> zipNames.add(entry.getName()));
+      var entries = archive.entries();
+      while (entries.hasMoreElements()) {
+        var entry = entries.nextElement();
+        if (!entry.isDirectory()) {
+          try (InputStream input = archive.getInputStream(entry)) {
+            assertTrue(zipContents.put(entry.getName(), sha256(input)) == null, entry.getName());
+          }
+        }
+      }
     }
-    Set<String> tarNames = new HashSet<>();
+    Map<String, String> tarContents = new HashMap<>();
     try (TarArchiveInputStream archive =
         new TarArchiveInputStream(Files.newInputStream(singleArchive(directory, ".tar")))) {
       for (var entry = archive.getNextEntry(); entry != null; entry = archive.getNextEntry()) {
-        if (!entry.isDirectory()) tarNames.add(entry.getName());
+        if (!entry.isDirectory()) {
+          assertTrue(tarContents.put(entry.getName(), sha256(archive)) == null, entry.getName());
+        }
       }
     }
-    assertEquals(zipNames, tarNames);
+    assertEquals(zipContents, tarContents);
+    Set<String> names = zipContents.keySet();
     String prefix =
-        zipNames.stream()
+        names.stream()
             .filter(name -> name.endsWith("/bin/gridgrind"))
             .findFirst()
             .orElseThrow()
             .replace("bin/gridgrind", "");
-    assertTrue(zipNames.contains(prefix + "bin/gridgrind.bat"));
-    assertTrue(zipNames.contains(prefix + "lib/gridgrind.jar"));
-    for (String name : LEGAL) assertTrue(zipNames.contains(prefix + name), name);
+    assertTrue(names.contains(prefix + "bin/gridgrind.bat"));
+    try (InputStream input =
+        Files.newInputStream(GoldenLauncher.REPOSITORY.resolve("cli/build/libs/gridgrind.jar"))) {
+      assertEquals(sha256(input), zipContents.get(prefix + "lib/gridgrind.jar"));
+    }
+    for (String name : LEGAL) {
+      try (InputStream input = Files.newInputStream(GoldenLauncher.REPOSITORY.resolve(name))) {
+        assertEquals(sha256(input), zipContents.get(prefix + name), name);
+      }
+    }
     assertEquals(
-        1,
-        zipNames.stream().filter(name -> name.contains("/lib/") && name.endsWith(".jar")).count());
+        1, names.stream().filter(name -> name.contains("/lib/") && name.endsWith(".jar")).count());
+  }
+
+  private static String sha256(InputStream input) throws IOException, NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    // Do not close the stream here: TAR callers must advance to the next archive entry.
+    new DigestInputStream(input, digest).transferTo(OutputStream.nullOutputStream());
+    return HexFormat.of().formatHex(digest.digest());
   }
 
   @Test
