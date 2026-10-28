@@ -54,8 +54,13 @@ GitHub runs deterministic checks, product Docker smoke and applicable contributo
 checks independently; the aggregate Gate requires all applicable results. The deterministic
 job does not install Docker build tooling. Gradle cache writes are restricted to the default
 branch; other refs restore read-only. Setup-gradle removes unused user-home cache entries
-before a permitted cache save, including after a failed build. Failed check reports are
-retained as a seven-day artifact.
+before a permitted cache save, including after a failed build. Failed deterministic, Docker
+and contributor-container checks retain their own diagnostic reports for seven days.
+
+Compiler outputs use Gradle's normal up-to-date tracking and stale-class cleanup. The bundled
+JAR also stays up to date locally, but is not stored in the build cache: each cached bundle
+duplicates its dependencies. Clean or changed bundles are assembled again; compile and test
+caching remain enabled. ZIP/TAR packaging uses Gradle's uncached default.
 
 The root check finalizer retains three configuration-cache reports: the current input report
 and two preceding comparisons. This limits retained diagnostics after checks, not active

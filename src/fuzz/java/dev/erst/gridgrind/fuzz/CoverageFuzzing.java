@@ -4,7 +4,6 @@ import edu.berkeley.cs.jqf.fuzz.FuzzRunner;
 import edu.berkeley.cs.jqf.fuzz.spi.ArgumentsGenerator;
 import edu.berkeley.cs.jqf.fuzz.spi.ResultClassifier;
 import edu.berkeley.cs.jqf.fuzz.spi.TrialExecutor;
-import edu.berkeley.cs.jqf.fuzz.util.Observability;
 import edu.berkeley.cs.jqf.instrument.tracing.SingleSnoop;
 import edu.berkeley.cs.jqf.instrument.tracing.TraceLogger;
 import java.io.File;
@@ -26,6 +25,24 @@ public final class CoverageFuzzing {
     if (args.length != 7)
       throw new IllegalArgumentException(
           "Expected harness, seeds, output, findings, seconds, trials and input bytes");
+    Path expectedInstrumentation =
+        Path.of(
+            java.util.Objects.requireNonNull(
+                System.getProperty("gridgrind.fuzz.instrumentation"),
+                "Run active fuzzing through the Gradle fuzz task to select reviewed"
+                    + " instrumentation"));
+    for (Class<?> instrumenter :
+        List.of(
+            janala.instrument.SnoopInstructionTransformer.class,
+            janala.instrument.SnoopInstructionClassAdapter.class,
+            janala.instrument.SnoopInstructionMethodAdapter.class)) {
+      Path loaded =
+          Path.of(instrumenter.getProtectionDomain().getCodeSource().getLocation().toURI());
+      if (!Files.isSameFile(expectedInstrumentation, loaded))
+        throw new IllegalStateException(
+            "Unexpected JQF instrumentation source for " + instrumenter.getName() + ": " + loaded);
+    }
+    System.out.println("Verified JQF instrumentation: " + expectedInstrumentation);
     Harness harness = Harness.fromKey(args[0]);
     Path seeds = Path.of(args[1]);
     Path output = Path.of(args[2]);
@@ -33,6 +50,7 @@ public final class CoverageFuzzing {
     int seconds = Integer.parseInt(args[4]);
     long trials = Long.parseLong(args[5]);
     int maxInputBytes = Integer.parseInt(args[6]);
+    System.clearProperty("jqfObservability");
     System.setProperty("jqf.ei.MAX_INPUT_SIZE", Integer.toString(maxInputBytes));
     System.setProperty("jqf.ei.EXIT_ON_CRASH", "true");
     System.setProperty("jqf.ei.LOG_CURRENT_INPUT", "false");
@@ -90,15 +108,7 @@ public final class CoverageFuzzing {
     TraceLogger.get().remove();
     SingleSnoop.startSnooping(Harness.class.getName() + "#check");
     try {
-      new FuzzRunner(
-              generator,
-              executor,
-              guidance,
-              classifier,
-              List.of(),
-              new Observability(Harness.class.getName(), harness.key(), System.currentTimeMillis()),
-              true)
-          .run();
+      new FuzzRunner(generator, executor, guidance, classifier, List.of(), null, true).run();
       if (guidance.firstFailure() != null) throw guidance.firstFailure();
       if (guidance.coverage() == 0)
         throw new IllegalStateException("No product coverage feedback was recorded");
@@ -142,7 +152,8 @@ public final class CoverageFuzzing {
       if (primary == null)
         Files.writeString(
             findings.resolve("in-flight-input.txt"),
-            "Last in-flight input at process termination. Investigate timeout or cancellation; this alone is not an invariant finding.\n");
+            "Last in-flight input at process termination. Investigate timeout or cancellation; this"
+                + " alone is not an invariant finding.\n");
     } catch (IOException exception) {
       if (primary != null) primary.addSuppressed(exception);
       else System.err.println("Could not preserve interrupted input: " + exception.getMessage());

@@ -1,7 +1,4 @@
-import org.gradle.api.file.Directory
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.tasks.Delete
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
@@ -19,6 +16,7 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.asm)
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
     implementation("com.google.googlejavaformat:google-java-format:${libs.versions.google.java.format.get()}")
@@ -32,6 +30,7 @@ dependencies {
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(gradleTestKit())
+    testImplementation(libs.jqf.instrument)
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
@@ -71,48 +70,18 @@ kotlin {
     jvmToolchain(javaVersion)
 }
 
-fun cleanDestinationTaskName(taskName: String): String =
-    "clean${taskName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}Destination"
-
-fun registerCleanDestinationTask(
-    taskName: String,
-    destinationDirectory: Provider<Directory>,
-) = tasks.register(cleanDestinationTaskName(taskName), Delete::class) { delete(destinationDirectory) }
-
-val cleanCompileKotlinDestination =
-    registerCleanDestinationTask(
-        "compileKotlin",
-        tasks.named<KotlinCompile>("compileKotlin").flatMap { it.destinationDirectory },
-    )
-val cleanCompileTestKotlinDestination =
-    registerCleanDestinationTask(
-        "compileTestKotlin",
-        tasks.named<KotlinCompile>("compileTestKotlin").flatMap { it.destinationDirectory },
-    )
-val cleanCompileTestJavaDestination =
-    registerCleanDestinationTask(
-        "compileTestJava",
-        tasks.named<JavaCompile>("compileTestJava").flatMap { it.destinationDirectory },
-    )
-
 tasks.named<KotlinCompile>("compileKotlin") {
     incremental = false
     compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaTargetVersion.toString()))
-    dependsOn(cleanCompileKotlinDestination)
 }
 
 tasks.named<KotlinCompile>("compileTestKotlin") {
     incremental = false
     compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaTargetVersion.toString()))
-    dependsOn(cleanCompileTestKotlinDestination)
 }
 
 tasks.withType<JavaCompile>().configureEach {
     options.release = javaTargetVersion
-}
-
-tasks.named<JavaCompile>("compileTestJava") {
-    dependsOn(cleanCompileTestJavaDestination)
 }
 
 tasks.test {
