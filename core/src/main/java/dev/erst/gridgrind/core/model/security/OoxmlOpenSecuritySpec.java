@@ -9,7 +9,7 @@ import java.util.Optional;
 @CatalogType(
     id = "OoxmlOpenSecuritySpec",
     summary =
-        "Optional OOXML package-open settings for encrypted existing workbook sources. password unlocks the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.",
+        "Optional OOXML package-open settings for encrypted existing workbook sources. passwordRef names a host-resolved secret used to unlock the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.",
     displayOrder = 19)
 public record OoxmlOpenSecuritySpec(Optional<SecretReference> passwordRef) {
   public OoxmlOpenSecuritySpec {

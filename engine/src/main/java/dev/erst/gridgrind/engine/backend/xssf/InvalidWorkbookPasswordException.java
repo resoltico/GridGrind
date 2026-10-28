@@ -6,6 +6,6 @@ public final class InvalidWorkbookPasswordException extends IllegalArgumentExcep
 
   /** Creates one semantic password failure without exposing private materialization paths. */
   public InvalidWorkbookPasswordException() {
-    super("The supplied source.security.password did not unlock the source workbook");
+    super("The supplied password did not unlock the source workbook");
   }
 }

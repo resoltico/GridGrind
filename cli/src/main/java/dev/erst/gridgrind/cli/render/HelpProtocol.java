@@ -66,8 +66,9 @@ final class HelpProtocol {
                 + " missingWorkbookPolicy accepts ERROR or USE_CACHED_VALUE;"
                 + " udfToolpacks[] registers named UDF packs for formula evaluation.",
             "persistence.security.encryption writes OOXML AGILE packages only."
-                + " encryption.password is required; encryption.cipher defaults to AES_256"
-                + " and encryption.hash defaults to SHA_512 when omitted."
+                + " For type=ENCRYPT, its nested encryption payload requires passwordRef,"
+                + " naming an authorized host secret; cipher defaults to AES_256"
+                + " and hash defaults to SHA_512 when omitted."
                 + " Supported ciphers are AES_256 and AES_192; supported hashes are"
                 + " SHA_512, SHA_384, and SHA_256."
                 + " Legacy STANDARD packages remain readable on inspection but are not"

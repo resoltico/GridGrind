@@ -192,7 +192,7 @@ public record WorkbookPlan(
     @Variant(
         id = "EXISTING",
         summary =
-            "Open an existing .xlsx workbook from disk. source.security.password unlocks encrypted OOXML packages.",
+            "Open an existing .xlsx workbook from disk. source.security.passwordRef names a host-resolved secret for encrypted OOXML packages.",
         noteRefs = {"requestOwnedPathRule"})
     record ExistingFile(
         @dev.erst.gridgrind.core.metadata.FieldRule(

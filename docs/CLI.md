@@ -33,3 +33,7 @@ emits the request on stdout and does not accept a separate response path.
 
 Recipe show emits the executable plan by default. With --details it emits the recipe descriptor,
 including portability, intent tags and the exact request profile; it does not execute the plan.
+
+Detected console-write failures, including broken pipes, cause a nonzero process exit.
+Transport failure does not undo workbook publication that already completed; inspect the
+destination before retrying a run whose response could not be delivered.

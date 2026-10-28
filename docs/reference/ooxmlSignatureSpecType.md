@@ -3,7 +3,7 @@
 
 ## OoxmlSignatureSpec
 
-OOXML package-signing settings for workbook persistence. keyPassword defaults to keystorePassword and digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.
+OOXML package-signing settings for workbook persistence. Omit keyPasswordRef to reuse the secret resolved by keystorePasswordRef. digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ OOXML package-signing settings for workbook persistence. keyPassword defaults to
 ```json
 {
   "id" : "OoxmlSignatureSpec",
-  "summary" : "OOXML package-signing settings for workbook persistence. keyPassword defaults to keystorePassword and digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.",
+  "summary" : "OOXML package-signing settings for workbook persistence. Omit keyPasswordRef to reuse the secret resolved by keystorePasswordRef. digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.",
   "fields" : [ {
     "name" : "pkcs12Path",
     "requirement" : "REQUIRED",

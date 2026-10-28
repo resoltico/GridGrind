@@ -3,7 +3,7 @@
 
 ## OoxmlOpenSecuritySpec
 
-Optional OOXML package-open settings for encrypted existing workbook sources. password unlocks the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.
+Optional OOXML package-open settings for encrypted existing workbook sources. passwordRef names a host-resolved secret used to unlock the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -12,7 +12,7 @@ Optional OOXML package-open settings for encrypted existing workbook sources. pa
 ```json
 {
   "id" : "OoxmlOpenSecuritySpec",
-  "summary" : "Optional OOXML package-open settings for encrypted existing workbook sources. password unlocks the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.",
+  "summary" : "Optional OOXML package-open settings for encrypted existing workbook sources. passwordRef names a host-resolved secret used to unlock the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.",
   "fields" : [ {
     "name" : "passwordRef",
     "requirement" : "OPTIONAL",

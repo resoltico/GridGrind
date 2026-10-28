@@ -8,6 +8,6 @@ public final class WorkbookPasswordRequiredException extends IllegalArgumentExce
    * Creates one semantic password-required failure without exposing private materialization paths.
    */
   public WorkbookPasswordRequiredException() {
-    super("The source workbook is encrypted and requires source.security.password before opening");
+    super("The source workbook is encrypted and requires a password before opening");
   }
 }

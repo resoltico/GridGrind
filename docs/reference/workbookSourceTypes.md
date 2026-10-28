@@ -19,7 +19,7 @@ Create a brand-new empty workbook. A new workbook starts with zero sheets; use E
 
 ## EXISTING
 
-Open an existing .xlsx workbook from disk. source.security.password unlocks encrypted OOXML packages.
+Open an existing .xlsx workbook from disk. source.security.passwordRef names a host-resolved secret for encrypted OOXML packages.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -29,7 +29,7 @@ Open an existing .xlsx workbook from disk. source.security.password unlocks encr
 ```json
 {
   "id" : "EXISTING",
-  "summary" : "Open an existing .xlsx workbook from disk. source.security.password unlocks encrypted OOXML packages.",
+  "summary" : "Open an existing .xlsx workbook from disk. source.security.passwordRef names a host-resolved secret for encrypted OOXML packages.",
   "fields" : [ {
     "name" : "path",
     "requirement" : "REQUIRED",

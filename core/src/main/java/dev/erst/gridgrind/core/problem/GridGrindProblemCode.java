@@ -161,12 +161,12 @@ public enum GridGrindProblemCode {
       GridGrindProblemCategory.SECURITY,
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Workbook password required",
-      "Provide source.security.password for the encrypted workbook and retry."),
+      "Provide source.security.passwordRef backed by an authorized host secret, then retry."),
   INVALID_WORKBOOK_PASSWORD(
       GridGrindProblemCategory.SECURITY,
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid workbook password",
-      "Supply the correct source.security.password for the encrypted workbook and retry."),
+      "Check the secret resolved by source.security.passwordRef, then retry."),
   ENCRYPTION_SOURCE_NOT_ENCRYPTED(
       GridGrindProblemCategory.SECURITY,
       GridGrindProblemRecovery.CHANGE_REQUEST,
