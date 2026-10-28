@@ -1,8 +1,11 @@
 # Fuzzing
 
-The root Gradle build uses JQF 3 on Java 27. The JUnit-free core and published instrumentation
-agent provide coverage feedback for GridGrind core, JSON and engine classes. The active driver
-and deterministic replay share the same raw byte cursor, generators and behavioral invariants
+The root Gradle build uses JQF 3 on Java 27. The build prepares the checksum-pinned instrumentation
+agent with ASM9 visitor APIs so sealed-class metadata survives instrumentation. The active agent
+and runtime use that same prepared JAR, which includes upstream licenses and modification
+provenance. An unexpected instrumentation source or a rejected selected class fails the run.
+The JUnit-free core and agent provide coverage feedback for GridGrind core, JSON and engine
+classes. The active driver and deterministic replay share the same raw byte cursor, generators and behavioral invariants
 under src/fuzz/java. Committed raw inputs live in src/fuzz/resources/seeds.
 
 ## Deterministic replay
@@ -39,9 +42,10 @@ runs preserve their in-flight input on a best-effort shutdown path.
 
 The 32 KiB limit covers the largest committed seed, 28,841 bytes, with 3,927 bytes of mutation
 room. A lower limit can reduce exploration headroom; below 28,841 it excludes an existing
-seed. The 10,000-trial default bounds faster harnesses while leaving substantial exploration
-for workbook-heavy inputs. Smaller explicit budgets are suitable for smoke checks. These
-budgets limit work; they do not guarantee a coverage level.
+protocol-request seed. The 10,000-trial default is an upper effort budget, not an established
+minimum or optimum. Smaller explicit budgets are suitable for smoke checks. The other three
+harnesses admit their existing seeds with `-PfuzzMaxInputBytes=1024`, but this reduces reachable
+input length and is not equivalent exploration. These budgets do not guarantee a coverage level.
 
 ## Disk ownership and limits
 
@@ -52,9 +56,15 @@ starting another run. A lock rejects concurrent active runs in the same checkout
 checkouts for parallel runs; dependency download caches can still be shared.
 
 The task reports a conservative corpus-payload ceiling based on the seed bytes, trial count
-and maximum input size. It does not preallocate that space. Filesystem block/inode overhead,
+and maximum input size. Current defaults permit at most 327,880,208 bytes (312.7 MiB) of raw
+corpus payload for the largest harness; sequential harnesses do not add their ceilings together.
+This is neither a required preallocation nor a total disk quota. Filesystem block/inode overhead,
 statistics, finding metadata, in-flight workbooks, JVM memory and caches are separate from
 that payload bound. Lowering the trial budget reduces potential corpus growth and executions.
+
+The standalone driver disables per-trial observation logs and all-input/current-input copies.
+Coverage statistics and exact finding artifacts remain available; inherited JQF observability
+properties cannot enable per-trial JSON output through this driver.
 
 Active scratch belongs to build/fuzz/tmp and is removed after success. Failed or interrupted
 runs retain scratch for diagnosis. Per-input cleanup and workflow construction failures clear

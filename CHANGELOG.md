@@ -23,14 +23,17 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 - Request, grant and response JSON Schemas are available through schema subcommands; structured intake diagnostics preserve independent valid fragments and exact JSON locations.
 - Pure authoring, recipes and discovery live in core; JSON codecs and schema handling live in json, allowing model-only Java consumers to omit the workbook engine.
 - Build logic uses Kotlin and the declared Java target. Runtime and POI parity tests live in engine; architecture-tests verifies product boundaries and record wire leaves.
+- Unchanged compiler outputs are reused; bundled JARs stay up to date locally but are no longer copied into the build cache.
 - Coverage and mutation scores are advisory; custom source-shape budgets are removed. Run ./gradlew mutationReport for the configured mutation scopes.
 - Fuzzing uses JQF 3.0 on Java 27. Root check replays committed seeds; ./gradlew fuzz selects bounded active runs. Jazzer, its agent bootstrap and the nested fuzz build are removed.
+- Active JQF uses a checksum-pinned prepared agent for sealed classes; rejected instrumentation and unexpected agent classpath sources fail the run.
 - JQF active runs retain explicit invariants and coverage feedback; generic security-sink sanitizers and comparison/value profiling are not provided by the new driver.
 - check.sh uses one Gradle task graph for deterministic checks, coverage and distributions. Docker and contributor-container suites are separate Gradle tasks.
 - Local builds use 0.0.0-dev. Version tags drive verified releases and multi-architecture containers; release notes require one nonempty, dated changelog entry matching the tag.
 - Active fuzzing defaults to 60 s, 10,000 executions and 32 KiB inputs, with one retained corpus. Unreviewed findings block another run; see [fuzzing](docs/FUZZING.md).
 - Mutation reports reuse unchanged inputs and cover native validation paths. PIT uses 512 MiB heaps and at most four workers; focused class/test/mutator selections support short probes.
 - Docker CI runs alongside deterministic checks while Gate requires both. Configuration-cache diagnostics retain three reports after check; shared cache writes stay on the default branch.
+- Failed Docker and contributor-container checks retain diagnostic reports for seven days; release staging retains verified delivery inputs for one day before publication.
 - Runtime images use Corretto 27 on Debian 13; matching container sources, package manifests and checksums accompany releases.
 - Container retention follows verified manifest graphs, preserving retained image parts and leaving unassociated versions untouched.
 

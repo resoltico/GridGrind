@@ -33,6 +33,7 @@ abstract class FuzzTask : JavaExec() {
             logger.lifecycle("Active JQF JVM: ${toolJvm.javaRuntimeVersion} (${toolJvm.vendor})")
             logger.lifecycle("Corpus payload ceiling: ${files.corpusByteCeiling} bytes; scratch, filesystem overhead and JVM are separate")
             systemProperty("java.io.tmpdir", files.temporary.toAbsolutePath().toString())
+            systemProperty("gridgrind.fuzz.instrumentation", instrumentationAgent.singleFile.absolutePath)
             systemProperty("janala.includes", "dev.erst.gridgrind.core.,dev.erst.gridgrind.json.,dev.erst.gridgrind.engine.")
             systemProperty("janala.excludes", "")
             systemProperty("janala.verbose", "true")

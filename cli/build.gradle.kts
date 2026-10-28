@@ -163,6 +163,8 @@ tasks.named<Test>("test") {
 }
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    // Keep local UP-TO-DATE reuse without retaining another bundled dependency copy per revision.
+    outputs.doNotCacheIf("Bundled JARs are inexpensive to assemble and expensive to cache per revision") { true }
     dependsOn(verifyRuntimeLegalInventory)
     archiveBaseName = "gridgrind"
     archiveVersion = ""

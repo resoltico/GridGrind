@@ -68,14 +68,18 @@ class GridGrindFuzzConventionsPlugin : Plugin<Project> {
             }
             tasks.named("check") { it.dependsOn(replay) }
 
+            val preparedInstrumentation = tasks.register<PrepareFuzzInstrumentation>("prepareFuzzInstrumentation") {
+                upstreamJar.set(layout.file(instrumentation.elements.map { it.single().asFile }))
+                agentJar.set(layout.buildDirectory.file("fuzz/instrumentation/jqf-instrument.jar"))
+            }
             val selectedHarness = providers.gradleProperty("harness").orElse("").get()
             tasks.register<FuzzTask>("fuzz") {
                 group = "verification"
                 description = "Actively fuzzes one explicitly selected harness; bounded, opt-in, never part of check."
-                dependsOn(fuzz.classesTaskName)
-                classpath = fuzz.runtimeClasspath
+                dependsOn(fuzz.classesTaskName, preparedInstrumentation)
+                classpath = fuzz.runtimeClasspath.minus(instrumentation).plus(files(preparedInstrumentation.flatMap { it.agentJar }))
                 mainClass.set("dev.erst.gridgrind.fuzz.CoverageFuzzing")
-                instrumentationAgent.from(instrumentation)
+                instrumentationAgent.from(preparedInstrumentation.flatMap { it.agentJar })
                 harness.set(selectedHarness)
                 seconds.set(providers.gradleProperty("fuzzSeconds").orElse("60").map(String::toInt))
                 timeout.set(seconds.map { java.time.Duration.ofSeconds(it.toLong() + 10L) })
