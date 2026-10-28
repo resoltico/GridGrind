@@ -9,7 +9,7 @@ import java.nio.file.StandardOpenOption
 import java.util.Comparator
 import java.util.function.Consumer
 
-/** Owns one bounded mutable corpus and temporary directory for an exclusive native fuzz run. */
+/** Owns one bounded mutable corpus and temporary directory for an exclusive active fuzz run. */
 object FuzzRunWorkspace {
     data class RunFiles(
         val corpus: Path,

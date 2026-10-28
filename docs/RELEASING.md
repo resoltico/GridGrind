@@ -5,8 +5,10 @@ Use the Java 27 toolchain/runtime configured in gradle.properties.
 Local builds use 0.0.0-dev from gradle.properties. A release builds the checked-out vX.Y.Z tag
 with -Pversion=X.Y.Z; the same version reaches JAR metadata, distribution names and the image.
 
-Before requesting a release, add its exact versioned section to CHANGELOG.md and complete the
-normal development checks. Prepare and inspect its notes locally with:
+Prepare the release summary from CHANGELOG.md: move the reviewed Unreleased bullets into the
+exact versioned, dated section and leave an empty Unreleased section above it. Docs-only changes
+do not need release-note bullets. Complete the normal development checks before publishing.
+Prepare and inspect the notes locally with:
 
 ```bash
 ./gradlew prepareReleaseNotes -Pversion=X.Y.Z
@@ -23,8 +25,8 @@ prune job retains complete package-version groups for the five newest stable rel
 
 The manual workflow accepts an existing tag's version and defaults to dry_run=true. Dry runs
 perform the build and verification but skip release creation, registry login, image publication
-and pruning. A fork or act can exercise this path without publishing. Creating or pushing tags, dispatching publication workflows and publishing artifacts each
-require explicit release authorization.
+and pruning. Creating or pushing tags, dispatching publication workflows and publishing artifacts
+each require explicit release authorization.
 
 Dependencies are pinned by the version catalog and Gradle dependency locks. Update lock state
 through Gradle's --write-locks option when intentionally changing dependencies; review the result
