@@ -38,13 +38,10 @@ An existing stable release stops publication. Inspect remote state after an ambi
 failure rather than retagging or blindly overwriting published assets.
 
 Publication controls and their tests come from the commit defining the workflow; product code,
-build inputs and source inventories remain on the selected release tag. The optional manual
-`verified_run` input names a completed tag-push run that passed all checks and stopped at initial
-asset publication. Recovery verifies its repository, workflow, attempt, tag commit and successful
-steps, then requires both rebuilt image IDs to equal the previously tested IDs. Only then can
-the earlier deterministic and container checks be reused. Rebuilt archives receive focused
-distribution checks, image JARs must match the standalone JAR, and source acquisition, retention
-and publication checks run fresh. Missing evidence or different images stops recovery.
+build inputs and source inventories remain on the selected release tag. The release job runs
+ARM64 natively and AMD64 under emulation. Staging and publication share
+one BuildKit instance and its job-local cache. Images are verified afresh in each run; an ephemeral
+runner's failed attempt does not provide retained image bytes for a later run to reuse.
 
 ## Container source delivery
 
