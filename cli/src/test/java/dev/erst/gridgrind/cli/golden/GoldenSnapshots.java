@@ -41,6 +41,10 @@ final class GoldenSnapshots {
     String actual = canonical(observation, workspace, certifiedGeneratedPreviews);
     Path snapshot = DIRECTORY.resolve(id + ".json");
     if (launcher == GoldenLauncher.IN_PROCESS && Boolean.getBoolean("gridgrind.golden.update")) {
+      assertEquals(
+          "0.0.0-dev",
+          System.getProperty("gridgrind.test.expectedVersion"),
+          "Record the shared golden corpus with the development version");
       Files.createDirectories(snapshot.getParent());
       Files.writeString(snapshot, actual);
     }
@@ -49,7 +53,25 @@ final class GoldenSnapshots {
 
   static void assertMatches(Path snapshot, String actual) throws IOException {
     assertTrue(Files.isRegularFile(snapshot), () -> "Missing golden snapshot: " + snapshot);
-    assertEquals(Files.readString(snapshot), actual, () -> "Golden drift: " + snapshot);
+    assertEquals(
+        expectedForVersion(
+            Files.readString(snapshot), System.getProperty("gridgrind.test.expectedVersion")),
+        actual,
+        () -> "Golden drift: " + snapshot);
+  }
+
+  /**
+   * Expand only expected build references; incorrect references in actual output remain visible.
+   */
+  static String expectedForVersion(String snapshot, String version) {
+    if ("0.0.0-dev".equals(version)) {
+      return snapshot;
+    }
+    return snapshot
+        .replace(
+            "https://github.com/resoltico/GridGrind/blob/main",
+            "https://github.com/resoltico/GridGrind/blob/v" + version)
+        .replace("ghcr.io/resoltico/gridgrind:latest", "ghcr.io/resoltico/gridgrind:" + version);
   }
 
   static ObjectNode observation(GoldenLauncher.Result result) {
