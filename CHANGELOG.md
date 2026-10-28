@@ -5,18 +5,20 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 
 ## [Unreleased]
 
-- Build and supported product runtime now require Java 27; the source/bytecode target is 26 to match stable compiler-analysis tooling.
-- Apache POI 6.0.0 corrects Excel unary-minus precedence and picture-anchor movement during row/column edits; recalculated values and affected drawing layouts can change.
-- POI 6 multiplication/division follows IEEE 754 directly; raw cached results can change at floating-point precision, so exact numeric expectations may need updating.
-- Runtime libraries use current stable JSON, cryptography and XML releases, including Jackson 3.2.4 and Bouncy Castle 1.86; resolved dependencies and bundled legal notices are refreshed.
-- CI and container inputs use current action releases, Ubuntu 26.04 runners/contributor images, and digest-pinned Azul 27.0.1 Debian 13 images.
-- Java formatting calls the current google-java-format 1.37 API directly through Spotless, avoiding its obsolete upstream adapter; formatter-only javac exports are declared in gradle.properties.
+## [0.77.0] - 2026-10-28
+
 - JSON protocolVersion is now integer 1, replacing V3; regenerate requests from current templates and update consumers. Wire variants use type or status.
 - CellValueSpec variants use value for scalar or source payloads and runs for rich text; update request producers. Explicit null is rejected instead of applying omission defaults.
 - CLI automation must use explicit run, doctor, catalog, schema, recipe and template subcommands; flat command flags and implicit stdin selection are removed. See [CLI](docs/CLI.md).
-- CLI detects failed console streams, including broken pipes, and returns nonzero; transport failure does not undo an already published workbook.
 - Java integrations use core specs, patches, reports, typed scalar records and the canonical grant; update model imports and constructors. Engine model mirrors are removed.
+- Build and supported product runtime now require Java 27; the source/bytecode target is 26 to match stable compiler-analysis tooling.
 - GridGrind-owned code uses MPL-2.0, retaining third-party terms. Previously distributed MIT copies retain their permissions; review source-distribution duties in [LICENSE](LICENSE).
+- Apache POI 6.0.0 corrects Excel unary-minus precedence and picture-anchor movement during row/column edits; recalculated values and affected drawing layouts can change.
+- POI 6 multiplication/division follows IEEE 754 directly; raw cached results can change at floating-point precision, so exact numeric expectations may need updating.
+- Runtime libraries use current stable JSON, cryptography and XML releases, including Jackson 3.2.4 and Bouncy Castle 1.86; resolved dependencies and bundled legal notices are refreshed.
+- CI uses updated pinned actions and Ubuntu 26.04 runners; build and contributor toolchains use Azul 27.
+- Java formatting calls the current google-java-format 1.37 API directly through Spotless, avoiding its obsolete upstream adapter; formatter-only javac exports are declared in gradle.properties.
+- CLI detects failed console streams, including broken pipes, and returns nonzero; transport failure does not undo an already published workbook.
 - Bundled Woodstox components retain their BSD, MIT and Apache 1.1 terms in delivery notices; unused shaded interactive tooling and build metadata are excluded.
 - Request, grant and response JSON Schemas are available through schema subcommands; structured intake diagnostics preserve independent valid fragments and exact JSON locations.
 - Pure authoring, recipes and discovery live in core; JSON codecs and schema handling live in json, allowing model-only Java consumers to omit the workbook engine.
@@ -29,6 +31,8 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 - Active fuzzing defaults to 60 s, 10,000 executions and 32 KiB inputs, with one retained corpus. Unreviewed findings block another run; see [fuzzing](docs/FUZZING.md).
 - Mutation reports reuse unchanged inputs and cover native validation paths. PIT uses 512 MiB heaps and at most four workers; focused class/test/mutator selections support short probes.
 - Docker CI runs alongside deterministic checks while Gate requires both. Configuration-cache diagnostics retain three reports after check; shared cache writes stay on the default branch.
+- Runtime images use Corretto 27 on Debian 13; matching container sources, package manifests and checksums accompany releases.
+- Container retention follows verified manifest graphs, preserving retained image parts and leaving unassociated versions untouched.
 
 ## [0.76.0] - 2026-09-09
 

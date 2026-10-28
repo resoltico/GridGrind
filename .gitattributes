@@ -29,5 +29,6 @@
 
 # Repository-owned agent instructions stay in Git history but do not ship in source archives.
 /AGENTS.md   export-ignore
+/AGENTS_EXTRA.md export-ignore
 /.codex      export-ignore
 /.codex/**   export-ignore

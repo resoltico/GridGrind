@@ -8,17 +8,57 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** Owns one anonymous Docker client configuration, image and any timed-out test containers. */
+/** Owns anonymous Docker configuration and test resources; borrowed images remain external. */
 final class DockerFixture implements AutoCloseable {
   private final Path workspace;
   private final List<String> client;
   private final List<String> containers = new ArrayList<>();
   private final List<String> volumes = new ArrayList<>();
-  private final String image = "gridgrind-test:" + UUID.randomUUID();
+  private final String image;
+  private final boolean ownsImage;
+  private final String platform;
   private final String user;
 
   DockerFixture(Path workspace) throws java.io.IOException, InterruptedException {
+    this(workspace, "gridgrind-test:" + UUID.randomUUID(), true);
+  }
+
+  DockerFixture(Path workspace, String borrowedImage)
+      throws java.io.IOException, InterruptedException {
+    this(workspace, borrowedImage, false);
+  }
+
+  private DockerFixture(Path workspace, String requestedImage, boolean ownsImage)
+      throws java.io.IOException, InterruptedException {
+    if (requestedImage.isBlank() || requestedImage.startsWith("-"))
+      throw new IllegalArgumentException("Expected a local Docker image reference");
     this.workspace = workspace;
+    this.ownsImage = ownsImage;
+    client = anonymousClient(workspace);
+    user =
+        assertSuccess(GoldenLauncher.runProcess(List.of("id", "-u"), workspace, 60)).strip()
+            + ":"
+            + assertSuccess(GoldenLauncher.runProcess(List.of("id", "-g"), workspace, 60)).strip();
+    // Resolve a borrowed tag once so later tag changes cannot substitute another image.
+    image =
+        ownsImage
+            ? requestedImage
+            : assertSuccess(command(60, "image", "inspect", "--format", "{{.Id}}", requestedImage))
+                .strip();
+    if (!ownsImage && !image.matches("sha256:[0-9a-f]{64}"))
+      throw new IllegalStateException("Docker did not resolve the borrowed local image ID");
+    platform =
+        ownsImage
+            ? ""
+            : assertSuccess(
+                    command(60, "image", "inspect", "--format", "{{.Os}}/{{.Architecture}}", image))
+                .strip();
+    if (!ownsImage && !platform.matches("linux/(amd64|arm64)"))
+      throw new IllegalStateException("Unsupported borrowed image platform: " + platform);
+  }
+
+  private static List<String> anonymousClient(Path workspace)
+      throws java.io.IOException, InterruptedException {
     Path config = Files.createDirectories(workspace.resolve("anonymous-docker"));
     Files.writeString(config.resolve("config.json"), "{}\n");
     String endpoint = System.getenv("DOCKER_HOST");
@@ -47,11 +87,7 @@ final class DockerFixture implements AutoCloseable {
     Path pluginDirectory = Files.createDirectories(config.resolve("cli-plugins"));
     Files.createSymbolicLink(
         pluginDirectory.resolve("docker-buildx"), Path.of(buildx).toRealPath());
-    client = List.of("docker", "--config", config.toString(), "--host", endpoint);
-    user =
-        assertSuccess(GoldenLauncher.runProcess(List.of("id", "-u"), workspace, 60)).strip()
-            + ":"
-            + assertSuccess(GoldenLauncher.runProcess(List.of("id", "-g"), workspace, 60)).strip();
+    return List.of("docker", "--config", config.toString(), "--host", endpoint);
   }
 
   String image() {
@@ -66,6 +102,7 @@ final class DockerFixture implements AutoCloseable {
   }
 
   void build(Path context, List<String> options) throws java.io.IOException, InterruptedException {
+    if (!ownsImage) throw new IllegalStateException("Cannot rebuild an externally owned image");
     List<String> arguments = new ArrayList<>(List.of("buildx", "build", "--load", "--tag", image));
     arguments.addAll(options);
     arguments.add(context.toString());
@@ -83,7 +120,9 @@ final class DockerFixture implements AutoCloseable {
       throws java.io.IOException, InterruptedException {
     String container = "gridgrind-test-" + UUID.randomUUID();
     containers.add(container);
-    List<String> invocation = new ArrayList<>(List.of("run", "--rm", "--name", container));
+    List<String> invocation =
+        new ArrayList<>(List.of("run", "--pull=never", "--rm", "--name", container));
+    if (!platform.isEmpty()) invocation.addAll(List.of("--platform", platform));
     invocation.addAll(options);
     invocation.add(image);
     invocation.addAll(List.of(arguments));
@@ -115,6 +154,6 @@ final class DockerFixture implements AutoCloseable {
       remove.addAll(volumes);
       command(60, remove.toArray(String[]::new));
     }
-    command(60, "image", "rm", "--force", image);
+    if (ownsImage) command(60, "image", "rm", "--force", image);
   }
 }

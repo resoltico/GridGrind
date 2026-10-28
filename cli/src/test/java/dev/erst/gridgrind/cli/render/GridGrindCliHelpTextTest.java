@@ -22,14 +22,14 @@ import org.junit.jupiter.api.Test;
 /** Help, version, and documentation integration tests for GridGrindCli. */
 class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   @Test
-  void bundledProductPropertiesMatchTheCurrentGradleProperties() throws IOException {
+  void bundledProductPropertiesMatchBuildInputs() throws IOException {
     Properties properties = new Properties();
     try (InputStream inputStream =
         Files.newInputStream(locateRepoRoot().resolve("gradle.properties"))) {
       properties.load(inputStream);
     }
 
-    assertEquals(properties.getProperty("version"), ProductInfo.version());
+    assertEquals(System.getProperty("gridgrind.test.expectedVersion"), ProductInfo.version());
     assertEquals(properties.getProperty("gridgrindDescription"), ProductInfo.description());
   }
 

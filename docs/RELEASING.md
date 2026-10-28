@@ -1,39 +1,83 @@
 # Releasing
 
-Use the Java 27 toolchain/runtime configured in gradle.properties.
+Use the Java 27 build toolchain configured in gradle.properties. Local builds use 0.0.0-dev.
+A release builds the checked-out vX.Y.Z tag with -Pversion=X.Y.Z; the effective version reaches
+JAR metadata, archive names, image labels and verification inputs.
 
-Local builds use 0.0.0-dev from gradle.properties. A release builds the checked-out vX.Y.Z tag
-with -Pversion=X.Y.Z; the same version reaches JAR metadata, distribution names and the image.
+Move the reviewed Unreleased bullets into one exact `## [X.Y.Z] - YYYY-MM-DD` section with a
+valid calendar date, leaving an empty Unreleased section above it. Docs-only changes do not
+need release-note bullets. Prepare and inspect the changelog-derived notes with:
 
-Prepare the release summary from CHANGELOG.md: move the reviewed Unreleased bullets into the
-exact versioned, dated section and leave an empty Unreleased section above it. Docs-only changes
-do not need release-note bullets. Complete the normal development checks before publishing.
-Prepare and inspect the notes locally with:
+    ./gradlew prepareReleaseNotes -Pversion=X.Y.Z
 
-```bash
-./gradlew prepareReleaseNotes -Pversion=X.Y.Z
-```
+The task writes build/release-notes.md and rejects missing, duplicated, empty or invalidly dated
+entries. Creating/pushing tags and dispatching publication require explicit release authorization.
 
-The task writes build/release-notes.md. Its heading must be exactly `## [X.Y.Z] - YYYY-MM-DD`
-with a valid calendar date. A missing, duplicated or empty version section fails.
-The development version cannot be published through this preparation step.
+## Verification and publication
 
-The release workflow runs check.sh, then the opt-in container tests, before creating a GitHub
-release containing the fat JAR and both launcher distributions. It publishes linux/amd64 and
-linux/arm64 images under the version and latest tags, with provenance and an SBOM. The
-prune job retains complete package-version groups for the five newest stable releases.
+The tag workflow serializes all releases and retention. It runs the deterministic check graph
+and builds versioned archives, then builds both runtime platforms without publication. It compares
+the image JARs with the verified standalone JAR and runs the container suite against those exact
+local image IDs. `-PcontainerImage=<local-image>` selects this borrowed-image check without
+rebuilding or deleting the supplied image.
 
-The manual workflow accepts an existing tag's version and defaults to dry_run=true. Dry runs
-perform the build and verification but skip release creation, registry login, image publication
-and pruning. Creating or pushing tags, dispatching publication workflows and publishing artifacts
-each require explicit release authorization.
+The workflow enables the containerd image store to preserve typed local manifest descriptors.
+It inventories both final filesystems and prepares corresponding source before any
+runtime publication. It stages verified assets in a draft, exposes the complete sources and
+binaries as a non-latest public prerelease, and publishes the data-only source image first.
+Anonymous retrieval must reproduce the source bytes. It then publishes the versioned runtime
+index with provenance and SPDX SBOMs, verifies platform-manifest/source bindings, applies safe
+retention, advances the image's latest tag and promotes the GitHub release to stable/latest.
+There is no atomic transaction across GitHub Releases and GHCR; a failure leaves the verified
+prerelease available for inspection rather than silently declaring a stable release.
 
-Dependencies are pinned by the version catalog and Gradle dependency locks. Update lock state
-through Gradle's --write-locks option when intentionally changing dependencies; review the result
-alongside the dependency change.
+The manual workflow verifies an existing tag and defaults to dry_run=true. A dry run performs
+builds, platform tests and source preparation but skips release/registry mutations and pruning.
+Draft assets can be resumed. Public prerelease assets must match exactly; they are not replaced.
+An existing stable release stops publication. Inspect remote state after an ambiguous network
+failure rather than retagging or blindly overwriting published assets.
 
-Review [NOTICE](../NOTICE) for the delivered runtime, shaded components and container terms.
-The packaging checks verify retained legal bytes and selected content boundaries. They do not
-establish every source-delivery obligation for a particular redistribution. Before container
-publication, establish the corresponding-source arrangements for its actual JRE and OS packages
-and distribution method; retained upstream offers and source links do not create a GridGrind offer.
+## Container source delivery
+
+Runtime inputs are owned by [container-runtime.properties](../release/container-runtime.properties)
+and the [Dockerfile](../Dockerfile). The build JDK and contributor toolchain remain separate from
+the Corretto runtime. Debian snapshot indexes remain authenticated; only historical metadata
+expiry checks are disabled.
+
+[prepare-container-sources.py](../scripts/prepare-container-sources.py) maps both image configurations,
+JRE commit identities and installed Debian binaries to exact source versions. It verifies the
+complete vendor source archive and every original, auxiliary and Debian patch/build archive
+named by authenticated source metadata and `.dsc` hashes. It also includes the runtime build
+inputs and their legal notices. It does not claim to have rebuilt upstream vendor/OS binaries.
+
+Release assets include the application JAR, ZIP/TAR launchers, a versioned container source
+archive, source manifest/checksums and SHA256SUMS. The same source files are offered beside the
+runtime at `ghcr.io/resoltico/gridgrind:X.Y.Z-sources`. This is data, not a runnable service:
+
+    docker create --platform linux/amd64 --name gridgrind-sources ghcr.io/resoltico/gridgrind:X.Y.Z-sources /source-only
+    docker cp gridgrind-sources:/sources/. ./container-sources
+    docker rm gridgrind-sources
+    cd container-sources
+    sha256sum --check gridgrind-container-sources-X.Y.Z.sha256
+
+The source tag must be publicly retrievable before the runtime and retained with it. Direct
+source delivery avoids making a new GridGrind written source offer. [NOTICE](../NOTICE) identifies
+the component terms and scope; packaging checks establish retained bytes, not a general legal
+opinion about every redistribution scenario.
+
+Source acquisition preflights exact sizes and available space. The release asset must stay below
+2 GiB. Its conservative free-space budget covers six possible source copies: upstream payloads,
+release archive, BuildKit upload snapshot, source-image layer, downloaded blob and unpacked layer,
+plus 512 MiB of scratch headroom. Public verification streams bytes instead of making another
+archive copy. Failed source preparation retains diagnostic evidence and refuses an occupied
+output directory; review it before resuming.
+
+## Retention
+
+[prune-container-versions.py](../scripts/prune-container-versions.py) retains complete manifest
+graphs for the five newest stable runtime versions and their matching source tags. All other
+nonretired aliases and source-only incoming versions remain protected. It verifies manifest
+hashes and a fresh package-state snapshot before applying a deletion plan; its default is dry-run.
+Only resolved manifests in retired graphs can be deleted. Missing retired nodes and unrelated
+untagged records are left alone; an incomplete protected graph or other error blocks deletion.
+Timestamps choose stable roots, never their child retention boundaries.

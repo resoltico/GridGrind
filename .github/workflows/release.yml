@@ -18,17 +18,18 @@ on:
 permissions:
   contents: read
 
+# Publication and retention share mutable registry/release state across versions.
 concurrency:
-  group: release-${{ inputs.version || github.ref_name }}
+  group: gridgrind-public-release
   cancel-in-progress: false
 
 env:
-  REGISTRY: ghcr.io
+  PUBLISH_RELEASE: ${{ github.event_name == 'push' || !inputs.dry_run }}
 
 jobs:
   release:
     runs-on: ubuntu-26.04
-    timeout-minutes: 45
+    timeout-minutes: 120
     permissions:
       contents: write
       packages: write
@@ -44,11 +45,29 @@ jobs:
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-cleanup: always
+          cache-read-only: true
+      - name: Enable descriptor-preserving local image storage
+        run: |
+          sudo python3 - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('/etc/docker/daemon.json')
+          config = json.loads(path.read_text()) if path.exists() else {}
+          config.setdefault('features', {})['containerd-snapshotter'] = True
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(config) + '\n')
+          PY
+          sudo systemctl restart docker
+          docker info --format '{{json .DriverStatus}}' | grep -q io.containerd.snapshotter.v1
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          image: tonistiigi/binfmt:qemu-v10.2.3-68@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
           version: v0.38.1
           driver-opts: image=moby/buildkit:v0.34.1@sha256:99368f3e46177c6405b9740e4461d91cee004128daeecca78d4ceac50ec1da5c
-      - name: Derive version and require its CHANGELOG section
+
+      - name: Derive version and finalized changelog notes
         id: release
         env:
           REQUESTED_VERSION: ${{ inputs.version }}
@@ -60,173 +79,256 @@ jobs:
             version="${GITHUB_REF_NAME#v}"
           fi
           ./gradlew prepareReleaseNotes "-Pversion=${version}"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/gridgrind" >> "$GITHUB_OUTPUT"
-      - name: Check and build delivery archives
-        run: ./check.sh "-Pversion=${{ steps.release.outputs.version }}"
-      - name: Verify actual container behavior
-        run: ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}"
-      - name: Publish GitHub release and exact verified artifacts
-        if: github.event_name == 'push' || !inputs.dry_run
+          release_commit=$(git rev-parse HEAD)
+          release_epoch=$(git show -s --format=%ct HEAD)
+          {
+            echo "version=${version}"
+            echo "commit=${release_commit}"
+            echo "epoch=${release_epoch}"
+            echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/gridgrind"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Reject an already stable public release before expensive work
         env:
-          GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -euo pipefail
-          gh release create "v${RELEASE_VERSION}" --verify-tag \
-            --title "GridGrind ${RELEASE_VERSION}" --notes-file build/release-notes.md \
-            cli/build/libs/gridgrind.jar \
-            "cli/build/distributions/gridgrind-${RELEASE_VERSION}.zip" \
-            "cli/build/distributions/gridgrind-${RELEASE_VERSION}.tar"
-      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
-        if: github.event_name == 'push' || !inputs.dry_run
-        with:
-          image: tonistiigi/binfmt:qemu-v10.2.3-68@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0
+          status=$(curl --silent --show-error --location --connect-timeout 15 --max-time 60 \
+            --output build/existing-release.json --write-out '%{http_code}' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/v${RELEASE_VERSION}")
+          case "$status" in
+            404) ;;
+            200) python3 -c 'import json; r=json.load(open("build/existing-release.json")); assert r["prerelease"], "Stable release already exists; verify public state instead of replacing it"' ;;
+            *) echo "Release preflight returned HTTP $status" >&2; exit 1 ;;
+          esac
+
+      - name: Test release-control failure boundaries
+        run: python3 -B -m unittest discover -s scripts/tests
+      - name: Check and build versioned delivery archives
+        run: ./check.sh "-Pversion=${{ steps.release.outputs.version }}"
+
+      - name: Build both runtime platforms without publishing
+        id: images
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
+          SOURCE_DATE_EPOCH: ${{ steps.release.outputs.epoch }}
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            docker buildx build --load --platform "linux/$arch" --tag "gridgrind-release:$arch" \
+              --build-arg "GRIDGRIND_VERSION=$RELEASE_VERSION" \
+              --build-arg "GRIDGRIND_REVISION=$RELEASE_COMMIT" \
+              --build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" \
+              --cache-from "type=gha,scope=release-$RELEASE_VERSION-$arch" \
+              --cache-to "type=gha,mode=min,scope=release-$RELEASE_VERSION-$arch" .
+            image_id=$(docker image inspect --format '{{.Id}}' "gridgrind-release:$arch")
+            echo "$arch=$image_id" >> "$GITHUB_OUTPUT"
+            expected=$(sha256sum cli/build/libs/gridgrind.jar | awk '{print $1}')
+            actual=$(docker run --rm --platform "linux/$arch" --entrypoint sha256sum "$image_id" /app/gridgrind.jar | awk '{print $1}')
+            test "$actual" = "$expected"
+          done
+
+      - name: Verify the exact staged images on both architectures
+        run: |
+          ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}" "-PcontainerImage=${{ steps.images.outputs.amd64 }}"
+          ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}" "-PcontainerImage=${{ steps.images.outputs.arm64 }}"
+
+      - name: Prepare and verify corresponding container source
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          AMD64_IMAGE: ${{ steps.images.outputs.amd64 }}
+          ARM64_IMAGE: ${{ steps.images.outputs.arm64 }}
+        run: |
+          set -euo pipefail
+          source release/container-runtime.properties
+          mkdir -p build/vendor-source
+          vendor="build/vendor-source/corretto-$CORRETTO_SOURCE_COMMIT.tar.gz"
+          curl --fail --silent --show-error --location --retry 2 --connect-timeout 15 --max-time 600 \
+            --output "$vendor" "$CORRETTO_SOURCE_URL"
+          printf '%s  %s\n' "$CORRETTO_SOURCE_SHA256" "$vendor" | sha256sum --check --status
+          python3 scripts/prepare-container-sources.py \
+            --image "linux/amd64=$AMD64_IMAGE" --image "linux/arm64=$ARM64_IMAGE" \
+            --version "$RELEASE_VERSION" --output build/container-sources \
+            --vendor-source "$vendor" --vendor-source-sha256 "$CORRETTO_SOURCE_SHA256" \
+            --vendor-source-commit "$CORRETTO_SOURCE_COMMIT"
+          export RELEASE_VERSION
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, os
+          version = os.environ['RELEASE_VERSION']
+          root = Path('build/container-sources')
+          payload = Path('build/container-source-payload')
+          payload.mkdir()
+          source_names = [f'gridgrind-container-sources-{version}{suffix}' for suffix in ['.tar.gz', '.manifest.json', '.sha256']]
+          for name in source_names:
+              os.link(root / name, payload / name)
+          assets = [Path('cli/build/libs/gridgrind.jar'), Path(f'cli/build/distributions/gridgrind-{version}.zip'), Path(f'cli/build/distributions/gridgrind-{version}.tar')]
+          assets += [root / name for name in source_names]
+          def digest(path):
+              h = hashlib.sha256()
+              with path.open('rb') as stream:
+                  for block in iter(lambda: stream.read(1024 * 1024), b''): h.update(block)
+              return h.hexdigest()
+          Path('build/SHA256SUMS').write_text(''.join(f'{digest(path)}  {path.name}\n' for path in assets))
+          PY
+
+      - name: Validate retention access and incoming-release plan without deleting
+        if: env.PUBLISH_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: python3 scripts/prune-container-versions.py --owner "$OWNER" --package gridgrind --keep 5 --pending-version "$RELEASE_VERSION"
+
+      - name: Stage release assets and make sources publicly accessible
+        if: env.PUBLISH_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
+        run: |
+          set -euo pipefail
+          args=(--repo "$GITHUB_REPOSITORY" --version "$RELEASE_VERSION" --commit "$RELEASE_COMMIT" --notes build/release-notes.md)
+          for asset in cli/build/libs/gridgrind.jar "cli/build/distributions/gridgrind-$RELEASE_VERSION.zip" \
+            "cli/build/distributions/gridgrind-$RELEASE_VERSION.tar" \
+            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.tar.gz" \
+            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.manifest.json" \
+            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.sha256" build/SHA256SUMS; do
+            args+=(--asset "$asset")
+          done
+          python3 scripts/release-publication.py prepare "${args[@]}"
+          python3 scripts/release-publication.py expose "${args[@]}"
+          curl --fail --silent --show-error --head --location --retry 2 --connect-timeout 15 --max-time 60 \
+            "https://github.com/$GITHUB_REPOSITORY/releases/download/v$RELEASE_VERSION/gridgrind-container-sources-$RELEASE_VERSION.tar.gz" >/dev/null
+
       - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
-        if: github.event_name == 'push' || !inputs.dry_run
+        if: env.PUBLISH_RELEASE == 'true'
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        if: github.event_name == 'push' || !inputs.dry_run
+      - name: Publish source next to runtime in the same registry
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        if: env.PUBLISH_RELEASE == 'true'
+        with:
+          context: build/container-source-payload
+          file: release/Dockerfile.sources
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.release.outputs.image }}:${{ steps.release.outputs.version }}-sources
+          build-args: |
+            GRIDGRIND_VERSION=${{ steps.release.outputs.version }}
+            GRIDGRIND_REVISION=${{ steps.release.outputs.commit }}
+            SOURCE_DATE_EPOCH=${{ steps.release.outputs.epoch }}
+          provenance: false
+          sbom: false
+      - name: Verify registry source bytes before runtime publication
+        if: env.PUBLISH_RELEASE == 'true'
+        env:
+          IMAGE: ${{ steps.release.outputs.image }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          anonymous="$RUNNER_TEMP/gridgrind-source-public-read"
+          mkdir -p "$anonymous"
+          printf '{}\n' > "$anonymous/config.json"
+          endpoint=$(docker context inspect --format '{{.Endpoints.docker.Host}}')
+          client=(docker --config "$anonymous" --host "$endpoint")
+          container=$("${client[@]}" create --pull=always --platform linux/amd64 "$IMAGE:$RELEASE_VERSION-sources" /source-only)
+          trap '"${client[@]}" rm -f "$container" >/dev/null' EXIT
+          for suffix in .tar.gz .manifest.json .sha256; do
+            name="gridgrind-container-sources-$RELEASE_VERSION$suffix"
+            expected=$(sha256sum "build/container-sources/$name" | awk '{print $1}')
+            "${client[@]}" cp "$container:/sources/$name" - | python3 -c '
+          import hashlib, sys, tarfile
+          expected, name = sys.argv[1:]
+          with tarfile.open(fileobj=sys.stdin.buffer, mode="r|*") as archive:
+              files = 0
+              for entry in archive:
+                  if entry.isdir(): continue
+                  assert entry.isfile() and entry.name == name, "Unexpected source image entry"
+                  h = hashlib.sha256()
+                  stream = archive.extractfile(entry)
+                  for block in iter(lambda: stream.read(1024 * 1024), b""): h.update(block)
+                  assert h.hexdigest() == expected, "Registry source payload differs"
+                  files += 1
+              assert files == 1, "Missing registry source payload"
+          ' "$expected" "$name"
+          done
+
+      - name: Publish runtime platforms and attestations under the version tag
+        id: publish_image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        if: env.PUBLISH_RELEASE == 'true'
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ${{ steps.release.outputs.image }}:${{ steps.release.outputs.version }}
-            ${{ steps.release.outputs.image }}:latest
-          build-args: GRIDGRIND_VERSION=${{ steps.release.outputs.version }}
+          tags: ${{ steps.release.outputs.image }}:${{ steps.release.outputs.version }}
+          build-args: |
+            GRIDGRIND_VERSION=${{ steps.release.outputs.version }}
+            GRIDGRIND_REVISION=${{ steps.release.outputs.commit }}
+            SOURCE_DATE_EPOCH=${{ steps.release.outputs.epoch }}
           provenance: mode=max
-          sbom: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          attests: type=sbom,generator=docker.io/docker/buildkit-syft-scanner@sha256:873a7458c3c8ac8e32c7b796c10e1600b07b963d2aa000a72a2d97aaaa2d6315
+          cache-from: |
+            type=gha,scope=release-${{ steps.release.outputs.version }}-amd64
+            type=gha,scope=release-${{ steps.release.outputs.version }}-arm64
 
-  cleanup:
-    name: Prune old container versions
-    runs-on: ubuntu-26.04
-    needs: release
-    if: needs.release.result == 'success' && (github.event_name == 'push' || !inputs.dry_run)
-    timeout-minutes: 5
-
-    permissions:
-      packages: write
-
-    steps:
-      # Retain complete multi-platform release groups through the package-versions API.
-      #
-      # A GHCR multi-arch release is not a single package-version record. The tagged OCI index is
-      # accompanied by multiple untagged records, including platform manifests and provenance or
-      # attestation manifests. Raw count-based pruning therefore keeps the wrong number of releases
-      # and can split a release across the retention boundary.
-      #
-      # The safe rule is to anchor retention on the five newest tagged releases (tags matching
-      # X.Y.Z), then keep every package-version record created at or after the 5th newest anchor.
-      # That preserves complete release groups even if GitHub changes how many untagged records a
-      # release produces in the future.
-      - name: Prune package versions older than the five newest tagged releases
-        shell: bash
+      - name: Verify published manifests, source bindings, provenance and SBOM
+        if: env.PUBLISH_RELEASE == 'true'
         env:
-          API_VERSION: 2026-03-10
+          IMAGE: ${{ steps.release.outputs.image }}
+        run: |
+          python3 scripts/verify-container-release.py --repository "${IMAGE#ghcr.io/}" \
+            --digest "${{ steps.publish_image.outputs.digest }}" --tag "${{ steps.release.outputs.version }}" \
+            --source-manifest "build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.manifest.json" \
+            --output build/published-image.json
+      - name: Retain complete runtime/source graphs for five stable versions
+        if: env.PUBLISH_RELEASE == 'true'
+        env:
           GH_TOKEN: ${{ github.token }}
           OWNER: ${{ github.repository_owner }}
-          PACKAGE_NAME: gridgrind
-          PACKAGE_TYPE: container
-          RELEASES_TO_KEEP: "5"
+        run: python3 scripts/prune-container-versions.py --owner "$OWNER" --package gridgrind --keep 5 --apply
+      - name: Advance latest only to the verified runtime index
+        if: env.PUBLISH_RELEASE == 'true'
+        env:
+          IMAGE: ${{ steps.release.outputs.image }}
+        run: |
+          docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE@${{ steps.publish_image.outputs.digest }}"
+          python3 scripts/verify-container-release.py --repository "${IMAGE#ghcr.io/}" \
+            --digest "${{ steps.publish_image.outputs.digest }}" --tag latest \
+            --source-manifest "build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.manifest.json" \
+            --output build/published-image.json
+      - name: Promote the verified prerelease to public stable/latest
+        if: env.PUBLISH_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
         run: |
           set -euo pipefail
-
-          owner_type="$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: ${API_VERSION}" \
-            "/users/${OWNER}" \
-            --jq '.type')"
-
-          case "${owner_type}" in
-            Organization)
-              versions_endpoint="/orgs/${OWNER}/packages/${PACKAGE_TYPE}/${PACKAGE_NAME}/versions"
-              ;;
-            User)
-              versions_endpoint="/users/${OWNER}/packages/${PACKAGE_TYPE}/${PACKAGE_NAME}/versions"
-              ;;
-            *)
-              echo "Unsupported package owner type: ${owner_type}" >&2
-              exit 1
-              ;;
-          esac
-
-          versions_json="$(gh api \
-            --paginate \
-            --slurp \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: ${API_VERSION}" \
-            "${versions_endpoint}?per_page=100")"
-
-          release_anchors_json="$(printf '%s' "${versions_json}" | jq \
-            --argjson releasesToKeep "${RELEASES_TO_KEEP}" '
-              map(.[]) |
-              [
-                .[]
-                | {
-                    id,
-                    createdAt: .created_at,
-                    tags: (.metadata.container.tags // []),
-                    releaseTag: (
-                      (.metadata.container.tags // [])
-                      | map(select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$")))
-                      | first
-                    )
-                  }
-                | select(.releaseTag != null)
-              ]
-              | sort_by(.createdAt)
-              | reverse
-              | .[:$releasesToKeep]
-            ')"
-
-          release_anchor_count="$(printf '%s' "${release_anchors_json}" | jq 'length')"
-          if [ "${release_anchor_count}" -lt "${RELEASES_TO_KEEP}" ]; then
-            echo "Found ${release_anchor_count} tagged releases; fewer than ${RELEASES_TO_KEEP} exist, so nothing is pruned."
-            exit 0
-          fi
-
-          cutoff_created_at="$(printf '%s' "${release_anchors_json}" | jq -r 'last.createdAt')"
-          echo "Keeping complete package-version groups for these tagged releases:"
-          printf '%s' "${release_anchors_json}" | jq -r '.[] | "  - \(.releaseTag) anchored at \(.createdAt) (package version id \(.id))"'
-
-          deletion_candidates_json="$(printf '%s' "${versions_json}" | jq \
-            --arg cutoffCreatedAt "${cutoff_created_at}" '
-              map(.[]) |
-              [
-                .[]
-                | select(.created_at < $cutoffCreatedAt)
-                | {
-                    id,
-                    createdAt: .created_at,
-                    tags: (
-                      if (.metadata.container.tags // []) | length == 0
-                      then ["<untagged>"]
-                      else (.metadata.container.tags // [])
-                      end
-                    )
-                  }
-              ]
-            ')"
-
-          deletion_count="$(printf '%s' "${deletion_candidates_json}" | jq 'length')"
-          if [ "${deletion_count}" -eq 0 ]; then
-            echo "No package versions are older than the retained release cutoff."
-            exit 0
-          fi
-
-          echo "Deleting ${deletion_count} package versions older than ${cutoff_created_at}:"
-          printf '%s' "${deletion_candidates_json}" | jq -r '.[] | "  - id \(.id) created \(.createdAt) tags=\(.tags | join(","))"'
-
-          printf '%s' "${deletion_candidates_json}" | jq -r '.[].id' | while IFS= read -r version_id; do
-            gh api \
-              -X DELETE \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: ${API_VERSION}" \
-              "${versions_endpoint}/${version_id}"
+          args=(--repo "$GITHUB_REPOSITORY" --version "$RELEASE_VERSION" --commit "$RELEASE_COMMIT" --notes build/release-notes.md)
+          for asset in cli/build/libs/gridgrind.jar "cli/build/distributions/gridgrind-$RELEASE_VERSION.zip" \
+            "cli/build/distributions/gridgrind-$RELEASE_VERSION.tar" \
+            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.tar.gz" \
+            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.manifest.json" \
+            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.sha256" build/SHA256SUMS; do
+            args+=(--asset "$asset")
           done
+          python3 scripts/release-publication.py finalize "${args[@]}"
+
+      - name: Retain bounded release diagnostics
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-diagnostics
+          path: |
+            **/build/test-results/**/*.xml
+            **/build/reports/tests/**
+            build/container-sources/collector.log
+            build/container-sources/source-plan.json
+            build/published-image.json
+          if-no-files-found: warn
+          retention-days: 7

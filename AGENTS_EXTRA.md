@@ -2,7 +2,7 @@
 
 This supplements the read-only [baseline](AGENTS.md).
 
-- Java/version pins are in [gradle.properties](gradle.properties); dependency versions and resolved locks are owned by [the version catalog](gradle/libs.versions.toml) and module lockfiles. Use the checked-in wrapper.
+- Build Java/bytecode and local-version pins are in [gradle.properties](gradle.properties); container/JRE/source pins are in [runtime inputs](release/container-runtime.properties). Dependencies use [the catalog](gradle/libs.versions.toml) and module lockfiles. Use the checked-in wrapper.
 - Core owns canonical specs, patches, reports, resolved values and pure discovery. JSON owns intake/codec/schema derivation; engine exports only its API and confines native mechanics to feature/backend packages. Follow [the module graph](docs/ARCHITECTURE.md), [model vocabulary](core/VOCABULARY.md) and JPMS descriptors.
 - Wire identities/defaults come from [core metadata](core/src/main/java/dev/erst/gridgrind/core/metadata). Closed wire unions have record leaves, verified by [architecture rules](architecture-tests/src/main/java/dev/erst/gridgrind/architecture/ProductArchitectureRules.java). Preserve the distinct authored-identifier and observed-label contracts.
 - Execution needs an explicit host-owned grant. Binding, staged publication and evidence responsibilities are described in [EXECUTION_MODEL.md](docs/EXECUTION_MODEL.md); native access/formula writes use [engine.poi](engine/src/main/java/dev/erst/gridgrind/engine/poi).
