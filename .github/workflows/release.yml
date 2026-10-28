@@ -14,10 +14,6 @@ on:
         required: true
         default: true
         type: boolean
-      verified_run:
-        description: Prior tag-push run that passed all checks and stopped at initial asset publication; requires identical rebuilt images
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -32,10 +28,9 @@ env:
 
 jobs:
   release:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-26.04-arm
     timeout-minutes: 120
     permissions:
-      actions: read
       contents: write
       packages: write
       id-token: write
@@ -117,29 +112,8 @@ jobs:
 
       - name: Test release-control failure boundaries
         run: python3 -B -m unittest discover -s "$RUNNER_TEMP/release-control/scripts/tests"
-      - name: Validate prior verification evidence for an identical-image resume
-        id: reuse
-        if: github.event_name == 'workflow_dispatch' && inputs.verified_run != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERIFIED_RUN: ${{ inputs.verified_run }}
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
-        run: |
-          python3 "$RUNNER_TEMP/release-control/scripts/verified-release-inputs.py" \
-            --repo "$GITHUB_REPOSITORY" --run "$VERIFIED_RUN" --version "$RELEASE_VERSION" \
-            --commit "$RELEASE_COMMIT" --output build/verified-release-inputs.json >> "$GITHUB_OUTPUT"
       - name: Check and build versioned delivery archives
-        env:
-          VERIFIED_AMD64: ${{ steps.reuse.outputs.amd64 }}
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-        run: |
-          if [[ -n "$VERIFIED_AMD64" ]]; then
-            echo "Rebuilding delivery archives; deterministic checks passed in the verified prior run"
-            ./gradlew :cli:test --tests '*DistributionTest' "-Pversion=$RELEASE_VERSION"
-          else
-            ./check.sh "-Pversion=$RELEASE_VERSION"
-          fi
+        run: ./check.sh "-Pversion=${{ steps.release.outputs.version }}"
 
       - name: Build both runtime platforms without publishing
         id: images
@@ -147,23 +121,14 @@ jobs:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
           RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
           SOURCE_DATE_EPOCH: ${{ steps.release.outputs.epoch }}
-          VERIFIED_AMD64: ${{ steps.reuse.outputs.amd64 }}
-          VERIFIED_ARM64: ${{ steps.reuse.outputs.arm64 }}
         run: |
           set -euo pipefail
           for arch in amd64 arm64; do
             docker buildx build --load --platform "linux/$arch" --tag "gridgrind-release:$arch" \
               --build-arg "GRIDGRIND_VERSION=$RELEASE_VERSION" \
               --build-arg "GRIDGRIND_REVISION=$RELEASE_COMMIT" \
-              --build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" \
-              --cache-from "type=gha,scope=release-$RELEASE_VERSION-$arch" \
-              --cache-to "type=gha,mode=min,scope=release-$RELEASE_VERSION-$arch" .
+              --build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" .
             image_id=$(docker image inspect --format '{{.Id}}' "gridgrind-release:$arch")
-            if [[ "$arch" == amd64 ]]; then verified="$VERIFIED_AMD64"; else verified="$VERIFIED_ARM64"; fi
-            if [[ -n "$verified" && "$image_id" != "$verified" ]]; then
-              echo "Rebuilt $arch image differs from the previously verified image; cannot reuse its checks" >&2
-              exit 1
-            fi
             echo "$arch=$image_id" >> "$GITHUB_OUTPUT"
             expected=$(sha256sum cli/build/libs/gridgrind.jar | awk '{print $1}')
             actual=$(docker run --rm --platform "linux/$arch" --entrypoint sha256sum "$image_id" /app/gridgrind.jar | awk '{print $1}')
@@ -171,7 +136,6 @@ jobs:
           done
 
       - name: Verify the exact staged images on both architectures
-        if: steps.reuse.outputs.amd64 == ''
         run: |
           ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}" "-PcontainerImage=${{ steps.images.outputs.amd64 }}"
           ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}" "-PcontainerImage=${{ steps.images.outputs.arm64 }}"
@@ -314,9 +278,6 @@ jobs:
             SOURCE_DATE_EPOCH=${{ steps.release.outputs.epoch }}
           provenance: mode=max
           attests: type=sbom,generator=docker.io/docker/buildkit-syft-scanner@sha256:873a7458c3c8ac8e32c7b796c10e1600b07b963d2aa000a72a2d97aaaa2d6315
-          cache-from: |
-            type=gha,scope=release-${{ steps.release.outputs.version }}-amd64
-            type=gha,scope=release-${{ steps.release.outputs.version }}-arm64
 
       - name: Verify published manifests, source bindings, provenance and SBOM
         if: env.PUBLISH_RELEASE == 'true'
@@ -372,6 +333,5 @@ jobs:
             build/container-sources/collector.log
             build/container-sources/source-plan.json
             build/published-image.json
-            build/verified-release-inputs.json
           if-no-files-found: warn
           retention-days: 7
