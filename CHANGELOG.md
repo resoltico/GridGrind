@@ -5,6 +5,8 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 
 ## [Unreleased]
 
+- Repository formatting leaves the read-only AGENTS.md baseline untouched.
+
 ## [0.77.0] - 2026-10-28
 
 - JSON protocolVersion is now integer 1, replacing V3; regenerate requests from current templates and update consumers. Wire variants use type or status.

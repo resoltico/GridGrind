@@ -267,7 +267,6 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
     private fun Project.projectFileTargets(): List<Any> =
         buildList {
             repositoryProjectFiles().forEach(::add)
-            add(projectFileTree(".codex") { include("**/*.md") })
             add(projectFileTree("docs") { include("**/*.md") })
             add(projectFileTree(".github") { include("**/*.yml") })
             add(projectFileTree("examples") { include("**/*.json") })
@@ -278,7 +277,6 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile(".gitattributes"))
             add(rootFile(".gitignore"))
             add(rootFile(".dockerignore"))
-            add(rootFile("AGENTS.md"))
             add(rootFile("CHANGELOG.md"))
             add(rootFile("Dockerfile"))
             add(rootFile("LICENSE"))
