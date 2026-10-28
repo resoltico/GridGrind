@@ -5,6 +5,9 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 
 ## [Unreleased]
 
+- Repository formatting leaves the read-only AGENTS.md baseline untouched.
+- Release dry runs skip stable-publication guards; publishing an existing stable release remains blocked.
+
 ## [0.77.0] - 2026-10-28
 
 - JSON protocolVersion is now integer 1, replacing V3; regenerate requests from current templates and update consumers. Wire variants use type or status.
@@ -270,7 +273,8 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 - Standardized the packaged discovery contract around `requestFileName` plus `requiredWorkspacePaths`, and realigned the release verifier, operator guidance, and public docs to that explicit example/task portability surface instead of carrying forward stale `suggestedRequestPath` and `requiredPaths` terminology.
 - Made the Docker runtime cache layout arbitrary-user-safe: the image now points `HOME` and `XDG_CACHE_HOME` at writable tmp-backed directories so signature-line and other font-backed authoring flows stay silent under `docker run --user <uid>:<gid>` instead of leaking Fontconfig cache warnings on stderr.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.76.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.77.0...HEAD
+[0.77.0]: https://github.com/resoltico/GridGrind/compare/v0.76.0...v0.77.0
 [0.76.0]: https://github.com/resoltico/GridGrind/compare/v0.75.0...v0.76.0
 [0.75.0]: https://github.com/resoltico/GridGrind/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/resoltico/GridGrind/compare/v0.73.0...v0.74.0
