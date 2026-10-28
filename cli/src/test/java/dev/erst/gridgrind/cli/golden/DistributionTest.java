@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.DigestInputStream;
@@ -19,6 +20,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 import java.util.zip.ZipFile;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -161,6 +163,51 @@ class DistributionTest {
     // Do not close the stream here: TAR callers must advance to the next archive entry.
     new DigestInputStream(input, digest).transferTo(OutputStream.nullOutputStream());
     return HexFormat.of().formatHex(digest.digest());
+  }
+
+  @Test
+  @SuppressWarnings(
+      "PMD.AvoidInstantiatingObjectsInLoops") // Each pipe state needs an independent process and
+  // decoded result.
+  void closedStdoutReportsFailureForAnOtherwiseValidDoctorRequest() throws Exception {
+    byte[] request =
+        """
+        {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[]}
+        """
+            .getBytes(StandardCharsets.UTF_8);
+    List<String> command =
+        List.of(
+            Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+            "-jar",
+            GoldenLauncher.REPOSITORY.resolve("cli/build/libs/gridgrind.jar").toString(),
+            "doctor",
+            "--request",
+            "-",
+            "--execution-root",
+            temporary.toString());
+    for (boolean closeStdout : List.of(false, true)) {
+      Process process = new ProcessBuilder(command).start();
+      try {
+        // stdin holds the child until the intended output state is established.
+        if (closeStdout) process.getInputStream().close();
+        try (OutputStream stdin = process.getOutputStream()) {
+          stdin.write(request);
+        }
+        assertTrue(process.waitFor(30, TimeUnit.SECONDS), "Doctor must terminate");
+        assertEquals(closeStdout ? 1 : 0, process.exitValue());
+        assertEquals(
+            "", new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8));
+        if (!closeStdout) {
+          assertTrue(
+              GoldenSnapshots.JSON
+                  .readTree(process.getInputStream().readAllBytes())
+                  .path("valid")
+                  .asBoolean());
+        }
+      } finally {
+        process.destroyForcibly();
+      }
+    }
   }
 
   @Test

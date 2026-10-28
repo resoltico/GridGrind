@@ -2998,7 +2998,7 @@
     },
     "dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec" : {
       "additionalProperties" : false,
-      "description" : "Optional OOXML package-open settings for encrypted existing workbook sources. password unlocks the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.",
+      "description" : "Optional OOXML package-open settings for encrypted existing workbook sources. passwordRef names a host-resolved secret used to unlock the encrypted OOXML package before GridGrind opens the inner .xlsx workbook.",
       "properties" : {
         "passwordRef" : {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.source.SecretReference"
@@ -3100,7 +3100,7 @@
     },
     "dev.erst.gridgrind.core.model.security.OoxmlSignatureSpec" : {
       "additionalProperties" : false,
-      "description" : "OOXML package-signing settings for workbook persistence. keyPassword defaults to keystorePassword and digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.",
+      "description" : "OOXML package-signing settings for workbook persistence. Omit keyPasswordRef to reuse the secret resolved by keystorePasswordRef. digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.",
       "properties" : {
         "alias" : {
           "type" : "string"
@@ -8686,7 +8686,7 @@
     },
     "dev.erst.gridgrind.core.plan.WorkbookPlan$WorkbookSource$ExistingFile" : {
       "additionalProperties" : false,
-      "description" : "Open an existing .xlsx workbook from disk. source.security.password unlocks encrypted OOXML packages.",
+      "description" : "Open an existing .xlsx workbook from disk. source.security.passwordRef names a host-resolved secret for encrypted OOXML packages.",
       "properties" : {
         "path" : {
           "allOf" : [ {

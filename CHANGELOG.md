@@ -14,6 +14,7 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 - JSON protocolVersion is now integer 1, replacing V3; regenerate requests from current templates and update consumers. Wire variants use type or status.
 - CellValueSpec variants use value for scalar or source payloads and runs for rich text; update request producers. Explicit null is rejected instead of applying omission defaults.
 - CLI automation must use explicit run, doctor, catalog, schema, recipe and template subcommands; flat command flags and implicit stdin selection are removed. See [CLI](docs/CLI.md).
+- CLI detects failed console streams, including broken pipes, and returns nonzero; transport failure does not undo an already published workbook.
 - Java integrations use core specs, patches, reports, typed scalar records and the canonical grant; update model imports and constructors. Engine model mirrors are removed.
 - GridGrind-owned code uses MPL-2.0, retaining third-party terms. Previously distributed MIT copies retain their permissions; review source-distribution duties in [LICENSE](LICENSE).
 - Bundled Woodstox components retain their BSD, MIT and Apache 1.1 terms in delivery notices; unused shaded interactive tooling and build metadata are excluded.

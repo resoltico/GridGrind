@@ -13,7 +13,7 @@ import java.util.Optional;
 @CatalogType(
     id = "OoxmlSignatureSpec",
     summary =
-        "OOXML package-signing settings for workbook persistence. keyPassword defaults to keystorePassword and digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.",
+        "OOXML package-signing settings for workbook persistence. Omit keyPasswordRef to reuse the secret resolved by keystorePasswordRef. digestAlgorithm defaults to SHA256 when omitted. alias may be omitted only when the keystore contains exactly one signable private-key entry.",
     noteRefs = {"requestOwnedPathRule"},
     displayOrder = 22)
 public record OoxmlSignatureSpec(

@@ -224,7 +224,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
 
     Path workbookPath = Path.of("/tmp/security.xlsx");
     WorkbookPasswordRequiredException passwordRequired = new WorkbookPasswordRequiredException();
-    assertTrue(passwordRequired.getMessage().contains("source.security.password"));
+    assertTrue(passwordRequired.getMessage().contains("requires a password"));
     assertFalse(passwordRequired.getMessage().contains(workbookPath.toString()));
 
     InvalidWorkbookPasswordException invalidPassword = new InvalidWorkbookPasswordException();

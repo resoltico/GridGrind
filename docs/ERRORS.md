@@ -239,7 +239,7 @@ Workbook password required
 
 Category: SECURITY. Recovery: CHANGE_REQUEST.
 
-Provide source.security.password for the encrypted workbook and retry.
+Provide source.security.passwordRef backed by an authorized host secret, then retry.
 
 ## INVALID_WORKBOOK_PASSWORD
 
@@ -247,7 +247,7 @@ Invalid workbook password
 
 Category: SECURITY. Recovery: CHANGE_REQUEST.
 
-Supply the correct source.security.password for the encrypted workbook and retry.
+Check the secret resolved by source.security.passwordRef, then retry.
 
 ## ENCRYPTION_SOURCE_NOT_ENCRYPTED
 
