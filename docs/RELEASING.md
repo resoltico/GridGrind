@@ -37,6 +37,15 @@ Draft assets can be resumed. Public prerelease assets must match exactly; they a
 An existing stable release stops publication. Inspect remote state after an ambiguous network
 failure rather than retagging or blindly overwriting published assets.
 
+Publication controls and their tests come from the commit defining the workflow; product code,
+build inputs and source inventories remain on the selected release tag. The optional manual
+`verified_run` input names a completed tag-push run that passed all checks and stopped at initial
+asset publication. Recovery verifies its repository, workflow, attempt, tag commit and successful
+steps, then requires both rebuilt image IDs to equal the previously tested IDs. Only then can
+the earlier deterministic and container checks be reused. Rebuilt archives receive focused
+distribution checks, image JARs must match the standalone JAR, and source acquisition, retention
+and publication checks run fresh. Missing evidence or different images stops recovery.
+
 ## Container source delivery
 
 Runtime inputs are owned by [container-runtime.properties](../release/container-runtime.properties)

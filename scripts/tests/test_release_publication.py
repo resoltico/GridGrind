@@ -36,9 +36,13 @@ class Api:
         self.sha = COMMIT
         self.lookup_error = None
         self.annotated = False
+        self.list_pages = None
+        self.list_error = None
+        self.reads = []
 
     def request(self, method, route, body=None):
         if method == "GET":
+            self.reads.append(route)
             if route.startswith("/git/ref/tags/"):
                 return {"object": {"type": "tag" if self.annotated else "commit", "sha": self.sha}}
             if route.startswith("/git/tags/"):
@@ -46,17 +50,24 @@ class Api:
             if route.startswith("/releases/tags/"):
                 if self.lookup_error:
                     raise publication.ApiError(self.lookup_error)
-                if self.current is None:
+                if self.current is None or self.current["draft"]:
                     raise publication.ApiError(404)
                 return copy.deepcopy(self.current)
-            if route.startswith("/releases/7/assets?"):
+            if route.startswith("/releases?per_page=100&page="):
+                if self.list_error:
+                    raise publication.ApiError(self.list_error)
+                page = int(route.rsplit("=", 1)[1])
+                if self.list_pages is not None:
+                    return copy.deepcopy(self.list_pages.get(page, []))
+                return [] if self.current is None else [copy.deepcopy(self.current)]
+            if self.current is not None and route.startswith("/releases/%s/assets?" % self.current["id"]):
                 return copy.deepcopy(self.assets)
             if route == "/releases/latest":
                 return copy.deepcopy(self.current)
         self.mutations.append((method, route, body))
         if method == "POST" and route == "/releases":
             self.current = {"id": 7, **body}
-        elif method == "PATCH" and route == "/releases/7":
+        elif method == "PATCH" and self.current is not None and route == "/releases/" + str(self.current["id"]):
             self.current.update(body)
         else:
             raise AssertionError("Unexpected fixture request: " + method + " " + route)
@@ -86,6 +97,61 @@ class PublicationTest(unittest.TestCase):
         self.assertEqual(NOTES, api.current["body"])
         self.assertTrue(api.current["draft"])
         self.assertEqual(1, len(self.uploads))
+
+    def test_tag_404_finds_existing_listed_draft_and_does_not_create_again(self):
+        current = release(body="")
+        current["id"] = 426403460
+        api = Api(current, [])
+        self.helper(api).run("prepare")
+        self.assertEqual(426403460, api.current["id"])
+        self.assertTrue(api.current["draft"])
+        self.assertEqual(NOTES, api.current["body"])
+        self.assertIn("/releases?per_page=100&page=1", api.reads)
+        self.assertFalse(any(method == "POST" for method, _, _ in api.mutations))
+        self.assertEqual(1, len(self.uploads))
+
+    def test_duplicate_matching_drafts_across_pages_abort_before_mutation(self):
+        api = Api()
+        first = release()
+        second = {**release(), "id": 8}
+        unrelated = [{**release(), "id": number, "tag_name": "unrelated-" + str(number)} for number in range(10, 109)]
+        api.list_pages = {1: unrelated + [first], 2: [second]}
+        with self.assertRaisesRegex(publication.PublicationError, "Multiple GitHub releases"):
+            self.helper(api).run("prepare")
+        self.assertEqual([], api.mutations)
+        self.assertEqual([], self.uploads)
+
+    def test_duplicate_paginated_release_id_aborts(self):
+        api = Api()
+        page = [{**release(), "id": number, "tag_name": "unrelated-" + str(number)} for number in range(10, 110)]
+        api.list_pages = {1: page, 2: [page[0]]}
+        with self.assertRaisesRegex(publication.PublicationError, "duplicate IDs"):
+            self.helper(api).run("prepare")
+        self.assertEqual([], api.mutations)
+
+    def test_invalid_list_pages_or_release_identity_abort(self):
+        for invalid in ({"message": "not a page"}, [release()] * 101, [{"id": 7}],
+                        [{**release(), "id": True}], [{**release(), "draft": "true"}]):
+            api = Api()
+            api.list_pages = {1: invalid}
+            with self.assertRaises(publication.PublicationError):
+                self.helper(api).run("prepare")
+            self.assertEqual([], api.mutations)
+
+    def test_release_list_errors_do_not_prove_absence(self):
+        for status in (403, 404, 500):
+            api = Api()
+            api.list_error = status
+            with self.assertRaises(publication.ApiError):
+                self.helper(api).run("prepare")
+            self.assertEqual([], api.mutations)
+
+    def test_complete_absent_list_allows_creation_and_then_finds_new_draft(self):
+        api = Api()
+        self.helper(api).run("prepare")
+        self.assertEqual(1, sum(method == "POST" for method, _, _ in api.mutations))
+        self.assertTrue(api.current["draft"])
+        self.assertGreaterEqual(api.reads.count("/releases?per_page=100&page=1"), 2)
 
     def test_wrong_tag_commit_prevents_every_mutation(self):
         api = Api()

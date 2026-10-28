@@ -116,6 +116,15 @@ def upload(repo, tag, assets):
         raise PublicationError("Draft asset upload failed; inspect remote draft before retrying")
 
 
+def validate_release_identity(release):
+    if (not isinstance(release, dict) or type(release.get("id")) is not int
+            or release["id"] <= 0 or not isinstance(release.get("tag_name"), str)
+            or not release["tag_name"] or type(release.get("draft")) is not bool
+            or type(release.get("prerelease")) is not bool):
+        raise PublicationError("GitHub release identity or state is invalid")
+    return release
+
+
 class Publication:
     def __init__(self, api, repo, version, commit, notes, assets, uploader=upload):
         self.api = api
@@ -148,16 +157,36 @@ class Publication:
 
     def release(self):
         try:
-            release = self.api.request("GET", "/releases/tags/" + self.tag)
+            release = validate_release_identity(self.api.request("GET", "/releases/tags/" + self.tag))
         except ApiError as error:
-            if error.status == 404:
-                return None
-            raise
-        if (not isinstance(release, dict) or type(release.get("id")) is not int
-                or release["id"] <= 0 or release.get("tag_name") != self.tag
-                or type(release.get("draft")) is not bool or type(release.get("prerelease")) is not bool):
-            raise PublicationError("GitHub release identity or state is invalid")
+            if error.status != 404:
+                raise
+            # GitHub's tag endpoint does not expose drafts. An authenticated
+            # release-list lookup must rule those out before creating a release.
+            return self.listed_release()
+        if release["tag_name"] != self.tag:
+            raise PublicationError("GitHub release tag does not match the requested identity")
         return release
+
+    def listed_release(self):
+        matches = []
+        seen = set()
+        for page in range(1, 101):
+            rows = self.api.request("GET", "/releases?per_page=100&page=" + str(page))
+            if not isinstance(rows, list) or len(rows) > 100:
+                raise PublicationError("GitHub release list page is invalid")
+            for row in rows:
+                release = validate_release_identity(row)
+                if release["id"] in seen:
+                    raise PublicationError("GitHub release pagination returned duplicate IDs")
+                seen.add(release["id"])
+                if release["tag_name"] == self.tag:
+                    matches.append(release)
+                    if len(matches) > 1:
+                        raise PublicationError("Multiple GitHub releases match the requested tag")
+            if len(rows) < 100:
+                return matches[0] if matches else None
+        raise PublicationError("GitHub release list pagination exceeds the bound")
 
     def remote_assets(self, release):
         result = []
