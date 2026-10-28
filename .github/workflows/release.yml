@@ -14,6 +14,10 @@ on:
         required: true
         default: true
         type: boolean
+      verified_run:
+        description: Prior tag-push run that passed all checks and stopped at initial asset publication; requires identical rebuilt images
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -31,6 +35,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 120
     permissions:
+      actions: read
       contents: write
       packages: write
       id-token: write
@@ -38,6 +43,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref }}
+      - name: Load publication controls from the workflow commit
+        env:
+          CONTROL_COMMIT: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$CONTROL_COMMIT"
+          mkdir -p "$RUNNER_TEMP/release-control"
+          git archive "$CONTROL_COMMIT" scripts | tar -xf - -C "$RUNNER_TEMP/release-control"
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           java-version: '27.0.1'
@@ -103,9 +116,30 @@ jobs:
           esac
 
       - name: Test release-control failure boundaries
-        run: python3 -B -m unittest discover -s scripts/tests
+        run: python3 -B -m unittest discover -s "$RUNNER_TEMP/release-control/scripts/tests"
+      - name: Validate prior verification evidence for an identical-image resume
+        id: reuse
+        if: github.event_name == 'workflow_dispatch' && inputs.verified_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERIFIED_RUN: ${{ inputs.verified_run }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
+        run: |
+          python3 "$RUNNER_TEMP/release-control/scripts/verified-release-inputs.py" \
+            --repo "$GITHUB_REPOSITORY" --run "$VERIFIED_RUN" --version "$RELEASE_VERSION" \
+            --commit "$RELEASE_COMMIT" --output build/verified-release-inputs.json >> "$GITHUB_OUTPUT"
       - name: Check and build versioned delivery archives
-        run: ./check.sh "-Pversion=${{ steps.release.outputs.version }}"
+        env:
+          VERIFIED_AMD64: ${{ steps.reuse.outputs.amd64 }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          if [[ -n "$VERIFIED_AMD64" ]]; then
+            echo "Rebuilding delivery archives; deterministic checks passed in the verified prior run"
+            ./gradlew :cli:test --tests '*DistributionTest' "-Pversion=$RELEASE_VERSION"
+          else
+            ./check.sh "-Pversion=$RELEASE_VERSION"
+          fi
 
       - name: Build both runtime platforms without publishing
         id: images
@@ -113,6 +147,8 @@ jobs:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
           RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
           SOURCE_DATE_EPOCH: ${{ steps.release.outputs.epoch }}
+          VERIFIED_AMD64: ${{ steps.reuse.outputs.amd64 }}
+          VERIFIED_ARM64: ${{ steps.reuse.outputs.arm64 }}
         run: |
           set -euo pipefail
           for arch in amd64 arm64; do
@@ -123,6 +159,11 @@ jobs:
               --cache-from "type=gha,scope=release-$RELEASE_VERSION-$arch" \
               --cache-to "type=gha,mode=min,scope=release-$RELEASE_VERSION-$arch" .
             image_id=$(docker image inspect --format '{{.Id}}' "gridgrind-release:$arch")
+            if [[ "$arch" == amd64 ]]; then verified="$VERIFIED_AMD64"; else verified="$VERIFIED_ARM64"; fi
+            if [[ -n "$verified" && "$image_id" != "$verified" ]]; then
+              echo "Rebuilt $arch image differs from the previously verified image; cannot reuse its checks" >&2
+              exit 1
+            fi
             echo "$arch=$image_id" >> "$GITHUB_OUTPUT"
             expected=$(sha256sum cli/build/libs/gridgrind.jar | awk '{print $1}')
             actual=$(docker run --rm --platform "linux/$arch" --entrypoint sha256sum "$image_id" /app/gridgrind.jar | awk '{print $1}')
@@ -130,6 +171,7 @@ jobs:
           done
 
       - name: Verify the exact staged images on both architectures
+        if: steps.reuse.outputs.amd64 == ''
         run: |
           ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}" "-PcontainerImage=${{ steps.images.outputs.amd64 }}"
           ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}" "-PcontainerImage=${{ steps.images.outputs.arm64 }}"
@@ -197,8 +239,8 @@ jobs:
             "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.sha256" build/SHA256SUMS; do
             args+=(--asset "$asset")
           done
-          python3 scripts/release-publication.py prepare "${args[@]}"
-          python3 scripts/release-publication.py expose "${args[@]}"
+          python3 "$RUNNER_TEMP/release-control/scripts/release-publication.py" prepare "${args[@]}"
+          python3 "$RUNNER_TEMP/release-control/scripts/release-publication.py" expose "${args[@]}"
           curl --fail --silent --show-error --head --location --retry 2 --connect-timeout 15 --max-time 60 \
             "https://github.com/$GITHUB_REPOSITORY/releases/download/v$RELEASE_VERSION/gridgrind-container-sources-$RELEASE_VERSION.tar.gz" >/dev/null
 
@@ -317,7 +359,7 @@ jobs:
             "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.sha256" build/SHA256SUMS; do
             args+=(--asset "$asset")
           done
-          python3 scripts/release-publication.py finalize "${args[@]}"
+          python3 "$RUNNER_TEMP/release-control/scripts/release-publication.py" finalize "${args[@]}"
 
       - name: Retain bounded release diagnostics
         if: failure()
@@ -330,5 +372,6 @@ jobs:
             build/container-sources/collector.log
             build/container-sources/source-plan.json
             build/published-image.json
+            build/verified-release-inputs.json
           if-no-files-found: warn
           retention-days: 7
