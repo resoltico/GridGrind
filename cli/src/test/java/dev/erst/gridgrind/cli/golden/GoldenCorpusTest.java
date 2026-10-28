@@ -26,6 +26,21 @@ import tools.jackson.databind.node.ObjectNode;
 class GoldenCorpusTest {
   @TempDir Path temporary;
 
+  @Test
+  void releaseDiscoveryRequiresVersionedReferences() {
+    String development =
+        "https://github.com/resoltico/GridGrind/blob/main/docs/CLI.md "
+            + "ghcr.io/resoltico/gridgrind:latest";
+    String release =
+        "https://github.com/resoltico/GridGrind/blob/v0.77.0/docs/CLI.md "
+            + "ghcr.io/resoltico/gridgrind:0.77.0";
+    assertEquals(development, GoldenSnapshots.expectedForVersion(development, "0.0.0-dev"));
+    assertEquals(release, GoldenSnapshots.expectedForVersion(development, "0.77.0"));
+    assertThrows(
+        AssertionFailedError.class,
+        () -> assertEquals(GoldenSnapshots.expectedForVersion(development, "0.77.0"), development));
+  }
+
   @TestFactory
   Stream<DynamicTest> examplesAndRecipes() throws IOException {
     List<DynamicTest> tests = new ArrayList<>();
