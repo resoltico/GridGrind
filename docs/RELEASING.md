@@ -40,8 +40,16 @@ failure rather than retagging or blindly overwriting published assets.
 Publication controls and their tests come from the commit defining the workflow; product code,
 build inputs and source inventories remain on the selected release tag. The release job runs
 AMD64 natively and ARM64 under emulation. Staging and publication share
-one BuildKit instance and its job-local cache. Images are verified afresh in each run; an ephemeral
-runner's failed attempt does not provide retained image bytes for a later run to reuse.
+one BuildKit instance and its job-local cache. Before publication, the workflow also retains both
+platforms' local BuildKit cache exports, all seven release assets, finalized notes and the exact
+image IDs, version, commit and source epoch in a verified-delivery artifact. Its name includes
+the run ID and attempt, and it expires after one day. Cache exports contain the final image
+layers, not the downloaded JDK, Gradle cache or unpacked source collection.
+
+These retained inputs support inspection and recovery after a publication failure. They do not
+enable automatic resume or waive verification: each fresh workflow run performs the full checks.
+Recovery must establish the retained assets' hashes and exact tested image identities before
+using them for publication.
 
 ## Container source delivery
 
