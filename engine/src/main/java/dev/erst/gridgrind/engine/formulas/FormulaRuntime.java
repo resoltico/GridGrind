@@ -51,7 +51,7 @@ public interface FormulaRuntime extends AutoCloseable {
   /** Clears all cached evaluator results owned by this workbook runtime. */
   void clearCachedResults();
 
-  /** Formats one cell exactly as Excel would display it, evaluating formulas when needed. */
+  /** Formats one cell through the supplied POI formatter and this runtime's evaluator. */
   String displayValue(DataFormatter formatter, Cell cell);
 
   /** Returns the evaluator configuration used for analysis and diagnostics. */
@@ -311,7 +311,7 @@ public interface FormulaRuntime extends AutoCloseable {
     }
   }
 
-  /** Safe template-backed UDF adapter built on top of a tiny scratch workbook. */
+  /** Template-backed UDF adapter using a per-evaluation scratch workbook. */
   final class TemplateFormulaUdfFunction implements FreeRefFunction {
     private final FormulaUdfFunctionSpec function;
 

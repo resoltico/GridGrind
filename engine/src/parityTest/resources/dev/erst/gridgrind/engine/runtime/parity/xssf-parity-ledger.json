@@ -39,7 +39,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Current summary reads expose core sheet protection state."
+      "notes": "summary reads expose core sheet protection state."
     },
     {
       "sequence": 3,
@@ -77,7 +77,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Merged-region reads are part of the current workbook-core surface."
+      "notes": "Merged-region reads are part of the workbook-core surface."
     },
     {
       "sequence": 5,
@@ -96,7 +96,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Sheet layout reads cover the currently authored core layout state."
+      "notes": "Sheet layout reads cover the authored core layout state."
     },
     {
       "sequence": 6,
@@ -172,7 +172,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Current cell-style reads preserve the modeled core style subset."
+      "notes": "cell-style reads preserve the modeled core style subset."
     },
     {
       "sequence": 10,
@@ -210,7 +210,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Plain comment text, author, and visibility are currently readable."
+      "notes": "Plain comment text, author, and visibility are readable."
     },
     {
       "sequence": 12,
@@ -286,7 +286,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Formula-defined names are already surfaced distinctly from range names."
+      "notes": "Formula-defined names are surfaced distinctly from range names."
     },
     {
       "sequence": 16,
@@ -381,7 +381,7 @@
         "Quick Guide",
         "XSSFTable API"
       ],
-      "notes": "Core table identity, range, and columns are currently readable."
+      "notes": "Core table identity, range, and columns are readable."
     },
     {
       "sequence": 21,
@@ -419,7 +419,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Current authored conditional-format rules are readable."
+      "notes": "authored conditional-format rules are readable."
     },
     {
       "sequence": 23,
@@ -438,7 +438,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Modeled advanced rule families already read back from POI-created workbooks."
+      "notes": "Modeled advanced rule families read back from POI-created workbooks."
     },
     {
       "sequence": 24,
@@ -476,7 +476,7 @@
         "Spreadsheet Overview",
         "Quick Guide"
       ],
-      "notes": "Core workbook and sheet lifecycle mutation is already supported."
+      "notes": "Core workbook and sheet lifecycle mutation is supported."
     },
     {
       "sequence": 26,
@@ -495,7 +495,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Current sheet-protection flag mutation survives save and readback."
+      "notes": "sheet-protection flag mutation survives save and readback."
     },
     {
       "sequence": 27,
@@ -553,7 +553,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Sheet copy now preserves Phase 3 workbook-core structures, including protection hashes and scoped names."
+      "notes": "Sheet copy preserves workbook-core structures, including protection hashes and scoped names."
     },
     {
       "sequence": 30,
@@ -572,7 +572,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Core print-layout mutation is already available."
+      "notes": "Core print-layout mutation is available."
     },
     {
       "sequence": 31,
@@ -629,7 +629,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Modeled core style mutation is already available."
+      "notes": "Modeled core style mutation is available."
     },
     {
       "sequence": 34,
@@ -762,7 +762,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Supported validation mutation is present for the current core contract."
+      "notes": "Supported validation mutation is present for the core contract."
     },
     {
       "sequence": 41,
@@ -914,7 +914,7 @@
         "Formula Evaluation",
         "Quick Guide"
       ],
-      "notes": "External workbook bindings now let GridGrind evaluate cross-workbook formulas and persist refreshed cached results."
+      "notes": "External workbook bindings let GridGrind evaluate cross-workbook formulas and persist refreshed cached results."
     },
     {
       "sequence": 49,
@@ -932,7 +932,7 @@
       "primarySources": [
         "Formula Evaluation"
       ],
-      "notes": "GridGrind now matches POI's strict-versus-cached handling for unresolved external workbook references."
+      "notes": "GridGrind matches POI's strict-versus-cached handling for unresolved external workbook references."
     },
     {
       "sequence": 50,
@@ -951,7 +951,7 @@
         "Formula Evaluation",
         "User Defined Functions"
       ],
-      "notes": "Template-backed UDF toolpacks now let GridGrind evaluate registered user-defined functions and persist refreshed cached results."
+      "notes": "Template-backed UDF toolpacks let GridGrind evaluate registered user-defined functions and persist refreshed cached results."
     },
     {
       "sequence": 51,
@@ -969,7 +969,7 @@
       "primarySources": [
         "Formula Evaluation"
       ],
-      "notes": "GridGrind now exposes targeted formula evaluation and explicit persisted cache clearing for formula lifecycle control."
+      "notes": "GridGrind exposes targeted formula evaluation and explicit persisted cache clearing for formula lifecycle control."
     },
     {
       "sequence": 52,
@@ -988,7 +988,7 @@
         "Quick Guide",
         "XSSFDrawing API"
       ],
-      "notes": "GridGrind now reads named picture-backed drawing objects, their anchors, extracted payload digests, and adjacent embedded-preview facts directly from loaded workbooks."
+      "notes": "GridGrind reads named picture-backed drawing objects, their anchors, extracted payload digests, and adjacent embedded-preview facts directly from loaded workbooks."
     },
     {
       "sequence": 53,
@@ -1007,7 +1007,7 @@
         "Quick Guide",
         "XSSFDrawing API"
       ],
-      "notes": "GridGrind now authors pictures, simple shapes, connectors, and embedded objects, supports in-place two-cell anchor mutation, and persists that surface in direct POI agreement."
+      "notes": "GridGrind authors pictures, simple shapes, connectors, and embedded objects, supports in-place two-cell anchor mutation, and persists that surface in direct POI agreement."
     },
     {
       "sequence": 54,
@@ -1026,7 +1026,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Comment set and clear operations now coexist with drawing parts without leaving empty drawing relationships behind or damaging existing pictures."
+      "notes": "Comment set and clear operations coexist with drawing parts without leaving empty drawing relationships behind or damaging existing pictures."
     },
     {
       "sequence": 55,
@@ -1045,7 +1045,7 @@
         "Quick Guide",
         "XSSFDrawing API"
       ],
-      "notes": "Unrelated workbook edits now preserve picture-backed drawing parts and merged-region state together."
+      "notes": "Unrelated workbook edits preserve picture-backed drawing parts and merged-region state together."
     },
     {
       "sequence": 56,
@@ -1064,7 +1064,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now reads extracted embedded-object payloads and preserves existing embedded OLE parts across unrelated workbook edits."
+      "notes": "GridGrind reads extracted embedded-object payloads and preserves existing embedded OLE parts across unrelated workbook edits."
     },
     {
       "sequence": 57,
@@ -1083,7 +1083,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now reads supported simple charts and chart drawing inventory with direct POI agreement, including truthful blank-title and cached-title rereads."
+      "notes": "GridGrind reads supported simple charts and chart drawing inventory with direct POI agreement, including truthful blank-title and cached-title rereads."
     },
     {
       "sequence": 58,
@@ -1102,7 +1102,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now authors named-range-backed supported simple charts and rereads them losslessly."
+      "notes": "GridGrind authors named-range-backed supported simple charts and rereads the modeled facts with direct POI agreement."
     },
     {
       "sequence": 59,
@@ -1121,7 +1121,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now mutates supported simple charts on existing workbooks after workbook-core edits without breaking chart relations."
+      "notes": "GridGrind mutates supported simple charts on existing workbooks after workbook-core edits without breaking chart relations."
     },
     {
       "sequence": 60,
@@ -1142,7 +1142,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "All Phase 6 chart corpus workbooks now preserve chart package relations, anchors, and unsupported detail across unrelated edits."
+      "notes": "The chart corpus workbooks preserve chart package relations, anchors, and unsupported detail across unrelated edits."
     },
     {
       "sequence": 61,
@@ -1161,7 +1161,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "Unsupported multi-plot chart detail is surfaced truthfully, preserved non-lossily, and rejects authoritative mutation."
+      "notes": "The BAR/LINE combo fixture is read with direct POI agreement, preserved across unrelated edits, and authoritatively replaced with a single BAR plot."
     },
     {
       "sequence": 62,
@@ -1180,7 +1180,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now reads supported POI-authored pivot tables and clean pivot health with direct POI agreement, including duplicate-name, cache-wiring, and malformed-source edge reporting."
+      "notes": "GridGrind reads supported POI-authored pivot tables and clean pivot health with direct POI agreement, including duplicate-name, cache-wiring, and malformed-source edge reporting."
     },
     {
       "sequence": 63,
@@ -1199,7 +1199,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now authors range-, named-range-, and table-backed supported pivot tables and rereads them losslessly."
+      "notes": "GridGrind authors range-, named-range-, and table-backed supported pivot tables and rereads the modeled facts with direct POI agreement."
     },
     {
       "sequence": 64,
@@ -1218,7 +1218,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now replaces and deletes supported pivot tables while keeping direct POI agreement on the saved workbook and rebuilding workbook cache registration during cleanup."
+      "notes": "GridGrind replaces and deletes supported pivot tables while keeping direct POI agreement on the saved workbook and rebuilding workbook cache registration during cleanup."
     },
     {
       "sequence": 65,
@@ -1238,7 +1238,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "All Phase 7 pivot corpus workbooks now preserve pivot package parts, sources, and locations across unrelated edits."
+      "notes": "The pivot corpus workbooks preserve pivot package parts, sources, and locations across unrelated edits."
     },
     {
       "sequence": 66,
@@ -1257,7 +1257,7 @@
         "Spreadsheet Overview",
         "Quick Guide"
       ],
-      "notes": "GridGrind now exposes EVENT_READ for workbook and sheet summaries and parity-checks it against the large-sheet corpus, including sparse workbook-view, dimension, row-ref, and column-metadata cases."
+      "notes": "GridGrind exposes EVENT_READ for workbook and sheet summaries and parity-checks it against the large-sheet corpus, including sparse workbook-view, dimension, row-ref, and column-metadata cases."
     },
     {
       "sequence": 67,
@@ -1276,7 +1276,7 @@
         "Spreadsheet Overview",
         "Quick Guide"
       ],
-      "notes": "GridGrind now exposes STREAMING_WRITE for append-oriented NEW workbook authoring and verifies the materialized result against the low-memory parity oracle."
+      "notes": "GridGrind exposes STREAMING_WRITE for append-oriented NEW workbook authoring and verifies the materialized result against the direct POI readback oracle."
     },
     {
       "sequence": 68,
@@ -1294,7 +1294,7 @@
       "primarySources": [
         "Encryption Support"
       ],
-      "notes": "GridGrind now opens encrypted OOXML workbooks with source passwords, preserves package encryption across save-as from encrypted sources, and authors new encrypted `.xlsx` outputs through the public security contract while keeping pass-through eligibility and error translation regression-covered."
+      "notes": "The security probes open password-protected OOXML, author encrypted outputs, and verify explicit source-encryption dispositions and password-error translation within the strong AGILE contract."
     },
     {
       "sequence": 69,
@@ -1312,7 +1312,7 @@
       "primarySources": [
         "Encryption Support"
       ],
-      "notes": "Encrypted workbook password failures now map to stable security problem codes for missing and invalid passwords."
+      "notes": "Encrypted workbook password failures map to stable security problem codes for missing and invalid passwords."
     },
     {
       "sequence": 70,
@@ -1350,7 +1350,7 @@
         "Encryption Support",
         "Quick Guide"
       ],
-      "notes": "Invalid OOXML package signatures now surface as truthful factual readback instead of aborting package inspection."
+      "notes": "Invalid OOXML package signatures surface as truthful factual readback instead of aborting package inspection."
     }
   ]
 }

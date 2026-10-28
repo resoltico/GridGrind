@@ -33,7 +33,7 @@ import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
-/** End-to-end parity-ledger verification for the Apache POI XSSF Phase 1 harness. */
+/** End-to-end parity-ledger verification for the scoped Apache POI XSSF harness. */
 final class XlsxParityTest {
   @Test
   void ledgerAndCorpusResourcesLoadAndCoverTheKnownScenarioRegistry() {

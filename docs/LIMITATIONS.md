@@ -13,15 +13,15 @@ These entries are owned by core.limits.Limit. Numeric enforcement, help and cata
 | Message template | `addresses must not exceed 250000 but was {n}` / `rowCount * columnCount must not exceed 250000 but was {n}` |
 | Applies to | GET_CELLS, GET_WINDOW, GET_SHEET_SCHEMA |
 
-Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily
+Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read very
 large windows and exact address lists; GridGrind must then materialize and serialize factual cell
 payloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does not change the
 worst case: a dense 50,000-cell window still returns 50,000 factual cells, `GET_SHEET_SCHEMA`
 still examines the entire rectangular sample even when many cells are blank, and an oversized
 `GET_CELLS` address list still asks GridGrind to return one factual cell report per address. The
-250,000-cell cap keeps the request gate deterministic before workbook IO and prevents
-`OutOfMemoryError`, empty response files, and unstructured exit-code-1 failures on worst-case
-cell-returning reads.
+250,000-cell cap bounds the number of returned cells before workbook IO. It does not bound total
+serialized bytes, native workbook memory or execution time; large payloads can still exhaust
+available resources within the cell-count limit.
 
 This limit is not from Apache POI or Excel. A serialized-byte cap depends on workbook contents and is only knowable after reading the
 workbook. The deterministic cell-count cap bounds materialization before workbook IO.
@@ -272,13 +272,13 @@ Enforcement: [FormulaLimits](../engine/src/main/java/dev/erst/gridgrind/engine/f
 | Message template | Product-owned `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected structure and sheet |
 | Applies to | INSERT_ROWS, DELETE_ROWS, SHIFT_ROWS, INSERT_COLUMNS, DELETE_COLUMNS, SHIFT_COLUMNS |
 
-Apache POI 6.0.0 does not reliably normalize table refs or sheet autofilter refs when rows or
-columns are structurally inserted, deleted, or shifted, and it still leaves data-validation
-coverage unsafe for delete and shift flows. GridGrind rebuilds data validations across row and
-column inserts, but it still rejects the remaining unsafe structural edits instead of persisting
-stale workbook XML or silently moving only part of the owned structure.
+Direct POI 6.0.0 shift probes leave table, sheet-autofilter and data-validation references at
+their original ranges. GridGrind rebuilds data validations for row and column insertion, but
+rejects inserts that would move a table or sheet autofilter and rejects affected deletes or
+shifts under the supported structural-edit contract. This does not assert that every native
+edit or every OOXML structure is unsafe.
 
-The rejection is precise and structure-owned. Example messages include:
+The rejection names the affected structure and sheet. Example messages include:
 - `INSERT_ROWS cannot move table 'BudgetTable' on sheet 'Budget'; row structural edits that would move tables are not supported`
 - `DELETE_COLUMNS cannot move sheet autofilter A1:C10 on sheet 'Budget'; column structural edits that would move or truncate sheet autofilters are not supported`
 
@@ -311,12 +311,10 @@ Example message:
 | Message template | Product-owned `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected named range and sheet |
 | Applies to | DELETE_ROWS, SHIFT_ROWS, DELETE_COLUMNS, SHIFT_COLUMNS |
 
-Apache POI can safely translate a range-backed named range when the named range is fully contained
-inside the moved row or column band, or when it is completely untouched by the edit. Direct probes
-against `deleteRows(...)`, `shiftRows(...)`, `deleteColumns(...)`, and `shiftColumns(...)` showed
-that destructive overlap produces broken formulas such as `I!#REF!:I!#REF!` and
-`I!#REF!:I!$B$1`. GridGrind therefore rejects only the destructive cases instead of persisting
-invalid named-range formulas that can later crash workbook rewrites.
+GridGrind rejects row or column deletes that overlap a range-backed named range. It also
+rejects shifts that would partially move or overwrite one. This guard admits untouched names
+and names fully contained in the moved band, subject to the other structural-edit rules.
+These are product admission boundaries; they do not certify every native POI reference rewrite.
 
 Example messages:
 - `DELETE_ROWS cannot move named range 'BudgetWindow' on sheet 'Budget'; row structural edits that would truncate range-backed named ranges are not supported`
@@ -334,10 +332,7 @@ Enforcement: [StructuralEdits](../engine/src/main/java/dev/erst/gridgrind/engine
 | Message template | `execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
 | Applies to | execution.mode.type, steps[] |
 
-`EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not
-materialize the full workbook object graph, so GridGrind restricts it to workbook and sheet
-summary reads only. Unsupported factual reads and analysis reads are rejected at request-validation
-time instead of silently falling back to the normal in-memory executor.
+`EVENT_READ` restricts operations to workbook and sheet summary inspections. Its direct event-reader path applies to eligible EXISTING-source requests with no publication and the required calculation settings. Existing-source preflight opens the workbook through full XSSF before reader selection, and other admitted EVENT_READ requests use XSSF materialization. The mode therefore does not provide an end-to-end low-memory guarantee. Unsupported queries are rejected by the mode contract.
 
 Enforcement: [GridGrindContractText](../core/src/main/java/dev/erst/gridgrind/core/catalog/GridGrindContractText.java), [BackendCapabilities](../core/src/main/java/dev/erst/gridgrind/core/semantics/BackendCapabilities.java).
 
@@ -351,10 +346,7 @@ Enforcement: [GridGrindContractText](../core/src/main/java/dev/erst/gridgrind/co
 | Message template | `execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
 | Applies to | execution.mode.type, source, steps[] |
 
-`STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only
-new workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced
-operation contract up front so callers get deterministic structured errors instead of half-written
-streaming workbooks or hidden mode fallback.
+`STREAMING_WRITE` uses POI SXSSF for append-oriented NEW-workbook authoring under its reduced operation contract. Assertions and inspections can materialize the workbook through full XSSF, and saved output is reopened through XSSF for staged-artifact verification before publication. Streaming authoring therefore does not guarantee bounded end-to-end heap use. Validation rejects unsupported operations and calculation settings before execution.
 
 Enforcement: [GridGrindContractText](../core/src/main/java/dev/erst/gridgrind/core/catalog/GridGrindContractText.java), [BackendCapabilities](../core/src/main/java/dev/erst/gridgrind/core/semantics/BackendCapabilities.java).
 
@@ -450,14 +442,16 @@ Enforcement: [ExecutionRequestPaths](../engine/src/main/java/dev/erst/gridgrind/
 | --- | --- |
 | Category | GridGrind |
 | Limit | 104857600 decompressed bytes per entry; minimum inflate ratio 0.01 |
-| Problems | INVALID_REQUEST |
+| Problems | IO_ERROR, WORKBOOK_NOT_OPENABLE |
 | Message template |  |
 | Applies to | All xlsx workbook open operations |
 
-GridGrind explicitly configures Apache POI's `ZipSecureFile` limits to bound decompression memory
-and time during xlsx package open. An entry expanding beyond 100 MiB or achieving a compression
-ratio beyond 1:100 triggers a `ZipBombException`, which GridGrind translates to an
-`INVALID_REQUEST` failure rather than an `OutOfMemoryError` or indefinite CPU consumption.
+GridGrind configures POI's ZipSecureFile with a 100 MiB expanded-entry limit and a minimum
+compressed-to-expanded byte ratio of 0.01. POI applies its ratio check after its small-entry
+grace threshold. POI 6 reports threshold violations as IOException; workbook-open wrappers
+can add context. The failure is IO_ERROR on the observed workbook/worksheet paths or
+WORKBOOK_NOT_OPENABLE when content-type parsing wraps the failure. These are per-entry decompression controls, not an aggregate package-size,
+heap-memory or execution-time quota.
 
 Enforcement: [XssfWorkbooks](../engine/src/main/java/dev/erst/gridgrind/engine/backend/xssf/XssfWorkbooks.java).
 
@@ -680,10 +674,10 @@ Enforcement: [GridGrindOoxmlWriteEncryptionContractText](../core/src/main/java/d
 | Message template | `materialized worksheet work must not exceed 250000 items per plan; this step raises the total to {n}` |
 | Applies to | APPLY_STYLE, CLEAR_RANGE, SET_ARRAY_FORMULA, SET_RANGE, SET_ROW_HEIGHT, SET_ROW_VISIBILITY, GROUP_ROWS, UNGROUP_ROWS |
 
-GridGrind counts every action that must enumerate cells or create physical rows before the workbook
-is opened. The cumulative limit prevents a syntactically valid plan from exhausting the JVM by
-materializing an Excel-sized range or row band, including when equivalent work is spread across
-several steps.
+GridGrind sums statically known cell and row materialization for the listed actions before
+opening the workbook, including work spread across multiple steps. The limit bounds this
+request-driven work; it is not a total-workbook, heap-memory or execution-time quota. Existing
+workbook contents, cell payload sizes and other operations also consume resources.
 
 Enforcement: [WorkbookStaticMaterializationValidation](../core/src/main/java/dev/erst/gridgrind/core/validation/WorkbookStaticMaterializationValidation.java).
 

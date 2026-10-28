@@ -28,7 +28,9 @@ resolved component families and preserves their attribution notices.
 | GridGrind | MPL-2.0 | Yes, MPL 2.0 Section 2.1(b), subject to Section 2.3 |
 | Apache POI, XMLBeans, Log4j, Santuario, and Commons | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
 | Apache POI Custom XML recipe workbook | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
-| Jackson, SparseBitSet, and Woodstox Core | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
+| Jackson, SparseBitSet, and Woodstox Core project code | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
+| MSV/xsdlib and RELAX NG code embedded by Woodstox | Component-specific BSD-3-Clause, Apache-1.1 and Apache-2.0 | Section 3 applies to Apache-2.0 portions; no express patent clause in the BSD/Apache-1.1 portions |
+| ISO-RELAX code embedded by Woodstox | MIT-style | No express patent clause |
 | FastDoubleParser and Schubfach code shaded into Jackson Core | MIT, BSL-1.0, and BSD-2-Clause | No |
 | Bouncy Castle and SLF4J API | MIT-style / MIT | No |
 | Stax2 API | BSD-2-Clause | No |

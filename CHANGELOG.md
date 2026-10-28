@@ -16,6 +16,7 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 - CLI automation must use explicit run, doctor, catalog, schema, recipe and template subcommands; flat command flags and implicit stdin selection are removed. See [CLI](docs/CLI.md).
 - Java integrations use core specs, patches, reports, typed scalar records and the canonical grant; update model imports and constructors. Engine model mirrors are removed.
 - GridGrind-owned code uses MPL-2.0, retaining third-party terms. Previously distributed MIT copies retain their permissions; review source-distribution duties in [LICENSE](LICENSE).
+- Bundled Woodstox components retain their BSD, MIT and Apache 1.1 terms in delivery notices; unused shaded interactive tooling and build metadata are excluded.
 - Request, grant and response JSON Schemas are available through schema subcommands; structured intake diagnostics preserve independent valid fragments and exact JSON locations.
 - Pure authoring, recipes and discovery live in core; JSON codecs and schema handling live in json, allowing model-only Java consumers to omit the workbook engine.
 - Build logic uses Kotlin and the declared Java target. Runtime and POI parity tests live in engine; architecture-tests verifies product boundaries and record wire leaves.

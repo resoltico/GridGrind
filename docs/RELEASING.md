@@ -31,3 +31,9 @@ each require explicit release authorization.
 Dependencies are pinned by the version catalog and Gradle dependency locks. Update lock state
 through Gradle's --write-locks option when intentionally changing dependencies; review the result
 alongside the dependency change.
+
+Review [NOTICE](../NOTICE) for the delivered runtime, shaded components and container terms.
+The packaging checks verify retained legal bytes and selected content boundaries. They do not
+establish every source-delivery obligation for a particular redistribution. Before container
+publication, establish the corresponding-source arrangements for its actual JRE and OS packages
+and distribution method; retained upstream offers and source links do not create a GridGrind offer.

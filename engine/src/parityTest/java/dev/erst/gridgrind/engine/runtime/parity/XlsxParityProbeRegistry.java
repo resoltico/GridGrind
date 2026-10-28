@@ -667,38 +667,40 @@ final class XlsxParityProbeRegistry {
 
   static boolean matchesColorDescriptor(
       dev.erst.gridgrind.core.model.style.CellColorReport color, String descriptor) {
-    if (descriptor == null || descriptor.isBlank()) {
+    if (descriptor == null || descriptor.isBlank() || "none".equals(descriptor)) {
       return color == null;
     }
     if (color == null) {
       return false;
     }
-    List<String> parts = Arrays.asList(descriptor.split("\\|"));
-    for (String part : parts) {
-      if (part.startsWith("rgb=")) {
-        String expected = "#" + part.substring("rgb=".length());
-        if (!(color instanceof CellColorReport.Rgb rgb) || !expected.equals(rgb.rgb().value())) {
-          return false;
-        }
-      } else if (part.startsWith("theme=")) {
-        if (!(color instanceof CellColorReport.Theme theme)
-            || !Integer.valueOf(part.substring("theme=".length())).equals(theme.theme())) {
-          return false;
-        }
-      } else if (part.startsWith("indexed=")) {
-        if (!(color instanceof CellColorReport.Indexed indexed)
-            || !Integer.valueOf(part.substring("indexed=".length())).equals(indexed.indexed())) {
-          return false;
-        }
-      } else if (part.startsWith("tint=")
-          && (color.tint().isEmpty()
+    try {
+      List<String> parts = Arrays.asList(descriptor.split("\\|", -1));
+      for (String part : parts) {
+        if (part.startsWith("rgb=")) {
+          String expected = "#" + part.substring("rgb=".length());
+          if (!(color instanceof CellColorReport.Rgb rgb)
+              || !expected.equalsIgnoreCase(rgb.rgb().value())) return false;
+        } else if (part.startsWith("theme=")) {
+          if (!(color instanceof CellColorReport.Theme theme)
+              || !Integer.valueOf(part.substring("theme=".length())).equals(theme.theme()))
+            return false;
+        } else if (part.startsWith("indexed=")) {
+          if (!(color instanceof CellColorReport.Indexed indexed)
+              || !Integer.valueOf(part.substring("indexed=".length())).equals(indexed.indexed()))
+            return false;
+        } else if (part.startsWith("tint=")) {
+          if (color.tint().isEmpty()
               || !approximatelyEquals(
-                  Double.parseDouble(part.substring("tint=".length())),
-                  color.tint().orElseThrow()))) {
-        return false;
+                  Double.parseDouble(part.substring("tint=".length())), color.tint().orElseThrow()))
+            return false;
+        } else {
+          return false;
+        }
       }
+      return true;
+    } catch (NumberFormatException exception) {
+      return false;
     }
-    return true;
   }
 
   static boolean approximatelyEquals(double left, double right) {

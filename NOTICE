@@ -1,15 +1,23 @@
 GridGrind
 Copyright (c) 2026 Ervins Strauhmanis
 
-GridGrind-owned files are licensed under the Mozilla Public License, v. 2.0
-(SPDX: MPL-2.0). See LICENSE for the complete terms and scope.
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-Corresponding Source Code Form is available at
-https://github.com/resoltico/GridGrind; official release sources are at the
-matching v<version> tag and the source archives linked from
-https://github.com/resoltico/GridGrind/releases. Redistributors of modified
-executables must provide their corresponding modified sources and tell
-recipients how to obtain them under MPL 2.0 Section 3.2.
+This notice applies to GridGrind-owned files throughout this repository,
+including source code, build scripts, tests, examples, and documentation.
+Third-party files and components identified in NOTICE or carrying their
+own license notices retain their respective licenses.
+
+Source Code Form is available at https://github.com/resoltico/GridGrind.
+For an official release, use the matching v<version> tag and its source
+archive at https://github.com/resoltico/GridGrind/releases. Redistributors
+of modified executables must also make the corresponding modified Source
+Code Form available and inform recipients how to obtain it under MPL 2.0
+Section 3.2.
+
+The complete Mozilla Public License, version 2.0 is in LICENSE.
 
 This notice describes third-party software and artifacts distributed with
 GridGrind and identifies whether they belong to the executable JAR, source
@@ -206,7 +214,473 @@ Copyright 2004- Tatu Saloranta, tatu.saloranta@iki.fi
 https://github.com/FasterXML/woodstox
 
 Each component in this section is licensed under the Apache License, Version
-2.0.
+2.0. Woodstox also embeds separately licensed code; its additional terms follow.
+
+Woodstox 7.3.0 Shaded Components
+
+Woodstox embeds MSV core 2022.7, MSV XML Schema datatype library (xsdlib)
+2022.7, ISO-RELAX 20090621, and RELAX NG datatype API 20020414.
+Their corresponding upstream source files carry the following notices and license terms.
+The component and source labels identify the scope of each retained text.
+
+================================================================================
+net.java.dev.msv:msv-core:2022.7, net.java.dev.msv:xsdlib:2022.7
+Source: com/sun/msv/reader/ExpressionOwner.java
+================================================================================
+
+Copyright (c) 2001-2013 Oracle and/or its affiliates. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+  - Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  - Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+  - Neither the name of Oracle nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+================================================================================
+net.java.dev.msv:msv-core:2022.7
+Source: com/sun/msv/reader/xmlschema/DOMLSInputImpl.java
+================================================================================
+
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+
+================================================================================
+net.java.dev.msv:msv-core:2022.7
+Source: com/sun/msv/util/Uri.java
+================================================================================
+
+Copyright (c) 2001, 2002 Thai Open Source Software Center Ltd
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+    Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+    Neither the name of the Thai Open Source Software Center Ltd nor
+    the names of its contributors may be used to endorse or promote
+    products derived from this software without specific prior written
+    permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+================================================================================
+net.java.dev.msv:msv-core:2022.7
+Source: com/sun/msv/scanner/dtd/DTDHandlerBase.java
+================================================================================
+
+Copyright (c) 1998-2013 Oracle and/or its affiliates. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+  - Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  - Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+  - Neither the name of Oracle nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+================================================================================
+net.java.dev.msv:xsdlib:2022.7
+Source: com/sun/msv/datatype/regexp/Token.java
+================================================================================
+
+The Apache Software License, Version 1.1
+
+
+Copyright (c) 1999-2002 The Apache Software Foundation.  All rights
+reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in
+   the documentation and/or other materials provided with the
+   distribution.
+
+3. The end-user documentation included with the redistribution,
+   if any, must include the following acknowledgment:
+      "This product includes software developed by the
+       Apache Software Foundation (http://www.apache.org/)."
+   Alternately, this acknowledgment may appear in the software itself,
+   if and wherever such third-party acknowledgments normally appear.
+
+4. The names "Xerces" and "Apache Software Foundation" must
+   not be used to endorse or promote products derived from this
+   software without prior written permission. For written
+   permission, please contact apache@apache.org.
+
+5. Products derived from this software may not be called "Apache",
+   nor may "Apache" appear in their name, without prior written
+   permission of the Apache Software Foundation.
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
+ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+====================================================================
+
+This software consists of voluntary contributions made by many
+individuals on behalf of the Apache Software Foundation and was
+originally based on software copyright (c) 1999, International
+Business Machines, Inc., http://www.apache.org.  For more
+information on the Apache Software Foundation, please see
+<http://www.apache.org/>.
+
+================================================================================
+net.java.dev.msv:xsdlib:2022.7
+Source: com/sun/msv/datatype/regexp/ParserForXMLSchema.java
+================================================================================
+
+The Apache Software License, Version 1.1
+
+
+Copyright (c) 1999-2003 The Apache Software Foundation.  All rights
+reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in
+   the documentation and/or other materials provided with the
+   distribution.
+
+3. The end-user documentation included with the redistribution,
+   if any, must include the following acknowledgment:
+      "This product includes software developed by the
+       Apache Software Foundation (http://www.apache.org/)."
+   Alternately, this acknowledgment may appear in the software itself,
+   if and wherever such third-party acknowledgments normally appear.
+
+4. The names "Xerces" and "Apache Software Foundation" must
+   not be used to endorse or promote products derived from this
+   software without prior written permission. For written
+   permission, please contact apache@apache.org.
+
+5. Products derived from this software may not be called "Apache",
+   nor may "Apache" appear in their name, without prior written
+   permission of the Apache Software Foundation.
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
+ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+====================================================================
+
+This software consists of voluntary contributions made by many
+individuals on behalf of the Apache Software Foundation and was
+originally based on software copyright (c) 1999, International
+Business Machines, Inc., http://www.apache.org.  For more
+information on the Apache Software Foundation, please see
+<http://www.apache.org/>.
+
+================================================================================
+net.java.dev.msv:xsdlib:2022.7
+Source: com/sun/msv/datatype/regexp/RangeToken.java
+================================================================================
+
+The Apache Software License, Version 1.1
+
+
+Copyright (c) 1999-2013 The Apache Software Foundation.  All rights
+reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in
+   the documentation and/or other materials provided with the
+   distribution.
+
+3. The end-user documentation included with the redistribution,
+   if any, must include the following acknowledgment:
+      "This product includes software developed by the
+       Apache Software Foundation (http://www.apache.org/)."
+   Alternately, this acknowledgment may appear in the software itself,
+   if and wherever such third-party acknowledgments normally appear.
+
+4. The names "Xerces" and "Apache Software Foundation" must
+   not be used to endorse or promote products derived from this
+   software without prior written permission. For written
+   permission, please contact apache@apache.org.
+
+5. Products derived from this software may not be called "Apache",
+   nor may "Apache" appear in their name, without prior written
+   permission of the Apache Software Foundation.
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
+ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+====================================================================
+
+This software consists of voluntary contributions made by many
+individuals on behalf of the Apache Software Foundation and was
+originally based on software copyright (c) 1999, International
+Business Machines, Inc., http://www.apache.org.  For more
+information on the Apache Software Foundation, please see
+<http://www.apache.org/>.
+
+================================================================================
+net.java.dev.msv:xsdlib:2022.7
+Source: com/sun/msv/datatype/regexp/InternalImpl.java
+================================================================================
+
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+Copyright (c) 2001-2013 Oracle and/or its affiliates. All rights reserved.
+
+Redistribution and  use in  source and binary  forms, with  or without
+modification, are permitted provided that the following conditions are
+met:
+
+- Redistributions  of  source code  must  retain  the above  copyright
+  notice, this list of conditions and the following disclaimer.
+
+- Redistribution  in binary  form must  reproduct the  above copyright
+  notice, this list of conditions  and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+
+Neither  the  name   of  Sun  Microsystems,  Inc.  or   the  names  of
+contributors may be  used to endorse or promote  products derived from
+this software without specific prior written permission.
+
+This software is provided "AS IS," without a warranty of any kind. ALL
+EXPRESS  OR   IMPLIED  CONDITIONS,  REPRESENTATIONS   AND  WARRANTIES,
+INCLUDING  ANY  IMPLIED WARRANTY  OF  MERCHANTABILITY,  FITNESS FOR  A
+PARTICULAR PURPOSE  OR NON-INFRINGEMENT, ARE HEREBY  EXCLUDED. SUN AND
+ITS  LICENSORS SHALL  NOT BE  LIABLE  FOR ANY  DAMAGES OR  LIABILITIES
+SUFFERED BY LICENSEE  AS A RESULT OF OR  RELATING TO USE, MODIFICATION
+OR DISTRIBUTION OF  THE SOFTWARE OR ITS DERIVATIVES.  IN NO EVENT WILL
+SUN OR ITS  LICENSORS BE LIABLE FOR ANY LOST  REVENUE, PROFIT OR DATA,
+OR  FOR  DIRECT,   INDIRECT,  SPECIAL,  CONSEQUENTIAL,  INCIDENTAL  OR
+PUNITIVE  DAMAGES, HOWEVER  CAUSED  AND REGARDLESS  OF  THE THEORY  OF
+LIABILITY, ARISING  OUT OF  THE USE OF  OR INABILITY TO  USE SOFTWARE,
+EVEN IF SUN HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+================================================================================
+com.sun.xml.bind.jaxb:isorelax:20090621
+Source: org/iso_relax/dispatcher/SchemaProvider.java
+================================================================================
+
+Copyright 2001 Kohsuke KAWAGUCHI
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+================================================================================
+com.sun.xml.bind.jaxb:isorelax:20090621
+Source: org/iso_relax/dispatcher/IslandVerifier.java
+================================================================================
+
+Copyright 2001 MURATA Makoto, KAWAGUCHI Kohsuke
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+================================================================================
+com.sun.xml.bind.jaxb:isorelax:20090621
+Source: org/iso_relax/dispatcher/IslandSchemaReader.java
+================================================================================
+
+Copyright 2001 KAWAGUCHI Kohsuke
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+================================================================================
+relaxngDatatype:relaxngDatatype:20020414
+Source: org/relaxng/datatype/helpers/DatatypeLibraryLoader.java
+================================================================================
+
+Copyright (c) 2001, Thai Open Source Software Center Ltd
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+    Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+    Neither the name of the Thai Open Source Software Center Ltd nor
+    the names of its contributors may be used to endorse or promote
+    products derived from this software without specific prior written
+    permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ================================================================================
 Jackson Core Shaded Code
@@ -215,7 +689,7 @@ Jackson Core Shaded Code
 Jackson Core bundles a shaded copy of FastDoubleParser and a copy of the
 Schubfach number-writing code. The upstream Jackson Core JAR retains the three
 corresponding license files under META-INF; the GridGrind fat JAR retains those
-files unchanged and reproduces their material terms here so `--license` exposes
+files unchanged and reproduces their material terms here so `gridgrind license` exposes
 the complete legal surface.
 
 Jackson Core's upstream NOTICE identifies the FastDoubleParser attribution as
@@ -481,7 +955,7 @@ tree under that project's Apache License, Version 2.0.
 
 GridGrind retains byte-identical copies at:
 
-engine/src/test/resources/dev/erst/gridgrind/excel/CustomXMLMappings.xlsx
+engine/src/test/resources/dev/erst/gridgrind/engine/backend/xssf/CustomXMLMappings.xlsx
 examples/custom-xml-assets/custom-xml-mapping.xlsx
 
 The example copy is also embedded in the executable JAR, and therefore in the
@@ -499,39 +973,42 @@ in LICENSE-APACHE-2.0.
 Container-Only Software
 ================================================================================
 
-The published container image adds an Azul Zulu build of OpenJDK and operating
+The runtime container adds an Azul Zulu build of OpenJDK and Debian operating-
 system/font packages that are not part of the executable GridGrind JAR. Their
 licenses are not represented by a single GridGrind license expression. The
-runtime preserves the base image and Debian package legal material, including
-the JRE legal directory under /usr/lib/jvm and package copyright files under
-/usr/share/doc. GridGrind-specific legal files are copied to
-/usr/share/doc/gridgrind. Published images also carry provenance and an SBOM
-attestation for the resolved image contents.
+image retains the JRE legal directory and readme.txt under JAVA_HOME and
+package copyright files under /usr/share/doc. GridGrind-specific legal files
+are copied to /usr/share/doc/gridgrind. The release workflow attaches
+provenance and an SBOM for the image contents.
 
-Published runtime base:
-azul/zulu-openjdk:26-jre@sha256:9382c343f6de2c9f2633b7f629380f9c2a9444df8768a880c690bd5ea74f51b6
+The corresponding release's Dockerfile identifies the exact official
+azul-zulu JRE variant and manifest-list digest. The runtime uses Debian 13;
+the contributor container has a separate base and distribution scope.
 
-The Dockerfile pins the Azul Zulu image by manifest-list digest. Azul publishes
-the base-image Dockerfiles and the Zulu licensing/source-availability materials
-at:
+Base-image definitions and upstream legal/source materials:
 
-https://github.com/zulu-openjdk/zulu-openjdk
+https://github.com/AzulSystems/azul-zulu-images
 https://docs.azul.com/core/tpl
 https://www.azul.com/products/core/openjdk-terms-of-use/
-https://launchpad.net/ubuntu/+sources
+https://sources.debian.org/
+https://snapshot.debian.org/
 
-The image's package copyright files and published SBOM identify the additional
-Ubuntu and font packages. GridGrind does not relicense those components or
-represent their terms as part of GridGrind's MPL 2.0 license. Anyone redistributing
-the aggregate image must assess and satisfy the applicable notice, source-
-availability, trademark, patent, and other license conditions for that
-distribution.
+The JRE readme.txt retains Azul's written offer for its OpenJDK-derived
+portions, including the source-request address and build-specific version
+code. Debian package copyright files identify package-specific terms;
+the image SBOM and package metadata identify the installed versions.
 
-GridGrind does not make a separate written source-code offer for third-party
-container components. Azul's published source-availability process and the
-Ubuntu source archive are the identified upstream source mechanisms; this
-notice does not represent that those mechanisms satisfy every commercial or
-jurisdiction-specific redistribution scenario.
+Build and fuzz tools, including JQF, are resolved separately by Gradle and are
+not bundled in the product JAR, launcher archives or final runtime image.
+Those tools are governed by their upstream licenses; this notice does not
+relicense them as GridGrind software.
+
+GridGrind makes no separate written source-code offer for third-party
+container components. Retained vendor materials and source pointers do not
+by themselves establish fulfillment of every redistributor's source-delivery
+obligations. Those obligations depend on the actual components and method of
+distribution; the upstream offers must not be represented as a new GridGrind
+promise.
 
 ================================================================================
 Cryptography and Export Notice

@@ -69,7 +69,7 @@ final class XlsxParityCoreProbeGroup {
         : fail("Core workbook factual reads diverged: " + String.join("; ", mismatches));
   }
 
-  private static CoreReadObservation readCoreObservation(ProbeContext context) {
+  static CoreReadObservation readCoreObservation(ProbeContext context) {
     XlsxParityScenarios.MaterializedScenario scenario =
         context.scenario(XlsxParityScenarios.CORE_WORKBOOK);
     XlsxParityOracle.CoreWorkbookSnapshot direct =
@@ -204,9 +204,9 @@ final class XlsxParityCoreProbeGroup {
               .formatted(
                   summary.forceFormulaRecalculationOnOpen(), direct.forceFormulaRecalculation()));
     }
-    if (!(observation.opsSummary().sheet().protection()
-        instanceof SheetProtectionReport.Protected)) {
-      mismatches.add("ops sheet protection did not report Protected");
+    if (!matchesCoreProtection(
+        observation.opsSummary().sheet().protection(), direct.sheetProtection())) {
+      mismatches.add("ops sheet protection flags diverged from direct POI");
     }
     if (observation.queueSummary().sheet().visibility()
         != dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.HIDDEN) {
@@ -223,6 +223,12 @@ final class XlsxParityCoreProbeGroup {
     compareCoreRichTextCell(cellsByAddress, mismatches);
     compareCorePrimitiveCells(cellsByAddress, mismatches);
     compareCoreFormulaCell(observation, cellsByAddress, mismatches);
+    for (var entry : observation.direct().styles().entrySet()) {
+      var cell = cellsByAddress.get(entry.getKey());
+      if (cell == null || !matchesCoreStyle(cell.style().orElse(null), entry.getValue())) {
+        mismatches.add("core style mismatch at " + entry.getKey());
+      }
+    }
   }
 
   private static void compareCoreMergedRegion(
@@ -382,14 +388,103 @@ final class XlsxParityCoreProbeGroup {
               .formatted(
                   observation.layout().layout().zoomPercent(), observation.direct().zoomPercent()));
     }
-    if (!(observation.layout().layout().pane()
-        instanceof dev.erst.gridgrind.core.model.layout.PaneReport.Frozen)) {
-      mismatches.add("pane=%s".formatted(observation.layout().layout().pane()));
+    if (!matchesCoreLayout(observation.layout().layout(), observation.direct())) {
+      mismatches.add("core pane or sizing differs from direct POI");
     }
-    if (observation.print().layout().orientation()
-        != dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation.LANDSCAPE) {
-      mismatches.add("printOrientation=%s".formatted(observation.print().layout().orientation()));
+    if (!matchesCorePrint(observation.print().layout(), observation.direct().print())) {
+      mismatches.add(
+          "core print fit, title bands, orientation or centering differs from direct POI");
     }
+  }
+
+  static boolean matchesCoreProtection(
+      SheetProtectionReport observed, SheetProtectionSettings direct) {
+    return observed instanceof SheetProtectionReport.Protected protectedSheet
+        && protectedSheet.settings().equals(direct);
+  }
+
+  static boolean matchesCoreLayout(
+      dev.erst.gridgrind.core.model.layout.SheetLayoutReport observed,
+      XlsxParityOracle.CoreWorkbookSnapshot direct) {
+    if (!(observed.pane() instanceof dev.erst.gridgrind.core.model.layout.PaneReport.Frozen pane))
+      return false;
+    String paneDescriptor =
+        "FROZEN:%d:%d:%d:%d"
+            .formatted(pane.splitRow(), pane.splitColumn(), pane.topRow(), pane.leftmostColumn());
+    return paneDescriptor.equals(direct.paneDescriptor())
+        && observed.columns().stream()
+            .anyMatch(
+                column ->
+                    column.columnIndex() == 0
+                        && column.widthCharacters() == direct.columnZeroWidthCharacters())
+        && observed.rows().stream()
+            .anyMatch(
+                row -> row.rowIndex() == 0 && row.heightPoints() == direct.rowZeroHeightPoints());
+  }
+
+  static boolean matchesCorePrint(
+      dev.erst.gridgrind.core.model.print.PrintLayoutReport observed,
+      XlsxParityOracle.CorePrintSnapshot direct) {
+    return observed.orientation().name().equals(direct.landscape() ? "LANDSCAPE" : "PORTRAIT")
+        && direct.fitToPage()
+        && observed.scaling()
+            instanceof dev.erst.gridgrind.core.model.print.PrintScalingReport.Fit fit
+        && fit.widthPages() == direct.widthPages()
+        && fit.heightPages() == direct.heightPages()
+        && observed.repeatingRows()
+            instanceof dev.erst.gridgrind.core.model.print.PrintTitleRowsReport.Band rows
+        && rows.firstRowIndex() == direct.firstTitleRow()
+        && rows.lastRowIndex() == direct.lastTitleRow()
+        && observed.repeatingColumns()
+            instanceof dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport.Band columns
+        && columns.firstColumnIndex() == direct.firstTitleColumn()
+        && columns.lastColumnIndex() == direct.lastTitleColumn()
+        && observed.setup().horizontallyCentered() == direct.horizontallyCentered()
+        && observed.setup().verticallyCentered() == direct.verticallyCentered();
+  }
+
+  static boolean matchesCoreStyle(
+      CellStyleReport style, XlsxParityOracle.CoreStyleSnapshot direct) {
+    if (style == null) return false;
+    var alignment = style.alignment();
+    var font = style.font();
+    return style.numberFormat().equals(direct.numberFormat())
+        && alignment.wrapText() == direct.wrapText()
+        && alignment.horizontalAlignment().name().equals(direct.horizontalAlignment())
+        && alignment.verticalAlignment().name().equals(direct.verticalAlignment())
+        && alignment.textRotation() == direct.rotation()
+        && alignment.indentation() == direct.indentation()
+        && font.bold() == direct.bold()
+        && font.italic() == direct.italic()
+        && font.fontName().equals(direct.fontName())
+        && font.fontHeight().twips() == direct.fontHeightTwips()
+        && matchesColorDescriptor(font.fontColor().orElse(null), direct.fontColorDescriptor())
+        && font.underline() == direct.underline()
+        && font.strikeout() == direct.strikeout()
+        && "SOLID_FOREGROUND".equals(direct.fillPattern())
+        && style.fill() instanceof CellFillReport.PatternForeground fill
+        && fill.pattern() == dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.SOLID
+        && matchesColorDescriptor(fill.foregroundColor(), direct.fillColorDescriptor())
+        && List.of(
+                borderStyle(style.border().top()),
+                borderStyle(style.border().right()),
+                borderStyle(style.border().bottom()),
+                borderStyle(style.border().left()))
+            .equals(direct.borderStyles())
+        && matchesColorDescriptor(
+            borderColor(style.border().top()), direct.topBorderColorDescriptor())
+        && style.protection().locked() == direct.locked()
+        && style.protection().hiddenFormula() == direct.hidden();
+  }
+
+  private static String borderStyle(dev.erst.gridgrind.core.model.style.CellBorderSideReport side) {
+    return switch (side) {
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.None _ -> "NONE";
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.DefaultColor border ->
+          border.style().name();
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.Colored border ->
+          border.style().name();
+    };
   }
 
   private static void compareCoreValidationsAndFormatting(

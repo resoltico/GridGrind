@@ -8,8 +8,8 @@ import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import java.util.Objects;
 
 /**
- * Request-side execution policy surface for low-memory execution modes, structured journaling, and
- * explicit calculation handling.
+ * Request-side execution policy surface for execution modes, structured journaling, and explicit
+ * calculation handling.
  */
 @CatalogType(
     id = "ExecutionPolicySpec",

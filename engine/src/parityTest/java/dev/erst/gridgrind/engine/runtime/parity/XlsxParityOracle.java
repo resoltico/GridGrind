@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
@@ -31,6 +32,7 @@ import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -135,12 +137,14 @@ final class XlsxParityOracle {
               (int) ops.getCTWorksheet().getSheetViews().getSheetViewArray(0).getZoomScale(),
               ops.getPaneInformation() == null
                   ? "NONE"
-                  : "%s:%d:%d"
+                  : "%s:%d:%d:%d:%d"
                       .formatted(
                           ops.getPaneInformation().isFreezePane() ? "FROZEN" : "SPLIT",
                           ops.getPaneInformation().getHorizontalSplitPosition(),
-                          ops.getPaneInformation().getVerticalSplitPosition()),
-              ops.getColumnWidthInPixels(0) > 0.0d,
+                          ops.getPaneInformation().getVerticalSplitPosition(),
+                          ops.getPaneInformation().getHorizontalSplitTopRow(),
+                          ops.getPaneInformation().getVerticalSplitLeftColumn()),
+              ops.getColumnWidth(0) / 256.0d,
               ops.getRow(0).getHeightInPoints(),
               formulaCell.getCellFormula(),
               workbook
@@ -154,8 +158,80 @@ final class XlsxParityOracle {
                   .map(column -> column.getName())
                   .toList(),
               ops.getSheetConditionalFormatting().getNumConditionalFormattings(),
-              dataValidationKinds(ops));
+              dataValidationKinds(ops),
+              sheetProtection(ops),
+              corePrint(ops),
+              Map.of(
+                  "A3", coreStyle(cell(ops, "A3").getCellStyle()),
+                  "B3", coreStyle(cell(ops, "B3").getCellStyle()),
+                  "C3", coreStyle(cell(ops, "C3").getCellStyle()),
+                  "D3", coreStyle(cell(ops, "D3").getCellStyle())));
         });
+  }
+
+  private static SheetProtectionSettings sheetProtection(XSSFSheet sheet) {
+    return new SheetProtectionSettings(
+        sheet.isAutoFilterLocked(),
+        sheet.isDeleteColumnsLocked(),
+        sheet.isDeleteRowsLocked(),
+        sheet.isFormatCellsLocked(),
+        sheet.isFormatColumnsLocked(),
+        sheet.isFormatRowsLocked(),
+        sheet.isInsertColumnsLocked(),
+        sheet.isInsertHyperlinksLocked(),
+        sheet.isInsertRowsLocked(),
+        sheet.isObjectsLocked(),
+        sheet.isPivotTablesLocked(),
+        sheet.isScenariosLocked(),
+        sheet.isSelectLockedCellsLocked(),
+        sheet.isSelectUnlockedCellsLocked(),
+        sheet.isSortLocked());
+  }
+
+  private static CorePrintSnapshot corePrint(XSSFSheet sheet) {
+    var rows =
+        Objects.requireNonNull(sheet.getRepeatingRows(), "Core fixture needs repeating rows");
+    var columns =
+        Objects.requireNonNull(sheet.getRepeatingColumns(), "Core fixture needs repeating columns");
+    return new CorePrintSnapshot(
+        sheet.getPrintSetup().getLandscape(),
+        sheet.getFitToPage(),
+        sheet.getPrintSetup().getFitWidth(),
+        sheet.getPrintSetup().getFitHeight(),
+        rows.getFirstRow(),
+        rows.getLastRow(),
+        columns.getFirstColumn(),
+        columns.getLastColumn(),
+        sheet.getHorizontallyCenter(),
+        sheet.getVerticallyCenter());
+  }
+
+  private static CoreStyleSnapshot coreStyle(XSSFCellStyle style) {
+    var font = style.getFont();
+    return new CoreStyleSnapshot(
+        style.getDataFormatString(),
+        style.getWrapText(),
+        style.getAlignment().name(),
+        style.getVerticalAlignment().name(),
+        style.getRotation(),
+        style.getIndention(),
+        font.getBold(),
+        font.getItalic(),
+        font.getFontName(),
+        font.getFontHeight(),
+        colorDescriptor(font.getXSSFColor()),
+        font.getUnderline() != 0,
+        font.getStrikeout(),
+        style.getFillPattern().name(),
+        colorDescriptor(style.getFillForegroundColorColor()),
+        List.of(
+            style.getBorderTop().name(),
+            style.getBorderRight().name(),
+            style.getBorderBottom().name(),
+            style.getBorderLeft().name()),
+        colorDescriptor(style.getTopBorderXSSFColor()),
+        style.getLocked(),
+        style.getHidden());
   }
 
   static WorkbookProtectionSnapshot workbookProtection(Path workbookPath) {
@@ -1178,7 +1254,7 @@ final class XlsxParityOracle {
       boolean commentVisible,
       int zoomPercent,
       String paneDescriptor,
-      boolean hasColumnSizing,
+      double columnZeroWidthCharacters,
       float rowZeroHeightPoints,
       String formulaText,
       double formulaValue,
@@ -1186,7 +1262,43 @@ final class XlsxParityOracle {
       String tableName,
       List<String> tableColumns,
       int conditionalFormattingBlockCount,
-      List<String> dataValidationKinds) {}
+      List<String> dataValidationKinds,
+      SheetProtectionSettings sheetProtection,
+      CorePrintSnapshot print,
+      Map<String, CoreStyleSnapshot> styles) {}
+
+  record CorePrintSnapshot(
+      boolean landscape,
+      boolean fitToPage,
+      int widthPages,
+      int heightPages,
+      int firstTitleRow,
+      int lastTitleRow,
+      int firstTitleColumn,
+      int lastTitleColumn,
+      boolean horizontallyCentered,
+      boolean verticallyCentered) {}
+
+  record CoreStyleSnapshot(
+      String numberFormat,
+      boolean wrapText,
+      String horizontalAlignment,
+      String verticalAlignment,
+      int rotation,
+      int indentation,
+      boolean bold,
+      boolean italic,
+      String fontName,
+      int fontHeightTwips,
+      String fontColorDescriptor,
+      boolean underline,
+      boolean strikeout,
+      String fillPattern,
+      String fillColorDescriptor,
+      List<String> borderStyles,
+      String topBorderColorDescriptor,
+      boolean locked,
+      boolean hidden) {}
 
   record WorkbookProtectionSnapshot(
       boolean structureLocked,

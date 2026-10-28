@@ -78,7 +78,7 @@ final class RecipeTemplates {
           example(
               "LARGE_FILE_MODES",
               "large-file-modes-request.json",
-              "Low-memory STREAMING_WRITE plan with append-only rows and recalc-on-open flagging.",
+              "Append-oriented STREAMING_WRITE plan with append-only rows and recalc-on-open flagging.",
               RecipeAdvisory.SELF_CONTAINED,
               List.of("execution-mode", "streaming", "large-files", "analysis"),
               WorkbookAuditExamples.largeFileModesPlan(ExamplePathLayout.BUILT_IN),

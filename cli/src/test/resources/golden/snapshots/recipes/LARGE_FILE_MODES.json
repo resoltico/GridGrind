@@ -21,7 +21,7 @@
         "stepCount" : 6
       },
       "requiredWorkspacePaths" : [ ],
-      "summary" : "Low-memory STREAMING_WRITE plan with append-only rows and recalc-on-open flagging.",
+      "summary" : "Append-oriented STREAMING_WRITE plan with append-only rows and recalc-on-open flagging.",
       "type" : "EXAMPLE"
     }
   },
