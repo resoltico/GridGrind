@@ -39,7 +39,7 @@ failure rather than retagging or blindly overwriting published assets.
 
 Publication controls and their tests come from the commit defining the workflow; product code,
 build inputs and source inventories remain on the selected release tag. The release job runs
-ARM64 natively and AMD64 under emulation. Staging and publication share
+AMD64 natively and ARM64 under emulation. Staging and publication share
 one BuildKit instance and its job-local cache. Images are verified afresh in each run; an ephemeral
 runner's failed attempt does not provide retained image bytes for a later run to reuse.
 
