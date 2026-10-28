@@ -26,8 +26,12 @@ run scratch have explicit owners and cleanup lifetimes.
 Specs carry complete authored choices, patches carry partial updates, reports carry observed
 facts, and resolved types exist where source binding changes the contract. Selectors resolve
 to concrete targets once. FULL_XSSF performs the complete in-memory workflow. EVENT_READ and
-STREAMING_WRITE have explicit reduced capabilities; unsupported work is rejected instead of
-silently changing backend.
+STREAMING_WRITE have explicit reduced operation capabilities; unsupported operations are rejected.
+EVENT_READ uses its direct streaming reader for eligible existing-source requests without publication.
+Existing-source preflight opens full XSSF first, and other admitted EVENT_READ requests use XSSF
+materialization. STREAMING_WRITE uses SXSSF for append authoring, but assertions, inspections
+and staged-publication verification can reopen full XSSF. Neither mode guarantees bounded
+end-to-end heap use.
 
 Steps preserve authored order. Assertions may collect after the terminal assertion phase
 begins; no later mutation is legal. Inspections may interleave. Factual observations retain

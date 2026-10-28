@@ -2,8 +2,6 @@ package dev.erst.gridgrind.core.vocabulary;
 
 /** Stable scalar bounds and patterns shared by protocol validation and catalog publication. */
 public final class ProtocolConstraintValues {
-  /** Pattern accepted for every authored workbook step identifier. */
-
   /** Pattern accepted for one protocol RGB color literal. */
   public static final String RGB_HEX_PATTERN = "^#[0-9A-Fa-f]{6}$";
 
@@ -19,6 +17,5 @@ public final class ProtocolConstraintValues {
   /** Maximum percentage for an Excel data-bar width. */
   public static final int DATA_BAR_WIDTH_MAX = 100;
 
-  /** Required suffix for source and persisted workbook paths. */
   private ProtocolConstraintValues() {}
 }

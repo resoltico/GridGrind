@@ -108,7 +108,7 @@ public final class BackendCapabilities {
     }
   }
 
-  /** Structured low-memory summary-read contract for `execution.mode.type=EVENT_READ`. */
+  /** Structured summary-read contract for `execution.mode.type=EVENT_READ`. */
   public record EventReadMode(
       Class<? extends ExecutionModeSpec> modeClass,
       List<Class<? extends InspectionQuery>> allowedQueries,
@@ -209,7 +209,7 @@ public final class BackendCapabilities {
     }
   }
 
-  /** Structured low-memory append-write contract for `execution.mode.type=STREAMING_WRITE`. */
+  /** Structured append-write contract for `execution.mode.type=STREAMING_WRITE`. */
   public record StreamingWriteMode(
       Class<? extends ExecutionModeSpec> modeClass,
       Class<? extends WorkbookPlan.WorkbookSource> requiredSourceType,

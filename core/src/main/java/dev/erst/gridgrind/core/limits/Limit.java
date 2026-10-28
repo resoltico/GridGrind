@@ -258,7 +258,7 @@ public record Limit(
               "SET_ROW_VISIBILITY",
               "GROUP_ROWS",
               "UNGROUP_ROWS"),
-          "GridGrind counts every action that must enumerate cells or create physical rows before the workbook\nis opened. The cumulative limit prevents a syntactically valid plan from exhausting the JVM by\nmaterializing an Excel-sized range or row band, including when equivalent work is spread across\nseveral steps.");
+          "GridGrind sums statically known cell and row materialization for the listed actions before\nopening the workbook, including work spread across multiple steps. The limit bounds this\nrequest-driven work; it is not a total-workbook, heap-memory or execution-time quota. Existing\nworkbook contents, cell payload sizes and other operations also consume resources.");
 
   /** Explicit Data-Validation List Formula Length. */
   public static final Limit EXPLICIT_DATA_VALIDATION_LIST_FORMULA_LENGTH =
@@ -290,9 +290,9 @@ public record Limit(
               + String.format(Locale.ROOT, "%,d", MAX_ROW_INDEX + 1)
               + " rows and "
               + String.format(Locale.ROOT, "%,d", MAX_COLUMN_INDEX + 1)
-              + " columns. POI can read arbitrarily\nlarge windows and exact address lists; GridGrind must then materialize and serialize factual cell\npayloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does not change the\nworst case: a dense 50,000-cell window still returns 50,000 factual cells, `GET_SHEET_SCHEMA`\nstill examines the entire rectangular sample even when many cells are blank, and an oversized\n`GET_CELLS` address list still asks GridGrind to return one factual cell report per address. The\n"
+              + " columns. POI can read very\nlarge windows and exact address lists; GridGrind must then materialize and serialize factual cell\npayloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does not change the\nworst case: a dense 50,000-cell window still returns 50,000 factual cells, `GET_SHEET_SCHEMA`\nstill examines the entire rectangular sample even when many cells are blank, and an oversized\n`GET_CELLS` address list still asks GridGrind to return one factual cell report per address. The\n"
               + String.format(Locale.ROOT, "%,d", MAX_READ_CELLS)
-              + "-cell cap keeps the request gate deterministic before workbook IO and prevents\n`OutOfMemoryError`, empty response files, and unstructured exit-code-1 failures on worst-case\ncell-returning reads.\n\nThis limit is not from Apache POI or Excel. A serialized-byte cap depends on workbook contents and is only knowable after reading the\nworkbook. The deterministic cell-count cap bounds materialization before workbook IO.\n\n**Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover `lastRowIndex` and\n`lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region\nwith multiple bounded `GET_WINDOW` reads.");
+              + "-cell cap bounds the number of returned cells before workbook IO. It does not bound total\nserialized bytes, native workbook memory or execution time; large payloads can still exhaust\navailable resources within the cell-count limit.\n\nThis limit is not from Apache POI or Excel. A serialized-byte cap depends on workbook contents and is only knowable after reading the\nworkbook. The deterministic cell-count cap bounds materialization before workbook IO.\n\n**Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover `lastRowIndex` and\n`lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region\nwith multiple bounded `GET_WINDOW` reads.");
 
   /** File Format. */
   public static final Limit FILE_FORMAT =
@@ -424,10 +424,10 @@ public record Limit(
           MAX_ZIP_ENTRY_SIZE
               + " decompressed bytes per entry; minimum inflate ratio "
               + MIN_ZIP_INFLATE_RATIO,
-          List.of("INVALID_REQUEST"),
+          List.of("IO_ERROR", "WORKBOOK_NOT_OPENABLE"),
           "",
           List.of("All xlsx workbook open operations"),
-          "GridGrind explicitly configures Apache POI's `ZipSecureFile` limits to bound decompression memory\nand time during xlsx package open. An entry expanding beyond 100 MiB or achieving a compression\nratio beyond 1:100 triggers a `ZipBombException`, which GridGrind translates to an\n`INVALID_REQUEST` failure rather than an `OutOfMemoryError` or indefinite CPU consumption.");
+          "GridGrind configures POI's ZipSecureFile with a 100 MiB expanded-entry limit and a minimum\ncompressed-to-expanded byte ratio of 0.01. POI applies its ratio check after its small-entry\ngrace threshold. POI 6 reports threshold violations as IOException; workbook-open wrappers\ncan add context. The failure is IO_ERROR on the observed workbook/worksheet paths or\nWORKBOOK_NOT_OPENABLE when content-type parsing wraps the failure. These are per-entry decompression controls, not an aggregate package-size,\nheap-memory or execution-time quota.");
 
   /** DDE Rejection in All Formula Inputs. */
   public static final Limit DDE_REJECTION_IN_ALL_FORMULA_INPUTS =
@@ -702,7 +702,7 @@ public record Limit(
               "INSERT_COLUMNS",
               "DELETE_COLUMNS",
               "SHIFT_COLUMNS"),
-          "Apache POI 6.0.0 does not reliably normalize table refs or sheet autofilter refs when rows or\ncolumns are structurally inserted, deleted, or shifted, and it still leaves data-validation\ncoverage unsafe for delete and shift flows. GridGrind rebuilds data validations across row and\ncolumn inserts, but it still rejects the remaining unsafe structural edits instead of persisting\nstale workbook XML or silently moving only part of the owned structure.\n\nThe rejection is precise and structure-owned. Example messages include:\n- `INSERT_ROWS cannot move table 'BudgetTable' on sheet 'Budget'; row structural edits that would move tables are not supported`\n- `DELETE_COLUMNS cannot move sheet autofilter A1:C10 on sheet 'Budget'; column structural edits that would move or truncate sheet autofilters are not supported`");
+          "Direct POI 6.0.0 shift probes leave table, sheet-autofilter and data-validation references at\ntheir original ranges. GridGrind rebuilds data validations for row and column insertion, but\nrejects inserts that would move a table or sheet autofilter and rejects affected deletes or\nshifts under the supported structural-edit contract. This does not assert that every native\nedit or every OOXML structure is unsafe.\n\nThe rejection names the affected structure and sheet. Example messages include:\n- `INSERT_ROWS cannot move table 'BudgetTable' on sheet 'Budget'; row structural edits that would move tables are not supported`\n- `DELETE_COLUMNS cannot move sheet autofilter A1:C10 on sheet 'Budget'; column structural edits that would move or truncate sheet autofilters are not supported`");
 
   /** Column Structural Edits While Formulas Are Present. */
   public static final Limit COLUMN_STRUCTURAL_EDITS_WHILE_FORMULAS_ARE_PRESENT =
@@ -726,7 +726,7 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "Product-owned `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected named range and sheet",
           List.of("DELETE_ROWS", "SHIFT_ROWS", "DELETE_COLUMNS", "SHIFT_COLUMNS"),
-          "Apache POI can safely translate a range-backed named range when the named range is fully contained\ninside the moved row or column band, or when it is completely untouched by the edit. Direct probes\nagainst `deleteRows(...)`, `shiftRows(...)`, `deleteColumns(...)`, and `shiftColumns(...)` showed\nthat destructive overlap produces broken formulas such as `I!#REF!:I!#REF!` and\n`I!#REF!:I!$B$1`. GridGrind therefore rejects only the destructive cases instead of persisting\ninvalid named-range formulas that can later crash workbook rewrites.\n\nExample messages:\n- `DELETE_ROWS cannot move named range 'BudgetWindow' on sheet 'Budget'; row structural edits that would truncate range-backed named ranges are not supported`\n- `SHIFT_COLUMNS cannot move named range 'BudgetWindow' on sheet 'Budget'; column structural edits that would overwrite or partially move range-backed named ranges are not supported`");
+          "GridGrind rejects row or column deletes that overlap a range-backed named range. It also\nrejects shifts that would partially move or overwrite one. This guard admits untouched names\nand names fully contained in the moved band, subject to the other structural-edit rules.\nThese are product admission boundaries; they do not certify every native POI reference rewrite.\n\nExample messages:\n- `DELETE_ROWS cannot move named range 'BudgetWindow' on sheet 'Budget'; row structural edits that would truncate range-backed named ranges are not supported`\n- `SHIFT_COLUMNS cannot move named range 'BudgetWindow' on sheet 'Budget'; column structural edits that would overwrite or partially move range-backed named ranges are not supported`");
 
   /** Event-Read Execution Mode Scope. */
   public static final Limit EVENT_READ_EXECUTION_MODE_SCOPE =
@@ -738,7 +738,7 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "`execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}`",
           List.of("execution.mode.type", "steps[]"),
-          "`EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not\nmaterialize the full workbook object graph, so GridGrind restricts it to workbook and sheet\nsummary reads only. Unsupported factual reads and analysis reads are rejected at request-validation\ntime instead of silently falling back to the normal in-memory executor.");
+          "`EVENT_READ` restricts operations to workbook and sheet summary inspections. Its direct event-reader path applies to eligible EXISTING-source requests with no publication and the required calculation settings. Existing-source preflight opens the workbook through full XSSF before reader selection, and other admitted EVENT_READ requests use XSSF materialization. The mode therefore does not provide an end-to-end low-memory guarantee. Unsupported queries are rejected by the mode contract.");
 
   /** Streaming-Write Execution Mode Scope. */
   public static final Limit STREAMING_WRITE_EXECUTION_MODE_SCOPE =
@@ -750,7 +750,7 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "`execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...`",
           List.of("execution.mode.type", "source", "steps[]"),
-          "`STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only\nnew workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced\noperation contract up front so callers get deterministic structured errors instead of half-written\nstreaming workbooks or hidden mode fallback.");
+          "`STREAMING_WRITE` uses POI SXSSF for append-oriented NEW-workbook authoring under its reduced operation contract. Assertions and inspections can materialize the workbook through full XSSF, and saved output is reopened through XSSF for staged-artifact verification before publication. Streaming authoring therefore does not guarantee bounded end-to-end heap use. Validation rejects unsupported operations and calculation settings before execution.");
 
   /** Request JSON Size. */
   public static final Limit REQUEST_JSON_SIZE =

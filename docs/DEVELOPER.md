@@ -17,7 +17,7 @@ It does not run Docker, active fuzzing or mutation campaigns.
 
 Use focused Gradle tests while changing a behavior. Product tests live beside their owners;
 architecture-tests contains ArchUnit rules and negative controls, while engine:parityTest
-compares engine behavior with Apache POI. The golden CLI corpus retains request materialization,
+compares engine behavior with Apache POI within the [declared parity scope](POI_PARITY.md). The golden CLI corpus retains request materialization,
 execution and workbook readback through both in-process and packaged-JAR launchers.
 
 Explicit additional suites are:

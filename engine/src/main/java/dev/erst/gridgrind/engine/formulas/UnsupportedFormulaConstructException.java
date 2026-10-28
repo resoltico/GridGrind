@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.formulas;
 
-/** Signals that a formula uses a valid Excel construct that POI cannot author on this path. */
+/** Signals a recognized formula construct rejected by the POI authoring path. */
 public final class UnsupportedFormulaConstructException extends IllegalArgumentException
     implements FormulaException {
   private static final long serialVersionUID = 1L;

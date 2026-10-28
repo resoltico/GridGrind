@@ -55,6 +55,7 @@ identity uses type or status.
 - [Architecture](docs/ARCHITECTURE.md)
 - [Java API](docs/JAVA_API.md)
 - [Generated protocol reference](docs/reference/README.md)
+- [POI parity and scope](docs/POI_PARITY.md)
 - [Limits](docs/LIMITATIONS.md) and [problems](docs/ERRORS.md)
 - [Development](docs/DEVELOPER.md), [fuzzing](docs/FUZZING.md), [releasing](docs/RELEASING.md)
 

@@ -17,12 +17,12 @@ public sealed interface ExecutionModeSpec {
     return new FullXssf();
   }
 
-  /** Returns the low-memory summary-read execution mode. */
+  /** Returns the summary-read execution mode. */
   static ExecutionModeSpec eventRead() {
     return new EventRead();
   }
 
-  /** Returns the low-memory append-write execution mode. */
+  /** Returns the SXSSF append-write execution mode. */
   static ExecutionModeSpec streamingWrite() {
     return new StreamingWrite();
   }
@@ -44,7 +44,7 @@ public sealed interface ExecutionModeSpec {
     }
   }
 
-  /** Low-memory summary-read execution mode with inspection-only constraints. */
+  /** Summary-read execution mode with inspection-only constraints. */
   @Variant(id = "EVENT_READ")
   record EventRead() implements ExecutionModeSpec {
     @Override
@@ -53,7 +53,7 @@ public sealed interface ExecutionModeSpec {
     }
   }
 
-  /** Low-memory append-write execution mode with streaming mutation constraints. */
+  /** SXSSF append-write execution mode with streaming mutation constraints. */
   @Variant(id = "STREAMING_WRITE")
   record StreamingWrite() implements ExecutionModeSpec {
     @Override

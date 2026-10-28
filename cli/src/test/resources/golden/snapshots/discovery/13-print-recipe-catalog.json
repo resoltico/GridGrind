@@ -64,7 +64,7 @@
       "id" : "LARGE_FILE_MODES",
       "requestFileName" : "large-file-modes-request.json",
       "requiredWorkspacePaths" : [ ],
-      "summary" : "Low-memory STREAMING_WRITE plan with append-only rows and recalc-on-open flagging.",
+      "summary" : "Append-oriented STREAMING_WRITE plan with append-only rows and recalc-on-open flagging.",
       "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
