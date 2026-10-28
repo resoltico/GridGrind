@@ -97,6 +97,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Reject an already stable public release before expensive work
+        if: env.PUBLISH_RELEASE == 'true'
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |

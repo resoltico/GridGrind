@@ -6,6 +6,7 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 ## [Unreleased]
 
 - Repository formatting leaves the read-only AGENTS.md baseline untouched.
+- Release dry runs skip stable-publication guards; publishing an existing stable release remains blocked.
 
 ## [0.77.0] - 2026-10-28
 
