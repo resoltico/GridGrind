@@ -194,6 +194,10 @@ jobs:
                   for block in iter(lambda: stream.read(1024 * 1024), b''): h.update(block)
               return h.hexdigest()
           Path('build/SHA256SUMS').write_text(''.join(f'{digest(path)}  {path.name}\n' for path in assets))
+          retained = assets + [Path('build/SHA256SUMS'), Path('build/release-notes.md'), Path('build/verified-images.json')]
+          for architecture in ('amd64', 'arm64'):
+              retained += [path for path in Path(f'build/runtime-cache-{architecture}').rglob('*') if path.is_file()]
+          print('Verified delivery artifact payload:', len(retained), 'files,', sum(path.stat().st_size for path in retained), 'bytes before ZIP metadata')
           PY
 
       - name: Retain verified delivery inputs before publication
