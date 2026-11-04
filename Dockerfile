@@ -2,7 +2,7 @@
 
 # Pin both builder and runtime manifest lists so local rebuilds and published images stay
 # reproducible across time.
-FROM --platform=$BUILDPLATFORM azul-zulu:27.30-27.0.1-jdk-debian13@sha256:7f3f17771a7a8500b8844c7da21b89f14feb856b7bafe6d68292bca8e746f035 AS build
+FROM --platform=$BUILDPLATFORM azul-zulu:27.30-27.0.1-jdk-debian13@sha256:bf25a71cdcc0ecb1d0d8796bf5f96437125f0c66eda7c76193206d718742e56c AS build
 
 ARG GRIDGRIND_VERSION
 
