@@ -19,6 +19,8 @@ Use focused Gradle tests while changing a behavior. Product tests live beside th
 architecture-tests contains ArchUnit rules and negative controls, while engine:parityTest
 compares engine behavior with Apache POI within the [declared parity scope](POI_PARITY.md). The golden CLI corpus retains request materialization,
 execution and workbook readback through both in-process and packaged-JAR launchers.
+Re-record it with `./gradlew :cli:test -Pgolden.update=true`, then review each snapshot diff
+and explain it in the change.
 
 Explicit additional suites are:
 
