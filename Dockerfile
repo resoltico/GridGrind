@@ -67,6 +67,7 @@ WORKDIR /workspace
 
 COPY gradlew gradle.properties settings.gradle.kts build.gradle.kts gradle.lockfile settings-gradle.lockfile ./
 COPY gradle ./gradle
+COPY release/container-runtime.properties ./release/container-runtime.properties
 COPY LICENSE PROJECT-NOTICE.md LICENSE-COMMERCIAL.md NOTICE PATENTS.md LICENSE-APACHE-2.0 LICENSE-BSD-2-CLAUSE LICENSE-BSD-3-CLAUSE ./
 COPY cli ./cli
 COPY core ./core

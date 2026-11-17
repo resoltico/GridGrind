@@ -33,7 +33,7 @@ public sealed interface CellTemporalReport
               throw new IllegalArgumentException("Invalid DATE_TIME interpretation.");
           }
           case TIME -> {
-            if (java.time.LocalTime.parse(isoValue).getNano() % 1_000_000 != 0)
+            if (!TemporalSemantics.millisecondTime(java.time.LocalTime.parse(isoValue)))
               throw new IllegalArgumentException(
                   "TIME interpretation supports millisecond precision.");
           }

@@ -157,6 +157,8 @@ final class MediaInput {
     return Arrays.copyOfRange(bytes, start, end);
   }
 
+  // This refusal helper is intentionally called to report an unsupported authored profile.
+  @SuppressWarnings("DoNotCallSuggester")
   void profile(String value) {
     throw MediaIssues.profile(format, value);
   }

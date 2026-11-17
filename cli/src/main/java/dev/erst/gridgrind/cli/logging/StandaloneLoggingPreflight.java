@@ -59,7 +59,7 @@ public final class StandaloneLoggingPreflight {
       if (!LEVEL_KEYS.contains(normalized)) throw new StandaloneLoggingRefusal(safeKey);
       String threshold = String.valueOf(setting.getValue()).strip().toUpperCase(Locale.ROOT);
       if (!LEVELS.contains(threshold)
-          || selected.isPresent() && !selected.orElseThrow().equals(threshold)) {
+          || (selected.isPresent() && !selected.orElseThrow().equals(threshold))) {
         throw new StandaloneLoggingRefusal(safeKey);
       }
       selected = Optional.of(threshold);

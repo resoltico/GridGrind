@@ -266,8 +266,8 @@ final class RequestPathIdentity {
     return new Stamp(key, attributes.isDirectory(), attributes.isSymbolicLink());
   }
 
-  @SuppressWarnings(
-      "PMD.CloseResource") // A successful secure stream transfers to its explicit caller.
+  // A successful secure stream transfers to its explicit caller.
+  @SuppressWarnings({"PMD.CloseResource", "StreamResourceLeak"})
   private static SecureDirectoryStream<Path> open(Path path) throws IOException {
     DirectoryStream<Path> stream = Files.newDirectoryStream(path);
     if (stream instanceof SecureDirectoryStream<Path> secure) return secure;

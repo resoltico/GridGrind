@@ -73,7 +73,7 @@ final class PngStructure {
     for (int shift = 24; shift >= 0; shift -= 8) {
       int letter = (type >>> shift) & 255;
       input.require(
-          letter >= 65 && letter <= 90 || letter >= 97 && letter <= 122,
+          (letter >= 65 && letter <= 90) || (letter >= 97 && letter <= 122),
           MediaStructureReason.HEADER);
     }
     input.require((type & 0x2000) == 0, MediaStructureReason.HEADER);

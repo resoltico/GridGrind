@@ -169,9 +169,8 @@ class WorkbookSourceXmlRefusalsTest {
     }
   }
 
-  @SuppressWarnings(
-      "PMD.AvoidInstantiatingObjectsInLoops") // Each named ZIP entry needs its own immutable
-                                              // header.
+  // Each named ZIP entry needs its own immutable header.
+  @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
   private Path workbook(String name, String sheet) throws IOException {
     Map<String, String> entries =
         Map.of(

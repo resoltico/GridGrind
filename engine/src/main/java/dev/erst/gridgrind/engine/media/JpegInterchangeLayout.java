@@ -68,7 +68,7 @@ final class JpegInterchangeLayout {
       int id = selector & 15;
       data.require(id < 4 && precision <= 1, MediaStructureReason.CODE);
       if (precision != 0) data.profile("TIFF/old-JPEG-nonbaseline-quantization");
-      quantTables[id] = data.position - memberStart;
+      quantTables[id] = (long) data.position - memberStart;
       data.skip(64);
     }
   }
@@ -80,7 +80,7 @@ final class JpegInterchangeLayout {
       int kind = selector >> 4;
       int id = selector & 15;
       data.require(kind < 2 && id < 4, MediaStructureReason.CODE);
-      long tableOffset = data.position - memberStart;
+      long tableOffset = (long) data.position - memberStart;
       int symbols = 0;
       for (int j = 0; j < 16; j++) symbols += data.u8();
       data.skip(symbols);
@@ -113,7 +113,7 @@ final class JpegInterchangeLayout {
       dcOffsets[index] = dcTables[tables >> 4];
       acOffsets[index] = acTables[tables & 15];
     }
-    entropyOffset = in.position - memberStart;
+    entropyOffset = (long) in.position - memberStart;
     while (in.remaining() > 0) {
       long start = in.position;
       int value = in.u8();
@@ -121,7 +121,7 @@ final class JpegInterchangeLayout {
         do {
           value = in.u8();
         } while (value == 255);
-        if (value == 0 || value >= 208 && value <= 215) continue;
+        if (value == 0 || (value >= 208 && value <= 215)) continue;
         if (value != 217) in.profile("TIFF/old-JPEG-multiple-scans");
         entropyEndOffset = start - memberStart;
         in.require(in.remaining() == 0, MediaStructureReason.EXCESS_DATA);

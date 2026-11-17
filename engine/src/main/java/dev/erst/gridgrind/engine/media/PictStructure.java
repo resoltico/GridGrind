@@ -48,12 +48,12 @@ final class PictStructure {
     if (prefix < 0 || in.size() - prefix < 12) return false;
     int at = in.start + prefix + 10;
     in.budget.inspect(2);
-    return (in.bytes[at] & 255) == 17 && (in.bytes[at + 1] & 255) == 1
-        || in.size() - prefix >= 14
+    return ((in.bytes[at] & 255) == 17 && (in.bytes[at + 1] & 255) == 1)
+        || (in.size() - prefix >= 14
             && in.bytes[at] == 0
             && (in.bytes[at + 1] & 255) == 17
             && (in.bytes[at + 2] & 255) == 2
-            && (in.bytes[at + 3] & 255) == 255;
+            && (in.bytes[at + 3] & 255) == 255);
   }
 
   private static void opcode(MediaInput in, int op) {
@@ -117,10 +117,10 @@ final class PictStructure {
   }
 
   private static boolean wordSized(int op) {
-    return op >= 0xa2 && op <= 0xaf
-        || op >= 0x24 && op <= 0x27
-        || op >= 0x92 && op <= 0x97
-        || op >= 0x9c && op <= 0x9f;
+    return (op >= 0xa2 && op <= 0xaf)
+        || (op >= 0x24 && op <= 0x27)
+        || (op >= 0x92 && op <= 0x97)
+        || (op >= 0x9c && op <= 0x9f);
   }
 
   private static boolean shape(MediaInput in, int op) {
@@ -137,7 +137,7 @@ final class PictStructure {
       polygon(in);
       return true;
     }
-    if (op >= 0x78 && op <= 0x7f || op >= 0x88 && op <= 0x8f) return true;
+    if ((op >= 0x78 && op <= 0x7f) || (op >= 0x88 && op <= 0x8f)) return true;
     if (op >= 0x80 && op <= 0x87) {
       region(in);
       return true;

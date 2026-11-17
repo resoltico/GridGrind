@@ -301,8 +301,8 @@ final class FaxStructure {
     Codes(String specification) {
       int used = 1;
       java.util.Arrays.fill(values, Integer.MIN_VALUE);
-      for (String entry : specification.trim().split(" +")) {
-        String[] pair = entry.split(":");
+      for (String entry : specification.trim().split(" +", -1)) {
+        String[] pair = entry.split(":", -1);
         int node = 0;
         for (char bit : pair[1].toCharArray()) {
           int side = bit - '0';

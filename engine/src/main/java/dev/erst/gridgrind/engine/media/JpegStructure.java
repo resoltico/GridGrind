@@ -130,7 +130,7 @@ final class JpegStructure {
         }
         case 218 -> scan(data);
         default -> {
-          if (!(marker >= 224 && marker <= 239 || marker == 254))
+          if (!((marker >= 224 && marker <= 239) || marker == 254))
             in.profile("JPEG/marker-" + marker);
         }
       }
@@ -166,9 +166,9 @@ final class JpegStructure {
 
     private void beginFrame(int marker) {
       in.require(
-          !onlyTables && (frame == null || hierarchy && frame.scanned),
+          !onlyTables && (frame == null || (hierarchy && frame.scanned)),
           MediaStructureReason.SEQUENCE);
-      in.require((marker & 4) == 0 || hierarchy && frameCount > 0, MediaStructureReason.SEQUENCE);
+      in.require((marker & 4) == 0 || (hierarchy && frameCount > 0), MediaStructureReason.SEQUENCE);
       if (frame != null) complete(in, frame);
     }
 
@@ -354,12 +354,12 @@ final class JpegStructure {
         int id = ids[i];
         int table = selectors[id];
         if (current.kind < 201) {
-          if (lossless(current) || !progressive(current) || start == 0 && (approx >> 4) == 0)
+          if (lossless(current) || !progressive(current) || (start == 0 && (approx >> 4) == 0))
             in.require(tables.huffman[0][table >> 4], MediaStructureReason.METADATA);
           if (!lossless(current) && (!progressive(current) || start > 0))
             in.require(tables.huffman[1][table & 15], MediaStructureReason.METADATA);
         }
-        if (!progressive(current) || start == 0 && (approx >> 4) == 0) current.covered[id] = true;
+        if (!progressive(current) || (start == 0 && (approx >> 4) == 0)) current.covered[id] = true;
       }
     }
 

@@ -125,7 +125,7 @@ public final class ObservedImageDimensions {
         marker = in.u8();
       } while (marker == 255);
       if (marker == 217 || marker == 218) break;
-      if (marker == 1 || marker >= 208 && marker <= 215) continue;
+      if (marker == 1 || (marker >= 208 && marker <= 215)) continue;
       int length = in.u16();
       in.require(length >= 2, MediaStructureReason.LENGTH);
       var data = in.take(length - 2);

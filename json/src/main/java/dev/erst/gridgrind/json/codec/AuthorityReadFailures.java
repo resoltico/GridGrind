@@ -130,15 +130,15 @@ final class AuthorityReadFailures {
     var references = failure.getPath();
     boolean unknownProperty =
         failure instanceof UnrecognizedPropertyException
-            || failure.getCause()
+            || (failure.getCause()
                     instanceof dev.erst.gridgrind.core.problem.InvalidRequestShapeException shape
-                && shape.requestProblem() instanceof dev.erst.gridgrind.core.problem.UnknownField;
+                && shape.requestProblem() instanceof dev.erst.gridgrind.core.problem.UnknownField);
     int size = references.size() - (unknownProperty ? 1 : 0);
     for (int index = 0; index < size; index++) {
       var reference = references.get(index);
       Object from = reference.from();
       if (from instanceof Map<?, ?>
-          || from instanceof Class<?> type && Map.class.isAssignableFrom(type)) break;
+          || (from instanceof Class<?> type && Map.class.isAssignableFrom(type))) break;
       String name = reference.getPropertyName();
       if (name != null) {
         if (!FIELD.matcher(name).matches()) break;

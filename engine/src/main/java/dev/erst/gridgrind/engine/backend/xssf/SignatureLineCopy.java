@@ -113,7 +113,7 @@ final class SignatureLineCopy {
   }
 
   static void restore(Capture capture, XSSFSheet target) {
-    if (capture.lines().isEmpty()) return;
+    if (capture.lines.isEmpty()) return;
     try {
       restoreNative(capture, target);
     } catch (WorkbookContentRefusalException | UnexpectedNativeContentException exception) {
@@ -128,7 +128,7 @@ final class SignatureLineCopy {
   private static void restoreNative(Capture capture, XSSFSheet target) {
     XSSFVMLDrawing vml = target.getVMLDrawing(true);
     if (capture
-        .sourcePartName()
+        .sourcePartName
         .filter(vml.getPackagePart().getPartName().getName()::equals)
         .isPresent()) {
       throw new IllegalStateException("Copied signatures require independently owned VML");
@@ -137,10 +137,10 @@ final class SignatureLineCopy {
     Map<String, String> identityMap =
         SignatureLineIdentities.mapping(
             vml,
-            capture.types().stream().map(TypeCapture::definition).toList(),
-            capture.lines().stream().map(LineCapture::shape).toList());
-    for (TypeCapture type : capture.types()) restoreType(vml, type, identityMap);
-    for (LineCapture line : capture.lines()) restoreLine(vml, line, identityMap, setupIds);
+            capture.types.stream().map(TypeCapture::definition).toList(),
+            capture.lines.stream().map(LineCapture::shape).toList());
+    for (TypeCapture type : capture.types) restoreType(vml, type, identityMap);
+    for (LineCapture line : capture.lines) restoreLine(vml, line, identityMap, setupIds);
   }
 
   private static void restoreType(
@@ -376,13 +376,17 @@ final class SignatureLineCopy {
         cause);
   }
 
-  /** Detached native state captured before the clone mutates package relationships. */
-  record Capture(
-      List<LineCapture> lines, List<TypeCapture> types, Optional<String> sourcePartName) {
-    Capture {
-      lines = List.copyOf(lines);
-      types = List.copyOf(types);
-      Objects.requireNonNull(sourcePartName);
+  /** Opaque detached state owned by this copier; callers only pass it back for restoration. */
+  static final class Capture {
+    private final List<LineCapture> lines;
+    private final List<TypeCapture> types;
+    private final Optional<String> sourcePartName;
+
+    private Capture(
+        List<LineCapture> lines, List<TypeCapture> types, Optional<String> sourcePartName) {
+      this.lines = List.copyOf(lines);
+      this.types = List.copyOf(types);
+      this.sourcePartName = Objects.requireNonNull(sourcePartName);
     }
   }
 

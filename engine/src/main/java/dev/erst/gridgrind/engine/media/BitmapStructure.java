@@ -86,12 +86,12 @@ final class BitmapStructure {
     input.require(header <= input.size() - dibStart, MediaStructureReason.LENGTH);
     os2 =
         header == 12
-            || header >= 16
+            || (header >= 16
                 && header <= 64
-                && (header != 40 && header != 52 && header != 56 || declaredSize == 14 + header);
+                && ((header != 40 && header != 52 && header != 56) || declaredSize == 14 + header));
     if (os2) input.require(os2Header(header), MediaStructureReason.HEADER);
     header();
-    os2 |= header <= 64 && (compression == 3 && bits == 1 || compression == 4 && bits == 24);
+    os2 |= header <= 64 && ((compression == 3 && bits == 1) || (compression == 4 && bits == 24));
     fileFacts();
   }
 
@@ -101,7 +101,7 @@ final class BitmapStructure {
     height = Math.abs(height);
     input.require(
         selectedRows < 0
-            || selectedRows <= height && firstScan >= 0 && firstScan <= height - selectedRows,
+            || (selectedRows <= height && firstScan >= 0 && firstScan <= height - selectedRows),
         MediaStructureReason.COUNT);
     boolean valid =
         switch (bits) {
@@ -251,7 +251,7 @@ final class BitmapStructure {
   }
 
   private boolean rawCompression() {
-    return compression == 0 || !os2 && (compression == 3 || compression == 6);
+    return compression == 0 || (!os2 && (compression == 3 || compression == 6));
   }
 
   private void huffman() {

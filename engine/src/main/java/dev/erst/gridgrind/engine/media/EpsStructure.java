@@ -96,7 +96,7 @@ final class EpsStructure {
       boolean third = value.word("%!PS-Adobe-3.0");
       in.require(third || value.word("%!PS-Adobe-2.0"), MediaStructureReason.HEADER);
       boolean older = value.word("EPSF-1.2") || value.word("EPSF-2.0");
-      in.require(older || third && value.word("EPSF-3.0"), MediaStructureReason.HEADER);
+      in.require(older || (third && value.word("EPSF-3.0")), MediaStructureReason.HEADER);
     }
 
     private void token(int c) {
@@ -169,7 +169,7 @@ final class EpsStructure {
     }
 
     private void boundingBox(Line value) {
-      in.require(headerRegion || atEnd && trailer, MediaStructureReason.METADATA);
+      in.require(headerRegion || (atEnd && trailer), MediaStructureReason.METADATA);
       if (headerRegion) {
         in.require(!declaredBox, MediaStructureReason.SEQUENCE);
         declaredBox = true;
@@ -410,7 +410,7 @@ final class EpsStructure {
 
       private boolean sign() {
         boolean negative = cursor < end && in.bytes[cursor] == '-';
-        if (negative || cursor < end && in.bytes[cursor] == '+') cursor++;
+        if (negative || (cursor < end && in.bytes[cursor] == '+')) cursor++;
         return negative;
       }
 
@@ -481,6 +481,6 @@ final class EpsStructure {
   }
 
   private static boolean hexDigit(int c) {
-    return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
   }
 }

@@ -128,7 +128,7 @@ final class MetafileStructure {
   }
 
   private static void emfContent(MediaInput r, long type) {
-    if (type >= 2 && type <= 8 || type == 56 || type >= 85 && type <= 92) poly(r, type);
+    if ((type >= 2 && type <= 8) || type == 56 || (type >= 85 && type <= 92)) poly(r, type);
     else
       switch ((int) type) {
         case 49 -> {

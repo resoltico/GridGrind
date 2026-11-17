@@ -35,8 +35,7 @@ final class PublicationFacts {
       cleanupFailure.addSuppressed(failure);
   }
 
-  @org.jspecify.annotations.Nullable
-  IOException cleanupFailure() {
+  @org.jspecify.annotations.Nullable IOException cleanupFailure() {
     return cleanupFailure;
   }
 
