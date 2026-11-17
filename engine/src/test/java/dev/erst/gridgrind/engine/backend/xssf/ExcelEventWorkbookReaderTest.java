@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.InspectionIntrospectionResult;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
@@ -43,8 +42,18 @@ class ExcelEventWorkbookReaderTest {
       workbook.sheets().setActiveSheet("Ops");
       workbook.sheets().setSelectedSheets(List.of("Ops"));
       workbook.formulas().markRecalculateOnOpen();
-      workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Header"));
-      workbook.sheet("Ops").cells().setCell("D3", new CellValue.NumberValue(12.5d));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12.5d));
       workbook.sheet("Ops").columns().setWidth(5, 5, 18.0d);
       workbook
           .protection()
@@ -413,14 +422,14 @@ class ExcelEventWorkbookReaderTest {
   }
 
   @Test
-  void rejectsNonXlsxAndWrapsMalformedWorkbookAndSheetXmlAsIoExceptions() throws IOException {
+  void rejectsNonXlsxAndClassifiesKnownMalformedWorkbookAndSheetXml() throws IOException {
     Path invalidWorkbook =
         ManagedTempFiles.createManagedTempFile("gridgrind-event-invalid-", ".xlsx");
     Files.writeString(invalidWorkbook, "not a workbook", StandardCharsets.UTF_8);
 
-    IllegalArgumentException workbookFailure =
+    WorkbookNotOpenableException workbookFailure =
         assertThrows(
-            IllegalArgumentException.class,
+            WorkbookNotOpenableException.class,
             () ->
                 new EventWorkbookReader()
                     .apply(
@@ -431,7 +440,8 @@ class ExcelEventWorkbookReaderTest {
                                 new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
                                 new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
                                     .GetWorkbookSummary()))));
-    assertEquals("Only .xlsx workbooks are supported", workbookFailure.getMessage());
+    assertEquals(
+        "Workbook package is not openable: " + invalidWorkbook, workbookFailure.getMessage());
 
     Path sourceWorkbook =
         ManagedTempFiles.createManagedTempFile("gridgrind-event-bad-workbook-source-", ".xlsx");
@@ -447,9 +457,9 @@ class ExcelEventWorkbookReaderTest {
     }
     Path malformedWorkbook = rewriteEntry(sourceWorkbook, "xl/workbook.xml", _ -> "<workbook");
 
-    IOException metadataFailure =
+    WorkbookContentRefusalException metadataFailure =
         assertThrows(
-            IOException.class,
+            WorkbookContentRefusalException.class,
             () ->
                 new EventWorkbookReader()
                     .apply(
@@ -460,10 +470,9 @@ class ExcelEventWorkbookReaderTest {
                                 new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
                                 new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery
                                     .GetWorkbookSummary()))));
-    assertTrue(
-        metadataFailure
-            .getMessage()
-            .contains("Failed to read workbook through the XSSF event model"));
+    assertEquals(
+        dev.erst.gridgrind.core.problem.WorkbookContentIssue.XML_SOURCE_REFUSED,
+        metadataFailure.issue());
 
     Path malformedSheetSource =
         ManagedTempFiles.createManagedTempFile("gridgrind-event-bad-sheet-source-", ".xlsx");
@@ -480,9 +489,9 @@ class ExcelEventWorkbookReaderTest {
     Path malformedSheetWorkbook =
         rewriteEntry(malformedSheetSource, "xl/worksheets/sheet1.xml", _ -> "<worksheet");
 
-    IOException sheetFailure =
+    WorkbookContentRefusalException sheetFailure =
         assertThrows(
-            IOException.class,
+            WorkbookContentRefusalException.class,
             () ->
                 new EventWorkbookReader()
                     .apply(
@@ -495,11 +504,13 @@ class ExcelEventWorkbookReaderTest {
                                 new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
                                     .GetSheetSummary()))));
 
-    assertTrue(sheetFailure.getMessage().contains("Failed to parse sheet Ops"));
+    assertEquals(
+        dev.erst.gridgrind.core.problem.WorkbookContentIssue.XML_SOURCE_REFUSED,
+        sheetFailure.issue());
   }
 
   @Test
-  void wrapsNonSaxSheetParseFailuresWithSheetContext() throws IOException {
+  void malformedNumericSheetAttributesRetainTheirKnownInputField() throws IOException {
     Path sourceWorkbook =
         ManagedTempFiles.createManagedTempFile("gridgrind-event-invalid-row-source-", ".xlsx");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
@@ -527,9 +538,9 @@ class ExcelEventWorkbookReaderTest {
                 </worksheet>
                 """);
 
-    IOException failure =
+    WorkbookContentRefusalException failure =
         assertThrows(
-            IOException.class,
+            WorkbookContentRefusalException.class,
             () ->
                 new EventWorkbookReader()
                     .apply(
@@ -542,7 +553,10 @@ class ExcelEventWorkbookReaderTest {
                                 new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
                                     .GetSheetSummary()))));
 
-    assertTrue(failure.getMessage().contains("Failed to parse sheet Ops"));
+    assertEquals(
+        dev.erst.gridgrind.core.problem.WorkbookContentIssue.INVALID_NATIVE_VALUE, failure.issue());
+    assertEquals(
+        java.util.Optional.of("worksheet.row.r"), failure.location().orElseThrow().fieldName());
   }
 
   @Test

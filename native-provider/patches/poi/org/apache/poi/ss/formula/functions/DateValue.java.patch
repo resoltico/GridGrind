@@ -1,0 +1,11 @@
+--- org/apache/poi/ss/formula/functions/DateValue.java
++++ org/apache/poi/ss/formula/functions/DateValue.java
+@@ -57,7 +57,7 @@
+                 return ErrorEval.VALUE_INVALID;
+             }
+ 
+-            return new NumberEval(DateUtil.getExcelDate(DateParser.parseLocalDate(dateText)));
++            return new NumberEval(DateUtil.getExcelDate(DateParser.parseLocalDate(dateText), org.apache.poi.ss.usermodel.DateSystemContext.is1904()));
+         } catch (DateTimeException dte) {
+             LOG.atInfo().log("Failed to parse date", dte);
+             return ErrorEval.VALUE_INVALID;

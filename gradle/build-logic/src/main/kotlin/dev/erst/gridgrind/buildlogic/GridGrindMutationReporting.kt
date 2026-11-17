@@ -6,7 +6,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
 
 internal fun Project.registerGridGrindMutationReport(): TaskProvider<Task> =
-    tasks.register("mutationReport") { reportTask ->
+    tasks.register("mutationReport") { val reportTask = this
         reportTask.group = "verification"
         reportTask.description = "Generates advisory mutation reports for the model and engine."
         reportTask.dependsOn(":core:pitest")

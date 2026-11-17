@@ -27,11 +27,13 @@ class GridGrindProblemCodeResolutionTest {
     ProblemContext.OpenWorkbook openWorkbookContext =
         new ProblemContext.OpenWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "NONE"),
-            ProblemContextWorkbookSurfaces.WorkbookReference.existingFile("/tmp/source.xlsx"));
+            ProblemContextWorkbookSurfaces.WorkbookReference.existingFile("/tmp/source.xlsx"),
+            java.util.Optional.empty());
     ProblemContext.OpenWorkbook newWorkbookContext =
         new ProblemContext.OpenWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
-            ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook());
+            ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook(),
+            java.util.Optional.empty());
     ProblemContext.WriteResponse writeResponseContext =
         new ProblemContext.WriteResponse(
             ProblemContextRequestSurfaces.ResponseOutput.responseFile("/tmp/report.json"));
@@ -40,17 +42,21 @@ class GridGrindProblemCodeResolutionTest {
             ProblemContextRequestSurfaces.ResponseOutput.standardOutput());
 
     assertEquals(
-        "Inspect problem.assertionFailure observations, then adjust the failing assertion or preceding workbook mutations and retry.",
+        "Inspect problem.assertionFailure observations, then adjust the failing assertion or"
+            + " preceding workbook mutations and retry.",
         GridGrindProblemCode.ASSERTION_FAILED.resolutionFor("assertion failed", assertionContext));
     assertEquals(
-        "Choose a new SAVE_AS destination path, remove the conflicting file, or set SAVE_AS.ifExists=REPLACE before retrying.",
+        "Choose a new SAVE_AS destination path, remove the conflicting file, or set"
+            + " SAVE_AS.ifExists=REPLACE before retrying.",
         GridGrindProblemCode.IO_ERROR.resolutionFor(
             "Could not write workbook: already exists", saveAsContext));
     assertEquals(
-        "Check the SAVE_AS destination path, parent directory permissions, free disk space, and file locks before retrying.",
+        "Check the SAVE_AS destination path, parent directory permissions, free disk space, and"
+            + " file locks before retrying.",
         GridGrindProblemCode.IO_ERROR.resolutionFor("disk full", saveAsContext));
     assertEquals(
-        "Check the destination workbook path, permissions, free disk space, and file locks before retrying.",
+        "Check the destination workbook path, permissions, free disk space, and file locks before"
+            + " retrying.",
         GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", overwriteSourceContext));
     assertEquals(
         "Check the source workbook path, permissions, and file locks before retrying.",
@@ -63,7 +69,8 @@ class GridGrindProblemCodeResolutionTest {
         GridGrindProblemCode.IO_ERROR.resolutionFor(
             "Could not write response: already exists", writeResponseContext));
     assertEquals(
-        "Check the response destination path, parent directory permissions, free disk space, and file locks before retrying.",
+        "Check the response destination path, parent directory permissions, free disk space, and"
+            + " file locks before retrying.",
         GridGrindProblemCode.IO_ERROR.resolutionFor("access denied", writeResponseContext));
     assertEquals(
         GridGrindProblemCode.IO_ERROR.resolution(),

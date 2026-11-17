@@ -1,0 +1,29 @@
+--- org/apache/poi/ss/usermodel/DataFormatter.java
++++ org/apache/poi/ss/usermodel/DataFormatter.java
+@@ -985,7 +985,7 @@
+         formatStr = sb.toString();
+ 
+         try {
+-            return new ExcelStyleDateFormatter(formatStr, symbols);
++            return new ExcelStyleDateFormatter(formatStr, locale);
+         } catch(IllegalArgumentException iae) {
+             LOG.atDebug().withThrowable(iae).log("Formatting failed for format {}, falling back", formatStr);
+             // the pattern could not be parsed correctly,
+@@ -1669,7 +1669,7 @@
+         if (dateFormat == null) {
+             if (defaultDateformat == null) {
+                 DateFormatSymbols sym = DateFormatSymbols.getInstance(LocaleUtil.getUserLocale());
+-                SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", sym);
++                SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", LocaleUtil.getUserLocale());
+                 sdf.setTimeZone(LocaleUtil.getUserTimeZone());
+                 dateFormat = sdf;
+             } else {
+@@ -2087,7 +2087,7 @@
+         generalNumberFormat = new ExcelGeneralNumberFormat(locale);
+ 
+         // taken from Date.toString()
+-        defaultDateformat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", dateSymbols);
++        defaultDateformat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", locale);
+         defaultDateformat.setTimeZone(LocaleUtil.getUserTimeZone());
+ 
+         // init built-in formats

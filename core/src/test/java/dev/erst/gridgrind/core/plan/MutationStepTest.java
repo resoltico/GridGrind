@@ -40,12 +40,11 @@ class MutationStepTest {
 
   @Test
   void keepsIncompatibleTargetsForTheStaticContractPhase() {
-    assertDoesNotThrow(
-        () ->
-            new MutationStep(
-                new StepId("bad-target"),
-                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
-                new CellMutationAction.SetCell(new CellValueSpec.Text(text("Owner")))));
+    assertDoesNotThrow(() ->
+        new MutationStep(
+            new StepId("bad-target"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
+            new CellMutationAction.SetCell(new CellValueSpec.Text(text("Owner")))));
   }
 
   @Test

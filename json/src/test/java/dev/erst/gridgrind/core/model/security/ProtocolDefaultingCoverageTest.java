@@ -641,12 +641,12 @@ class ProtocolDefaultingCoverageTest {
 
     assertTrue(explicitAlert.showErrorBox());
     assertFalse(hiddenAlert.showErrorBox());
-    assertTrue(defaultedChart.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, defaultedChart.title());
     assertEquals(
         new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), defaultedChart.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultedChart.displayBlanksAs());
     assertTrue(defaultedChart.plotOnlyVisibleCells());
-    assertTrue(explicitChart.legend() instanceof ChartLegendSpec.Hidden);
+    assertInstanceOf(ChartLegendSpec.Hidden.class, explicitChart.legend());
     assertEquals(ExcelChartDisplayBlanksAs.SPAN, explicitChart.displayBlanksAs());
     assertFalse(explicitChart.plotOnlyVisibleCells());
     assertTrue(defaultedAxis.visible());
@@ -962,7 +962,7 @@ class ProtocolDefaultingCoverageTest {
         ChartSpec.withStandardDisplay("ConvenienceChart", twoCellAnchor(), List.of(explicitLine));
 
     assertTrue(defaultAxis.visible());
-    assertTrue(convenienceSeries.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, convenienceSeries.title());
     assertEquals(2, explicitArea.axes().size());
     assertEquals(2, convenienceArea.axes().size());
     assertEquals(2, explicitArea3D.axes().size());
@@ -981,12 +981,12 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(3, convenienceSurface.axes().size());
     assertEquals(2, explicitSurface3D.axes().size());
     assertEquals(3, convenienceSurface3D.axes().size());
-    assertTrue(createdChart.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, createdChart.title());
     assertEquals(
         new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), createdChart.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, createdChart.displayBlanksAs());
     assertTrue(createdChart.plotOnlyVisibleCells());
-    assertTrue(convenienceChart.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, convenienceChart.title());
   }
 
   @Test
@@ -1310,7 +1310,8 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(
         components.length, values.length, "Fixture supplies a position for every component");
     for (int index = 0; index < values.length; index++) {
-      if (values[index] != null) {
+      if (values[index] != null
+          && !(values[index] instanceof Optional<?> optional && optional.isEmpty())) {
         fields.set(
             components[index].getName(),
             mapper.readTree(
@@ -1319,6 +1320,8 @@ class ProtocolDefaultingCoverageTest {
                     .writeValueAsBytes(values[index])));
       }
     }
-    return mapper.readValue(mapper.writeValueAsBytes(fields), type);
+    return type == WorkbookPlan.class
+        ? type.cast(dev.erst.gridgrind.json.codec.GridGrindJson.readRequest(fields.toString()))
+        : mapper.readValue(mapper.writeValueAsBytes(fields), type);
   }
 }

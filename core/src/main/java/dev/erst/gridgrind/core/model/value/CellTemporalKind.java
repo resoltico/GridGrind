@@ -4,5 +4,6 @@ package dev.erst.gridgrind.core.model.value;
 public enum CellTemporalKind {
   DATE,
   TIME,
-  DATE_TIME
+  DATE_TIME,
+  ELAPSED
 }

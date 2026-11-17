@@ -466,38 +466,38 @@ class GridGrindJsonCoverageTest {
     WorkbookPlan request =
         GridGrindJson.readRequest(
             """
-                        {
-                          "protocolVersion": 1,
-                          "source": { "type": "NEW" },
-                          "persistence": { "type": "NONE" },
-                          "execution": {
-                            "mode": {"type": "FULL_XSSF"},
-                            "journal": { "level": "NORMAL" },
-                            "calculation": {
-                              "strategy": { "type": "DO_NOT_CALCULATE" },
-                              "markRecalculateOnOpen": false
-                            }
-                          },
-                          "formulaEnvironment": {
-                            "externalWorkbooks": [],
-                            "missingWorkbookPolicy": "ERROR",
-                            "udfToolpacks": []
-                          },
-                          "steps": [
-                            {
-                          "stepId": "set-owner",
-                          "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                          "action": {
-                            "type": "SET_CELL",
-                            "value": {
-                              "type": "TEXT",
-                              "value": { "type": "INLINE", "text": "%s" }
-                            }
-                          }
-                        }
-                      ]
+                {
+                  "protocolVersion": 1,
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "execution": {
+                    "mode": {"type": "FULL_XSSF"},
+                    "journal": { "level": "NORMAL" },
+                    "calculation": {
+                      "strategy": { "type": "DO_NOT_CALCULATE" },
+                      "markRecalculateOnOpen": false
                     }
-                    """
+                  },
+                  "formulaEnvironment": {
+                    "externalWorkbooks": [],
+                    "missingWorkbookPolicy": "ERROR",
+                    "udfToolpacks": []
+                  },
+                  "steps": [
+                    {
+                  "stepId": "set-owner",
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "action": {
+                    "type": "SET_CELL",
+                    "value": {
+                      "type": "TEXT",
+                      "value": { "type": "INLINE", "text": "%s" }
+                    }
+                  }
+                }
+              ]
+            }
+            """
                 .formatted(largeText)
                 .getBytes(StandardCharsets.UTF_8));
     WorkbookResult response =

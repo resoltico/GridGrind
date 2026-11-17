@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli.golden;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -51,8 +52,8 @@ final class GoldenSignaturePreviews {
       if ("SET_SIGNATURE_LINE".equals(action.path("type").asString(""))) {
         JsonNode definition = action.path("signatureLine");
         String name = definition.path("name").asString();
-        assertTrue(
-            expected.putIfAbsent(name, render(definition, workspace)) == null,
+        assertNull(
+            expected.putIfAbsent(name, render(definition, workspace)),
             "Golden signature fixtures require unique names: " + name);
       }
     }

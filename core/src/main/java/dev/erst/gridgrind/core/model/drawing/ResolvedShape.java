@@ -31,10 +31,9 @@ public sealed interface ResolvedShape permits ResolvedShape.SimpleShape, ShapeSp
       Objects.requireNonNull(anchor, "anchor must not be null");
       Objects.requireNonNull(text, "text must not be null");
       presetGeometryToken = requirePresetGeometryToken(presetGeometryToken);
-      text.ifPresent(
-          value -> {
-            TextValidation.requireNonBlank(value, "text");
-          });
+      text.ifPresent(value -> {
+        TextValidation.requireNonBlank(value, "text");
+      });
     }
 
     @Override

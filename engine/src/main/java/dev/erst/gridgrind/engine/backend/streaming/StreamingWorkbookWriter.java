@@ -13,7 +13,6 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.engine.cells.CellErrors;
-import dev.erst.gridgrind.engine.cells.CellTextLimits;
 import dev.erst.gridgrind.engine.packaging.WorkbookFiles;
 import dev.erst.gridgrind.engine.packaging.WorkbookNormalization;
 import dev.erst.gridgrind.engine.poi.FormulaWrites;
@@ -32,8 +31,6 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Stateful low-memory append-oriented workbook authoring backed by POI's SXSSF writer. */
-// Streaming authoring spans canonical scalar, temporal, formula and rich-text operands.
-@SuppressWarnings("PMD.ExcessiveImports")
 @dev.erst.gridgrind.core.limits.EnforcesLimit({
   dev.erst.gridgrind.core.limits.Limit.ID_MAXIMUM_TEXT_CHARACTERS_PER_CELL
 })
@@ -52,15 +49,10 @@ public final class StreamingWorkbookWriter implements AutoCloseable {
   }
 
   /** Applies a materialized core mutation to the streaming session. */
-  public void apply(ResolvedStep step) {
+  public void apply(ResolvedStep step) throws IOException {
     switch (step.action()) {
       case WorkbookMutationAction.EnsureSheet _ ->
-          sheets.computeIfAbsent(
-              ((SheetSelector.ByName) step.target()).name().value(),
-              name -> {
-                nextRowIndexes.put(name, 0);
-                return workbook.createSheet(name);
-              });
+          ensureSheet(((SheetSelector.ByName) step.target()).name().value());
       case ResolvedMutationAction.AppendRow action ->
           appendValues(
               requiredSheet(((SheetSelector.ByName) step.target()).name().value()),
@@ -68,10 +60,28 @@ public final class StreamingWorkbookWriter implements AutoCloseable {
               action.values());
       default ->
           throw new IllegalArgumentException(
-              "execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: "
+              "execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only;"
+                  + " unsupported mutation action type: "
                   + dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames
                       .mutationActionTypeName(step.action().authoredType()));
     }
+  }
+
+  private void ensureSheet(String name) throws IOException {
+    if (sheets.containsKey(name)) return;
+    SXSSFSheet created;
+    try {
+      created = workbook.createSheet(name);
+    } catch (IllegalStateException exception) {
+      // POI 6's createAndRegisterSXSSFSheet wraps scratch acquisition IOException in this type.
+      // Restore that declared IO boundary without reclassifying unrelated native failures.
+      if (exception.getCause() instanceof IOException failure) {
+        throw new IOException(failure.getMessage(), exception);
+      }
+      throw exception;
+    }
+    sheets.put(name, created);
+    nextRowIndexes.put(name, 0);
   }
 
   /** Marks the streamed workbook to recalculate formulas on the next Excel-compatible open. */
@@ -109,6 +119,9 @@ public final class StreamingWorkbookWriter implements AutoCloseable {
 
   private void appendValues(
       SXSSFSheet sheet, String sheetName, java.util.List<ResolvedCellWrite> values) {
+    values.forEach(value ->
+        dev.erst.gridgrind.core.model.value.TemporalSemantics.requireWritable(
+            value, dev.erst.gridgrind.core.model.value.ExcelDateSystem.WINDOWS_1900));
     int rowIndex = nextRowIndexes.compute(sheetName, (_, nextRowIndex) -> nextRowIndex + 1) - 1;
     SXSSFRow row = sheet.createRow(rowIndex);
     for (int columnIndex = 0; columnIndex < values.size(); columnIndex++) {
@@ -119,22 +132,27 @@ public final class StreamingWorkbookWriter implements AutoCloseable {
   private void writeCellValue(SXSSFCell cell, ResolvedCellWrite value) {
     switch (value) {
       case CellValue.Blank _ -> cell.setBlank();
-      case CellValue.Text textValue -> {
-        CellTextLimits.requireSupportedLength(textValue.value(), "textValue.value");
+      case dev.erst.gridgrind.core.model.value.ResolvedCellText textValue -> {
         cell.setCellValue(textValue.value());
       }
       case ResolvedRichText richTextValue ->
           cell.setCellValue(StyleAdapter.toPoiRichText(workbook.getXSSFWorkbook(), richTextValue));
-      case CellValue.NumberValue numberValue -> cell.setCellValue(numberValue.value());
+      case CellValueSpec.NumberValue numberValue -> cell.setCellValue(numberValue.value());
       case CellValue.BooleanValue booleanValue -> cell.setCellValue(booleanValue.value());
-      case CellValue.ErrorValue errorValue ->
+      case CellValueSpec.ErrorValue errorValue ->
           cell.setCellErrorValue(CellErrors.toPoiStoredFormulaError(errorValue.value()).getCode());
       case CellValueSpec.Date dateValue -> {
-        cell.setCellValue(dateValue.value());
+        cell.setCellValue(
+            dev.erst.gridgrind.core.model.value.TemporalSemantics.serial(
+                dateValue.value(),
+                dev.erst.gridgrind.core.model.value.ExcelDateSystem.WINDOWS_1900));
         cell.setCellStyle(styleRegistry.localDateStyle(cell));
       }
       case CellValueSpec.DateTime dateTimeValue -> {
-        cell.setCellValue(dateTimeValue.value());
+        cell.setCellValue(
+            dev.erst.gridgrind.core.model.value.TemporalSemantics.serial(
+                dateTimeValue.value(),
+                dev.erst.gridgrind.core.model.value.ExcelDateSystem.WINDOWS_1900));
         cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       }
       case ResolvedFormula formulaValue ->

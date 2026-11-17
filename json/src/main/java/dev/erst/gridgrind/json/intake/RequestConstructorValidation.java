@@ -2,7 +2,6 @@ package dev.erst.gridgrind.json.intake;
 
 import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.core.metadata.ModelDefaults;
-import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.model.formula.FormulaInputException;
 import dev.erst.gridgrind.core.problem.FormulaRequestException;
@@ -56,8 +55,7 @@ final class RequestConstructorValidation {
     }
     Class<?> raw = RequestJavaTypes.rawType(type);
     if (WireScalar.isValueType(raw)) {
-      RecordComponent component = raw.getRecordComponents()[0];
-      Object scalar = scalar(node, component.getType());
+      Object scalar = scalar(node, WireScalar.wireType(raw));
       return construct(raw, new Object[] {scalar}, path, true, problems);
     }
     if (raw.isSealed()) {
@@ -71,45 +69,24 @@ final class RequestConstructorValidation {
 
   private static Class<?> variant(RequestJsonObject node, Class<?> root) {
     List<Class<? extends Record>> variants = ProtocolTypeMetadataSupport.declaredVariants(root);
-    Optional<String> discriminator = discriminator(root);
-    if (discriminator.isPresent()) {
-      String name = discriminator.orElseThrow();
+    String discriminator = ProtocolTypeMetadataSupport.discriminatorField(root);
+    if (!discriminator.isEmpty()) {
+      String name = discriminator;
       RequestJsonString tag =
           (RequestJsonString) RequestObjectMembers.index(node).member(name).orElseThrow().value();
       return ProtocolTypeMetadataSupport.subtypeForTypeId(root, tag.value()).orElseThrow();
     }
     var members = RequestObjectMembers.index(node);
     return variants.stream()
-        .filter(
-            type ->
-                java.util.Arrays.stream(type.getRecordComponents())
-                    .allMatch(
-                        component ->
-                            members.member(component.getName()).isPresent()
-                                || component.getType() == Optional.class
-                                || component.isAnnotationPresent(WireDefault.class)))
+        .filter(type ->
+            java.util.Arrays.stream(type.getRecordComponents())
+                .allMatch(component ->
+                    members.member(component.getName()).isPresent()
+                        || component.getType() == Optional.class
+                        || component.isAnnotationPresent(WireDefault.class)))
         .findFirst()
         .orElseThrow(
             () -> new IllegalStateException("Shape-valid union has no canonical alternative"));
-  }
-
-  private static Optional<String> discriminator(Class<?> root) {
-    Union annotation = root.getAnnotation(Union.class);
-    if (annotation != null) {
-      return annotation.discriminator().isEmpty()
-          ? Optional.empty()
-          : Optional.of(annotation.discriminator());
-    }
-    if (!root.isSealed()) {
-      return Optional.empty();
-    }
-    for (Class<?> permitted : root.getPermittedSubclasses()) {
-      Optional<String> inherited = discriminator(permitted);
-      if (inherited.isPresent()) {
-        return inherited;
-      }
-    }
-    return Optional.empty();
   }
 
   @SuppressWarnings(
@@ -162,6 +139,8 @@ final class RequestConstructorValidation {
     return construct(type, arguments, path, false, problems);
   }
 
+  @SuppressWarnings("PMD.PreserveStackTrace")
+  // Preserve the actual constructor Error identity instead of adding its reflection wrapper.
   private static Optional<Object> construct(
       Class<?> type,
       Object[] arguments,
@@ -170,12 +149,15 @@ final class RequestConstructorValidation {
       List<RequestBindingFailure> problems) {
     try {
       Class<?>[] parameters =
-          java.util.Arrays.stream(type.getRecordComponents())
-              .map(RecordComponent::getType)
-              .toArray(Class<?>[]::new);
+          scalar
+              ? new Class<?>[] {WireScalar.wireType(type)}
+              : java.util.Arrays.stream(type.getRecordComponents())
+                  .map(RecordComponent::getType)
+                  .toArray(Class<?>[]::new);
       return Optional.of(type.getConstructor(parameters).newInstance(arguments));
     } catch (InvocationTargetException wrapped) {
       Throwable cause = wrapped.getCause();
+      if (cause instanceof Error fatal) throw fatal;
       if (!(cause instanceof IllegalArgumentException invalid)) {
         throw new IllegalStateException(
             "Canonical model validation failed unexpectedly: " + type, cause);

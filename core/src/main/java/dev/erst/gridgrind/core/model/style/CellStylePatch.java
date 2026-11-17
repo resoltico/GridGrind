@@ -10,7 +10,8 @@ import java.util.Optional;
 @CatalogType(
     id = "CellStylePatch",
     summary =
-        "Style patch applied to a cell or range; at least one field must be set. Colors preserve RGB, theme, indexed, and tint semantics; style subgroups are nested explicitly.",
+        "Style patch applied to a cell or range; at least one field must be set. Colors preserve"
+            + " RGB, theme, indexed, and tint semantics; style subgroups are nested explicitly.",
     displayOrder = 43)
 public record CellStylePatch(
     Optional<String> numberFormat,
@@ -26,10 +27,9 @@ public record CellStylePatch(
     Objects.requireNonNull(fill, "fill must not be null");
     Objects.requireNonNull(border, "border must not be null");
     Objects.requireNonNull(protection, "protection must not be null");
-    numberFormat.ifPresent(
-        value -> {
-          TextValidation.requireNonBlank(value, "numberFormat");
-        });
+    numberFormat.ifPresent(value -> {
+      TextValidation.requireNonBlank(value, "numberFormat");
+    });
     if (numberFormat.isEmpty()
         && alignment.isEmpty()
         && font.isEmpty()

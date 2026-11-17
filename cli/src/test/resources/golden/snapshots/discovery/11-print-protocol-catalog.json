@@ -54,6 +54,13 @@
       "qualifiedId" : "workbookStepTypes:MUTATION",
       "summary" : "Execute one mutation action against the selected workbook target."
     }, {
+      "catalogGroup" : "assertionTypes",
+      "kind" : "ENTRY",
+      "lookupId" : "EXPECT_CHART_FACTS",
+      "qualifiedId" : "assertionTypes:EXPECT_CHART_FACTS",
+      "summary" : "Require the selected chart reports to match exactly and in order.",
+      "supportingQualifiedIds" : [ "numericCacheTypes:STORED", "nestedTypes:dataSourceTypes", "nestedTypes:numericCacheTypes", "drawingAnchorReportTypes:ONE_CELL", "drawingAnchorReportTypes:TWO_CELL", "titleTypes:TEXT", "axisCrossingTypes:VALUE", "chartNumericCachePointType:ChartNumericCachePoint", "chartReportType:ChartReport", "chartStringCachePointType:ChartStringCachePoint", "dataSourceTypes:NUMERIC_LITERAL", "dataSourceTypes:NUMERIC_REFERENCE", "drawingCoordinateReportTypes:MEASURED", "drawingMarkerReportType:DrawingMarkerReport", "titleTypes:FORMULA", "nestedTypes:axisCrossingTypes", "nestedTypes:drawingAnchorReportTypes", "nestedTypes:drawingCoordinateReportTypes", "nestedTypes:titleTypes", "plainTypes:chartNumericCachePointType", "plainTypes:chartReportType", "plainTypes:chartStringCachePointType", "plainTypes:drawingMarkerReportType" ]
+    }, {
       "catalogGroup" : "mutationActionTypes",
       "kind" : "ENTRY",
       "lookupId" : "SET_SHEET_PRESENTATION",
@@ -212,13 +219,6 @@
       "lookupId" : "EXPECT_ANALYSIS_MAX_SEVERITY",
       "qualifiedId" : "assertionTypes:EXPECT_ANALYSIS_MAX_SEVERITY",
       "summary" : "Run one analysis query and require its highest severity to be no higher than maximumSeverity."
-    }, {
-      "catalogGroup" : "assertionTypes",
-      "kind" : "ENTRY",
-      "lookupId" : "EXPECT_CHART_FACTS",
-      "qualifiedId" : "assertionTypes:EXPECT_CHART_FACTS",
-      "summary" : "Require the selected chart reports to match exactly and in order.",
-      "supportingQualifiedIds" : [ "drawingAnchorReportTypes:ONE_CELL", "drawingAnchorReportTypes:TWO_CELL", "titleTypes:TEXT", "chartReportType:ChartReport", "drawingMarkerReportType:DrawingMarkerReport", "titleTypes:FORMULA", "nestedTypes:drawingAnchorReportTypes", "nestedTypes:titleTypes", "plainTypes:chartReportType", "plainTypes:drawingMarkerReportType" ]
     }, {
       "catalogGroup" : "inspectionQueryTypes",
       "kind" : "ENTRY",
@@ -396,9 +396,15 @@
     }, {
       "catalogGroup" : "nestedTypes",
       "kind" : "NESTED_GROUP",
+      "lookupId" : "cellTemporalReportTypes",
+      "qualifiedId" : "nestedTypes:cellTemporalReportTypes",
+      "summary" : "Nested type group with discriminator type and 3 variants."
+    }, {
+      "catalogGroup" : "nestedTypes",
+      "kind" : "NESTED_GROUP",
       "lookupId" : "requestWarningLocationTypes",
       "qualifiedId" : "nestedTypes:requestWarningLocationTypes",
-      "summary" : "Nested type group with discriminator type and 4 variants."
+      "summary" : "Nested type group with discriminator type and 5 variants."
     }, {
       "catalogGroup" : "nestedTypes",
       "kind" : "NESTED_GROUP",
@@ -411,12 +417,6 @@
       "lookupId" : "tableRowSelectorTypes",
       "qualifiedId" : "nestedTypes:tableRowSelectorTypes",
       "summary" : "Nested type group with discriminator type and 3 variants."
-    }, {
-      "catalogGroup" : "plainTypes",
-      "kind" : "PLAIN_GROUP",
-      "lookupId" : "cellTemporalReportType",
-      "qualifiedId" : "plainTypes:cellTemporalReportType",
-      "summary" : "Projected temporal facet for one numeric cell value, including whether Excel formatting marks it as date-like and any derived DATE, TIME, or DATE_TIME semantic kind."
     }, {
       "catalogGroup" : "plainTypes",
       "kind" : "PLAIN_GROUP",

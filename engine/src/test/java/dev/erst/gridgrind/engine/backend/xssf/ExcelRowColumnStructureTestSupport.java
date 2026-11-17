@@ -225,17 +225,15 @@ class ExcelRowColumnStructureTestSupport {
       ExcelRowSpan rows,
       RowSpanMutation mutation,
       String... addressValuePairs) {
-    withWorkbook(
-        workbook -> {
-          XSSFSheet sheet = workbook.createSheet(sheetName);
-          seedStrings(sheet, addressValuePairs);
-          seedNamedRange(workbook, rangeName, formula);
+    withWorkbook(workbook -> {
+      XSSFSheet sheet = workbook.createSheet(sheetName);
+      seedStrings(sheet, addressValuePairs);
+      seedNamedRange(workbook, rangeName, formula);
 
-          IllegalArgumentException failure =
-              assertThrows(
-                  IllegalArgumentException.class, () -> mutation.apply(workbook, sheet, rows));
-          assertTrue(failure.getMessage().contains("named range '" + rangeName + "'"));
-        });
+      IllegalArgumentException failure =
+          assertThrows(IllegalArgumentException.class, () -> mutation.apply(workbook, sheet, rows));
+      assertTrue(failure.getMessage().contains("named range '" + rangeName + "'"));
+    });
   }
 
   void assertColumnNamedRangeRejected(
@@ -245,17 +243,16 @@ class ExcelRowColumnStructureTestSupport {
       ExcelColumnSpan columns,
       ColumnSpanMutation mutation,
       String... addressValuePairs) {
-    withWorkbook(
-        workbook -> {
-          XSSFSheet sheet = workbook.createSheet(sheetName);
-          seedStrings(sheet, addressValuePairs);
-          seedNamedRange(workbook, rangeName, formula);
+    withWorkbook(workbook -> {
+      XSSFSheet sheet = workbook.createSheet(sheetName);
+      seedStrings(sheet, addressValuePairs);
+      seedNamedRange(workbook, rangeName, formula);
 
-          IllegalArgumentException failure =
-              assertThrows(
-                  IllegalArgumentException.class, () -> mutation.apply(workbook, sheet, columns));
-          assertTrue(failure.getMessage().contains("named range '" + rangeName + "'"));
-        });
+      IllegalArgumentException failure =
+          assertThrows(
+              IllegalArgumentException.class, () -> mutation.apply(workbook, sheet, columns));
+      assertTrue(failure.getMessage().contains("named range '" + rangeName + "'"));
+    });
   }
 
   void assertRowNamedRangeUntouched(
@@ -265,15 +262,14 @@ class ExcelRowColumnStructureTestSupport {
       ExcelRowSpan rows,
       RowSpanMutation mutation,
       String... addressValuePairs) {
-    withWorkbook(
-        workbook -> {
-          XSSFSheet sheet = workbook.createSheet(sheetName);
-          seedStrings(sheet, addressValuePairs);
-          seedNamedRange(workbook, rangeName, formula);
+    withWorkbook(workbook -> {
+      XSSFSheet sheet = workbook.createSheet(sheetName);
+      seedStrings(sheet, addressValuePairs);
+      seedNamedRange(workbook, rangeName, formula);
 
-          assertDoesNotThrow(() -> mutation.apply(workbook, sheet, rows));
-          assertEquals(formula, workbook.getName(rangeName).getRefersToFormula());
-        });
+      assertDoesNotThrow(() -> mutation.apply(workbook, sheet, rows));
+      assertEquals(formula, workbook.getName(rangeName).getRefersToFormula());
+    });
   }
 
   void assertColumnNamedRangeUntouched(
@@ -283,15 +279,14 @@ class ExcelRowColumnStructureTestSupport {
       ExcelColumnSpan columns,
       ColumnSpanMutation mutation,
       String... addressValuePairs) {
-    withWorkbook(
-        workbook -> {
-          XSSFSheet sheet = workbook.createSheet(sheetName);
-          seedStrings(sheet, addressValuePairs);
-          seedNamedRange(workbook, rangeName, formula);
+    withWorkbook(workbook -> {
+      XSSFSheet sheet = workbook.createSheet(sheetName);
+      seedStrings(sheet, addressValuePairs);
+      seedNamedRange(workbook, rangeName, formula);
 
-          assertDoesNotThrow(() -> mutation.apply(workbook, sheet, columns));
-          assertEquals(formula, workbook.getName(rangeName).getRefersToFormula());
-        });
+      assertDoesNotThrow(() -> mutation.apply(workbook, sheet, columns));
+      assertEquals(formula, workbook.getName(rangeName).getRefersToFormula());
+    });
   }
 
   void assertStructureGuardCase(
@@ -300,19 +295,18 @@ class ExcelRowColumnStructureTestSupport {
       CheckedSheetOperation operation,
       boolean allowed,
       String expectedMessageFragment) {
-    withWorkbook(
-        workbook -> {
-          XSSFSheet sheet = workbook.createSheet(sheetName);
-          seeder.accept(workbook, sheet);
-          if (allowed) {
-            assertDoesNotThrow(() -> operation.apply(sheet));
-            return;
-          }
-          assertTrue(
-              unsupportedStructure(() -> operation.apply(sheet))
-                  .getMessage()
-                  .contains(expectedMessageFragment));
-        });
+    withWorkbook(workbook -> {
+      XSSFSheet sheet = workbook.createSheet(sheetName);
+      seeder.accept(workbook, sheet);
+      if (allowed) {
+        assertDoesNotThrow(() -> operation.apply(sheet));
+        return;
+      }
+      assertTrue(
+          unsupportedStructure(() -> operation.apply(sheet))
+              .getMessage()
+              .contains(expectedMessageFragment));
+    });
   }
 
   static void runUnchecked(Executable executable) {

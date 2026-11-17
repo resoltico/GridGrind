@@ -14,6 +14,36 @@ import java.util.Set;
 public final class ProtocolTypeMetadataSupport {
   private ProtocolTypeMetadataSupport() {}
 
+  /**
+   * Returns the inherited or common family discriminator; explicit structural unions stay untagged.
+   */
+  public static String discriminatorField(Class<?> type) {
+    Objects.requireNonNull(type, "type must not be null");
+    Optional<String> declared = inheritedDiscriminator(type);
+    if (declared.isPresent()) return declared.orElseThrow();
+    if (!type.isSealed()) return "";
+    Set<String> fields = new LinkedHashSet<>();
+    for (Class<?> family : type.getPermittedSubclasses()) {
+      fields.add(discriminatorField(family));
+    }
+    if (fields.size() > 1) {
+      throw new IllegalStateException(
+          "Sealed marker families must share one discriminator: " + type.getName());
+    }
+    return fields.isEmpty() ? "" : fields.iterator().next();
+  }
+
+  private static Optional<String> inheritedDiscriminator(Class<?> type) {
+    dev.erst.gridgrind.core.metadata.Union union =
+        type.getAnnotation(dev.erst.gridgrind.core.metadata.Union.class);
+    if (union != null) return Optional.of(union.discriminator());
+    for (Class<?> parent : type.getInterfaces()) {
+      Optional<String> inherited = inheritedDiscriminator(parent);
+      if (inherited.isPresent()) return inherited;
+    }
+    return Optional.empty();
+  }
+
   /** Returns the stable wire id for one protocol leaf type. */
   public static String requiredTypeId(Class<?> type) {
     Objects.requireNonNull(type, "type must not be null");

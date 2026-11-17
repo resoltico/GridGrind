@@ -11,7 +11,10 @@ import java.util.Objects;
 /** Reads reusable introspection facts from one sheet wrapper. */
 final class SheetIntrospector {
   /** Returns exact cell snapshots for the provided ordered addresses on one sheet. */
-  List<CellReport> cells(XssfSheet sheet, List<String> addresses, CellReadProjection projection) {
+  List<CellReport> cells(
+      XssfSheet sheet,
+      List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses,
+      CellReadProjection projection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(addresses, "addresses must not be null");
     Objects.requireNonNull(projection, "projection must not be null");
@@ -21,7 +24,7 @@ final class SheetIntrospector {
   /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
   dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
       XssfSheet sheet,
-      String topLeftAddress,
+      dev.erst.gridgrind.core.vocabulary.CellAddress topLeftAddress,
       int rowCount,
       int columnCount,
       CellReadProjection projection) {

@@ -85,13 +85,13 @@ final class ExecutionEvidence {
     List<WorkbookExecutionEvidence.MaterializedInput> inputs =
         bindings.hasRequestPathAccess()
             ? bindings.requestPathAccess().materializedReadIdentities().stream()
-                .map(
-                    input ->
-                        new WorkbookExecutionEvidence.MaterializedInput(
-                            input.role(), input.path(), input.byteSize(), input.sha256()))
+                .map(input ->
+                    new WorkbookExecutionEvidence.MaterializedInput(
+                        input.role(), input.path(), input.byteSize(), input.sha256()))
                 .toList()
             : List.of();
-    return new WorkbookExecutionEvidence.Admission(operations, inputs);
+    return new WorkbookExecutionEvidence.Admission(
+        operations, inputs, bindings.executionStrategy());
   }
 
   private static WorkbookExecutionEvidence.Operation operation(WorkbookStep step) {

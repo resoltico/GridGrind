@@ -44,7 +44,9 @@ class ExcelDataValidationWorkflowTest {
                       "Invalid status",
                       "Use one of the allowed values.",
                       true)));
-      budget.metadata().setDataValidation("A1:C3", definition);
+      budget
+          .metadata()
+          .setDataValidation(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:C3"), definition);
 
       WorkbookIntrospector introspector = new WorkbookIntrospector();
       dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult beforeClear =

@@ -24,9 +24,8 @@ final class WorkbookInvariantEngineShapeChecks {
         "engine sheet names must be unique");
     workbook
         .sheetNames()
-        .forEach(
-            sheetName ->
-                WorkbookInvariantChecks.requireNonBlank(sheetName.value(), "engine sheetName"));
+        .forEach(sheetName ->
+            WorkbookInvariantChecks.requireNonBlank(sheetName.value(), "engine sheetName"));
     switch (workbook) {
       case dev.erst.gridgrind.core.result.WorkbookSummary.Empty empty -> {
         WorkbookInvariantChecks.require(
@@ -52,14 +51,13 @@ final class WorkbookInvariantEngineShapeChecks {
             "engine selectedSheetNames must be unique");
         withSheets
             .selectedSheetNames()
-            .forEach(
-                selectedSheetName -> {
-                  WorkbookInvariantChecks.requireNonBlank(
-                      selectedSheetName.value(), "engine selectedSheetName");
-                  WorkbookInvariantChecks.require(
-                      withSheets.sheetNames().contains(selectedSheetName),
-                      "engine selectedSheetNames must be present in sheetNames");
-                });
+            .forEach(selectedSheetName -> {
+              WorkbookInvariantChecks.requireNonBlank(
+                  selectedSheetName.value(), "engine selectedSheetName");
+              WorkbookInvariantChecks.require(
+                  withSheets.sheetNames().contains(selectedSheetName),
+                  "engine selectedSheetNames must be present in sheetNames");
+            });
       }
     }
   }
@@ -92,7 +90,8 @@ final class WorkbookInvariantEngineShapeChecks {
       dev.erst.gridgrind.core.model.drawing.DrawingObjectReport drawingObject) {
     WorkbookInvariantChecks.require(
         drawingObject != null, "engine drawing object must not be null");
-    WorkbookInvariantChecks.requireNonBlank(drawingObject.name(), "engine drawing object name");
+    WorkbookInvariantChecks.require(
+        drawingObject.name() != null, "engine drawing object name must not be null");
     requireEngineDrawingAnchorShape(drawingObject.anchor());
     switch (drawingObject) {
       case dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.Picture picture -> {
@@ -107,9 +106,8 @@ final class WorkbookInvariantEngineShapeChecks {
             chart.plotTypeTokens() != null, "engine chart plotTypeTokens must not be null");
         chart
             .plotTypeTokens()
-            .forEach(
-                token ->
-                    WorkbookInvariantChecks.requireNonBlank(token, "engine chart plotTypeToken"));
+            .forEach(token ->
+                WorkbookInvariantChecks.requireNonBlank(token, "engine chart plotTypeToken"));
         WorkbookInvariantChecks.require(
             chart.title() != null, "engine chart title must not be null");
       }
@@ -141,7 +139,7 @@ final class WorkbookInvariantEngineShapeChecks {
 
   static void requireEngineChartShape(dev.erst.gridgrind.core.model.chart.ChartReport chart) {
     WorkbookInvariantChecks.require(chart != null, "engine chart must not be null");
-    WorkbookInvariantChecks.requireNonBlank(chart.name(), "engine chart name");
+    WorkbookInvariantChecks.require(chart.name() != null, "engine chart name must not be null");
     requireEngineDrawingAnchorShape(chart.anchor());
     requireEngineChartTitleShape(chart.title());
     requireEngineChartLegendShape(chart.legend());
@@ -154,69 +152,59 @@ final class WorkbookInvariantEngineShapeChecks {
       dev.erst.gridgrind.core.model.drawing.DrawingObjectReport.SignatureLine signatureLine) {
     signatureLine
         .setup()
-        .ifPresent(
-            setup -> {
-              setup
-                  .setupId()
-                  .ifPresent(
-                      setupId ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              setupId, "engine signature line setupId"));
-              setup
-                  .signingInstructions()
-                  .ifPresent(
-                      signingInstructions ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              signingInstructions, "engine signature line signingInstructions"));
-              setup
-                  .suggestedSigner()
-                  .ifPresent(
-                      suggestedSigner ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              suggestedSigner, "engine signature line suggestedSigner"));
-              setup
-                  .suggestedSigner2()
-                  .ifPresent(
-                      suggestedSigner2 ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              suggestedSigner2, "engine signature line suggestedSigner2"));
-              setup
-                  .suggestedSignerEmail()
-                  .ifPresent(
-                      suggestedSignerEmail ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              suggestedSignerEmail, "engine signature line suggestedSignerEmail"));
-            });
+        .ifPresent(setup -> {
+          setup
+              .setupId()
+              .ifPresent(setupId ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      setupId, "engine signature line setupId"));
+          setup
+              .signingInstructions()
+              .ifPresent(signingInstructions ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      signingInstructions, "engine signature line signingInstructions"));
+          setup
+              .suggestedSigner()
+              .ifPresent(suggestedSigner ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      suggestedSigner, "engine signature line suggestedSigner"));
+          setup
+              .suggestedSigner2()
+              .ifPresent(suggestedSigner2 ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      suggestedSigner2, "engine signature line suggestedSigner2"));
+          setup
+              .suggestedSignerEmail()
+              .ifPresent(suggestedSignerEmail ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      suggestedSignerEmail, "engine signature line suggestedSignerEmail"));
+        });
     signatureLine
         .preview()
-        .ifPresent(
-            preview -> {
-              WorkbookInvariantChecks.requireNonBlank(
-                  preview.contentType(), "engine signature line previewContentType");
-              WorkbookInvariantChecks.require(
-                  preview.byteSize() >= 0L,
-                  "engine signature line previewByteSize must not be negative");
-              preview
-                  .sha256()
-                  .ifPresent(
-                      previewSha256 ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              previewSha256, "engine signature line previewSha256"));
-              preview
-                  .widthPixels()
-                  .ifPresent(
-                      previewWidthPixels ->
-                          WorkbookInvariantChecks.require(
-                              previewWidthPixels >= 0,
-                              "engine signature line previewWidthPixels must not be negative"));
-              preview
-                  .heightPixels()
-                  .ifPresent(
-                      previewHeightPixels ->
-                          WorkbookInvariantChecks.require(
-                              previewHeightPixels >= 0,
-                              "engine signature line previewHeightPixels must not be negative"));
-            });
+        .ifPresent(preview -> {
+          WorkbookInvariantChecks.requireNonBlank(
+              preview.contentType(), "engine signature line previewContentType");
+          WorkbookInvariantChecks.require(
+              preview.byteSize() >= 0L,
+              "engine signature line previewByteSize must not be negative");
+          preview
+              .sha256()
+              .ifPresent(previewSha256 ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      previewSha256, "engine signature line previewSha256"));
+          preview
+              .widthPixels()
+              .ifPresent(previewWidthPixels ->
+                  WorkbookInvariantChecks.require(
+                      previewWidthPixels >= 0,
+                      "engine signature line previewWidthPixels must not be negative"));
+          preview
+              .heightPixels()
+              .ifPresent(previewHeightPixels ->
+                  WorkbookInvariantChecks.require(
+                      previewHeightPixels >= 0,
+                      "engine signature line previewHeightPixels must not be negative"));
+        });
   }
 
   static void requireEngineChartLegendShape(
@@ -265,18 +253,16 @@ final class WorkbookInvariantEngineShapeChecks {
       case dev.erst.gridgrind.core.model.chart.ChartReport.Doughnut doughnut -> {
         doughnut
             .firstSliceAngle()
-            .ifPresent(
-                firstSliceAngle ->
-                    WorkbookInvariantChecks.require(
-                        firstSliceAngle >= 0 && firstSliceAngle <= 360,
-                        "engine doughnut chart firstSliceAngle must be between 0 and 360"));
+            .ifPresent(firstSliceAngle ->
+                WorkbookInvariantChecks.require(
+                    firstSliceAngle >= 0 && firstSliceAngle <= 360,
+                    "engine doughnut chart firstSliceAngle must be between 0 and 360"));
         doughnut
             .holeSize()
-            .ifPresent(
-                holeSize ->
-                    WorkbookInvariantChecks.require(
-                        holeSize >= 10 && holeSize <= 90,
-                        "engine doughnut chart holeSize must be between 10 and 90"));
+            .ifPresent(holeSize ->
+                WorkbookInvariantChecks.require(
+                    holeSize >= 1 && holeSize <= 90,
+                    "engine doughnut chart holeSize must be between 1 and 90"));
         doughnut
             .series()
             .forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
@@ -295,11 +281,10 @@ final class WorkbookInvariantEngineShapeChecks {
       }
       case dev.erst.gridgrind.core.model.chart.ChartReport.Pie pie -> {
         pie.firstSliceAngle()
-            .ifPresent(
-                firstSliceAngle ->
-                    WorkbookInvariantChecks.require(
-                        firstSliceAngle >= 0 && firstSliceAngle <= 360,
-                        "engine pie chart firstSliceAngle must be between 0 and 360"));
+            .ifPresent(firstSliceAngle ->
+                WorkbookInvariantChecks.require(
+                    firstSliceAngle >= 0 && firstSliceAngle <= 360,
+                    "engine pie chart firstSliceAngle must be between 0 and 360"));
         pie.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
       case dev.erst.gridgrind.core.model.chart.ChartReport.Pie3D pie3D ->
@@ -430,20 +415,14 @@ final class WorkbookInvariantEngineShapeChecks {
         dataField.displayName(), "engine pivot dataField displayName");
     dataField
         .valueFormat()
-        .ifPresent(
-            valueFormat ->
-                WorkbookInvariantChecks.requireNonBlank(
-                    valueFormat, "engine pivot dataField valueFormat"));
+        .ifPresent(valueFormat ->
+            WorkbookInvariantChecks.requireNonBlank(
+                valueFormat, "engine pivot dataField valueFormat"));
   }
 
   static void requireEngineChartAxisShape(
       dev.erst.gridgrind.core.model.chart.ChartReport.Axis axis) {
-    WorkbookInvariantChecks.require(axis != null, "engine chart axis must not be null");
-    WorkbookInvariantChecks.require(axis.kind() != null, "engine chart axis kind must not be null");
-    WorkbookInvariantChecks.require(
-        axis.position() != null, "engine chart axis position must not be null");
-    WorkbookInvariantChecks.require(
-        axis.crosses() != null, "engine chart axis crosses must not be null");
+    WorkbookInvariantWorkbookSurfaceChecks.requireChartAxisShape(axis);
   }
 
   static void requireEngineChartSeriesShape(
@@ -456,107 +435,21 @@ final class WorkbookInvariantEngineShapeChecks {
 
   static void requireEngineChartTitleShape(
       dev.erst.gridgrind.core.model.chart.ChartReport.Title title) {
-    WorkbookInvariantChecks.require(title != null, "engine chart title must not be null");
-    switch (title) {
-      case dev.erst.gridgrind.core.model.chart.ChartReport.Title.None _ -> {}
-      case dev.erst.gridgrind.core.model.chart.ChartReport.Title.Text text ->
-          WorkbookInvariantChecks.require(
-              text.text() != null, "engine chart title text must not be null");
-      case dev.erst.gridgrind.core.model.chart.ChartReport.Title.Formula formula -> {
-        WorkbookInvariantChecks.requireNonBlank(formula.formula(), "engine chart title formula");
-        WorkbookInvariantChecks.require(
-            formula.cachedText() != null, "engine chart title cachedText must not be null");
-      }
-    }
+    WorkbookInvariantWorkbookSurfaceChecks.requireChartTitleShape(title);
   }
 
   static void requireEngineChartDataSourceShape(
       dev.erst.gridgrind.core.model.chart.ChartReport.DataSource source) {
-    WorkbookInvariantChecks.require(source != null, "engine chart data source must not be null");
-    switch (source) {
-      case dev.erst.gridgrind.core.model.chart.ChartReport.DataSource.StringReference reference -> {
-        WorkbookInvariantChecks.requireNonBlank(
-            reference.formula(), "engine chart string-reference formula");
-        WorkbookInvariantChecks.require(
-            reference.cachedValues() != null,
-            "engine chart string-reference cachedValues must not be null");
-      }
-      case dev.erst.gridgrind.core.model.chart.ChartReport.DataSource.NumericReference
-              reference -> {
-        WorkbookInvariantChecks.requireNonBlank(
-            reference.formula(), "engine chart numeric-reference formula");
-        WorkbookInvariantChecks.require(
-            reference.cachedValues() != null,
-            "engine chart numeric-reference cachedValues must not be null");
-        reference
-            .formatCode()
-            .ifPresent(
-                formatCode ->
-                    WorkbookInvariantChecks.require(
-                        !formatCode.isBlank(),
-                        "engine chart numeric-reference formatCode must not be blank"));
-      }
-      case dev.erst.gridgrind.core.model.chart.ChartReport.DataSource.StringLiteral literal ->
-          WorkbookInvariantChecks.require(
-              literal.values() != null, "engine chart string-literal values must not be null");
-      case dev.erst.gridgrind.core.model.chart.ChartReport.DataSource.NumericLiteral literal -> {
-        WorkbookInvariantChecks.require(
-            literal.values() != null, "engine chart numeric-literal values must not be null");
-        literal
-            .formatCode()
-            .ifPresent(
-                formatCode ->
-                    WorkbookInvariantChecks.require(
-                        !formatCode.isBlank(),
-                        "engine chart numeric-literal formatCode must not be blank"));
-      }
-    }
+    WorkbookInvariantWorkbookSurfaceChecks.requireChartDataSourceShape(source);
   }
 
   static void requireEngineDrawingAnchorShape(
       dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport anchor) {
-    WorkbookInvariantChecks.require(anchor != null, "engine drawing anchor must not be null");
-    switch (anchor) {
-      case dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.TwoCell twoCell -> {
-        requireEngineDrawingMarkerShape(twoCell.from());
-        requireEngineDrawingMarkerShape(twoCell.to());
-        WorkbookInvariantChecks.require(
-            twoCell.behavior() != null, "engine two-cell anchor behavior must not be null");
-      }
-      case dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.OneCell oneCell -> {
-        requireEngineDrawingMarkerShape(oneCell.from());
-        WorkbookInvariantChecks.require(
-            oneCell.widthEmu() > 0L, "engine one-cell widthEmu must be positive");
-        WorkbookInvariantChecks.require(
-            oneCell.heightEmu() > 0L, "engine one-cell heightEmu must be positive");
-        WorkbookInvariantChecks.require(
-            oneCell.behavior() != null, "engine one-cell anchor behavior must not be null");
-      }
-      case dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.Absolute absolute -> {
-        WorkbookInvariantChecks.require(
-            absolute.xEmu() >= 0L, "engine absolute xEmu must not be negative");
-        WorkbookInvariantChecks.require(
-            absolute.yEmu() >= 0L, "engine absolute yEmu must not be negative");
-        WorkbookInvariantChecks.require(
-            absolute.widthEmu() > 0L, "engine absolute widthEmu must be positive");
-        WorkbookInvariantChecks.require(
-            absolute.heightEmu() > 0L, "engine absolute heightEmu must be positive");
-        WorkbookInvariantChecks.require(
-            absolute.behavior() != null, "engine absolute anchor behavior must not be null");
-      }
-    }
+    WorkbookInvariantWorkbookSurfaceChecks.requireDrawingAnchorShape(anchor);
   }
 
   static void requireEngineDrawingMarkerShape(
       dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport marker) {
-    WorkbookInvariantChecks.require(marker != null, "engine drawing marker must not be null");
-    WorkbookInvariantChecks.require(
-        marker.columnIndex() >= 0, "engine drawing marker columnIndex must not be negative");
-    WorkbookInvariantChecks.require(
-        marker.rowIndex() >= 0, "engine drawing marker rowIndex must not be negative");
-    WorkbookInvariantChecks.require(
-        marker.dx() >= 0, "engine drawing marker dx must not be negative");
-    WorkbookInvariantChecks.require(
-        marker.dy() >= 0, "engine drawing marker dy must not be negative");
+    WorkbookInvariantWorkbookSurfaceChecks.requireDrawingMarkerShape(marker);
   }
 }

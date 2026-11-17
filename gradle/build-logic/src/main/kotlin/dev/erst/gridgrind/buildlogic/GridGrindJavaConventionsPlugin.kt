@@ -17,6 +17,7 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.getByType
 import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
@@ -34,18 +35,21 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
 
             configureGridGrindRepositories()
 
+            configureFormatterDependencies()
+
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
             val repositoryLayout = GridGrindRepositoryLayout.locate(this)
             val gridgrindJavaVersion =
                 providers.gradleProperty("gridgrindJavaVersion").map(String::toInt).get()
             val gridgrindJavaTargetVersion =
                 providers.gradleProperty("gridgrindJavaTargetVersion").map(String::toInt).get()
+            val expectedArchiveNames = objects.listProperty(String::class.java)
             val pruneJarOutputs =
-                tasks.register("pruneJarOutputs", PruneJarOutputsTask::class.java) { pruneTask ->
+                tasks.register<PruneJarOutputsTask>("pruneJarOutputs") { val pruneTask = this
+                    pruneTask.expectedArchiveFileNames.set(expectedArchiveNames)
                     pruneTask.outputs.upToDateWhen { false }
                     pruneTask.libsDirectory.set(layout.buildDirectory.dir("libs"))
                 }
-            val pruneJarOutputsTask = pruneJarOutputs.get()
 
             pluginManager.withPlugin("java") {
                 val javaExtension = extensions.getByType(JavaPluginExtension::class.java)
@@ -68,7 +72,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     }
                 val coverageClasses =
                     mainSourceSet.map { sourceSet ->
-                        sourceSet.output.classesDirs.asFileTree.matching { patternFilterable ->
+                        sourceSet.output.classesDirs.asFileTree.matching { val patternFilterable = this
                             patternFilterable.exclude("module-info.class")
                         }
                     }
@@ -86,15 +90,24 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 )
             }
 
+            dependencies.constraints {
+                add("errorprone", libs.findLibrary("guava").get().get())
+                for (library in listOf("commons-text", "commons-lang3", "errorprone-annotations")) {
+                    add("pmd", libs.findLibrary(library).get().get())
+                }
+                for (library in listOf("bnd-annotations", "osgi-resource", "commons-lang3", "errorprone-annotations", "jspecify")) {
+                    add("testImplementation", libs.findLibrary(library).get().get())
+                }
+            }
             dependencies.add("errorprone", libs.findLibrary("errorprone-core").get().get())
             dependencies.add("errorprone", libs.findLibrary("nullaway").get().get())
 
             extensions.configure<SpotlessExtension> {
-                java { formatExtension ->
+                java { val formatExtension = this
                     formatExtension.target("src/*/java/**/*.java")
-                    formatExtension.addStep(GridGrindGoogleJavaFormatStep.create(
+                    formatExtension.googleJavaFormat(
                         libs.findVersion("google-java-format").get().requiredVersion,
-                    ))
+                    )
                     formatExtension.formatAnnotations()
                 }
             }
@@ -108,7 +121,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 setRuleSets(emptyList())
             }
 
-            tasks.withType(AbstractArchiveTask::class.java).configureEach { archive ->
+            tasks.withType(AbstractArchiveTask::class.java).configureEach { val archive = this
                 archive.isPreserveFileTimestamps = false
                 archive.isReproducibleFileOrder = true
             }
@@ -116,11 +129,11 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.withType(Jar::class.java).configureEach(
                 object : Action<Jar> {
                     override fun execute(jar: Jar) {
-                        pruneJarOutputsTask.expectedArchiveFileNames.add(jar.archiveFileName)
-                        jar.dependsOn(pruneJarOutputsTask)
+                        expectedArchiveNames.add(jar.archiveFileName)
+                        jar.dependsOn(pruneJarOutputs)
                         if (jar.name != "shadowJar") {
                             jar.from(repositoryLayout.repositoryRoot.resolve("LICENSE")) {
-                                it.into("META-INF")
+                                into("META-INF")
                             }
                         }
                         jar.manifest.attributes(
@@ -128,7 +141,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                                 "Implementation-Title" to project.name,
                                 "Implementation-Version" to project.version,
                                 "Implementation-Vendor" to "Ervins Strauhmanis",
-                                "Implementation-License" to "MPL-2.0",
+                                "Implementation-License" to "AGPL-3.0-only",
                             ),
                         )
                     }
@@ -138,11 +151,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.withType(JavaCompile::class.java).configureEach(
                 object : Action<JavaCompile> {
                     override fun execute(javaCompile: JavaCompile) {
-                        javaCompile.options.isIncremental = false
                         javaCompile.options.release.set(gridgrindJavaTargetVersion)
-                        javaCompile.doFirst {
-                            cleanDirectoryContents(javaCompile.destinationDirectory.get().asFile)
-                        }
                         javaCompile.options.errorprone.disableWarningsInGeneratedCode.set(true)
                         javaCompile.options.errorprone.check("NullAway", CheckSeverity.ERROR)
                         javaCompile.options.errorprone.option("NullAway:OnlyNullMarked", "true")
@@ -248,7 +257,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 },
             )
 
-            tasks.named("check").configure { checkTask ->
+            tasks.named("check").configure { val checkTask = this
                 checkTask.dependsOn("spotlessCheck")
                 checkTask.dependsOn("jacocoTestReport")
             }
@@ -258,11 +267,4 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
     private fun jacocoExecutionDataFile(test: Test): File =
         test.project.layout.buildDirectory.file("jacoco/${test.name}.exec").get().asFile
 
-    private fun cleanDirectoryContents(directory: File) {
-        if (!directory.exists()) {
-            directory.mkdirs()
-            return
-        }
-        directory.listFiles()?.forEach(File::deleteRecursively)
-    }
 }

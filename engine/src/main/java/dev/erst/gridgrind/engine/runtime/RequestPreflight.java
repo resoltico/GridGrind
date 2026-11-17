@@ -15,11 +15,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Shared non-mutating phase-four request preflight for doctor and executor paths.
+ * Sole factory for engine-only prepared execution capabilities, shared by doctor and executor.
  *
- * <p>Input resolution and opening an existing source are independent checks: an unreadable asset
- * must not hide a bad source password or an inaccessible workbook. The preflight opens only to
- * prove availability, closes immediately, and never reaches workbook mutation or persistence.
+ * <p>Static admission precedes all resource acquisition. After static and authority checks, input
+ * resolution and source verification collect independent findings. Prepared native resources remain
+ * session-owned until an executing workflow takes their exclusive ownership.
  */
 final class RequestPreflight {
   private RequestPreflight() {}
@@ -42,7 +42,8 @@ final class RequestPreflight {
         SourceBackedPlanResolver::resolveStep);
   }
 
-  @SuppressWarnings("PMD.UseTryWithResources")
+  @SuppressWarnings("PMD.CloseResource")
+  // Path and prepared-source owners are registered with the session, including refusal paths.
   private static Result verify(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
@@ -52,41 +53,51 @@ final class RequestPreflight {
     Objects.requireNonNull(bindings, "bindings must not be null");
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(stepResolver, "stepResolver must not be null");
+    List<GridGrindProblemDetail.Problem> staticProblems =
+        new StaticRequestValidator().validate(request);
+    if (!staticProblems.isEmpty()) {
+      return new Result(Optional.empty(), staticProblems, List.of());
+    }
     List<GridGrindProblemDetail.Problem> problems = new ArrayList<>();
     RequestPathAccess pathAccess =
         new RequestPathAccess(
-            bindings.workingDirectory(), bindings.tempFileFactory(), bindings.executionGrant());
-    boolean prepared = false;
-    try {
-      ExecutionInputBindings locatedBindings =
-          bindings
-              .withRequestPathAccess(pathAccess)
-              .withInputResolutionOrigins(InputResolutionOrigins.forRequest(request, analysis));
-      RequestPreflightStaticPaths.validate(request, locatedBindings, problems);
-      if (problems.isEmpty()) {
-        addGrantViolations(request, locatedBindings, problems);
-      }
-      Optional<ResolvedPlan> resolvedRequest = Optional.empty();
-      if (problems.isEmpty()) {
-        resolvedRequest =
-            RequestPreflightInputResolver.resolve(request, locatedBindings, stepResolver, problems);
-        RequestPreflightPaths.verify(request, locatedBindings, problems);
-        RequestPreflightWorkbookSource.verify(request, locatedBindings, problems);
-      }
-      Result result =
-          new Result(
-              problems.isEmpty()
-                  ? resolvedRequest.map(value -> new PreparedRequest(value, locatedBindings))
-                  : Optional.empty(),
-              DiagnosticOrder.problems(problems),
-              pathAccess.warnings());
-      prepared = result.preparedRequest().isPresent();
-      return result;
-    } finally {
-      if (!prepared) {
-        closeQuietly(pathAccess);
-      }
+            bindings.workingDirectory(),
+            bindings.tempFileFactory(),
+            bindings.executionGrant(),
+            bindings.snapshots(),
+            bindings.publicationFacts());
+    bindings.own(pathAccess::close);
+    ExecutionInputBindings locatedBindings =
+        bindings
+            .withRequestPathAccess(pathAccess)
+            .withInputResolutionOrigins(InputResolutionOrigins.forRequest(request, analysis));
+    RequestPreflightStaticPaths.validate(request, locatedBindings, problems);
+    if (problems.isEmpty()) {
+      addGrantViolations(request, locatedBindings, problems);
     }
+    if (!problems.isEmpty()) {
+      return new Result(
+          Optional.empty(), DiagnosticOrder.problems(problems), pathAccess.warnings());
+    }
+    Optional<ResolvedPlan> resolvedRequest =
+        RequestPreflightInputResolver.resolve(request, locatedBindings, stepResolver, problems);
+    HostAcceptanceInputResolver.resolve(request, locatedBindings, problems);
+    RequestPreflightPaths.verify(
+        request, locatedBindings.withInputResolutionScope("persistence"), problems);
+    PreparedWorkbookSource source =
+        RequestPreflightWorkbookSource.prepare(request, locatedBindings, problems);
+    if (resolvedRequest.isPresent() && source.dateSystem().isPresent())
+      TemporalInputValidation.validate(
+          resolvedRequest.orElseThrow(), source.dateSystem().orElseThrow(), analysis, problems);
+    if (!problems.isEmpty()) {
+      return new Result(
+          Optional.empty(), DiagnosticOrder.problems(problems), pathAccess.warnings());
+    }
+    locatedBindings.recordExecutionStrategy(source.strategy());
+    PreparedRequest prepared =
+        new PreparedRequest(resolvedRequest.orElseThrow(), locatedBindings, source);
+    bindings.session().prepared(prepared);
+    return new Result(Optional.of(prepared), List.of(), pathAccess.warnings());
   }
 
   static ProblemContext.ResolveInputs resolveInputsContext(
@@ -103,10 +114,9 @@ final class RequestPreflight {
                 : failure.input());
     return failure
         .json()
-        .map(
-            location ->
-                new ProblemContext.ResolveInputs(
-                    context.request(), context.input(), Optional.of(location)))
+        .map(location ->
+            new ProblemContext.ResolveInputs(
+                context.request(), context.input(), Optional.of(location)))
         .orElse(context);
   }
 
@@ -114,30 +124,36 @@ final class RequestPreflight {
       WorkbookPlan request,
       ExecutionInputBindings bindings,
       List<GridGrindProblemDetail.Problem> problems) {
-    ExecutionGrantValidator.violations(
-            request, bindings.executionGrant(), bindings.workingDirectory())
-        .forEach(
-            violation ->
-                problems.add(
-                    GridGrindProblems.fromException(
-                        violation,
-                        new ProblemContext.ValidateRequest(
-                            ExecutionRequestPaths.requestShape(request)))));
+    try {
+      ExecutionGrantValidator.violations(
+              request, bindings.executionGrant(), bindings.requestPathAccess().pathIdentity())
+          .forEach(violation ->
+              problems.add(
+                  GridGrindProblems.fromException(
+                      violation,
+                      new ProblemContext.ValidateRequest(
+                          ExecutionRequestPaths.requestShape(request)))));
+    } catch (IOException | RuntimeException failure) {
+      problems.add(
+          GridGrindProblems.fromException(
+              failure,
+              new ProblemContext.ValidateRequest(ExecutionRequestPaths.requestShape(request))));
+    }
     HostAcceptancePolicyValidator.violations(request, bindings.executionGrant())
-        .forEach(
-            violation ->
-                problems.add(
-                    GridGrindProblems.fromException(
-                        violation,
-                        new ProblemContext.ValidateRequest(
-                            ExecutionRequestPaths.requestShape(request)))));
+        .forEach(violation ->
+            problems.add(
+                GridGrindProblems.fromException(
+                    violation,
+                    new ProblemContext.ValidateRequest(
+                        ExecutionRequestPaths.requestShape(request)))));
   }
 
   static ProblemContext.OpenWorkbook openWorkbookContext(
       WorkbookPlan request, ExecutionInputBindings bindings) {
     return new ProblemContext.OpenWorkbook(
         ExecutionRequestPaths.requestShape(request),
-        ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory()));
+        ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory()),
+        java.util.Optional.empty());
   }
 
   /** Resolves one step's externally authored input without mutating a workbook. */
@@ -176,31 +192,38 @@ final class RequestPreflight {
     ExecutionInputBindings preparedBindings() {
       return requirePreparedRequest().bindings();
     }
-
-    /** Releases request-private resources retained by one successful preflight result. */
-    void release() {
-      preparedRequest.ifPresent(RequestPreflight::closeQuietly);
-    }
   }
 
-  record PreparedRequest(ResolvedPlan plan, ExecutionInputBindings bindings)
-      implements AutoCloseable {
-    PreparedRequest {
-      Objects.requireNonNull(plan, "plan must not be null");
-      Objects.requireNonNull(bindings, "bindings must not be null");
+  /**
+   * Engine-only capability issued after static, authority, operand and source preparation succeed.
+   */
+  static final class PreparedRequest implements AutoCloseable {
+    private final PreparedWorkbookSource source;
+    private final ResolvedPlan plan;
+    private final ExecutionInputBindings bindings;
+
+    private PreparedRequest(
+        ResolvedPlan plan, ExecutionInputBindings bindings, PreparedWorkbookSource source) {
+      this.source = Objects.requireNonNull(source);
+      this.plan = Objects.requireNonNull(plan);
+      this.bindings = Objects.requireNonNull(bindings);
+    }
+
+    PreparedWorkbookSource source() {
+      return source;
+    }
+
+    ResolvedPlan plan() {
+      return plan;
+    }
+
+    ExecutionInputBindings bindings() {
+      return bindings;
     }
 
     @Override
     public void close() throws IOException {
-      bindings.requestPathAccess().close();
-    }
-  }
-
-  static void closeQuietly(AutoCloseable closeable) {
-    try {
-      closeable.close();
-    } catch (Exception ignored) {
-      // The original preflight finding is always more actionable than private-resource cleanup.
+      bindings.closeRunResources();
     }
   }
 }

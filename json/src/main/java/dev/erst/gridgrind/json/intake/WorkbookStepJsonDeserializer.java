@@ -140,16 +140,8 @@ public final class WorkbookStepJsonDeserializer<T extends WorkbookStep>
     try {
       return deserializeNode(node, parser, targetType);
     } catch (JacksonException exception) {
-      Optional<dev.erst.gridgrind.core.problem.InvalidRequestException> validationFailure =
-          WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
-              fieldName, node, targetType, exception);
-      if (validationFailure.isPresent()) {
-        throw validationFailure.orElseThrow();
-      }
       throw WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
           fieldName, node, targetType, exception);
-    } catch (IllegalArgumentException exception) {
-      throw WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure(fieldName, exception);
     }
   }
 

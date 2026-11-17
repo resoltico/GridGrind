@@ -1,25 +1,34 @@
 package dev.erst.gridgrind.core.model.drawing;
 
 import dev.erst.gridgrind.core.metadata.CatalogType;
+import dev.erst.gridgrind.core.metadata.FieldRule;
+import dev.erst.gridgrind.core.problem.MessageInvariant;
+import dev.erst.gridgrind.core.problem.ValueInvariantException;
+import java.util.Objects;
+import java.util.Optional;
 
 /** One factual cell-relative drawing marker returned by drawing reads. */
 @CatalogType(
     id = "DrawingMarkerReport",
     summary = "Exact cell-relative drawing marker report.",
     displayOrder = 96)
-public record DrawingMarkerReport(int columnIndex, int rowIndex, int dx, int dy) {
+public record DrawingMarkerReport(
+    @FieldRule(kind = FieldRule.Kind.NUMBER_RANGE, minimum = 0, maximum = Integer.MAX_VALUE)
+        int columnIndex,
+    @FieldRule(kind = FieldRule.Kind.NUMBER_RANGE, minimum = 0, maximum = Integer.MAX_VALUE)
+        int rowIndex,
+    DrawingCoordinateReport dx,
+    DrawingCoordinateReport dy) {
   public DrawingMarkerReport {
     if (columnIndex < 0) {
-      throw new IllegalArgumentException("columnIndex must not be negative");
+      throw new ValueInvariantException(
+          new MessageInvariant("columnIndex must not be negative", Optional.of("columnIndex")));
     }
     if (rowIndex < 0) {
-      throw new IllegalArgumentException("rowIndex must not be negative");
+      throw new ValueInvariantException(
+          new MessageInvariant("rowIndex must not be negative", Optional.of("rowIndex")));
     }
-    if (dx < 0) {
-      throw new IllegalArgumentException("dx must not be negative");
-    }
-    if (dy < 0) {
-      throw new IllegalArgumentException("dy must not be negative");
-    }
+    Objects.requireNonNull(dx, "dx must not be null");
+    Objects.requireNonNull(dy, "dy must not be null");
   }
 }

@@ -246,6 +246,7 @@ class GridGrindPlanTest {
                         tempDir,
                         tempDir.resolve("temp-root"),
                         new ExecutionGrant(
+                            16L * 1024 * 1024,
                             List.of(
                                 new ExecutionGrant.ReadAuthority.File(tempDir.resolve("item.txt"))),
                             List.of(
@@ -334,13 +335,12 @@ class GridGrindPlanTest {
           () ->
               "examples/java-authoring-workflow.java must compile: "
                   + diagnostics.getDiagnostics().stream()
-                      .map(
-                          diagnostic ->
-                              diagnostic.getKind()
-                                  + " line "
-                                  + diagnostic.getLineNumber()
-                                  + ": "
-                                  + diagnostic.getMessage(Locale.ROOT))
+                      .map(diagnostic ->
+                          diagnostic.getKind()
+                              + " line "
+                              + diagnostic.getLineNumber()
+                              + ": "
+                              + diagnostic.getMessage(Locale.ROOT))
                       .collect(Collectors.joining(" | ")));
     }
 

@@ -190,15 +190,14 @@ final class RecipeScorer {
             capabilityRef.id().replace('_', ' ').toLowerCase(java.util.Locale.ROOT);
         scoreSurface(queryTerms, List.of(capabilityText), "capability id", 6, false, accumulator);
         GridGrindProtocolCatalog.entryFor(capabilityRef.qualifiedId())
-            .ifPresent(
-                entry ->
-                    scoreSurface(
-                        queryTerms,
-                        List.of(entry.summary()),
-                        "capability summary",
-                        2,
-                        false,
-                        accumulator));
+            .ifPresent(entry ->
+                scoreSurface(
+                    queryTerms,
+                    List.of(entry.summary()),
+                    "capability summary",
+                    2,
+                    false,
+                    accumulator));
       }
     }
   }

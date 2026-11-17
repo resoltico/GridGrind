@@ -29,11 +29,10 @@ final class WorkbookInvariantCellContentChecks {
     if (!(cellReport instanceof dev.erst.gridgrind.core.model.value.CellReport.FormulaReport)) {
       cellReport
           .value()
-          .ifPresent(
-              value ->
-                  WorkbookInvariantChecks.require(
-                      cellReport.type().equals(value.type()),
-                      "stored and scalar value types must agree"));
+          .ifPresent(value ->
+              WorkbookInvariantChecks.require(
+                  cellReport.type().equals(value.type()),
+                  "stored and scalar value types must agree"));
     }
     switch (cellReport) {
       case dev.erst.gridgrind.core.model.value.CellReport.TextReport text ->
@@ -109,21 +108,20 @@ final class WorkbookInvariantCellContentChecks {
 
   private static void requireTemporalShape(CellTemporalReport temporal) {
     WorkbookInvariantChecks.require(temporal != null, "temporal must not be null");
-    WorkbookInvariantChecks.require(temporal.kind() != null, "temporal kind must not be null");
-    WorkbookInvariantChecks.require(
-        temporal.isoValue() != null, "temporal isoValue must not be null");
-    if (temporal.isDate()) {
-      WorkbookInvariantChecks.require(
-          temporal.kind().isPresent(), "temporal kind must be present when isDate is true");
-      WorkbookInvariantChecks.require(
-          temporal.isoValue().isPresent(), "temporal isoValue must be present when isDate is true");
-      WorkbookInvariantChecks.require(
-          !temporal.isoValue().orElseThrow().isBlank(), "temporal isoValue must not be blank");
-    } else {
-      WorkbookInvariantChecks.require(
-          temporal.kind().isEmpty(), "temporal kind must be absent when isDate is false");
-      WorkbookInvariantChecks.require(
-          temporal.isoValue().isEmpty(), "temporal isoValue must be absent when isDate is false");
+    switch (temporal) {
+      case CellTemporalReport.NotTemporal ignored -> {}
+      case CellTemporalReport.Interpreted interpreted -> {
+        WorkbookInvariantChecks.require(
+            interpreted.kind() != null, "interpreted kind must not be null");
+        WorkbookInvariantChecks.require(
+            interpreted.isoValue() != null && !interpreted.isoValue().isBlank(),
+            "interpreted ISO value must be present");
+      }
+      case CellTemporalReport.Unrepresentable unrepresentable -> {
+        WorkbookInvariantChecks.require(
+            unrepresentable.kind() != null && unrepresentable.reason() != null,
+            "unrepresentable temporal facts must name kind and reason");
+      }
     }
   }
 

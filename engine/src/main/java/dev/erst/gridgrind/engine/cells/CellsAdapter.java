@@ -15,15 +15,14 @@ import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
-import dev.erst.gridgrind.core.vocabulary.TextValidation;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import dev.erst.gridgrind.engine.comments.CommentAdapter;
 import dev.erst.gridgrind.engine.formulas.FormulaExceptions;
 import dev.erst.gridgrind.engine.formulas.FormulaLimits;
 import dev.erst.gridgrind.engine.formulas.FormulaRuntime;
 import dev.erst.gridgrind.engine.links.LinkAdapter;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.poi.FormulaWrites;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import dev.erst.gridgrind.engine.styles.StyleAdapter;
@@ -69,13 +68,13 @@ public final class CellsAdapter {
     this.dataFormatter = Objects.requireNonNull(dataFormatter, "dataFormatter must not be null");
   }
 
-  public String text(String address) {
-    TextValidation.requireNonBlank(address, "address");
+  public String text(CellAddress address) {
+    Objects.requireNonNull(address, "address must not be null");
     return requiredCell(address).getStringCellValue();
   }
 
-  public double number(String address) {
-    TextValidation.requireNonBlank(address, "address");
+  public double number(CellAddress address) {
+    Objects.requireNonNull(address, "address must not be null");
     Cell cell = requiredCell(address);
     if (cell.getCellType() == CellType.FORMULA) {
       org.apache.poi.ss.usermodel.CellValue evaluatedCell;
@@ -83,7 +82,11 @@ public final class CellsAdapter {
         evaluatedCell = formulaRuntime.evaluate(cell);
       } catch (RuntimeException exception) {
         throw FormulaExceptions.wrap(
-            formulaRuntime, sheet.getSheetName(), address, cell.getCellFormula(), exception);
+            formulaRuntime,
+            sheet.getSheetName(),
+            address.value(),
+            cell.getCellFormula(),
+            exception);
       }
       if (evaluatedCell == null || evaluatedCell.getCellType() != CellType.NUMERIC) {
         throw new IllegalStateException("Cell does not evaluate to a numeric value: " + address);
@@ -93,8 +96,8 @@ public final class CellsAdapter {
     return cell.getNumericCellValue();
   }
 
-  public boolean bool(String address) {
-    TextValidation.requireNonBlank(address, "address");
+  public boolean bool(CellAddress address) {
+    Objects.requireNonNull(address, "address must not be null");
     Cell cell = requiredCell(address);
     if (cell.getCellType() == CellType.FORMULA) {
       org.apache.poi.ss.usermodel.CellValue evaluatedCell;
@@ -102,7 +105,11 @@ public final class CellsAdapter {
         evaluatedCell = formulaRuntime.evaluate(cell);
       } catch (RuntimeException exception) {
         throw FormulaExceptions.wrap(
-            formulaRuntime, sheet.getSheetName(), address, cell.getCellFormula(), exception);
+            formulaRuntime,
+            sheet.getSheetName(),
+            address.value(),
+            cell.getCellFormula(),
+            exception);
       }
       if (evaluatedCell == null || evaluatedCell.getCellType() != CellType.BOOLEAN) {
         throw new IllegalStateException("Cell does not evaluate to a boolean value: " + address);
@@ -112,8 +119,8 @@ public final class CellsAdapter {
     return cell.getBooleanCellValue();
   }
 
-  public String formula(String address) {
-    TextValidation.requireNonBlank(address, "address");
+  public String formula(CellAddress address) {
+    Objects.requireNonNull(address, "address must not be null");
     Cell cell = requiredCell(address);
     if (cell.getCellType() != CellType.FORMULA) {
       throw new IllegalStateException("Cell does not contain a formula: " + address);
@@ -121,29 +128,28 @@ public final class CellsAdapter {
     return cell.getCellFormula();
   }
 
-  public CellReport snapshotCell(String address) {
+  public CellReport snapshotCell(CellAddress address) {
     return snapshotCell(address, new CellReadProjection(java.util.List.of(CellReadFacet.values())));
   }
 
-  public CellReport snapshotCell(String address, CellReadProjection projection) {
-    TextValidation.requireNonBlank(address, "address");
+  public CellReport snapshotCell(CellAddress address, CellReadProjection projection) {
+    Objects.requireNonNull(address, "address must not be null");
     Objects.requireNonNull(projection, "projection must not be null");
-    CellReference cellReference = parseCellReference(address);
-    requireValidCellReference(address, cellReference);
-    return snapshotCellOrBlank(address, cellReference.getRow(), cellReference.getCol(), projection);
+    return snapshotCellOrBlank(address, projection);
   }
 
-  public List<CellReport> snapshotCells(List<String> addresses) {
+  public List<CellReport> snapshotCells(List<CellAddress> addresses) {
     return snapshotCells(
         addresses, new CellReadProjection(java.util.List.of(CellReadFacet.values())));
   }
 
-  public List<CellReport> snapshotCells(List<String> addresses, CellReadProjection projection) {
+  public List<CellReport> snapshotCells(
+      List<CellAddress> addresses, CellReadProjection projection) {
     Objects.requireNonNull(addresses, "addresses must not be null");
     Objects.requireNonNull(projection, "projection must not be null");
     List<CellReport> cells = new ArrayList<>(addresses.size());
-    for (String address : List.copyOf(addresses)) {
-      TextValidation.requireNonBlank(address, "address");
+    for (CellAddress address : List.copyOf(addresses)) {
+      Objects.requireNonNull(address, "address must not be null");
       cells.add(snapshotCell(address, projection));
     }
     return List.copyOf(cells);
@@ -167,7 +173,7 @@ public final class CellsAdapter {
   }
 
   public dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
-      String topLeftAddress, int rowCount, int columnCount) {
+      CellAddress topLeftAddress, int rowCount, int columnCount) {
     return window(
         topLeftAddress,
         rowCount,
@@ -177,8 +183,8 @@ public final class CellsAdapter {
 
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
   public dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
-      String topLeftAddress, int rowCount, int columnCount, CellReadProjection projection) {
-    TextValidation.requireNonBlank(topLeftAddress, "topLeftAddress");
+      CellAddress topLeftAddress, int rowCount, int columnCount, CellReadProjection projection) {
+    Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
     Objects.requireNonNull(projection, "projection must not be null");
     if (rowCount <= 0) {
       throw new IllegalArgumentException("rowCount must be greater than 0");
@@ -187,10 +193,9 @@ public final class CellsAdapter {
       throw new IllegalArgumentException("columnCount must be greater than 0");
     }
 
-    CellReference topLeft = parseCellReference(topLeftAddress);
-    requireValidCellReference(topLeftAddress, topLeft);
-    int lastRow = topLeft.getRow() + rowCount - 1;
-    int lastCol = topLeft.getCol() + columnCount - 1;
+    CellAddress topLeft = topLeftAddress;
+    long lastRow = (long) topLeft.rowIndex() + rowCount - 1;
+    long lastCol = (long) topLeft.columnIndex() + columnCount - 1;
     if (lastRow > Limit.MAX_ROW_INDEX || lastCol > Limit.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
           "window extends beyond the Excel sheet boundary: topLeft="
@@ -202,19 +207,19 @@ public final class CellsAdapter {
     }
     List<dev.erst.gridgrind.core.model.layout.WindowRowReport> rows = new ArrayList<>(rowCount);
     for (int rowOffset = 0; rowOffset < rowCount; rowOffset++) {
-      int rowIndex = topLeft.getRow() + rowOffset;
+      int rowIndex = topLeft.rowIndex() + rowOffset;
       List<CellReport> cells = new ArrayList<>(columnCount);
       for (int columnOffset = 0; columnOffset < columnCount; columnOffset++) {
-        int columnIndex = topLeft.getCol() + columnOffset;
-        String address = new CellReference(rowIndex, columnIndex).formatAsString();
-        cells.add(snapshotCellOrBlank(address, rowIndex, columnIndex, projection));
+        int columnIndex = topLeft.columnIndex() + columnOffset;
+        CellAddress address = new CellAddress(rowIndex, columnIndex);
+        cells.add(snapshotCellOrBlank(address, projection));
       }
       rows.add(
           new dev.erst.gridgrind.core.model.layout.WindowRowReport(rowIndex, List.copyOf(cells)));
     }
     return new dev.erst.gridgrind.core.model.layout.WindowReport.Dense(
         new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheet.getSheetName()),
-        new dev.erst.gridgrind.core.vocabulary.CellAddress(topLeftAddress),
+        topLeftAddress,
         new dev.erst.gridgrind.core.model.layout.WindowDimensionsReport(rowCount, columnCount),
         List.copyOf(rows));
   }
@@ -236,9 +241,7 @@ public final class CellsAdapter {
             new ArrayFormulaReport(
                 new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheet.getSheetName()),
                 new dev.erst.gridgrind.core.vocabulary.RangeLabel(rangeText),
-                new dev.erst.gridgrind.core.vocabulary.CellAddress(
-                    new CellReference(range.getFirstRow(), range.getFirstColumn())
-                        .formatAsString()),
+                new CellAddress(range.getFirstRow(), range.getFirstColumn()),
                 xssfSheet()
                     .getRow(range.getFirstRow())
                     .getCell(range.getFirstColumn())
@@ -249,16 +252,15 @@ public final class CellsAdapter {
     return List.copyOf(formulas);
   }
 
-  private Cell requiredCell(String address) {
-    CellReference cellReference = parseCellReference(address);
-    Row row = sheet.getRow(cellReference.getRow());
+  private Cell requiredCell(CellAddress address) {
+    Row row = sheet.getRow(address.rowIndex());
     if (row == null) {
-      throw new CellNotFoundException(address);
+      throw new CellNotFoundException(address.value());
     }
 
-    Cell cell = row.getCell(cellReference.getCol());
+    Cell cell = row.getCell(address.columnIndex());
     if (cell == null) {
-      throw new CellNotFoundException(address);
+      throw new CellNotFoundException(address.value());
     }
 
     return cell;
@@ -273,7 +275,7 @@ public final class CellsAdapter {
         if (SheetStructure.shouldPreview(cell)) {
           cells.add(
               snapshot(
-                  new CellReference(rowIndex, columnIndex).formatAsString(),
+                  new CellAddress(rowIndex, columnIndex),
                   cell,
                   CellReadProjection.of(CellReadFacet.VALUE, CellReadFacet.FORMAT)));
         }
@@ -282,16 +284,15 @@ public final class CellsAdapter {
     return List.copyOf(cells);
   }
 
-  private CellReport snapshotCellOrBlank(
-      String address, int rowIndex, int columnIndex, CellReadProjection projection) {
-    Row row = sheet.getRow(rowIndex);
-    Cell cell = row == null ? null : row.getCell(columnIndex);
+  private CellReport snapshotCellOrBlank(CellAddress address, CellReadProjection projection) {
+    Row row = sheet.getRow(address.rowIndex());
+    Cell cell = row == null ? null : row.getCell(address.columnIndex());
     if (cell == null) return blankReport(address, projection);
     return snapshot(address, cell, projection);
   }
 
-  private CellReport snapshot(String address, Cell cell, CellReadProjection projection) {
-    var coordinate = new dev.erst.gridgrind.core.vocabulary.CellAddress(address);
+  private CellReport snapshot(CellAddress address, Cell cell, CellReadProjection projection) {
+    var coordinate = address;
     CellType declared = cell.getCellType();
     String formula = declared == CellType.FORMULA ? cell.getCellFormula() : null;
     String display;
@@ -305,7 +306,8 @@ public final class CellsAdapter {
                       : cell.getCellFormula()
                   : dataFormatter.formatCellValue(cell);
     } catch (RuntimeException failure) {
-      throw FormulaExceptions.wrap(formulaRuntime, sheet.getSheetName(), address, formula, failure);
+      throw FormulaExceptions.wrap(
+          formulaRuntime, sheet.getSheetName(), address.value(), formula, failure);
     }
     CellStyleReport effectiveStyle = styleRegistry.snapshot(cell);
     var format =
@@ -331,7 +333,7 @@ public final class CellsAdapter {
           evaluated = formulaRuntime.evaluate(cell);
         } catch (RuntimeException failure) {
           throw FormulaExceptions.wrap(
-              formulaRuntime, sheet.getSheetName(), address, formula, failure);
+              formulaRuntime, sheet.getSheetName(), address.value(), formula, failure);
         }
       }
       var value =
@@ -340,7 +342,7 @@ public final class CellsAdapter {
               : java.util.Optional.<dev.erst.gridgrind.core.model.value.CellValue>empty();
       var temporal =
           projection.includes(CellReadFacet.TEMPORAL)
-                  && value.orElse(null)
+                  && evaluatedValue(evaluated)
                       instanceof dev.erst.gridgrind.core.model.value.CellValue.NumberValue number
               ? java.util.Optional.of(temporal(number.value(), effectiveStyle.numberFormat()))
               : java.util.Optional.<dev.erst.gridgrind.core.model.value.CellTemporalReport>empty();
@@ -425,7 +427,9 @@ public final class CellsAdapter {
   }
 
   private static boolean requiresFormulaEvaluation(CellReadProjection projection) {
-    return projection.includes(CellReadFacet.VALUE) || projection.includes(CellReadFacet.FORMAT);
+    return projection.includes(CellReadFacet.VALUE)
+        || projection.includes(CellReadFacet.FORMAT)
+        || projection.includes(CellReadFacet.TEMPORAL);
   }
 
   private static <T> java.util.Optional<T> projected(CellReadProjection projection, T value) {
@@ -452,29 +456,22 @@ public final class CellsAdapter {
 
   private dev.erst.gridgrind.core.model.value.CellTemporalReport temporal(
       double number, String numberFormat) {
-    var kind = TemporalFormats.observedKind(numberFormat);
-    if (kind.isEmpty()) return dev.erst.gridgrind.core.model.value.CellTemporalReport.notDate();
-    var value =
-        org.apache.poi.ss.usermodel.DateUtil.getLocalDateTime(
-            number, xssfSheet().getWorkbook().isDate1904());
-    return switch (kind.orElseThrow()) {
-      case DATE ->
-          dev.erst.gridgrind.core.model.value.CellTemporalReport.temporal(
-              dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE,
-              value.toLocalDate().toString());
-      case TIME ->
-          dev.erst.gridgrind.core.model.value.CellTemporalReport.temporal(
-              dev.erst.gridgrind.core.model.value.CellTemporalKind.TIME,
-              value.toLocalTime().toString());
-      case DATE_TIME ->
-          dev.erst.gridgrind.core.model.value.CellTemporalReport.temporal(
-              dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME, value.toString());
-    };
+    return TemporalFormats.observedKind(numberFormat)
+        .<dev.erst.gridgrind.core.model.value.CellTemporalReport>map(kind ->
+            dev.erst.gridgrind.core.model.value.TemporalSemantics.interpret(
+                number, kind, dateSystem()))
+        .orElseGet(dev.erst.gridgrind.core.model.value.CellTemporalReport.NotTemporal::new);
   }
 
-  private CellReport blankReport(String address, CellReadProjection projection) {
+  private dev.erst.gridgrind.core.model.value.ExcelDateSystem dateSystem() {
+    return xssfSheet().getWorkbook().isDate1904()
+        ? dev.erst.gridgrind.core.model.value.ExcelDateSystem.MAC_1904
+        : dev.erst.gridgrind.core.model.value.ExcelDateSystem.WINDOWS_1900;
+  }
+
+  private CellReport blankReport(CellAddress address, CellReadProjection projection) {
     return new CellReport.BlankReport(
-        new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
+        address,
         projection.includes(CellReadFacet.FORMAT)
             ? java.util.Optional.of("")
             : java.util.Optional.empty(),
@@ -490,47 +487,31 @@ public final class CellsAdapter {
     return (XSSFSheet) sheet;
   }
 
-  private static CellReference parseCellReference(String address) {
-    try {
-      return new CellReference(address);
-    } catch (IllegalArgumentException exception) {
-      throw new InvalidCellAddressException(address, exception);
-    }
-  }
-
-  public static void requireValidCellReference(String address, CellReference cellReference) {
-    int row = cellReference.getRow();
-    int col = cellReference.getCol();
-    if (row < 0 || col < 0 || row > Limit.MAX_ROW_INDEX || col > Limit.MAX_COLUMN_INDEX) {
-      throw new InvalidCellAddressException(
-          address, new IllegalArgumentException("not a valid A1-style cell address: " + address));
-    }
-  }
-
-  public CellsAdapter setCell(String address, ResolvedCellWrite value) {
-    TextValidation.requireNonBlank(address, "address");
+  public CellsAdapter setCell(CellAddress address, ResolvedCellWrite value) {
+    Objects.requireNonNull(address, "address must not be null");
     Objects.requireNonNull(value, "value must not be null");
 
-    CellReference cellReference = parseCellReference(address);
-    writeCellValue(cellReference.getRow(), cellReference.getCol(), value);
+    dev.erst.gridgrind.core.model.value.TemporalSemantics.requireWritable(value, dateSystem());
+    writeCellValue(address.rowIndex(), address.columnIndex(), value);
     syncTableHeaders(
-        new CellBounds(
-            cellReference.getRow(),
-            cellReference.getRow(),
-            cellReference.getCol(),
-            cellReference.getCol()));
+        new RangeRef(
+            address.rowIndex(), address.rowIndex(), address.columnIndex(), address.columnIndex()));
     return this;
   }
 
-  public CellsAdapter setRange(String range, List<List<ResolvedCellWrite>> rows) {
-    TextValidation.requireNonBlank(range, "range");
+  public CellsAdapter setRange(RangeRef range, List<List<ResolvedCellWrite>> rows) {
+    Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(rows, "rows must not be null");
     if (rows.isEmpty()) {
       throw new IllegalArgumentException("rows must not be empty");
     }
 
     List<List<ResolvedCellWrite>> copiedRows = copyRows(rows);
-    CellBounds excelRange = CellBounds.parse(range);
+    copiedRows.forEach(row ->
+        row.forEach(value ->
+            dev.erst.gridgrind.core.model.value.TemporalSemantics.requireWritable(
+                value, dateSystem())));
+    RangeRef excelRange = range;
     if (copiedRows.size() != excelRange.rowCount()
         || copiedRows.getFirst().size() != excelRange.columnCount()) {
       throw new IllegalArgumentException(
@@ -560,9 +541,9 @@ public final class CellsAdapter {
     return this;
   }
 
-  public CellsAdapter clearRange(String range) {
-    TextValidation.requireNonBlank(range, "range");
-    CellBounds excelRange = CellBounds.parse(range);
+  public CellsAdapter clearRange(RangeRef range) {
+    Objects.requireNonNull(range, "range must not be null");
+    RangeRef excelRange = range;
     for (int rowIndex = excelRange.firstRow(); rowIndex <= excelRange.lastRow(); rowIndex++) {
       Row row = sheet.getRow(rowIndex);
       if (row == null) {
@@ -585,11 +566,11 @@ public final class CellsAdapter {
     return this;
   }
 
-  public CellsAdapter setArrayFormula(String range, ResolvedArrayFormula formula) {
-    TextValidation.requireNonBlank(range, "range");
+  public CellsAdapter setArrayFormula(RangeRef range, ResolvedArrayFormula formula) {
+    Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(formula, "formula must not be null");
 
-    CellBounds excelRange = CellBounds.parse(range);
+    RangeRef excelRange = range;
     CellRangeAddress poiRange =
         new CellRangeAddress(
             excelRange.firstRow(),
@@ -614,16 +595,16 @@ public final class CellsAdapter {
     return this;
   }
 
-  public CellsAdapter clearArrayFormula(String address) {
-    TextValidation.requireNonBlank(address, "address");
-    Cell cell = requiredArrayCell(address);
+  public CellsAdapter clearArrayFormula(CellAddress address) {
+    Objects.requireNonNull(address, "address must not be null");
+    Cell cell = requiredCell(address);
     if (!cell.isPartOfArrayFormulaGroup()) {
       throw new IllegalArgumentException("Cell " + address + " is not part of an array formula.");
     }
     CellRangeAddress removed = cell.getArrayFormulaRange();
     xssfSheet().removeArrayFormula(cell);
     syncTableHeaders(
-        new CellBounds(
+        new RangeRef(
             removed.getFirstRow(),
             removed.getLastRow(),
             removed.getFirstColumn(),
@@ -631,11 +612,11 @@ public final class CellsAdapter {
     return this;
   }
 
-  public CellsAdapter applyStyle(String range, CellStylePatch style) {
-    TextValidation.requireNonBlank(range, "range");
+  public CellsAdapter applyStyle(RangeRef range, CellStylePatch style) {
+    Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(style, "style must not be null");
 
-    CellBounds excelRange = CellBounds.parse(range);
+    RangeRef excelRange = range;
     for (int rowIndex = excelRange.firstRow(); rowIndex <= excelRange.lastRow(); rowIndex++) {
       for (int columnIndex = excelRange.firstColumn();
           columnIndex <= excelRange.lastColumn();
@@ -652,6 +633,7 @@ public final class CellsAdapter {
     Objects.requireNonNull(values, "values must not be null");
     for (ResolvedCellWrite value : values) {
       Objects.requireNonNull(value, "values must not contain nulls");
+      dev.erst.gridgrind.core.model.value.TemporalSemantics.requireWritable(value, dateSystem());
     }
 
     int rowIndex = nextAppendRowIndex();
@@ -659,7 +641,7 @@ public final class CellsAdapter {
       writeCellValue(rowIndex, columnIndex, values[columnIndex]);
     }
     if (values.length > 0) {
-      syncTableHeaders(new CellBounds(rowIndex, rowIndex, 0, values.length - 1));
+      syncTableHeaders(new RangeRef(rowIndex, rowIndex, 0, values.length - 1));
     }
     return this;
   }
@@ -672,16 +654,15 @@ public final class CellsAdapter {
         clearExistingFormula(cell);
         cell.setBlank();
       }
-      case CellValue.Text textValue -> {
+      case dev.erst.gridgrind.core.model.value.ResolvedCellText textValue -> {
         clearExistingFormula(cell);
-        CellTextLimits.requireSupportedLength(textValue.value(), "textValue.value");
         cell.setCellValue(textValue.value());
       }
       case ResolvedRichText richTextValue -> {
         clearExistingFormula(cell);
         cell.setCellValue(StyleAdapter.toPoiRichText(xssfSheet().getWorkbook(), richTextValue));
       }
-      case CellValue.NumberValue numberValue -> {
+      case CellValueSpec.NumberValue numberValue -> {
         clearExistingFormula(cell);
         cell.setCellValue(numberValue.value());
       }
@@ -689,19 +670,23 @@ public final class CellsAdapter {
         clearExistingFormula(cell);
         cell.setCellValue(booleanValue.value());
       }
-      case CellValue.ErrorValue errorValue -> {
+      case CellValueSpec.ErrorValue errorValue -> {
         byte storedError = CellErrors.toPoiStoredFormulaError(errorValue.value()).getCode();
         clearExistingFormula(cell);
         cell.setCellErrorValue(storedError);
       }
       case CellValueSpec.Date dateValue -> {
         clearExistingFormula(cell);
-        cell.setCellValue(dateValue.value());
+        cell.setCellValue(
+            dev.erst.gridgrind.core.model.value.TemporalSemantics.serial(
+                dateValue.value(), dateSystem()));
         cell.setCellStyle(styleRegistry.localDateStyle(cell));
       }
       case CellValueSpec.DateTime dateTimeValue -> {
         clearExistingFormula(cell);
-        cell.setCellValue(dateTimeValue.value());
+        cell.setCellValue(
+            dev.erst.gridgrind.core.model.value.TemporalSemantics.serial(
+                dateTimeValue.value(), dateSystem()));
         cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       }
       case ResolvedFormula formulaValue ->
@@ -722,27 +707,13 @@ public final class CellsAdapter {
     }
   }
 
-  private void syncTableHeaders(CellBounds changedRange) {
+  private void syncTableHeaders(RangeRef changedRange) {
     TableAdapter.syncAffectedHeaders(xssfSheet(), changedRange);
   }
 
   private Cell getOrCreateCell(int rowIndex, int columnIndex) {
     return getOrCreateRow(rowIndex)
         .getCell(columnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-  }
-
-  private Cell requiredArrayCell(String address) {
-    CellReference cellReference = parseCellReference(address);
-    requireValidCellReference(address, cellReference);
-    Row row = sheet.getRow(cellReference.getRow());
-    if (row == null) {
-      throw new CellNotFoundException(address);
-    }
-    Cell cell = row.getCell(cellReference.getCol());
-    if (cell == null) {
-      throw new CellNotFoundException(address);
-    }
-    return cell;
   }
 
   public int nextAppendRowIndex() {

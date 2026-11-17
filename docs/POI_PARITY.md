@@ -41,7 +41,7 @@ the ledger and probe implementations own the detailed evidence.
 | Drawings and embedded objects | Pictures, shapes, connectors, anchors, embedded payload readback and preservation | The modeled drawing contract; preservation does not imply arbitrary OLE execution or editing. |
 | Charts | BAR/LINE/PIE oracle projections, authoring/replacement fixtures and BAR/LINE combo handling | The product models additional plot families; this ledger does not exhaustively compare them or every chart option/renderer. |
 | Pivot tables | Readback/health, range/name/table-backed authoring, replacement/deletion and preservation | The modeled pivot contract; no certification of every Excel pivot feature or refresh result. |
-| Large-sheet modes | Event-reader summaries and append-oriented streaming authoring | EVENT_READ supports workbook/sheet summaries but existing-source preflight uses full XSSF; STREAMING_WRITE is restricted NEW-workbook authoring and can materialize XSSF for inspection, assertions and publication checks. See [Execution model](EXECUTION_MODEL.md). |
+| Large-sheet modes | Event-reader summaries and append-oriented streaming authoring | EVENT_READ can validate eligible existing sources without XSSF materialization; other admitted plans require full views. STREAMING_WRITE is restricted NEW-workbook authoring; observations and publication checks can require XSSF. Interleaved mutation/observation selects FULL_XSSF. See [Execution model](EXECUTION_MODEL.md). |
 | Package security | Password handling, strong AGILE encryption, signature inspection, unsigned output and signing | Explicit grants and security dispositions; broader observed encryption state is not all authorable. |
 | Other file formats and VBA | Outside the GridGrind product contract | `.xls`/`.xlsb` content and `.xlsm` filenames are rejected; there is no VBA authoring or execution interface. |
 
@@ -56,9 +56,7 @@ than GridGrind's `.xlsx` interface, including HSSF and lower-level access. Its
 limited chart/pivot support and macro preservation from macro creation. Those upstream pages
 provide context; they are not an exhaustive POI 6 feature inventory or GridGrind acceptance test.
 
-POI 6's [release notes](https://poi.apache.org/changes.html) include behavior changes in formula
-calculation, formatting and drawing shifts. GridGrind has dedicated regressions for unary-minus
-precedence, persisted multiplication/division precision and picture-anchor movement in
-[formula tests](../engine/src/test/java/dev/erst/gridgrind/engine/backend/xssf/ExcelWorkbookFormulasTest.java)
-and [structural-edit tests](../engine/src/test/java/dev/erst/gridgrind/engine/backend/xssf/ExcelRowStructureEditCoverageTest.java).
-They complement the ledger; they do not expand it into an exhaustive comparison with all POI 6 changes.
+Dedicated [formula tests](../engine/src/test/java/dev/erst/gridgrind/engine/backend/xssf/ExcelWorkbookFormulasTest.java)
+and [structural-edit tests](../engine/src/test/java/dev/erst/gridgrind/engine/backend/xssf/ExcelRowStructureEditCoverageTest.java)
+exercise unary-minus precedence, persisted multiplication/division precision and picture-anchor
+movement. They complement the ledger within their declared cases.

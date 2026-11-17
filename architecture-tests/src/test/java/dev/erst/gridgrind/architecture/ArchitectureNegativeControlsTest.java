@@ -8,10 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import dev.erst.gridgrind.architecture.fixture.ArchitectureCatalogWithoutSemantics;
 import dev.erst.gridgrind.architecture.fixture.ArchitectureMethodReferenceViolationFixture;
+import dev.erst.gridgrind.architecture.fixture.ArchitectureNonWireSealedClass;
+import dev.erst.gridgrind.architecture.fixture.ArchitectureNonWireSealedInterface;
 import dev.erst.gridgrind.architecture.fixture.ArchitectureRuntimeLeakFixture;
-import dev.erst.gridgrind.architecture.fixture.ArchitectureSealedClassViolation;
-import dev.erst.gridgrind.architecture.fixture.ArchitectureSealedUnionViolation;
-import dev.erst.gridgrind.architecture.fixture.ArchitectureUnadmittedExecutorFixture;
 import dev.erst.gridgrind.architecture.fixture.ArchitectureWireUnionVariants;
 import org.junit.jupiter.api.Test;
 
@@ -36,42 +35,18 @@ class ArchitectureNegativeControlsTest {
   }
 
   @Test
-  void modelNamesRejectRetiredGenericSuffixes() {
+  void coreRejectsAdapterDependencies() {
     AssertionError failure =
         assertThrows(
             AssertionError.class,
             () ->
-                ProductDomainShapeArchitectureRules.canonicalModelNamesDescribeTheirRole()
-                    .check(
-                        new ClassFileImporter()
-                            .importPackages("dev.erst.gridgrind.core.model.fixture")));
-    for (String name :
-        java.util.List.of("AuthoredInput", "AuthoredDto", "CellSnapshot", "CellDefinition")) {
-      assertTrue(failure.getMessage().contains(name), name);
-    }
-  }
-
-  @Test
-  void coreRejectsConcreteHostTypes() {
-    AssertionError failure =
-        assertThrows(
-            AssertionError.class,
-            () ->
-                ProductDependencyArchitectureRules.coreDoesNotOwnConcreteHostTypes()
+                ProductDependencyArchitectureRules.coreDoesNotDependOnAdapters()
                     .check(
                         new ClassFileImporter()
                             .importClasses(
-                                dev.erst.gridgrind.core.fixture.ArchitectureCoreHostTypes
-                                    .CliTransport.class,
-                                dev.erst.gridgrind.core.fixture.ArchitectureCoreHostTypes
-                                    .DockerInvocation.class,
-                                dev.erst.gridgrind.core.fixture.ArchitectureCoreHostTypes
-                                    .ContainerImage.class,
-                                dev.erst.gridgrind.core.fixture.ArchitectureCoreHostTypes
-                                    .TerminalSession.class)));
-    for (String name :
-        java.util.List.of("CliTransport", "DockerInvocation", "ContainerImage", "TerminalSession"))
-      assertTrue(failure.getMessage().contains(name));
+                                dev.erst.gridgrind.core.fixture.ArchitectureCoreAdapterDependency
+                                    .class)));
+    assertTrue(failure.getMessage().contains("GridGrindRequestInputs"));
   }
 
   @Test
@@ -124,18 +99,6 @@ class ArchitectureNegativeControlsTest {
   }
 
   @Test
-  void apiImplementationWiringStaysInOwnedFacades() {
-    AssertionError failure =
-        assertThrows(
-            AssertionError.class,
-            () ->
-                ProductDependencyArchitectureRules.engineApiRuntimeDependenciesStayInOwnedBridges()
-                    .check(
-                        new ClassFileImporter().importPackages("dev.erst.gridgrind.engine.api")));
-    assertTrue(failure.getMessage().contains("ArchitectureUnownedRuntimeBridgeFixture"));
-  }
-
-  @Test
   void apiSignaturesRejectInternalAndPoiTypesIncludingGenerics() {
     AssertionError failure =
         assertThrows(
@@ -177,36 +140,46 @@ class ArchitectureNegativeControlsTest {
   }
 
   @Test
-  void closedDomainUnionsRejectOpenOrOrdinaryClassVariants() {
-    assertThrows(
-        AssertionError.class,
-        () ->
-            ProductDomainShapeArchitectureRules.sealedInterfacesUseClosedDomainVariants()
-                .check(
-                    new ClassFileImporter().importClasses(ArchitectureSealedUnionViolation.class)));
+  void domainNamesAreIndependentOfDependencyBoundaries() {
+    assertDoesNotThrow(() ->
+        ProductDependencyArchitectureRules.coreDoesNotDependOnWorkbookOrJsonLibraries()
+            .check(
+                new ClassFileImporter()
+                    .importClasses(
+                        dev.erst.gridgrind.core.model.fixture.ArchitectureModelNames.AuthoredInput
+                            .class,
+                        dev.erst.gridgrind.core.model.fixture.ArchitectureModelNames.AuthoredDto
+                            .class,
+                        dev.erst.gridgrind.core.model.fixture.ArchitectureModelNames.CellSnapshot
+                            .class,
+                        dev.erst.gridgrind.core.model.fixture.ArchitectureModelNames.CellDefinition
+                            .class)));
   }
 
   @Test
-  void sealedClassesRemainExceptionBases() {
-    assertThrows(
-        AssertionError.class,
-        () ->
-            ProductDomainShapeArchitectureRules.sealedClassesModelOnlyExceptionBases()
-                .check(
-                    new ClassFileImporter().importClasses(ArchitectureSealedClassViolation.class)));
+  void nonWireRepresentationsMayUseOrdinaryOrSealedClasses() {
+    assertDoesNotThrow(() ->
+        ProductDomainShapeArchitectureRules.wireUnionsUseRecordVariants()
+            .check(
+                new ClassFileImporter()
+                    .importClasses(
+                        ArchitectureNonWireSealedInterface.class,
+                        ArchitectureNonWireSealedClass.class,
+                        ArchitectureWireUnionVariants.class,
+                        ArchitectureWireUnionVariants.RecordBranch.class,
+                        ArchitectureWireUnionVariants.RecordVariant.class)));
   }
 
   @Test
   void wireUnionsAcceptRecordLeavesAndRejectEnumOrOpenAlternatives() {
     ClassFileImporter importer = new ClassFileImporter();
-    assertDoesNotThrow(
-        () ->
-            ProductDomainShapeArchitectureRules.wireUnionsUseRecordVariants()
-                .check(
-                    importer.importClasses(
-                        ArchitectureWireUnionVariants.class,
-                        ArchitectureWireUnionVariants.RecordBranch.class,
-                        ArchitectureWireUnionVariants.RecordVariant.class)));
+    assertDoesNotThrow(() ->
+        ProductDomainShapeArchitectureRules.wireUnionsUseRecordVariants()
+            .check(
+                importer.importClasses(
+                    ArchitectureWireUnionVariants.class,
+                    ArchitectureWireUnionVariants.RecordBranch.class,
+                    ArchitectureWireUnionVariants.RecordVariant.class)));
     AssertionError failure =
         assertThrows(
             AssertionError.class,
@@ -219,17 +192,6 @@ class ArchitectureNegativeControlsTest {
                             ArchitectureWireUnionVariants.OpenBranch.class)));
     assertTrue(failure.getMessage().contains("EnumVariant"));
     assertTrue(failure.getMessage().contains("OpenBranch"));
-  }
-
-  @Test
-  void executionRejectsUnadmittedImplementations() {
-    assertThrows(
-        AssertionError.class,
-        () ->
-            ProductAssuranceArchitectureRules.executionUsesOneAdmittedExecutor()
-                .check(
-                    new ClassFileImporter()
-                        .importClasses(ArchitectureUnadmittedExecutorFixture.class)));
   }
 
   @Test

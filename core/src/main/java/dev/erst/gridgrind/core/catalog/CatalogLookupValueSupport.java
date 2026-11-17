@@ -7,36 +7,26 @@ import java.util.stream.Stream;
 final class CatalogLookupValueSupport {
   private CatalogLookupValueSupport() {}
 
-  static Object rawValue(CatalogLookupValue lookupValue) {
-    return switch (lookupValue) {
-      case CatalogEntryLookupValue entryValue -> entryValue.entry();
-      case CatalogNestedGroupLookupValue nestedGroupValue -> nestedGroupValue.group();
-      case CatalogPlainGroupLookupValue plainGroupValue -> plainGroupValue.group();
-      case CatalogTopLevelGroupLookupValue topLevelGroupValue ->
-          new TopLevelTypeGroup(topLevelGroupValue.group(), topLevelGroupValue.types());
-    };
-  }
-
   static String kind(CatalogLookupValue lookupValue) {
     return switch (lookupValue) {
-      case CatalogEntryLookupValue _ -> "ENTRY";
-      case CatalogNestedGroupLookupValue _ -> "NESTED_GROUP";
-      case CatalogPlainGroupLookupValue _ -> "PLAIN_GROUP";
-      case CatalogTopLevelGroupLookupValue _ -> "TOP_LEVEL_GROUP";
+      case TypeEntry _ -> "ENTRY";
+      case NestedTypeGroup _ -> "NESTED_GROUP";
+      case PlainTypeGroup _ -> "PLAIN_GROUP";
+      case TopLevelTypeGroup _ -> "TOP_LEVEL_GROUP";
     };
   }
 
   static String summary(CatalogLookupValue lookupValue) {
     return switch (lookupValue) {
-      case CatalogEntryLookupValue entryValue -> entryValue.entry().summary();
-      case CatalogNestedGroupLookupValue nestedGroupValue ->
+      case TypeEntry entryValue -> entryValue.summary();
+      case NestedTypeGroup nestedGroupValue ->
           "Nested type group with discriminator "
-              + nestedGroupValue.group().discriminatorField()
+              + nestedGroupValue.discriminatorField()
               + " and "
-              + nestedGroupValue.group().types().size()
+              + nestedGroupValue.types().size()
               + " variants.";
-      case CatalogPlainGroupLookupValue plainGroupValue -> plainGroupValue.group().type().summary();
-      case CatalogTopLevelGroupLookupValue topLevelGroupValue ->
+      case PlainTypeGroup plainGroupValue -> plainGroupValue.type().summary();
+      case TopLevelTypeGroup topLevelGroupValue ->
           "Top-level type category with " + topLevelGroupValue.types().size() + " entries.";
     };
   }
@@ -44,27 +34,25 @@ final class CatalogLookupValueSupport {
   static String searchableText(
       Catalog catalog, CatalogLookupValue lookupValue, boolean includeReferencedShapes) {
     return switch (lookupValue) {
-      case CatalogEntryLookupValue entryValue ->
-          entrySearchableText(catalog, entryValue.entry(), includeReferencedShapes);
-      case CatalogNestedGroupLookupValue nestedGroupValue ->
-          nestedGroupSearchableText(catalog, nestedGroupValue.group());
-      case CatalogPlainGroupLookupValue plainGroupValue ->
-          plainGroupSearchableText(catalog, plainGroupValue.group());
-      case CatalogTopLevelGroupLookupValue topLevelGroupValue ->
+      case TypeEntry entryValue ->
+          entrySearchableText(catalog, entryValue, includeReferencedShapes);
+      case NestedTypeGroup nestedGroupValue -> nestedGroupSearchableText(catalog, nestedGroupValue);
+      case PlainTypeGroup plainGroupValue -> plainGroupSearchableText(catalog, plainGroupValue);
+      case TopLevelTypeGroup topLevelGroupValue ->
           topLevelGroupSearchableText(catalog, topLevelGroupValue.types());
     };
   }
 
   static List<String> relatedEntryIds(Catalog catalog, CatalogLookupValue lookupValue) {
     return switch (lookupValue) {
-      case CatalogEntryLookupValue _ -> List.of();
-      case CatalogNestedGroupLookupValue nestedGroupValue ->
+      case TypeEntry _ -> List.of();
+      case NestedTypeGroup nestedGroupValue ->
           CatalogShapeTextSupport.relatedEntryIdsForFieldShape(
-              catalog, new FieldShape.NestedTypeGroupRef(nestedGroupValue.group().group()));
-      case CatalogPlainGroupLookupValue plainGroupValue ->
+              catalog, new FieldShape.NestedTypeGroupRef(nestedGroupValue.group()));
+      case PlainTypeGroup plainGroupValue ->
           CatalogShapeTextSupport.relatedEntryIdsForFieldShape(
-              catalog, new FieldShape.PlainTypeGroupRef(plainGroupValue.group().group()));
-      case CatalogTopLevelGroupLookupValue _ -> List.of();
+              catalog, new FieldShape.PlainTypeGroupRef(plainGroupValue.group()));
+      case TopLevelTypeGroup _ -> List.of();
     };
   }
 
@@ -77,9 +65,8 @@ final class CatalogLookupValueSupport {
         + String.join(
             " ",
             entry.targetSelectors().stream()
-                .flatMap(
-                    selector ->
-                        Stream.concat(Stream.of(selector.family()), selector.typeIds().stream()))
+                .flatMap(selector ->
+                    Stream.concat(Stream.of(selector.family()), selector.typeIds().stream()))
                 .toList())
         + (includeReferencedShapes
             ? " " + CatalogShapeTextSupport.referencedShapeText(catalog, entry.fields())
@@ -95,14 +82,13 @@ final class CatalogLookupValueSupport {
 
   private static String nestedGroupSearchableText(Catalog catalog, NestedTypeGroup group) {
     return group.types().stream()
-        .flatMap(
-            entry ->
-                Stream.concat(
-                    Stream.of(
-                        entry.id(),
-                        entry.summary(),
-                        CatalogNoteResolutionSupport.referencedNoteText(catalog, entry.noteRefs())),
-                    entry.fields().stream().flatMap(CatalogLookupValueSupport::fieldSearchTokens)))
+        .flatMap(entry ->
+            Stream.concat(
+                Stream.of(
+                    entry.id(),
+                    entry.summary(),
+                    CatalogNoteResolutionSupport.referencedNoteText(catalog, entry.noteRefs())),
+                entry.fields().stream().flatMap(CatalogLookupValueSupport::fieldSearchTokens)))
         .collect(java.util.stream.Collectors.joining(" "));
   }
 
@@ -119,14 +105,13 @@ final class CatalogLookupValueSupport {
 
   private static String topLevelGroupSearchableText(Catalog catalog, List<TypeEntry> types) {
     return types.stream()
-        .flatMap(
-            entry ->
-                Stream.concat(
-                    Stream.of(
-                        entry.id(),
-                        entry.summary(),
-                        CatalogNoteResolutionSupport.referencedNoteText(catalog, entry.noteRefs())),
-                    entry.fields().stream().flatMap(CatalogLookupValueSupport::fieldSearchTokens)))
+        .flatMap(entry ->
+            Stream.concat(
+                Stream.of(
+                    entry.id(),
+                    entry.summary(),
+                    CatalogNoteResolutionSupport.referencedNoteText(catalog, entry.noteRefs())),
+                entry.fields().stream().flatMap(CatalogLookupValueSupport::fieldSearchTokens)))
         .collect(java.util.stream.Collectors.joining(" "));
   }
 

@@ -143,10 +143,13 @@ class ExcelDataValidationControllerTest {
   void selectedSelectionFiltersByIntersection() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
-      controller.setDataValidation(sheet, "A1:A3", explicitListValidation());
       controller.setDataValidation(
           sheet,
-          "C1:C3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
+          explicitListValidation());
+      controller.setDataValidation(
+          sheet,
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("C1:C3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.TextLength(
                   ExcelComparisonOperator.GREATER_THAN,
@@ -190,8 +193,14 @@ class ExcelDataValidationControllerTest {
   void clearDataValidationsAllRemovesEveryStructure() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
-      controller.setDataValidation(sheet, "A1:A3", explicitListValidation());
-      controller.setDataValidation(sheet, "B1:B3", explicitListValidation());
+      controller.setDataValidation(
+          sheet,
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
+          explicitListValidation());
+      controller.setDataValidation(
+          sheet,
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("B1:B3"),
+          explicitListValidation());
 
       controller.clearDataValidations(sheet);
 
@@ -230,7 +239,10 @@ class ExcelDataValidationControllerTest {
   void selectedClearRemovesWholeStructuresAndUnsetsTheContainer() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
-      controller.setDataValidation(sheet, "A1:A3", explicitListValidation());
+      controller.setDataValidation(
+          sheet,
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
+          explicitListValidation());
 
       controller.clearDataValidations(
           sheet,
@@ -245,7 +257,10 @@ class ExcelDataValidationControllerTest {
   void selectedClearSplitsRowRangesAndSkipsBlankSqrefEntries() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
-      controller.setDataValidation(sheet, "A1:A10", explicitListValidation());
+      controller.setDataValidation(
+          sheet,
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A10"),
+          explicitListValidation());
       sheet
           .getCTWorksheet()
           .getDataValidations()
@@ -273,8 +288,14 @@ class ExcelDataValidationControllerTest {
       throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
-      controller.setDataValidation(sheet, "A20:C20", explicitListValidation());
-      controller.setDataValidation(sheet, "C1:C3", explicitListValidation());
+      controller.setDataValidation(
+          sheet,
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A20:C20"),
+          explicitListValidation());
+      controller.setDataValidation(
+          sheet,
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("C1:C3"),
+          explicitListValidation());
 
       controller.clearDataValidations(
           sheet,
@@ -1189,7 +1210,7 @@ class ExcelDataValidationControllerTest {
       XSSFSheet sheet = workbook.createSheet("Budget");
       controller.setDataValidation(
           sheet,
-          "A1:A3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.FormulaList(
                   ComparisonFormulas.normalizeFormula("#REF!", "formula")),
@@ -1199,7 +1220,7 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       controller.setDataValidation(
           sheet,
-          "B1:B3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("B1:B3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.WholeNumber(
                   ExcelComparisonOperator.BETWEEN,
@@ -1211,7 +1232,7 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       controller.setDataValidation(
           sheet,
-          "C1:C3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("C1:C3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.DecimalNumber(
                   ExcelComparisonOperator.GREATER_THAN,
@@ -1223,7 +1244,7 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       controller.setDataValidation(
           sheet,
-          "D1:D3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("D1:D3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.DateRule(
                   ExcelComparisonOperator.GREATER_THAN,
@@ -1235,7 +1256,7 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       controller.setDataValidation(
           sheet,
-          "E1:E3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("E1:E3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.TimeRule(
                   ExcelComparisonOperator.GREATER_THAN,
@@ -1247,7 +1268,7 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       controller.setDataValidation(
           sheet,
-          "F1:F3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("F1:F3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.TextLength(
                   ExcelComparisonOperator.GREATER_THAN,
@@ -1259,7 +1280,7 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       controller.setDataValidation(
           sheet,
-          "G1:G3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("G1:G3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.CustomFormula(
                   ComparisonFormulas.normalizeFormula("#REF!", "formula")),
@@ -1286,7 +1307,7 @@ class ExcelDataValidationControllerTest {
       XSSFSheet sheet = workbook.createSheet("Budget");
       controller.setDataValidation(
           sheet,
-          "A1:A3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.WholeNumber(
                   ExcelComparisonOperator.GREATER_THAN,
@@ -1298,7 +1319,7 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       controller.setDataValidation(
           sheet,
-          "B1:B3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("B1:B3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.FormulaList(
                   ComparisonFormulas.normalizeFormula("Statuses", "formula")),
@@ -1308,7 +1329,7 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       controller.setDataValidation(
           sheet,
-          "C1:C3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("C1:C3"),
           new ResolvedDataValidation(
               new DataValidationRuleSpec.CustomFormula(
                   ComparisonFormulas.normalizeFormula("LEN(C1)>0", "formula")),
@@ -1409,7 +1430,8 @@ class ExcelDataValidationControllerTest {
               Optional.empty(),
               Optional.empty());
 
-      controller.setDataValidation(sheet, "E2:E4", definition);
+      controller.setDataValidation(
+          sheet, new dev.erst.gridgrind.core.vocabulary.RangeRef("E2:E4"), definition);
 
       List<DataValidationEntryReport> snapshots = controller.dataValidations(sheet);
 
@@ -1518,7 +1540,8 @@ class ExcelDataValidationControllerTest {
   private void assertRoundTrip(String range, ResolvedDataValidation definition) throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
-      controller.setDataValidation(sheet, range, definition);
+      controller.setDataValidation(
+          sheet, new dev.erst.gridgrind.core.vocabulary.RangeRef(range), definition);
 
       List<DataValidationEntryReport> snapshots = controller.dataValidations(sheet);
 

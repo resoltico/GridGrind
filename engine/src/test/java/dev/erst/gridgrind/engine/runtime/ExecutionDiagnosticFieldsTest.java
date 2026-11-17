@@ -33,7 +33,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
@@ -72,7 +71,9 @@ class ExecutionDiagnosticFieldsTest {
         ExecutionDiagnosticFields.locationFor(new SheetNotFoundException("Budget")));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Address("B4"),
-        ExecutionDiagnosticFields.locationFor(new InvalidCellAddressException("B4", null)));
+        ExecutionDiagnosticFields.locationFor(
+            WorkbookFailureFixtures.missingCell(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress(3, 1))));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.RangeOnly("A1:B2"),
         ExecutionDiagnosticFields.locationFor(new InvalidRangeAddressException("A1:B2", null)));
@@ -279,7 +280,9 @@ class ExecutionDiagnosticFieldsTest {
     assertEquals(
         Optional.of("B4"),
         ExecutionDiagnosticFields.addressFor(
-            workbookInspection, new InvalidCellAddressException("B4", null)));
+            workbookInspection,
+            WorkbookFailureFixtures.missingCell(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress(3, 1))));
     assertEquals(
         Optional.of("A1:B2"),
         ExecutionDiagnosticFields.rangeFor(

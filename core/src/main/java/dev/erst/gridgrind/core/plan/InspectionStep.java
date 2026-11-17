@@ -18,7 +18,7 @@ public record InspectionStep(
         StepId stepId,
     Selector target,
     InspectionQuery query)
-    implements WorkbookStep, PreparedStep {
+    implements WorkbookStep {
   public InspectionStep {
     java.util.Objects.requireNonNull(stepId, "stepId must not be null");
     java.util.Objects.requireNonNull(target, "target must not be null");
@@ -28,10 +28,5 @@ public record InspectionStep(
   @Override
   public String stepKind() {
     return GridGrindProtocolTypeNames.workbookStepTypeName(InspectionStep.class);
-  }
-
-  @Override
-  public WorkbookStep authoredStep() {
-    return this;
   }
 }

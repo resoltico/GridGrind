@@ -165,7 +165,12 @@ public final class XlsxRoundTripVerifier {
   static CellStyleReport defaultStyleSnapshot() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Default");
-      return workbook.sheet("Default").cells().snapshotCell("A1").style().orElseThrow();
+      return workbook
+          .sheet("Default")
+          .cells()
+          .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
+          .style()
+          .orElseThrow();
     }
   }
 

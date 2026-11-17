@@ -8,7 +8,6 @@ import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
@@ -47,8 +46,12 @@ class FormulaOriginTrackerTest {
                   new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B2:C3")),
                   new ResolvedMutationAction.SetRange(
                       List.of(
-                          List.of(new ResolvedFormula("1+1"), new CellValue.Text("a")),
-                          List.of(new CellValue.Text("b"), new ResolvedFormula("2+2"))))));
+                          List.of(
+                              new ResolvedFormula("1+1"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("a")),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("b"),
+                              new ResolvedFormula("2+2"))))));
       FormulaOriginTracker.FormulaWrites clearWrites =
           tracker.plannedWrites(
               workbook,
@@ -64,14 +67,20 @@ class FormulaOriginTrackerTest {
 
       Set<FormulaOriginTracker.CellCoordinate> expected =
           Set.of(
-              new FormulaOriginTracker.CellCoordinate("Ops", "B2"),
-              new FormulaOriginTracker.CellCoordinate("Ops", "C2"),
-              new FormulaOriginTracker.CellCoordinate("Ops", "B3"),
-              new FormulaOriginTracker.CellCoordinate("Ops", "C3"));
+              new FormulaOriginTracker.CellCoordinate(
+                  "Ops", new dev.erst.gridgrind.core.vocabulary.CellAddress("B2")),
+              new FormulaOriginTracker.CellCoordinate(
+                  "Ops", new dev.erst.gridgrind.core.vocabulary.CellAddress("C2")),
+              new FormulaOriginTracker.CellCoordinate(
+                  "Ops", new dev.erst.gridgrind.core.vocabulary.CellAddress("B3")),
+              new FormulaOriginTracker.CellCoordinate(
+                  "Ops", new dev.erst.gridgrind.core.vocabulary.CellAddress("C3")));
       assertEquals(expected, setWrites.cells().keySet());
       assertEquals(expected, clearWrites.cells().keySet());
       assertEquals(
-          Set.of(new FormulaOriginTracker.CellCoordinate("Ops", "D5")),
+          Set.of(
+              new FormulaOriginTracker.CellCoordinate(
+                  "Ops", new dev.erst.gridgrind.core.vocabulary.CellAddress("D5"))),
           clearArrayWrites.cells().keySet());
       assertTrue(clearArrayWrites.cells().values().stream().allMatch(Optional::isEmpty));
     }
@@ -109,7 +118,10 @@ class FormulaOriginTrackerTest {
           new ResolvedStep(
               new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B1:C1")),
               new ResolvedMutationAction.SetRange(
-                  List.of(List.of(new ResolvedFormula("2+2"), new CellValue.Text("plain"))))),
+                  List.of(
+                      List.of(
+                          new ResolvedFormula("2+2"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("plain"))))),
           author);
       applyAndRecord(
           tracker,
@@ -117,7 +129,9 @@ class FormulaOriginTrackerTest {
           new ResolvedStep(
               new SheetSelector.ByName(new SheetName("Ops")),
               new ResolvedMutationAction.AppendRow(
-                  List.of(new ResolvedFormula("3+3"), new CellValue.Text("tail")))),
+                  List.of(
+                      new ResolvedFormula("3+3"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("tail")))),
           author);
       applyAndRecord(
           tracker,
@@ -181,7 +195,8 @@ class FormulaOriginTrackerTest {
           workbook,
           new ResolvedStep(
               new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-              new ResolvedMutationAction.SetCell(new CellValue.Text("replaced"))),
+              new ResolvedMutationAction.SetCell(
+                  new dev.erst.gridgrind.core.model.value.ResolvedCellText("replaced"))),
           new StepReference(1, new StepId("replace"), "MUTATION", "SET_CELL"));
       applyAndRecord(
           tracker,

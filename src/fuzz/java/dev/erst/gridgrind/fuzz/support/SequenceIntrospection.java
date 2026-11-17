@@ -52,14 +52,13 @@ public final class SequenceIntrospection {
   public static Map<String, Long> styleKinds(List<MutationStep> mutations) {
     Objects.requireNonNull(mutations, "mutations must not be null");
     LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
-    mutations.forEach(
-        mutation -> {
-          if (mutation.action()
-              instanceof dev.erst.gridgrind.core.plan.CellMutationAction.ApplyStyle applyStyle) {
-            StyleKindIntrospection.styleKinds(applyStyle.style())
-                .forEach((key, value) -> counts.merge(key, value, Long::sum));
-          }
-        });
+    mutations.forEach(mutation -> {
+      if (mutation.action()
+          instanceof dev.erst.gridgrind.core.plan.CellMutationAction.ApplyStyle applyStyle) {
+        StyleKindIntrospection.styleKinds(applyStyle.style())
+            .forEach((key, value) -> counts.merge(key, value, Long::sum));
+      }
+    });
     return Map.copyOf(counts);
   }
 
@@ -67,14 +66,13 @@ public final class SequenceIntrospection {
   public static Map<String, Long> styleKindsFromCommands(List<ResolvedStep> commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
-    commands.forEach(
-        command -> {
-          if (command.action()
-              instanceof dev.erst.gridgrind.core.plan.CellMutationAction.ApplyStyle applyStyle) {
-            StyleKindIntrospection.styleKinds(applyStyle.style())
-                .forEach((key, value) -> counts.merge(key, value, Long::sum));
-          }
-        });
+    commands.forEach(command -> {
+      if (command.action()
+          instanceof dev.erst.gridgrind.core.plan.CellMutationAction.ApplyStyle applyStyle) {
+        StyleKindIntrospection.styleKinds(applyStyle.style())
+            .forEach((key, value) -> counts.merge(key, value, Long::sum));
+      }
+    });
     return Map.copyOf(counts);
   }
 

@@ -107,6 +107,7 @@ final class SheetCopyAdapter {
     PictureCopySnapshot pictures = snapshot(sourcePoiSheet);
     SheetCopyCapture snapshot = snapshot(workbook, sourceSheetName, sourcePoiSheet);
     EmbeddedObjectCopySnapshot embeddedObjects = snapshot(sourceSheet);
+    SignatureLineCopy.Capture signatures = SignatureLineCopy.capture(sourcePoiSheet);
     RewrittenChartFormulas rewrittenChartFormulas = rewriteDefinedNameFormulas(sourcePoiSheet);
     prepareSourceSheetForClone(sourcePoiSheet);
     int sourceSheetIndex = workbook.xssfWorkbook().getSheetIndex(sourcePoiSheet);
@@ -133,6 +134,7 @@ final class SheetCopyAdapter {
         sourceSheetName,
         newSheetName);
     repairComments(snapshot.comments(), targetSheet);
+    SignatureLineCopy.restore(signatures, targetPoiSheet);
     repairCopiedEmbeddedObjects(targetSheet, embeddedObjects);
     repairPrintLayout(snapshot.printLayout(), targetSheet);
     replaceTables(workbook, newSheetName, snapshot.tables());
@@ -285,10 +287,9 @@ final class SheetCopyAdapter {
       String sourceSheetName,
       String newSheetName) {
     Objects.requireNonNull(formula, "formula must not be null");
-    return formula.map(
-        value ->
-            retargetFormula(
-                workbook, value, formulaType, targetSheetIndex, sourceSheetName, newSheetName));
+    return formula.map(value ->
+        retargetFormula(
+            workbook, value, formulaType, targetSheetIndex, sourceSheetName, newSheetName));
   }
 
   static void replaceAutofilter(
@@ -344,7 +345,7 @@ final class SheetCopyAdapter {
     targetSheet
         .metadata()
         .setAutofilter(
-            sheetAutofilter.range().value(),
+            new dev.erst.gridgrind.core.vocabulary.RangeRef(sheetAutofilter.range().value()),
             sheetAutofilter.filterColumns().stream()
                 .map(SheetCopyAdapter::copyableAutofilterColumn)
                 .toList(),
@@ -368,10 +369,9 @@ final class SheetCopyAdapter {
           new AutofilterFilterCriterionSpec.Custom(
               custom.and(),
               custom.conditions().stream()
-                  .map(
-                      condition ->
-                          new AutofilterFilterCriterionSpec.CustomConditionSpec(
-                              condition.operator(), condition.value()))
+                  .map(condition ->
+                      new AutofilterFilterCriterionSpec.CustomConditionSpec(
+                          condition.operator(), condition.value()))
                   .toList());
       case AutofilterFilterCriterionReport.Dynamic dynamic ->
           new AutofilterFilterCriterionSpec.Dynamic(
@@ -386,10 +386,8 @@ final class SheetCopyAdapter {
                   ColorAdapter.copyOf(
                       color
                           .color()
-                          .orElseThrow(
-                              () ->
-                                  new IllegalArgumentException(
-                                      "autofilter color must not be absent"))),
+                          .orElseThrow(() ->
+                              new IllegalArgumentException("autofilter color must not be absent"))),
                   "autofilter color must not be null"));
       case AutofilterFilterCriterionReport.Icon icon ->
           new AutofilterFilterCriterionSpec.Icon(icon.iconSet(), icon.iconId());
@@ -399,16 +397,15 @@ final class SheetCopyAdapter {
   private static Optional<AutofilterSortStateSpec> copyableSortState(
       Optional<AutofilterSortStateReport> sortState) {
     return Objects.requireNonNull(sortState, "sortState must not be null")
-        .map(
-            snapshot ->
-                new AutofilterSortStateSpec(
-                    new dev.erst.gridgrind.core.vocabulary.RangeRef(snapshot.range().value()),
-                    snapshot.caseSensitive(),
-                    snapshot.columnSort(),
-                    snapshot.sortMethod(),
-                    snapshot.conditions().stream()
-                        .map(SheetCopyAdapter::copyableSortCondition)
-                        .toList()));
+        .map(snapshot ->
+            new AutofilterSortStateSpec(
+                new dev.erst.gridgrind.core.vocabulary.RangeRef(snapshot.range().value()),
+                snapshot.caseSensitive(),
+                snapshot.columnSort(),
+                snapshot.sortMethod(),
+                snapshot.conditions().stream()
+                    .map(SheetCopyAdapter::copyableSortCondition)
+                    .toList()));
   }
 
   static List<CTConditionalFormatting> snapshot(XSSFSheet sheet, String sheetName) {
@@ -721,14 +718,13 @@ final class SheetCopyAdapter {
         table.presentation().dataCellStyle().orElse(""),
         table.presentation().totalsRowCellStyle().orElse(""),
         table.structure().columns().stream()
-            .map(
-                column ->
-                    new TableColumnSpec(
-                        Math.toIntExact(column.id() - 1L),
-                        column.uniqueName().orElse(""),
-                        column.totalsRowLabel().orElse(""),
-                        column.totalsRowFunction().orElse(""),
-                        column.calculatedColumnFormula().orElse("")))
+            .map(column ->
+                new TableColumnSpec(
+                    Math.toIntExact(column.id() - 1L),
+                    column.uniqueName().orElse(""),
+                    column.totalsRowLabel().orElse(""),
+                    column.totalsRowFunction().orElse(""),
+                    column.calculatedColumnFormula().orElse("")))
             .toList());
   }
 
@@ -1028,14 +1024,13 @@ final class SheetCopyAdapter {
         .map(XSSFObjectData.class::cast)
         .filter(shape -> objectName.equals(DrawingAdapter.resolvedName(shape)))
         .findFirst()
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Copied sheet '"
-                        + targetSheet.getSheetName()
-                        + "' is missing embedded object '"
-                        + objectName
-                        + "'"));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "Copied sheet '"
+                    + targetSheet.getSheetName()
+                    + "' is missing embedded object '"
+                    + objectName
+                    + "'"));
   }
 
   static void ensureInternalRelation(
@@ -1336,8 +1331,7 @@ final class SheetCopyAdapter {
       return copiedPart;
     } catch (IOException | InvalidFormatException exception) {
       throw new IllegalStateException(
-          "Failed to copy " + relationDescription + " for embedded object '" + objectName + "'",
-          exception);
+          "Failed to copy " + relationDescription + " for object '" + objectName + "'", exception);
     }
   }
 
@@ -1547,11 +1541,10 @@ final class SheetCopyAdapter {
   private static void materializeExternalHyperlinkRelationships(XSSFSheet sourceSheet) {
     for (XSSFHyperlink hyperlink : List.copyOf(sourceSheet.getHyperlinkList())) {
       materializeExternalHyperlinkRelationship(sourceSheet, hyperlink)
-          .ifPresent(
-              materialized -> {
-                sourceSheet.removeHyperlink(hyperlink);
-                sourceSheet.addHyperlink(materialized);
-              });
+          .ifPresent(materialized -> {
+            sourceSheet.removeHyperlink(hyperlink);
+            sourceSheet.addHyperlink(materialized);
+          });
     }
   }
 

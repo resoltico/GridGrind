@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -53,7 +54,9 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
                         new CellValueSpec.Formula(TextSourceSpec.inline("SUM("))))));
 
     WorkbookResult result =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(
                 request,
                 new ExecutionInputBindings(

@@ -3,10 +3,10 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
-import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.PreparedAssertionStep;
+import dev.erst.gridgrind.core.plan.PreparedInspectionStep;
 import dev.erst.gridgrind.core.plan.PreparedMutationStep;
 import dev.erst.gridgrind.core.plan.PreparedStep;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
@@ -50,7 +50,7 @@ final class FullXssfStepExecution {
                 ExecutionStepContextFactory.referenceFor(stepIndex, mutationStep.authoredStep()));
         yield java.util.Optional.empty();
       }
-      case AssertionStep assertionStep -> {
+      case PreparedAssertionStep assertionStep -> {
         if (assertionMode == AssertionModeSpec.FAIL_FAST) {
           assertions.add(
               stepSupport.executeAssertionStep(
@@ -66,7 +66,7 @@ final class FullXssfStepExecution {
           case AssertionStepExecution.Failed failed -> java.util.Optional.of(failed.failure());
         };
       }
-      case InspectionStep inspectionStep -> {
+      case PreparedInspectionStep inspectionStep -> {
         inspections.add(
             stepSupport.executeInspectionStep(
                 inspectionStep, workbook, workbookLocation, executionMode));
@@ -92,13 +92,12 @@ final class FullXssfStepExecution {
         GridGrindProblems.fromException(
             exception,
             formulaAuthor
-                .map(
-                    author ->
-                        new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
-                            ExecutionRequestPaths.requestShape(executionContext.request()),
-                            author,
-                            triggeringContext.location(),
-                            java.util.Optional.of(triggeringContext.step())))
+                .map(author ->
+                    new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
+                        ExecutionRequestPaths.requestShape(executionContext.request()),
+                        author,
+                        triggeringContext.location(),
+                        java.util.Optional.of(triggeringContext.step())))
                 .orElse(triggeringContext));
     stepHandle.fail(
         problem.code(), problem.category(), problem.context().type(), problem.message());

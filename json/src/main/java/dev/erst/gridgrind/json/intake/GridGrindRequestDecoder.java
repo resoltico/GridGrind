@@ -22,10 +22,9 @@ public final class GridGrindRequestDecoder {
   private static WorkbookPlan completePlan(RequestIntake analysis) {
     analysis.structuralProblems().stream()
         .findFirst()
-        .ifPresent(
-            problem -> {
-              throw problem.exception();
-            });
+        .ifPresent(problem -> {
+          throw problem.exception();
+        });
     return analysis.requireCompletePlan();
   }
 

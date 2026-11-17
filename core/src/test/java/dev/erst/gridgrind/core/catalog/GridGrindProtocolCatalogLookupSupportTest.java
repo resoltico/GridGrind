@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.catalog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -168,8 +169,8 @@ class GridGrindProtocolCatalogLookupSupportTest {
                 lookupFixtureCatalog(), "workbookSourceTypes")
             .orElseThrow();
 
-    assertTrue(mutationGroup instanceof TopLevelTypeGroup);
-    assertTrue(sourceGroup instanceof TopLevelTypeGroup);
+    assertInstanceOf(TopLevelTypeGroup.class, mutationGroup);
+    assertInstanceOf(TopLevelTypeGroup.class, sourceGroup);
     assertFalse(((TopLevelTypeGroup) mutationGroup).types().isEmpty());
     assertEquals(1, ((TopLevelTypeGroup) sourceGroup).types().size());
   }
@@ -189,9 +190,9 @@ class GridGrindProtocolCatalogLookupSupportTest {
                 lookupFixtureCatalog(), "workbookSourceTypes:SOURCE_ALPHA")
             .orElseThrow();
 
-    assertTrue(nestedGroup instanceof NestedTypeGroup);
-    assertTrue(plainGroup instanceof PlainTypeGroup);
-    assertTrue(sourceEntry instanceof TypeEntry);
+    assertInstanceOf(NestedTypeGroup.class, nestedGroup);
+    assertInstanceOf(PlainTypeGroup.class, plainGroup);
+    assertInstanceOf(TypeEntry.class, sourceEntry);
   }
 
   private static List<String> qualifiedIds(CatalogSearchResult result) {

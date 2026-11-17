@@ -48,7 +48,8 @@ class AutofilterAdapterTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = populatedSheet(workbook);
 
-      controller.setSheetAutofilter(sheet, "A1:B3");
+      controller.setSheetAutofilter(
+          sheet, new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"));
 
       assertEquals(
           List.of(
@@ -78,7 +79,7 @@ class AutofilterAdapterTest {
 
       controller.setSheetAutofilter(
           sheet,
-          "A1:F3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:F3"),
           List.of(
               new AutofilterFilterColumnSpec(
                   0L, false, new AutofilterFilterCriterionSpec.Values(List.of("Ada"), true)),
@@ -174,7 +175,7 @@ class AutofilterAdapterTest {
                   () ->
                       controller.setSheetAutofilter(
                           sheet,
-                          "A1:F3",
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:F3"),
                           List.of(
                               new AutofilterFilterColumnSpec(
                                   0L,
@@ -193,7 +194,7 @@ class AutofilterAdapterTest {
                   () ->
                       controller.setSheetAutofilter(
                           sheet,
-                          "A1:F3",
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:F3"),
                           List.of(
                               new AutofilterFilterColumnSpec(
                                   0L,
@@ -209,7 +210,7 @@ class AutofilterAdapterTest {
                   () ->
                       controller.setSheetAutofilter(
                           sheet,
-                          "A1:F3",
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:F3"),
                           List.of(
                               new AutofilterFilterColumnSpec(
                                   0L, true, new AutofilterFilterCriterionSpec.Icon("unknown", 0))),
@@ -222,7 +223,8 @@ class AutofilterAdapterTest {
   void clearSheetAutofilter_removesFilterDatabaseNames() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = populatedSheet(workbook);
-      controller.setSheetAutofilter(sheet, "A1:B3");
+      controller.setSheetAutofilter(
+          sheet, new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"));
 
       assertTrue(
           sheet.getWorkbook().getAllNames().stream()
@@ -242,7 +244,7 @@ class AutofilterAdapterTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet ops = populatedSheet(workbook);
       XSSFSheet archive = populatedSheet(workbook, "Archive");
-      controller.setSheetAutofilter(ops, "A1:B3");
+      controller.setSheetAutofilter(ops, new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"));
 
       Name archiveFilter = workbook.createName();
       archiveFilter.setNameName("_xlnm._FilterDatabase");
@@ -260,10 +262,9 @@ class AutofilterAdapterTest {
       assertTrue(workbook.getAllNames().contains(unrelated));
       assertFalse(
           workbook.getAllNames().stream()
-              .anyMatch(
-                  name ->
-                      name.getSheetIndex() == workbook.getSheetIndex(ops)
-                          && isFilterDatabaseName(name)));
+              .anyMatch(name ->
+                  name.getSheetIndex() == workbook.getSheetIndex(ops)
+                      && isFilterDatabaseName(name)));
     }
   }
 
@@ -407,7 +408,10 @@ class AutofilterAdapterTest {
 
       IllegalArgumentException failure =
           assertThrows(
-              IllegalArgumentException.class, () -> controller.setSheetAutofilter(sheet, "A1:B2"));
+              IllegalArgumentException.class,
+              () ->
+                  controller.setSheetAutofilter(
+                      sheet, new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")));
 
       assertEquals(
           "autofilter range must include a nonblank header row: A1:B2", failure.getMessage());
@@ -698,7 +702,7 @@ class AutofilterAdapterTest {
 
       controller.setSheetAutofilter(
           sheet,
-          "A1:B3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"),
           List.of(),
           Optional.of(
               new AutofilterSortStateSpec(
@@ -729,7 +733,7 @@ class AutofilterAdapterTest {
 
       controller.setSheetAutofilter(
           sheet,
-          "A1:C3",
+          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:C3"),
           List.of(
               new AutofilterFilterColumnSpec(
                   0L,
@@ -756,7 +760,10 @@ class AutofilterAdapterTest {
 
       IllegalArgumentException failure =
           assertThrows(
-              IllegalArgumentException.class, () -> controller.setSheetAutofilter(sheet, "A1:B3"));
+              IllegalArgumentException.class,
+              () ->
+                  controller.setSheetAutofilter(
+                      sheet, new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3")));
 
       assertEquals(
           "sheet-level autofilter range must not overlap an existing table range: Table1@A1:B3",
@@ -862,7 +869,8 @@ class AutofilterAdapterTest {
       XSSFTable table = sheet.createTable(new AreaReference("D1:E3", SpreadsheetVersion.EXCEL2007));
       table.getCTTable().setRef("D0:E3");
 
-      controller.setSheetAutofilter(sheet, "A1:B3");
+      controller.setSheetAutofilter(
+          sheet, new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"));
 
       assertEquals(
           List.of(
@@ -884,7 +892,8 @@ class AutofilterAdapterTest {
       sheet.getRow(2).createCell(4).setCellValue("South");
       sheet.createTable(new AreaReference("D1:E3", SpreadsheetVersion.EXCEL2007));
 
-      controller.setSheetAutofilter(sheet, "A1:B3");
+      controller.setSheetAutofilter(
+          sheet, new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"));
 
       assertEquals(
           List.of(

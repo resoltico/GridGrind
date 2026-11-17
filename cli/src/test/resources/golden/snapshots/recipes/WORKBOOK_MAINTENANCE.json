@@ -255,14 +255,26 @@
             "behavior" : "MOVE_AND_RESIZE",
             "from" : {
               "columnIndex" : 3,
-              "dx" : 0,
-              "dy" : 0,
+              "dx" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
+              "dy" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
               "rowIndex" : 1
             },
             "to" : {
               "columnIndex" : 6,
-              "dx" : 0,
-              "dy" : 0,
+              "dx" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
+              "dy" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
               "rowIndex" : 5
             },
             "type" : "TWO_CELL"
@@ -278,7 +290,7 @@
           },
           "setup" : {
             "allowComments" : false,
-            "setupId" : "<setupId-0>",
+            "setupId" : "{957F9ACA-DB10-4A22-9D21-0C5548B19B40}",
             "signingInstructions" : "Review the workbook before signing.",
             "suggestedSigner" : "Ada Lovelace",
             "suggestedSigner2" : "Operations",
@@ -1000,14 +1012,26 @@
             "behavior" : "MOVE_AND_RESIZE",
             "from" : {
               "columnIndex" : 3,
-              "dx" : 0,
-              "dy" : 0,
+              "dx" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
+              "dy" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
               "rowIndex" : 1
             },
             "to" : {
               "columnIndex" : 6,
-              "dx" : 0,
-              "dy" : 0,
+              "dx" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
+              "dy" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
               "rowIndex" : 5
             },
             "type" : "TWO_CELL"
@@ -1439,6 +1463,10 @@
       },
       "evidence" : {
         "admission" : {
+          "executionStrategy" : {
+            "backend" : "FULL_XSSF",
+            "fullWorkbookMaterializationRequired" : true
+          },
           "materializedInputs" : [ {
             "byteSize" : 9105,
             "path" : "<workspace>/recipe/task-starter-assets/workbook-ops-source.xlsx",
@@ -1519,14 +1547,26 @@
             "behavior" : "MOVE_AND_RESIZE",
             "from" : {
               "columnIndex" : 3,
-              "dx" : 0,
-              "dy" : 0,
+              "dx" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
+              "dy" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
               "rowIndex" : 1
             },
             "to" : {
               "columnIndex" : 6,
-              "dx" : 0,
-              "dy" : 0,
+              "dx" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
+              "dy" : {
+                "type" : "PIXELS",
+                "value" : 0
+              },
               "rowIndex" : 5
             },
             "type" : "TWO_CELL"

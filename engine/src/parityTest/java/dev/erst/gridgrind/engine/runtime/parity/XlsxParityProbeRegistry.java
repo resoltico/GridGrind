@@ -569,15 +569,14 @@ final class XlsxParityProbeRegistry {
 
   static List<String> normalizedTableColumns(List<TableColumnReport> columns) {
     return columns.stream()
-        .map(
-            column ->
-                "%s|%s|%s|%s|%s"
-                    .formatted(
-                        column.name(),
-                        column.uniqueName(),
-                        column.totalsRowLabel(),
-                        column.totalsRowFunction(),
-                        column.calculatedColumnFormula()))
+        .map(column ->
+            "%s|%s|%s|%s|%s"
+                .formatted(
+                    column.name(),
+                    column.uniqueName(),
+                    column.totalsRowLabel(),
+                    column.totalsRowFunction(),
+                    column.calculatedColumnFormula()))
         .toList();
   }
 
@@ -615,24 +614,23 @@ final class XlsxParityProbeRegistry {
 
   static List<String> plotTypeTokens(ChartReport chart) {
     return chart.plots().stream()
-        .map(
-            plot ->
-                switch (plot) {
-                  case ChartReport.Area _ -> "AREA";
-                  case ChartReport.Area3D _ -> "AREA_3D";
-                  case ChartReport.Bar _ -> "BAR";
-                  case ChartReport.Bar3D _ -> "BAR_3D";
-                  case ChartReport.Doughnut _ -> "DOUGHNUT";
-                  case ChartReport.Line _ -> "LINE";
-                  case ChartReport.Line3D _ -> "LINE_3D";
-                  case ChartReport.Pie _ -> "PIE";
-                  case ChartReport.Pie3D _ -> "PIE_3D";
-                  case ChartReport.Radar _ -> "RADAR";
-                  case ChartReport.Scatter _ -> "SCATTER";
-                  case ChartReport.Surface _ -> "SURFACE";
-                  case ChartReport.Surface3D _ -> "SURFACE_3D";
-                  case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
-                })
+        .map(plot ->
+            switch (plot) {
+              case ChartReport.Area _ -> "AREA";
+              case ChartReport.Area3D _ -> "AREA_3D";
+              case ChartReport.Bar _ -> "BAR";
+              case ChartReport.Bar3D _ -> "BAR_3D";
+              case ChartReport.Doughnut _ -> "DOUGHNUT";
+              case ChartReport.Line _ -> "LINE";
+              case ChartReport.Line3D _ -> "LINE_3D";
+              case ChartReport.Pie _ -> "PIE";
+              case ChartReport.Pie3D _ -> "PIE_3D";
+              case ChartReport.Radar _ -> "RADAR";
+              case ChartReport.Scatter _ -> "SCATTER";
+              case ChartReport.Surface _ -> "SURFACE";
+              case ChartReport.Surface3D _ -> "SURFACE_3D";
+              case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
+            })
         .toList();
   }
 
@@ -643,13 +641,9 @@ final class XlsxParityProbeRegistry {
         .findFirst()
         .filter(type::isInstance)
         .map(type::cast)
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Missing direct oracle drawing object "
-                        + name
-                        + " as "
-                        + type.getSimpleName()));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "Missing direct oracle drawing object " + name + " as " + type.getSimpleName()));
   }
 
   static <T extends DrawingObjectReport> T drawingObjectReport(
@@ -659,10 +653,9 @@ final class XlsxParityProbeRegistry {
         .findFirst()
         .filter(type::isInstance)
         .map(type::cast)
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Missing GridGrind drawing report " + name + " as " + type.getSimpleName()));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "Missing GridGrind drawing report " + name + " as " + type.getSimpleName()));
   }
 
   static boolean matchesColorDescriptor(

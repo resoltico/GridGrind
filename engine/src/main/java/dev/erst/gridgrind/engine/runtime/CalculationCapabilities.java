@@ -26,9 +26,8 @@ final class CalculationCapabilities {
     int unparseableByPoiCount =
         Math.toIntExact(
             assessments.stream()
-                .filter(
-                    assessment ->
-                        assessment.capability() == FormulaCapabilityKind.UNPARSEABLE_BY_POI)
+                .filter(assessment ->
+                    assessment.capability() == FormulaCapabilityKind.UNPARSEABLE_BY_POI)
                 .count());
     return new CalculationReport.Summary(
         evaluableNowCount, unevaluableNowCount, unparseableByPoiCount);

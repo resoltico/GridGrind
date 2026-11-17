@@ -1,0 +1,8 @@
+{
+  "IN_PROCESS" : "",
+  "SHADOW_JAR" : {
+    "component" : "POI",
+    "level" : "WARN",
+    "type" : "NATIVE_DIAGNOSTIC"
+  }
+}

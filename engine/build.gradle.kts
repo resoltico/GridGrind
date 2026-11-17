@@ -1,3 +1,5 @@
+import dev.erst.gridgrind.buildlogic.NativeProviderModuleArguments
+import dev.erst.gridgrind.buildlogic.NativeProviderVariants
 import dev.erst.gridgrind.buildlogic.coverageTestTasks
 import info.solidsoft.gradle.pitest.PitestPluginExtension
 import org.gradle.api.tasks.testing.Test
@@ -12,6 +14,75 @@ plugins {
 }
 
 description = "Core GridGrind workbook automation and request execution engine"
+
+// These compiler views are directories, applied to the unchanged named vendor modules.
+val poiNativeCompile = configurations.create("poiNativeCompile") {
+    attributes.attribute(NativeProviderVariants.REPAIR_MODULE, NativeProviderVariants.POI_MODULE)
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+val ooxmlNativeCompile = configurations.create("ooxmlNativeCompile") {
+    attributes.attribute(NativeProviderVariants.REPAIR_MODULE, NativeProviderVariants.OOXML_MODULE)
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+dependencies {
+    add(poiNativeCompile.name, project(path = ":native-provider", configuration = "poiCompileElements"))
+    add(ooxmlNativeCompile.name, project(path = ":native-provider", configuration = "ooxmlCompileElements"))
+    compileOnly(project(path = ":native-provider", configuration = "nativeCompileElements"))
+    runtimeOnly(project(path = ":native-provider", configuration = "nativeRuntimeElements"))
+}
+val nativePatchArguments = objects.newInstance(NativeProviderModuleArguments::class.java).apply {
+    poiClasses.from(poiNativeCompile)
+    ooxmlClasses.from(ooxmlNativeCompile)
+}
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn(poiNativeCompile, ooxmlNativeCompile)
+    options.compilerArgumentProviders.add(nativePatchArguments)
+}
+val nativeOwnerClasses = files(poiNativeCompile, ooxmlNativeCompile)
+// Native owner tests use the declared classpath view. Public realm tests use delivery resources only.
+sourceSets.matching { it.name != "main" }.all {
+    val ownerSourceSet = this
+    tasks.named<JavaCompile>(compileJavaTaskName) {
+        classpath = nativeOwnerClasses + ownerSourceSet.compileClasspath
+    }
+}
+tasks.withType<Test>().configureEach {
+    if (name != "publicNativeTest" && name != "publicNativeLifetimeTest") {
+        classpath = nativeOwnerClasses + classpath
+        useJUnitPlatform { excludeTags("native-public", "native-lifetime") }
+    }
+}
+val publicNativeTest = tasks.register<Test>("publicNativeTest") {
+    group = "verification"
+    description = "Verifies public native realms using stock parent JARs and the resource capsule"
+    failOnNoDiscoveredTests = true
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform {
+        includeTags("native-public")
+        excludeTags("native-lifetime")
+    }
+    shouldRunAfter(tasks.named<Test>("test"))
+}
+
+val publicNativeLifetimeTest = tasks.register<Test>("publicNativeLifetimeTest") {
+    group = "verification"
+    description = "Verifies public realm reclamation after JVM soft adaptation caches are cleared"
+    failOnNoDiscoveredTests = true
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform { includeTags("native-lifetime") }
+    filter {
+        includeTestsMatching("*NativePublicExecutionTest.realmsAreReclaimedWhenJvmSoftAdaptationCachesAreCleared")
+        isFailOnNoMatchingTests = true
+    }
+    jvmArgs("-XX:SoftRefLRUPolicyMSPerMB=0")
+    shouldRunAfter(publicNativeTest)
+}
+
+tasks.named("check") { dependsOn(publicNativeTest, publicNativeLifetimeTest) }
 
 configure<PitestPluginExtension> {
     targetClasses.convention(
@@ -39,22 +110,6 @@ tasks.named("pitest") {
 }
 
 // Engine behavior is exercised through both runtime adapters; coverage evidence must include both.
-val downstreamCoverageProjects = listOf(project(":json"), project(":cli"))
-
-fun downstreamCoverageTaskPaths(): List<String> =
-    downstreamCoverageProjects.flatMap { downstreamProject ->
-        downstreamProject.coverageTestTasks().map { task -> task.path }
-    }
-
-fun downstreamCoverageExecutionData() =
-    provider {
-        downstreamCoverageProjects.flatMap { downstreamProject ->
-            downstreamProject.coverageTestTasks().map { testTask ->
-                testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
-            }
-        }
-    }
-
 fun localCoverageExecutionData() =
     provider {
         listOf(
@@ -69,6 +124,11 @@ fun localCoverageExecutionData() =
 dependencies {
     constraints {
         for (configuration in listOf("implementation", "testFixturesImplementation")) {
+            add(configuration, libs.bnd.annotations)
+            add(configuration, libs.osgi.resource)
+            add(configuration, libs.commons.codec)
+            add(configuration, libs.errorprone.annotations)
+            add(configuration, libs.jspecify)
             add(configuration, libs.commons.lang3)
             add(configuration, libs.woodstox.core)
             add(configuration, libs.stax2.api)
@@ -93,6 +153,7 @@ dependencies {
     testFixturesImplementation(libs.poi.ooxml.full)
     testFixturesImplementation(libs.xmlsec)
     testImplementation(testFixtures(project(":engine")))
+    testImplementation(testFixtures(project(":core")))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.log4j.core)
@@ -101,8 +162,6 @@ dependencies {
 tasks.named<JacocoReport>("jacocoTestReport") {
     dependsOn(tasks.named<Test>("test"))
     executionData.from(localCoverageExecutionData())
-    dependsOn(downstreamCoverageTaskPaths())
-    executionData.from(downstreamCoverageExecutionData())
 }
 
 val paritySourceSet = the<org.gradle.api.tasks.SourceSetContainer>().create("parityTest") {
@@ -117,7 +176,6 @@ configurations.named(paritySourceSet.runtimeOnlyConfigurationName) {
 }
 dependencies {
     testImplementation(project(":json"))
-    testImplementation(project(":cli"))
     testImplementation(libs.jackson.databind)
     add(paritySourceSet.implementationConfigurationName, libs.jackson.databind)
     add(paritySourceSet.implementationConfigurationName, libs.bcpkix)
@@ -130,7 +188,8 @@ val parityTest = tasks.register<Test>("parityTest") {
     description = "Runs the XSSF behavioural parity corpus."
     group = "verification"
     testClassesDirs = paritySourceSet.output.classesDirs
-    classpath = paritySourceSet.runtimeClasspath
+    // Parity invokes native owners directly, so its explicit runtime view includes all repairs.
+    classpath = nativeOwnerClasses + paritySourceSet.runtimeClasspath
     useJUnitPlatform()
     failOnNoDiscoveredTests = true
     shouldRunAfter(tasks.named<Test>("test"))

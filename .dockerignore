@@ -16,6 +16,7 @@
 !core/
 !json/
 !engine/
+!native-provider/
 !architecture-tests/
 
 # Asset-backed built-in recipes are copied into the CLI JAR during processResources.
@@ -23,6 +24,8 @@
 
 # Legal files published into the runtime image.
 !LICENSE
+!PROJECT-NOTICE.md
+!LICENSE-COMMERCIAL.md
 !NOTICE
 !PATENTS.md
 !LICENSE-APACHE-2.0

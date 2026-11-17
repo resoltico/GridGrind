@@ -13,7 +13,6 @@ import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -159,7 +158,7 @@ public final class PrintAdapter {
     switch (printArea) {
       case PrintAreaSpec.None _ -> sheet.getWorkbook().removePrintArea(sheetIndex);
       case PrintAreaSpec.Range range -> {
-        CellBounds parsed = CellBounds.parse(range.range().value());
+        RangeRef parsed = range.range();
         sheet
             .getWorkbook()
             .setPrintArea(

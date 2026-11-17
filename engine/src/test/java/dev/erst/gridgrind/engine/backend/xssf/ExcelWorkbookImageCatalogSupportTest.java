@@ -73,20 +73,19 @@ class ExcelWorkbookImageCatalogSupportTest {
       sheet.drawings().setPicture(pictureDefinition("OpsPicture", 1, 1, 4, 6));
       sheet.drawings().setSignatureLine(signatureDefinition("OpsSignature", 5, 1, 8, 6));
 
-      assertDoesNotThrow(
-          () ->
-              sheet
-                  .drawings()
-                  .setEmbeddedObject(
-                      new ResolvedEmbeddedObject(
-                          "OpsEmbed",
-                          "Payload",
-                          "payload.txt",
-                          "payload.txt",
-                          new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
-                          ExcelPictureFormat.PNG,
-                          new BinaryContent(PNG_PIXEL_BYTES),
-                          anchor(9, 1, 12, 6))));
+      assertDoesNotThrow(() ->
+          sheet
+              .drawings()
+              .setEmbeddedObject(
+                  new ResolvedEmbeddedObject(
+                      "OpsEmbed",
+                      "Payload",
+                      "payload.txt",
+                      "payload.txt",
+                      new BinaryContent("payload".getBytes(StandardCharsets.UTF_8)),
+                      ExcelPictureFormat.PNG,
+                      new BinaryContent(PNG_PIXEL_BYTES),
+                      anchor(9, 1, 12, 6))));
       assertEquals(
           List.of("/xl/media/image1.png", "/xl/media/image2.png", "/xl/media/image3.png"),
           ImageCatalog.packageImagePartNames(workbook.xssfWorkbook()));
@@ -209,10 +208,9 @@ class ExcelWorkbookImageCatalogSupportTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                ImageCatalog.imageParts(
-                    () -> {
-                      throw new InvalidFormatException("broken");
-                    }));
+                ImageCatalog.imageParts(() -> {
+                  throw new InvalidFormatException("broken");
+                }));
     assertEquals("Failed to inspect workbook package media parts", invalidImageParts.getMessage());
     assertEquals("broken", invalidImageParts.getCause().getMessage());
     assertThrows(

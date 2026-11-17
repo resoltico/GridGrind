@@ -1,0 +1,15 @@
+--- org/apache/poi/ss/formula/functions/Days.java
++++ org/apache/poi/ss/formula/functions/Days.java
+@@ -89,10 +89,10 @@
+      * @throws EvaluationException (#NUM!) if the serial is not a date Excel can work with
+      */
+     static LocalDate getDate(double date) throws EvaluationException {
+-        if (date < 0 || date >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++        if (date < 0 || date >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+             throw new EvaluationException(ErrorEval.NUM_ERROR);
+         }
+-        Date d = DateUtil.getJavaDate(date, false);
++        Date d = DateUtil.getJavaDate(date, org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+         return d.toInstant()
+                 .atZone(LocaleUtil.getUserTimeZone().toZoneId())
+                 .toLocalDate();

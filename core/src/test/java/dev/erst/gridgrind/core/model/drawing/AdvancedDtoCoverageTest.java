@@ -37,7 +37,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
@@ -63,22 +62,37 @@ import org.junit.jupiter.api.Test;
 class AdvancedDtoCoverageTest {
   @Test
   void drawingReportsValidatePayloadAndAnchorSemantics() {
-    DrawingMarkerReport from = new DrawingMarkerReport(0, 0, 0, 0);
-    DrawingMarkerReport to = new DrawingMarkerReport(1, 1, 0, 0);
+    DrawingMarkerReport from =
+        new DrawingMarkerReport(
+            0, 0, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0));
+    DrawingMarkerReport to =
+        new DrawingMarkerReport(
+            1, 1, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0));
     DrawingAnchorReport.TwoCell twoCell =
         new DrawingAnchorReport.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
     DrawingAnchorReport.OneCell oneCell =
         new DrawingAnchorReport.OneCell(from, 1L, 2L, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
     DrawingAnchorReport.Absolute absolute =
         new DrawingAnchorReport.Absolute(
-            1L, 2L, 3L, 4L, ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE);
+            new DrawingCoordinateReport.Emu(1L),
+            new DrawingCoordinateReport.Emu(2L),
+            3L,
+            4L,
+            ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE);
 
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, twoCell.behavior());
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, oneCell.behavior());
     assertEquals(ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE, absolute.behavior());
     assertEquals(
         "columnIndex must not be negative",
-        assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0))
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingMarkerReport(
+                        -1,
+                        0,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)))
             .getMessage());
     assertEquals(
         "lastColumn must be greater than or equal to firstColumn",
@@ -437,14 +451,13 @@ class AdvancedDtoCoverageTest {
     assertEquals("D2", report.topLeftAddress().value());
     assertEquals("B2:B4*C2:C4", report.formula());
     assertFalse(report.singleCell());
-    assertDoesNotThrow(
-        () ->
-            new ArrayFormulaReport(
-                new SheetLabel("Calc"),
-                new RangeLabel(" "),
-                new CellAddress("D2"),
-                "SUM(B2:C2)",
-                true));
+    assertDoesNotThrow(() ->
+        new ArrayFormulaReport(
+            new SheetLabel("Calc"),
+            new RangeLabel(" "),
+            new CellAddress("D2"),
+            "SUM(B2:C2)",
+            true));
   }
 
   @Test
@@ -554,7 +567,11 @@ class AdvancedDtoCoverageTest {
 
     DrawingAnchorReport.Absolute anchor =
         new DrawingAnchorReport.Absolute(
-            1L, 2L, 3L, 4L, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+            new DrawingCoordinateReport.Emu(1L),
+            new DrawingCoordinateReport.Emu(2L),
+            3L,
+            4L,
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
     ChartReport bar =
         new ChartReport(
             "Revenue",
@@ -574,14 +591,30 @@ class AdvancedDtoCoverageTest {
                         new ChartReport.Axis(
                             ExcelChartAxisKind.CATEGORY,
                             ExcelChartAxisPosition.BOTTOM,
-                            ExcelChartAxisCrosses.AUTO_ZERO,
+                            new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
                             true)),
                     List.of(
                         chartSeries(
                             new ChartReport.Title.Text("Series 1"),
-                            new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                            new ChartReport.DataSource.StringLiteral(
+                                new ChartReport.StringCache.Stored(
+                                    Optional.of(2L),
+                                    List.of(
+                                        new ChartReport.StringPoint(
+                                            Optional.of(0L), Optional.of("Jan")),
+                                        new ChartReport.StringPoint(
+                                            Optional.of(1L), Optional.of("Feb"))))),
                             new ChartReport.DataSource.NumericLiteral(
-                                Optional.of("#,##0"), List.of("1", "2")))))));
+                                new ChartReport.NumericCache.Stored(
+                                    Optional.of(2L),
+                                    Optional.of("#,##0"),
+                                    List.of(
+                                        new ChartReport.NumericPoint(
+                                            Optional.of(0L), Optional.of("1"), Optional.empty()),
+                                        new ChartReport.NumericPoint(
+                                            Optional.of(1L),
+                                            Optional.of("2"),
+                                            Optional.empty())))))))));
     assertEquals("Revenue", bar.name());
     assertEquals(
         "firstSliceAngle must be between 0 and 360",
@@ -594,25 +627,21 @@ class AdvancedDtoCoverageTest {
                         List.of(
                             chartSeries(
                                 new ChartReport.Title.Text("Series 1"),
-                                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                                new ChartReport.DataSource.StringLiteral(
+                                    new ChartReport.StringCache.Stored(
+                                        Optional.of(1L),
+                                        List.of(
+                                            new ChartReport.StringPoint(
+                                                Optional.of(0L), Optional.of("Jan"))))),
                                 new ChartReport.DataSource.NumericLiteral(
-                                    Optional.empty(), List.of("1"))))))
-            .getMessage());
-    assertEquals(
-        "series must not be empty",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ChartReport.Line(
-                        false,
-                        ExcelChartGrouping.STANDARD,
-                        List.of(
-                            new ChartReport.Axis(
-                                ExcelChartAxisKind.CATEGORY,
-                                ExcelChartAxisPosition.BOTTOM,
-                                ExcelChartAxisCrosses.AUTO_ZERO,
-                                true)),
-                        List.of()))
+                                    new ChartReport.NumericCache.Stored(
+                                        Optional.of(1L),
+                                        Optional.empty(),
+                                        List.of(
+                                            new ChartReport.NumericPoint(
+                                                Optional.of(0L),
+                                                Optional.of("1"),
+                                                Optional.empty()))))))))
             .getMessage());
     assertEquals(
         Optional.of(180),
@@ -622,8 +651,19 @@ class AdvancedDtoCoverageTest {
                 List.of(
                     chartSeries(
                         new ChartReport.Title.Text("Series 1"),
-                        new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("1")))))
+                        new ChartReport.DataSource.StringLiteral(
+                            new ChartReport.StringCache.Stored(
+                                Optional.of(1L),
+                                List.of(
+                                    new ChartReport.StringPoint(
+                                        Optional.of(0L), Optional.of("Jan"))))),
+                        new ChartReport.DataSource.NumericLiteral(
+                            new ChartReport.NumericCache.Stored(
+                                Optional.of(1L),
+                                Optional.empty(),
+                                List.of(
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(0L), Optional.of("1"), Optional.empty())))))))
             .firstSliceAngle());
     assertEquals(
         Optional.empty(),
@@ -633,8 +673,19 @@ class AdvancedDtoCoverageTest {
                 List.of(
                     chartSeries(
                         new ChartReport.Title.Text("Series 1"),
-                        new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("1")))))
+                        new ChartReport.DataSource.StringLiteral(
+                            new ChartReport.StringCache.Stored(
+                                Optional.of(1L),
+                                List.of(
+                                    new ChartReport.StringPoint(
+                                        Optional.of(0L), Optional.of("Jan"))))),
+                        new ChartReport.DataSource.NumericLiteral(
+                            new ChartReport.NumericCache.Stored(
+                                Optional.of(1L),
+                                Optional.empty(),
+                                List.of(
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(0L), Optional.of("1"), Optional.empty())))))))
             .firstSliceAngle());
 
     PivotTableReport.Supported pivot =

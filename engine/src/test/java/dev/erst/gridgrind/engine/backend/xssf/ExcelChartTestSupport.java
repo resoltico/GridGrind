@@ -9,7 +9,6 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -134,18 +133,66 @@ final class ExcelChartTestSupport {
   }
 
   static void seedChartData(XssfSheet sheet) {
-    sheet.cells().setCell("A1", new CellValue.Text("Month"));
-    sheet.cells().setCell("B1", new CellValue.Text("Plan"));
-    sheet.cells().setCell("C1", new CellValue.Text("Actual"));
-    sheet.cells().setCell("A2", new CellValue.Text("Jan"));
-    sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
-    sheet.cells().setCell("C2", new CellValue.NumberValue(12d));
-    sheet.cells().setCell("A3", new CellValue.Text("Feb"));
-    sheet.cells().setCell("B3", new CellValue.NumberValue(18d));
-    sheet.cells().setCell("C3", new CellValue.NumberValue(16d));
-    sheet.cells().setCell("A4", new CellValue.Text("Mar"));
-    sheet.cells().setCell("B4", new CellValue.NumberValue(15d));
-    sheet.cells().setCell("C4", new CellValue.NumberValue(21d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Month"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plan"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Actual"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Jan"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Feb"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(18d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(16d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mar"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(15d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C4"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(21d));
   }
 
   static void seedChartData(org.apache.poi.xssf.usermodel.XSSFSheet sheet) {

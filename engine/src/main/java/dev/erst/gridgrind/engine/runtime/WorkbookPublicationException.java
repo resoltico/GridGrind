@@ -12,9 +12,11 @@ final class WorkbookPublicationException extends IOException {
 
   WorkbookPublicationException(PublicationOutcome publication, IOException cause) {
     super(Objects.requireNonNull(cause, "cause must not be null").getMessage(), cause);
-    if (!(publication instanceof PublicationOutcome.NotPublished)
+    if (!(publication instanceof PublicationOutcome.NotAttempted)
+        && !(publication instanceof PublicationOutcome.NotPublished)
         && !(publication instanceof PublicationOutcome.Uncertain)) {
-      throw new IllegalArgumentException("publication failure must be NOT_PUBLISHED or UNCERTAIN");
+      throw new IllegalArgumentException(
+          "publication failure must be NOT_ATTEMPTED, NOT_PUBLISHED or UNCERTAIN");
     }
     this.publication = publication;
   }

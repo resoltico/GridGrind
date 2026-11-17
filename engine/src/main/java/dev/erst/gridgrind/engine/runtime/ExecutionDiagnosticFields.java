@@ -34,6 +34,18 @@ final class ExecutionDiagnosticFields {
   }
 
   static ProblemContextWorkbookSurfaces.ProblemLocation locationFor(Exception exception) {
+    if (exception instanceof dev.erst.gridgrind.engine.customxml.MappedDateInputException mapped) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.MappedXmlField(
+          Optional.empty(), mapped.xpath(), mapped.mappingRowIndex());
+    }
+    if (exception
+        instanceof dev.erst.gridgrind.engine.backend.xssf.WorkbookContentRefusalException refusal) {
+      return refusal
+          .location()
+          .<ProblemContextWorkbookSurfaces.ProblemLocation>map(
+              ProblemContextWorkbookSurfaces.ProblemLocation.NativeContent::new)
+          .orElseGet(ProblemContextWorkbookSurfaces.ProblemLocation::unknown);
+    }
     return locationFor(
         new DiagnosticLocationParts(
             ExecutionExceptionDiagnosticFields.namedRangeNameFor(exception),

@@ -9,11 +9,15 @@ import org.junit.jupiter.api.Test;
 /** Tests for NamedRangeTarget authored construction and validation. */
 class NamedRangeTargetTest {
   @Test
-  void preservesAuthoredRangeText() {
+  void usesCanonicalOrderedRangeGeometry() {
     NamedRangeTarget.Range target =
-        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4:A1"));
+        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("$a$1:B4"));
 
-    assertEquals("B4:A1", target.range().value());
+    assertEquals("A1:B4", target.range().value());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4:A1")));
+    assertEquals("Budget!$B$4:A1", NamedRangeTarget.formula("Budget!$B$4:A1").formula());
   }
 
   @Test

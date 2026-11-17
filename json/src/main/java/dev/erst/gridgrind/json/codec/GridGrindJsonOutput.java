@@ -1,9 +1,11 @@
 package dev.erst.gridgrind.json.codec;
 
 import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.catalog.CatalogLookupValue;
 import dev.erst.gridgrind.core.catalog.CatalogNote;
 import dev.erst.gridgrind.core.catalog.ProtocolStepTemplate;
 import dev.erst.gridgrind.core.catalog.TypeEntry;
+import dev.erst.gridgrind.core.discovery.RecipeCatalogDetail;
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
@@ -125,14 +127,14 @@ public final class GridGrindJsonOutput {
   }
 
   /** Writes one protocol-catalog lookup value to an output stream without closing it. */
-  public static void writeCatalogLookupValue(OutputStream outputStream, Object value)
+  public static void writeCatalogLookupValue(OutputStream outputStream, CatalogLookupValue value)
       throws IOException {
     writeCatalogLookupValue(outputStream, value, false);
   }
 
   /** Writes one protocol-catalog lookup value to an output stream without closing it. */
   public static void writeCatalogLookupValue(
-      OutputStream outputStream, Object value, boolean pretty) throws IOException {
+      OutputStream outputStream, CatalogLookupValue value, boolean pretty) throws IOException {
     writeValue(outputStream, value, pretty);
   }
 
@@ -141,7 +143,10 @@ public final class GridGrindJsonOutput {
    * the root.
    */
   public static void writeCatalogLookupResult(
-      OutputStream outputStream, ProtocolVersion protocolVersion, Object value, boolean pretty)
+      OutputStream outputStream,
+      ProtocolVersion protocolVersion,
+      CatalogLookupValue value,
+      boolean pretty)
       throws IOException {
     writeCatalogLookupResult(outputStream, protocolVersion, value, List.of(), pretty);
   }
@@ -151,6 +156,26 @@ public final class GridGrindJsonOutput {
    * the scoped value references them.
    */
   public static void writeCatalogLookupResult(
+      OutputStream outputStream,
+      ProtocolVersion protocolVersion,
+      CatalogLookupValue value,
+      List<CatalogNote> notes,
+      boolean pretty)
+      throws IOException {
+    writeLookupEnvelope(outputStream, protocolVersion, value, notes, pretty);
+  }
+
+  /** Writes one recipe detail with its protocol version, without closing the stream. */
+  public static void writeRecipeLookupResult(
+      OutputStream outputStream,
+      ProtocolVersion protocolVersion,
+      RecipeCatalogDetail value,
+      boolean pretty)
+      throws IOException {
+    writeLookupEnvelope(outputStream, protocolVersion, value, List.of(), pretty);
+  }
+
+  private static void writeLookupEnvelope(
       OutputStream outputStream,
       ProtocolVersion protocolVersion,
       Object value,

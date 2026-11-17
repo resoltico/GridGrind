@@ -12,66 +12,26 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.engine.charts.ChartAdapter;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
-import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
 import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
 import org.apache.poi.xssf.usermodel.XSSFChart;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 /** Focused regression tests for authoritative chart readback behavior. */
 class ExcelChartReadbackTest {
-  @Test
-  void unresolvedReferenceFormulasFallBackToEmbeddedChartCaches() throws IOException {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Charts");
-
-      assertEquals(
-          List.of("cached-a", "cached-b"),
-          ChartAdapter.resolvedOrCachedReferenceValues(
-              sheet,
-              "'Missing'!A1:A2",
-              new ReferenceDataSource("'Missing'!A1:A2", List.of("cached-a", "cached-b"))));
-    }
-  }
 
   @Test
-  void blankReferenceFormulasAlsoFallBackToEmbeddedChartCaches() throws IOException {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Charts");
-
-      assertEquals(
-          List.of("cached-only"),
-          ChartAdapter.resolvedOrCachedReferenceValues(
-              sheet, " ", new ReferenceDataSource(" ", List.of("cached-only"))));
-    }
-  }
-
-  @Test
-  void nullReferenceFormulasAlsoFallBackToEmbeddedChartCaches() throws IOException {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Charts");
-
-      assertEquals(
-          List.of("cached-null"),
-          ChartAdapter.resolvedOrCachedReferenceValues(
-              sheet, null, new ReferenceDataSource(null, List.of("cached-null"))));
-    }
-  }
-
-  @Test
-  void referenceReadbackUsesCurrentCellValuesInsteadOfStaleChartCaches() throws IOException {
-    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-live-readback-");
+  void referenceReadbackUsesStoredCachesWhenCurrentCellsDiffer() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-stored-readback-");
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Summary");
@@ -115,8 +75,9 @@ class ExcelChartReadbackTest {
           assertInstanceOf(
               ChartReport.DataSource.NumericReference.class, line.series().getFirst().values());
 
-      assertEquals("C2:C4", values.formula());
-      assertEquals(List.of("4.0", "6.0", "10.0"), values.cachedValues());
+      assertEquals(Optional.of("C2:C4"), values.formula());
+      assertEquals(
+          List.of("0.0", "0.0", "0.0"), ChartCacheAssertions.denseNumericValues(values.cache()));
     }
   }
 
@@ -126,14 +87,46 @@ class ExcelChartReadbackTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Summary");
-      sheet.cells().setCell("A1", new CellValue.Text("Owner"));
-      sheet.cells().setCell("B1", new CellValue.Text("Projected"));
-      sheet.cells().setCell("A2", new CellValue.Text("Ari"));
-      sheet.cells().setCell("A3", new CellValue.Text("Bo"));
-      sheet.cells().setCell("A4", new CellValue.Text("Cy"));
-      sheet.cells().setCell("B2", new ResolvedFormula("40+2"));
-      sheet.cells().setCell("B3", new CellValue.NumberValue(7d));
-      sheet.cells().setCell("B4", new ResolvedFormula("B3*2"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Projected"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ari"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Bo"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Cy"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new ResolvedFormula("40+2"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(7d));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new ResolvedFormula("B3*2"));
 
       sheet
           .drawings()
@@ -171,18 +164,63 @@ class ExcelChartReadbackTest {
   }
 
   private static void seedFormulaBackedChartData(XssfSheet sheet) {
-    sheet.cells().setCell("A1", new CellValue.Text("Owner"));
-    sheet.cells().setCell("B1", new CellValue.Text("Hours"));
-    sheet.cells().setCell("C1", new CellValue.Text("Projected"));
-    sheet.cells().setCell("A2", new CellValue.Text("Ari"));
-    sheet.cells().setCell("A3", new CellValue.Text("Bo"));
-    sheet.cells().setCell("A4", new CellValue.Text("Cy"));
-    sheet.cells().setCell("B2", new CellValue.NumberValue(2d));
-    sheet.cells().setCell("B3", new CellValue.NumberValue(3d));
-    sheet.cells().setCell("B4", new CellValue.NumberValue(5d));
-    sheet.cells().setCell("C2", new ResolvedFormula("B2*2"));
-    sheet.cells().setCell("C3", new ResolvedFormula("B3*2"));
-    sheet.cells().setCell("C4", new ResolvedFormula("B4*2"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hours"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Projected"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ari"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Bo"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Cy"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(3d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(5d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"), new ResolvedFormula("B2*2"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"), new ResolvedFormula("B3*2"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C4"), new ResolvedFormula("B4*2"));
   }
 
   private static DrawingAnchorSpec.TwoCell anchor(
@@ -201,62 +239,6 @@ class ExcelChartReadbackTest {
       String updated = transformer.apply(original);
       assertNotEquals(original, updated);
       Files.writeString(entry, updated);
-    }
-  }
-
-  /** Minimal reference-backed data source stub for chart snapshot seam coverage. */
-  private static final class ReferenceDataSource implements XDDFDataSource<String> {
-    private final String formula;
-    private final List<String> values;
-
-    private ReferenceDataSource(String formula, List<String> values) {
-      this.formula = formula;
-      this.values = List.copyOf(values);
-    }
-
-    @Override
-    public int getPointCount() {
-      return values.size();
-    }
-
-    @Override
-    public String getPointAt(int index) {
-      return values.get(index);
-    }
-
-    @Override
-    public boolean isLiteral() {
-      return false;
-    }
-
-    @Override
-    public boolean isCellRange() {
-      return true;
-    }
-
-    @Override
-    public boolean isReference() {
-      return true;
-    }
-
-    @Override
-    public boolean isNumeric() {
-      return false;
-    }
-
-    @Override
-    public int getColIndex() {
-      return 0;
-    }
-
-    @Override
-    public String getDataRangeReference() {
-      return formula;
-    }
-
-    @Override
-    public String getFormatCode() {
-      return null;
     }
   }
 }

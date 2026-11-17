@@ -1,0 +1,11 @@
+--- org/apache/poi/ss/formula/atp/YearFracCalculator.java
++++ org/apache/poi/ss/formula/atp/YearFracCalculator.java
+@@ -311,7 +311,7 @@
+     private static SimpleDate createDate(int dayCount) {
+         /* use UTC time-zone to avoid daylight savings issues */
+         Calendar cal = LocaleUtil.getLocaleCalendar(LocaleUtil.TIMEZONE_UTC);
+-        DateUtil.setCalendar(cal, dayCount, 0, false, false);
++        DateUtil.setCalendar(cal, dayCount, 0, org.apache.poi.ss.usermodel.DateSystemContext.is1904(), false);
+         return new SimpleDate(cal);
+     }
+ 

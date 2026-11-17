@@ -28,7 +28,7 @@ class ExcelDataValidationModelTest {
       sheet
           .metadata()
           .setDataValidation(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"),
               new ResolvedDataValidation(
                   new DataValidationRuleSpec.WholeNumber(
                       ExcelComparisonOperator.BETWEEN, " =1 ", Optional.of(" =10 ")),
@@ -46,7 +46,7 @@ class ExcelDataValidationModelTest {
               sheet
                   .metadata()
                   .setDataValidation(
-                      "A1",
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"),
                       new ResolvedDataValidation(
                           new DataValidationRuleSpec.FormulaList(" = "),
                           false,
@@ -362,14 +362,11 @@ class ExcelDataValidationModelTest {
                     .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
                     .toList(),
                 dev.erst.gridgrind.engine.backend.xssf.DataValidationFixtures.report(definition)));
-    assertDoesNotThrow(
-        () ->
-            new DataValidationEntryReport.Unsupported(
-                List.of(" ").stream()
-                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
-                    .toList(),
-                "ANY",
-                "detail"));
+    assertDoesNotThrow(() ->
+        new DataValidationEntryReport.Unsupported(
+            List.of(" ").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "ANY",
+            "detail"));
     assertThrows(
         IllegalArgumentException.class,
         () ->

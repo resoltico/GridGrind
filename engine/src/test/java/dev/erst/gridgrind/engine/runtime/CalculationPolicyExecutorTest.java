@@ -21,7 +21,6 @@ import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -94,9 +93,24 @@ class CalculationPolicyExecutorTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
-      workbook.sheet("Budget").cells().setCell("C1", new ResolvedFormula("A1*3"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new ResolvedFormula("A1*3"));
 
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
@@ -119,8 +133,18 @@ class CalculationPolicyExecutorTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(5.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(5.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
 
       CalculationPolicySpec targeted =
           calculateTargets(
@@ -143,8 +167,18 @@ class CalculationPolicyExecutorTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
       workbook.formulas().evaluateAll();
 
       CalculationPolicyExecutor.ExecutionOutcome clearCaches =
@@ -164,8 +198,18 @@ class CalculationPolicyExecutorTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(5.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(5.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
 
       CalculationPolicySpec targetedAndMarked =
           new CalculationPolicySpec(
@@ -413,9 +457,21 @@ class CalculationPolicyExecutorTest {
       throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       var sheet = workbook.getOrCreateSheet("Budget");
-      sheet.cells().setCell("A1", new ResolvedFormula("A1+1"));
-      sheet.cells().setCell("B1", new ResolvedFormula("C1+1"));
-      sheet.cells().setCell("C1", new ResolvedFormula("B1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedFormula("A1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("C1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new ResolvedFormula("B1+1"));
 
       CalculationPolicySpec doNotCalculate = CalculationPolicySpec.defaults();
       CalculationPolicySpec deferred = deferCalculation();

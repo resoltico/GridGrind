@@ -3,7 +3,6 @@ package dev.erst.gridgrind.core.source;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.TextValidation;
-import java.util.Base64;
 
 /** Contract-owned authored binary source used by source-backed payloads. */
 @Union(discriminator = "type", catalog = true, displayOrder = 5)
@@ -57,10 +56,15 @@ public sealed interface BinarySourceSpec
   private static String requireBase64(String value, String fieldName) {
     String validatedValue = TextValidation.requireNonBlank(value, fieldName);
     try {
-      Base64.getDecoder().decode(validatedValue);
-    } catch (IllegalArgumentException exception) {
+      Base64SourceValidation.validate(validatedValue);
+    } catch (IllegalArgumentException | java.io.IOException exception) {
       throw new IllegalArgumentException(fieldName + " must be valid base64", exception);
     }
     return validatedValue;
+  }
+
+  /** Exact decoded byte count of a validated source without allocating its payload. */
+  static long decodedSize(InlineBase64 source) {
+    return Base64SourceValidation.decodedSize(source.base64Data());
   }
 }

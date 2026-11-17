@@ -36,11 +36,10 @@ class RequestIeeeNumberExactnessTest {
           assertInstanceOf(
               RequestNumberNotRepresentable.class,
               analysis.structuralProblems().stream()
-                  .filter(
-                      candidate ->
-                          candidate
-                              .jsonPath()
-                              .equals(java.util.Optional.of("steps[0].action.value.value")))
+                  .filter(candidate ->
+                      candidate
+                          .jsonPath()
+                          .equals(java.util.Optional.of("steps[0].action.value.value")))
                   .findFirst()
                   .orElseThrow());
       assertEquals(token, problem.token());
@@ -86,19 +85,19 @@ class RequestIeeeNumberExactnessTest {
 
   private static String request(String number) {
     return """
+    {
+      "protocolVersion": 1,
+      "source": { "type": "NEW" },
+      "persistence": { "type": "NONE" },
+      "steps": [
         {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": [
-            {
-              "stepId": "set-number",
-              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-              "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": %s } }
-            }
-          ]
+          "stepId": "set-number",
+          "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+          "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": %s } }
         }
-        """
+      ]
+    }
+    """
         .formatted(number);
   }
 

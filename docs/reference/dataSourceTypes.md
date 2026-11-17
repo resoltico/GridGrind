@@ -3,34 +3,31 @@
 
 ## STRING_REFERENCE
 
-Formula-backed string chart source plus cached values.
+Stored string reference and string-cache facts; formula absence/blankness is preserved.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
-| formula | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
-| cachedValues | REQUIRED | {"type":"LIST","elementShape":{"type":"SCALAR","scalarType":"STRING"}} |  |
+| formula | OPTIONAL | {"type":"SCALAR","scalarType":"STRING"} |  |
+| cache | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"stringCacheTypes"} |  |
 
 ```json
 {
   "id" : "STRING_REFERENCE",
-  "summary" : "Formula-backed string chart source plus cached values.",
+  "summary" : "Stored string reference and string-cache facts; formula absence/blankness is preserved.",
   "fields" : [ {
     "name" : "formula",
-    "requirement" : "REQUIRED",
+    "requirement" : "OPTIONAL",
     "shape" : {
       "type" : "SCALAR",
       "scalarType" : "STRING"
     },
     "enumValues" : [ ]
   }, {
-    "name" : "cachedValues",
+    "name" : "cache",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "LIST",
-      "elementShape" : {
-        "type" : "SCALAR",
-        "scalarType" : "STRING"
-      }
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "stringCacheTypes"
     },
     "enumValues" : [ ]
   } ],
@@ -40,28 +37,19 @@ Formula-backed string chart source plus cached values.
 
 ## NUMERIC_REFERENCE
 
-Formula-backed numeric chart source plus cached values.
+Stored numeric reference and numeric-cache facts; no values are substituted from live cells.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
-| formula | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
-| formatCode | OPTIONAL | {"type":"SCALAR","scalarType":"STRING"} |  |
-| cachedValues | REQUIRED | {"type":"LIST","elementShape":{"type":"SCALAR","scalarType":"STRING"}} |  |
+| formula | OPTIONAL | {"type":"SCALAR","scalarType":"STRING"} |  |
+| cache | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"numericCacheTypes"} |  |
 
 ```json
 {
   "id" : "NUMERIC_REFERENCE",
-  "summary" : "Formula-backed numeric chart source plus cached values.",
+  "summary" : "Stored numeric reference and numeric-cache facts; no values are substituted from live cells.",
   "fields" : [ {
     "name" : "formula",
-    "requirement" : "REQUIRED",
-    "shape" : {
-      "type" : "SCALAR",
-      "scalarType" : "STRING"
-    },
-    "enumValues" : [ ]
-  }, {
-    "name" : "formatCode",
     "requirement" : "OPTIONAL",
     "shape" : {
       "type" : "SCALAR",
@@ -69,14 +57,11 @@ Formula-backed numeric chart source plus cached values.
     },
     "enumValues" : [ ]
   }, {
-    "name" : "cachedValues",
+    "name" : "cache",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "LIST",
-      "elementShape" : {
-        "type" : "SCALAR",
-        "scalarType" : "STRING"
-      }
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "numericCacheTypes"
     },
     "enumValues" : [ ]
   } ],
@@ -86,25 +71,22 @@ Formula-backed numeric chart source plus cached values.
 
 ## STRING_LITERAL
 
-Literal string chart source stored directly in the chart part.
+Stored literal string data, including declared count and physical point order.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
-| values | REQUIRED | {"type":"LIST","elementShape":{"type":"SCALAR","scalarType":"STRING"}} |  |
+| data | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"stringCacheTypes"} |  |
 
 ```json
 {
   "id" : "STRING_LITERAL",
-  "summary" : "Literal string chart source stored directly in the chart part.",
+  "summary" : "Stored literal string data, including declared count and physical point order.",
   "fields" : [ {
-    "name" : "values",
+    "name" : "data",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "LIST",
-      "elementShape" : {
-        "type" : "SCALAR",
-        "scalarType" : "STRING"
-      }
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "stringCacheTypes"
     },
     "enumValues" : [ ]
   } ],
@@ -114,34 +96,72 @@ Literal string chart source stored directly in the chart part.
 
 ## NUMERIC_LITERAL
 
-Literal numeric chart source stored directly in the chart part.
+Stored literal numeric data, retaining raw value text, counts and formats.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
-| formatCode | OPTIONAL | {"type":"SCALAR","scalarType":"STRING"} |  |
-| values | REQUIRED | {"type":"LIST","elementShape":{"type":"SCALAR","scalarType":"STRING"}} |  |
+| data | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"numericCacheTypes"} |  |
 
 ```json
 {
   "id" : "NUMERIC_LITERAL",
-  "summary" : "Literal numeric chart source stored directly in the chart part.",
+  "summary" : "Stored literal numeric data, retaining raw value text, counts and formats.",
   "fields" : [ {
-    "name" : "formatCode",
-    "requirement" : "OPTIONAL",
+    "name" : "data",
+    "requirement" : "REQUIRED",
+    "shape" : {
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "numericCacheTypes"
+    },
+    "enumValues" : [ ]
+  } ],
+  "targetSelectors" : [ ]
+}
+```
+
+## MISSING
+
+No chart data-source element is stored.
+
+| Field | Requirement | Shape | Default |
+| --- | --- | --- | --- |
+
+```json
+{
+  "id" : "MISSING",
+  "summary" : "No chart data-source element is stored.",
+  "fields" : [ ],
+  "targetSelectors" : [ ]
+}
+```
+
+## UNSUPPORTED
+
+A stored chart data-source kind outside the typed observation contract; no substitute values are reported.
+
+| Field | Requirement | Shape | Default |
+| --- | --- | --- | --- |
+| nativeType | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
+| detail | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
+
+```json
+{
+  "id" : "UNSUPPORTED",
+  "summary" : "A stored chart data-source kind outside the typed observation contract; no substitute values are reported.",
+  "fields" : [ {
+    "name" : "nativeType",
+    "requirement" : "REQUIRED",
     "shape" : {
       "type" : "SCALAR",
       "scalarType" : "STRING"
     },
     "enumValues" : [ ]
   }, {
-    "name" : "values",
+    "name" : "detail",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "LIST",
-      "elementShape" : {
-        "type" : "SCALAR",
-        "scalarType" : "STRING"
-      }
+      "type" : "SCALAR",
+      "scalarType" : "STRING"
     },
     "enumValues" : [ ]
   } ],

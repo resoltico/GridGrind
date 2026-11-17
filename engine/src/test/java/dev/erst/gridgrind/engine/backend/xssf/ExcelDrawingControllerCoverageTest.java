@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.problem.WorkbookContentIssue;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
@@ -131,10 +132,9 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
       controller.deleteDrawingObject(sheet, chartName);
       assertTrue(
           controller.drawingObjects(sheet).stream()
-              .noneMatch(
-                  snapshot ->
-                      snapshot instanceof DrawingObjectReport.Chart chart
-                          && chart.name().equals(chartName)));
+              .noneMatch(snapshot ->
+                  snapshot instanceof DrawingObjectReport.Chart chart
+                      && chart.name().equals(chartName)));
 
       simpleShape.getCTShape().getNvSpPr().getCNvPr().setName("Duplicate");
       connector.getCTConnector().getNvCxnSpPr().getCNvPr().setName("Duplicate");
@@ -156,9 +156,8 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
       List<String> remainingNames =
           controller.drawingObjects(sheet).stream()
               .map(DrawingObjectReport::name)
-              .filter(
-                  name ->
-                      !List.of("OpsEmbed", "OpsPicture", "OpsShape", "OpsConnector").contains(name))
+              .filter(name ->
+                  !List.of("OpsEmbed", "OpsPicture", "OpsShape", "OpsConnector").contains(name))
               .toList();
       assertEquals(List.of(), remainingNames);
 
@@ -195,27 +194,27 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
             invoke(controller, "snapshotAnchor", DrawingAnchorReport.class, absoluteShape));
     assertEquals(ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE, reflectedAbsolute.behavior());
 
-    IllegalStateException missingParent =
+    WorkbookContentRefusalException missingParent =
         assertInvocationFailure(
-            IllegalStateException.class,
+            WorkbookContentRefusalException.class,
             () ->
                 invoke(
                     controller,
                     "snapshotAnchor",
                     DrawingAnchorReport.class,
                     CTShape.Factory.newInstance()));
-    assertTrue(missingParent.getMessage().contains("missing its parent anchor"));
+    assertEquals(WorkbookContentIssue.INVALID_NATIVE_VALUE, missingParent.issue());
 
-    IllegalStateException unsupportedParent =
+    UnexpectedNativeContentException unsupportedParent =
         assertInvocationFailure(
-            IllegalStateException.class,
+            UnexpectedNativeContentException.class,
             () ->
                 invoke(
                     controller,
                     "snapshotAnchor",
                     DrawingAnchorReport.class,
                     unsupportedParentShape()));
-    assertTrue(unsupportedParent.getMessage().contains("Unsupported parent anchor type"));
+    assertInstanceOf(IllegalStateException.class, unsupportedParent.getCause());
 
     CTDrawing ctDrawing = CTDrawing.Factory.newInstance();
     CTTwoCellAnchor twoCellAnchor = ctDrawing.addNewTwoCellAnchor();

@@ -7,34 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.limits.Limit;
-import dev.erst.gridgrind.engine.cells.CellAccess;
-import dev.erst.gridgrind.engine.cells.CellTextLimits;
-import dev.erst.gridgrind.engine.cells.CellsAdapter;
 import dev.erst.gridgrind.engine.formulas.FormulaLimits;
 import dev.erst.gridgrind.engine.links.LinkAdapter;
 import dev.erst.gridgrind.engine.styles.StyleAdapter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 /** Coverage for the explicit Excel-authored text, formula, hyperlink, and style limit helpers. */
 class ExcelLimitsTest {
-  @Test
-  void rejectsCellTextPastTheExcelCellLimit() {
-    String oversizedText = "x".repeat(Limit.MAX_CELL_TEXT_LENGTH + 1);
-
-    IllegalArgumentException failure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> CellTextLimits.requireSupportedLength(oversizedText, "text"));
-
-    org.junit.jupiter.api.Assertions.assertTrue(
-        failure.getMessage().contains("Excel cell text limit"));
-  }
-
   @Test
   void rejectsNewStylesOnceTheWorkbookStyleCapIsReached() {
     assertDoesNotThrow(() -> StyleAdapter.requireCellStyleCapacity(63_999));
@@ -121,11 +104,9 @@ class ExcelLimitsTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Budget");
 
-      assertDoesNotThrow(
-          () ->
-              FormulaLimits.requireSupportedFormula(
-                  new FormulaLimits.CellContext(workbook, 0),
-                  "CONCAT(\"A\"\"B\",TEXT((1+2),\"0\"))"));
+      assertDoesNotThrow(() ->
+          FormulaLimits.requireSupportedFormula(
+              new FormulaLimits.CellContext(workbook, 0), "CONCAT(\"A\"\"B\",TEXT((1+2),\"0\"))"));
     }
   }
 
@@ -213,24 +194,31 @@ class ExcelLimitsTest {
 
   @Test
   void cellAddressConsumersRejectCoordinatesBeyondTheLastXlsxCell() throws Exception {
-    var last = CellAccess.parseCellReference("XFD1048576");
-    assertEquals(1_048_575, last.getRow());
-    assertEquals(16_383, last.getCol());
-    assertDoesNotThrow(() -> CellsAdapter.requireValidCellReference("XFD1048576", last));
-    assertThrows(InvalidCellAddressException.class, () -> CellAccess.parseCellReference("XFE1"));
-    assertThrows(
-        InvalidCellAddressException.class, () -> CellAccess.parseCellReference("A1048577"));
-    assertThrows(
-        InvalidCellAddressException.class,
-        () -> CellsAdapter.requireValidCellReference("XFE1", new CellReference(0, 16_384)));
-    assertThrows(
-        InvalidCellAddressException.class,
-        () -> CellsAdapter.requireValidCellReference("A1048577", new CellReference(1_048_576, 0)));
+    var last =
+        new dev.erst.gridgrind.core.vocabulary.CellAddress(
+            Limit.MAX_ROW_INDEX, Limit.MAX_COLUMN_INDEX);
     try (var workbook = XssfWorkbooks.create()) {
-      var cells = workbook.getOrCreateSheet("Boundary").cells();
-      assertDoesNotThrow(() -> cells.window("XFD1048576", 1, 1));
-      assertThrows(IllegalArgumentException.class, () -> cells.window("XFD1048576", 2, 1));
-      assertThrows(IllegalArgumentException.class, () -> cells.window("XFD1048576", 1, 2));
+      var sheet = workbook.getOrCreateSheet("Boundary");
+      var cells = sheet.cells();
+      cells.setCell(last, new dev.erst.gridgrind.core.model.value.ResolvedCellText("last"));
+      assertEquals("last", cells.text(last));
+      assertEquals(
+          "last",
+          sheet
+              .xssfSheet()
+              .getRow(Limit.MAX_ROW_INDEX)
+              .getCell(Limit.MAX_COLUMN_INDEX)
+              .getStringCellValue());
+      assertDoesNotThrow(() ->
+          cells.window(new dev.erst.gridgrind.core.vocabulary.CellAddress("XFD1048576"), 1, 1));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              cells.window(new dev.erst.gridgrind.core.vocabulary.CellAddress("XFD1048576"), 2, 1));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              cells.window(new dev.erst.gridgrind.core.vocabulary.CellAddress("XFD1048576"), 1, 2));
     }
   }
 }

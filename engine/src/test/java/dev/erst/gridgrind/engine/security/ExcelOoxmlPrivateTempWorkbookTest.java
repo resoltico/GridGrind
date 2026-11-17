@@ -12,12 +12,17 @@ import org.junit.jupiter.api.Test;
 
 /** Direct coverage for private OOXML plaintext temp-workbook ownership helpers. */
 class ExcelOoxmlPrivateTempWorkbookTest {
+  @org.junit.jupiter.api.io.TempDir Path scratch;
+
   @Test
   void closeDeletesTheOwnedWorkbookTreeWhenOwnershipStaysLocal() throws IOException {
     Path root;
     Path workbookPath;
     try (PrivateWorkbookFile privateWorkbook =
-        PrivateWorkbookFile.create("gridgrind-private-", ".xlsx")) {
+        PrivateWorkbookFile.create(
+            "gridgrind-private-",
+            ".xlsx",
+            dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory.rooted(scratch))) {
       root = privateWorkbook.root();
       workbookPath = privateWorkbook.workbookPath();
 
@@ -35,7 +40,10 @@ class ExcelOoxmlPrivateTempWorkbookTest {
     Path releasedRoot;
     Path workbookPath;
     try (PrivateWorkbookFile privateWorkbook =
-        PrivateWorkbookFile.create("gridgrind-private-", ".xlsx")) {
+        PrivateWorkbookFile.create(
+            "gridgrind-private-",
+            ".xlsx",
+            dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory.rooted(scratch))) {
       workbookPath = privateWorkbook.workbookPath();
       releasedRoot = privateWorkbook.releaseRoot();
 

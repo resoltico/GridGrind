@@ -8,7 +8,6 @@ import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
@@ -256,10 +255,9 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
                       AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET)));
       assertTrue(
           findings.stream()
-              .noneMatch(
-                  finding ->
-                      finding.location() instanceof AnalysisLocationReport.Cell cell
-                          && "A5".equals(cell.address())));
+              .noneMatch(finding ->
+                  finding.location() instanceof AnalysisLocationReport.Cell cell
+                      && "A5".equals(cell.address())));
     }
   }
 
@@ -344,11 +342,19 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", new CellValue.Text("first"));
-      sheet.cells().setCell("A3", new CellValue.Text("third"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("first"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("third"));
 
       dev.erst.gridgrind.core.model.layout.WindowReport.Dense window =
-          sheet.cells().window("A1", 3, 1);
+          sheet.cells().window(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), 3, 1);
       assertEquals("A2", window.rows().get(1).cells().getFirst().address().value());
       assertEquals("BLANK", window.rows().get(1).cells().getFirst().type());
 
@@ -486,15 +492,21 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", new CellValue.Text("Header"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
 
       // A cell in a non-existent row returns blank.
-      CellReport blankInNewRow = sheet.cells().snapshotCell("C5");
+      CellReport blankInNewRow =
+          sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("C5"));
       assertInstanceOf(CellReport.BlankReport.class, blankInNewRow);
       assertEquals("C5", blankInNewRow.address().value());
 
       // A cell in a row that exists but in a column that has not been written returns blank.
-      CellReport blankInExistingRow = sheet.cells().snapshotCell("B1");
+      CellReport blankInExistingRow =
+          sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"));
       assertInstanceOf(CellReport.BlankReport.class, blankInExistingRow);
       assertEquals("B1", blankInExistingRow.address().value());
     }

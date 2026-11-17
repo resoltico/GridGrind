@@ -129,13 +129,11 @@ final class AssertionValueEvaluator {
     }
     List<String> mismatches =
         cellsResult.cells().stream()
-            .filter(
-                cell ->
-                    !(cell
-                            instanceof
-                            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport
-                                formulaReport)
-                        || !formulaReport.formula().orElseThrow().equals(expectedFormula))
+            .filter(cell ->
+                !(cell
+                        instanceof
+                        dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaReport)
+                    || !formulaReport.formula().orElseThrow().equals(expectedFormula))
             .map(cell -> cell.address().value())
             .toList();
     return mismatches.isEmpty()

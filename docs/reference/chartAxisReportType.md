@@ -9,7 +9,7 @@ Exact chart-axis report.
 | --- | --- | --- | --- |
 | kind | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
 | position | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
-| crosses | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
+| crosses | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"axisCrossingTypes"} |  |
 | visible | REQUIRED | {"type":"SCALAR","scalarType":"BOOLEAN"} |  |
 
 ```json
@@ -36,10 +36,10 @@ Exact chart-axis report.
     "name" : "crosses",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "SCALAR",
-      "scalarType" : "STRING"
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "axisCrossingTypes"
     },
-    "enumValues" : [ "AUTO_ZERO", "MAX", "MIN" ]
+    "enumValues" : [ ]
   }, {
     "name" : "visible",
     "requirement" : "REQUIRED",

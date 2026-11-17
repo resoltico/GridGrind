@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    `kotlin-dsl`
     `java-gradle-plugin`
 }
 
@@ -16,10 +16,21 @@ repositories {
 }
 
 dependencies {
+    constraints {
+        implementation(libs.jspecify)
+        implementation(libs.errorprone.annotations)
+        implementation(libs.slf4j.api)
+        implementation(libs.guava)
+        implementation(libs.commons.codec)
+        implementation(libs.java.diff.utils)
+        implementation(libs.jgit)
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$embeddedKotlinVersion")
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$embeddedKotlinVersion")
+        implementation(libs.xz)
+    }
     implementation(libs.asm)
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
-    implementation("com.google.googlejavaformat:google-java-format:${libs.versions.google.java.format.get()}")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:${libs.versions.spotless.get()}")
     implementation(
         "net.ltgt.gradle:gradle-errorprone-plugin:${libs.versions.errorprone.plugin.get()}",
@@ -37,6 +48,10 @@ dependencies {
 
 gradlePlugin {
     plugins {
+        register("gridgrindNativeProvider") {
+            id = "gridgrind.native-provider"
+            implementationClass = "dev.erst.gridgrind.buildlogic.NativeProviderConventionsPlugin"
+        }
         register("gridgrindRootConventions") {
             id = "gridgrind.root-conventions"
             implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindRootConventionsPlugin"
@@ -71,12 +86,10 @@ kotlin {
 }
 
 tasks.named<KotlinCompile>("compileKotlin") {
-    incremental = false
     compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaTargetVersion.toString()))
 }
 
 tasks.named<KotlinCompile>("compileTestKotlin") {
-    incremental = false
     compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaTargetVersion.toString()))
 }
 

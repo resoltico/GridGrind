@@ -2,6 +2,7 @@ package dev.erst.gridgrind.fuzz.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
@@ -28,11 +29,9 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
         "sheetCount must match sheetNames size");
     workbook
         .sheetNames()
-        .forEach(
-            sheetName ->
-                WorkbookInvariantChecks.require(
-                    sheetName != null && !sheetName.value().isBlank(),
-                    "sheetName must not be blank"));
+        .forEach(sheetName ->
+            WorkbookInvariantChecks.require(
+                sheetName != null && !sheetName.value().isBlank(), "sheetName must not be blank"));
     switch (workbook) {
       case WorkbookSummary.Empty empty -> {
         WorkbookInvariantChecks.require(
@@ -59,14 +58,13 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
             "selectedSheetNames must be unique");
         withSheets
             .selectedSheetNames()
-            .forEach(
-                selectedSheetName -> {
-                  WorkbookInvariantChecks.requireNonBlank(
-                      selectedSheetName.value(), "selectedSheetName");
-                  WorkbookInvariantChecks.require(
-                      withSheets.sheetNames().contains(selectedSheetName),
-                      "selectedSheetNames must be present in sheetNames");
-                });
+            .forEach(selectedSheetName -> {
+              WorkbookInvariantChecks.requireNonBlank(
+                  selectedSheetName.value(), "selectedSheetName");
+              WorkbookInvariantChecks.require(
+                  withSheets.sheetNames().contains(selectedSheetName),
+                  "selectedSheetNames must be present in sheetNames");
+            });
       }
     }
   }
@@ -93,7 +91,8 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
 
   static void requireDrawingObjectShape(DrawingObjectReport drawingObject) {
     WorkbookInvariantChecks.require(drawingObject != null, "drawing object must not be null");
-    WorkbookInvariantChecks.requireNonBlank(drawingObject.name(), "drawing object name");
+    WorkbookInvariantChecks.require(
+        drawingObject.name() != null, "drawing object name must not be null");
     requireDrawingAnchorShape(drawingObject.anchor());
     switch (drawingObject) {
       case DrawingObjectReport.Picture picture -> requirePictureDrawingObjectShape(picture);
@@ -131,7 +130,7 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     chart
         .plotTypeTokens()
         .forEach(token -> WorkbookInvariantChecks.requireNonBlank(token, "chart plotTypeToken"));
-    WorkbookInvariantChecks.require(chart.title() != null, "chart title must not be null");
+    requireChartTitleShape(chart.title());
   }
 
   static void requireShapeDrawingObjectShape(DrawingObjectReport.Shape shape) {
@@ -191,68 +190,57 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
       DrawingObjectReport.SignatureLine signatureLine) {
     signatureLine
         .setup()
-        .ifPresent(
-            setup -> {
-              setup
-                  .setupId()
-                  .ifPresent(
-                      setupId ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              setupId, "signature line setupId"));
-              setup
-                  .signingInstructions()
-                  .ifPresent(
-                      signingInstructions ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              signingInstructions, "signature line signingInstructions"));
-              setup
-                  .suggestedSigner()
-                  .ifPresent(
-                      suggestedSigner ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              suggestedSigner, "signature line suggestedSigner"));
-              setup
-                  .suggestedSigner2()
-                  .ifPresent(
-                      suggestedSigner2 ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              suggestedSigner2, "signature line suggestedSigner2"));
-              setup
-                  .suggestedSignerEmail()
-                  .ifPresent(
-                      suggestedSignerEmail ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              suggestedSignerEmail, "signature line suggestedSignerEmail"));
-            });
+        .ifPresent(setup -> {
+          setup
+              .setupId()
+              .ifPresent(setupId ->
+                  WorkbookInvariantChecks.requireNonBlank(setupId, "signature line setupId"));
+          setup
+              .signingInstructions()
+              .ifPresent(signingInstructions ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      signingInstructions, "signature line signingInstructions"));
+          setup
+              .suggestedSigner()
+              .ifPresent(suggestedSigner ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      suggestedSigner, "signature line suggestedSigner"));
+          setup
+              .suggestedSigner2()
+              .ifPresent(suggestedSigner2 ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      suggestedSigner2, "signature line suggestedSigner2"));
+          setup
+              .suggestedSignerEmail()
+              .ifPresent(suggestedSignerEmail ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      suggestedSignerEmail, "signature line suggestedSignerEmail"));
+        });
     signatureLine
         .preview()
-        .ifPresent(
-            preview -> {
-              WorkbookInvariantChecks.requireNonBlank(
-                  preview.contentType(), "signature line previewContentType");
-              WorkbookInvariantChecks.require(
-                  preview.byteSize() >= 0L, "signature line previewByteSize must not be negative");
-              preview
-                  .sha256()
-                  .ifPresent(
-                      previewSha256 ->
-                          WorkbookInvariantChecks.requireNonBlank(
-                              previewSha256, "signature line previewSha256"));
-              preview
-                  .widthPixels()
-                  .ifPresent(
-                      previewWidthPixels ->
-                          WorkbookInvariantChecks.require(
-                              previewWidthPixels >= 0,
-                              "signature line previewWidthPixels must not be negative"));
-              preview
-                  .heightPixels()
-                  .ifPresent(
-                      previewHeightPixels ->
-                          WorkbookInvariantChecks.require(
-                              previewHeightPixels >= 0,
-                              "signature line previewHeightPixels must not be negative"));
-            });
+        .ifPresent(preview -> {
+          WorkbookInvariantChecks.requireNonBlank(
+              preview.contentType(), "signature line previewContentType");
+          WorkbookInvariantChecks.require(
+              preview.byteSize() >= 0L, "signature line previewByteSize must not be negative");
+          preview
+              .sha256()
+              .ifPresent(previewSha256 ->
+                  WorkbookInvariantChecks.requireNonBlank(
+                      previewSha256, "signature line previewSha256"));
+          preview
+              .widthPixels()
+              .ifPresent(previewWidthPixels ->
+                  WorkbookInvariantChecks.require(
+                      previewWidthPixels >= 0,
+                      "signature line previewWidthPixels must not be negative"));
+          preview
+              .heightPixels()
+              .ifPresent(previewHeightPixels ->
+                  WorkbookInvariantChecks.require(
+                      previewHeightPixels >= 0,
+                      "signature line previewHeightPixels must not be negative"));
+        });
   }
 
   static void requireDrawingObjectPayloadShape(DrawingObjectPayloadReport payload) {
@@ -300,19 +288,17 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
       case DrawingAnchorReport.OneCell oneCell -> {
         requireDrawingMarkerShape(oneCell.from());
         WorkbookInvariantChecks.require(
-            oneCell.widthEmu() > 0L, "one-cell widthEmu must be positive");
+            oneCell.widthEmu() >= 0L, "one-cell widthEmu must not be negative");
         WorkbookInvariantChecks.require(
-            oneCell.heightEmu() > 0L, "one-cell heightEmu must be positive");
+            oneCell.heightEmu() >= 0L, "one-cell heightEmu must not be negative");
       }
       case DrawingAnchorReport.Absolute absolute -> {
+        requireDrawingCoordinateShape(absolute.x());
+        requireDrawingCoordinateShape(absolute.y());
         WorkbookInvariantChecks.require(
-            absolute.xEmu() >= 0L, "absolute xEmu must not be negative");
+            absolute.widthEmu() >= 0L, "absolute widthEmu must not be negative");
         WorkbookInvariantChecks.require(
-            absolute.yEmu() >= 0L, "absolute yEmu must not be negative");
-        WorkbookInvariantChecks.require(
-            absolute.widthEmu() > 0L, "absolute widthEmu must be positive");
-        WorkbookInvariantChecks.require(
-            absolute.heightEmu() > 0L, "absolute heightEmu must be positive");
+            absolute.heightEmu() >= 0L, "absolute heightEmu must not be negative");
       }
     }
   }
@@ -323,13 +309,30 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
         marker.columnIndex() >= 0, "drawing marker columnIndex must not be negative");
     WorkbookInvariantChecks.require(
         marker.rowIndex() >= 0, "drawing marker rowIndex must not be negative");
-    WorkbookInvariantChecks.require(marker.dx() >= 0, "drawing marker dx must not be negative");
-    WorkbookInvariantChecks.require(marker.dy() >= 0, "drawing marker dy must not be negative");
+    requireDrawingCoordinateShape(marker.dx());
+    requireDrawingCoordinateShape(marker.dy());
+  }
+
+  static void requireDrawingCoordinateShape(DrawingCoordinateReport coordinate) {
+    WorkbookInvariantChecks.require(coordinate != null, "drawing coordinate must not be null");
+    switch (coordinate) {
+      case DrawingCoordinateReport.Emu emu ->
+          WorkbookInvariantChecks.require(
+              emu.value() >= -27273042329600L && emu.value() <= 27273042316900L,
+              "drawing EMU coordinate must satisfy native bounds");
+      case DrawingCoordinateReport.Measured measured ->
+          WorkbookInvariantChecks.require(
+              measured.valueText().matches("-?[0-9]+(\\.[0-9]+)?(mm|cm|in|pt|pc|pi)"),
+              "drawing measurement must retain its native lexical form");
+      case DrawingCoordinateReport.Pixels pixels ->
+          WorkbookInvariantChecks.require(
+              pixels.value() >= 0, "VML offset pixels must not be negative");
+    }
   }
 
   static void requireChartReportShape(ChartReport chart) {
     WorkbookInvariantChecks.require(chart != null, "chart report must not be null");
-    WorkbookInvariantChecks.requireNonBlank(chart.name(), "chart name");
+    WorkbookInvariantChecks.require(chart.name() != null, "chart name must not be null");
     requireDrawingAnchorShape(chart.anchor());
     requireChartTitleShape(chart.title());
     requireChartLegendShape(chart.legend());
@@ -382,18 +385,16 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
       case ChartReport.Doughnut doughnut -> {
         doughnut
             .firstSliceAngle()
-            .ifPresent(
-                firstSliceAngle ->
-                    WorkbookInvariantChecks.require(
-                        firstSliceAngle >= 0 && firstSliceAngle <= 360,
-                        "doughnut chart firstSliceAngle must be between 0 and 360"));
+            .ifPresent(firstSliceAngle ->
+                WorkbookInvariantChecks.require(
+                    firstSliceAngle >= 0 && firstSliceAngle <= 360,
+                    "doughnut chart firstSliceAngle must be between 0 and 360"));
         doughnut
             .holeSize()
-            .ifPresent(
-                holeSize ->
-                    WorkbookInvariantChecks.require(
-                        holeSize >= 10 && holeSize <= 90,
-                        "doughnut chart holeSize must be between 10 and 90"));
+            .ifPresent(holeSize ->
+                WorkbookInvariantChecks.require(
+                    holeSize >= 1 && holeSize <= 90,
+                    "doughnut chart holeSize must be between 1 and 90"));
         doughnut.series().forEach(WorkbookInvariantWorkbookSurfaceChecks::requireChartSeriesShape);
       }
       case ChartReport.Line line -> {
@@ -410,11 +411,10 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
       }
       case ChartReport.Pie pie -> {
         pie.firstSliceAngle()
-            .ifPresent(
-                firstSliceAngle ->
-                    WorkbookInvariantChecks.require(
-                        firstSliceAngle >= 0 && firstSliceAngle <= 360,
-                        "pie chart firstSliceAngle must be between 0 and 360"));
+            .ifPresent(firstSliceAngle ->
+                WorkbookInvariantChecks.require(
+                    firstSliceAngle >= 0 && firstSliceAngle <= 360,
+                    "pie chart firstSliceAngle must be between 0 and 360"));
         pie.series().forEach(WorkbookInvariantWorkbookSurfaceChecks::requireChartSeriesShape);
       }
       case ChartReport.Pie3D pie3D ->
@@ -453,6 +453,15 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.require(
         axis.position() != null, "chart axis position must not be null");
     WorkbookInvariantChecks.require(axis.crosses() != null, "chart axis crosses must not be null");
+    switch (axis.crosses()) {
+      case ChartReport.AxisCrossing.Missing _ -> {}
+      case ChartReport.AxisCrossing.Mode mode ->
+          WorkbookInvariantChecks.require(
+              mode.mode() != null, "axis crossing mode must not be null");
+      case ChartReport.AxisCrossing.Value value ->
+          WorkbookInvariantChecks.require(
+              value.valueText() != null, "axis crossing value text must not be null");
+    }
   }
 
   static void requireChartSeriesShape(ChartReport.Series series) {
@@ -469,9 +478,10 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
       case ChartReport.Title.Text text ->
           WorkbookInvariantChecks.require(text.text() != null, "chart title text must not be null");
       case ChartReport.Title.Formula formula -> {
-        WorkbookInvariantChecks.requireNonBlank(formula.formula(), "chart title formula");
         WorkbookInvariantChecks.require(
-            formula.cachedText() != null, "chart title cachedText must not be null");
+            formula.formula() != null, "chart title formula declaration must not be null");
+        WorkbookInvariantChecks.require(
+            formula.cache() != null, "chart title cache facts must not be null");
       }
     }
   }
@@ -480,40 +490,24 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.require(source != null, "chart data source must not be null");
     switch (source) {
       case ChartReport.DataSource.StringReference reference -> {
-        WorkbookInvariantChecks.requireNonBlank(
-            reference.formula(), "chart string-reference formula");
         WorkbookInvariantChecks.require(
-            reference.cachedValues() != null,
-            "chart string-reference cachedValues must not be null");
+            reference.formula() != null, "chart string-reference declaration must not be null");
+        WorkbookInvariantChecks.require(
+            reference.cache() != null, "chart string-reference cache facts must not be null");
       }
       case ChartReport.DataSource.NumericReference reference -> {
-        WorkbookInvariantChecks.requireNonBlank(
-            reference.formula(), "chart numeric-reference formula");
         WorkbookInvariantChecks.require(
-            reference.cachedValues() != null,
-            "chart numeric-reference cachedValues must not be null");
-        reference
-            .formatCode()
-            .ifPresent(
-                formatCode ->
-                    WorkbookInvariantChecks.require(
-                        !formatCode.isBlank(),
-                        "chart numeric-reference formatCode must not be blank"));
+            reference.formula() != null, "chart numeric-reference declaration must not be null");
+        WorkbookInvariantChecks.require(
+            reference.cache() != null, "chart numeric-reference cache facts must not be null");
       }
       case ChartReport.DataSource.StringLiteral literal ->
           WorkbookInvariantChecks.require(
-              literal.values() != null, "chart string-literal values must not be null");
-      case ChartReport.DataSource.NumericLiteral literal -> {
-        WorkbookInvariantChecks.require(
-            literal.values() != null, "chart numeric-literal values must not be null");
-        literal
-            .formatCode()
-            .ifPresent(
-                formatCode ->
-                    WorkbookInvariantChecks.require(
-                        !formatCode.isBlank(),
-                        "chart numeric-literal formatCode must not be blank"));
-      }
+              literal.data() != null, "chart string-literal data facts must not be null");
+      case ChartReport.DataSource.NumericLiteral literal ->
+          WorkbookInvariantChecks.require(
+              literal.data() != null, "chart numeric-literal data facts must not be null");
+      case ChartReport.DataSource.Missing _, ChartReport.DataSource.Unsupported _ -> {}
     }
   }
 
@@ -599,9 +593,7 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.requireNonBlank(dataField.displayName(), "pivot dataField displayName");
     dataField
         .valueFormat()
-        .ifPresent(
-            valueFormat ->
-                WorkbookInvariantChecks.requireNonBlank(
-                    valueFormat, "pivot dataField valueFormat"));
+        .ifPresent(valueFormat ->
+            WorkbookInvariantChecks.requireNonBlank(valueFormat, "pivot dataField valueFormat"));
   }
 }

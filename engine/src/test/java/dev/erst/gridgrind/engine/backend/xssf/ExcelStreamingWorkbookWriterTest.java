@@ -56,12 +56,12 @@ class ExcelStreamingWorkbookWriterTest {
               new ResolvedMutationAction.AppendRow(
                   List.of(
                       new CellValue.Blank(),
-                      new CellValue.Text("Item"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
                       new ResolvedRichText(
                           List.of(new ResolvedRichTextRun("Rich", Optional.empty()))),
-                      new CellValue.NumberValue(42.5d),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(42.5d),
                       new CellValue.BooleanValue(true),
-                      new CellValue.ErrorValue("#REF!"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.ErrorValue("#REF!"),
                       new CellValueSpec.Date(LocalDate.of(2026, 4, 13)),
                       new CellValueSpec.DateTime(LocalDateTime.of(2026, 4, 13, 9, 30, 15)),
                       new ResolvedFormula("2+3"),
@@ -70,7 +70,9 @@ class ExcelStreamingWorkbookWriterTest {
           new ResolvedStep(
               new SheetSelector.ByName(new SheetName("Ops")),
               new ResolvedMutationAction.AppendRow(
-                  List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(9.0d)))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(9.0d)))));
       writer.markRecalculateOnOpen();
       writer.save(
           workbookPath,
@@ -109,7 +111,9 @@ class ExcelStreamingWorkbookWriterTest {
                       new ResolvedStep(
                           new SheetSelector.ByName(new SheetName("Ops")),
                           new ResolvedMutationAction.AppendRow(
-                              List.of(new CellValue.Text("missing"))))));
+                              List.of(
+                                  new dev.erst.gridgrind.core.model.value.ResolvedCellText(
+                                      "missing"))))));
       assertEquals("Sheet does not exist: Ops", missingSheet.getMessage());
 
       for (ResolvedStep command : WorkbookSampleFixtures.workbookCommands()) {
@@ -139,6 +143,52 @@ class ExcelStreamingWorkbookWriterTest {
   }
 
   @Test
+  void exposesNativeSheetScratchIoFailuresWithoutReclassifyingUnexpectedFailures() {
+    IOException expected = new IOException("controlled scratch failure");
+    var observed =
+        WorkbookTempScope.call(
+            (prefix, suffix) -> {
+              throw expected;
+            },
+            () -> {
+              try (var writer = new StreamingWorkbookWriter()) {
+                return assertThrows(
+                    IOException.class,
+                    () ->
+                        writer.apply(
+                            new ResolvedStep(
+                                new SheetSelector.ByName(new SheetName("Data")),
+                                new WorkbookMutationAction.EnsureSheet())));
+              } catch (IOException cleanup) {
+                throw new java.io.UncheckedIOException(cleanup);
+              }
+            });
+    assertEquals(expected.getMessage(), observed.getMessage());
+    assertInstanceOf(IllegalStateException.class, observed.getCause());
+    assertSame(expected, observed.getCause().getCause());
+    IllegalStateException unexpected = new IllegalStateException("unexpected native failure");
+    var propagated =
+        WorkbookTempScope.call(
+            (prefix, suffix) -> {
+              throw unexpected;
+            },
+            () -> {
+              try (var writer = new StreamingWorkbookWriter()) {
+                return assertThrows(
+                    IllegalStateException.class,
+                    () ->
+                        writer.apply(
+                            new ResolvedStep(
+                                new SheetSelector.ByName(new SheetName("Data")),
+                                new WorkbookMutationAction.EnsureSheet())));
+              } catch (IOException cleanup) {
+                throw new java.io.UncheckedIOException(cleanup);
+              }
+            });
+    assertSame(unexpected, propagated);
+  }
+
+  @Test
   void streamingWriterUsesSharedStringsToAvoidInlineStringPackageInflation() throws IOException {
     Path tempDirectory = ManagedTempFiles.createManagedTempDirectory("gridgrind-streaming-size-");
     Path gridGrindWorkbookPath = tempDirectory.resolve("gridgrind-streaming.xlsx");
@@ -146,12 +196,12 @@ class ExcelStreamingWorkbookWriterTest {
 
     List<ResolvedCellWrite> repeatedValues =
         List.of(
-            new CellValue.Text("Quarterly revenue forecast"),
-            new CellValue.Text("North"),
-            new CellValue.Text("Approved"),
-            new CellValue.Text("Quarterly revenue forecast"),
-            new CellValue.Text("North"),
-            new CellValue.Text("Approved"));
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Quarterly revenue forecast"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Approved"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Quarterly revenue forecast"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Approved"));
 
     try (StreamingWorkbookWriter writer = new StreamingWorkbookWriter()) {
       ResolvedStep repeatedAppendRow =
@@ -176,7 +226,10 @@ class ExcelStreamingWorkbookWriterTest {
         var row = sheet.createRow(rowIndex);
         for (int columnIndex = 0; columnIndex < repeatedValues.size(); columnIndex++) {
           row.createCell(columnIndex)
-              .setCellValue(((CellValue.Text) repeatedValues.get(columnIndex)).value());
+              .setCellValue(
+                  ((dev.erst.gridgrind.core.model.value.ResolvedCellText)
+                          repeatedValues.get(columnIndex))
+                      .value());
         }
       }
       try (OutputStream outputStream = java.nio.file.Files.newOutputStream(inlineWorkbookPath)) {
@@ -218,7 +271,9 @@ class ExcelStreamingWorkbookWriterTest {
         writer.apply(
             new ResolvedStep(
                 new SheetSelector.ByName(new SheetName("Ops")),
-                new ResolvedMutationAction.AppendRow(List.of(new CellValue.Text("collision")))));
+                new ResolvedMutationAction.AppendRow(
+                    List.of(
+                        new dev.erst.gridgrind.core.model.value.ResolvedCellText("collision")))));
         assertThrows(
             FileAlreadyExistsException.class,
             () ->
@@ -242,7 +297,9 @@ class ExcelStreamingWorkbookWriterTest {
           new ResolvedStep(
               new SheetSelector.ByName(new SheetName("Ops")),
               new ResolvedMutationAction.AppendRow(
-                  List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(9.0d)))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(9.0d)))));
       writer.markRecalculateOnOpen();
       writer.save(
           workbookPath,

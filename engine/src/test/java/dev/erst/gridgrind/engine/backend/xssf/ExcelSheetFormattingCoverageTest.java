@@ -45,23 +45,65 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", new CellValue.Text("Header"));
-      sheet.links().setHyperlink("A4", new HyperlinkTarget.Document("Budget!A1"));
-      sheet.comments().setComment("B5", new ResolvedComment("Note", "GridGrind", false));
-      sheet.cells().appendRow(new CellValue.Text("Hosting"), new CellValue.NumberValue(49.0));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new HyperlinkTarget.Document("Budget!A1"));
+      sheet
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B5"),
+              new ResolvedComment("Note", "GridGrind", false));
+      sheet
+          .cells()
+          .appendRow(
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(49.0));
 
-      assertEquals("Hosting", sheet.cells().text("A2"));
-      assertEquals(49.0, sheet.cells().number("B2"));
+      assertEquals(
+          "Hosting", sheet.cells().text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2")));
+      assertEquals(
+          49.0, sheet.cells().number(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2")));
       assertEquals(
           new HyperlinkTarget.Document("Budget!A1"),
-          sheet.cells().snapshotCell("A4").hyperlink().orElseThrow());
+          sheet
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"))
+              .hyperlink()
+              .orElseThrow());
       assertAll(
           () ->
-              assertEquals("Note", sheet.cells().snapshotCell("B5").comment().orElseThrow().text()),
+              assertEquals(
+                  "Note",
+                  sheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B5"))
+                      .comment()
+                      .orElseThrow()
+                      .text()),
           () ->
               assertEquals(
-                  "GridGrind", sheet.cells().snapshotCell("B5").comment().orElseThrow().author()),
-          () -> assertFalse(sheet.cells().snapshotCell("B5").comment().orElseThrow().visible()));
+                  "GridGrind",
+                  sheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B5"))
+                      .comment()
+                      .orElseThrow()
+                      .author()),
+          () ->
+              assertFalse(
+                  sheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B5"))
+                      .comment()
+                      .orElseThrow()
+                      .visible()));
     }
   }
 
@@ -75,7 +117,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .applyStyle(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"),
               new CellStylePatch(
                   Optional.empty(),
                   Optional.of(
@@ -105,15 +147,25 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.empty()));
-      sheet.links().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
-      sheet.comments().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.Url("https://example.com/report"));
+      sheet
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedComment("Review", "GridGrind", false));
 
       CellReport.TextReport textSnapshot =
           (CellReport.TextReport)
               sheet
                   .cells()
-                  .setCell("A1", new CellValue.Text("Quarterly report"))
-                  .snapshotCell("A1");
+                  .setCell(
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Quarterly report"))
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertEquals("Quarterly report", textSnapshot.value().orElseThrow().value());
       assertEquals(rgb("#AABBCC"), fillForegroundColor(textSnapshot.style().orElseThrow().fill()));
       assertEquals(
@@ -131,7 +183,12 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
 
       CellReport.BlankReport blankSnapshot =
           (CellReport.BlankReport)
-              sheet.cells().setCell("A1", new CellValue.Blank()).snapshotCell("A1");
+              sheet
+                  .cells()
+                  .setCell(
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                      new CellValue.Blank())
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertEquals(rgb("#AABBCC"), fillForegroundColor(blankSnapshot.style().orElseThrow().fill()));
       assertEquals(
           ExcelBorderStyle.THIN, borderStyle(blankSnapshot.style().orElseThrow().border().top()));
@@ -182,21 +239,24 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                       Optional.empty(),
                       Optional.empty())),
               Optional.empty());
-      sheet.cells().applyStyle("A1:B1", style);
+      sheet.cells().applyStyle(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1"), style);
 
       CellReport.NumberReport dateSnapshot =
           (CellReport.NumberReport)
               sheet
                   .cells()
-                  .setCell("A1", new CellValueSpec.Date(LocalDate.of(2026, 3, 31)))
-                  .snapshotCell("A1");
+                  .setCell(
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                      new CellValueSpec.Date(LocalDate.of(2026, 3, 31)))
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       CellReport.NumberReport dateTimeSnapshot =
           (CellReport.NumberReport)
               sheet
                   .cells()
                   .setCell(
-                      "B1", new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 31, 9, 45, 0)))
-                  .snapshotCell("B1");
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+                      new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 31, 9, 45, 0)))
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"));
 
       assertEquals("yyyy-mm-dd", dateSnapshot.style().orElseThrow().numberFormat());
       assertEquals(rgb("#DDEBF7"), fillForegroundColor(dateSnapshot.style().orElseThrow().fill()));
@@ -233,7 +293,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .setCell(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
               new ResolvedRichText(
                   List.of(
                       new ResolvedRichTextRun("Quarterly", Optional.empty()),
@@ -251,7 +311,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .applyStyle(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"),
               new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
@@ -268,7 +328,9 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                   Optional.empty(),
                   Optional.empty()));
 
-      CellReport.TextReport textSnapshot = (CellReport.TextReport) sheet.cells().snapshotCell("A1");
+      CellReport.TextReport textSnapshot =
+          (CellReport.TextReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
 
       assertEquals("Quarterly Report", textSnapshot.value().orElseThrow().value());
       assertNotNull(textSnapshot.runs());
@@ -307,7 +369,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .applyStyle(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
@@ -336,14 +398,18 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .appendRow(
-              new CellValue.NumberValue(607.8483822864587), new CellValue.BooleanValue(false));
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(607.8483822864587),
+              new CellValue.BooleanValue(false));
 
       CellReport.NumberReport firstCell =
-          (CellReport.NumberReport) sheet.cells().snapshotCell("A1");
+          (CellReport.NumberReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       CellReport.BooleanReport secondCell =
-          (CellReport.BooleanReport) sheet.cells().snapshotCell("B1");
+          (CellReport.BooleanReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"));
       CellReport.BlankReport untouchedStyledCell =
-          (CellReport.BlankReport) sheet.cells().snapshotCell("A2");
+          (CellReport.BlankReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"));
 
       assertEquals(rgb("#CDCDCD"), fillForegroundColor(firstCell.style().orElseThrow().fill()));
       assertEquals(
@@ -378,7 +444,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .applyStyle(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               new CellStylePatch(
                   Optional.of("0.00"),
                   Optional.of(
@@ -416,9 +482,11 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
               new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 1)));
 
       CellReport.NumberReport appendedFirstCell =
-          (CellReport.NumberReport) sheet.cells().snapshotCell("A2");
+          (CellReport.NumberReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"));
       CellReport.NumberReport appendedSecondCell =
-          (CellReport.NumberReport) sheet.cells().snapshotCell("B2");
+          (CellReport.NumberReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"));
 
       assertEquals("yyyy-mm-dd hh:mm:ss", appendedFirstCell.style().orElseThrow().numberFormat());
       assertEquals("yyyy-mm-dd hh:mm:ss", appendedSecondCell.style().orElseThrow().numberFormat());

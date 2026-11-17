@@ -87,7 +87,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     ChartPlotSpec.Surface3D surface3D = new ChartPlotSpec.Surface3D(false, false, List.of(series));
 
     assertTrue(defaultVisibleAxis.visible());
-    assertTrue(series.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, series.title());
     assertEquals(
         List.of("Jan", "Feb"), ((ChartDataSourceSpec.StringLiteral) series.categories()).values());
     assertEquals(
@@ -165,15 +165,31 @@ class SpreadsheetSurfaceEdgeCoverageTest {
   void chartReportCustomXmlAndSignatureReportsValidateExtendedBranches() {
     DrawingAnchorReport.TwoCell anchor =
         new DrawingAnchorReport.TwoCell(
-            new DrawingMarkerReport(1, 2, 0, 0),
-            new DrawingMarkerReport(6, 12, 0, 0),
+            new DrawingMarkerReport(
+                1, 2, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0)),
+            new DrawingMarkerReport(
+                6, 12, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0)),
             ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
     ChartReport.Series series =
         new ChartReport.Series(
             new ChartReport.Title.Text("Series"),
-            new ChartReport.DataSource.StringReference("ChartCategories", List.of("Jan", "Feb")),
+            new ChartReport.DataSource.StringReference(
+                Optional.of("ChartCategories"),
+                new ChartReport.StringCache.Stored(
+                    Optional.of(2L),
+                    List.of(
+                        new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan")),
+                        new ChartReport.StringPoint(Optional.of(1L), Optional.of("Feb"))))),
             new ChartReport.DataSource.NumericReference(
-                "ChartValues", Optional.of("#,##0.00"), List.of("10", "18")),
+                Optional.of("ChartValues"),
+                new ChartReport.NumericCache.Stored(
+                    Optional.of(2L),
+                    Optional.of("#,##0.00"),
+                    List.of(
+                        new ChartReport.NumericPoint(
+                            Optional.of(0L), Optional.of("10"), Optional.empty()),
+                        new ChartReport.NumericPoint(
+                            Optional.of(1L), Optional.of("18"), Optional.empty())))),
             Optional.of(true),
             Optional.of(ExcelChartMarkerStyle.SQUARE),
             Optional.of((short) 6),
@@ -183,12 +199,12 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             new ChartReport.Axis(
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
-                ExcelChartAxisCrosses.AUTO_ZERO,
+                new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
                 true),
             new ChartReport.Axis(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
-                ExcelChartAxisCrosses.AUTO_ZERO,
+                new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
                 true));
 
     ChartReport.Area area =
@@ -438,7 +454,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 List.of(series)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartReport.Doughnut(false, Optional.of(0), Optional.of(9), List.of(series)));
+        () -> new ChartReport.Doughnut(false, Optional.of(0), Optional.of(0), List.of(series)));
     assertThrows(
         NullPointerException.class,
         () -> new ChartReport.Line3D(false, null, Optional.of(12), axes, List.of(series)));
@@ -576,7 +592,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertEquals(
         "{=BROKEN",
         assertInstanceOf(TextSourceSpec.Inline.class, malformedBraceFormula.source()).text());
-    assertTrue(standardInputFormula.source() instanceof TextSourceSpec.Stdin);
+    assertInstanceOf(TextSourceSpec.Stdin.class, standardInputFormula.source());
     assertEquals("CORSO_mapping", namedLocator.name().orElse(null));
     assertThrows(
         IllegalArgumentException.class,
@@ -690,8 +706,17 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.Text("Series"),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.empty(),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("10"), Optional.empty())))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of((short) 1),
@@ -701,8 +726,17 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.Text("Series"),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.empty(),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("10"), Optional.empty())))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of((short) 73),
@@ -711,8 +745,17 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         Optional.empty(),
         new ChartReport.Series(
                 new ChartReport.Title.Text("Series"),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.empty(),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("10"), Optional.empty())))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -723,8 +766,17 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.Text("Series"),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.empty(),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("10"), Optional.empty())))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -739,8 +791,19 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 List.of(
                     new ChartReport.Series(
                         new ChartReport.Title.Text("Series"),
-                        new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                        new ChartReport.DataSource.StringLiteral(
+                            new ChartReport.StringCache.Stored(
+                                Optional.of(1L),
+                                List.of(
+                                    new ChartReport.StringPoint(
+                                        Optional.of(0L), Optional.of("Jan"))))),
+                        new ChartReport.DataSource.NumericLiteral(
+                            new ChartReport.NumericCache.Stored(
+                                Optional.of(1L),
+                                Optional.empty(),
+                                List.of(
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(0L), Optional.of("10"), Optional.empty())))),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
@@ -754,8 +817,19 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 List.of(
                     new ChartReport.Series(
                         new ChartReport.Title.Text("Series"),
-                        new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                        new ChartReport.DataSource.StringLiteral(
+                            new ChartReport.StringCache.Stored(
+                                Optional.of(1L),
+                                List.of(
+                                    new ChartReport.StringPoint(
+                                        Optional.of(0L), Optional.of("Jan"))))),
+                        new ChartReport.DataSource.NumericLiteral(
+                            new ChartReport.NumericCache.Stored(
+                                Optional.of(1L),
+                                Optional.empty(),
+                                List.of(
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(0L), Optional.of("10"), Optional.empty())))),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
@@ -767,8 +841,16 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
-                    new DrawingMarkerReport(1, 2, 0, 0),
-                    new DrawingMarkerReport(6, 12, 0, 0),
+                    new DrawingMarkerReport(
+                        1,
+                        2,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
+                    new DrawingMarkerReport(
+                        6,
+                        12,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
                 signaturePreview(null, null, null, "sig123", 10, 10)));
@@ -777,8 +859,16 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
-                    new DrawingMarkerReport(1, 2, 0, 0),
-                    new DrawingMarkerReport(6, 12, 0, 0),
+                    new DrawingMarkerReport(
+                        1,
+                        2,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
+                    new DrawingMarkerReport(
+                        6,
+                        12,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
                 signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "preview", null, null))
@@ -790,8 +880,16 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
-                    new DrawingMarkerReport(1, 2, 0, 0),
-                    new DrawingMarkerReport(6, 12, 0, 0),
+                    new DrawingMarkerReport(
+                        1,
+                        2,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
+                    new DrawingMarkerReport(
+                        6,
+                        12,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
                 signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, null, null, null))
@@ -803,8 +901,16 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
-                    new DrawingMarkerReport(1, 2, 0, 0),
-                    new DrawingMarkerReport(6, 12, 0, 0),
+                    new DrawingMarkerReport(
+                        1,
+                        2,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
+                    new DrawingMarkerReport(
+                        6,
+                        12,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
                 signaturePreview(null, null, null, null, null, null))
@@ -816,8 +922,16 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
-                    new DrawingMarkerReport(1, 2, 0, 0),
-                    new DrawingMarkerReport(6, 12, 0, 0),
+                    new DrawingMarkerReport(
+                        1,
+                        2,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
+                    new DrawingMarkerReport(
+                        6,
+                        12,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
                 signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, " ", 10, 10)));
@@ -891,17 +1005,17 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         new ChartReport.Axis(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
-            ExcelChartAxisCrosses.AUTO_ZERO,
+            new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
             true),
         new ChartReport.Axis(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
-            ExcelChartAxisCrosses.AUTO_ZERO,
+            new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
             true),
         new ChartReport.Axis(
             ExcelChartAxisKind.SERIES,
             ExcelChartAxisPosition.RIGHT,
-            ExcelChartAxisCrosses.AUTO_ZERO,
+            new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
             true));
   }
 

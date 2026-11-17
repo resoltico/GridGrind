@@ -1,12 +1,10 @@
 package dev.erst.gridgrind.cli.io;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.source.SecretReference;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -120,40 +118,15 @@ class CliFileSecretResolverTest {
 
   @Test
   @SuppressWarnings("PMD.CloseResource") // The enclosing stream owns the no-follow descriptor.
-  void rejectsAProviderLeafThatEndsBeforeTheDescriptorDeclaredSize() throws Exception {
+  void actualEofDeterminesSecretLengthWhenTheSizeHintIsStale() throws Exception {
     Files.writeString(temporaryDirectory.resolve("report-password"), "secret");
     try (DirectoryStream<Path> nativeStream = Files.newDirectoryStream(temporaryDirectory)) {
       SecureDirectoryStream<Path> nativeDirectory = (SecureDirectoryStream<Path>) nativeStream;
       try (CliFileSecretResolver resolver =
           new CliFileSecretResolver(
               new FaultInjectingSecureDirectoryStream(nativeDirectory, true, false))) {
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> resolver.resolve(new SecretReference("report-password")));
+        assertArrayEquals(new char[0], resolver.resolve(new SecretReference("report-password")));
       }
     }
-  }
-
-  @Test
-  @SuppressWarnings("PMD.CloseResource") // The enclosing stream owns the no-follow descriptor.
-  void managedBindingsAbsorbOwnedSecretDescriptorCloseFailures() throws Exception {
-    Path scratchRoot = Files.createTempDirectory("gridgrind-secret-close-failure-");
-    try (DirectoryStream<Path> nativeStream = Files.newDirectoryStream(temporaryDirectory)) {
-      SecureDirectoryStream<Path> nativeDirectory = (SecureDirectoryStream<Path>) nativeStream;
-      try (CliFileSecretResolver resolver =
-          new CliFileSecretResolver(
-              new FaultInjectingSecureDirectoryStream(nativeDirectory, false, true))) {
-        dev.erst.gridgrind.engine.api.GridGrindRequestInputs inputs =
-            new dev.erst.gridgrind.engine.api.GridGrindRequestInputs(
-                temporaryDirectory, scratchRoot, ExecutionGrant.denied(), resolver);
-
-        assertDoesNotThrow(
-            () ->
-                new CliExecutionBindingsFactory.ManagedRequestInputs(
-                        inputs, java.util.Optional.empty(), java.util.Optional.of(resolver))
-                    .close());
-      }
-    }
-    assertTrue(Files.notExists(scratchRoot));
   }
 }

@@ -16,12 +16,10 @@ final class GridGrindProtocolCatalogLookupSupport {
     return matches.size() == 1 ? Optional.of(matches.getFirst().entry()) : Optional.empty();
   }
 
-  static Optional<Object> lookupValueFor(Catalog catalog, String idOrQualifiedId) {
+  static Optional<CatalogLookupValue> lookupValueFor(Catalog catalog, String idOrQualifiedId) {
     List<CatalogLookupRef> matches =
         CatalogRefResolutionSupport.matchingLookupRefs(catalog, idOrQualifiedId);
-    return matches.size() == 1
-        ? Optional.of(CatalogLookupValueSupport.rawValue(matches.getFirst().value()))
-        : Optional.empty();
+    return matches.size() == 1 ? Optional.of(matches.getFirst().value()) : Optional.empty();
   }
 
   static List<String> matchingEntryIds(Catalog catalog, String idOrQualifiedId) {
@@ -66,10 +64,10 @@ final class GridGrindProtocolCatalogLookupSupport {
       Catalog catalog, CatalogLookupRef ref, String normalizedQuery, List<String> tokens) {
     CatalogLookupValue lookupValue = ref.value();
     boolean topLevelEntryMatch =
-        lookupValue instanceof CatalogEntryLookupValue
+        lookupValue instanceof TypeEntry
             && CatalogSearchRankingSupport.isTopLevelPublishedGroup(ref.catalogGroup());
     boolean supportingEntryMatch =
-        lookupValue instanceof CatalogEntryLookupValue
+        lookupValue instanceof TypeEntry
             && !CatalogSearchRankingSupport.isTopLevelPublishedGroup(ref.catalogGroup());
     String lookupId = ref.lookupId().toLowerCase(Locale.ROOT);
     String qualifiedId = ref.qualifiedId().toLowerCase(Locale.ROOT);

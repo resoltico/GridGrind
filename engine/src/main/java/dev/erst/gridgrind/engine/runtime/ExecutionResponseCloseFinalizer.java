@@ -5,8 +5,6 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
-import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -60,36 +58,13 @@ final class ExecutionResponseCloseFinalizer {
       @Nullable Integer failedStepIndex,
       @Nullable StepId failedStepId,
       GridGrindProblemDetail.Problem closeProblem) {
-    return switch (response) {
-      case WorkbookResult.Failure existingFailure ->
-          new WorkbookResult.Failure(
-              existingFailure.protocolVersion(),
-              existingFailure.planId(),
-              journal.buildFailure(
-                  request.steps().size(),
-                  Objects.requireNonNullElse(primaryFailureCode, existingFailure.problem().code()),
-                  failedStepIndex,
-                  failedStepId),
-              existingFailure.calculation(),
-              existingFailure.persistence(),
-              existingFailure.evidence(),
-              existingFailure.warnings(),
-              existingFailure.assertions(),
-              existingFailure.inspections(),
-              GridGrindProblems.appendCause(
-                  existingFailure.problem(), GridGrindProblems.problemCause(closeProblem)));
-      case WorkbookResult.Success success ->
-          new WorkbookResult.Failure(
-              request.protocolVersion(),
-              request.planId(),
-              journal.buildFailure(request.steps().size(), closeProblem.code(), null, null),
-              success.calculation(),
-              success.persistence(),
-              success.evidence(),
-              success.warnings(),
-              List.of(),
-              success.inspections(),
-              closeProblem);
-    };
+    GridGrindProblemCode code =
+        response instanceof WorkbookResult.Failure failure
+            ? Objects.requireNonNullElse(primaryFailureCode, failure.problem().code())
+            : closeProblem.code();
+    return dev.erst.gridgrind.core.result.WorkbookResults.withSecondaryFailure(
+        response,
+        closeProblem,
+        journal.buildFailure(request.steps().size(), code, failedStepIndex, failedStepId));
   }
 }

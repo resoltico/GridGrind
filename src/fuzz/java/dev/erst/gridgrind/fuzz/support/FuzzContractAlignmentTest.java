@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +37,7 @@ class FuzzContractAlignmentTest {
   @Test
   void errorCellsRemainValueBearingForRoundTripFootprints() {
     assertTrue(
-        XlsxRoundTripExpectedFootprintSupport.isValueBearing(new CellValue.ErrorValue("#REF!")));
+        XlsxRoundTripExpectedFootprintSupport.isValueBearing(
+            new CellValueSpec.ErrorValue("#REF!")));
   }
 }

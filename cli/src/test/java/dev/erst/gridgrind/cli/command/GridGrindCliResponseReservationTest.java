@@ -35,11 +35,10 @@ class GridGrindCliResponseReservationTest {
     Files.writeString(responsePath, "sentinel\n");
     AtomicInteger executorCalls = new AtomicInteger();
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, bindings, progress) -> {
-              executorCalls.incrementAndGet();
-              throw new AssertionError("response reservation must prevent execution");
-            });
+        GridGrindCli.forTesting((request, bindings, progress) -> {
+          executorCalls.incrementAndGet();
+          throw new AssertionError("response reservation must prevent execution");
+        });
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -233,9 +232,9 @@ class GridGrindCliResponseReservationTest {
   void executionAndDoctorResponsesRetainBomWarningsWhenTheirPrimaryResultIsInvalid()
       throws Exception {
     GridGrindCli failingCli =
-        GridGrindCli.forTesting(
-            (request, bindings, progress) ->
-                CliExecutionFailureSupport.failure(request, new IllegalStateException("failed")));
+        GridGrindCli.forTesting((request, bindings, progress) ->
+            CliExecutionFailureSupport.failureBeforeExecution(
+                request, new IllegalStateException("failed")));
     ByteArrayOutputStream executionStdout = new ByteArrayOutputStream();
     int executionExitCode =
         failingCli.run(
@@ -287,12 +286,11 @@ class GridGrindCliResponseReservationTest {
     Path responsePath = temporaryDirectory.resolve("response.json");
     AtomicInteger executorCalls = new AtomicInteger();
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, bindings, progress) -> {
-              executorCalls.incrementAndGet();
-              return WorkbookResults.success(
-                  java.util.List.of(), java.util.List.of(), java.util.List.of());
-            });
+        GridGrindCli.forTesting((request, bindings, progress) -> {
+          executorCalls.incrementAndGet();
+          return WorkbookResults.success(
+              java.util.List.of(), java.util.List.of(), java.util.List.of());
+        });
 
     int exitCode =
         cli.run(
@@ -325,13 +323,13 @@ class GridGrindCliResponseReservationTest {
 
   private static byte[] validRequestBytes() {
     return """
-        {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": []
-        }
-        """
+    {
+      "protocolVersion": 1,
+      "source": { "type": "NEW" },
+      "persistence": { "type": "NONE" },
+      "steps": []
+    }
+    """
         .getBytes(StandardCharsets.UTF_8);
   }
 

@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.semantics.BackendCapabilities;
@@ -45,7 +44,11 @@ class ExecutionStepSupportTest {
     IllegalArgumentException failure =
         assertThrows(
             IllegalArgumentException.class,
-            () -> support.executeEventInspection(Path.of("unused.xlsx"), inspectionStep));
+            () ->
+                support.executeEventInspection(
+                    Path.of("unused.xlsx"),
+                    (dev.erst.gridgrind.core.plan.PreparedInspectionStep)
+                        dev.erst.gridgrind.core.plan.PreparedStep.prepare(inspectionStep)));
 
     assertEquals(
         BackendCapabilities.eventRead().unsupportedQueryMessage(inspectionStep.query().queryType()),
@@ -76,10 +79,8 @@ class ExecutionStepSupportTest {
     assertThrows(
         IOException.class,
         () ->
-            support.executeInspectionAgainstMaterializedPath(
-                inspectionStep,
-                new WorkbookLocation.UnsavedWorkbook(),
-                ExecutionModeSpec.fullXssf(),
-                filesystemRoot));
+            support
+                .openReadView(filesystemRoot, new WorkbookLocation.UnsavedWorkbook())
+                .inspect((PreparedInspectionStep) PreparedStep.prepare(inspectionStep)));
   }
 }

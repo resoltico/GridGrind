@@ -1,0 +1,34 @@
+--- org/apache/poi/ss/formula/atp/WorkdayCalculator.java
++++ org/apache/poi/ss/formula/atp/WorkdayCalculator.java
+@@ -126,11 +126,11 @@
+      */
+     public Date calculateWorkdays(double start, int workdays, int weekendType, double[] holidays) {
+         Set<Integer> weekendDays = weekendTypeMap.getOrDefault(weekendType, standardWeekend);
+-        Date startDate = DateUtil.getJavaDate(start);
++        Date startDate = DateUtil.getJavaDate(start, org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+         int direction = workdays < 0 ? -1 : 1;
+         Calendar endDate = LocaleUtil.getLocaleCalendar();
+         endDate.setTime(startDate);
+-        double excelEndDate = DateUtil.getExcelDate(endDate.getTime());
++        double excelEndDate = DateUtil.getExcelDate(endDate.getTime(), org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+         while (workdays != 0) {
+             endDate.add(Calendar.DAY_OF_YEAR, direction);
+             excelEndDate += direction;
+@@ -155,7 +155,7 @@
+         int endDay = MathUtil.safeDoubleToInt(Math.floor(Math.max(end, start)));
+         for (; startDay <= endDay; startDay++) {
+             Calendar today = LocaleUtil.getLocaleCalendar();
+-            today.setTime(DateUtil.getJavaDate(startDay));
++            today.setTime(DateUtil.getJavaDate(startDay, org.apache.poi.ss.usermodel.DateSystemContext.is1904()));
+             if (today.get(Calendar.DAY_OF_WEEK) == dayOfWeek) {
+                 pastDaysOfWeek++;
+             }
+@@ -191,7 +191,7 @@
+      */
+     protected boolean isWeekend(double aDate) {
+         Calendar date = LocaleUtil.getLocaleCalendar();
+-        date.setTime(DateUtil.getJavaDate(aDate));
++        date.setTime(DateUtil.getJavaDate(aDate, org.apache.poi.ss.usermodel.DateSystemContext.is1904()));
+         return isWeekend(date);
+     }
+ 

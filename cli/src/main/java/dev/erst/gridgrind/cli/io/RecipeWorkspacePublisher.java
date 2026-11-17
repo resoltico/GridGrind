@@ -15,9 +15,15 @@ import java.util.Objects;
 /** Publishes one complete recipe workspace without traversing caller-controlled child paths. */
 public final class RecipeWorkspacePublisher {
   private final WorkspaceMover workspaceMover;
+  private final StageCleaner stageCleaner;
 
   RecipeWorkspacePublisher(WorkspaceMover workspaceMover) {
+    this(workspaceMover, RecipeWorkspacePublisher::deleteStage);
+  }
+
+  RecipeWorkspacePublisher(WorkspaceMover workspaceMover, StageCleaner stageCleaner) {
     this.workspaceMover = Objects.requireNonNull(workspaceMover, "workspaceMover must not be null");
+    this.stageCleaner = Objects.requireNonNull(stageCleaner, "stageCleaner must not be null");
   }
 
   /**
@@ -36,7 +42,8 @@ public final class RecipeWorkspacePublisher {
     Path target = normalizedTarget(workspace);
     requireAbsent(target);
     Path stage = Files.createTempDirectory(target.getParent(), ".gridgrind-recipe-stage-");
-    try {
+    java.io.Closeable stageCleanup = () -> stageCleaner.delete(stage);
+    try (stageCleanup) {
       RecipeAssetMaterializer.copyToStaging(recipe, stage);
       Files.write(stage.resolve(recipe.requestFileName()), requestBytes);
       workspaceMover.move(stage, target);
@@ -46,15 +53,16 @@ public final class RecipeWorkspacePublisher {
           "Workspace already exists: " + target, exception);
     } catch (AtomicMoveNotSupportedException exception) {
       throw new RecipeWorkspacePublicationException(
-          "Workspace parent does not support atomic recipe publication: " + target.getParent(),
+          "Workspace parent does not support atomic recipe publication: "
+              + target.getParent()
+              + "; "
+              + exception.getReason(),
           exception);
-    } finally {
-      deleteStage(stage);
     }
   }
 
-  private static void moveAtomically(Path source, Path target) throws IOException {
-    Files.move(source, target, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+  static void moveAtomically(Path source, Path target) throws IOException {
+    CliPublicationPrimitives.createDirectory(source, target);
   }
 
   private static Path normalizedTarget(Path workspace) throws IOException {
@@ -109,5 +117,12 @@ public final class RecipeWorkspacePublisher {
   interface WorkspaceMover {
     /** Moves one stage directory atomically when the local filesystem supports it. */
     void move(Path source, Path target) throws IOException;
+  }
+
+  /** Releases one private recipe stage after publication or a failed attempt. */
+  @FunctionalInterface
+  interface StageCleaner {
+    /** Deletes the owned stage without redefining any caller-owned workspace path. */
+    void delete(Path stage) throws IOException;
   }
 }

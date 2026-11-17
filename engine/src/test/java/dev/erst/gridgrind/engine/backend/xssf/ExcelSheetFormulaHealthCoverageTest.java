@@ -8,7 +8,6 @@ import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
@@ -41,12 +40,22 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       InvalidFormulaException invalidWrite =
           assertThrows(
               InvalidFormulaException.class,
-              () -> writeFailureSheet.cells().setCell("B1", new ResolvedFormula("SUM(")));
+              () ->
+                  writeFailureSheet
+                      .cells()
+                      .setCell(
+                          new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+                          new ResolvedFormula("SUM(")));
       assertEquals("SUM(", invalidWrite.formula());
       InvalidFormulaException parserStateWrite =
           assertThrows(
               InvalidFormulaException.class,
-              () -> writeFailureSheet.cells().setCell("C1", new ResolvedFormula("[^owe_e`ffffff")));
+              () ->
+                  writeFailureSheet
+                      .cells()
+                      .setCell(
+                          new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+                          new ResolvedFormula("[^owe_e`ffffff")));
       assertEquals("[^owe_e`ffffff", parserStateWrite.formula());
 
       FormulaEvaluator baseEvaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
@@ -59,14 +68,27 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
 
       InvalidFormulaException invalidSnapshot =
           assertThrows(
-              InvalidFormulaException.class, () -> invalidFormulaSheet.cells().snapshotCell("A1"));
+              InvalidFormulaException.class,
+              () ->
+                  invalidFormulaSheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals("1+1", invalidSnapshot.formula());
       InvalidFormulaException invalidNumber =
           assertThrows(
-              InvalidFormulaException.class, () -> invalidFormulaSheet.cells().number("A1"));
+              InvalidFormulaException.class,
+              () ->
+                  invalidFormulaSheet
+                      .cells()
+                      .number(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals("1+1", invalidNumber.formula());
       InvalidFormulaException invalidBoolean =
-          assertThrows(InvalidFormulaException.class, () -> invalidFormulaSheet.cells().bool("A1"));
+          assertThrows(
+              InvalidFormulaException.class,
+              () ->
+                  invalidFormulaSheet
+                      .cells()
+                      .bool(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals("1+1", invalidBoolean.formula());
 
       XssfSheet displayFailureSheet =
@@ -77,7 +99,11 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                   new org.apache.poi.ss.formula.FakeFormulaFailure("display failure")));
       InvalidFormulaException displayFailure =
           assertThrows(
-              InvalidFormulaException.class, () -> displayFailureSheet.cells().snapshotCell("A1"));
+              InvalidFormulaException.class,
+              () ->
+                  displayFailureSheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals("1+1", displayFailure.formula());
 
       XssfSheet unsupportedFormulaSheet =
@@ -90,7 +116,10 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       UnsupportedFormulaException unsupported =
           assertThrows(
               UnsupportedFormulaException.class,
-              () -> unsupportedFormulaSheet.cells().snapshotCell("A1"));
+              () ->
+                  unsupportedFormulaSheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals("1+1", unsupported.formula());
 
       XssfSheet nullEvaluatedCellSheet =
@@ -98,10 +127,23 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               poiSheet,
               new StyleAdapter(poiWorkbook),
               FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
-      CellReport blankEvaluatedFormula = nullEvaluatedCellSheet.cells().snapshotCell("A1");
+      CellReport blankEvaluatedFormula =
+          nullEvaluatedCellSheet
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertEquals("FORMULA", blankEvaluatedFormula.type());
-      assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().number("A1"));
-      assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().bool("A1"));
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              nullEvaluatedCellSheet
+                  .cells()
+                  .number(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertThrows(
+          IllegalStateException.class,
+          () ->
+              nullEvaluatedCellSheet
+                  .cells()
+                  .bool(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertInstanceOf(
           dev.erst.gridgrind.core.model.value.CellValue.Blank.class,
           ((CellReport.FormulaReport) blankEvaluatedFormula).value().orElseThrow());
@@ -115,8 +157,16 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", new CellValue.Text("first"));
-      sheet.cells().setCell("A3", new CellValue.Text("third"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("first"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("third"));
 
       List<WindowRowReport> preview = sheet.cells().preview(3, 1);
       assertEquals(3, preview.size());
@@ -133,9 +183,20 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", new ResolvedFormula("INDIRECT(\"[External.xlsx]Sheet1!A1\")"));
-      sheet.cells().setCell("A2", new ResolvedFormula("NOW()"));
-      sheet.cells().setCell("A3", new ResolvedFormula("1/0"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedFormula("INDIRECT(\"[External.xlsx]Sheet1!A1\")"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new ResolvedFormula("NOW()"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"), new ResolvedFormula("1/0"));
 
       List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 
@@ -183,8 +244,16 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               new StyleAdapter(poiWorkbook),
               poiWorkbook.getCreationHelper().createFormulaEvaluator());
 
-      sheet.cells().setCell("A1", new ResolvedFormula("B1+1"));
-      sheet.cells().setCell("B1", new ResolvedFormula("A1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedFormula("B1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1+1"));
 
       List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 

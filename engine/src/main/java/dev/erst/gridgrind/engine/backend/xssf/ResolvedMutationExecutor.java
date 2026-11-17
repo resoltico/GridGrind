@@ -259,12 +259,12 @@ public final class ResolvedMutationExecutor {
     };
   }
 
-  private static String address(ResolvedTarget target) {
-    return ((CellSelector.ByAddress) target).address().value();
+  private static dev.erst.gridgrind.core.vocabulary.CellAddress address(ResolvedTarget target) {
+    return ((CellSelector.ByAddress) target).address();
   }
 
-  private static String range(ResolvedTarget target) {
-    return ((RangeSelector.ByRange) target).range().value();
+  private static dev.erst.gridgrind.core.vocabulary.RangeRef range(ResolvedTarget target) {
+    return ((RangeSelector.ByRange) target).range();
   }
 
   private static ExcelRowSpan rows(ResolvedTarget target) {

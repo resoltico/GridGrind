@@ -1,12 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.RequestPathPublicationTestSupport.assertNoPrivatePublicationSibling;
-import static dev.erst.gridgrind.engine.runtime.RequestPathPublicationTestSupport.moveAtomically;
+import static dev.erst.gridgrind.engine.runtime.RequestPathPublicationTestSupport.commitAtomically;
 import static dev.erst.gridgrind.engine.runtime.RequestPathPublicationTestSupport.verifiedStage;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -89,9 +87,10 @@ class RequestPathPublicationTest {
                       WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
                       verifiedStage()));
 
-      PublicationOutcome.NotPublished outcome =
-          assertInstanceOf(PublicationOutcome.NotPublished.class, attempt.outcome());
-      assertEquals(PublicationOutcome.DestinationState.PRESERVED, outcome.destinationState());
+      PublicationOutcome.Uncertain outcome =
+          assertInstanceOf(PublicationOutcome.Uncertain.class, attempt.outcome());
+      assertEquals(
+          PublicationOutcome.CommitObservation.NOT_ESTABLISHED, outcome.commitObservation());
     }
 
     assertArrayEquals(new byte[] {1, 2, 3, 4}, Files.readAllBytes(destination));
@@ -108,7 +107,7 @@ class RequestPathPublicationTest {
           assertInstanceOf(
               FailedPublicationAttempt.class,
               new RequestPathPublication(
-                      RequestPathPublicationTestSupport::moveAtomically,
+                      RequestPathPublicationTestSupport::commitAtomically,
                       RequestPathPublicationTestSupport::writeOneByteThenFail)
                   .publish(
                       binding,
@@ -116,9 +115,7 @@ class RequestPathPublicationTest {
                       WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
                       verifiedStage()));
 
-      PublicationOutcome.NotPublished outcome =
-          assertInstanceOf(PublicationOutcome.NotPublished.class, attempt.outcome());
-      assertEquals(PublicationOutcome.DestinationState.PRESERVED, outcome.destinationState());
+      assertInstanceOf(PublicationOutcome.NotAttempted.class, attempt.outcome());
     }
 
     assertArrayEquals(new byte[] {1, 2, 3, 4}, Files.readAllBytes(destination));
@@ -126,7 +123,7 @@ class RequestPathPublicationTest {
   }
 
   @Test
-  void reportsUncertainWhenAnEstablishedReplacementDestinationDisappearsBeforePublication()
+  void reportsNoAttemptWhenAnExternalActorRemovesTheDestinationBeforeThePrimitive()
       throws Exception {
     Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     Path destination = Files.write(root.resolve("source.xlsx"), new byte[] {1, 2, 3, 4});
@@ -136,7 +133,7 @@ class RequestPathPublicationTest {
           assertInstanceOf(
               FailedPublicationAttempt.class,
               new RequestPathPublication(
-                      RequestPathPublicationTestSupport::moveAtomically,
+                      RequestPathPublicationTestSupport::commitAtomically,
                       (stagedArtifact, targetBinding, siblingName) -> {
                         Files.delete(targetBinding.resolvedPath());
                         throw new IOException("synthetic external destination removal");
@@ -147,7 +144,7 @@ class RequestPathPublicationTest {
                       WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
                       verifiedStage()));
 
-      assertInstanceOf(PublicationOutcome.Uncertain.class, attempt.outcome());
+      assertInstanceOf(PublicationOutcome.NotAttempted.class, attempt.outcome());
     }
 
     assertTrue(Files.notExists(destination));
@@ -189,15 +186,14 @@ class RequestPathPublicationTest {
   }
 
   @Test
-  void recoversAPublishedOutcomeWhenTheSiblingAndFinalDestinationBothVerifyAfterMoverFailure()
-      throws Exception {
+  void equalDestinationBytesCannotProveOwnCommitAfterPrimitiveFailure() throws Exception {
     Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     Path destination = root.resolve("output.xlsx");
 
     try (RequestPathBinding binding = RequestPathBinding.bindWriteTarget("output.xlsx", root)) {
-      PublishedPublicationAttempt attempt =
+      FailedPublicationAttempt attempt =
           assertInstanceOf(
-              PublishedPublicationAttempt.class,
+              FailedPublicationAttempt.class,
               new RequestPathPublication(
                       (source, target, disposition) -> {
                         Files.copy(source, target);
@@ -209,7 +205,9 @@ class RequestPathPublicationTest {
                       WorkbookArtifactWriteDisposition.CREATE_NEW,
                       verifiedStage()));
 
-      assertEquals(destination.toString(), attempt.outcome().executionPath());
+      var outcome = assertInstanceOf(PublicationOutcome.Uncertain.class, attempt.outcome());
+      assertEquals(
+          PublicationOutcome.CommitObservation.NOT_ESTABLISHED, outcome.commitObservation());
     }
 
     assertArrayEquals(new byte[] {6, 7, 8}, Files.readAllBytes(destination));
@@ -227,7 +225,7 @@ class RequestPathPublicationTest {
               FailedPublicationAttempt.class,
               new RequestPathPublication(
                       (source, target, disposition) -> {
-                        moveAtomically(source, target, disposition);
+                        commitAtomically(source, target, disposition);
                         Files.write(target, new byte[] {9});
                       })
                   .publish(
@@ -259,11 +257,14 @@ class RequestPathPublicationTest {
         GridGrindProblemCodeClassifier.codeFor(
             new WorkbookPublicationException(
                 new PublicationOutcome.Uncertain(
-                    "output.xlsx", PublicationOutcome.Recovery.INSPECT_DESTINATION_DO_NOT_RETRY),
+                    "output.xlsx",
+                    PublicationOutcome.Recovery.INSPECT_DESTINATION_DO_NOT_RETRY,
+                    PublicationOutcome.CommitObservation.NOT_ESTABLISHED),
                 cause)));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookPublicationException(new PublicationOutcome.NotAttempted(), cause));
+    assertInstanceOf(
+        PublicationOutcome.NotAttempted.class,
+        new WorkbookPublicationException(new PublicationOutcome.NotAttempted(), cause)
+            .publication());
     assertEquals(
         "Workbook output path already exists and ifExists=REJECT: output.xlsx",
         new OutputPathAlreadyExistsException("output.xlsx").getMessage());
@@ -271,32 +272,17 @@ class RequestPathPublicationTest {
   }
 
   @Test
-  void retainsUncertainFailuresAndSuppressesPrivateSiblingCleanupNoise() {
+  void retainsUncertainFailureFacts() {
     PublicationOutcome.Uncertain uncertain =
         new PublicationOutcome.Uncertain(
             root.resolve("output.xlsx").toString(),
-            PublicationOutcome.Recovery.INSPECT_DESTINATION_DO_NOT_RETRY);
+            PublicationOutcome.Recovery.INSPECT_DESTINATION_DO_NOT_RETRY,
+            PublicationOutcome.CommitObservation.NOT_ESTABLISHED);
     IOException failure = new IOException("publication state unavailable");
 
     assertEquals(uncertain, new FailedPublicationAttempt(uncertain, failure).outcome());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new FailedPublicationAttempt(new PublicationOutcome.NotAttempted(), failure));
-
-    AtomicInteger cleanupAttempts = new AtomicInteger();
-    RequestPathPublication.deleteSiblingQuietly(
-        Path.of(".publication-sibling.xlsx"),
-        sibling -> {
-          cleanupAttempts.incrementAndGet();
-          throw new java.nio.file.NoSuchFileException(sibling.toString());
-        });
-    RequestPathPublication.deleteSiblingQuietly(
-        Path.of(".publication-sibling.xlsx"),
-        sibling -> {
-          cleanupAttempts.incrementAndGet();
-          throw new IOException("synthetic private cleanup failure");
-        });
-
-    assertEquals(2, cleanupAttempts.get());
+    assertInstanceOf(
+        PublicationOutcome.NotAttempted.class,
+        new FailedPublicationAttempt(new PublicationOutcome.NotAttempted(), failure).outcome());
   }
 }

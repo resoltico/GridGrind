@@ -11,7 +11,13 @@ public final class TextValidation {
   public static String requireNonBlank(@Nullable String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
+      var problem =
+          fieldName != null && !fieldName.isBlank()
+              ? dev.erst.gridgrind.core.problem.FieldValidationProblem.atField(
+                  fieldName, dev.erst.gridgrind.core.problem.FieldValidationBasicRule.NON_BLANK)
+              : new dev.erst.gridgrind.core.problem.MessageInvariant(
+                  "Value must not be blank.", java.util.Optional.empty());
+      throw new dev.erst.gridgrind.core.problem.ValueInvariantException(problem);
     }
     return value;
   }

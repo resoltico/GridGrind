@@ -17,7 +17,8 @@ final class CatalogEnumValueDocumentationSupport {
           CellReadFacet.class,
           Map.of(
               "VALUE",
-                  "Project the factual effective scalar in value, including formula results and blank values.",
+                  "Project the factual effective scalar in value, including formula results and"
+                      + " blank values.",
               "STYLE", "Project the style report for each returned cell.",
               "FORMAT", "Project displayValue using Excel's formatted display text.",
               "HYPERLINK", "Project hyperlink metadata when the cell carries a hyperlink.",
@@ -104,12 +105,11 @@ final class CatalogEnumValueDocumentationSupport {
           "Enum value docs must cover every published token for " + valueSetName);
     }
     return expectedValues.stream()
-        .map(
-            value ->
-                new EnumValueDocEntry(
-                    value,
-                    Objects.requireNonNull(
-                        docsByValue.get(value), "Missing enum value doc for " + value)))
+        .map(value ->
+            new EnumValueDocEntry(
+                value,
+                Objects.requireNonNull(
+                    docsByValue.get(value), "Missing enum value doc for " + value)))
         .toList();
   }
 }

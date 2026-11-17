@@ -2,7 +2,7 @@ package dev.erst.gridgrind.fuzz.protocol;
 
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
-import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.fuzz.support.FuzzFilesystem;
 import dev.erst.gridgrind.fuzz.support.FuzzWorkbookIo;
 import dev.erst.gridgrind.fuzz.support.GeneratedProtocolWorkflow;
@@ -26,9 +26,8 @@ public final class ProtocolWorkflowHarness {
     WorkbookPlan request = workflow.request();
     try {
       WorkbookResult response =
-          new DefaultGridGrindRequestExecutor()
-              .execute(
-                  request, FuzzWorkbookIo.executionBindings(workflow.executionRoot(), request));
+          GridGrindEngine.requestExecutor()
+              .execute(request, FuzzWorkbookIo.executionInputs(workflow.executionRoot(), request));
       if (response instanceof WorkbookResult.Failure failure
           && failure.problem().code()
               == dev.erst.gridgrind.core.problem.GridGrindProblemCode.AUTHORITY_DENIED) {

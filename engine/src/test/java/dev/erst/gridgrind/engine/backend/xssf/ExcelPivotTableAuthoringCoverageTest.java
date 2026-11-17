@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import java.util.List;
@@ -174,13 +173,13 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           .getOrCreateSheet("OneRow")
           .cells()
           .setRange(
-              "A1:D1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D1"),
               List.of(
                   List.of(
-                      new CellValue.Text("Region"),
-                      new CellValue.Text("Stage"),
-                      new CellValue.Text("Owner"),
-                      new CellValue.Text("Amount"))));
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Stage"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount"))));
       IllegalArgumentException oneRowFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -200,8 +199,16 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
       assertTrue(oneRowFailure.getMessage().contains("header row plus at least one data row"));
 
       XssfSheet missingHeaderSheet = workbook.getOrCreateSheet("MissingHeader");
-      missingHeaderSheet.cells().setCell("A3", new CellValue.Text("North"));
-      missingHeaderSheet.cells().setCell("B3", new CellValue.NumberValue(10));
+      missingHeaderSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"));
+      missingHeaderSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10));
       IllegalArgumentException missingHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -224,10 +231,14 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           .getOrCreateSheet("NumericHeader")
           .cells()
           .setRange(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               List.of(
-                  List.of(new CellValue.NumberValue(1), new CellValue.Text("Amount")),
-                  List.of(new CellValue.Text("North"), new CellValue.NumberValue(10))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount")),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10))));
       IllegalArgumentException numericHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -242,40 +253,72 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                               new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
                           "C5",
                           List.of(),
-                          List.of("Amount"),
+                          List.of("Region"),
                           List.of())));
-      assertFalse(numericHeaderFailure.getMessage().isBlank());
+      assertTrue(
+          numericHeaderFailure.getMessage().contains("header cells must all be strings"),
+          numericHeaderFailure::getMessage);
 
-      workbook
-          .getOrCreateSheet("BlankHeader")
+      var blankHeaderSheet = workbook.getOrCreateSheet("BlankHeader");
+      blankHeaderSheet
           .cells()
           .setRange(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               List.of(
-                  List.of(new CellValue.Text(" "), new CellValue.Text("Amount")),
-                  List.of(new CellValue.Text("North"), new CellValue.NumberValue(10))));
-      assertThrows(
-          IllegalArgumentException.class,
-          () ->
-              controller.setPivotTable(
-                  workbook,
-                  definition(
-                      "Blank Header",
-                      "Report",
-                      new PivotTableSpec.PivotSourceSpec.Range(
-                          new dev.erst.gridgrind.core.vocabulary.SheetName("BlankHeader"),
-                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
-                      "C5",
-                      List.of(),
-                      List.of("Amount"),
-                      List.of())));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount")),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10))));
+      // Model a whitespace header read from an external workbook, not an authored operand.
+      blankHeaderSheet.xssfSheet().getRow(0).getCell(0).setCellValue(" ");
+      var whitespaceHeaderFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  controller.setPivotTable(
+                      workbook,
+                      definition(
+                          "Blank Header",
+                          "Report",
+                          new PivotTableSpec.PivotSourceSpec.Range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("BlankHeader"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
+                          "C5",
+                          List.of(),
+                          List.of("Region"),
+                          List.of())));
+      assertTrue(
+          whitespaceHeaderFailure.getMessage().contains("contains a blank header cell"),
+          whitespaceHeaderFailure::getMessage);
 
       XssfSheet missingHeaderCellSheet = workbook.getOrCreateSheet("MissingHeaderCell");
-      missingHeaderCellSheet.cells().setCell("A1", new CellValue.Text("Region"));
-      missingHeaderCellSheet.cells().setCell("C1", new CellValue.Text("Amount"));
-      missingHeaderCellSheet.cells().setCell("A2", new CellValue.Text("North"));
-      missingHeaderCellSheet.cells().setCell("B2", new CellValue.Text("Plan"));
-      missingHeaderCellSheet.cells().setCell("C2", new CellValue.NumberValue(10));
+      missingHeaderCellSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"));
+      missingHeaderCellSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount"));
+      missingHeaderCellSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"));
+      missingHeaderCellSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plan"));
+      missingHeaderCellSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10));
       assertThrows(
           IllegalArgumentException.class,
           () ->
@@ -296,10 +339,14 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           .getOrCreateSheet("DuplicateHeader")
           .cells()
           .setRange(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               List.of(
-                  List.of(new CellValue.Text("Region"), new CellValue.Text("region")),
-                  List.of(new CellValue.Text("North"), new CellValue.NumberValue(10))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("region")),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10))));
       IllegalArgumentException duplicateHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -318,14 +365,18 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                           List.of())));
       assertTrue(duplicateHeaderFailure.getMessage().contains("unique case-insensitively"));
 
-      workbook
-          .getOrCreateSheet("BlankHeader")
+      blankHeaderSheet
           .cells()
           .setRange(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               List.of(
-                  List.of(new CellValue.Text(""), new CellValue.Text("Amount")),
-                  List.of(new CellValue.Text("North"), new CellValue.NumberValue(10))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount")),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10))));
+      blankHeaderSheet.xssfSheet().getRow(0).getCell(0).setCellValue("");
       IllegalArgumentException blankHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,

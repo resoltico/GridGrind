@@ -4,7 +4,6 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.catalog.GridGrindContractText;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
@@ -22,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,8 +40,18 @@ class ExecutionModeRequestExecutorTest {
       workbook.sheets().setActiveSheet("Ops");
       workbook.sheets().setSelectedSheets(List.of("Ops"));
       workbook.formulas().markRecalculateOnOpen();
-      workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Header"));
-      workbook.sheet("Ops").cells().setCell("C2", new CellValue.NumberValue(42.0d));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(42.0d));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
@@ -58,7 +68,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Success full =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -67,7 +79,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Success event =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -86,7 +100,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -143,7 +159,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Success streaming =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -155,7 +173,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Success reopened =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -187,7 +207,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -218,7 +240,9 @@ class ExecutionModeRequestExecutorTest {
                 dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.MaterializedWorkbook
                     ::close,
                 dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
-                    ::markRecalculateOnOpen));
+                    ::markRecalculateOnOpen),
+            NativeInvocationContext.enterOwned(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD));
 
     WorkbookResult.Success success =
         success(
@@ -254,14 +278,21 @@ class ExecutionModeRequestExecutorTest {
     Files.deleteIfExists(persistedCopy);
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Header"));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, sourcePath);
     }
 
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -300,7 +331,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -322,7 +355,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -341,7 +376,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -371,7 +408,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -392,7 +431,10 @@ class ExecutionModeRequestExecutorTest {
 
   @Test
   void streamingWriteModeReportsTempFileCreationIoFailure() throws IOException {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    DefaultGridGrindRequestExecutor executor =
+        new DefaultGridGrindRequestExecutor(
+            NativeInvocationContext.enterOwned(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD));
     WorkbookPlan request =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -419,7 +461,7 @@ class ExecutionModeRequestExecutorTest {
                 ExecutionProgressSink.NOOP));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
+    assertEquals("EXECUTE_STEP", failure.problem().context().type());
   }
 
   @Test
@@ -427,7 +469,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -461,7 +505,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -493,7 +539,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure unsupportedEventRead =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -512,7 +560,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure existingStreamingSource =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -531,7 +581,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure unsupportedStreamingOperation =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -559,7 +611,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookResult.Failure missingStreamingSheetMaterialization =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),

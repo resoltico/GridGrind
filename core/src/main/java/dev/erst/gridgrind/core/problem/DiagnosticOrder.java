@@ -84,6 +84,7 @@ public final class DiagnosticOrder {
       case ProblemContext.ParseArguments _ -> PRE_EXECUTION_PHASE;
       case HostContext _ -> PRE_EXECUTION_PHASE;
       case ProblemContext.ReadRequest _ -> PRE_EXECUTION_PHASE;
+      case ProblemContext.ReadAuthority _ -> PRE_EXECUTION_PHASE;
       case ProblemContext.BindRequest _ -> REQUEST_BINDING_PHASE;
       case ProblemContext.ValidateRequest _ -> STATIC_VALIDATION_PHASE;
       case ProblemContext.ResolveInputs _ -> SOURCE_RESOLUTION_PHASE;
@@ -106,6 +107,9 @@ public final class DiagnosticOrder {
   }
 
   private static Optional<Long> byteOffsetOptional(GridGrindProblemDetail.Problem problem) {
+    if (problem.context() instanceof ProblemContext.ReadAuthority authority) {
+      return authority.json().byteOffsetValue();
+    }
     if (problem.context() instanceof RequestInputContext requestInputContext) {
       return requestInputContext.byteOffset();
     }

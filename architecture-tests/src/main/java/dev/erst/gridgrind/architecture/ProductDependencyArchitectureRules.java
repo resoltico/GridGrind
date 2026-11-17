@@ -29,18 +29,6 @@ enum ProductDependencyArchitectureRules {
     "dev.erst.gridgrind.engine.security..", "dev.erst.gridgrind.engine.customxml..",
     "dev.erst.gridgrind.engine.packaging.."
   };
-  private static final String ENGINE_API_RUNTIME_BRIDGE_PATTERN =
-      "^dev\\.erst\\.gridgrind\\.engine\\.api\\."
-          + "(GridGrindEngine(\\$.*)?|GridGrindProblems|GridGrindRequestRequirements)$";
-
-  private static final DescribedPredicate<JavaClass> ENGINE_INTERNAL =
-      new DescribedPredicate<>("engine implementation types") {
-        @Override
-        public boolean test(JavaClass input) {
-          return new EngineImplementationTypeClassifier().isImplementationType(input);
-        }
-      };
-
   private static final ArchCondition<JavaClass> NOT_EXPOSE_ENGINE_IMPLEMENTATION_TYPES =
       new ArchCondition<>("not expose engine implementation types through the exported API") {
         @Override
@@ -58,14 +46,15 @@ enum ProductDependencyArchitectureRules {
         }
       };
 
-  static ArchRule coreDoesNotOwnConcreteHostTypes() {
-    return classes()
+  static ArchRule coreDoesNotDependOnAdapters() {
+    return noClasses()
         .that()
         .resideInAPackage("dev.erst.gridgrind.core..")
         .should()
-        .haveNameNotMatching(
-            ".*(Cli|Docker|Container|TerminalSession|TerminalCommand|TerminalWindow).*")
-        .because("product discovery and HostContext are independent of concrete host transports");
+        .dependOnClassesThat()
+        .resideInAnyPackage(
+            "dev.erst.gridgrind.engine..", "dev.erst.gridgrind.json..", "dev.erst.gridgrind.cli..")
+        .because("the pure core is independent of application, transport and host adapters");
   }
 
   static ArchRule coreDoesNotDependOnWorkbookOrJsonLibraries() {
@@ -99,18 +88,6 @@ enum ProductDependencyArchitectureRules {
         .resideInAnyPackage("org.apache.poi..", "org.openxmlformats..")
         .because(
             "runtime, publication and API use native operations without depending on POI types");
-  }
-
-  static ArchRule engineApiRuntimeDependenciesStayInOwnedBridges() {
-    return noClasses()
-        .that()
-        .resideInAPackage(ENGINE_API_PACKAGE)
-        .and()
-        .haveNameNotMatching(ENGINE_API_RUNTIME_BRIDGE_PATTERN)
-        .should()
-        .dependOnClassesThat(ENGINE_INTERNAL)
-        .because(
-            "the exported API exposes contracts while named facades own implementation wiring");
   }
 
   static ArchRule engineApiDoesNotExposeImplementationTypes() {

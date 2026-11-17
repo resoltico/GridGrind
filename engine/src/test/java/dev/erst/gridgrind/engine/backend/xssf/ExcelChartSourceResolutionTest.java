@@ -48,7 +48,7 @@ class ExcelChartSourceResolutionTest {
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "FormulaTitle");
       ChartReport.Title.Formula chartTitle =
           assertInstanceOf(ChartReport.Title.Formula.class, formulaTitleChart.title());
-      assertEquals("Plan", chartTitle.cachedText());
+      assertEquals("Plan", ChartCacheAssertions.singleStringValue(chartTitle.cache()));
       assertInstanceOf(
           ChartReport.DataSource.NumericReference.class,
           ExcelChartTestSupport.singlePlot(formulaTitleChart, ChartReport.Line.class)
@@ -68,13 +68,14 @@ class ExcelChartSourceResolutionTest {
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "SparseCategoriesChart");
       assertEquals(
           List.of("true", "", ""),
-          assertInstanceOf(
-                  ChartReport.DataSource.StringReference.class,
-                  ExcelChartTestSupport.singlePlot(sparseChart, ChartReport.Line.class)
-                      .series()
-                      .getFirst()
-                      .categories())
-              .cachedValues());
+          ChartCacheAssertions.denseStringValues(
+              assertInstanceOf(
+                      ChartReport.DataSource.StringReference.class,
+                      ExcelChartTestSupport.singlePlot(sparseChart, ChartReport.Line.class)
+                          .series()
+                          .getFirst()
+                          .categories())
+                  .cache()));
 
       sheet
           .drawings()
@@ -88,24 +89,25 @@ class ExcelChartSourceResolutionTest {
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "FormulaCategoriesChart");
       assertEquals(
           List.of("Alpha", "2.0", "true", ""),
-          assertInstanceOf(
-                  ChartReport.DataSource.StringReference.class,
-                  ExcelChartTestSupport.singlePlot(formulaCategoriesChart, ChartReport.Line.class)
-                      .series()
-                      .getFirst()
-                      .categories())
-              .cachedValues());
+          ChartCacheAssertions.denseStringValues(
+              assertInstanceOf(
+                      ChartReport.DataSource.StringReference.class,
+                      ExcelChartTestSupport.singlePlot(
+                              formulaCategoriesChart, ChartReport.Line.class)
+                          .series()
+                          .getFirst()
+                          .categories())
+                  .cache()));
 
-      assertDoesNotThrow(
-          () ->
-              sheet
-                  .drawings()
-                  .setChart(
-                      chart(
-                          "LocalCategoriesChart",
-                          ExcelChartTestSupport.ref("LocalCategories"),
-                          ExcelChartTestSupport.ref("ChartActual"),
-                          new ChartTitleSpec.None())));
+      assertDoesNotThrow(() ->
+          sheet
+              .drawings()
+              .setChart(
+                  chart(
+                      "LocalCategoriesChart",
+                      ExcelChartTestSupport.ref("LocalCategories"),
+                      ExcelChartTestSupport.ref("ChartActual"),
+                      new ChartTitleSpec.None())));
 
       sheet
           .drawings()
@@ -119,13 +121,14 @@ class ExcelChartSourceResolutionTest {
           ExcelChartTestSupport.chart(sheet.drawings().charts(), "CrossSheetCategoriesChart");
       assertEquals(
           List.of("North", "South", "West"),
-          assertInstanceOf(
-                  ChartReport.DataSource.StringReference.class,
-                  ExcelChartTestSupport.singlePlot(crossSheetChart, ChartReport.Line.class)
-                      .series()
-                      .getFirst()
-                      .categories())
-              .cachedValues());
+          ChartCacheAssertions.denseStringValues(
+              assertInstanceOf(
+                      ChartReport.DataSource.StringReference.class,
+                      ExcelChartTestSupport.singlePlot(crossSheetChart, ChartReport.Line.class)
+                          .series()
+                          .getFirst()
+                          .categories())
+                  .cache()));
 
       assertFailureMessage(
           sheet,
@@ -176,12 +179,36 @@ class ExcelChartSourceResolutionTest {
   void runtimeAwareSourceResolutionEvaluatesFormulaCellsBeforeReadingValues() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Charts");
-      sheet.cells().setCell("A2", new CellValue.Text("Ari"));
-      sheet.cells().setCell("A3", new CellValue.Text("Bo"));
-      sheet.cells().setCell("A4", new CellValue.Text("Cy"));
-      sheet.cells().setCell("B2", new ResolvedFormula("40+2"));
-      sheet.cells().setCell("B3", new CellValue.NumberValue(7d));
-      sheet.cells().setCell("B4", new ResolvedFormula("B3*2"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ari"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Bo"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Cy"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new ResolvedFormula("40+2"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(7d));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new ResolvedFormula("B3*2"));
 
       ResolvedChartSource resolved =
           ChartAdapter.resolveChartSource(
@@ -237,8 +264,14 @@ class ExcelChartSourceResolutionTest {
   }
 
   private static void seedChartSourceResolutionFixtures(XssfWorkbook workbook, XssfSheet sheet) {
-    sheet.cells().setCell("D2", new CellValue.BooleanValue(true));
-    sheet.cells().setCell("D3", new CellValue.Blank());
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"),
+            new CellValue.BooleanValue(true));
+    sheet
+        .cells()
+        .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"), new CellValue.Blank());
     workbook
         .names()
         .setNamedRange(
@@ -313,8 +346,20 @@ class ExcelChartSourceResolutionTest {
     xssfSheet.getRow(3).createCell(6).setCellErrorValue(FormulaError.NA.getCode());
 
     XssfSheet sourceSheet = workbook.getOrCreateSheet("Other");
-    sourceSheet.cells().setCell("A2", new CellValue.Text("North"));
-    sourceSheet.cells().setCell("A3", new CellValue.Text("South"));
-    sourceSheet.cells().setCell("A4", new CellValue.Text("West"));
+    sourceSheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"));
+    sourceSheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"));
+    sourceSheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("West"));
   }
 }

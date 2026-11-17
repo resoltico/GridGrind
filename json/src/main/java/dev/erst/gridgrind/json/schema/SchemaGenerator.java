@@ -5,10 +5,8 @@ import dev.erst.gridgrind.core.catalog.FieldConstraint;
 import dev.erst.gridgrind.core.catalog.FieldShape;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
-import dev.erst.gridgrind.core.metadata.CatalogIgnored;
 import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.metadata.ModelDefaults;
-import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.metadata.WireDefault;
 import dev.erst.gridgrind.core.vocabulary.WireScalar;
@@ -41,7 +39,8 @@ final class SchemaGenerator {
             .put("$schema", "https://json-schema.org/draft/2020-12/schema")
             .put(
                 "$comment",
-                "Structure and declared field constraints. GridGrind also enforces value-object, numeric-token, constructor and workflow invariants.");
+                "Structure and declared field constraints. GridGrind also enforces value-object,"
+                    + " numeric-token, constructor and workflow invariants.");
     result.setAll(generator.node(root));
     result.set("$defs", generator.definitions);
     return result;
@@ -62,9 +61,10 @@ final class SchemaGenerator {
       throw new IllegalStateException("Unsupported schema type: " + type);
     }
     if (WireScalar.isValueType(raw)) {
-      RecordComponent component = raw.getRecordComponents()[0];
-      ObjectNode scalar = node(component.getGenericType());
-      metadata(scalar, component, Set.of());
+      ObjectNode scalar = node(WireScalar.wireType(raw));
+      if (raw.getRecordComponents().length == 1) {
+        metadata(scalar, raw.getRecordComponents()[0], Set.of());
+      }
       return scalar;
     }
     if (raw.isEnum()) {
@@ -88,24 +88,44 @@ final class SchemaGenerator {
   }
 
   private ObjectNode number(Class<?> type) {
-    boolean integral =
-        type == byte.class
-            || type == short.class
-            || type == int.class
-            || type == long.class
-            || type == Byte.class
-            || type == Short.class
-            || type == Integer.class
-            || type == Long.class
-            || type == java.math.BigInteger.class;
-    ObjectNode number = JSON.createObjectNode().put("type", integral ? "integer" : "number");
-    if (!observedNumbers
-        || !(type == double.class
-            || type == Double.class
-            || type == float.class
-            || type == Float.class)) {
-      return number;
+    ObjectNode number =
+        JSON.createObjectNode().put("type", integralType(type) ? "integer" : "number");
+    integerBounds(number, type);
+    return observedNumbers && floatingPointType(type) ? observedNumber(number) : number;
+  }
+
+  private static boolean integralType(Class<?> type) {
+    return type == byte.class
+        || type == short.class
+        || type == int.class
+        || type == long.class
+        || type == Byte.class
+        || type == Short.class
+        || type == Integer.class
+        || type == Long.class
+        || type == java.math.BigInteger.class;
+  }
+
+  private static boolean floatingPointType(Class<?> type) {
+    return type == double.class
+        || type == Double.class
+        || type == float.class
+        || type == Float.class;
+  }
+
+  private static void integerBounds(ObjectNode number, Class<?> type) {
+    if (type == byte.class || type == Byte.class) {
+      number.put("minimum", Byte.MIN_VALUE).put("maximum", Byte.MAX_VALUE);
+    } else if (type == short.class || type == Short.class) {
+      number.put("minimum", Short.MIN_VALUE).put("maximum", Short.MAX_VALUE);
+    } else if (type == int.class || type == Integer.class) {
+      number.put("minimum", Integer.MIN_VALUE).put("maximum", Integer.MAX_VALUE);
+    } else if (type == long.class || type == Long.class) {
+      number.put("minimum", Long.MIN_VALUE).put("maximum", Long.MAX_VALUE);
     }
+  }
+
+  private static ObjectNode observedNumber(ObjectNode number) {
     ObjectNode result = JSON.createObjectNode();
     var alternatives = result.putArray("oneOf");
     alternatives.add(number);
@@ -142,11 +162,8 @@ final class SchemaGenerator {
     ObjectNode properties = schema.putObject("properties");
     var required = schema.putArray("required");
     Set<String> optional = Set.copyOf(GridGrindProtocolContractSupport.optionalFieldNames(type));
-    for (RecordComponent component : type.getRecordComponents()) {
-      if (component.isAnnotationPresent(CatalogIgnored.class)
-          || component.getAccessor().isAnnotationPresent(CatalogIgnored.class)) {
-        continue;
-      }
+    for (RecordComponent component :
+        GridGrindProtocolContractSupport.visibleRecordComponents(type)) {
       ObjectNode value = node(component.getGenericType());
       metadata(value, component, optional);
       properties.set(component.getName(), value);
@@ -157,7 +174,7 @@ final class SchemaGenerator {
     Variant variant = type.getAnnotation(Variant.class);
     if (variant != null) {
       schema.put("description", ProtocolTypeMetadataSupport.summary(type));
-      String discriminator = discriminator(type);
+      String discriminator = ProtocolTypeMetadataSupport.discriminatorField(type);
       if (!discriminator.isEmpty()) {
         properties.putObject(discriminator).put("const", variant.id());
         required.add(discriminator);
@@ -167,20 +184,6 @@ final class SchemaGenerator {
     if (plain != null) {
       schema.put("description", plain.summary());
     }
-  }
-
-  private static String discriminator(Class<?> type) {
-    for (Class<?> parent : type.getInterfaces()) {
-      Union union = parent.getAnnotation(Union.class);
-      if (union != null) {
-        return union.discriminator();
-      }
-      String inherited = discriminator(parent);
-      if (!inherited.isEmpty()) {
-        return inherited;
-      }
-    }
-    return "";
   }
 
   private void metadata(ObjectNode value, RecordComponent component, Set<String> optional) {
@@ -235,8 +238,18 @@ final class SchemaGenerator {
             pattern(value, "^(?:" + match.pattern() + ")(?![\\s\\S])");
         case FieldConstraint.LengthRange range ->
             value.put("minLength", range.minimum()).put("maxLength", range.maximum());
-        case FieldConstraint.NumberRange range ->
-            value.put("minimum", range.minimum()).put("maximum", range.maximum());
+        case FieldConstraint.NumberRange range -> {
+          java.math.BigDecimal minimum = java.math.BigDecimal.valueOf(range.minimum());
+          java.math.BigDecimal maximum = java.math.BigDecimal.valueOf(range.maximum());
+          if (!value.has("minimum")
+              || minimum.compareTo(value.path("minimum").decimalValue()) > 0) {
+            value.put("minimum", minimum);
+          }
+          if (!value.has("maximum")
+              || maximum.compareTo(value.path("maximum").decimalValue()) < 0) {
+            value.put("maximum", maximum);
+          }
+        }
         case FieldConstraint.Integral _ -> value.put("type", "integer");
         case FieldConstraint.PathSuffix suffix -> pattern(value, suffixPattern(suffix.suffix()));
       }

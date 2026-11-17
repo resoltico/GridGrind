@@ -31,12 +31,36 @@ final class SourceBackedStructuredInputResolver {
 
   static List<RichTextRunSpec> resolveRuns(
       List<RichTextRunSpec> runs, ExecutionInputBindings bindings) throws IOException {
+    return resolveRuns(runs, bindings, false);
+  }
+
+  static List<RichTextRunSpec> resolveCellRuns(
+      List<RichTextRunSpec> runs, ExecutionInputBindings bindings) throws IOException {
+    return resolveRuns(runs, bindings, true);
+  }
+
+  private static List<RichTextRunSpec> resolveRuns(
+      List<RichTextRunSpec> runs, ExecutionInputBindings bindings, boolean cellText)
+      throws IOException {
     List<RichTextRunSpec> resolvedRuns = new ArrayList<>(runs.size());
     boolean changed = false;
+    long totalLength = 0;
+    boolean exceeded = false;
     for (RichTextRunSpec run : runs) {
       RichTextRunSpec resolvedRun = resolveRichTextRun(run, bindings);
       resolvedRuns.add(resolvedRun);
       changed |= !sameReference(resolvedRun, run);
+      if (!cellText || !(resolvedRun.text() instanceof TextSourceSpec.Inline inline)) continue;
+      totalLength += inline.text().length();
+      if (exceeded) continue;
+      try {
+        dev.erst.gridgrind.core.model.value.CellTextLimits.requireSupportedLength(
+            totalLength, "rich-text cell");
+      } catch (IllegalArgumentException failure) {
+        exceeded = true;
+        if (!bindings.collectInputResolutionFailure(
+            failure, run.text(), bindings.lastInputOrigin(run.text()))) throw failure;
+      }
     }
     return changed ? List.copyOf(resolvedRuns) : runs;
   }
@@ -52,29 +76,43 @@ final class SourceBackedStructuredInputResolver {
     if (resolvedText.isEmpty()) {
       IllegalArgumentException failure =
           new IllegalArgumentException("rich-text run must not be empty");
-      if (bindings.collectInputResolutionFailure(failure, run.text())) {
+      if (bindings.collectInputResolutionFailure(
+          failure, run.text(), bindings.lastInputOrigin(run.text()))) {
         return run;
       }
       throw failure;
     }
-    return sameReference(resolvedSource, run.text())
-        ? run
-        : new RichTextRunSpec(resolvedSource, run.font());
+    try {
+      return sameReference(resolvedSource, run.text())
+          ? run
+          : new RichTextRunSpec(resolvedSource, run.font());
+    } catch (IllegalArgumentException failure) {
+      if (bindings.collectInputResolutionFailure(
+          failure, run.text(), bindings.lastInputOrigin(run.text()))) return run;
+      throw failure;
+    }
   }
 
   static CommentSpec resolveComment(CommentSpec comment, ExecutionInputBindings bindings)
       throws IOException {
     TextSourceSpec resolvedText =
         SourceBackedPlanResolver.resolveTextSource(comment.text(), bindings, true, "comment text");
+    var textOrigin = bindings.lastInputOrigin(comment.text());
     Optional<List<RichTextRunSpec>> resolvedRuns =
         comment.runs().isEmpty()
             ? Optional.empty()
             : Optional.of(resolveRuns(comment.runs().orElseThrow(), bindings));
-    return sameReference(resolvedText, comment.text())
-            && sameOptionalReference(resolvedRuns, comment.runs())
-        ? comment
-        : new CommentSpec(
-            resolvedText, comment.author(), comment.visible(), resolvedRuns, comment.anchor());
+    try {
+      return sameReference(resolvedText, comment.text())
+              && sameOptionalReference(resolvedRuns, comment.runs())
+          ? comment
+          : new CommentSpec(
+              resolvedText, comment.author(), comment.visible(), resolvedRuns, comment.anchor());
+    } catch (IllegalArgumentException failure) {
+      if (bindings.collectInputResolutionFailure(failure, comment.text(), textOrigin))
+        return comment;
+      throw failure;
+    }
   }
 
   static CustomXmlImportSpec resolveCustomXmlImport(
@@ -127,8 +165,7 @@ final class SourceBackedStructuredInputResolver {
 
   private static PictureDataSpec resolvePictureData(
       PictureDataSpec image, ExecutionInputBindings bindings) throws IOException {
-    BinarySourceSpec resolvedSource =
-        SourceBackedPlanResolver.resolveBinarySource(image.source(), bindings, "picture payload");
+    BinarySourceSpec resolvedSource = SourceBackedPlanResolver.resolveMediaSource(image, bindings);
     return sameReference(resolvedSource, image.source())
         ? image
         : new PictureDataSpec(image.format(), resolvedSource);

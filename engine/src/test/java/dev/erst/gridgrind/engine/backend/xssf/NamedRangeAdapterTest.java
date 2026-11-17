@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.backend.xssf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
@@ -84,8 +84,8 @@ class NamedRangeAdapterTest {
           new NamedRangeScopeReport.Sheet(
               new dev.erst.gridgrind.core.vocabulary.SheetLabel("Data")),
           observed.get(1).scope());
-      assertTrue(observed.get(2).scope() instanceof NamedRangeScopeReport.Workbook);
-      assertTrue(observed.get(3).scope() instanceof NamedRangeScopeReport.Workbook);
+      assertInstanceOf(NamedRangeScopeReport.Workbook.class, observed.get(2).scope());
+      assertInstanceOf(NamedRangeScopeReport.Workbook.class, observed.get(3).scope());
     }
   }
 

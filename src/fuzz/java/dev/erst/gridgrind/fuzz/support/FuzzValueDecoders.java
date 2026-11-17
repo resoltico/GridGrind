@@ -52,9 +52,11 @@ final class FuzzValueDecoders {
 
     return switch (data.consumeInt(0, 7)) {
       case 0 -> new CellValue.Blank();
-      case 1 -> new CellValue.Text(FuzzAddressDecoders.nextText(data));
+      case 1 ->
+          new dev.erst.gridgrind.core.model.value.ResolvedCellText(
+              FuzzAddressDecoders.nextText(data));
       case 2 -> nextRichText(data);
-      case 3 -> new CellValue.NumberValue(data.consumeRegularDouble(-1000.0d, 1000.0d));
+      case 3 -> new CellValueSpec.NumberValue(data.consumeRegularDouble(-1000.0d, 1000.0d));
       case 4 -> new CellValue.BooleanValue(data.consumeBoolean());
       case 5 ->
           new CellValueSpec.Date(

@@ -51,15 +51,13 @@ final class WorkbookInvariantCellMetadataChecks {
         security.signatures() != null, "package signatures must not be null");
     security
         .signatures()
-        .forEach(
-            signature -> {
-              WorkbookInvariantChecks.require(
-                  signature != null, "package signature must not be null");
-              WorkbookInvariantChecks.requireNonBlank(
-                  signature.packagePartName(), "package signature part");
-              WorkbookInvariantChecks.require(
-                  signature.state() != null, "package signature state must not be null");
-            });
+        .forEach(signature -> {
+          WorkbookInvariantChecks.require(signature != null, "package signature must not be null");
+          WorkbookInvariantChecks.requireNonBlank(
+              signature.packagePartName(), "package signature part");
+          WorkbookInvariantChecks.require(
+              signature.state() != null, "package signature state must not be null");
+        });
   }
 
   static void requireCustomXmlMappingShape(CustomXmlMappingReport mapping) {
@@ -185,16 +183,14 @@ final class WorkbookInvariantCellMetadataChecks {
         setup.columnBreaks() != null, "print setup columnBreaks must not be null");
     setup
         .rowBreaks()
-        .forEach(
-            rowBreak ->
-                WorkbookInvariantChecks.require(
-                    rowBreak >= 0, "print setup rowBreak must not be negative"));
+        .forEach(rowBreak ->
+            WorkbookInvariantChecks.require(
+                rowBreak >= 0, "print setup rowBreak must not be negative"));
     setup
         .columnBreaks()
-        .forEach(
-            columnBreak ->
-                WorkbookInvariantChecks.require(
-                    columnBreak >= 0, "print setup columnBreak must not be negative"));
+        .forEach(columnBreak ->
+            WorkbookInvariantChecks.require(
+                columnBreak >= 0, "print setup columnBreak must not be negative"));
   }
 
   static void requirePrintMarginsShape(PrintMarginsReport margins) {
@@ -217,10 +213,9 @@ final class WorkbookInvariantCellMetadataChecks {
             values.values() != null, "autofilter values must not be null");
         values
             .values()
-            .forEach(
-                value ->
-                    WorkbookInvariantChecks.require(
-                        value != null, "autofilter value must not be null"));
+            .forEach(value ->
+                WorkbookInvariantChecks.require(
+                    value != null, "autofilter value must not be null"));
       }
       case AutofilterFilterCriterionReport.Custom custom -> {
         WorkbookInvariantChecks.require(
@@ -229,15 +224,13 @@ final class WorkbookInvariantCellMetadataChecks {
             !custom.conditions().isEmpty(), "autofilter custom conditions must not be empty");
         custom
             .conditions()
-            .forEach(
-                condition -> {
-                  WorkbookInvariantChecks.require(
-                      condition != null, "autofilter custom condition must not be null");
-                  WorkbookInvariantChecks.requireNonBlank(
-                      condition.operator(), "autofilter custom operator");
-                  WorkbookInvariantChecks.requireNonBlank(
-                      condition.value(), "autofilter custom value");
-                });
+            .forEach(condition -> {
+              WorkbookInvariantChecks.require(
+                  condition != null, "autofilter custom condition must not be null");
+              WorkbookInvariantChecks.requireNonBlank(
+                  condition.operator(), "autofilter custom operator");
+              WorkbookInvariantChecks.requireNonBlank(condition.value(), "autofilter custom value");
+            });
       }
       case AutofilterFilterCriterionReport.Dynamic dynamic -> {
         WorkbookInvariantChecks.requireNonBlank(dynamic.dynamicType(), "autofilter dynamic type");

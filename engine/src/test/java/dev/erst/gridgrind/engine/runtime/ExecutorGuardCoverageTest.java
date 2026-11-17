@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -9,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
-import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -32,6 +29,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,7 +42,7 @@ import org.junit.jupiter.api.Test;
 /** Edge coverage for executor guards, explicit bindings, and error mapping. */
 class ExecutorGuardCoverageTest {
   @Test
-  void defaultExecutorMethodsForwardAndRejectNullInputs() {
+  void defaultExecutorMethodsForwardAndRejectNullInputs() throws java.io.IOException {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -67,9 +65,9 @@ class ExecutorGuardCoverageTest {
         ExecutionInputBindingsFixtureSupport.bindings(
             Path.of("/tmp"), "stdin".getBytes(StandardCharsets.UTF_8));
     assertTrue(explicitBindings.hasStandardInput());
-    assertArrayEquals(
-        "stdin".getBytes(StandardCharsets.UTF_8),
-        explicitBindings.standardInputBytes().orElseThrow());
+    assertEquals(
+        java.nio.ByteBuffer.wrap("stdin".getBytes(StandardCharsets.UTF_8)),
+        explicitBindings.standardInputSnapshot().orElseThrow());
     assertSame(expected, executor.execute(request, explicitBindings));
     assertSame(explicitBindings, seenBindings.get());
     assertSame(ExecutionProgressSink.NOOP, seenSink.get());
@@ -90,11 +88,12 @@ class ExecutorGuardCoverageTest {
   }
 
   @Test
-  void executionInputBindingsAndInputSourceExceptionsCoverNullAndValidationBranches() {
+  void executionInputBindingsAndInputSourceExceptionsCoverNullAndValidationBranches()
+      throws java.io.IOException {
     ExecutionInputBindings withoutStandardInput =
         ExecutionInputBindingsFixtureSupport.bindings(Path.of("/tmp"));
     assertFalse(withoutStandardInput.hasStandardInput());
-    assertTrue(withoutStandardInput.standardInputBytes().isEmpty());
+    assertTrue(withoutStandardInput.standardInputSnapshot().isEmpty());
     assertThrows(
         NullPointerException.class,
         () ->
@@ -117,46 +116,21 @@ class ExecutorGuardCoverageTest {
   }
 
   @Test
-  void workbookCommandConverterRejectsUnresolvedSourceBackedValues() {
-    assertEquals(
-        "cell text must be resolved to INLINE before conversion",
-        assertThrows(
-                IllegalStateException.class,
-                () ->
-                    MutationResolution.toResolvedCellWrite(
-                        new CellValueSpec.Text(TextSourceSpec.utf8File("title.txt"))))
-            .getMessage());
-
-    PictureSpec unresolvedPicture =
-        picture(
-            "Logo",
-            new PictureDataSpec(ExcelPictureFormat.PNG, BinarySourceSpec.file("logo.png")),
-            new dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec.TwoCell(
-                new dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec(0, 0, 0, 0),
-                new dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec(1, 1, 0, 0),
-                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-            TextSourceSpec.inline("Logo"));
-    assertEquals(
-        "picture payload must be resolved to INLINE_BASE64 before conversion",
-        assertThrows(
-                IllegalStateException.class,
-                () -> MutationResolution.toResolvedPicture(unresolvedPicture))
-            .getMessage());
-  }
-
-  @Test
   void defaultExecutorSurfacesResolveInputContextForSourceFailures() throws Exception {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+
     assertThrows(
         NullPointerException.class,
         () ->
-            executor.execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.None(),
-                    mutations()),
-                null,
-                ExecutionProgressSink.NOOP));
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+                .execute(
+                    request(
+                        new WorkbookPlan.WorkbookSource.New(),
+                        new WorkbookPlan.WorkbookPersistence.None(),
+                        mutations()),
+                    null,
+                    ExecutionProgressSink.NOOP));
     WorkbookPlan standardInputRequest =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -170,7 +144,11 @@ class ExecutorGuardCoverageTest {
     WorkbookResult.Failure unavailableFailure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            ExecutionContextFixtureSupport.execute(executor, standardInputRequest));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+                standardInputRequest));
     dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs unavailableContext =
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs.class,
@@ -194,10 +172,14 @@ class ExecutorGuardCoverageTest {
     WorkbookResult.Failure blankFailure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            executor.execute(
-                blankFileRequest,
-                ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, blankFileRequest),
-                ExecutionProgressSink.NOOP));
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+                .execute(
+                    blankFileRequest,
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, blankFileRequest),
+                    ExecutionProgressSink.NOOP));
     dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs blankContext =
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs.class,
@@ -208,7 +190,7 @@ class ExecutorGuardCoverageTest {
   }
 
   @Test
-  void formulaDiagnosticsExposeInlineFormulasOnly() {
+  void formulaDiagnosticsExposeInlineFormulasOnly() throws java.io.IOException {
     CellMutationAction.SetCell fileBackedFormula =
         new CellMutationAction.SetCell(
             new CellValueSpec.Formula(TextSourceSpec.utf8File("formula.txt")));
@@ -224,7 +206,8 @@ class ExecutorGuardCoverageTest {
   }
 
   @Test
-  void mutationAndRangeSelectorDiagnosticHelpersCoverNullAndSingleSheetForwarders() {
+  void mutationAndRangeSelectorDiagnosticHelpersCoverNullAndSingleSheetForwarders()
+      throws java.io.IOException {
     dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec.TwoCell drawingAnchor =
         new dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec.TwoCell(
             new dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec(0, 0),
@@ -405,7 +388,7 @@ class ExecutorGuardCoverageTest {
   }
 
   @Test
-  void inputSourceProblemsMapToDedicatedCodesAndPassthroughContexts() {
+  void inputSourceProblemsMapToDedicatedCodesAndPassthroughContexts() throws java.io.IOException {
     assertEquals(
         GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
         GridGrindProblems.codeFor(
@@ -433,7 +416,8 @@ class ExecutorGuardCoverageTest {
   }
 
   @Test
-  void summaryTargetDescribesSourceBackedTextKindsInsideTableKeySelectors() {
+  void summaryTargetDescribesSourceBackedTextKindsInsideTableKeySelectors()
+      throws java.io.IOException {
     ExecutionJournal.Target blankTarget =
         ExecutionJournalTargetResolver.summaryTarget(
             new dev.erst.gridgrind.core.plan.TableRowSelector.ByKeyCell(

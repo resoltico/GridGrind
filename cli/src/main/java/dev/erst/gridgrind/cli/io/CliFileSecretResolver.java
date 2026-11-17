@@ -91,12 +91,11 @@ final class CliFileSecretResolver implements GridGrindSecretResolver, AutoClosea
       if (channel.size() > MAX_SECRET_BYTES) {
         throw new IllegalArgumentException("secret provider file exceeds 65536 bytes");
       }
-      ByteBuffer bytes = ByteBuffer.allocate(Math.toIntExact(channel.size()));
-      while (bytes.hasRemaining() && channel.read(bytes) >= 0) {
-        // Read the sole explicitly named provider leaf to completion.
-      }
-      if (bytes.hasRemaining()) {
-        throw new IllegalArgumentException("secret provider file ended before its declared size");
+      ByteBuffer bytes = ByteBuffer.allocate(MAX_SECRET_BYTES + 1);
+      while (channel.read(bytes) >= 0) {
+        if (bytes.position() > MAX_SECRET_BYTES) {
+          throw new IllegalArgumentException("secret provider file exceeds 65536 bytes");
+        }
       }
       bytes.flip();
       return bytes;

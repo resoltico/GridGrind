@@ -60,6 +60,7 @@ final class GoldenWorkbook {
     Set<String> references = new TreeSet<>();
     collect(plan, "", workspace, resources, operations, references);
     ObjectNode grant = GoldenSnapshots.JSON.createObjectNode();
+    grant.put("maxInputSnapshotBytes", 16L * 1024 * 1024);
     ArrayNode readable = grant.putArray("readableResources");
     resources.forEach(path -> readable.addObject().put("type", "FILE").put("path", path));
     ArrayNode ids = grant.putArray("operationIds");
@@ -106,15 +107,9 @@ final class GoldenWorkbook {
         references.add(node.path("id").asString());
       }
       node.properties()
-          .forEach(
-              entry ->
-                  collect(
-                      entry.getValue(),
-                      entry.getKey(),
-                      workspace,
-                      resources,
-                      operations,
-                      references));
+          .forEach(entry ->
+              collect(
+                  entry.getValue(), entry.getKey(), workspace, resources, operations, references));
     } else if (node.isArray()) {
       node.forEach(value -> collect(value, parent, workspace, resources, operations, references));
     } else if (parent.endsWith("Ref") && node.isString()) {

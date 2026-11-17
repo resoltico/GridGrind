@@ -1,0 +1,31 @@
+name: Set up the pinned Temurin JDK
+description: Install and verify the same exact Temurin binary tuple used by the Java image.
+runs:
+  using: composite
+  steps:
+    - name: Download the checksum-pinned JDK archive
+      id: binary
+      shell: bash
+      run: |
+        set -euo pipefail
+        source release/container-runtime.properties
+        case "$(uname -m)" in
+          x86_64) url="$TEMURIN_AMD64_URL"; checksum="$TEMURIN_AMD64_SHA256" ;;
+          aarch64|arm64) url="$TEMURIN_ARM64_URL"; checksum="$TEMURIN_ARM64_SHA256" ;;
+          *) echo 'Unsupported managed Linux JDK architecture' >&2; exit 1 ;;
+        esac
+        archive="$RUNNER_TEMP/gridgrind-temurin.tar.gz"
+        curl --fail --silent --show-error --location --retry 2 --connect-timeout 15 --max-time 600 \
+          --output "$archive" "$url"
+        printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check --status
+        printf 'archive=%s\nversion=%s\n' "$archive" "$TEMURIN_VERSION" >> "$GITHUB_OUTPUT"
+    - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+      with:
+        distribution: jdkfile
+        java-version: ${{ steps.binary.outputs.version }}
+        jdk-file: ${{ steps.binary.outputs.archive }}
+        force-download: true
+        cache-jdk: false
+    - name: Verify the installed binary identity
+      shell: bash
+      run: python3 scripts/verify-managed-jdk.py "$JAVA_HOME"

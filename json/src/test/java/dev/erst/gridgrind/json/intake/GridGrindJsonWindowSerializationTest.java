@@ -36,53 +36,51 @@ final class GridGrindJsonWindowSerializationTest {
   @Test
   void sparseWindowRequestsOmitIncludeBlanksUntilDenseReadbackIsRequested() {
     WorkbookPlan sparseWindowRequest =
-        assertDoesNotThrow(
-            () ->
-                GridGrindJson.readRequest(
-                    """
+        assertDoesNotThrow(() ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": 1,
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "steps": [
                     {
-                      "protocolVersion": 1,
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "steps": [
-                        {
-                          "stepId": "window",
-                          "target": {
-                            "type": "RANGE_RECTANGULAR_WINDOW",
-                            "sheetName": "Budget",
-                            "topLeftAddress": "A1",
-                            "rowCount": 4,
-                            "columnCount": 3
-                          },
-                          "query": { "type": "GET_WINDOW" }
-                        }
-                      ]
+                      "stepId": "window",
+                      "target": {
+                        "type": "RANGE_RECTANGULAR_WINDOW",
+                        "sheetName": "Budget",
+                        "topLeftAddress": "A1",
+                        "rowCount": 4,
+                        "columnCount": 3
+                      },
+                      "query": { "type": "GET_WINDOW" }
                     }
-                    """));
+                  ]
+                }
+                """));
     WorkbookPlan denseWindowRequest =
-        assertDoesNotThrow(
-            () ->
-                GridGrindJson.readRequest(
-                    """
+        assertDoesNotThrow(() ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": 1,
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "steps": [
                     {
-                      "protocolVersion": 1,
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "steps": [
-                        {
-                          "stepId": "window",
-                          "target": {
-                            "type": "RANGE_RECTANGULAR_WINDOW",
-                            "sheetName": "Budget",
-                            "topLeftAddress": "A1",
-                            "rowCount": 4,
-                            "columnCount": 3
-                          },
-                          "query": { "type": "GET_WINDOW", "includeBlanks": true }
-                        }
-                      ]
+                      "stepId": "window",
+                      "target": {
+                        "type": "RANGE_RECTANGULAR_WINDOW",
+                        "sheetName": "Budget",
+                        "topLeftAddress": "A1",
+                        "rowCount": 4,
+                        "columnCount": 3
+                      },
+                      "query": { "type": "GET_WINDOW", "includeBlanks": true }
                     }
-                    """));
+                  ]
+                }
+                """));
 
     JsonNode sparseWindowQuery =
         GridGrindJsonOutput.requestTree(sparseWindowRequest).path("steps").get(0).path("query");

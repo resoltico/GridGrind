@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.fuzz.support;
 
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
-import dev.erst.gridgrind.engine.runtime.ExecutionInputBindings;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -18,7 +18,7 @@ public final class FuzzWorkbookIo {
   private FuzzWorkbookIo() {}
 
   /** Grants exactly the generated workflow's owned input, operations and publication. */
-  public static ExecutionInputBindings executionBindings(
+  public static GridGrindRequestInputs executionInputs(
       Path workingDirectory, dev.erst.gridgrind.core.plan.WorkbookPlan request) {
     Path root = normalize(workingDirectory, "workingDirectory");
     var resources = new java.util.ArrayList<ExecutionGrant.ReadAuthority>();
@@ -51,10 +51,11 @@ public final class FuzzWorkbookIo {
               new ExecutionGrant.PublicationAuthority.SaveAs(
                   ownedPath(root, save.path()), save.ifExists());
         };
-    return new ExecutionInputBindings(
+    return new GridGrindRequestInputs(
         root,
         root.resolve(MANAGED_TEMP_SEGMENT),
         new ExecutionGrant(
+            16L * 1024 * 1024,
             resources,
             operations,
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -70,12 +71,12 @@ public final class FuzzWorkbookIo {
     return path;
   }
 
-  /** Opens one workbook using a temp factory rooted next to the workbook path. */
+  /** Opens one workbook within the caller-owned native invocation and workbook lifetime. */
   public static XssfWorkbook openWorkbook(Path workbookPath) throws IOException {
     return XssfWorkbooks.open(workbookPath, tempFileFactoryFor(workbookPath));
   }
 
-  /** Saves one workbook using a temp factory rooted next to the workbook path. */
+  /** Saves one workbook within the caller-owned native invocation using its anchored temp root. */
   public static void saveWorkbook(XssfWorkbook workbook, Path workbookPath) throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
     workbook

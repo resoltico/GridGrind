@@ -45,13 +45,12 @@ public sealed interface CellGridSpec
     @Override
     public List<List<CellValueSpec>> toCellInputRows() {
       return cells.stream()
-          .map(
-              row ->
-                  row.stream()
-                      .map(TextSourceSpec::inline)
-                      .map(CellValueSpec.Text::new)
-                      .map(CellValueSpec.class::cast)
-                      .toList())
+          .map(row ->
+              row.stream()
+                  .map(TextSourceSpec::inline)
+                  .map(CellValueSpec.Text::new)
+                  .map(CellValueSpec.class::cast)
+                  .toList())
           .toList();
     }
   }
@@ -60,20 +59,18 @@ public sealed interface CellGridSpec
   record NumberRows(List<List<Double>> cells) implements CellGridSpec {
     public NumberRows {
       cells = copyScalarRows(cells, "cells");
-      cells.forEach(
-          row ->
-              row.forEach(value -> CellValueSpec.Validation.requireFinite(value, "cells element")));
+      cells.forEach(row ->
+          row.forEach(value -> CellValueSpec.Validation.requireFinite(value, "cells element")));
     }
 
     @Override
     public List<List<CellValueSpec>> toCellInputRows() {
       return cells.stream()
-          .map(
-              row ->
-                  row.stream()
-                      .map(CellValueSpec.NumberValue::new)
-                      .map(CellValueSpec.class::cast)
-                      .toList())
+          .map(row ->
+              row.stream()
+                  .map(CellValueSpec.NumberValue::new)
+                  .map(CellValueSpec.class::cast)
+                  .toList())
           .toList();
     }
   }
@@ -87,12 +84,11 @@ public sealed interface CellGridSpec
     @Override
     public List<List<CellValueSpec>> toCellInputRows() {
       return cells.stream()
-          .map(
-              row ->
-                  row.stream()
-                      .map(CellValueSpec.BooleanValue::new)
-                      .map(CellValueSpec.class::cast)
-                      .toList())
+          .map(row ->
+              row.stream()
+                  .map(CellValueSpec.BooleanValue::new)
+                  .map(CellValueSpec.class::cast)
+                  .toList())
           .toList();
     }
   }
@@ -103,23 +99,19 @@ public sealed interface CellGridSpec
   record ErrorRows(List<List<String>> cells) implements CellGridSpec {
     public ErrorRows {
       cells = copyScalarRows(cells, "cells");
-      cells.forEach(
-          row ->
-              row.forEach(
-                  value ->
-                      CellErrorLiteralValidation.requireStoredErrorLiteral(
-                          value, "cells element")));
+      cells.forEach(row ->
+          row.forEach(value ->
+              CellErrorLiteralValidation.requireStoredErrorLiteral(value, "cells element")));
     }
 
     @Override
     public List<List<CellValueSpec>> toCellInputRows() {
       return cells.stream()
-          .map(
-              row ->
-                  row.stream()
-                      .map(CellValueSpec.ErrorValue::new)
-                      .map(CellValueSpec.class::cast)
-                      .toList())
+          .map(row ->
+              row.stream()
+                  .map(CellValueSpec.ErrorValue::new)
+                  .map(CellValueSpec.class::cast)
+                  .toList())
           .toList();
     }
   }
@@ -128,14 +120,14 @@ public sealed interface CellGridSpec
   record DateRows(List<List<LocalDate>> cells) implements CellGridSpec {
     public DateRows {
       cells = copyScalarRows(cells, "cells");
+      cells.forEach(row -> row.forEach(TemporalSemantics::requireDateShape));
     }
 
     @Override
     public List<List<CellValueSpec>> toCellInputRows() {
       return cells.stream()
-          .map(
-              row ->
-                  row.stream().map(CellValueSpec.Date::new).map(CellValueSpec.class::cast).toList())
+          .map(row ->
+              row.stream().map(CellValueSpec.Date::new).map(CellValueSpec.class::cast).toList())
           .toList();
     }
   }
@@ -146,17 +138,14 @@ public sealed interface CellGridSpec
   record DateTimeRows(List<List<LocalDateTime>> cells) implements CellGridSpec {
     public DateTimeRows {
       cells = copyScalarRows(cells, "cells");
+      cells.forEach(row -> row.forEach(TemporalSemantics::requireDateTimeShape));
     }
 
     @Override
     public List<List<CellValueSpec>> toCellInputRows() {
       return cells.stream()
-          .map(
-              row ->
-                  row.stream()
-                      .map(CellValueSpec.DateTime::new)
-                      .map(CellValueSpec.class::cast)
-                      .toList())
+          .map(row ->
+              row.stream().map(CellValueSpec.DateTime::new).map(CellValueSpec.class::cast).toList())
           .toList();
     }
   }
@@ -168,27 +157,23 @@ public sealed interface CellGridSpec
     public FormulaRows {
       cells =
           copyScalarRows(cells, "cells").stream()
-              .map(
-                  row ->
-                      row.stream()
-                          .map(
-                              value ->
-                                  CellValueSpec.Validation.normalizeInlineFormula(
-                                      value, "cells element"))
-                          .toList())
+              .map(row ->
+                  row.stream()
+                      .map(value ->
+                          CellValueSpec.Validation.normalizeInlineFormula(value, "cells element"))
+                      .toList())
               .toList();
     }
 
     @Override
     public List<List<CellValueSpec>> toCellInputRows() {
       return cells.stream()
-          .map(
-              row ->
-                  row.stream()
-                      .map(TextSourceSpec::inline)
-                      .map(CellValueSpec.Formula::new)
-                      .map(CellValueSpec.class::cast)
-                      .toList())
+          .map(row ->
+              row.stream()
+                  .map(TextSourceSpec::inline)
+                  .map(CellValueSpec.Formula::new)
+                  .map(CellValueSpec.class::cast)
+                  .toList())
           .toList();
     }
   }

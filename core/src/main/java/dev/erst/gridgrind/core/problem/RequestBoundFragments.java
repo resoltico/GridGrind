@@ -58,6 +58,27 @@ public final class RequestBoundFragments {
     return steps;
   }
 
+  boolean matches(WorkbookPlan plan) {
+    if (!root.protocolVersion().equals(Optional.of(plan.protocolVersion()))
+        || !root.planId().equals(plan.planId())
+        || !root.source().equals(Optional.of(plan.source()))
+        || !root.persistence().equals(Optional.of(plan.persistence()))
+        || !root.execution().equals(Optional.of(plan.execution()))
+        || !root.formulaEnvironment().equals(Optional.of(plan.formulaEnvironment()))
+        || steps.isEmpty()
+        || steps.orElseThrow().size() != plan.steps().size()) {
+      return false;
+    }
+    for (int index = 0; index < plan.steps().size(); index++) {
+      Step fragment = steps.orElseThrow().get(index);
+      if (fragment.index() != index
+          || !fragment.value().equals(Optional.of(plan.steps().get(index)))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /** Returns a fully bound plan only when every top-level component and every step bound. */
   public Optional<WorkbookPlan> completePlan() {
     if (root.protocolVersion().isEmpty()
@@ -99,11 +120,10 @@ public final class RequestBoundFragments {
 
   private static Optional<List<Step>> copySteps(Optional<List<Step>> steps) {
     Objects.requireNonNull(steps, "steps must not be null");
-    return steps.map(
-        values -> {
-          List<Step> copy = List.copyOf(Objects.requireNonNull(values, "steps must not be null"));
-          copy.forEach(step -> Objects.requireNonNull(step, "steps must not contain null"));
-          return copy;
-        });
+    return steps.map(values -> {
+      List<Step> copy = List.copyOf(Objects.requireNonNull(values, "steps must not be null"));
+      copy.forEach(step -> Objects.requireNonNull(step, "steps must not contain null"));
+      return copy;
+    });
   }
 }

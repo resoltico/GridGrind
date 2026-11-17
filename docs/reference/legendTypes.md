@@ -19,7 +19,7 @@ No legend is present.
 
 ## VISIBLE
 
-Visible legend at one persisted position.
+Visible legend with its effective native position, including the default.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ Visible legend at one persisted position.
 ```json
 {
   "id" : "VISIBLE",
-  "summary" : "Visible legend at one persisted position.",
+  "summary" : "Visible legend with its effective native position, including the default.",
   "fields" : [ {
     "name" : "position",
     "requirement" : "REQUIRED",

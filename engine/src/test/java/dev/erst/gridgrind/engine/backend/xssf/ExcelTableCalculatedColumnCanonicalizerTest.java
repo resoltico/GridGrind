@@ -196,20 +196,70 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
   private static void seedCalculatedTableSheet(
       XssfWorkbook workbook, String sheetName, String tableName) throws IOException {
     XssfSheet sheet = workbook.getOrCreateSheet(sheetName);
-    sheet.cells().setCell("A1", new CellValue.Text("Task"));
-    sheet.cells().setCell("B1", new CellValue.Text("Actual"));
-    sheet.cells().setCell("C1", new CellValue.Text("Budget"));
-    sheet.cells().setCell("D1", new CellValue.Text("Delta"));
-    sheet.cells().setCell("A2", new CellValue.Text("One"));
-    sheet.cells().setCell("B2", new CellValue.NumberValue(10));
-    sheet.cells().setCell("C2", new CellValue.NumberValue(7));
-    sheet.cells().setCell("A3", new CellValue.Text("Two"));
-    sheet.cells().setCell("B3", new CellValue.NumberValue(5));
-    sheet.cells().setCell("C3", new CellValue.NumberValue(6));
-    sheet.cells().setCell("A4", new CellValue.Text("Total"));
-    sheet.cells().setCell("B4", new CellValue.Blank());
-    sheet.cells().setCell("C4", new CellValue.Blank());
-    sheet.cells().setCell("D4", new CellValue.Blank());
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Task"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Actual"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Budget"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("D1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Delta"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("One"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(7));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Two"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(5));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(6));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Total"));
+    sheet
+        .cells()
+        .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"), new CellValue.Blank());
+    sheet
+        .cells()
+        .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("C4"), new CellValue.Blank());
+    sheet
+        .cells()
+        .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("D4"), new CellValue.Blank());
     new TableAdapter()
         .setTable(
             workbook,

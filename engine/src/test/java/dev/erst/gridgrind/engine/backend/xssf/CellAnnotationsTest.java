@@ -3,7 +3,6 @@ package dev.erst.gridgrind.engine.backend.xssf;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -18,31 +17,22 @@ import org.junit.jupiter.api.Test;
 /** Tests for sheet-annotation helper validation and address handling. */
 class CellAnnotationsTest {
   @Test
-  void annotationMutationsRejectOutOfBoundsCellAddresses() throws Exception {
+  void annotationMutationsUseCanonicalCellCoordinates() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var sheet = workbook.createSheet("Ops");
       var comments = new CommentAdapter(sheet);
       var links = new LinkAdapter(sheet);
-
-      InvalidCellAddressException zeroRowFailure =
-          assertThrows(InvalidCellAddressException.class, () -> links.clearHyperlink("A0"));
-      assertEquals("A0", zeroRowFailure.address());
-
-      InvalidCellAddressException missingColumnFailure =
-          assertThrows(InvalidCellAddressException.class, () -> comments.clearComment("1"));
-      assertEquals("1", missingColumnFailure.address());
-
-      InvalidCellAddressException hyperlinkFailure =
-          assertThrows(
-              InvalidCellAddressException.class,
-              () -> links.setHyperlink("A1048577", new HyperlinkTarget.Url("https://example.com")));
-      assertEquals("A1048577", hyperlinkFailure.address());
-
-      InvalidCellAddressException commentFailure =
-          assertThrows(
-              InvalidCellAddressException.class,
-              () -> comments.setComment("XFE1", new ResolvedComment("Review", "GridGrind", false)));
-      assertEquals("XFE1", commentFailure.address());
+      var address = new dev.erst.gridgrind.core.vocabulary.CellAddress(7, 27);
+      links.setHyperlink(address, new HyperlinkTarget.Url("https://example.com"));
+      comments.setComment(address, new ResolvedComment("Review", "GridGrind", false));
+      var nativeCell = sheet.getRow(7).getCell(27);
+      assertEquals("https://example.com", nativeCell.getHyperlink().getAddress());
+      assertEquals("Review", nativeCell.getCellComment().getString().getString());
+      var alias = new dev.erst.gridgrind.core.vocabulary.CellAddress("$ab$8");
+      links.clearHyperlink(alias);
+      comments.clearComment(alias);
+      assertNull(nativeCell.getHyperlink());
+      assertNull(nativeCell.getCellComment());
     }
   }
 

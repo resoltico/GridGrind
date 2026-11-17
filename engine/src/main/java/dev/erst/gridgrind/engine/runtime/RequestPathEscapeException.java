@@ -7,4 +7,8 @@ final class RequestPathEscapeException extends IllegalArgumentException {
   RequestPathEscapeException(String message) {
     super(message);
   }
+
+  RequestPathEscapeException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

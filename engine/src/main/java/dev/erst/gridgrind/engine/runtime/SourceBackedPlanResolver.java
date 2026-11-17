@@ -44,7 +44,10 @@ public final class SourceBackedPlanResolver {
     if (!bindings.hasRequestPathAccess()) {
       try (RequestPathAccess access =
           new RequestPathAccess(
-              bindings.workingDirectory(), bindings.tempFileFactory(), bindings.executionGrant())) {
+              bindings.workingDirectory(),
+              bindings.tempFileFactory(),
+              bindings.executionGrant(),
+              bindings.snapshots())) {
         return resolveBound(plan, bindings.withRequestPathAccess(access));
       }
     }
@@ -55,7 +58,7 @@ public final class SourceBackedPlanResolver {
       throws IOException {
     List<WorkbookStep> resolvedSteps = new ArrayList<>(plan.steps().size());
     for (WorkbookStep step : plan.steps()) {
-      resolvedSteps.add(resolveStepUnchecked(step, bindings));
+      resolvedSteps.add(resolveStepUnchecked(step, bindings.withNewMediaUse()));
     }
     return new WorkbookPlan(
         plan.protocolVersion(),
@@ -118,13 +121,21 @@ public final class SourceBackedPlanResolver {
       case CellValueSpec.Text text -> {
         TextSourceSpec resolvedSource =
             resolveTextSource(text.value(), bindings, true, "cell text");
-        yield sameReference(resolvedSource, text.value())
-            ? text
-            : new CellValueSpec.Text(resolvedSource);
+        try {
+          yield sameReference(resolvedSource, text.value())
+              ? text
+              : new CellValueSpec.Text(resolvedSource);
+        } catch (IllegalArgumentException failure) {
+          if (bindings.collectInputResolutionFailure(
+              failure, text.value(), bindings.lastInputOrigin(text.value()))) {
+            yield text;
+          }
+          throw failure;
+        }
       }
       case CellValueSpec.RichText richText -> {
         var resolvedRuns =
-            SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings);
+            SourceBackedStructuredInputResolver.resolveCellRuns(richText.runs(), bindings);
         yield sameReference(resolvedRuns, richText.runs())
             ? richText
             : new CellValueSpec.RichText(resolvedRuns);
@@ -149,6 +160,26 @@ public final class SourceBackedPlanResolver {
     };
   }
 
+  static CellValueSpec resolveCellWriteInput(
+      CellValueSpec original, ExecutionInputBindings bindings) throws IOException {
+    CellValueSpec resolved = resolveCellInput(original, bindings);
+    if (original instanceof CellValueSpec.Text sourceText
+        && resolved instanceof CellValueSpec.Text text
+        && text.value() instanceof TextSourceSpec.Inline inline) {
+      try {
+        dev.erst.gridgrind.core.model.value.CellTextLimits.requireSupportedLength(
+            inline.text(), "cell text");
+      } catch (IllegalArgumentException failure) {
+        if (bindings.collectInputResolutionFailure(
+            failure, sourceText.value(), bindings.lastInputOrigin(sourceText.value()))) {
+          return original;
+        }
+        throw failure;
+      }
+    }
+    return resolved;
+  }
+
   static TextSourceSpec resolveTextSource(
       TextSourceSpec source,
       ExecutionInputBindings bindings,
@@ -158,7 +189,10 @@ public final class SourceBackedPlanResolver {
     if (!bindings.hasRequestPathAccess()) {
       try (RequestPathAccess access =
           new RequestPathAccess(
-              bindings.workingDirectory(), bindings.tempFileFactory(), bindings.executionGrant())) {
+              bindings.workingDirectory(),
+              bindings.tempFileFactory(),
+              bindings.executionGrant(),
+              bindings.snapshots())) {
         return resolveTextSource(
             source, bindings.withRequestPathAccess(access), requireNonBlank, inputKind);
       }
@@ -180,11 +214,19 @@ public final class SourceBackedPlanResolver {
     if (!(resolvedSource instanceof TextSourceSpec.Inline inline)) {
       return source;
     }
-    String resolvedText = inline.text();
-    new CellValueSpec.Formula(new TextSourceSpec.Inline(resolvedText));
-    return source instanceof TextSourceSpec.Inline
-        ? source
-        : new TextSourceSpec.Inline(resolvedText);
+    try {
+      String resolvedText = inline.text();
+      new CellValueSpec.Formula(new TextSourceSpec.Inline(resolvedText));
+      return source instanceof TextSourceSpec.Inline
+          ? source
+          : new TextSourceSpec.Inline(resolvedText);
+    } catch (IllegalArgumentException failure) {
+      if (bindings.collectInputResolutionFailure(
+          failure, source, bindings.lastInputOrigin(source))) {
+        return source;
+      }
+      throw failure;
+    }
   }
 
   static TextSourceSpec resolveRawFormulaSource(
@@ -193,10 +235,18 @@ public final class SourceBackedPlanResolver {
     if (!(resolvedSource instanceof TextSourceSpec.Inline inline)) {
       return source;
     }
-    TextSourceSpec.Inline validated =
-        (TextSourceSpec.Inline)
-            new CellValueSpec.RawFormula(new TextSourceSpec.Inline(inline.text())).value();
-    return source instanceof TextSourceSpec.Inline ? source : validated;
+    try {
+      TextSourceSpec.Inline validated =
+          (TextSourceSpec.Inline)
+              new CellValueSpec.RawFormula(new TextSourceSpec.Inline(inline.text())).value();
+      return source instanceof TextSourceSpec.Inline ? source : validated;
+    } catch (IllegalArgumentException failure) {
+      if (bindings.collectInputResolutionFailure(
+          failure, source, bindings.lastInputOrigin(source))) {
+        return source;
+      }
+      throw failure;
+    }
   }
 
   static BinarySourceSpec resolveBinarySource(
@@ -205,7 +255,10 @@ public final class SourceBackedPlanResolver {
     if (!bindings.hasRequestPathAccess()) {
       try (RequestPathAccess access =
           new RequestPathAccess(
-              bindings.workingDirectory(), bindings.tempFileFactory(), bindings.executionGrant())) {
+              bindings.workingDirectory(),
+              bindings.tempFileFactory(),
+              bindings.executionGrant(),
+              bindings.snapshots())) {
         return resolveBinarySource(source, bindings.withRequestPathAccess(access), inputKind);
       }
     }
@@ -213,11 +266,34 @@ public final class SourceBackedPlanResolver {
         source,
         bindings,
         () -> {
+          if (source instanceof BinarySourceSpec.InlineBase64) return source;
           String resolvedBase64 = resolveBinaryBase64(source, bindings, inputKind);
-          return source instanceof BinarySourceSpec.InlineBase64 inline
-                  && inline.base64Data().equals(resolvedBase64)
+          return source instanceof BinarySourceSpec.InlineBase64
               ? source
               : new BinarySourceSpec.InlineBase64(resolvedBase64);
+        });
+  }
+
+  static BinarySourceSpec resolveMediaSource(
+      dev.erst.gridgrind.core.model.drawing.PictureDataSpec image, ExecutionInputBindings bindings)
+      throws IOException {
+    var source = image.source();
+    if (!bindings.hasRequestPathAccess()) {
+      try (RequestPathAccess access =
+          new RequestPathAccess(
+              bindings.workingDirectory(),
+              bindings.tempFileFactory(),
+              bindings.executionGrant(),
+              bindings.snapshots())) {
+        return resolveMediaSource(image, bindings.withRequestPathAccess(access));
+      }
+    }
+    return resolveOrCollect(
+        source,
+        bindings,
+        () -> {
+          bindings.mediaUse().remember(source, bindings.lastInputOrigin(source));
+          return bindings.mediaUse().materialize(image, bindings);
         });
   }
 
@@ -258,25 +334,26 @@ public final class SourceBackedPlanResolver {
 
   private static String readStandardInputText(ExecutionInputBindings bindings, String inputKind)
       throws IOException {
-    byte[] bytes = standardInputBytes(bindings, inputKind);
-    return new String(bytes, StandardCharsets.UTF_8);
+    java.nio.ByteBuffer bytes = standardInputSnapshot(bindings, inputKind);
+    return StandardCharsets.UTF_8.newDecoder().decode(bytes).toString();
   }
 
   private static String resolveBinaryBase64(
       BinarySourceSpec source, ExecutionInputBindings bindings, String inputKind)
       throws IOException {
     Objects.requireNonNull(source, "source must not be null");
-    byte[] bytes =
+    java.nio.ByteBuffer bytes =
         switch (source) {
           case BinarySourceSpec.InlineBase64 inline ->
-              Base64.getDecoder().decode(inline.base64Data());
-          case BinarySourceSpec.File file -> readBinaryFile(file.path(), bindings, inputKind);
-          case BinarySourceSpec.Stdin _ -> standardInputBytes(bindings, inputKind);
+              java.nio.ByteBuffer.wrap(Base64.getDecoder().decode(inline.base64Data()));
+          case BinarySourceSpec.File file ->
+              java.nio.ByteBuffer.wrap(readBinaryFile(file.path(), bindings, inputKind));
+          case BinarySourceSpec.Stdin _ -> standardInputSnapshot(bindings, inputKind);
         };
-    if (bytes.length == 0) {
+    if (!bytes.hasRemaining()) {
       throw new IllegalArgumentException(inputKind + " must not be empty");
     }
-    return Base64.getEncoder().encodeToString(bytes);
+    return StandardCharsets.US_ASCII.decode(Base64.getEncoder().encode(bytes)).toString();
   }
 
   private static byte[] readBinaryFile(
@@ -306,24 +383,24 @@ public final class SourceBackedPlanResolver {
         "Failed to read " + inputKind + " file: " + path, inputKind, path, exception);
   }
 
-  private static byte[] standardInputBytes(ExecutionInputBindings bindings, String inputKind)
-      throws InputSourceUnavailableException {
+  private static java.nio.ByteBuffer standardInputSnapshot(
+      ExecutionInputBindings bindings, String inputKind) throws IOException {
     return bindings
-        .standardInputBytes()
-        .orElseThrow(
-            () ->
-                new InputSourceUnavailableException(
-                    inputKind + " requires STANDARD_INPUT but no standard-input bytes were bound",
-                    inputKind));
+        .standardInputSnapshot()
+        .orElseThrow(() ->
+            new InputSourceUnavailableException(
+                inputKind + " requires STANDARD_INPUT but no standard-input bytes were bound",
+                inputKind));
   }
 
   private static <T> T resolveOrCollect(
       T source, ExecutionInputBindings bindings, SourceResolution<T> resolution)
       throws IOException {
+    var origin = bindings.inputOrigin(source);
     try {
       return resolution.resolve();
     } catch (IOException | RuntimeException exception) {
-      if (bindings.collectInputResolutionFailure(exception, source)) {
+      if (bindings.collectInputResolutionFailure(exception, source, origin)) {
         return source;
       }
       throw exception;
@@ -354,7 +431,7 @@ public final class SourceBackedPlanResolver {
     List<CellValueSpec> resolvedValues = new ArrayList<>(values.size());
     boolean changed = false;
     for (CellValueSpec value : values) {
-      CellValueSpec resolvedValue = resolveCellInput(value, bindings);
+      CellValueSpec resolvedValue = resolveCellWriteInput(value, bindings);
       resolvedValues.add(resolvedValue);
       changed |= !sameReference(resolvedValue, value);
     }

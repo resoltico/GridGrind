@@ -322,14 +322,13 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
                       new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5"))));
       worksheetSource.setRef(" ");
       worksheetSource.setName("SalesTableA");
-      assertDoesNotThrow(
-          () ->
-              invoke(
-                  controller,
-                  "snapshotSource",
-                  PivotTableReport.PivotSourceReport.class,
-                  workbook.xssfWorkbook(),
-                  pivot));
+      assertDoesNotThrow(() ->
+          invoke(
+              controller,
+              "snapshotSource",
+              PivotTableReport.PivotSourceReport.class,
+              workbook.xssfWorkbook(),
+              pivot));
     }
 
     try (XssfWorkbook workbook = pivotWorkbook()) {

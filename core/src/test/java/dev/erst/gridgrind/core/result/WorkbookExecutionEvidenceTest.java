@@ -64,7 +64,8 @@ class WorkbookExecutionEvidenceTest {
             WorkbookExecutionEvidence.TaskSpecific.Origin.HOST_REQUIRED, failed);
     WorkbookExecutionEvidence evidence =
         new WorkbookExecutionEvidence(
-            new WorkbookExecutionEvidence.Admission(List.of(operation), List.of(input)),
+            new WorkbookExecutionEvidence.Admission(
+                List.of(operation), List.of(input), java.util.Optional.empty()),
             new WorkbookExecutionEvidence.Structural.Established(),
             new WorkbookExecutionEvidence.Computational.Established(),
             new WorkbookExecutionEvidence.TaskSpecific.Established(List.of(passedAssertion)),

@@ -28,6 +28,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +39,9 @@ class SemanticSelectorExecutionCoverageTest {
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -60,7 +63,9 @@ class SemanticSelectorExecutionCoverageTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -96,7 +101,9 @@ class SemanticSelectorExecutionCoverageTest {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),

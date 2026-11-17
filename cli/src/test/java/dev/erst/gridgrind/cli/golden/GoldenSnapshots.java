@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -28,7 +27,7 @@ final class GoldenSnapshots {
 
   static void verify(String id, GoldenLauncher launcher, Path workspace, ObjectNode observation)
       throws IOException {
-    verify(id, launcher, workspace, observation, Set.of());
+    verify(id, launcher, workspace, observation, Set.of(), Set.of());
   }
 
   static void verify(
@@ -36,9 +35,11 @@ final class GoldenSnapshots {
       GoldenLauncher launcher,
       Path workspace,
       ObjectNode observation,
-      Set<String> certifiedGeneratedPreviews)
+      Set<String> certifiedGeneratedPreviews,
+      Set<String> certifiedGeneratedSetupIds)
       throws IOException {
-    String actual = canonical(observation, workspace, certifiedGeneratedPreviews);
+    String actual =
+        canonical(observation, workspace, certifiedGeneratedPreviews, certifiedGeneratedSetupIds);
     Path snapshot = DIRECTORY.resolve(id + ".json");
     if (launcher == GoldenLauncher.IN_PROCESS && Boolean.getBoolean("gridgrind.golden.update")) {
       assertEquals(
@@ -48,7 +49,38 @@ final class GoldenSnapshots {
       Files.createDirectories(snapshot.getParent());
       Files.writeString(snapshot, actual);
     }
-    assertMatches(snapshot, actual);
+    Path stderr = snapshot.resolveSibling(id.substring(id.lastIndexOf('/') + 1) + ".stderr.json");
+    if (Files.isRegularFile(stderr)) {
+      JsonNode expected =
+          JSON.readTree(
+              expectedForVersion(
+                  Files.readString(snapshot),
+                  System.getProperty("gridgrind.test.expectedVersion")));
+      JsonNode byLauncher = JSON.readTree(Files.readString(stderr));
+      assertEquals(
+          expectedForLauncher(expected, byLauncher, launcher),
+          JSON.readTree(actual),
+          () -> "Golden launcher drift: " + snapshot + " / " + launcher);
+    } else {
+      assertMatches(snapshot, actual);
+    }
+  }
+
+  static JsonNode expectedForLauncher(JsonNode common, JsonNode stderr, GoldenLauncher launcher) {
+    assertEquals(
+        Set.of("IN_PROCESS", "SHADOW_JAR"),
+        stderr.properties().stream()
+            .map(Map.Entry::getKey)
+            .collect(java.util.stream.Collectors.toSet()),
+        "Stderr expectations must explicitly cover exactly the known golden launchers");
+    ObjectNode expected = (ObjectNode) common.deepCopy();
+    ObjectNode primary =
+        expected.has("execution") ? (ObjectNode) expected.path("execution") : expected;
+    assertTrue(
+        primary.has("stderr"),
+        "Launcher-specific expectation needs an existing execution stderr field");
+    primary.set("stderr", stderr.path(launcher.name()));
+    return expected;
   }
 
   static void assertMatches(Path snapshot, String actual) throws IOException {
@@ -83,13 +115,24 @@ final class GoldenSnapshots {
   }
 
   static String canonical(JsonNode node, Path workspace) {
-    return canonical(node, workspace, Set.of());
+    return canonical(node, workspace, Set.of(), Set.of());
   }
 
   static String canonical(JsonNode node, Path workspace, Set<String> certifiedGeneratedPreviews) {
+    return canonical(node, workspace, certifiedGeneratedPreviews, Set.of());
+  }
+
+  static String canonical(
+      JsonNode node,
+      Path workspace,
+      Set<String> certifiedGeneratedPreviews,
+      Set<String> certifiedGeneratedSetupIds) {
     return JSON.writerWithDefaultPrettyPrinter()
             .writeValueAsString(
-                normalize(node, workspace, new NormalizationState(certifiedGeneratedPreviews)))
+                normalize(
+                    node,
+                    workspace,
+                    new NormalizationState(certifiedGeneratedPreviews, certifiedGeneratedSetupIds)))
         + "\n";
   }
 
@@ -117,31 +160,23 @@ final class GoldenSnapshots {
       ObjectNode normalized = JSON.createObjectNode();
       node.properties().stream()
           .sorted(Map.Entry.comparingByKey())
-          .forEach(
-              entry -> {
-                String name = entry.getKey();
-                JsonNode value = entry.getValue();
-                if (VOLATILE_FIELDS.contains(name)
-                    || (node.has("executionPath") && Set.of("sha256", "byteSize").contains(name))) {
-                  normalized.put(name, "<" + name + ">");
-                } else if ("setupId".equals(name) && value.isString()) {
-                  String id = value.asString();
-                  assertTrue(
-                      id.startsWith("{") && id.endsWith("}"), "Signature setup id must be a UUID");
-                  UUID.fromString(id.substring(1, id.length() - 1));
-                  normalized.put(
-                      name,
-                      state.setupIds.computeIfAbsent(
-                          id, ignored -> "<setupId-" + state.setupIds.size() + ">"));
-                } else if ("preview".equals(name)
-                    && "SIGNATURE_LINE".equals(node.path("type").asString(""))
-                    && state.certifiedGeneratedPreviews.contains(
-                        value.path("sha256").asString(""))) {
-                  normalized.set(name, signaturePreview(value, workspace, state));
-                } else {
-                  normalized.set(name, normalize(value, workspace, state));
-                }
-              });
+          .forEach(entry -> {
+            String name = entry.getKey();
+            JsonNode value = entry.getValue();
+            if (VOLATILE_FIELDS.contains(name)
+                || (node.has("executionPath") && Set.of("sha256", "byteSize").contains(name))) {
+              normalized.put(name, "<" + name + ">");
+            } else if ("setup".equals(name)
+                && "SIGNATURE_LINE".equals(node.path("type").asString(""))) {
+              normalized.set(name, signatureSetup(value, workspace, state));
+            } else if ("preview".equals(name)
+                && "SIGNATURE_LINE".equals(node.path("type").asString(""))
+                && state.certifiedGeneratedPreviews.contains(value.path("sha256").asString(""))) {
+              normalized.set(name, signaturePreview(value, workspace, state));
+            } else {
+              normalized.set(name, normalize(value, workspace, state));
+            }
+          });
       return normalized;
     }
     if (node.isArray()) {
@@ -158,6 +193,17 @@ final class GoldenSnapshots {
       return StringNode.valueOf(text);
     }
     return node;
+  }
+
+  private static JsonNode signatureSetup(JsonNode value, Path workspace, NormalizationState state) {
+    ObjectNode setup = (ObjectNode) normalize(value, workspace, state);
+    String id = value.path("setupId").asString("");
+    if (state.certifiedGeneratedSetupIds.contains(id)) {
+      setup.put(
+          "setupId",
+          state.setupIds.computeIfAbsent(id, ignored -> "<setupId-" + state.setupIds.size() + ">"));
+    }
+    return setup;
   }
 
   private static JsonNode signaturePreview(
@@ -185,9 +231,12 @@ final class GoldenSnapshots {
       "PMD.UseConcurrentHashMap") // One canonicalization owns insertion-ordered identities.
   private static final class NormalizationState {
     private final Set<String> certifiedGeneratedPreviews;
+    private final Set<String> certifiedGeneratedSetupIds;
 
-    private NormalizationState(Set<String> certifiedGeneratedPreviews) {
+    private NormalizationState(
+        Set<String> certifiedGeneratedPreviews, Set<String> certifiedGeneratedSetupIds) {
       this.certifiedGeneratedPreviews = Set.copyOf(certifiedGeneratedPreviews);
+      this.certifiedGeneratedSetupIds = Set.copyOf(certifiedGeneratedSetupIds);
     }
 
     private final Map<String, String> setupIds = new LinkedHashMap<>();

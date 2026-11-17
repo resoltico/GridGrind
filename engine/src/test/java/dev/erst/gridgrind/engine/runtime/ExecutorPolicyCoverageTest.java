@@ -55,7 +55,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo;
@@ -273,20 +272,6 @@ class ExecutorPolicyCoverageTest {
                         dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                             .ProblemLocation.unknown()),
                     new CellNotFoundException("A1")))
-            .address());
-    assertEquals(
-        java.util.Optional.of("BAD!"),
-        assertInstanceOf(
-                dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
-                GridGrindProblems.enrichContext(
-                    new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
-                        dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
-                            .known("NEW", "NONE"),
-                        new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
-                            .StepReference(2, new StepId("cell"), "MUTATION", "SET_CELL"),
-                        dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
-                            .ProblemLocation.unknown()),
-                    new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))))
             .address());
 
     WorkbookPlan inspectionOnly =
@@ -974,10 +959,6 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         java.util.Optional.of("A1"),
         ExecutionExceptionDiagnosticFields.addressFor(new CellNotFoundException("A1")));
-    assertEquals(
-        java.util.Optional.of("BAD!"),
-        ExecutionExceptionDiagnosticFields.addressFor(
-            new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionExceptionDiagnosticFields.addressFor(new RuntimeException("x")));

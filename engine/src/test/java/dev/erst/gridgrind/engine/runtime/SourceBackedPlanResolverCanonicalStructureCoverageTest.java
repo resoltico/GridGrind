@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -407,10 +408,22 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         assertInstanceOf(
             DrawingMutationAction.SetPicture.class,
             assertInstanceOf(MutationStep.class, resolved.steps().get(2)).action());
-    assertEquals(
-        "cGF5bG9hZA==",
-        ((BinarySourceSpec.InlineBase64) resolvedPictureAction.picture().image().source())
-            .base64Data());
+    var originalPicture =
+        assertInstanceOf(DrawingMutationAction.SetPicture.class, pictureStep.action()).picture();
+    assertSame(originalPicture.image().source(), resolvedPictureAction.picture().image().source());
+    var preparedPicture =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.plan.PreparedMutationStep.class,
+            dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                pictureStep, resolved.steps().get(2)));
+    var picturePayload =
+        assertInstanceOf(
+                dev.erst.gridgrind.core.plan.ResolvedMutationAction.SetPicture.class,
+                preparedPicture.action())
+            .picture()
+            .imageData();
+    assertArrayEquals(
+        "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8), picturePayload.bytes());
     assertEquals(
         "Queue preview",
         ((TextSourceSpec.Inline) resolvedPictureAction.picture().description().orElseThrow())

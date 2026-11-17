@@ -25,7 +25,6 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
@@ -57,10 +56,21 @@ class ExcelWorkbookIntrospectorTest {
   void readsOpaqueRawFormulaFactsWithoutEvaluatorExecution() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Raw");
-      sheet.cells().setCell("A1", new ResolvedRawFormula("_xlfn.UNIQUE({1,2,2})"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedRawFormula("_xlfn.UNIQUE({1,2,2})"));
       XssfSheet schemaSheet = workbook.getOrCreateSheet("Schema");
-      schemaSheet.cells().setCell("A1", new CellValue.Text("Count"));
-      schemaSheet.cells().setCell("A2", new ResolvedFormula("1+1"));
+      schemaSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Count"));
+      schemaSheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"), new ResolvedFormula("1+1"));
 
       WorkbookIntrospector introspector = new WorkbookIntrospector();
       dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.FormulaSurfaceResult
@@ -554,9 +564,21 @@ class ExcelWorkbookIntrospectorTest {
   void getSheetSchemaReturnsNullDominantTypeOnTies() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Budget");
-      sheet.cells().setCell("A1", new CellValue.Text("Mixed"));
-      sheet.cells().setCell("A2", new CellValue.Text("text"));
-      sheet.cells().setCell("A3", new CellValue.NumberValue(1.0));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mixed"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("text"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1.0));
 
       dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult schema =
           cast(
@@ -596,10 +618,26 @@ class ExcelWorkbookIntrospectorTest {
   void schemaDataRowCountIsRowCountMinusOneWhenHeaderIsPopulated() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Data");
-      sheet.cells().setCell("A1", new CellValue.Text("Name"));
-      sheet.cells().setCell("B1", new CellValue.Text("Score"));
-      sheet.cells().setCell("A2", new CellValue.Text("Alice"));
-      sheet.cells().setCell("B2", new CellValue.NumberValue(95.0));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Name"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Score"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Alice"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(95.0));
 
       dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult schema =
           cast(
@@ -617,9 +655,19 @@ class ExcelWorkbookIntrospectorTest {
   void schemaUsesEvaluatedTypeForFormulaCells() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Data");
-      sheet.cells().setCell("A1", new CellValue.Text("Total"));
-      sheet.cells().setCell("A2", new ResolvedFormula("1+1"));
-      sheet.cells().setCell("A3", new ResolvedFormula("2+2"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Total"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"), new ResolvedFormula("1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"), new ResolvedFormula("2+2"));
 
       dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult schema =
           cast(
@@ -681,10 +729,26 @@ class ExcelWorkbookIntrospectorTest {
   void schemaDominantTypeIsNullWhenMinorityTypeExistsButTieDoesNot() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Data");
-      sheet.cells().setCell("A1", new CellValue.Text("Col"));
-      sheet.cells().setCell("A2", new CellValue.Text("a"));
-      sheet.cells().setCell("A3", new CellValue.Text("b"));
-      sheet.cells().setCell("A4", new CellValue.NumberValue(1.0));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Col"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("a"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("b"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1.0));
 
       dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult schema =
           cast(
@@ -700,14 +764,42 @@ class ExcelWorkbookIntrospectorTest {
 
   private void populateWorkbookForFullIntrospection(XssfWorkbook workbook) {
     XssfSheet budget = workbook.getOrCreateSheet("Budget");
-    budget.cells().setCell("A1", new CellValue.Text("Report"));
-    budget.cells().setCell("A2", new CellValue.Text("Hosting"));
-    budget.cells().setCell("B2", new CellValue.NumberValue(49.0));
-    budget.cells().setCell("A3", new CellValue.Text("Domain"));
-    budget.cells().setCell("B3", new CellValue.NumberValue(12.0));
-    budget.cells().setCell("B4", new CellValue.NumberValue(61.0));
-    budget.cells().setCell("B5", new ResolvedFormula("SUM(B2:B3)"));
-    budget.layout().mergeCells("A1:B1");
+    budget
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Report"));
+    budget
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"));
+    budget
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(49.0));
+    budget
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Domain"));
+    budget
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12.0));
+    budget
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(61.0));
+    budget
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B5"),
+            new ResolvedFormula("SUM(B2:B3)"));
+    budget.layout().mergeCells(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1"));
     budget.columns().setWidth(0, 0, 12.5);
     budget.rows().setHeight(0, 0, 18.0);
     budget.layout().setPane(new PaneSpec.Frozen(1, 1, 1, 1));
@@ -723,8 +815,16 @@ class ExcelWorkbookIntrospectorTest {
                 new PrintTitleColumnsSpec.None(),
                 new HeaderFooterTextReport("Budget", "", ""),
                 new HeaderFooterTextReport("", "Page &P", "")));
-    budget.links().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
-    budget.comments().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
+    budget
+        .links()
+        .setHyperlink(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new HyperlinkTarget.Url("https://example.com/report"));
+    budget
+        .comments()
+        .setComment(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new ResolvedComment("Review", "GridGrind", false));
     workbook
         .names()
         .setNamedRange(
@@ -736,19 +836,55 @@ class ExcelWorkbookIntrospectorTest {
                     new dev.erst.gridgrind.core.vocabulary.RangeRef("B4"))));
 
     XssfSheet ops = workbook.getOrCreateSheet("Ops");
-    ops.cells().setCell("A1", new CellValue.Text("Owner"));
-    ops.cells().setCell("B1", new CellValue.Text("Task"));
-    ops.cells().setCell("A2", new CellValue.Text("Ada"));
-    ops.cells().setCell("B2", new CellValue.Text("Queue"));
-    ops.cells().setCell("A3", new CellValue.Text("Lin"));
-    ops.cells().setCell("B3", new CellValue.Text("Pack"));
-    ops.cells().setCell("D1", new CellValue.Text("Region"));
-    ops.cells().setCell("E1", new CellValue.Text("Desk"));
-    ops.cells().setCell("D2", new CellValue.Text("North"));
-    ops.cells().setCell("E2", new CellValue.Text("A1"));
-    ops.cells().setCell("D3", new CellValue.Text("South"));
-    ops.cells().setCell("E3", new CellValue.Text("B1"));
-    ops.metadata().setAutofilter("D1:E3");
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Task"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pack"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("D1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("E1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("A1"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"));
+    ops.cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("E3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("B1"));
+    ops.metadata().setAutofilter(new dev.erst.gridgrind.core.vocabulary.RangeRef("D1:E3"));
     new TableAdapter()
         .setTable(
             workbook,

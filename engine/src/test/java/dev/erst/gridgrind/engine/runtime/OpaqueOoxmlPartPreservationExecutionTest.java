@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -48,7 +49,9 @@ class OpaqueOoxmlPartPreservationExecutionTest {
     WorkbookResult.Success success =
         assertInstanceOf(
             WorkbookResult.Success.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(
@@ -72,7 +75,9 @@ class OpaqueOoxmlPartPreservationExecutionTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(

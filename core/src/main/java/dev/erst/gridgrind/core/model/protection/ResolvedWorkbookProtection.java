@@ -14,14 +14,12 @@ public record ResolvedWorkbookProtection(
   public ResolvedWorkbookProtection {
     Objects.requireNonNull(workbookPassword, "workbookPassword must not be null");
     Objects.requireNonNull(revisionsPassword, "revisionsPassword must not be null");
-    workbookPassword.ifPresent(
-        value -> {
-          TextValidation.requireNonBlank(value, "workbookPassword");
-        });
-    revisionsPassword.ifPresent(
-        value -> {
-          TextValidation.requireNonBlank(value, "revisionsPassword");
-        });
+    workbookPassword.ifPresent(value -> {
+      TextValidation.requireNonBlank(value, "workbookPassword");
+    });
+    revisionsPassword.ifPresent(value -> {
+      TextValidation.requireNonBlank(value, "revisionsPassword");
+    });
   }
 
   /** Renders lock state without exposing materialized credentials. */

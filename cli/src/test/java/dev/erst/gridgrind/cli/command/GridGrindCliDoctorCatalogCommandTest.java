@@ -345,12 +345,11 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
             "steps[1].action.zoomPercent",
             "steps[2].action.widthCharacters"),
         report.problems().stream()
-            .map(
-                problem ->
-                    assertInstanceOf(ProblemContext.BindRequest.class, problem.context())
-                        .json()
-                        .jsonPathValue()
-                        .orElseThrow())
+            .map(problem ->
+                assertInstanceOf(ProblemContext.BindRequest.class, problem.context())
+                    .json()
+                    .jsonPathValue()
+                    .orElseThrow())
             .toList());
     assertTrue(
         report.problems().stream()
@@ -401,7 +400,8 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, problem.code());
     assertEquals(
-        "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field 'address'.",
+        "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field"
+            + " 'address'.",
         problem.resolution());
     assertEquals(
         java.util.Optional.of("steps[0].target.address"), requestIntakeContext(report).jsonPath());
@@ -548,7 +548,8 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",
-                            "{ \"type\": \"SAVE_AS\", \"path\": \"budget.txt\", \"ifExists\": \"REJECT\" }",
+                            "{ \"type\": \"SAVE_AS\", \"path\": \"budget.txt\", \"ifExists\":"
+                                + " \"REJECT\" }",
                             "[]")
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout,

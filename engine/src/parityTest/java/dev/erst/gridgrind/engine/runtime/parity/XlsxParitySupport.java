@@ -32,6 +32,7 @@ final class XlsxParitySupport {
         normalizedRoot,
         managedTempRoot(normalizedRoot),
         new ExecutionGrant(
+            16L * 1024 * 1024,
             readableResources(request, normalizedRoot),
             request.steps().stream().map(XlsxParitySupport::operationId).distinct().toList(),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

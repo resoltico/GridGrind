@@ -413,10 +413,9 @@ final class XlsxParityCoreProbeGroup {
             .formatted(pane.splitRow(), pane.splitColumn(), pane.topRow(), pane.leftmostColumn());
     return paneDescriptor.equals(direct.paneDescriptor())
         && observed.columns().stream()
-            .anyMatch(
-                column ->
-                    column.columnIndex() == 0
-                        && column.widthCharacters() == direct.columnZeroWidthCharacters())
+            .anyMatch(column ->
+                column.columnIndex() == 0
+                    && column.widthCharacters() == direct.columnZeroWidthCharacters())
         && observed.rows().stream()
             .anyMatch(
                 row -> row.rowIndex() == 0 && row.heightPoints() == direct.rowZeroHeightPoints());
@@ -875,7 +874,8 @@ final class XlsxParityCoreProbeGroup {
     return parityAchieved
         ? pass("Fine-grained data-validation diagnostics are present.")
         : fail(
-            "GridGrind analysis collapses distinct malformed validation states into generic findings.");
+            "GridGrind analysis collapses distinct malformed validation states into generic"
+                + " findings.");
   }
 
   static ProbeResult probeAutofilterCriteriaReadGap(ProbeContext context) {
@@ -1490,13 +1490,12 @@ final class XlsxParityCoreProbeGroup {
 
   private static boolean hasCopiedSheetScopedFormulaName(Path copiedPath) {
     return XlsxParityOracle.namedRanges(copiedPath).stream()
-        .anyMatch(
-            snapshot ->
-                "SheetScopedFormulaBudget".equals(snapshot.name())
-                    && "Advanced Replica".equals(snapshot.scope())
-                    && snapshot.formulaDefined()
-                    && snapshot.refersToFormula().contains("Advanced Replica")
-                    && snapshot.refersToFormula().contains("$C$2:$C$5"));
+        .anyMatch(snapshot ->
+            "SheetScopedFormulaBudget".equals(snapshot.name())
+                && "Advanced Replica".equals(snapshot.scope())
+                && snapshot.formulaDefined()
+                && snapshot.refersToFormula().contains("Advanced Replica")
+                && snapshot.refersToFormula().contains("$C$2:$C$5"));
   }
 
   private static void compareSheetCopyTable(
@@ -1782,10 +1781,9 @@ final class XlsxParityCoreProbeGroup {
             WorkbookInspectionResult.NamedRangesResult.class);
     boolean clearedOk =
         clearedRead.namedRanges().stream()
-            .noneMatch(
-                namedRange ->
-                    "WorkbookFormulaBudget".equals(namedRange.name().value())
-                        || "SheetScopedFormulaBudget".equals(namedRange.name().value()));
+            .noneMatch(namedRange ->
+                "WorkbookFormulaBudget".equals(namedRange.name().value())
+                    || "SheetScopedFormulaBudget".equals(namedRange.name().value()));
 
     Path restoredPath = context.derivedWorkbook("formula-named-ranges-restored");
     WorkbookInspectionResult.NamedRangesResult restoredRead =

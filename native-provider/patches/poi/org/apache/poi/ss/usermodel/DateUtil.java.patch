@@ -1,0 +1,22 @@
+--- org/apache/poi/ss/usermodel/DateUtil.java
++++ org/apache/poi/ss/usermodel/DateUtil.java
+@@ -1019,7 +1019,8 @@
+         return result;
+     }
+ 
+-    public static Double parseDateTime(String str){
++    public static Double parseDateTime(String str){return parseDateTime(str,false);}
++    public static Double parseDateTime(String str,boolean use1904){
+         TemporalAccessor tmp = dateTimeFormats.parse(WHITESPACE_PATTERN.matcher(str).replaceAll(" "));
+         LocalTime time = tmp.query(TemporalQueries.localTime());
+         LocalDate date = tmp.query(TemporalQueries.localDate());
+@@ -1027,8 +1028,7 @@
+ 
+         double tm = 0;
+         if(date != null) {
+-            Date d = Date.from(date.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+-            tm = DateUtil.getExcelDate(d);
++            tm = DateUtil.getExcelDate(date.atStartOfDay(),use1904);
+         }
+         if(time != null) tm += 1.0*time.toSecondOfDay()/SECONDS_PER_DAY;
+ 

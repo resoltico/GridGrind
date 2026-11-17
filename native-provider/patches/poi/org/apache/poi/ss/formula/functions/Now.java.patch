@@ -1,0 +1,10 @@
+--- org/apache/poi/ss/formula/functions/Now.java
++++ org/apache/poi/ss/formula/functions/Now.java
+@@ -33,6 +33,6 @@
+             return ErrorEval.VALUE_INVALID;
+         }
+         Date now = new Date(System.currentTimeMillis());
+-        return new NumberEval(DateUtil.getExcelDate(now));
++        return new NumberEval(DateUtil.getExcelDate(now, org.apache.poi.ss.usermodel.DateSystemContext.is1904()));
+     }
+ }

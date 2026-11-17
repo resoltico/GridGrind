@@ -55,26 +55,24 @@ public final class RecipeRegistry {
 
   static List<ShippedExampleEntry> exampleCatalogEntries() {
     return EXAMPLE_RECIPES.stream()
-        .map(
-            recipe ->
-                new ShippedExampleEntry(
-                    recipe.id(),
-                    recipe.requestFileName(),
-                    recipe.summary(),
-                    recipe.advisory(),
-                    recipe.requiredWorkspacePaths()))
+        .map(recipe ->
+            new ShippedExampleEntry(
+                recipe.id(),
+                recipe.requestFileName(),
+                recipe.summary(),
+                recipe.advisory(),
+                recipe.requiredWorkspacePaths()))
         .toList();
   }
 
   static List<ShippedExamples.ShippedExample> repositoryExamples() {
     return EXAMPLE_RECIPES.stream()
-        .map(
-            recipe ->
-                new ShippedExamples.ShippedExample(
-                    recipe.id(),
-                    recipe.requestFileName(),
-                    recipe.summary(),
-                    repositoryExamplePlanFor(recipe.id())))
+        .map(recipe ->
+            new ShippedExamples.ShippedExample(
+                recipe.id(),
+                recipe.requestFileName(),
+                recipe.summary(),
+                repositoryExamplePlanFor(recipe.id())))
         .toList();
   }
 

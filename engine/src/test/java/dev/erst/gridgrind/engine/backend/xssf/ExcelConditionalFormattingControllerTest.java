@@ -14,7 +14,6 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -513,8 +512,16 @@ class ExcelConditionalFormattingControllerTest {
   void healthyGreaterThanRuleSupportsSelectionFilteringAndSheetDelegation() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("A1", new CellValue.NumberValue(5));
-      sheet.cells().setCell("A2", new CellValue.NumberValue(9));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(5));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(9));
       sheet
           .metadata()
           .setConditionalFormatting(
@@ -567,10 +574,8 @@ class ExcelConditionalFormattingControllerTest {
       assertTrue(rule.formula2().isEmpty());
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet.xssfSheet()).stream()
-              .noneMatch(
-                  finding ->
-                      finding.code()
-                          == AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION));
+              .noneMatch(finding ->
+                  finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION));
 
       sheet.metadata().clearConditionalFormatting();
       assertEquals(0, sheet.diagnostics().conditionalFormattingBlockCount());
@@ -1012,9 +1017,8 @@ class ExcelConditionalFormattingControllerTest {
 
       AnalysisFindingReport finding =
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
-              .filter(
-                  candidate ->
-                      candidate.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA)
+              .filter(candidate ->
+                  candidate.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA)
               .findFirst()
               .orElseThrow();
 
@@ -1050,9 +1054,8 @@ class ExcelConditionalFormattingControllerTest {
 
       AnalysisFindingReport finding =
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
-              .filter(
-                  candidate ->
-                      candidate.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA)
+              .filter(candidate ->
+                  candidate.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA)
               .findFirst()
               .orElseThrow();
 
@@ -1087,9 +1090,8 @@ class ExcelConditionalFormattingControllerTest {
 
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
-              .noneMatch(
-                  finding ->
-                      finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
+              .noneMatch(finding ->
+                  finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
     }
   }
 
@@ -1121,9 +1123,8 @@ class ExcelConditionalFormattingControllerTest {
 
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
-              .noneMatch(
-                  finding ->
-                      finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
+              .noneMatch(finding ->
+                  finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
     }
   }
 
@@ -1202,9 +1203,8 @@ class ExcelConditionalFormattingControllerTest {
 
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
-              .noneMatch(
-                  finding ->
-                      finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
+              .noneMatch(finding ->
+                  finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
     }
   }
 
@@ -1328,7 +1328,11 @@ class ExcelConditionalFormattingControllerTest {
   void excelSheetDelegatesConditionalFormattingHealthAnalysis() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("A1", new CellValue.NumberValue(1));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1));
       sheet
           .metadata()
           .setConditionalFormatting(

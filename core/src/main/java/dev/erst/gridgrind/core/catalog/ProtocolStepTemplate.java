@@ -21,13 +21,12 @@ public record ProtocolStepTemplate(
   @SuppressWarnings("PMD.UseConcurrentHashMap")
   private static Map<String, Object> copyObject(Map<?, ?> source) {
     Map<String, Object> copy = new LinkedHashMap<>();
-    source.forEach(
-        (key, value) -> {
-          if (!(key instanceof String field)) {
-            throw new IllegalArgumentException("Template fields must have string names");
-          }
-          copy.put(field, copyValue(value));
-        });
+    source.forEach((key, value) -> {
+      if (!(key instanceof String field)) {
+        throw new IllegalArgumentException("Template fields must have string names");
+      }
+      copy.put(field, copyValue(value));
+    });
     return Collections.unmodifiableMap(copy);
   }
 

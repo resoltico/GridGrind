@@ -4,25 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.RangeSelector;
-import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
-import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
@@ -131,8 +124,7 @@ class RuntimeResidualCoverageSupplementTest {
   }
 
   @Test
-  void sourceBackedPlanResolutionPreservesErrorCellsAndConvertersMapThemToExcelErrors()
-      throws Exception {
+  void sourceBackedPlanResolutionPreservesErrorCells() throws Exception {
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             Path.of("tmp", "runtime-residual-supplement"),
@@ -141,40 +133,27 @@ class RuntimeResidualCoverageSupplementTest {
     CellValueSpec.ErrorValue errorValue = new CellValueSpec.ErrorValue("#REF!");
 
     assertSame(errorValue, SourceBackedPlanResolver.resolveCellInput(errorValue, bindings));
-    assertEquals(
-        "#REF!",
-        assertInstanceOf(
-                CellValue.ErrorValue.class, MutationResolution.toResolvedCellWrite(errorValue))
-            .value());
   }
 
   @Test
   void semanticSelectorResolverTreatsUnsupportedKeyCellKindsAsNonMatches() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Ada"));
-      CellReport snapshot = workbook.sheet("Budget").cells().snapshotCell("A1");
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      CellReport snapshot =
+          workbook
+              .sheet("Budget")
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
 
       boolean matched =
-          SemanticSelectorResolver.matchesKeyCell(snapshot, new CellValueSpec.ErrorValue("#REF!"));
+          TableCellResolver.matchesKeyCell(snapshot, new CellValueSpec.ErrorValue("#REF!"));
 
       assertFalse(matched);
     }
-  }
-
-  @Test
-  void conditionalFormattingMutationRequiresExplicitRangeTargets() {
-    IllegalArgumentException failure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                DefaultGridGrindRequestExecutorTestSupport.command(
-                    new RangeSelector.AllOnSheet(new SheetName("Budget")),
-                    new StructuredMutationAction.SetConditionalFormatting(
-                        new ConditionalFormattingSpec(
-                            List.of(
-                                new ConditionalFormattingRuleSpec.FormulaRule(
-                                    "A1>0", true, Optional.empty()))))));
-
-    assertEquals("Mutation target does not match SetConditionalFormatting", failure.getMessage());
   }
 }

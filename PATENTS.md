@@ -6,10 +6,11 @@ license.
 
 ## GridGrind Code
 
-GridGrind's own code is distributed under the Mozilla Public License 2.0 (`MPL-2.0`)
-in [LICENSE](LICENSE). Section 2.1(b) grants rights under each contributor's licensable Patent
-Claims, subject to the definitions and limitations in Sections 1 and 2.3. Section 5.2 terminates
-license rights in the patent-litigation circumstances it specifies.
+GridGrind's original code uses GNU Affero General Public License version 3 only
+(`AGPL-3.0-only`), as identified in [PROJECT-NOTICE.md](PROJECT-NOTICE.md) and
+[LICENSE](LICENSE). Section 11 describes contributors' essential patent claims and the
+non-exclusive, worldwide, royalty-free patent license specified there. Its conditions and
+limitations remain those of the license. This document supplies no separate patent grant.
 
 No patent search, freedom-to-operate analysis, patent-clearance opinion, or non-infringement
 determination has been performed or is represented by this repository. Absence of a known patent
@@ -25,7 +26,7 @@ resolved component families and preserves their attribution notices.
 
 | Component family | Distributed terms | Express patent clause |
 |:--|:--|:--|
-| GridGrind | MPL-2.0 | Yes, MPL 2.0 Section 2.1(b), subject to Section 2.3 |
+| GridGrind original code | AGPL-3.0-only | Yes, AGPLv3 Section 11, with its stated scope and conditions |
 | Apache POI, XMLBeans, Log4j, Santuario, and Commons | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
 | Apache POI Custom XML recipe workbook | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
 | Jackson, SparseBitSet, and Woodstox Core project code | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
@@ -39,7 +40,7 @@ resolved component families and preserves their attribution notices.
 
 The Apache License patent grant is component-specific. It applies only to patent claims licensable
 by each Apache-licensed component's contributors that are necessarily infringed by their
-contributions as described in Section 3. It does not create a patent grant for GridGrind's MPL-licensed
+contributions as described in Section 3. It does not create a patent grant for GridGrind's AGPL-licensed original
 code or for components under other licenses. The termination condition in Apache License 2.0
 Section 3 also remains part of those component licenses.
 
@@ -51,25 +52,26 @@ jurisdiction.
 
 The public source tree also includes the Gradle wrapper under Apache-2.0. The component-specific
 Section 3 patent grant and termination terms described above apply to that artifact; they do not
-extend to GridGrind's MPL-licensed code. The Apache POI Custom XML workbook listed in the JAR table
+extend to GridGrind's AGPL-licensed original code. The Apache POI Custom XML workbook listed in the JAR table
 is also present as a source fixture. [NOTICE](NOTICE) records the exact provenance and distribution
 scope of both artifacts.
 
 ## Container Image
 
-The published container image includes the GridGrind JAR, an Amazon Corretto build of OpenJDK, and
-operating-system and font packages. Those additional components retain their own license and patent
-terms; they are not covered by GridGrind's MPL 2.0 license or by one combined patent statement. Their
-legal materials remain in the image's JRE legal directory and package documentation directories,
-and published images include an SBOM attestation for content inventory.
+The container contains GridGrind, the pinned Eclipse Temurin OpenJDK/Ubuntu environment and
+separately licensed operating-system/font packages. Those materials retain their own licenses
+and patent terms. Their vendor legal files and package copyright files remain in the image;
+[NOTICE](NOTICE) and the source manifest identify their distribution/source scope. No single
+project license or patent statement replaces those terms.
 
 ## Contributors
 
-The repository currently documents no contributor license agreement, developer certificate of
-origin, or separate contributor patent grant. MPL 2.0 Section 2.5 includes a contributor
-representation of sufficient rights. Contributors must have the right to submit their work and
-should not submit material they know they lack permission to contribute. The legal effect of a
-contribution depends on the applicable facts and law; this document does not determine it.
+[Contribution terms](PROJECT-NOTICE.md#contribution-terms) retain contributors' copyright and
+grant the public AGPL license plus the stated perpetual, worldwide, non-exclusive,
+royalty-free, irrevocable owner license to use, reproduce, modify, distribute, sublicense and
+license contributions under other terms. These terms do not state an assignment, DCO or a
+separate express contributor patent/trademark grant. The AGPL's own patent provisions remain
+applicable according to their terms. This is not a representation of patent clearance.
 
 ## Cryptography and Jurisdiction
 

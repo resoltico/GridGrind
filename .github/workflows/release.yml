@@ -1,379 +1,245 @@
 name: Release
 
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
+      operation:
+        description: Prepare a candidate or publish an independently accepted artifact pair
+        type: choice
+        required: true
+        options: [prepare, publish-prepared]
       version:
-        description: Version of an existing vX.Y.Z tag to verify
-        required: true
+        description: Stable version, without v
         type: string
-      dry_run:
-        description: Build and verify without publishing or pruning
         required: true
-        default: true
-        type: boolean
+      source_commit:
+        description: Exact protected main and workflow commit
+        type: string
+        required: true
+      candidate_run_id:
+        description: Reviewed preparation run ID (publication only)
+        type: string
+      candidate_run_attempt:
+        description: Reviewed preparation attempt (publication only)
+        type: string
+      delivery_artifact_id:
+        description: Exact immutable delivery artifact ID (publication only)
+        type: string
+      delivery_artifact_digest:
+        description: Delivery service digest, sha256 followed by colon and hex (publication only)
+        type: string
+      candidate_manifest_sha256:
+        description: Reviewed candidate.json digest (publication only)
+        type: string
+      qa_artifact_id:
+        description: Exact immutable QA receipt artifact ID (publication only)
+        type: string
+      qa_artifact_digest:
+        description: QA receipt service digest (publication only)
+        type: string
+      qa_receipt_sha256:
+        description: Reviewed artifact-qa.json digest (publication only)
+        type: string
+      reviewed_pair_sha256:
+        description: Canonical reviewed pair digest (publication only)
+        type: string
+      independent_acceptance:
+        description: JSON acknowledgement binding independent QA evidence to the exact pair and JAR (publication only)
+        type: string
+      independent_acceptance_sha256:
+        description: Canonical independent acknowledgement digest (publication only)
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
-# Publication and retention share mutable registry/release state across versions.
 concurrency:
   group: gridgrind-public-release
   cancel-in-progress: false
 
 env:
-  PUBLISH_RELEASE: ${{ github.event_name == 'push' || !inputs.dry_run }}
+  VERSION: ${{ inputs.version }}
+  SOURCE_COMMIT: ${{ inputs.source_commit }}
+  RELEASE_WORKFLOW_COMMIT: ${{ github.workflow_sha }}
 
 jobs:
-  release:
+  prepare:
+    name: Prepare candidate
+    if: inputs.operation == 'prepare'
     runs-on: ubuntu-26.04
-    timeout-minutes: 120
-    permissions:
-      contents: write
-      packages: write
-      id-token: write
+    timeout-minutes: 180
+    outputs:
+      delivery-id: ${{ steps.delivery.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref }}
-      - name: Load publication controls from the workflow commit
-        env:
-          CONTROL_COMMIT: ${{ github.workflow_sha }}
+      - name: Require a main dispatch
+        shell: bash
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin "$CONTROL_COMMIT"
-          mkdir -p "$RUNNER_TEMP/release-control"
-          git archive "$CONTROL_COMMIT" scripts | tar -xf - -C "$RUNNER_TEMP/release-control"
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          java-version: '27.0.1'
-          distribution: zulu
-      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - name: Bind the untagged protected main source before expensive work
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -B scripts/release_delivery.py begin --version "$VERSION" --source "$SOURCE_COMMIT"
+      - uses: ./.github/actions/setup-temurin
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-cleanup: always
           cache-read-only: true
-      - name: Enable descriptor-preserving local image storage
+      - name: Read the qualified Docker server pin
+        id: docker-version
+        shell: bash
         run: |
-          sudo python3 - <<'PY'
-          import json
-          from pathlib import Path
-          path = Path('/etc/docker/daemon.json')
-          config = json.loads(path.read_text()) if path.exists() else {}
-          config.setdefault('features', {})['containerd-snapshotter'] = True
-          path.parent.mkdir(parents=True, exist_ok=True)
-          path.write_text(json.dumps(config) + '\n')
-          PY
-          sudo systemctl restart docker
-          docker info --format '{{json .DriverStatus}}' | grep -q io.containerd.snapshotter.v1
+          set -euo pipefail
+          source release/transfer-tools.properties
+          printf 'version=v%s\n' "$DOCKER_SERVER_VERSION" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-docker-action@3f1ab1ab0e29231562e4db4ca600c1a49653bac6 # v5.7.0
+        with:
+          version: ${{ steps.docker-version.outputs.version }}
+          daemon-config: '{"features":{"containerd-snapshotter":true}}'
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
         with:
           image: tonistiigi/binfmt:qemu-v10.2.3-68@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
-          version: v0.38.1
-          driver-opts: image=moby/buildkit:v0.34.1@sha256:99368f3e46177c6405b9740e4461d91cee004128daeecca78d4ceac50ec1da5c
-
-      - name: Derive version and finalized changelog notes
-        id: release
-        env:
-          REQUESTED_VERSION: ${{ inputs.version }}
+          version: v0.39.0
+          driver-opts: image=moby/buildkit:v0.35.0@sha256:aa632b921ef07411d2cb77292cd34213d4f7b384001d6fceef1e1f25bf9752bb
+      - name: Exercise release-control failure boundaries
+        shell: bash
         run: |
           set -euo pipefail
-          if [[ "${GITHUB_EVENT_NAME}" == workflow_dispatch ]]; then
-            version="${REQUESTED_VERSION}"
-          else
-            version="${GITHUB_REF_NAME#v}"
-          fi
-          ./gradlew prepareReleaseNotes "-Pversion=${version}"
-          release_commit=$(git rev-parse HEAD)
-          release_epoch=$(git show -s --format=%ct HEAD)
-          {
-            echo "version=${version}"
-            echo "commit=${release_commit}"
-            echo "epoch=${release_epoch}"
-            echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/gridgrind"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Reject an already stable public release before expensive work
-        if: env.PUBLISH_RELEASE == 'true'
-        env:
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          python3 -B -m unittest discover -s scripts/tests 2>&1 | tee build/release-work/control-tests.log
+      - name: Check and build the exact versioned delivery
+        shell: bash
         run: |
           set -euo pipefail
-          status=$(curl --silent --show-error --location --connect-timeout 15 --max-time 60 \
-            --output build/existing-release.json --write-out '%{http_code}' \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/v${RELEASE_VERSION}")
-          case "$status" in
-            404) ;;
-            200) python3 -c 'import json; r=json.load(open("build/existing-release.json")); assert r["prerelease"], "Stable release already exists; verify public state instead of replacing it"' ;;
-            *) echo "Release preflight returned HTTP $status" >&2; exit 1 ;;
-          esac
-
-      - name: Test release-control failure boundaries
-        run: python3 -B -m unittest discover -s "$RUNNER_TEMP/release-control/scripts/tests"
-      - name: Check and build versioned delivery archives
-        run: ./check.sh "-Pversion=${{ steps.release.outputs.version }}"
-
-      - name: Build both runtime platforms without publishing
-        id: images
-        env:
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
-          SOURCE_DATE_EPOCH: ${{ steps.release.outputs.epoch }}
+          ./check.sh prepareReleaseNotes "-Pversion=$VERSION" --no-build-cache --continue 2>&1 | tee build/release-work/check.log
+      - name: Exercise bounded active fuzzing
+        shell: bash
         run: |
           set -euo pipefail
-          declare -A image_ids
-          for arch in amd64 arm64; do
-            docker buildx build --load --platform "linux/$arch" --tag "gridgrind-release:$arch" \
-              --build-arg "GRIDGRIND_VERSION=$RELEASE_VERSION" \
-              --build-arg "GRIDGRIND_REVISION=$RELEASE_COMMIT" \
-              --build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" \
-              --cache-to "type=local,dest=build/runtime-cache-$arch,mode=min" .
-            image_id=$(docker image inspect --format '{{.Id}}' "gridgrind-release:$arch")
-            echo "$arch=$image_id" >> "$GITHUB_OUTPUT"
-            expected=$(sha256sum cli/build/libs/gridgrind.jar | awk '{print $1}')
-            actual=$(docker run --rm --platform "linux/$arch" --entrypoint sha256sum "$image_id" /app/gridgrind.jar | awk '{print $1}')
-            test "$actual" = "$expected"
-            image_ids[$arch]=$image_id
-          done
-          export AMD64_IMAGE="${image_ids[amd64]}" ARM64_IMAGE="${image_ids[arm64]}"
-          python3 - <<'PYTHON'
-          import json, os
-          from pathlib import Path
-          Path('build/verified-images.json').write_text(json.dumps({
-              'version': os.environ['RELEASE_VERSION'],
-              'commit': os.environ['RELEASE_COMMIT'],
-              'epoch': int(os.environ['SOURCE_DATE_EPOCH']),
-              'images': {
-                  'linux/amd64': os.environ['AMD64_IMAGE'],
-                  'linux/arm64': os.environ['ARM64_IMAGE'],
-              },
-          }, indent=2) + '\n')
-          PYTHON
-
-      - name: Verify the exact staged images on both architectures
-        run: |
-          ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}" "-PcontainerImage=${{ steps.images.outputs.amd64 }}"
-          ./gradlew containerTest "-Pversion=${{ steps.release.outputs.version }}" "-PcontainerImage=${{ steps.images.outputs.arm64 }}"
-
-      - name: Prepare and verify corresponding container source
-        env:
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-          AMD64_IMAGE: ${{ steps.images.outputs.amd64 }}
-          ARM64_IMAGE: ${{ steps.images.outputs.arm64 }}
+          ./gradlew fuzz -Pharness=protocol-request -PfuzzSeconds=10 -PfuzzRuns=1000 "-Pversion=$VERSION" 2>&1 | tee build/release-work/active-fuzz.log
+      - name: Exercise a bounded mutation control
+        shell: bash
         run: |
           set -euo pipefail
-          source release/container-runtime.properties
-          mkdir -p build/vendor-source
-          vendor="build/vendor-source/corretto-$CORRETTO_SOURCE_COMMIT.tar.gz"
-          curl --fail --silent --show-error --location --retry 2 --connect-timeout 15 --max-time 600 \
-            --output "$vendor" "$CORRETTO_SOURCE_URL"
-          printf '%s  %s\n' "$CORRETTO_SOURCE_SHA256" "$vendor" | sha256sum --check --status
-          python3 scripts/prepare-container-sources.py \
-            --image "linux/amd64=$AMD64_IMAGE" --image "linux/arm64=$ARM64_IMAGE" \
-            --version "$RELEASE_VERSION" --output build/container-sources \
-            --vendor-source "$vendor" --vendor-source-sha256 "$CORRETTO_SOURCE_SHA256" \
-            --vendor-source-commit "$CORRETTO_SOURCE_COMMIT"
-          export RELEASE_VERSION
-          python3 - <<'PY'
-          from pathlib import Path
-          import hashlib, os
-          version = os.environ['RELEASE_VERSION']
-          root = Path('build/container-sources')
-          payload = Path('build/container-source-payload')
-          payload.mkdir()
-          source_names = [f'gridgrind-container-sources-{version}{suffix}' for suffix in ['.tar.gz', '.manifest.json', '.sha256']]
-          for name in source_names:
-              os.link(root / name, payload / name)
-          assets = [Path('cli/build/libs/gridgrind.jar'), Path(f'cli/build/distributions/gridgrind-{version}.zip'), Path(f'cli/build/distributions/gridgrind-{version}.tar')]
-          assets += [root / name for name in source_names]
-          def digest(path):
-              h = hashlib.sha256()
-              with path.open('rb') as stream:
-                  for block in iter(lambda: stream.read(1024 * 1024), b''): h.update(block)
-              return h.hexdigest()
-          Path('build/SHA256SUMS').write_text(''.join(f'{digest(path)}  {path.name}\n' for path in assets))
-          retained = assets + [Path('build/SHA256SUMS'), Path('build/release-notes.md'), Path('build/verified-images.json')]
-          for architecture in ('amd64', 'arm64'):
-              retained += [path for path in Path(f'build/runtime-cache-{architecture}').rglob('*') if path.is_file()]
-          print('Verified delivery artifact payload:', len(retained), 'files,', sum(path.stat().st_size for path in retained), 'bytes before ZIP metadata')
-          PY
-
-      - name: Retain verified delivery inputs before publication
+          ./gradlew :core:pitest -PmutationClasses=dev.erst.gridgrind.core.vocabulary.RgbHex -PmutationTests=dev.erst.gridgrind.core.vocabulary.RgbHexTest -PmutationMutators=NEGATE_CONDITIONALS --max-workers=1 "-Pversion=$VERSION" 2>&1 | tee build/release-work/bounded-pit.log
+      - name: Derive the resolved runtime component inventory
+        run: ./gradlew :cli:writeRuntimeComponentInventory "-Pversion=$VERSION"
+      - name: Build and verify both retained image platforms and corresponding sources
+        run: python3 -B scripts/release_delivery.py assemble --components cli/build/runtime-component-inventory.json --component-files cli/build/runtime-component-files.json
+      - name: Seal completed artifact QA and immutable payload inventory
+        run: python3 -B scripts/release_delivery.py seal
+      # These are CI candidates visible to authenticated artifact readers. No tag,
+      # release or registry image exists until the separately dispatched publisher.
+      - name: Retain the validated delivery candidate
+        id: delivery
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: verified-delivery-${{ steps.release.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            build/runtime-cache-amd64/
-            build/runtime-cache-arm64/
-            cli/build/libs/gridgrind.jar
-            cli/build/distributions/gridgrind-${{ steps.release.outputs.version }}.zip
-            cli/build/distributions/gridgrind-${{ steps.release.outputs.version }}.tar
-            build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.tar.gz
-            build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.manifest.json
-            build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.sha256
-            build/SHA256SUMS
-            build/release-notes.md
-            build/verified-images.json
-          if-no-files-found: error
-          retention-days: 1
+          name: delivery-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/release-candidate/
           compression-level: 0
-
-      - name: Validate retention access and incoming-release plan without deleting
-        if: env.PUBLISH_RELEASE == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          OWNER: ${{ github.repository_owner }}
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-        run: python3 scripts/prune-container-versions.py --owner "$OWNER" --package gridgrind --keep 5 --pending-version "$RELEASE_VERSION"
-
-      - name: Stage release assets and make sources publicly accessible
-        if: env.PUBLISH_RELEASE == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
-        run: |
-          set -euo pipefail
-          args=(--repo "$GITHUB_REPOSITORY" --version "$RELEASE_VERSION" --commit "$RELEASE_COMMIT" --notes build/release-notes.md)
-          for asset in cli/build/libs/gridgrind.jar "cli/build/distributions/gridgrind-$RELEASE_VERSION.zip" \
-            "cli/build/distributions/gridgrind-$RELEASE_VERSION.tar" \
-            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.tar.gz" \
-            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.manifest.json" \
-            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.sha256" build/SHA256SUMS; do
-            args+=(--asset "$asset")
-          done
-          python3 "$RUNNER_TEMP/release-control/scripts/release-publication.py" prepare "${args[@]}"
-          python3 "$RUNNER_TEMP/release-control/scripts/release-publication.py" expose "${args[@]}"
-          curl --fail --silent --show-error --head --location --retry 2 --connect-timeout 15 --max-time 60 \
-            "https://github.com/$GITHUB_REPOSITORY/releases/download/v$RELEASE_VERSION/gridgrind-container-sources-$RELEASE_VERSION.tar.gz" >/dev/null
-
-      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
-        if: env.PUBLISH_RELEASE == 'true'
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish source next to runtime in the same registry
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        if: env.PUBLISH_RELEASE == 'true'
-        with:
-          context: build/container-source-payload
-          file: release/Dockerfile.sources
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.release.outputs.image }}:${{ steps.release.outputs.version }}-sources
-          build-args: |
-            GRIDGRIND_VERSION=${{ steps.release.outputs.version }}
-            GRIDGRIND_REVISION=${{ steps.release.outputs.commit }}
-            SOURCE_DATE_EPOCH=${{ steps.release.outputs.epoch }}
-          provenance: false
-          sbom: false
-      - name: Verify registry source bytes before runtime publication
-        if: env.PUBLISH_RELEASE == 'true'
-        env:
-          IMAGE: ${{ steps.release.outputs.image }}
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-        run: |
-          set -euo pipefail
-          anonymous="$RUNNER_TEMP/gridgrind-source-public-read"
-          mkdir -p "$anonymous"
-          printf '{}\n' > "$anonymous/config.json"
-          endpoint=$(docker context inspect --format '{{.Endpoints.docker.Host}}')
-          client=(docker --config "$anonymous" --host "$endpoint")
-          container=$("${client[@]}" create --pull=always --platform linux/amd64 "$IMAGE:$RELEASE_VERSION-sources" /source-only)
-          trap '"${client[@]}" rm -f "$container" >/dev/null' EXIT
-          for suffix in .tar.gz .manifest.json .sha256; do
-            name="gridgrind-container-sources-$RELEASE_VERSION$suffix"
-            expected=$(sha256sum "build/container-sources/$name" | awk '{print $1}')
-            "${client[@]}" cp "$container:/sources/$name" - | python3 -c '
-          import hashlib, sys, tarfile
-          expected, name = sys.argv[1:]
-          with tarfile.open(fileobj=sys.stdin.buffer, mode="r|*") as archive:
-              files = 0
-              for entry in archive:
-                  if entry.isdir(): continue
-                  assert entry.isfile() and entry.name == name, "Unexpected source image entry"
-                  h = hashlib.sha256()
-                  stream = archive.extractfile(entry)
-                  for block in iter(lambda: stream.read(1024 * 1024), b""): h.update(block)
-                  assert h.hexdigest() == expected, "Registry source payload differs"
-                  files += 1
-              assert files == 1, "Missing registry source payload"
-          ' "$expected" "$name"
-          done
-
-      - name: Publish runtime platforms and attestations under the version tag
-        id: publish_image
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        if: env.PUBLISH_RELEASE == 'true'
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.release.outputs.image }}:${{ steps.release.outputs.version }}
-          build-args: |
-            GRIDGRIND_VERSION=${{ steps.release.outputs.version }}
-            GRIDGRIND_REVISION=${{ steps.release.outputs.commit }}
-            SOURCE_DATE_EPOCH=${{ steps.release.outputs.epoch }}
-          provenance: mode=max
-          attests: type=sbom,generator=docker.io/docker/buildkit-syft-scanner@sha256:873a7458c3c8ac8e32c7b796c10e1600b07b963d2aa000a72a2d97aaaa2d6315
-
-      - name: Verify published manifests, source bindings, provenance and SBOM
-        if: env.PUBLISH_RELEASE == 'true'
-        env:
-          IMAGE: ${{ steps.release.outputs.image }}
-        run: |
-          python3 scripts/verify-container-release.py --repository "${IMAGE#ghcr.io/}" \
-            --digest "${{ steps.publish_image.outputs.digest }}" --tag "${{ steps.release.outputs.version }}" \
-            --source-manifest "build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.manifest.json" \
-            --output build/published-image.json
-      - name: Retain complete runtime/source graphs for five stable versions
-        if: env.PUBLISH_RELEASE == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          OWNER: ${{ github.repository_owner }}
-        run: python3 scripts/prune-container-versions.py --owner "$OWNER" --package gridgrind --keep 5 --apply
-      - name: Advance latest only to the verified runtime index
-        if: env.PUBLISH_RELEASE == 'true'
-        env:
-          IMAGE: ${{ steps.release.outputs.image }}
-        run: |
-          docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE@${{ steps.publish_image.outputs.digest }}"
-          python3 scripts/verify-container-release.py --repository "${IMAGE#ghcr.io/}" \
-            --digest "${{ steps.publish_image.outputs.digest }}" --tag latest \
-            --source-manifest "build/container-sources/gridgrind-container-sources-${{ steps.release.outputs.version }}.manifest.json" \
-            --output build/published-image.json
-      - name: Promote the verified prerelease to public stable/latest
-        if: env.PUBLISH_RELEASE == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
-        run: |
-          set -euo pipefail
-          args=(--repo "$GITHUB_REPOSITORY" --version "$RELEASE_VERSION" --commit "$RELEASE_COMMIT" --notes build/release-notes.md)
-          for asset in cli/build/libs/gridgrind.jar "cli/build/distributions/gridgrind-$RELEASE_VERSION.zip" \
-            "cli/build/distributions/gridgrind-$RELEASE_VERSION.tar" \
-            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.tar.gz" \
-            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.manifest.json" \
-            "build/container-sources/gridgrind-container-sources-$RELEASE_VERSION.sha256" build/SHA256SUMS; do
-            args+=(--asset "$asset")
-          done
-          python3 "$RUNNER_TEMP/release-control/scripts/release-publication.py" finalize "${args[@]}"
-
-      - name: Retain bounded release diagnostics
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain preparation failure diagnostics
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: release-diagnostics
+          name: prepare-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            build/release-work/*.log
             **/build/test-results/**/*.xml
             **/build/reports/tests/**
-            build/container-sources/collector.log
-            build/container-sources/source-plan.json
-            build/published-image.json
+            build/reports/configuration-cache/**
           if-no-files-found: warn
           retention-days: 7
+
+  qa-receipt:
+    name: Bind candidate QA receipt
+    needs: prepare
+    if: inputs.operation == 'prepare'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - name: Require a main dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - name: Download and bind the exact delivery service artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DELIVERY_ID: ${{ needs.prepare.outputs.delivery-id }}
+        run: python3 -B scripts/release_pair.py receipt --repo "$GITHUB_REPOSITORY" --version "$VERSION" --source "$SOURCE_COMMIT" --delivery-id "$DELIVERY_ID" --download "$RUNNER_TEMP/delivery-check" --output build/artifact-qa
+      - name: Retain the immutable service binding receipt
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: artifact-qa-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/artifact-qa/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish reviewed artifacts
+    if: inputs.operation == 'publish-prepared'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      packages: write
+      actions: read
+    steps:
+      - name: Require a main dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - name: Install the qualified OCI copy client
+        run: python3 -B scripts/release_oci.py install --pins release/transfer-tools.properties --output "$RUNNER_TEMP/release-tools/regctl"
+      - name: Publish the independently accepted immutable pair without rebuilding
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REGCTL_CONFIG: ${{ runner.temp }}/release-tools/regctl-config.json
+          CANDIDATE_RUN_ID: ${{ inputs.candidate_run_id }}
+          CANDIDATE_RUN_ATTEMPT: ${{ inputs.candidate_run_attempt }}
+          DELIVERY_ID: ${{ inputs.delivery_artifact_id }}
+          DELIVERY_DIGEST: ${{ inputs.delivery_artifact_digest }}
+          CANDIDATE_MANIFEST_SHA256: ${{ inputs.candidate_manifest_sha256 }}
+          QA_ID: ${{ inputs.qa_artifact_id }}
+          QA_DIGEST: ${{ inputs.qa_artifact_digest }}
+          QA_RECEIPT_SHA256: ${{ inputs.qa_receipt_sha256 }}
+          REVIEWED_PAIR_SHA256: ${{ inputs.reviewed_pair_sha256 }}
+          INDEPENDENT_ACCEPTANCE: ${{ inputs.independent_acceptance }}
+          INDEPENDENT_ACCEPTANCE_SHA256: ${{ inputs.independent_acceptance_sha256 }}
+        run: |
+          python3 -B scripts/publish_prepared.py --version "$VERSION" --source "$SOURCE_COMMIT" \
+            --run-id "$CANDIDATE_RUN_ID" --attempt "$CANDIDATE_RUN_ATTEMPT" \
+            --delivery-id "$DELIVERY_ID" --delivery-digest "$DELIVERY_DIGEST" --candidate-sha "$CANDIDATE_MANIFEST_SHA256" \
+            --qa-id "$QA_ID" --qa-digest "$QA_DIGEST" --receipt-sha "$QA_RECEIPT_SHA256" \
+            --pair-sha "$REVIEWED_PAIR_SHA256" --acceptance-sha "$INDEPENDENT_ACCEPTANCE_SHA256" \
+            --download "$RUNNER_TEMP/reviewed-release" --client "$RUNNER_TEMP/release-tools/regctl"
+      - name: Retain publication receipts and failure state
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: publication-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/publication-receipt.json
+            build/publication-*.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -44,31 +44,31 @@ Static title text.
 
 ## FORMULA
 
-Formula-backed title with cached text.
+Stored formula-backed title with its cache; never live-resolved text.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
-| formula | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
-| cachedText | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
+| formula | OPTIONAL | {"type":"SCALAR","scalarType":"STRING"} |  |
+| cache | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"stringCacheTypes"} |  |
 
 ```json
 {
   "id" : "FORMULA",
-  "summary" : "Formula-backed title with cached text.",
+  "summary" : "Stored formula-backed title with its cache; never live-resolved text.",
   "fields" : [ {
     "name" : "formula",
-    "requirement" : "REQUIRED",
+    "requirement" : "OPTIONAL",
     "shape" : {
       "type" : "SCALAR",
       "scalarType" : "STRING"
     },
     "enumValues" : [ ]
   }, {
-    "name" : "cachedText",
+    "name" : "cache",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "SCALAR",
-      "scalarType" : "STRING"
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "stringCacheTypes"
     },
     "enumValues" : [ ]
   } ],

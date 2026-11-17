@@ -4,6 +4,8 @@ import static dev.erst.gridgrind.fuzz.support.OperationSequenceCommandFactory.se
 import static dev.erst.gridgrind.fuzz.support.ProtocolStepSupport.assertThat;
 import static dev.erst.gridgrind.fuzz.support.ProtocolStepSupport.inspect;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
@@ -22,6 +24,7 @@ import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
@@ -86,7 +89,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionResult;
@@ -122,6 +124,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -162,6 +165,7 @@ import dev.erst.gridgrind.engine.backend.xssf.*;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -189,7 +193,8 @@ class WorkbookInvariantChecksTest {
                     1,
                     new StepId("step-01-set-cell"),
                     "SET_CELL",
-                    "Formula references same-request sheet names with spaces.")),
+                    "Formula references same-request sheet names with spaces."),
+                RequestWarning.progressSinkFailed()),
             List.of(
                 new AssertionResult.Passed(
                     new StepId("assert-total"), "EXPECT_NAMED_RANGE_PRESENT")),
@@ -396,6 +401,54 @@ class WorkbookInvariantChecksTest {
   }
 
   @Test
+  void uncertainPublicationDoesNotAssertCurrentDestinationPresence(@TempDir Path root) {
+    Path missing = root.resolve("uncertain.xlsx");
+    for (var observation :
+        WorkbookResultPersistence.PublicationOutcome.CommitObservation.values()) {
+      var publication =
+          new WorkbookResultPersistence.PublicationOutcome.Uncertain(
+              missing.toString(),
+              WorkbookResultPersistence.PublicationOutcome.Recovery
+                  .INSPECT_DESTINATION_DO_NOT_RETRY,
+              observation);
+      var response =
+          WorkbookResults.failure(
+              ProtocolVersion.CURRENT,
+              new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                  missing.toString(), publication),
+              GridGrindProblemDetail.Problem.of(
+                  GridGrindProblemCode.IO_ERROR,
+                  "Destination verification could not establish publication.",
+                  new ProblemContext.PersistWorkbook(
+                      ProblemContextRequestSurfaces.RequestShape.known("NEW", "SAVE_AS"),
+                      ProblemContextWorkbookSurfaces.PersistenceReference.saveAs(
+                          missing.toString()))));
+      assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
+    }
+  }
+
+  @Test
+  void publishedArtifactsMustStillExistInTheClosedFuzzWorkspace(@TempDir Path root) {
+    Path missing = root.resolve("published.xlsx");
+    var response =
+        WorkbookResults.failure(
+            ProtocolVersion.CURRENT,
+            publishedSaveAs(missing.toString(), missing),
+            GridGrindProblemDetail.Problem.of(
+                GridGrindProblemCode.IO_ERROR,
+                "Post-publication execution failure.",
+                new ProblemContext.PersistWorkbook(
+                    ProblemContextRequestSurfaces.RequestShape.known("NEW", "SAVE_AS"),
+                    ProblemContextWorkbookSurfaces.PersistenceReference.saveAs(
+                        missing.toString()))));
+    var failure =
+        assertThrows(
+            IllegalStateException.class,
+            () -> WorkbookInvariantChecks.requireResponseShape(response));
+    assertEquals("executionPath must exist", failure.getMessage());
+  }
+
+  @Test
   void acceptsWorkflowOutcomeShapeForOrderedReads(@TempDir Path tempDirectory) throws IOException {
     Path workbookPath = tempDirectory.resolve("result.xlsx");
     Files.writeString(workbookPath, "seed");
@@ -510,8 +563,14 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithNamedRanges() throws IOException {
-    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("B4", new CellValue.NumberValue(61.0));
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(61.0));
       workbook
           .names()
           .setNamedRange(
@@ -528,7 +587,8 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithB1SheetState() throws IOException {
-    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
       workbook.sheets().setActiveSheet("Beta");
@@ -979,7 +1039,11 @@ class WorkbookInvariantChecksTest {
                         new DrawingObjectReport.Shape(
                             "OpsShape",
                             new DrawingAnchorReport.OneCell(
-                                new DrawingMarkerReport(2, 3, 0, 0),
+                                new DrawingMarkerReport(
+                                    2,
+                                    3,
+                                    new DrawingCoordinateReport.Emu(0),
+                                    new DrawingCoordinateReport.Emu(0)),
                                 914_400L,
                                 457_200L,
                                 ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
@@ -990,8 +1054,8 @@ class WorkbookInvariantChecksTest {
                         new DrawingObjectReport.EmbeddedObject(
                             "OpsEmbed",
                             new DrawingAnchorReport.Absolute(
-                                0L,
-                                0L,
+                                new DrawingCoordinateReport.Emu(0L),
+                                new DrawingCoordinateReport.Emu(0L),
                                 914_400L,
                                 914_400L,
                                 ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE),
@@ -1091,7 +1155,11 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Ops"),
                     List.of(
                         new DrawingObjectReport.Chart(
-                            "OpsChart", twoCellAnchor(), true, List.of("BAR"), "Roadmap"))),
+                            "OpsChart",
+                            twoCellAnchor(),
+                            true,
+                            List.of("BAR"),
+                            new ChartReport.Title.Text("Roadmap")))),
                 new WorkbookAssetInspectionResult.ChartsResult(
                     new StepId("charts"), new SheetLabel("Ops"), List.of(chartReport()))));
 
@@ -1126,7 +1194,11 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Ops"),
                     List.of(
                         new DrawingObjectReport.Chart(
-                            "OpsChart", twoCellAnchor(), true, List.of("BAR"), "Roadmap"))),
+                            "OpsChart",
+                            twoCellAnchor(),
+                            true,
+                            List.of("BAR"),
+                            new ChartReport.Title.Text("Roadmap")))),
                 new WorkbookAssetInspectionResult.ChartsResult(
                     new StepId("charts"), new SheetLabel("Ops"), List.of(chartReport()))));
 
@@ -1136,15 +1208,56 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithCharts() throws IOException {
-    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Ops").cells().setCell("A1", new CellValue.Text("Month"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("B1", new CellValue.Text("Actual"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("A2", new CellValue.Text("Jan"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("B2", new CellValue.NumberValue(12.0d));
-      workbook.getOrCreateSheet("Ops").cells().setCell("A3", new CellValue.Text("Feb"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("B3", new CellValue.NumberValue(18.0d));
-      workbook.getOrCreateSheet("Ops").cells().setCell("A4", new CellValue.Text("Mar"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("B4", new CellValue.NumberValue(15.0d));
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Month"));
+      workbook
+          .getOrCreateSheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Actual"));
+      workbook
+          .getOrCreateSheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Jan"));
+      workbook
+          .getOrCreateSheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12.0d));
+      workbook
+          .getOrCreateSheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Feb"));
+      workbook
+          .getOrCreateSheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(18.0d));
+      workbook
+          .getOrCreateSheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mar"));
+      workbook
+          .getOrCreateSheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(15.0d));
       new WorkbookExecutionEngine()
           .apply(
               workbook,
@@ -1187,15 +1300,56 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithPivots() throws IOException {
-    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Month"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B1", new CellValue.Text("Actual"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("A2", new CellValue.Text("Jan"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B2", new CellValue.NumberValue(12.0d));
-      workbook.getOrCreateSheet("Budget").cells().setCell("A3", new CellValue.Text("Feb"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B3", new CellValue.NumberValue(18.0d));
-      workbook.getOrCreateSheet("Budget").cells().setCell("A4", new CellValue.Text("Mar"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B4", new CellValue.NumberValue(15.0d));
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Month"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Actual"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Jan"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12.0d));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Feb"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(18.0d));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mar"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(15.0d));
       workbook.getOrCreateSheet("Pivot");
       new WorkbookExecutionEngine()
           .apply(
@@ -1356,9 +1510,28 @@ class WorkbookInvariantChecksTest {
                     new ChartReport.Series(
                         new ChartReport.Title.Text("Actual"),
                         new ChartReport.DataSource.StringReference(
-                            "Ops!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
+                            Optional.of("Ops!$A$2:$A$4"),
+                            new ChartReport.StringCache.Stored(
+                                Optional.of(3L),
+                                List.of(
+                                    new ChartReport.StringPoint(
+                                        Optional.of(0L), Optional.of("Jan")),
+                                    new ChartReport.StringPoint(
+                                        Optional.of(1L), Optional.of("Feb")),
+                                    new ChartReport.StringPoint(
+                                        Optional.of(2L), Optional.of("Mar"))))),
                         new ChartReport.DataSource.NumericReference(
-                            "Ops!$B$2:$B$4", Optional.of("General"), List.of("12", "18", "15")),
+                            Optional.of("Ops!$B$2:$B$4"),
+                            new ChartReport.NumericCache.Stored(
+                                Optional.of(3L),
+                                Optional.of("General"),
+                                List.of(
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(0L), Optional.of("12"), Optional.empty()),
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(1L), Optional.of("18"), Optional.empty()),
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(2L), Optional.of("15"), Optional.empty())))),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
@@ -1423,12 +1596,12 @@ class WorkbookInvariantChecksTest {
         new ChartReport.Axis(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
-            ExcelChartAxisCrosses.AUTO_ZERO,
+            new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
             true),
         new ChartReport.Axis(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
-            ExcelChartAxisCrosses.AUTO_ZERO,
+            new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
             true));
   }
 
@@ -1550,8 +1723,10 @@ class WorkbookInvariantChecksTest {
 
   private static DrawingAnchorReport.TwoCell twoCellAnchor() {
     return new DrawingAnchorReport.TwoCell(
-        new DrawingMarkerReport(0, 0, 0, 0),
-        new DrawingMarkerReport(2, 3, 0, 0),
+        new DrawingMarkerReport(
+            0, 0, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0)),
+        new DrawingMarkerReport(
+            2, 3, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0)),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 

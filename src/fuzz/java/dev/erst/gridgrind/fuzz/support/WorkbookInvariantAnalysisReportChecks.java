@@ -28,32 +28,28 @@ final class WorkbookInvariantAnalysisReportChecks {
         analysis.totalFormulaCellCount() >= 0, "totalFormulaCellCount must not be negative");
     analysis
         .sheets()
-        .forEach(
-            sheet -> {
-              WorkbookInvariantChecks.require(
-                  sheet.sheetName() != null, "formula surface sheetName must not be null");
-              WorkbookInvariantChecks.require(
-                  !sheet.sheetName().value().isBlank(),
-                  "formula surface sheetName must not be blank");
-              WorkbookInvariantChecks.require(
-                  sheet.formulaCellCount() >= 0, "formulaCellCount must not be negative");
-              WorkbookInvariantChecks.require(
-                  sheet.distinctFormulaCount() >= 0, "distinctFormulaCount must not be negative");
-              sheet
-                  .formulas()
-                  .forEach(
-                      formula -> {
-                        WorkbookInvariantChecks.require(
-                            formula.formula() != null, "formula pattern must not be null");
-                        WorkbookInvariantChecks.require(
-                            !formula.formula().isBlank(), "formula pattern must not be blank");
-                        WorkbookInvariantChecks.require(
-                            formula.occurrenceCount() > 0,
-                            "occurrenceCount must be greater than 0");
-                        WorkbookInvariantChecks.require(
-                            formula.addresses() != null, "formula addresses must not be null");
-                      });
-            });
+        .forEach(sheet -> {
+          WorkbookInvariantChecks.require(
+              sheet.sheetName() != null, "formula surface sheetName must not be null");
+          WorkbookInvariantChecks.require(
+              !sheet.sheetName().value().isBlank(), "formula surface sheetName must not be blank");
+          WorkbookInvariantChecks.require(
+              sheet.formulaCellCount() >= 0, "formulaCellCount must not be negative");
+          WorkbookInvariantChecks.require(
+              sheet.distinctFormulaCount() >= 0, "distinctFormulaCount must not be negative");
+          sheet
+              .formulas()
+              .forEach(formula -> {
+                WorkbookInvariantChecks.require(
+                    formula.formula() != null, "formula pattern must not be null");
+                WorkbookInvariantChecks.require(
+                    !formula.formula().isBlank(), "formula pattern must not be blank");
+                WorkbookInvariantChecks.require(
+                    formula.occurrenceCount() > 0, "occurrenceCount must be greater than 0");
+                WorkbookInvariantChecks.require(
+                    formula.addresses() != null, "formula addresses must not be null");
+              });
+        });
   }
 
   static void requireSheetSchemaShape(SheetSchemaReport analysis) {
@@ -73,48 +69,45 @@ final class WorkbookInvariantAnalysisReportChecks {
         analysis.dataRowCount() >= 0, "schema dataRowCount must not be negative");
     analysis
         .columns()
-        .forEach(
-            column -> {
-              WorkbookInvariantChecks.require(
-                  column.columnIndex() >= 0, "schema columnIndex must not be negative");
-              WorkbookInvariantChecks.require(
-                  column.columnAddress() != null, "schema columnAddress must not be null");
-              WorkbookInvariantChecks.require(
-                  !column.columnAddress().isBlank(), "schema columnAddress must not be blank");
-              WorkbookInvariantChecks.require(
-                  column.headerDisplayValue() != null,
-                  "schema headerDisplayValue must not be null");
-              WorkbookInvariantChecks.require(
-                  column.populatedCellCount() >= 0,
-                  "schema populatedCellCount must not be negative");
-              WorkbookInvariantChecks.require(
-                  column.blankCellCount() >= 0, "schema blankCellCount must not be negative");
-              Set<String> observedTypes = new HashSet<>();
-              int observedTypeCountTotal = 0;
-              for (TypeCountReport typeCount : column.observedTypes()) {
-                WorkbookInvariantChecks.require(
-                    typeCount.type() != null, "type count type must not be null");
-                WorkbookInvariantChecks.require(
-                    !typeCount.type().isBlank(), "type count type must not be blank");
-                TypeCountReport.requireSupportedType(typeCount.type(), "type");
-                WorkbookInvariantChecks.require(
-                    typeCount.count() > 0, "type count must be greater than 0");
-                WorkbookInvariantChecks.require(
-                    observedTypes.add(typeCount.type()),
-                    "schema observedTypes must not contain duplicate types");
-                observedTypeCountTotal += typeCount.count();
-              }
-              WorkbookInvariantChecks.require(
-                  observedTypeCountTotal == column.populatedCellCount(),
-                  "schema observedTypes counts must sum to populatedCellCount");
-              if (column.dominantType().isPresent()) {
-                TypeCountReport.requireSupportedType(
-                    column.dominantType().orElseThrow(), "dominantType");
-                WorkbookInvariantChecks.require(
-                    observedTypes.contains(column.dominantType().orElseThrow()),
-                    "schema dominantType must match one observedTypes entry");
-              }
-            });
+        .forEach(column -> {
+          WorkbookInvariantChecks.require(
+              column.columnIndex() >= 0, "schema columnIndex must not be negative");
+          WorkbookInvariantChecks.require(
+              column.columnAddress() != null, "schema columnAddress must not be null");
+          WorkbookInvariantChecks.require(
+              !column.columnAddress().isBlank(), "schema columnAddress must not be blank");
+          WorkbookInvariantChecks.require(
+              column.headerDisplayValue() != null, "schema headerDisplayValue must not be null");
+          WorkbookInvariantChecks.require(
+              column.populatedCellCount() >= 0, "schema populatedCellCount must not be negative");
+          WorkbookInvariantChecks.require(
+              column.blankCellCount() >= 0, "schema blankCellCount must not be negative");
+          Set<String> observedTypes = new HashSet<>();
+          int observedTypeCountTotal = 0;
+          for (TypeCountReport typeCount : column.observedTypes()) {
+            WorkbookInvariantChecks.require(
+                typeCount.type() != null, "type count type must not be null");
+            WorkbookInvariantChecks.require(
+                !typeCount.type().isBlank(), "type count type must not be blank");
+            TypeCountReport.requireSupportedType(typeCount.type(), "type");
+            WorkbookInvariantChecks.require(
+                typeCount.count() > 0, "type count must be greater than 0");
+            WorkbookInvariantChecks.require(
+                observedTypes.add(typeCount.type()),
+                "schema observedTypes must not contain duplicate types");
+            observedTypeCountTotal += typeCount.count();
+          }
+          WorkbookInvariantChecks.require(
+              observedTypeCountTotal == column.populatedCellCount(),
+              "schema observedTypes counts must sum to populatedCellCount");
+          if (column.dominantType().isPresent()) {
+            TypeCountReport.requireSupportedType(
+                column.dominantType().orElseThrow(), "dominantType");
+            WorkbookInvariantChecks.require(
+                observedTypes.contains(column.dominantType().orElseThrow()),
+                "schema dominantType must match one observedTypes entry");
+          }
+        });
   }
 
   static void requireNamedRangeSurfaceShape(NamedRangeSurfaceReport analysis) {
@@ -128,20 +121,18 @@ final class WorkbookInvariantAnalysisReportChecks {
         analysis.formulaBackedCount() >= 0, "formulaBackedCount must not be negative");
     analysis
         .namedRanges()
-        .forEach(
-            namedRange -> {
-              WorkbookInvariantChecks.require(
-                  namedRange.name() != null, "named range name must not be null");
-              WorkbookInvariantChecks.require(
-                  !namedRange.name().isBlank(), "named range name must not be blank");
-              WorkbookInvariantChecks.require(
-                  namedRange.scope() != null, "named range scope must not be null");
-              WorkbookInvariantChecks.require(
-                  namedRange.refersToFormula() != null,
-                  "named range refersToFormula must not be null");
-              WorkbookInvariantChecks.require(
-                  namedRange.kind() != null, "named range kind must not be null");
-            });
+        .forEach(namedRange -> {
+          WorkbookInvariantChecks.require(
+              namedRange.name() != null, "named range name must not be null");
+          WorkbookInvariantChecks.require(
+              !namedRange.name().isBlank(), "named range name must not be blank");
+          WorkbookInvariantChecks.require(
+              namedRange.scope() != null, "named range scope must not be null");
+          WorkbookInvariantChecks.require(
+              namedRange.refersToFormula() != null, "named range refersToFormula must not be null");
+          WorkbookInvariantChecks.require(
+              namedRange.kind() != null, "named range kind must not be null");
+        });
   }
 
   static void requireFormulaHealthShape(FormulaHealthReport analysis) {

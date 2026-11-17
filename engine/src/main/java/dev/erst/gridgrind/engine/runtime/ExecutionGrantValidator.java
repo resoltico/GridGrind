@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
 import dev.erst.gridgrind.core.semantics.OperationSemantics;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.source.SecretReference;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,15 +21,15 @@ final class ExecutionGrantValidator {
   private ExecutionGrantValidator() {}
 
   static List<ExecutionAuthorityDeniedException> violations(
-      WorkbookPlan request, ExecutionGrant grant, Path workingDirectory) {
+      WorkbookPlan request, ExecutionGrant grant, RequestPathIdentity paths) throws IOException {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(grant, "grant must not be null");
-    Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
+    Objects.requireNonNull(paths, "paths must not be null");
     List<ExecutionAuthorityDeniedException> violations = new ArrayList<>();
-    requireSourceAuthority(request, grant, workingDirectory, violations);
-    requireFormulaEnvironmentAuthority(request, grant, workingDirectory, violations);
+    requireSourceAuthority(request, grant, paths, violations);
+    requireFormulaEnvironmentAuthority(request, grant, paths, violations);
     requireOperationAuthority(request.steps(), grant, violations);
-    requirePublicationAuthority(request, grant, workingDirectory, violations);
+    requirePublicationAuthority(request, grant, paths, violations);
     requireSecretAuthority(request, grant, violations);
     return List.copyOf(violations);
   }
@@ -82,50 +83,48 @@ final class ExecutionGrantValidator {
       java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec>
           security,
       List<SecretReference> references) {
-    security.ifPresent(
-        value -> {
-          switch (value.encryption()) {
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.None _ -> {}
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec
-                        .PreserveSource
-                    _ -> {}
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.Encrypt
-                    encrypt ->
-                references.add(encrypt.encryption().passwordRef());
-          }
-          switch (value.signature()) {
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.None _ -> {}
-            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.Sign sign -> {
-              references.add(sign.signature().keystorePasswordRef());
-              sign.signature().keyPasswordRef().ifPresent(references::add);
-            }
-          }
-        });
+    security.ifPresent(value -> {
+      switch (value.encryption()) {
+        case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.None _ -> {}
+        case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.PreserveSource
+                _ -> {}
+        case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.Encrypt
+                encrypt ->
+            references.add(encrypt.encryption().passwordRef());
+      }
+      switch (value.signature()) {
+        case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.None _ -> {}
+        case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.Sign sign -> {
+          references.add(sign.signature().keystorePasswordRef());
+          sign.signature().keyPasswordRef().ifPresent(references::add);
+        }
+      }
+    });
   }
 
   private static void requireSourceAuthority(
       WorkbookPlan request,
       ExecutionGrant grant,
-      Path workingDirectory,
-      List<ExecutionAuthorityDeniedException> violations) {
+      RequestPathIdentity paths,
+      List<ExecutionAuthorityDeniedException> violations)
+      throws IOException {
     if (request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile) {
       requireReadableFile(
-          grant,
-          ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory),
-          "source workbook",
-          violations);
+          grant, paths, paths.resolve(existingFile.path()), "source workbook", violations);
     }
   }
 
   private static void requireFormulaEnvironmentAuthority(
       WorkbookPlan request,
       ExecutionGrant grant,
-      Path workingDirectory,
-      List<ExecutionAuthorityDeniedException> violations) {
+      RequestPathIdentity paths,
+      List<ExecutionAuthorityDeniedException> violations)
+      throws IOException {
     for (var externalWorkbook : request.formulaEnvironment().externalWorkbooks()) {
       requireReadableFile(
           grant,
-          ExecutionRequestPaths.normalizePath(externalWorkbook.path(), workingDirectory),
+          paths,
+          paths.resolve(externalWorkbook.path()),
           "formula external workbook",
           violations);
     }
@@ -133,6 +132,7 @@ final class ExecutionGrantValidator {
 
   private static void requireReadableFile(
       ExecutionGrant grant,
+      RequestPathIdentity paths,
       Path path,
       String resourceKind,
       List<ExecutionAuthorityDeniedException> violations) {
@@ -140,7 +140,7 @@ final class ExecutionGrantValidator {
         grant.readableResources().stream()
             .filter(ExecutionGrant.ReadAuthority.File.class::isInstance)
             .map(ExecutionGrant.ReadAuthority.File.class::cast)
-            .anyMatch(resource -> resource.path().equals(path));
+            .anyMatch(resource -> paths.matchesGrant(resource.path(), path));
     if (!allowed) {
       violations.add(
           new ExecutionAuthorityDeniedException(
@@ -214,15 +214,16 @@ final class ExecutionGrantValidator {
   private static void requirePublicationAuthority(
       WorkbookPlan request,
       ExecutionGrant grant,
-      Path workingDirectory,
-      List<ExecutionAuthorityDeniedException> violations) {
+      RequestPathIdentity paths,
+      List<ExecutionAuthorityDeniedException> violations)
+      throws IOException {
     switch (request.persistence()) {
       case WorkbookPlan.WorkbookPersistence.None _ -> {}
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
-        Path requestedPath = ExecutionRequestPaths.normalizePath(saveAs.path(), workingDirectory);
+        Path requestedPath = paths.resolve(saveAs.path());
         if (!(grant.publicationAuthority()
                 instanceof ExecutionGrant.PublicationAuthority.SaveAs allowed)
-            || !allowed.path().equals(requestedPath)
+            || !paths.matchesGrant(allowed.path(), requestedPath)
             || allowed.ifExists() != saveAs.ifExists()) {
           violations.add(
               new ExecutionAuthorityDeniedException(

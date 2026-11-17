@@ -82,6 +82,7 @@ class JsonSchemasTest {
   void grantSchemaAcceptsCanonicalAuthoritiesAndOpaqueSecretReferences() throws IOException {
     var grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(new ExecutionGrant.ReadAuthority.File(ROOT.resolve("input.xlsx"))),
             List.of("ENSURE_SHEET"),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -102,6 +103,21 @@ class JsonSchemasTest {
         (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(bytes).deepCopy();
     ((ObjectNode) invalidReference.path("allowedSecretReferences").get(0)).put("id", "bad value");
     assertFalse(schema.validate(invalidReference.toString(), InputFormat.JSON).isEmpty());
+  }
+
+  @Test
+  void grantSnapshotBudgetUsesExactLongBoundsInTheIndependentSchema() throws IOException {
+    Schema grantSchema = schema(JsonSchemas.Document.GRANT);
+    ObjectNode grant =
+        (ObjectNode)
+            GridGrindJsonMapperSupport.JSON_MAPPER.readTree(
+                GridGrindJsonOutput.writeGrantBytes(ExecutionGrant.denied(), false));
+    grant.put("maxInputSnapshotBytes", new java.math.BigInteger("9223372036854775807"));
+    assertTrue(grantSchema.validate(grant.toString(), InputFormat.JSON).isEmpty());
+    grant.put("maxInputSnapshotBytes", new java.math.BigInteger("9223372036854775808"));
+    assertFalse(grantSchema.validate(grant.toString(), InputFormat.JSON).isEmpty());
+    grant.put("maxInputSnapshotBytes", -1);
+    assertFalse(grantSchema.validate(grant.toString(), InputFormat.JSON).isEmpty());
   }
 
   @ParameterizedTest

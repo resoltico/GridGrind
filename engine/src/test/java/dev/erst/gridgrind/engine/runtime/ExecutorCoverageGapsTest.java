@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -108,9 +109,15 @@ class ExecutorCoverageGapsTest {
         ExecutionRequestPaths.materializeOpenSecurity(
             new OoxmlOpenSecuritySpec(Optional.empty()), bindings));
 
-    GridGrindRequestDoctor defaultDoctor = new GridGrindRequestDoctor();
+    GridGrindRequestDoctor defaultDoctor =
+        new GridGrindRequestDoctor(
+            NativeInvocationContext.enterOwned(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD));
     GridGrindRequestDoctor validationOnlyDoctor =
-        new GridGrindRequestDoctor(new StaticRequestValidator());
+        new GridGrindRequestDoctor(
+            new StaticRequestValidator(),
+            NativeInvocationContext.enterOwned(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD));
 
     assertInstanceOf(GridGrindRequestDoctor.class, defaultDoctor);
     assertInstanceOf(GridGrindRequestDoctor.class, validationOnlyDoctor);

@@ -158,7 +158,7 @@ GridGrind rejects out-of-bounds addressed rows on the public request path for se
 row-band operations, row-structural edits, and print-title row bands instead of deferring those
 errors to Apache POI.
 
-Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorNumberValidation.java), [ExcelRowSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelRowSpan.java), [ProtocolCellAddressValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolCellAddressValidation.java), [CellAccess](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellAccess.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [DataValidationAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/validation/DataValidationAdapter.java).
+Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorNumberValidation.java), [ExcelRowSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelRowSpan.java), [ProtocolCellAddressValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolCellAddressValidation.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [DataValidationAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/validation/DataValidationAdapter.java).
 
 ## LIM-009 — Maximum Columns per Worksheet
 
@@ -175,7 +175,7 @@ Last valid zero-based column index: 16,383.
 GridGrind rejects out-of-bounds addressed columns on the public request path for
 selectors, column-band operations, column-structural edits, and print-title column bands.
 
-Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorNumberValidation.java), [ExcelColumnSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelColumnSpan.java), [ProtocolCellAddressValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolCellAddressValidation.java), [ProtocolDefinedNameValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolDefinedNameValidation.java), [CellAccess](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellAccess.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [DataValidationAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/validation/DataValidationAdapter.java).
+Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind/core/plan/SelectorNumberValidation.java), [ExcelColumnSpan](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ExcelColumnSpan.java), [ProtocolCellAddressValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolCellAddressValidation.java), [ProtocolDefinedNameValidation](../core/src/main/java/dev/erst/gridgrind/core/vocabulary/ProtocolDefinedNameValidation.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [DataValidationAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/validation/DataValidationAdapter.java).
 
 ## LIM-010 — Maximum Text Characters per Cell
 
@@ -189,7 +189,7 @@ Enforcement: [SelectorNumberValidation](../core/src/main/java/dev/erst/gridgrind
 
 This is the persisted Excel cell-text ceiling; reject oversized authored or reconstructed text before native mutation.
 
-Enforcement: [StreamingWorkbookWriter](../engine/src/main/java/dev/erst/gridgrind/engine/backend/streaming/StreamingWorkbookWriter.java), [CellTextLimits](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellTextLimits.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [CommentAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/comments/CommentAdapter.java), [StyleAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/styles/StyleAdapter.java).
+Enforcement: [CellTextLimits](../core/src/main/java/dev/erst/gridgrind/core/model/value/CellTextLimits.java), [StreamingWorkbookWriter](../engine/src/main/java/dev/erst/gridgrind/engine/backend/streaming/StreamingWorkbookWriter.java), [CellsAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/cells/CellsAdapter.java), [CommentAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/comments/CommentAdapter.java), [StyleAdapter](../engine/src/main/java/dev/erst/gridgrind/engine/styles/StyleAdapter.java).
 
 ## LIM-011 — Maximum Cell Styles per Workbook
 
@@ -332,7 +332,7 @@ Enforcement: [StructuralEdits](../engine/src/main/java/dev/erst/gridgrind/engine
 | Message template | `execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
 | Applies to | execution.mode.type, steps[] |
 
-`EVENT_READ` restricts operations to workbook and sheet summary inspections. Its direct event-reader path applies to eligible EXISTING-source requests with no publication and the required calculation settings. Existing-source preflight opens the workbook through full XSSF before reader selection, and other admitted EVENT_READ requests use XSSF materialization. The mode therefore does not provide an end-to-end low-memory guarantee. Unsupported queries are rejected by the mode contract.
+`EVENT_READ` restricts operations to workbook and sheet summary inspections. Its direct event-reader path applies to eligible EXISTING-source requests with no publication and the required calculation settings. Admission selects the concrete backend once. Eligible event-only sources are security-checked and validated through event metadata without an unconditional full XSSF graph; their readable source is retained for execution. Host terminal acceptance can still require a full workbook view, and other admitted EVENT_READ requests use XSSF materialization. The mode therefore does not provide an end-to-end low-memory guarantee. Unsupported queries are rejected by the mode contract.
 
 Enforcement: [GridGrindContractText](../core/src/main/java/dev/erst/gridgrind/core/catalog/GridGrindContractText.java), [BackendCapabilities](../core/src/main/java/dev/erst/gridgrind/core/semantics/BackendCapabilities.java).
 
@@ -346,7 +346,7 @@ Enforcement: [GridGrindContractText](../core/src/main/java/dev/erst/gridgrind/co
 | Message template | `execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
 | Applies to | execution.mode.type, source, steps[] |
 
-`STREAMING_WRITE` uses POI SXSSF for append-oriented NEW-workbook authoring under its reduced operation contract. Assertions and inspections can materialize the workbook through full XSSF, and saved output is reopened through XSSF for staged-artifact verification before publication. Streaming authoring therefore does not guarantee bounded end-to-end heap use. Validation rejects unsupported operations and calculation settings before execution.
+`STREAMING_WRITE` uses POI SXSSF for append-oriented NEW-workbook authoring under its reduced operation contract. Terminal assertions and inspections share one materialized full XSSF view. A requested streaming plan with a mutation after an observation selects the reported FULL_XSSF backend to preserve each authored state and requires full workbook memory. Host terminal checks share one completed-artifact view, and saved output is reopened through XSSF for staged-artifact verification before publication. Streaming authoring therefore does not guarantee bounded end-to-end heap use. Validation rejects unsupported operations and calculation settings before execution.
 
 Enforcement: [GridGrindContractText](../core/src/main/java/dev/erst/gridgrind/core/catalog/GridGrindContractText.java), [BackendCapabilities](../core/src/main/java/dev/erst/gridgrind/core/semantics/BackendCapabilities.java).
 
@@ -434,7 +434,7 @@ anything. A relative traversal such as `../secret.xlsx` and an absolute path out
 with the same code. A contained absolute path remains legal but carries a warning because it relies
 on one host-specific root layout. CLI flag paths are invocation controls, not request-owned paths.
 
-Enforcement: [ExecutionRequestPaths](../engine/src/main/java/dev/erst/gridgrind/engine/runtime/ExecutionRequestPaths.java).
+Enforcement: [RequestPathIdentity](../engine/src/main/java/dev/erst/gridgrind/engine/runtime/RequestPathIdentity.java).
 
 ## LIM-026 — ZIP Decompression Limits
 
@@ -501,14 +501,13 @@ Enforcement: [ProtocolHyperlinkUrlSupport](../core/src/main/java/dev/erst/gridgr
 | Applies to | Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs |
 
 GridGrind binds the root and every existing parent with no-follow directory descriptors, records
-their filesystem identities, copies request inputs into private staging, and commits output through
-the retained parent descriptor. Any symlink is rejected, including a link that happens to point
+their filesystem identities, copies request inputs into private staging, and retains the verified parent binding for publication. Any symlink is rejected, including a link that happens to point
 inside the root. Immediately before persistence, GridGrind rechecks the recorded topology and
 fails closed if it observes a replacement, unlink, rename, or symlink transition.
 
 This protects containment while the bound filesystem topology remains stable. It does not claim
 absolute containment against a principal that can mutate that topology in the scheduling window
-between the final identity recheck and a descriptor-relative commit; Java exposes no proven,
+between the final identity recheck and a pathname-based commit; Java exposes no proven,
 portable root-anchored atomic-resolve-and-commit primitive for that stronger guarantee.
 
 Enforcement: [RequestPathDescriptorBinder](../engine/src/main/java/dev/erst/gridgrind/engine/runtime/RequestPathDescriptorBinder.java).
@@ -698,3 +697,171 @@ Apache POI authoring so callers receive the request path and computed length ins
 exception.
 
 Enforcement: [DataValidationRuleSpec](../core/src/main/java/dev/erst/gridgrind/core/model/validation/DataValidationRuleSpec.java).
+
+## LIM-041 — Input Snapshot Bytes
+
+| Field | Value |
+| --- | --- |
+| Category | Host authority |
+| Limit | ExecutionGrant.maxInputSnapshotBytes (0..9223372036854775807 bytes) |
+| Problems | INVALID_REQUEST |
+| Message template | Host input snapshot byte budget exceeded |
+| Applies to | source, formulaEnvironment, FILE, UTF8_FILE, STANDARD_INPUT, host acceptance inputs |
+
+The host supplies a required finite nonnegative aggregate byte allowance. Reads are charged while snapshotting; a unique admitted snapshot is charged once. Zero permits NEW/inline work with sufficient operation authority. Workbook decompression, native memory, output growth and general scratch capacity are separate concerns; this allowance does not bound end-to-end memory.
+
+Enforcement: [ExecutionGrant](../core/src/main/java/dev/erst/gridgrind/core/grant/ExecutionGrant.java).
+
+## LIM-042 — Authored Media Payload Bytes
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 33554432 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+One decoded payload is bounded before media accumulation, encoding, decoding or cloning.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-043 — Authored Media Use Bytes
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 67108864 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+Every authored occurrence charges, even when a source snapshot or equal bytes are reused.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-044 — Media Inspection Bytes
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 268435456 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+Structural inspection includes bounded opaque spans, nested members and repeated reads.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-045 — Media Raster Pixels
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 16777216 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+Coded raster and tile storage is bounded; vector coordinate units are not pixels.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-046 — Media Expanded Coding Bytes
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 134217728 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+Known expansion is reserved before decoding; failures do not restore the allowance.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-047 — Media Structural Records
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 65536 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+Roots, frames, directories, entries and nested records share one bounded counter.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-048 — Media Container Depth
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 8 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+Nested image and preview structures cannot reset the request budget.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-049 — EPS Syntax Tokens
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 1000000 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+PostScript is inspected lexically without executing or expanding operators.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-050 — EPS Syntax Depth
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 256 |
+| Problems | INVALID_REQUEST |
+| Message template | Authored media exceeds {limit}. |
+| Applies to | SET_PICTURE, SET_EMBEDDED_OBJECT, SET_SIGNATURE_LINE |
+
+Lexical container tracking is bounded without executing PostScript.
+
+Enforcement: [MediaAdmissionBudget](../engine/src/main/java/dev/erst/gridgrind/engine/media/MediaAdmissionBudget.java).
+
+## LIM-051 — Civil Date Domain
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | 1900: 1900-01-01..9999-12-31; 1904: 1904-01-01..9999-12-31 |
+| Problems | INVALID_REQUEST |
+| Message template | {fieldName} must be within the receiving workbook's supported calendar range. |
+| Applies to | SET_CELL, SET_RANGE, APPEND_ROW, IMPORT_CUSTOM_XML_MAPPING |
+
+Unsupported civil dates refuse before native mutation; observations retain their raw number and explicit interpretation outcome.
+
+Enforcement: [TemporalSemantics](../core/src/main/java/dev/erst/gridgrind/core/model/value/TemporalSemantics.java).
+
+## LIM-052 — Date-Time Precision
+
+| Field | Value |
+| --- | --- |
+| Category | GridGrind |
+| Limit | millisecond |
+| Problems | INVALID_REQUEST |
+| Message template | {fieldName} supports millisecond precision. |
+| Applies to | SET_CELL, SET_RANGE, APPEND_ROW |
+
+Finer authored precision refuses rather than being silently truncated or rounded.
+
+Enforcement: [TemporalSemantics](../core/src/main/java/dev/erst/gridgrind/core/model/value/TemporalSemantics.java).

@@ -78,13 +78,13 @@ class ExcelChartInteropTest {
 
       ChartReport cachedFormulaLine =
           sheet.drawings().charts().stream()
-              .filter(snapshot -> snapshot.name().startsWith("Chart-"))
+              .filter(snapshot -> snapshot.name().isEmpty())
               .findFirst()
               .orElseThrow();
       ChartReport.Title.Formula cachedLineTitle =
           assertInstanceOf(ChartReport.Title.Formula.class, cachedFormulaLine.title());
-      assertEquals("Charts!$B$1", cachedLineTitle.formula());
-      assertEquals("Plan", cachedLineTitle.cachedText());
+      assertEquals(Optional.of("Charts!$B$1"), cachedLineTitle.formula());
+      assertEquals("Plan", ChartCacheAssertions.singleStringValue(cachedLineTitle.cache()));
       ChartReport.Line cachedLinePlot =
           ExcelChartTestSupport.singlePlot(cachedFormulaLine, ChartReport.Line.class);
       assertEquals(
@@ -94,12 +94,16 @@ class ExcelChartInteropTest {
       ChartReport.Series cachedLineSeries = cachedLinePlot.series().getFirst();
       ChartReport.Title.Formula cachedLineSeriesTitle =
           assertInstanceOf(ChartReport.Title.Formula.class, cachedLineSeries.title());
-      assertEquals("Actual", cachedLineSeriesTitle.cachedText());
+      assertInstanceOf(ChartReport.StringCache.Missing.class, cachedLineSeriesTitle.cache());
       assertEquals(
-          List.of("Jan", "Mar", ""),
+          new ChartReport.StringCache.Stored(
+              Optional.of(3L),
+              List.of(
+                  new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan")),
+                  new ChartReport.StringPoint(Optional.of(1L), Optional.of("Mar")))),
           assertInstanceOf(
                   ChartReport.DataSource.StringLiteral.class, cachedLineSeries.categories())
-              .values());
+              .data());
 
       ChartReport literalPie = ExcelChartTestSupport.chart(sheet.drawings().charts(), "LiteralPie");
       assertTrue(ExcelChartTestSupport.singlePlot(literalPie, ChartReport.Pie.class).varyColors());
@@ -114,7 +118,10 @@ class ExcelChartInteropTest {
                   .filter(snapshot -> "FormulaNoCache".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
-      assertEquals("Actual", uncachedFormulaDrawingObject.title());
+      assertEquals(
+          new ChartReport.Title.Formula(
+              Optional.of("Charts!$C$1"), new ChartReport.StringCache.Missing()),
+          uncachedFormulaDrawingObject.title());
     }
   }
 

@@ -49,9 +49,6 @@ class SelectorValidationSupportTest {
     assertEquals(
         16_384 - 1, SelectorValueValidation.requireColumnIndexWithinBounds(16_384 - 1, "column"));
     SelectorValueValidation.requireWindowSize(500, 500);
-    assertEquals("AA10", SelectorAddressSupport.absoluteA1Address(9, 26));
-    assertEquals(26, SelectorAddressSupport.columnIndex("$AA$10"));
-    assertEquals(9, SelectorAddressSupport.rowIndex("$AA$10"));
   }
 
   @Test
@@ -264,14 +261,6 @@ class SelectorValidationSupportTest {
   }
 
   @Test
-  void selectorSupportCoversZeroIterationAddressParsingAndCatalogLookupOrdering() {
-    assertEquals(-1, SelectorAddressSupport.columnIndex(""));
-    assertEquals(-1, SelectorAddressSupport.columnIndex("123"));
-    assertThrows(NumberFormatException.class, () -> SelectorAddressSupport.rowIndex(""));
-    assertEquals(122, SelectorAddressSupport.rowIndex("123"));
-  }
-
-  @Test
   void prefixedValidationMessagePreservesNullBlankAndAlreadyPrefixedMessages() {
     assertNull(SelectorValueValidation.prefixedValidationMessage("field", null));
     assertEquals(" ", SelectorValueValidation.prefixedValidationMessage("field", " "));
@@ -294,7 +283,8 @@ class SelectorValidationSupportTest {
     assertEquals("address must be a single-cell A1-style address", failure.getMessage());
     assertEquals(FieldValidationAddressRule.ADDRESS_SYNTAX, requestProblem.rule());
     assertEquals(
-        "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field 'address'.",
+        "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field"
+            + " 'address'.",
         GridGrindRequestProblemSupport.resolution(
             requestProblem,
             new ProblemContext.ReadRequest(

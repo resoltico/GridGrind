@@ -195,7 +195,8 @@ final class WorkbookInvariantResponseChecks {
       case WorkbookResultPersistence.PublicationOutcome.NotPublished notPublished ->
           require(notPublished.destinationState() != null, "destination state must not be null");
       case WorkbookResultPersistence.PublicationOutcome.Published published -> {
-        requireExecutionWorkbookPath(published.executionPath());
+        requireExecutionWorkbookPathShape(published.executionPath());
+        require(Files.exists(Path.of(published.executionPath())), "executionPath must exist");
         require(
             published.sha256().matches("[0-9a-f]{64}"),
             "published artifact SHA-256 must be lowercase hexadecimal");
@@ -206,7 +207,7 @@ final class WorkbookInvariantResponseChecks {
         require(published.durability() != null, "durability evidence must not be null");
       }
       case WorkbookResultPersistence.PublicationOutcome.Uncertain uncertain -> {
-        requireExecutionWorkbookPath(uncertain.executionPath());
+        requireExecutionWorkbookPathShape(uncertain.executionPath());
         require(
             uncertain.recovery()
                 == WorkbookResultPersistence.PublicationOutcome.Recovery
@@ -216,15 +217,15 @@ final class WorkbookInvariantResponseChecks {
     }
   }
 
-  private static void requireExecutionWorkbookPath(String executionPath) {
+  private static void requireExecutionWorkbookPathShape(String executionPath) {
     require(executionPath != null, "executionPath must not be null");
     require(executionPath.endsWith(".xlsx"), "executionPath must point to .xlsx");
-    require(Files.exists(Path.of(executionPath)), "executionPath must exist");
   }
 
   private static void requireRequestWarningShape(RequestWarning warning) {
     require(warning != null, "warning must not be null");
     switch (warning.location()) {
+      case RequestWarningLocation.Execution _ -> {}
       case RequestWarningLocation.Step step -> {
         require(step.stepIndex() >= 0, "warning stepIndex must not be negative");
         requireNonBlank(step.stepId().value(), "warning stepId");
@@ -312,11 +313,10 @@ final class WorkbookInvariantResponseChecks {
       case WorkbookInspectionResult.SheetsResult result ->
           result
               .sheetNames()
-              .forEach(
-                  name ->
-                      require(
-                          name != null && !name.value().isBlank(),
-                          "sheets sheetName must not be blank"));
+              .forEach(name ->
+                  require(
+                      name != null && !name.value().isBlank(),
+                      "sheets sheetName must not be blank"));
       case SheetInspectionResult.SheetSummaryResult result ->
           requireSheetSummaryShape(result.sheet());
       case SheetInspectionResult.ArrayFormulasResult result ->
@@ -333,11 +333,9 @@ final class WorkbookInvariantResponseChecks {
             !result.sheetName().value().isBlank(), "merged regions sheetName must not be blank");
         result
             .mergedRegions()
-            .forEach(
-                region ->
-                    require(
-                        !region.range().value().isBlank(),
-                        "merged region range must not be blank"));
+            .forEach(region ->
+                require(
+                    !region.range().value().isBlank(), "merged region range must not be blank"));
       }
       case SheetInspectionResult.HyperlinksResult result -> {
         require(result.sheetName() != null, "hyperlinks sheetName must not be null");

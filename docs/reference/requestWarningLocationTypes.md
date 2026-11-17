@@ -145,3 +145,19 @@ Warning located at one formula cell assessed by calculation capability analysis.
   "targetSelectors" : [ ]
 }
 ```
+
+## EXECUTION
+
+Warning about this execution's optional infrastructure.
+
+| Field | Requirement | Shape | Default |
+| --- | --- | --- | --- |
+
+```json
+{
+  "id" : "EXECUTION",
+  "summary" : "Warning about this execution's optional infrastructure.",
+  "fields" : [ ],
+  "targetSelectors" : [ ]
+}
+```

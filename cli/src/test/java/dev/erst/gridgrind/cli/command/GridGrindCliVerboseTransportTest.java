@@ -95,15 +95,14 @@ class GridGrindCliVerboseTransportTest extends GridGrindCliTestSupport {
         progressLines.stream().allMatch(line -> line.startsWith("{") && !line.contains("\n")));
     assertTrue(
         progressLines.stream()
-            .map(
-                line -> {
-                  try {
-                    return GridGrindCliJson.readBytes(
-                        line.getBytes(StandardCharsets.UTF_8), ExecutionProgressEvent.class);
-                  } catch (IOException exception) {
-                    throw new java.io.UncheckedIOException(exception);
-                  }
-                })
+            .map(line -> {
+              try {
+                return GridGrindCliJson.readBytes(
+                    line.getBytes(StandardCharsets.UTF_8), ExecutionProgressEvent.class);
+              } catch (IOException exception) {
+                throw new java.io.UncheckedIOException(exception);
+              }
+            })
             .allMatch(event -> event.status() != null && event.category() != null));
     assertFalse(stderr.toString(StandardCharsets.UTF_8).contains(sentinel));
     assertFalse(stderr.toString(StandardCharsets.UTF_8).contains("\"detail\""));

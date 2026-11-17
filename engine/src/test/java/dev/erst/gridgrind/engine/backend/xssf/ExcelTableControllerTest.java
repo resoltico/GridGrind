@@ -46,7 +46,7 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.metadata().setAutofilter("A1:B3");
+      sheet.metadata().setAutofilter(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"));
 
       controller.setTable(
           workbook,
@@ -77,8 +77,16 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
-      sheet.cells().setCell("B4", new CellValue.Text("Done"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
 
       controller.setTable(
           workbook,
@@ -116,8 +124,16 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Amount");
-      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
-      sheet.cells().setCell("B4", new CellValue.NumberValue(3));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(3));
 
       controller.setTable(
           workbook,
@@ -148,8 +164,16 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
-      sheet.cells().setCell("B4", new CellValue.Text("Done"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
 
       controller.setTable(
           workbook,
@@ -260,8 +284,16 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
-      sheet.cells().setCell("B4", new CellValue.Text("Done"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
 
       controller.setTable(
           workbook,
@@ -376,12 +408,35 @@ class ExcelTableControllerTest {
   void setTable_acceptsFormulaAndNumericHeaders() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("A1", new ResolvedFormula("A2"));
-      sheet.cells().setCell("B1", new CellValue.NumberValue(12.0));
-      sheet.cells().setCell("A2", new CellValue.Text("Ada"));
-      sheet.cells().setCell("B2", new CellValue.Text("Queue"));
-      sheet.cells().setCell("A3", new CellValue.Text("Lin"));
-      sheet.cells().setCell("B3", new CellValue.Text("Pack"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("A2"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12.0));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pack"));
 
       controller.setTable(
           workbook,
@@ -445,7 +500,9 @@ class ExcelTableControllerTest {
   void setTable_rejectsBlankHeaders() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
-      populateTableCells(sheet, "", "Task");
+      populateTableCells(sheet, "Owner", "Task");
+      // Model an invalid header already present in an external workbook.
+      sheet.xssfSheet().getRow(0).getCell(0).setCellValue("");
 
       IllegalArgumentException failure =
           assertThrows(
@@ -493,15 +550,51 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("C1", new CellValue.Text("Desk"));
-      sheet.cells().setCell("C2", new CellValue.Text("A1"));
-      sheet.cells().setCell("C3", new CellValue.Text("B1"));
-      sheet.cells().setCell("D1", new CellValue.Text("Region"));
-      sheet.cells().setCell("E1", new CellValue.Text("Desk"));
-      sheet.cells().setCell("D2", new CellValue.Text("North"));
-      sheet.cells().setCell("E2", new CellValue.Text("A1"));
-      sheet.cells().setCell("D3", new CellValue.Text("South"));
-      sheet.cells().setCell("E3", new CellValue.Text("B1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("A1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("B1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("A1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("B1"));
 
       controller.setTable(
           workbook,
@@ -724,8 +817,16 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
-      sheet.cells().setCell("B4", new CellValue.Text("Done"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
 
       controller.setTable(
           workbook,
@@ -750,10 +851,22 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("D1", new CellValue.Text("Desk"));
-      sheet.cells().setCell("D2", new CellValue.Text("A1"));
-      sheet.cells().setCell("D3", new CellValue.Text("B1"));
-      sheet.metadata().setAutofilter("D1:D3");
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("A1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("B1"));
+      sheet.metadata().setAutofilter(new dev.erst.gridgrind.core.vocabulary.RangeRef("D1:D3"));
 
       controller.setTable(
           workbook,
@@ -906,8 +1019,12 @@ class ExcelTableControllerTest {
               new RangeRef("A1:B3"),
               false,
               new TableStyleSpec.None()));
-      sheet.cells().setCell("A1", new CellValue.Blank());
-      sheet.cells().setCell("B1", new CellValue.Blank());
+      sheet
+          .cells()
+          .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new CellValue.Blank());
+      sheet
+          .cells()
+          .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"), new CellValue.Blank());
 
       List<AnalysisFindingReport> findings =
           controller.tableAutofilterHealthFindings(workbook, "Ops");
@@ -1087,15 +1204,51 @@ class ExcelTableControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("C1", new CellValue.Text("Desk"));
-      sheet.cells().setCell("C2", new CellValue.Text("A1"));
-      sheet.cells().setCell("C3", new CellValue.Text("B1"));
-      sheet.cells().setCell("E1", new CellValue.Text("Region"));
-      sheet.cells().setCell("F1", new CellValue.Text("Lead"));
-      sheet.cells().setCell("E2", new CellValue.Text("North"));
-      sheet.cells().setCell("F2", new CellValue.Text("Ada"));
-      sheet.cells().setCell("E3", new CellValue.Text("South"));
-      sheet.cells().setCell("F3", new CellValue.Text("Lin"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("A1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("B1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lead"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
       workbook
           .names()
           .setNamedRange(
@@ -1167,7 +1320,11 @@ class ExcelTableControllerTest {
               new TableStyleSpec.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
-      sheet.cells().setCell("A1", new CellValue.Text("QQQQq"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("QQQQq"));
 
       assertEquals("QQQQq", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertEquals(
@@ -1220,15 +1377,19 @@ class ExcelTableControllerTest {
       sheet
           .cells()
           .setRange(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               List.of(
-                  List.of(new CellValue.Text("Desk"), new CellValue.Text("Lane")),
-                  List.of(new CellValue.Text("Ada"), new CellValue.Text("Queue"))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lane")),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"))));
 
       assertEquals("Desk", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertEquals("Lane", table.getCTTable().getTableColumns().getTableColumnArray(1).getName());
 
-      sheet.cells().clearRange("A1");
+      sheet.cells().clearRange(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"));
 
       assertEquals("", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertTrue(
@@ -1270,10 +1431,26 @@ class ExcelTableControllerTest {
           .appendRow(
               new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
               new CellValueSpec.Date(LocalDate.of(2026, 6, 26)));
-      sheet.cells().setCell("A2", new CellValue.Text("Ada"));
-      sheet.cells().setCell("B2", new CellValue.Text("Queue"));
-      sheet.cells().setCell("A3", new CellValue.Text("Totals"));
-      sheet.cells().setCell("B3", new CellValue.Text("Done"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
       controller.setTable(
           workbook,
           new ResolvedTable(
@@ -1291,7 +1468,7 @@ class ExcelTableControllerTest {
       sheet
           .cells()
           .applyStyle(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               new CellStylePatch(
                   Optional.of("yyyy-mm-dd"),
                   Optional.empty(),
@@ -1343,10 +1520,26 @@ class ExcelTableControllerTest {
           .appendRow(
               new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
               new CellValueSpec.Date(LocalDate.of(2026, 6, 26)));
-      sheet.cells().setCell("A2", new CellValue.Text("Ada"));
-      sheet.cells().setCell("B2", new CellValue.Text("Queue"));
-      sheet.cells().setCell("A3", new CellValue.Text("Totals"));
-      sheet.cells().setCell("B3", new CellValue.Text("Done"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
       controller.setTable(
           workbook,
           new ResolvedTable(
@@ -1389,11 +1582,35 @@ class ExcelTableControllerTest {
   }
 
   private static void populateTableCells(XssfSheet sheet, String firstHeader, String secondHeader) {
-    sheet.cells().setCell("A1", new CellValue.Text(firstHeader));
-    sheet.cells().setCell("B1", new CellValue.Text(secondHeader));
-    sheet.cells().setCell("A2", new CellValue.Text("Ada"));
-    sheet.cells().setCell("B2", new CellValue.Text("Queue"));
-    sheet.cells().setCell("A3", new CellValue.Text("Lin"));
-    sheet.cells().setCell("B3", new CellValue.Text("Pack"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText(firstHeader));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText(secondHeader));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pack"));
   }
 }

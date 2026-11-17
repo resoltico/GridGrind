@@ -32,12 +32,16 @@ class ResolvedStepTest {
 
   @Test
   void resolvedGridsOwnBothCollectionLevelsAndRequireRectangularContent() {
-    List<ResolvedCellWrite> row = new ArrayList<>(List.of(new CellValue.Text("original")));
+    List<ResolvedCellWrite> row =
+        new ArrayList<>(
+            List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("original")));
     List<List<ResolvedCellWrite>> rows = new ArrayList<>(List.of(row));
     var action = new ResolvedMutationAction.SetRange(rows);
-    row.set(0, new CellValue.Text("changed"));
+    row.set(0, new dev.erst.gridgrind.core.model.value.ResolvedCellText("changed"));
     rows.clear();
-    assertEquals(List.of(List.of(new CellValue.Text("original"))), action.rows());
+    assertEquals(
+        List.of(List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("original"))),
+        action.rows());
     assertThrows(
         IllegalArgumentException.class, () -> new ResolvedMutationAction.SetRange(List.of()));
     assertThrows(

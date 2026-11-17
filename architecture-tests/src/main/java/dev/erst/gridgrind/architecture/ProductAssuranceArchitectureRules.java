@@ -10,16 +10,12 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.conditions.ArchConditions;
 
-/** Protects the single admitted executor, canonical semantics, and publication boundaries. */
+/** Protects canonical operation semantics and centralized publication ownership. */
 final class ProductAssuranceArchitectureRules {
   private static final String CATALOG_FACTORY =
       "dev.erst.gridgrind.core.catalog.CatalogTypeEntryFactory";
   private static final String CANONICAL_OPERATION_CONTRACTS =
       "dev.erst.gridgrind.core.semantics.WorkbookOperationContracts";
-  private static final String REQUEST_EXECUTOR =
-      "dev.erst.gridgrind.engine.runtime.GridGrindRequestExecutor";
-  private static final String ADMITTED_EXECUTOR =
-      "dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor";
   private static final String ENGINE_RUNTIME_PACKAGE = "dev.erst.gridgrind.engine.runtime..";
   private static final String REQUEST_PATH_ACCESS =
       "dev.erst.gridgrind.engine.runtime.RequestPathAccess";
@@ -40,24 +36,12 @@ final class ProductAssuranceArchitectureRules {
   private ProductAssuranceArchitectureRules() {}
 
   @ArchTest
-  static final ArchRule EXECUTION_USES_ONE_ADMITTED_EXECUTOR = executionUsesOneAdmittedExecutor();
-
-  @ArchTest
   static final ArchRule CATALOG_USES_CANONICAL_OPERATION_CONTRACTS =
       catalogUsesCanonicalOperationContracts();
 
   @ArchTest
   static final ArchRule PUBLICATION_IS_CENTRALIZED_BEHIND_REQUEST_PATH_ACCESS =
       publicationIsCentralizedBehindRequestPathAccess();
-
-  static ArchRule executionUsesOneAdmittedExecutor() {
-    return classes()
-        .that()
-        .implement(REQUEST_EXECUTOR)
-        .should()
-        .haveFullyQualifiedName(ADMITTED_EXECUTOR)
-        .because("all executable requests must cross shared admission before workbook mutation");
-  }
 
   static ArchRule catalogUsesCanonicalOperationContracts() {
     return classes()

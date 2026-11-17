@@ -31,11 +31,10 @@ final class WorkbookStaticStreamingValidation {
     request
         .source()
         .filter(source -> !(source instanceof WorkbookPlan.WorkbookSource.New))
-        .ifPresent(
-            source ->
-                violations.add(
-                    new WorkbookStaticViolation(
-                        "execution.mode", STREAMING_WRITE.invalidSourceMessage())));
+        .ifPresent(source ->
+            violations.add(
+                new WorkbookStaticViolation(
+                    "execution.mode", STREAMING_WRITE.invalidSourceMessage())));
     boolean seenEnsureSheet = false;
     boolean everyStepBound = request.steps().stream().allMatch(step -> step.value().isPresent());
     for (int index = 0; index < request.steps().size(); index++) {

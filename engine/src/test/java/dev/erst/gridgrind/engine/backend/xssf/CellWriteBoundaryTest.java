@@ -8,23 +8,28 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.engine.cells.CellErrors;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Verifies cell-write behavior at the POI boundary. */
 class CellWriteBoundaryTest {
-  @Test
-  void rejectsEvaluationOnlyErrorsWithoutErasingAnExistingFormula() throws Exception {
+  @ParameterizedTest
+  @ValueSource(strings = {"#CIRCULAR_REF!", "#FUNCTION_NOT_IMPLEMENTED!"})
+  void rejectsEvaluationOnlyErrorsWithoutErasingAnExistingFormula(String literal) throws Exception {
+    var observed = new CellValue.ErrorValue(literal);
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       var cells = workbook.getOrCreateSheet("Budget").cells();
-      cells.setCell("A1", new ResolvedFormula("1+1"));
-      for (CellValue.ErrorValue value :
-          java.util.List.of(
-              new CellValue.ErrorValue("#CIRCULAR_REF!"),
-              new CellValue.ErrorValue("#FUNCTION_NOT_IMPLEMENTED!"))) {
-        assertThrows(IllegalArgumentException.class, () -> cells.setCell("A1", value));
-        assertEquals(
-            "1+1",
-            workbook.xssfWorkbook().getSheet("Budget").getRow(0).getCell(0).getCellFormula());
-      }
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              cells.setCell(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                  new dev.erst.gridgrind.core.model.value.CellValueSpec.ErrorValue(
+                      observed.value())));
+      assertEquals(
+          "1+1", workbook.xssfWorkbook().getSheet("Budget").getRow(0).getCell(0).getCellFormula());
     }
   }
 
@@ -44,7 +49,9 @@ class CellWriteBoundaryTest {
       workbook
           .getOrCreateSheet("Budget")
           .cells()
-          .setCell("A1", new ResolvedRawFormula("LAMBDA(x,x+1)(A1)"));
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedRawFormula("LAMBDA(x,x+1)(A1)"));
 
       assertEquals(
           "LAMBDA(x,x+1)(A1)",

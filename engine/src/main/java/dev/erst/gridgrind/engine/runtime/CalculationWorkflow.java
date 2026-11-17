@@ -210,21 +210,19 @@ final class CalculationWorkflow {
       Optional<CalculationReport.Preflight> preflightReport) {
     return preflightReport.stream()
         .flatMap(report -> report.formulas().stream())
-        .filter(
-            capability ->
-                capability.capability()
-                    != dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind.EVALUABLE_NOW)
-        .map(
-            capability ->
-                new RequestWarning(
-                    GridGrindWarningCode.FORMULA_NOT_EVALUATED,
-                    new RequestWarningLocation.FormulaCell(
-                        new SheetLabel(capability.cell().sheetName().value()),
-                        capability.cell().address().value(),
-                        capability.formula()),
-                    capability
-                        .message()
-                        .orElse("Formula was not evaluated by the configured strategy.")))
+        .filter(capability ->
+            capability.capability()
+                != dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind.EVALUABLE_NOW)
+        .map(capability ->
+            new RequestWarning(
+                GridGrindWarningCode.FORMULA_NOT_EVALUATED,
+                new RequestWarningLocation.FormulaCell(
+                    new SheetLabel(capability.cell().sheetName().value()),
+                    capability.cell().address().value(),
+                    capability.formula()),
+                capability
+                    .message()
+                    .orElse("Formula was not evaluated by the configured strategy.")))
         .toList();
   }
 

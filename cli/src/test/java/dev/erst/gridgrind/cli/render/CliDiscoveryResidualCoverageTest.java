@@ -3,6 +3,8 @@ package dev.erst.gridgrind.cli.render;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import dev.erst.gridgrind.core.catalog.CatalogFieldMetadataKey;
+import dev.erst.gridgrind.core.catalog.CatalogLookupNamespace;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,12 +34,12 @@ class CliDiscoveryResidualCoverageTest {
             List.of(new ProtocolCatalogGroupIndex("nested", List.of("C"))),
             List.of(new ProtocolCatalogGroupIndex("plain", List.of("NUMBER"))),
             List.of(
-                new ProtocolCatalogFieldMetadataKey(
+                new CatalogFieldMetadataKey(
                     "projectedByFacets",
                     "Field is present only when one listed facet is requested."),
-                new ProtocolCatalogFieldMetadataKey(
+                new CatalogFieldMetadataKey(
                     "noteRefs", "Entry references stable note ids published once per payload.")),
-            List.of(new ProtocolCatalogLookupNamespace("<group>:<id>", "Use stable catalog ids.")),
+            List.of(new CatalogLookupNamespace("<group>:<id>", "Use stable catalog ids.")),
             List.of());
 
     assertEquals(2, report.topLevelGroups().getFirst().entryCount());

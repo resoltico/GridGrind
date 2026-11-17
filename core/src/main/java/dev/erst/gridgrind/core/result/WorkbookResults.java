@@ -77,6 +77,90 @@ public final class WorkbookResults {
     return failure(ProtocolVersion.CURRENT, problem);
   }
 
+  /** Converts a completed result to failure while preserving established execution facts. */
+  public static WorkbookResult.Failure withSecondaryFailure(
+      WorkbookResult prior, GridGrindProblemDetail.Problem problem) {
+    Objects.requireNonNull(prior, "prior must not be null");
+    return withSecondaryFailure(prior, problem, prior.journal());
+  }
+
+  /** Retains explicit completed phase telemetry while attaching a secondary failure. */
+  public static WorkbookResult.Failure withSecondaryFailure(
+      WorkbookResult prior, GridGrindProblemDetail.Problem problem, ExecutionJournal journal) {
+    Objects.requireNonNull(prior, "prior must not be null");
+    Objects.requireNonNull(problem, "problem must not be null");
+    Objects.requireNonNull(journal, "journal must not be null");
+    var primary =
+        prior instanceof WorkbookResult.Failure failure
+            ? failure.problem().withCause(problem.asCause())
+            : problem;
+    Optional<ExecutionJournal.FailureStep> priorFailedStep =
+        prior.journal().outcome() instanceof ExecutionJournal.Outcome.Failed failed
+            ? failed.failedStep()
+            : Optional.empty();
+    ExecutionJournal failedJournal = failedJournal(journal, primary.code(), priorFailedStep);
+    return switch (prior) {
+      case WorkbookResult.Success success ->
+          new WorkbookResult.Failure(
+              success.protocolVersion(),
+              success.planId(),
+              failedJournal,
+              success.calculation(),
+              success.persistence(),
+              success.evidence(),
+              success.warnings(),
+              success.assertions(),
+              success.inspections(),
+              primary);
+      case WorkbookResult.Failure failure ->
+          new WorkbookResult.Failure(
+              failure.protocolVersion(),
+              failure.planId(),
+              failedJournal,
+              failure.calculation(),
+              failure.persistence(),
+              failure.evidence(),
+              failure.warnings(),
+              failure.assertions(),
+              failure.inspections(),
+              primary);
+    };
+  }
+
+  private static ExecutionJournal failedJournal(
+      ExecutionJournal journal,
+      dev.erst.gridgrind.core.problem.GridGrindProblemCode code,
+      Optional<ExecutionJournal.FailureStep> priorFailedStep) {
+    ExecutionJournal.Outcome.Failed outcome =
+        switch (journal.outcome()) {
+          case ExecutionJournal.Outcome.Succeeded success ->
+              new ExecutionJournal.Outcome.Failed(
+                  success.plannedStepCount(),
+                  success.completedStepCount(),
+                  success.durationMillis(),
+                  code,
+                  priorFailedStep);
+          case ExecutionJournal.Outcome.Failed failure ->
+              new ExecutionJournal.Outcome.Failed(
+                  failure.plannedStepCount(),
+                  failure.completedStepCount(),
+                  failure.durationMillis(),
+                  code,
+                  failure.failedStep().or(() -> priorFailedStep));
+        };
+    return new ExecutionJournal(
+        journal.level(),
+        journal.source(),
+        journal.validation(),
+        journal.inputResolution(),
+        journal.open(),
+        journal.calculation(),
+        journal.persistencePhase(),
+        journal.close(),
+        journal.steps(),
+        outcome);
+  }
+
   /**
    * Describes persistence that was requested but whose final destination was never touched.
    *

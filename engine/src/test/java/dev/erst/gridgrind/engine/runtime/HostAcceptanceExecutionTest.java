@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -60,7 +61,9 @@ class HostAcceptanceExecutionTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(root, request, policy),
@@ -97,7 +100,9 @@ class HostAcceptanceExecutionTest {
     WorkbookResult.Success success =
         assertInstanceOf(
             WorkbookResult.Success.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(root, request, policy),
@@ -126,7 +131,9 @@ class HostAcceptanceExecutionTest {
     WorkbookResult.Success success =
         assertInstanceOf(
             WorkbookResult.Success.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(root, request, policy),
@@ -162,7 +169,9 @@ class HostAcceptanceExecutionTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(
@@ -196,7 +205,9 @@ class HostAcceptanceExecutionTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(
@@ -213,7 +224,9 @@ class HostAcceptanceExecutionTest {
     WorkbookPlan request = preservationPlan(source, output, "A1", 2);
 
     WorkbookResult result =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(
                 request,
                 ExecutionInputBindingsFixtureSupport.bindings(root, request, preserveCell("B1")),
@@ -243,7 +256,9 @@ class HostAcceptanceExecutionTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(

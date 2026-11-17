@@ -14,7 +14,6 @@ import dev.erst.gridgrind.core.model.security.ResolvedPersistenceEncryption;
 import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
 import dev.erst.gridgrind.core.model.security.ResolvedSignature;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
@@ -53,7 +52,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook
           .getOrCreateSheet("Plain")
           .cells()
-          .setCell("A1", new CellValue.Text("Plain workbook"));
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plain workbook"));
       workbook
           .persistence()
           .save(
@@ -74,7 +75,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(directory.resolve("encrypted"));
-    Path explicitTempRoot = directory.resolve("caller-scratch");
+    Path explicitTempRoot = hostScratch(directory.resolve("caller-scratch"));
     AtomicInteger tempFilesCreated = new AtomicInteger();
     WorkbookTempFileFactory tempFileFactory =
         (prefix, suffix) -> {
@@ -95,13 +96,14 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       assertInstanceOf(
           OoxmlEncryptionReport.Encrypted.class, readableWorkbook.packageSecurity().encryption());
       assertTrue(Files.exists(readableWorkbook.workbookPath()));
-      assertFalse(
-          readableWorkbook
-              .workbookPath()
-              .startsWith(explicitTempRoot.toAbsolutePath().normalize()));
+      assertTrue(readableWorkbook.workbookPath().startsWith(explicitTempRoot));
+      assertNotEquals(explicitTempRoot, readableWorkbook.workbookPath().getParent());
     }
-    assertEquals(0, tempFilesCreated.get());
-    assertTrue(Files.notExists(explicitTempRoot));
+    assertTrue(
+        tempFilesCreated.get() > 0,
+        "Decryption must acquire private scratch through the host factory");
+    assertOnlyHostMarker(explicitTempRoot);
+    assertTrue(Files.isRegularFile(encryptedWorkbook.workbookPath()));
 
     Path legacyWorkbookPath =
         ManagedTempFiles.createManagedTempFile("gridgrind-legacy-materialize-", ".xls");
@@ -127,7 +129,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path directory = ManagedTempFiles.createManagedTempDirectory("gridgrind-package-io-");
     Path sourceWorkbookPath = directory.resolve("source.xlsx");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Bridge"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Bridge"));
       workbook
           .persistence()
           .save(
@@ -153,7 +160,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
     try (XssfWorkbook reopened =
         XssfWorkbooks.open(copiedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      assertEquals("Bridge", reopened.sheet("Budget").cells().text("A1"));
+      assertEquals(
+          "Bridge",
+          reopened
+              .sheet("Budget")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
     }
   }
 
@@ -162,7 +174,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path workspace = ManagedTempFiles.createManagedTempDirectory("gridgrind-package-file-ops-");
     Path sourceWorkbookPath = workspace.resolve("source.xlsx");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Source"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Source"));
       workbook
           .persistence()
           .save(
@@ -220,8 +237,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
             ManagedTempFiles.createManagedTempDirectory("gridgrind-ooxml-materialize-cleanup-"));
-    Path explicitTempRoot = encryptedWorkbook.workbookPath().getParent().resolve("caller-scratch");
-    AtomicInteger tempFilesCreated = new AtomicInteger();
+    Path explicitTempRoot =
+        hostScratch(encryptedWorkbook.workbookPath().getParent().resolve("caller-scratch"));
+    java.util.List<Path> reservedPaths = new java.util.ArrayList<>();
 
     InvalidWorkbookPasswordException failure =
         assertThrows(
@@ -231,14 +249,16 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     encryptedWorkbook.workbookPath(),
                     new ResolvedOpenSecurity.Encrypted("wrong-password"),
                     (prefix, suffix) -> {
-                      tempFilesCreated.incrementAndGet();
-                      return ManagedTempFiles.createManagedTempFile(
-                          explicitTempRoot, prefix, suffix);
+                      Path reserved =
+                          ManagedTempFiles.createManagedTempFile(explicitTempRoot, prefix, suffix);
+                      reservedPaths.add(reserved);
+                      return reserved;
                     }));
 
     assertFalse(failure.getMessage().contains(encryptedWorkbook.workbookPath().toString()));
-    assertEquals(0, tempFilesCreated.get());
-    assertTrue(Files.notExists(explicitTempRoot));
+    assertTrue(reservedPaths.stream().allMatch(Files::notExists));
+    assertOnlyHostMarker(explicitTempRoot);
+    assertTrue(Files.isRegularFile(encryptedWorkbook.workbookPath()));
   }
 
   @Test
@@ -315,20 +335,22 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook.write(outputStream);
     }
 
-    IllegalArgumentException unsupportedMaterializedFailure =
+    WorkbookNotOpenableException unsupportedMaterializedFailure =
         assertThrows(
-            IllegalArgumentException.class,
+            WorkbookNotOpenableException.class,
             () ->
                 XssfWorkbooks.openMaterializedWorkbook(
                     nonXlsxPath,
                     Optional.of(nonXlsxPath),
                     OoxmlPackageSecurityReport.none(),
                     Optional.empty()));
-    assertEquals("Only .xlsx workbooks are supported", unsupportedMaterializedFailure.getMessage());
+    assertEquals(
+        "Workbook package is not openable: " + nonXlsxPath,
+        unsupportedMaterializedFailure.getMessage());
 
-    IllegalArgumentException unsupportedFormulaMaterializedFailure =
+    WorkbookNotOpenableException unsupportedFormulaMaterializedFailure =
         assertThrows(
-            IllegalArgumentException.class,
+            WorkbookNotOpenableException.class,
             () ->
                 XssfWorkbooks.openMaterializedWorkbook(
                     nonXlsxPath,
@@ -337,7 +359,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     OoxmlPackageSecurityReport.none(),
                     Optional.empty()));
     assertEquals(
-        "Only .xlsx workbooks are supported", unsupportedFormulaMaterializedFailure.getMessage());
+        "Workbook package is not openable: " + nonXlsxPath,
+        unsupportedFormulaMaterializedFailure.getMessage());
   }
 
   @Test
@@ -345,34 +368,59 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
             ManagedTempFiles.createManagedTempDirectory("gridgrind-workbook-open-security-"));
-    AtomicInteger tempFilesCreated = new AtomicInteger();
+    Path explicitTempRoot =
+        hostScratch(encryptedWorkbook.workbookPath().getParent().resolve("caller-scratch"));
+    java.util.List<Path> reservedPaths = new java.util.ArrayList<>();
     WorkbookTempFileFactory tempFileFactory =
         (prefix, suffix) -> {
-          tempFilesCreated.incrementAndGet();
-          return ManagedTempFiles.createManagedTempFile(prefix, suffix);
+          Path reserved = ManagedTempFiles.createManagedTempFile(explicitTempRoot, prefix, suffix);
+          reservedPaths.add(reserved);
+          return reserved;
         };
-
     try (XssfWorkbook workbook =
-            XssfWorkbooks.open(
-                encryptedWorkbook.workbookPath(),
-                new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
-                tempFileFactory);
-        XssfWorkbook workbookWithEnvironment =
-            XssfWorkbooks.open(
-                encryptedWorkbook.workbookPath(),
-                ResolvedFormulaEnvironment.defaults(),
-                new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
-                tempFileFactory)) {
-      assertEquals("Encrypted workbook", workbook.sheet("Encrypted").cells().text("A1"));
+        XssfWorkbooks.open(
+            encryptedWorkbook.workbookPath(),
+            new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
+            tempFileFactory)) {
       assertEquals(
-          "Encrypted workbook", workbookWithEnvironment.sheet("Encrypted").cells().text("A1"));
+          "Encrypted workbook",
+          workbook
+              .sheet("Encrypted")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertFalse(reservedPaths.isEmpty(), "Default-environment opening must use the host factory");
+      assertTrue(reservedPaths.stream().allMatch(Files::notExists));
+      assertOnlyHostMarker(explicitTempRoot);
     }
-    assertEquals(0, tempFilesCreated.get());
+    int firstOpenReservations = reservedPaths.size();
+    try (XssfWorkbook workbook =
+        XssfWorkbooks.open(
+            encryptedWorkbook.workbookPath(),
+            ResolvedFormulaEnvironment.defaults(),
+            new ResolvedOpenSecurity.Encrypted(encryptedWorkbook.password()),
+            tempFileFactory)) {
+      assertEquals(
+          "Encrypted workbook",
+          workbook
+              .sheet("Encrypted")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertTrue(
+          reservedPaths.size() > firstOpenReservations,
+          "Explicit-environment opening must independently use the host factory");
+      assertTrue(reservedPaths.stream().allMatch(Files::notExists));
+      assertOnlyHostMarker(explicitTempRoot);
+    }
 
     Path materializedWorkbookPath =
         ManagedTempFiles.createManagedTempFile("gridgrind-materialized-open-", ".xlsx");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Plain").cells().setCell("A1", new CellValue.Text("Materialized"));
+      workbook
+          .getOrCreateSheet("Plain")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Materialized"));
       workbook
           .persistence()
           .save(
@@ -395,8 +443,18 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                 Optional.of(materializedWorkbookPath),
                 OoxmlPackageSecurityReport.none(),
                 Optional.empty())) {
-      assertEquals("Materialized", workbook.sheet("Plain").cells().text("A1"));
-      assertEquals("Materialized", workbookWithEnvironment.sheet("Plain").cells().text("A1"));
+      assertEquals(
+          "Materialized",
+          workbook
+              .sheet("Plain")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertEquals(
+          "Materialized",
+          workbookWithEnvironment
+              .sheet("Plain")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
     }
   }
 
@@ -657,7 +715,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         ManagedTempFiles.createManagedTempDirectory("gridgrind-saveworkbook-security-");
     Path plainSourcePath = workspace.resolve("plain-source.xlsx");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Plain").cells().setCell("A1", new CellValue.Text("Plain save"));
+      workbook
+          .getOrCreateSheet("Plain")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plain save"));
       workbook
           .persistence()
           .save(
@@ -679,12 +742,22 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     }
     try (XssfWorkbook workbook =
         XssfWorkbooks.open(plainSavedPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      assertEquals("Plain save", workbook.sheet("Plain").cells().text("A1"));
+      assertEquals(
+          "Plain save",
+          workbook
+              .sheet("Plain")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
     }
 
     Path plainWorkbookPath = workspace.resolve("persist-signed-plain.xlsx");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Guard").cells().setCell("A1", new CellValue.Text("Signed guard"));
+      workbook
+          .getOrCreateSheet("Guard")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Signed guard"));
       workbook
           .persistence()
           .save(
@@ -719,7 +792,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   @Test
   void saveWorkbookCoversInMemoryAndSignedPassthroughBranches() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Memory").cells().setCell("A1", new CellValue.Text("Memory save"));
+      workbook
+          .getOrCreateSheet("Memory")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Memory save"));
       Path memoryTarget = ManagedTempFiles.createManagedTempFile("gridgrind-save-memory-", ".xlsx");
 
       SecurityAdapter.saveWorkbook(
@@ -731,7 +809,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
       try (XssfWorkbook reopened =
           XssfWorkbooks.open(memoryTarget, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-        assertEquals("Memory save", reopened.sheet("Memory").cells().text("A1"));
+        assertEquals(
+            "Memory save",
+            reopened
+                .sheet("Memory")
+                .cells()
+                .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       }
     }
 
@@ -784,10 +867,10 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   }
 
   @Test
-  void encryptedSaveKeepsPlaintextTempsOutOfCallerScratchRoot() throws IOException {
+  void encryptedSaveRemovesPrivatePlaintextWithinHostSelectedScratchRoot() throws IOException {
     Path workspace =
         ManagedTempFiles.createManagedTempDirectory("gridgrind-encrypted-save-private-");
-    Path explicitTempRoot = workspace.resolve("caller-scratch");
+    Path explicitTempRoot = hostScratch(workspace.resolve("caller-scratch"));
     Path encryptedOutput = workspace.resolve("encrypted-output.xlsx");
     AtomicInteger tempFilesCreated = new AtomicInteger();
 
@@ -795,7 +878,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook
           .getOrCreateSheet("Encrypted")
           .cells()
-          .setCell("A1", new CellValue.Text("Encrypted save"));
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Encrypted save"));
       SecurityAdapter.saveWorkbook(
           workbook,
           encryptedOutput,
@@ -813,14 +898,38 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           });
     }
 
-    assertEquals(0, tempFilesCreated.get());
-    assertTrue(Files.notExists(explicitTempRoot));
+    assertTrue(
+        tempFilesCreated.get() > 0,
+        "Encrypted saving must acquire private scratch through the host factory");
+    assertOnlyHostMarker(explicitTempRoot);
     try (XssfWorkbook reopened =
         XssfWorkbooks.open(
             encryptedOutput,
             new ResolvedOpenSecurity.Encrypted("secret-password"),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      assertEquals("Encrypted save", reopened.sheet("Encrypted").cells().text("A1"));
+      assertEquals(
+          "Encrypted save",
+          reopened
+              .sheet("Encrypted")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+    }
+  }
+
+  private static Path hostScratch(Path root) throws IOException {
+    Files.createDirectories(root);
+    Files.writeString(root.resolve("host-owned-marker.txt"), "host-owned");
+    return root;
+  }
+
+  private static void assertOnlyHostMarker(Path root) throws IOException {
+    assertTrue(Files.isDirectory(root), "The host-selected root must survive cleanup");
+    assertEquals("host-owned", Files.readString(root.resolve("host-owned-marker.txt")));
+    try (var children = Files.list(root)) {
+      assertEquals(
+          java.util.List.of(root.resolve("host-owned-marker.txt")),
+          children.toList(),
+          "Every private plaintext child must be removed without deleting host data");
     }
   }
 
@@ -1192,7 +1301,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook
           .getOrCreateSheet("Signed")
           .cells()
-          .setCell("A1", new CellValue.Text("Signed workbook"));
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Signed workbook"));
       workbook
           .persistence()
           .save(

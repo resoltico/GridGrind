@@ -2,12 +2,9 @@ package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.plan.Assertion;
-import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
-import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationAction;
-import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import java.util.Map;
@@ -26,10 +23,7 @@ public final class GridGrindProtocolTypeNames {
   private static final Map<Class<?>, String> WORKBOOK_PERSISTENCE_TYPE_NAMES =
       typeNamesByClass(WorkbookPlan.WorkbookPersistence.class);
   private static final Map<Class<?>, String> WORKBOOK_STEP_TYPE_NAMES =
-      Map.of(
-          MutationStep.class, "MUTATION",
-          AssertionStep.class, "ASSERTION",
-          InspectionStep.class, "INSPECTION");
+      typeNamesByClass(WorkbookStep.class);
   private static final Map<Class<?>, String> MUTATION_ACTION_TYPE_NAMES =
       typeNamesByClass(MutationAction.class);
   private static final Map<Class<?>, String> ASSERTION_TYPE_NAMES =

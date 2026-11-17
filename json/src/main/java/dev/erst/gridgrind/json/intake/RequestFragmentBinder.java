@@ -3,7 +3,6 @@ package dev.erst.gridgrind.json.intake;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
-import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
@@ -36,44 +35,27 @@ final class RequestFragmentBinder {
     if (hasProblemAtOrBelow(jsonPath, structuralProblems) || !canConvert(node)) {
       return Optional.empty();
     }
-    Optional<T> validated =
-        RequestConstructorValidation.validate(node, type, jsonPath, bindingFailures);
-    if (validated.isEmpty()) {
-      return Optional.empty();
-    }
-    try {
-      T bound = GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.treeToValue(toJsonNode(node), type);
-      if (!validated.orElseThrow().equals(bound)) {
-        throw new IllegalStateException(
-            "Wire binding differs from canonical model validation at " + jsonPath);
-      }
-      return Optional.of(bound);
-    } catch (tools.jackson.core.JacksonException defect) {
-      throw new IllegalStateException(
-          "Wire binding failed after canonical validation at " + jsonPath, defect);
-    }
+    return RequestConstructorValidation.validate(node, type, jsonPath, bindingFailures);
   }
 
   static boolean hasProblemAtOrBelow(String jsonPath, List<RequestStructuralProblem> problems) {
     return problems.stream()
-        .anyMatch(
-            problem -> {
-              if (problem instanceof RequestDuplicateKey duplicateKey) {
-                return isAtOrBelow(jsonPath, duplicateKeyPath(duplicateKey));
-              }
-              return problem.jsonPath().map(path -> isAtOrBelow(jsonPath, path)).orElse(false);
-            });
+        .anyMatch(problem -> {
+          if (problem instanceof RequestDuplicateKey duplicateKey) {
+            return isAtOrBelow(jsonPath, duplicateKeyPath(duplicateKey));
+          }
+          return problem.jsonPath().map(path -> isAtOrBelow(jsonPath, path)).orElse(false);
+        });
   }
 
   static boolean hasProblemAt(String jsonPath, List<RequestStructuralProblem> problems) {
     return problems.stream()
-        .anyMatch(
-            problem -> {
-              if (problem instanceof RequestDuplicateKey duplicateKey) {
-                return duplicateKeyPath(duplicateKey).equals(jsonPath);
-              }
-              return problem.jsonPath().filter(jsonPath::equals).isPresent();
-            });
+        .anyMatch(problem -> {
+          if (problem instanceof RequestDuplicateKey duplicateKey) {
+            return duplicateKeyPath(duplicateKey).equals(jsonPath);
+          }
+          return problem.jsonPath().filter(jsonPath::equals).isPresent();
+        });
   }
 
   private static String duplicateKeyPath(RequestDuplicateKey duplicateKey) {

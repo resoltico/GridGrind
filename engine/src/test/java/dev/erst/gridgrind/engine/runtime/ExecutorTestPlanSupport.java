@@ -24,7 +24,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionStep;
@@ -513,7 +512,12 @@ final class ExecutorTestPlanSupport {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.Text("Header"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
     return workbookPath;

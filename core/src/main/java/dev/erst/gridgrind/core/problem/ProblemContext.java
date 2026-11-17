@@ -21,6 +21,7 @@ import java.util.Optional;
 @Union(discriminator = "type")
 public sealed interface ProblemContext
     permits ProblemContext.ParseArguments,
+        ProblemContext.ReadAuthority,
         HostContext,
         RequestInputContext,
         ProblemContext.RequestShapeContext,
@@ -48,11 +49,21 @@ public sealed interface ProblemContext
     }
   }
 
+  /** Context for strict host-authority document intake before workbook execution. */
+  @Variant(id = "READ_AUTHORITY", summary = "Strict host-authority document intake.")
+  record ReadAuthority(String authorityPath, JsonLocation json) implements ProblemContext {
+    public ReadAuthority {
+      authorityPath = TextValidation.requireNonBlank(authorityPath, "authorityPath");
+      Objects.requireNonNull(json, "json must not be null");
+    }
+  }
+
   /** Context for failures that occur while reading or structurally checking the JSON request. */
   @Variant(
       id = "READ_REQUEST",
       summary =
-          "Context for failures that occur while reading or structurally checking the JSON request.")
+          "Context for failures that occur while reading or structurally checking the JSON"
+              + " request.")
   record ReadRequest(RequestInput request, JsonLocation json) implements RequestInputContext {
     public ReadRequest {
       Objects.requireNonNull(request, "request must not be null");
@@ -72,7 +83,8 @@ public sealed interface ProblemContext
   @Variant(
       id = "BIND_REQUEST",
       summary =
-          "Context for failures that occur while binding structurally valid JSON into the request model.")
+          "Context for failures that occur while binding structurally valid JSON into the request"
+              + " model.")
   record BindRequest(RequestInput request, JsonLocation json) implements RequestInputContext {
     public BindRequest {
       Objects.requireNonNull(request, "request must not be null");
@@ -159,11 +171,18 @@ public sealed interface ProblemContext
   @Variant(
       id = "OPEN_WORKBOOK",
       summary = "Context for failures that occur while opening the source workbook.")
-  record OpenWorkbook(RequestShape request, WorkbookReference workbook)
+  record OpenWorkbook(
+      RequestShape request, WorkbookReference workbook, Optional<WorkbookContentLocation> content)
       implements RequestShapeContext {
     public OpenWorkbook {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(workbook, "workbook must not be null");
+      Objects.requireNonNull(content, "content must not be null");
+    }
+
+    /** Enriches the source-open phase with established native-content coordinates. */
+    public OpenWorkbook withContent(WorkbookContentLocation discovered) {
+      return new OpenWorkbook(request, workbook, Optional.of(Objects.requireNonNull(discovered)));
     }
 
     /** Returns the opened workbook path when execution targeted one existing file. */

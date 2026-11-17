@@ -35,7 +35,6 @@ import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
-import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
@@ -63,66 +62,29 @@ import org.junit.jupiter.api.Test;
 class DtoEdgeCoverageTest {
   @Test
   void drawingAnchorsMarkersAndObjectsValidateAllRemainingBranches() {
-    DrawingMarkerReport marker = new DrawingMarkerReport(0, 0, 0, 0);
+    DrawingMarkerReport marker =
+        new DrawingMarkerReport(
+            0, 0, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0));
 
     assertEquals(
         "rowIndex must not be negative",
-        assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, -1, 0, 0))
-            .getMessage());
-    assertEquals(
-        "dx must not be negative",
-        assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, 0, -1, 0))
-            .getMessage());
-    assertEquals(
-        "dy must not be negative",
-        assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, 0, 0, -1))
-            .getMessage());
-    assertEquals(
-        "widthEmu must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new DrawingAnchorReport.OneCell(
-                        marker, 0L, 1L, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE))
-            .getMessage());
-    assertEquals(
-        "heightEmu must be greater than 0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new DrawingAnchorReport.OneCell(
-                        marker, 1L, 0L, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE))
-            .getMessage());
-    assertEquals(
-        "xEmu must not be negative",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new DrawingAnchorReport.Absolute(
-                        -1L, 0L, 1L, 1L, ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE))
-            .getMessage());
-    assertEquals(
-        "yEmu must not be negative",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DrawingAnchorReport.Absolute(0L, -1L, 1L, 1L, null))
-            .getMessage());
-    assertEquals(
-        "widthEmu must be greater than 0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DrawingAnchorReport.Absolute(0L, 0L, 0L, 1L, null))
-            .getMessage());
-    assertEquals(
-        "heightEmu must be greater than 0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new DrawingAnchorReport.Absolute(0L, 0L, 1L, 0L, null))
+                    new DrawingMarkerReport(
+                        0,
+                        -1,
+                        new DrawingCoordinateReport.Emu(0),
+                        new DrawingCoordinateReport.Emu(0)))
             .getMessage());
 
     String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3});
     DrawingAnchorReport.TwoCell twoCell =
-        new DrawingAnchorReport.TwoCell(marker, new DrawingMarkerReport(1, 1, 0, 0), null);
+        new DrawingAnchorReport.TwoCell(
+            marker,
+            new DrawingMarkerReport(
+                1, 1, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0)),
+            null);
 
     assertEquals(
         "byteSize must not be negative",
@@ -189,7 +151,9 @@ class DtoEdgeCoverageTest {
         "plotTypeTokens value must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DrawingObjectReport.Chart("Chart", twoCell, true, List.of(" "), "Title"))
+                () ->
+                    new DrawingObjectReport.Chart(
+                        "Chart", twoCell, true, List.of(" "), new ChartReport.Title.Text("Title")))
             .getMessage());
     assertEquals(
         "presetGeometryToken must not be blank",
@@ -466,33 +430,26 @@ class DtoEdgeCoverageTest {
                         List.of(
                             chartSeries(
                                 new ChartReport.Title.Text("S1"),
-                                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
+                                new ChartReport.DataSource.StringLiteral(
+                                    new ChartReport.StringCache.Stored(
+                                        Optional.of(1L),
+                                        List.of(
+                                            new ChartReport.StringPoint(
+                                                Optional.of(0L), Optional.of("Jan"))))),
                                 new ChartReport.DataSource.NumericLiteral(
-                                    Optional.empty(), List.of("1"))))))
+                                    new ChartReport.NumericCache.Stored(
+                                        Optional.of(1L),
+                                        Optional.empty(),
+                                        List.of(
+                                            new ChartReport.NumericPoint(
+                                                Optional.of(0L),
+                                                Optional.of("1"),
+                                                Optional.empty()))))))))
             .getMessage());
     assertEquals(
         "detail must not be blank",
         assertThrows(
                 IllegalArgumentException.class, () -> new ChartReport.Unsupported("RADAR", " "))
-            .getMessage());
-    assertEquals(
-        "formula must not be blank",
-        assertThrows(
-                IllegalArgumentException.class, () -> new ChartReport.Title.Formula(" ", "cache"))
-            .getMessage());
-    assertEquals(
-        "formatCode must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ChartReport.DataSource.NumericReference(
-                        "A1:A2", Optional.of(" "), List.of("1")))
-            .getMessage());
-    assertEquals(
-        "formatCode must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new ChartReport.DataSource.NumericLiteral(Optional.of(" "), List.of("1")))
             .getMessage());
 
     assertEquals(
@@ -835,10 +792,9 @@ class DtoEdgeCoverageTest {
                             Optional.empty())))
             .getMessage());
 
-    assertDoesNotThrow(
-        () ->
-            new IgnoredErrorReport(
-                new RangeLabel(" "), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)));
+    assertDoesNotThrow(() ->
+        new IgnoredErrorReport(
+            new RangeLabel(" "), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)));
     assertEquals(
         "errorTypes must not contain duplicates",
         assertThrows(

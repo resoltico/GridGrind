@@ -12,6 +12,10 @@ final class CliPayloadOutput {
   static void write(OutputStream outputStream, byte[] payload) throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(payload, "payload must not be null");
+    if (outputStream instanceof CliDiagnosticChannel channel) {
+      channel.writeFrame(payload);
+      return;
+    }
     outputStream.write(payload);
     if (payload.length == 0 || payload[payload.length - 1] != '\n') {
       outputStream.write('\n');

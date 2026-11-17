@@ -14,7 +14,6 @@ import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.engine.backend.ExecutionBackend;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,41 +23,44 @@ final class ExecutionDirectEventReadWorkflow
   private final StepExecution stepSupport;
   private final MaterializedTerminalAcceptance terminalAcceptance;
   private final ExecutionResults responseSupport;
-  private final TempFileFactory tempFileFactory;
 
-  ExecutionDirectEventReadWorkflow(
-      StepExecution stepSupport,
-      ExecutionResults responseSupport,
-      TempFileFactory tempFileFactory) {
+  ExecutionDirectEventReadWorkflow(StepExecution stepSupport, ExecutionResults responseSupport) {
     this(
         stepSupport,
         new HostAcceptanceExecutor(
                 Objects.requireNonNull(stepSupport, "stepSupport must not be null"))
             ::verifyMaterializedTerminalAcceptance,
-        responseSupport,
-        tempFileFactory);
+        responseSupport);
   }
 
   ExecutionDirectEventReadWorkflow(
       StepExecution stepSupport,
       MaterializedTerminalAcceptance terminalAcceptance,
-      ExecutionResults responseSupport,
-      TempFileFactory tempFileFactory) {
+      ExecutionResults responseSupport) {
     this.stepSupport = Objects.requireNonNull(stepSupport, "stepSupport must not be null");
     this.terminalAcceptance =
         Objects.requireNonNull(terminalAcceptance, "terminalAcceptance must not be null");
     this.responseSupport =
         Objects.requireNonNull(responseSupport, "responseSupport must not be null");
-    this.tempFileFactory =
-        Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
   }
 
   record Call(
       ProtocolVersion protocolVersion,
-      ResolvedPlan plan,
+      RequestPreflight.PreparedRequest prepared,
       List<RequestWarning> warnings,
-      ExecutionJournalRecorder journal,
-      ExecutionInputBindings bindings) {}
+      ExecutionJournalRecorder journal) {
+    Call {
+      Objects.requireNonNull(prepared, "prepared must not be null");
+    }
+
+    ResolvedPlan plan() {
+      return prepared.plan();
+    }
+
+    ExecutionInputBindings bindings() {
+      return prepared.bindings();
+    }
+  }
 
   @Override
   public BackendCapabilities.Mode capabilities() {
@@ -76,12 +78,10 @@ final class ExecutionDirectEventReadWorkflow
     WorkbookPlan request = plan.request();
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
-    WorkbookPlan.WorkbookSource.ExistingFile source =
-        (WorkbookPlan.WorkbookSource.ExistingFile) request.source();
-    List<InspectionResult> inspections = new ArrayList<>();
-    List<AssertionResult> hostAssertions = new ArrayList<>();
+    List<InspectionResult> inspections = bindings.session().inspections;
+    List<AssertionResult> hostAssertions = bindings.session().hostAssertions;
     List<dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation> hostPreservation =
-        new ArrayList<>();
+        bindings.session().preservation;
     DirectEventReadContext executionContext =
         new DirectEventReadContext(
             protocolVersion,
@@ -93,43 +93,48 @@ final class ExecutionDirectEventReadWorkflow
             hostPreservation,
             inspections);
     ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
-    WorkbookArtifactIo.MaterializedWorkbook materialized;
+    WorkbookArtifactIo.@org.jspecify.annotations.Nullable MaterializedWorkbook materialized = null;
+    var openContext =
+        new dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook(
+            ExecutionRequestPaths.requestShape(request),
+            ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory()),
+            java.util.Optional.empty());
     try {
       materialized =
-          WorkbookArtifactIo.materializeWorkbook(
-              bindings
-                  .requestPathAccess()
-                  .materializeRead(source.path(), "source", "gridgrind-source-workbook-", ".xlsx"),
-              ExecutionRequestPaths.materializeOpenSecurity(
-                  source.security().orElse(null), bindings),
-              tempFileFactory::createTempFile);
+          call.prepared()
+              .source()
+              .takeMaterialized()
+              .orElseThrow(
+                  () -> new IllegalStateException("Admitted event source was not retained"));
     } catch (Exception exception) {
-      GridGrindProblemDetail.Problem problem =
-          GridGrindProblems.fromException(
-              exception,
-              new dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook(
-                  ExecutionRequestPaths.requestShape(request),
-                  ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory())));
-      openPhase.fail(problem.code());
-      return responseSupport.closeReadableWorkbook(
-          null,
-          ExecutionResults.failureResponseWithoutPlanOutcomeEvent(
-              executionContext.failure(problem)),
-          request,
-          journal,
-          problem.code(),
-          null,
-          null);
+      return failedOpen(
+          materialized,
+          executionContext,
+          openPhase,
+          GridGrindProblems.fromException(exception, openContext));
+    }
+    if (!java.nio.file.Files.isRegularFile(
+        materialized.workbookPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+      return failedOpen(
+          materialized,
+          executionContext,
+          openPhase,
+          GridGrindProblems.problem(
+              dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR,
+              "Admitted workbook source materialization is unavailable",
+              openContext,
+              List.of()));
     }
     openPhase.succeed();
     dev.erst.gridgrind.core.grant.AcceptancePolicy hostAcceptancePolicy =
-        bindings.executionGrant().acceptancePolicy();
+        bindings.acceptancePolicy();
     for (int stepIndex = 0; stepIndex < plan.steps().size(); stepIndex++) {
-      InspectionStep inspectionStep = (InspectionStep) plan.steps().get(stepIndex);
+      var prepared =
+          (dev.erst.gridgrind.core.plan.PreparedInspectionStep) plan.steps().get(stepIndex);
+      InspectionStep inspectionStep = prepared.authoredStep();
       ExecutionJournalRecorder.StepHandle stepHandle = journal.beginStep(stepIndex, inspectionStep);
       try {
-        inspections.add(
-            stepSupport.executeEventInspection(materialized.workbookPath(), inspectionStep));
+        inspections.add(stepSupport.executeEventInspection(materialized.workbookPath(), prepared));
         stepHandle.succeed();
       } catch (Exception exception) {
         GridGrindProblemDetail.Problem problem =
@@ -154,11 +159,12 @@ final class ExecutionDirectEventReadWorkflow
     try {
       HostAcceptanceVerification hostAcceptance =
           terminalAcceptance.verify(
+              bindings.executionGrant().acceptancePolicy(),
               hostAcceptancePolicy,
               materialized.workbookPath(),
               ExecutionRequestPaths.workbookLocationFor(
-                  request.source(), request.persistence(), bindings.workingDirectory()));
-      hostAssertions.addAll(hostAcceptance.assertions());
+                  request.source(), request.persistence(), bindings.workingDirectory()),
+              hostAssertions);
       hostPreservation.addAll(hostAcceptance.preservation());
     } catch (AssertionFailedException exception) {
       hostAssertions.add(
@@ -177,6 +183,22 @@ final class ExecutionDirectEventReadWorkflow
         request,
         journal,
         null,
+        null,
+        null);
+  }
+
+  private WorkbookResult failedOpen(
+      WorkbookArtifactIo.@org.jspecify.annotations.Nullable MaterializedWorkbook materialized,
+      DirectEventReadContext context,
+      ExecutionJournalRecorder.PhaseHandle phase,
+      GridGrindProblemDetail.Problem problem) {
+    phase.fail(problem.code());
+    return responseSupport.closeReadableWorkbook(
+        materialized,
+        ExecutionResults.failureResponseWithoutPlanOutcomeEvent(context.failure(problem)),
+        context.request(),
+        context.journal(),
+        problem.code(),
         null,
         null);
   }
@@ -205,9 +227,11 @@ final class ExecutionDirectEventReadWorkflow
   interface MaterializedTerminalAcceptance {
     /** Returns established host acceptance facts or fails before a success response is emitted. */
     HostAcceptanceVerification verify(
+        dev.erst.gridgrind.core.grant.AcceptancePolicy authoredPolicy,
         dev.erst.gridgrind.core.grant.AcceptancePolicy policy,
         java.nio.file.Path workbookPath,
-        dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation workbookLocation)
+        dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation workbookLocation,
+        List<AssertionResult> assertions)
         throws IOException, AssertionFailedException;
   }
 }

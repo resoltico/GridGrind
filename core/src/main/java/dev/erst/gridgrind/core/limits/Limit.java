@@ -82,6 +82,33 @@ public record Limit(
   /** Canonical request document limit bytes. */
   public static final long REQUEST_DOCUMENT_LIMIT_BYTES = 16L * 1024 * 1024;
 
+  /** Maximum actual bytes in one authored media occurrence. */
+  public static final long MAX_AUTHORED_MEDIA_BYTES = 32L * 1024 * 1024;
+
+  /** Maximum materialized authored media bytes across request occurrences. */
+  public static final long MAX_AUTHORED_MEDIA_TOTAL_BYTES = 64L * 1024 * 1024;
+
+  /** Maximum inspected media spans, including revisits, in one request. */
+  public static final long MAX_MEDIA_INSPECTION_BYTES = 256L * 1024 * 1024;
+
+  /** Maximum coded raster pixels across authored media in one request. */
+  public static final long MAX_MEDIA_RASTER_PIXELS = 16_777_216;
+
+  /** Maximum reserved or produced coding expansion in one request. */
+  public static final long MAX_MEDIA_EXPANDED_BYTES = 128L * 1024 * 1024;
+
+  /** Maximum media structural records across one request. */
+  public static final long MAX_MEDIA_STRUCTURE_RECORDS = 65_536;
+
+  /** Maximum embedded media container depth. */
+  public static final int MAX_MEDIA_CONTAINER_DEPTH = 8;
+
+  /** Maximum EPS lexical tokens across one request. */
+  public static final long MAX_EPS_SYNTAX_TOKENS = 1_000_000;
+
+  /** Maximum EPS lexical container depth. */
+  public static final int MAX_EPS_SYNTAX_DEPTH = 256;
+
   /** Canonical max zip entry size. */
   public static final long MAX_ZIP_ENTRY_SIZE = 100L * 1024 * 1024;
 
@@ -106,7 +133,8 @@ public record Limit(
 
   /** Exact rejection wording shared with the security policy entry. */
   public static final String WEBSERVICE_REJECTION =
-      "formula must not use the WEBSERVICE function; WEBSERVICE triggers outbound HTTP requests when the workbook is opened in Excel";
+      "formula must not use the WEBSERVICE function; WEBSERVICE triggers outbound HTTP requests"
+          + " when the workbook is opened in Excel";
 
   /** URL hyperlink schemes admitted by the authoring contract. */
   public static final java.util.Set<String> URL_SCHEMES =
@@ -258,7 +286,14 @@ public record Limit(
               "SET_ROW_VISIBILITY",
               "GROUP_ROWS",
               "UNGROUP_ROWS"),
-          "GridGrind sums statically known cell and row materialization for the listed actions before\nopening the workbook, including work spread across multiple steps. The limit bounds this\nrequest-driven work; it is not a total-workbook, heap-memory or execution-time quota. Existing\nworkbook contents, cell payload sizes and other operations also consume resources.");
+          "GridGrind sums statically known cell and row materialization for the listed actions"
+              + " before\n"
+              + "opening the workbook, including work spread across multiple steps. The limit"
+              + " bounds this\n"
+              + "request-driven work; it is not a total-workbook, heap-memory or execution-time"
+              + " quota. Existing\n"
+              + "workbook contents, cell payload sizes and other operations also consume"
+              + " resources.");
 
   /** Explicit Data-Validation List Formula Length. */
   public static final Limit EXPLICIT_DATA_VALIDATION_LIST_FORMULA_LENGTH =
@@ -270,7 +305,15 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "`values must serialize to at most 255 characters for Excel data validation; got {n}`",
           List.of("EXPLICIT_LIST"),
-          "Excel data-validation explicit lists are stored as one quoted comma-separated formula. GridGrind\nrejects commas and quotes inside individual values because that representation cannot preserve them;\nuse `FORMULA_LIST` when values require delimiters. It validates the complete stored formula before\nApache POI authoring so callers receive the request path and computed length instead of a library\nexception.");
+          "Excel data-validation explicit lists are stored as one quoted comma-separated formula."
+              + " GridGrind\n"
+              + "rejects commas and quotes inside individual values because that representation"
+              + " cannot preserve them;\n"
+              + "use `FORMULA_LIST` when values require delimiters. It validates the complete"
+              + " stored formula before\n"
+              + "Apache POI authoring so callers receive the request path and computed length"
+              + " instead of a library\n"
+              + "exception.");
 
   /** Cell-Returning Read Count. */
   public static final Limit CELL_RETURNING_READ_COUNT =
@@ -290,9 +333,32 @@ public record Limit(
               + String.format(Locale.ROOT, "%,d", MAX_ROW_INDEX + 1)
               + " rows and "
               + String.format(Locale.ROOT, "%,d", MAX_COLUMN_INDEX + 1)
-              + " columns. POI can read very\nlarge windows and exact address lists; GridGrind must then materialize and serialize factual cell\npayloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does not change the\nworst case: a dense 50,000-cell window still returns 50,000 factual cells, `GET_SHEET_SCHEMA`\nstill examines the entire rectangular sample even when many cells are blank, and an oversized\n`GET_CELLS` address list still asks GridGrind to return one factual cell report per address. The\n"
+              + " columns. POI can read very\n"
+              + "large windows and exact address lists; GridGrind must then materialize and"
+              + " serialize factual cell\n"
+              + "payloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does"
+              + " not change the\n"
+              + "worst case: a dense 50,000-cell window still returns 50,000 factual cells,"
+              + " `GET_SHEET_SCHEMA`\n"
+              + "still examines the entire rectangular sample even when many cells are blank, and"
+              + " an oversized\n"
+              + "`GET_CELLS` address list still asks GridGrind to return one factual cell report"
+              + " per address. The\n"
               + String.format(Locale.ROOT, "%,d", MAX_READ_CELLS)
-              + "-cell cap bounds the number of returned cells before workbook IO. It does not bound total\nserialized bytes, native workbook memory or execution time; large payloads can still exhaust\navailable resources within the cell-count limit.\n\nThis limit is not from Apache POI or Excel. A serialized-byte cap depends on workbook contents and is only knowable after reading the\nworkbook. The deterministic cell-count cap bounds materialization before workbook IO.\n\n**Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover `lastRowIndex` and\n`lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region\nwith multiple bounded `GET_WINDOW` reads.");
+              + "-cell cap bounds the number of returned cells before workbook IO. It does not"
+              + " bound total\n"
+              + "serialized bytes, native workbook memory or execution time; large payloads can"
+              + " still exhaust\n"
+              + "available resources within the cell-count limit.\n\n"
+              + "This limit is not from Apache POI or Excel. A serialized-byte cap depends on"
+              + " workbook contents and is only knowable after reading the\n"
+              + "workbook. The deterministic cell-count cap bounds materialization before workbook"
+              + " IO.\n\n"
+              + "**Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover"
+              + " `lastRowIndex` and\n"
+              + "`lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the"
+              + " populated region\n"
+              + "with multiple bounded `GET_WINDOW` reads.");
 
   /** File Format. */
   public static final Limit FILE_FORMAT =
@@ -304,7 +370,12 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "`path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: {path}`",
           List.of("source", "persistence"),
-          "GridGrind intentionally narrows Apache POI's broader OOXML workbook support to plain `.xlsx`.\n`.xls` (BIFF8/HSSF), macro-enabled `.xlsm`, and `.xlsb` (binary) are all rejected by the product\ncontract even though Apache POI can preserve and extract VBA-bearing `.xlsm` packages.");
+          "GridGrind intentionally narrows Apache POI's broader OOXML workbook support to plain"
+              + " `.xlsx`.\n"
+              + "`.xls` (BIFF8/HSSF), macro-enabled `.xlsm`, and `.xlsb` (binary) are all rejected"
+              + " by the product\n"
+              + "contract even though Apache POI can preserve and extract VBA-bearing `.xlsm`"
+              + " packages.");
 
   /** Sheet Name Contract. */
   public static final Limit SHEET_NAME_CONTRACT =
@@ -314,9 +385,15 @@ public record Limit(
           "GridGrind (enforces Excel limit)",
           "1.." + MAX_SHEET_NAME_LENGTH + " characters, with Excel sheet-name syntax",
           List.of("INVALID_REQUEST"),
-          "`sheetName must not exceed 31 characters: {name}` or `sheetName contains invalid Excel character ':' at position 4: Bad:Name`",
+          "`sheetName must not exceed 31 characters: {name}` or `sheetName contains invalid Excel"
+              + " character ':' at position 4: Bad:Name`",
           List.of("sheetName"),
-          "The 31-character ceiling and reserved-character rules are Excel hard limits. GridGrind validates\nthem at request parse time so the error is structured and reported before any workbook work\nbegins, instead of surfacing a raw Apache POI sheet-creation exception later in execution.");
+          "The 31-character ceiling and reserved-character rules are Excel hard limits. GridGrind"
+              + " validates\n"
+              + "them at request parse time so the error is structured and reported before any"
+              + " workbook work\n"
+              + "begins, instead of surfacing a raw Apache POI sheet-creation exception later in"
+              + " execution.");
 
   /** Column Width. */
   public static final Limit COLUMN_WIDTH =
@@ -326,9 +403,18 @@ public record Limit(
           "GridGrind (enforces Excel limit)",
           "0 < width <= " + MAX_COLUMN_WIDTH_CHARACTERS,
           List.of("INVALID_REQUEST"),
-          "`widthCharacters must not exceed 255.0 (Excel column width limit): got {n}` / `widthCharacters is too small to produce a visible Excel column width: got {n}`",
+          "`widthCharacters must not exceed 255.0 (Excel column width limit): got {n}` /"
+              + " `widthCharacters is too small to produce a visible Excel column width: got {n}`",
           List.of("SET_COLUMN_WIDTH", "SET_SHEET_PRESENTATION.sheetDefaults.defaultColumnWidth"),
-          "255 character units is the Excel column width ceiling. POI converts explicit column widths to\ninternal units with `round(widthCharacters * 256)`. Values that round to zero are also rejected.\nSheet-wide default column widths are integer character counts and use the same Excel ceiling.\n`GET_SHEET_LAYOUT` remains factual on reopen, so malformed positive persisted explicit column\nwidths can still be reported above `255` instead of being clamped.");
+          "255 character units is the Excel column width ceiling. POI converts explicit column"
+              + " widths to\n"
+              + "internal units with `round(widthCharacters * 256)`. Values that round to zero are"
+              + " also rejected.\n"
+              + "Sheet-wide default column widths are integer character counts and use the same"
+              + " Excel ceiling.\n"
+              + "`GET_SHEET_LAYOUT` remains factual on reopen, so malformed positive persisted"
+              + " explicit column\n"
+              + "widths can still be reported above `255` instead of being clamped.");
 
   /** Row Height. */
   public static final Limit ROW_HEIGHT =
@@ -338,9 +424,19 @@ public record Limit(
           "GridGrind (enforces Excel limit)",
           "0 < height <= " + MAX_ROW_HEIGHT_POINTS + " points",
           List.of("INVALID_REQUEST"),
-          "`heightPoints must not exceed 409.0 (Excel row height limit): got {n}` / `heightPoints is too small to produce a visible Excel row height: {n}`",
+          "`heightPoints must not exceed 409.0 (Excel row height limit): got {n}` / `heightPoints"
+              + " is too small to produce a visible Excel row height: {n}`",
           List.of("SET_ROW_HEIGHT", "SET_SHEET_PRESENTATION.sheetDefaults.defaultRowHeightPoints"),
-          "Excel's published maximum row height is 409 points for `.xlsx` worksheets. Apache POI can store a\nlarger twip value internally, but GridGrind aligns the product contract to the real Excel limit\ninstead of the wider storage envelope. Values that round to zero twips are also rejected.\n`GET_SHEET_LAYOUT` remains factual on reopen, so malformed positive persisted explicit row heights\nand default row-height values can still be reported above `409.0` instead of being clamped.");
+          "Excel's published maximum row height is 409 points for `.xlsx` worksheets. Apache POI"
+              + " can store a\n"
+              + "larger twip value internally, but GridGrind aligns the product contract to the"
+              + " real Excel limit\n"
+              + "instead of the wider storage envelope. Values that round to zero twips are also"
+              + " rejected.\n"
+              + "`GET_SHEET_LAYOUT` remains factual on reopen, so malformed positive persisted"
+              + " explicit row heights\n"
+              + "and default row-height values can still be reported above `409.0` instead of being"
+              + " clamped.");
 
   /** Duplicate Step IDs. */
   public static final Limit DUPLICATE_STEP_IDS =
@@ -364,7 +460,8 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "`stepId must match [A-Za-z0-9._-]+`",
           List.of("steps[*].stepId"),
-          "Stable machine-readable step tokens avoid ambiguous diagnostic paths and lookup identities.");
+          "Stable machine-readable step tokens avoid ambiguous diagnostic paths and lookup"
+              + " identities.");
 
   /** GET_CELLS Address List. */
   public static final Limit GET_CELLS_ADDRESS_LIST =
@@ -388,7 +485,15 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "`source must not use the DDE function; DDE formula execution is a security risk`",
           List.of("CellValueSpec.Formula", "INLINE"),
-          "Dynamic Data Exchange (DDE) formulas such as `DDE(\"cmd\", \"/C calc\", \"\")` can invoke external\nprograms when the saved workbook is opened in Microsoft Excel on Windows. GridGrind rejects inline\nformula sources that begin with `DDE(` (case-insensitive) after stripping the leading `=`.\nFile-backed formula sources are not validated at construction time but are equally subject to this\nconstraint in execution.");
+          "Dynamic Data Exchange (DDE) formulas such as `DDE(\"cmd\", \"/C calc\", \"\")` can"
+              + " invoke external\n"
+              + "programs when the saved workbook is opened in Microsoft Excel on Windows."
+              + " GridGrind rejects inline\n"
+              + "formula sources that begin with `DDE(` (case-insensitive) after stripping the"
+              + " leading `=`.\n"
+              + "File-backed formula sources are not validated at construction time but are equally"
+              + " subject to this\n"
+              + "constraint in execution.");
 
   /** Step Count. */
   public static final Limit STEP_COUNT =
@@ -400,7 +505,13 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "`steps must not exceed 10000 entries but was {n}`",
           List.of("steps"),
-          "Unbounded step lists enable runaway resource consumption and extended execution times. The 10,000-\nstep ceiling is generous enough for legitimate bulk streaming-write workflows (for example, 10,000\n`APPEND_ROW` mutations) while preventing pathological inputs. The separate 16 MiB JSON cap\n(`LIM-021`) further bounds the total request size independent of step count.");
+          "Unbounded step lists enable runaway resource consumption and extended execution times."
+              + " The 10,000-\n"
+              + "step ceiling is generous enough for legitimate bulk streaming-write workflows (for"
+              + " example, 10,000\n"
+              + "`APPEND_ROW` mutations) while preventing pathological inputs. The separate 16 MiB"
+              + " JSON cap\n"
+              + "(`LIM-021`) further bounds the total request size independent of step count.");
 
   /** Request-Owned Path Containment. */
   public static final Limit REQUEST_OWNED_PATH_CONTAINMENT =
@@ -408,12 +519,21 @@ public record Limit(
           ID_REQUEST_OWNED_PATH_CONTAINMENT,
           "Request-Owned Path Containment",
           "GridGrind",
-          "Every request-owned path, whether relative or absolute, must resolve beneath the execution root",
+          "Every request-owned path, whether relative or absolute, must resolve beneath the"
+              + " execution root",
           List.of("PATH_ESCAPES_ROOT"),
           "`path must not escape the execution root: {path}`",
           List.of(
-              "Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs"),
-          "GridGrind normalizes every request-owned path against the execution root before it opens or writes\nanything. A relative traversal such as `../secret.xlsx` and an absolute path outside the root fail\nwith the same code. A contained absolute path remains legal but carries a warning because it relies\non one host-specific root layout. CLI flag paths are invocation controls, not request-owned paths.");
+              "Workbook source and persistence paths, formula external workbooks, signing material,"
+                  + " and file-backed authored inputs"),
+          "GridGrind normalizes every request-owned path against the execution root before it opens"
+              + " or writes\n"
+              + "anything. A relative traversal such as `../secret.xlsx` and an absolute path"
+              + " outside the root fail\n"
+              + "with the same code. A contained absolute path remains legal but carries a warning"
+              + " because it relies\n"
+              + "on one host-specific root layout. CLI flag paths are invocation controls, not"
+              + " request-owned paths.");
 
   /** ZIP Decompression Limits. */
   public static final Limit ZIP_DECOMPRESSION_LIMITS =
@@ -427,7 +547,17 @@ public record Limit(
           List.of("IO_ERROR", "WORKBOOK_NOT_OPENABLE"),
           "",
           List.of("All xlsx workbook open operations"),
-          "GridGrind configures POI's ZipSecureFile with a 100 MiB expanded-entry limit and a minimum\ncompressed-to-expanded byte ratio of 0.01. POI applies its ratio check after its small-entry\ngrace threshold. POI 6 reports threshold violations as IOException; workbook-open wrappers\ncan add context. The failure is IO_ERROR on the observed workbook/worksheet paths or\nWORKBOOK_NOT_OPENABLE when content-type parsing wraps the failure. These are per-entry decompression controls, not an aggregate package-size,\nheap-memory or execution-time quota.");
+          "GridGrind configures POI's ZipSecureFile with a 100 MiB expanded-entry limit and a"
+              + " minimum\n"
+              + "compressed-to-expanded byte ratio of 0.01. POI applies its ratio check after its"
+              + " small-entry\n"
+              + "grace threshold. POI 6 reports threshold violations as IOException; workbook-open"
+              + " wrappers\n"
+              + "can add context. The failure is IO_ERROR on the observed workbook/worksheet paths"
+              + " or\n"
+              + "WORKBOOK_NOT_OPENABLE when content-type parsing wraps the failure. These are"
+              + " per-entry decompression controls, not an aggregate package-size,\n"
+              + "heap-memory or execution-time quota.");
 
   /** DDE Rejection in All Formula Inputs. */
   public static final Limit DDE_REJECTION_IN_ALL_FORMULA_INPUTS =
@@ -444,7 +574,16 @@ public record Limit(
               "ConditionalFormattingRuleSpec",
               "ConditionalFormattingThresholdSpec.Formula",
               "ChartDataSourceSpec.Reference.formula"),
-          "GridGrind rejects any formula string that begins with `DDE(` (case-insensitive, stripping leading\n`=` or `{=...}` prefixes first) across all formula-bearing input types. The DDE (Dynamic Data\nExchange) function is a Windows IPC mechanism; embedding it in an xlsx workbook can trigger\narbitrary command execution when the file is opened in Microsoft Excel. This guard extends the\n`CellValueSpec.Formula` protection (LIM-023) to every remaining formula surface written to xlsx output.");
+          "GridGrind rejects any formula string that begins with `DDE(` (case-insensitive,"
+              + " stripping leading\n"
+              + "`=` or `{=...}` prefixes first) across all formula-bearing input types. The DDE"
+              + " (Dynamic Data\n"
+              + "Exchange) function is a Windows IPC mechanism; embedding it in an xlsx workbook"
+              + " can trigger\n"
+              + "arbitrary command execution when the file is opened in Microsoft Excel. This guard"
+              + " extends the\n"
+              + "`CellValueSpec.Formula` protection (LIM-023) to every remaining formula surface"
+              + " written to xlsx output.");
 
   /** URL Scheme Allowlist. */
   public static final Limit URL_SCHEME_ALLOWLIST =
@@ -456,7 +595,14 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("HyperlinkTarget.Url"),
-          "GridGrind enforces an explicit allowlist of URL schemes for `HyperlinkTarget.Url` targets.\nSchemes such as `javascript:`, `vbscript:`, `ms-excel:`, `ldap:`, and `data:` are rejected.\nThese schemes can trigger script execution, protocol-handler abuse, or cross-site scripting when\nthe hyperlink is activated in a browser-based spreadsheet viewer or other host application.");
+          "GridGrind enforces an explicit allowlist of URL schemes for `HyperlinkTarget.Url`"
+              + " targets.\n"
+              + "Schemes such as `javascript:`, `vbscript:`, `ms-excel:`, `ldap:`, and `data:` are"
+              + " rejected.\n"
+              + "These schemes can trigger script execution, protocol-handler abuse, or cross-site"
+              + " scripting when\n"
+              + "the hyperlink is activated in a browser-based spreadsheet viewer or other host"
+              + " application.");
 
   /** No-Follow Request Path Binding. */
   public static final Limit NO_FOLLOW_REQUEST_PATH_BINDING =
@@ -464,12 +610,30 @@ public record Limit(
           ID_NO_FOLLOW_REQUEST_PATH_BINDING,
           "No-Follow Request Path Binding",
           "GridGrind",
-          "Request-owned reads and writes never follow a symbolic link and use descriptor-relative access below a verified execution root",
+          "Request-owned reads and writes never follow a symbolic link and use descriptor-relative"
+              + " access below a verified execution root",
           List.of("UNSAFE_PATH_ACCESS"),
           "",
           List.of(
-              "Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs"),
-          "GridGrind binds the root and every existing parent with no-follow directory descriptors, records\ntheir filesystem identities, copies request inputs into private staging, and commits output through\nthe retained parent descriptor. Any symlink is rejected, including a link that happens to point\ninside the root. Immediately before persistence, GridGrind rechecks the recorded topology and\nfails closed if it observes a replacement, unlink, rename, or symlink transition.\n\nThis protects containment while the bound filesystem topology remains stable. It does not claim\nabsolute containment against a principal that can mutate that topology in the scheduling window\nbetween the final identity recheck and a descriptor-relative commit; Java exposes no proven,\nportable root-anchored atomic-resolve-and-commit primitive for that stronger guarantee.");
+              "Workbook source and persistence paths, formula external workbooks, signing material,"
+                  + " and file-backed authored inputs"),
+          "GridGrind binds the root and every existing parent with no-follow directory descriptors,"
+              + " records\n"
+              + "their filesystem identities, copies request inputs into private staging, and"
+              + " retains the verified parent binding for publication. Any symlink is rejected,"
+              + " including a link that happens to point\n"
+              + "inside the root. Immediately before persistence, GridGrind rechecks the recorded"
+              + " topology and\n"
+              + "fails closed if it observes a replacement, unlink, rename, or symlink"
+              + " transition.\n\n"
+              + "This protects containment while the bound filesystem topology remains stable. It"
+              + " does not claim\n"
+              + "absolute containment against a principal that can mutate that topology in the"
+              + " scheduling window\n"
+              + "between the final identity recheck and a pathname-based commit; Java exposes no"
+              + " proven,\n"
+              + "portable root-anchored atomic-resolve-and-commit primitive for that stronger"
+              + " guarantee.");
 
   /** File-Backed Authored Input Isolation. */
   public static final Limit FILE_BACKED_AUTHORED_INPUT_ISOLATION =
@@ -477,7 +641,8 @@ public record Limit(
           ID_FILE_BACKED_AUTHORED_INPUT_ISOLATION,
           "File-Backed Authored Input Isolation",
           "GridGrind",
-          "File-backed text and binary authored inputs are read only through the request-owned no-follow binding and are resolved before workbook mutation",
+          "File-backed text and binary authored inputs are read only through the request-owned"
+              + " no-follow binding and are resolved before workbook mutation",
           List.of(
               "PATH_ESCAPES_ROOT",
               "UNSAFE_PATH_ACCESS",
@@ -485,7 +650,13 @@ public record Limit(
               "INPUT_SOURCE_IO_ERROR"),
           "",
           List.of("TextSourceSpec.Utf8File", "BinarySourceSpec.File"),
-          "The resolver reads each authored file through the same containment and no-follow capability used\nfor workbooks and signing material, then normalizes its bytes into the in-memory plan. The later\nmutation phase never reopens an authored path string, so a source-file race cannot redirect the\ncontent that was validated during preflight.");
+          "The resolver reads each authored file through the same containment and no-follow"
+              + " capability used\n"
+              + "for workbooks and signing material, then normalizes its bytes into the in-memory"
+              + " plan. The later\n"
+              + "mutation phase never reopens an authored path string, so a source-file race cannot"
+              + " redirect the\n"
+              + "content that was validated during preflight.");
 
   /** WEBSERVICE Formula Rejection. */
   public static final Limit WEBSERVICE_FORMULA_REJECTION =
@@ -497,7 +668,14 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("FormulaInputSecurity.rejectDde"),
-          "FormulaInputSecurity.rejectDde rejects a formula beginning with `WEBSERVICE(`, ignoring case,\nafter removing one leading `=` or surrounding `{=...}` delimiters. This is a prefix check,\nnot a formula parser: it does not establish that nested or otherwise embedded function calls\nare absent. Hosts must assess the formulas and the spreadsheet client that will consume them.");
+          "FormulaInputSecurity.rejectDde rejects a formula beginning with `WEBSERVICE(`, ignoring"
+              + " case,\n"
+              + "after removing one leading `=` or surrounding `{=...}` delimiters. This is a"
+              + " prefix check,\n"
+              + "not a formula parser: it does not establish that nested or otherwise embedded"
+              + " function calls\n"
+              + "are absent. Hosts must assess the formulas and the spreadsheet client that will"
+              + " consume them.");
 
   /** Named-Range Formula Injection. */
   public static final Limit NAMED_RANGE_FORMULA_INJECTION =
@@ -509,7 +687,13 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("NamedRangeTarget.Formula"),
-          "`NamedRangeTarget.Formula` uses the wire discriminator `type: FORMULA`. Its constructor calls\n`FormulaInputSecurity.rejectDde` before a formula can be authored into the defined-names part.\nThe guard rejects leading `DDE(` and `WEBSERVICE(` calls, ignoring case and removing one leading\n`=` or surrounding `{=...}` delimiters. It does not parse nested function calls.");
+          "`NamedRangeTarget.Formula` uses the wire discriminator `type: FORMULA`. Its constructor"
+              + " calls\n"
+              + "`FormulaInputSecurity.rejectDde` before a formula can be authored into the"
+              + " defined-names part.\n"
+              + "The guard rejects leading `DDE(` and `WEBSERVICE(` calls, ignoring case and"
+              + " removing one leading\n"
+              + "`=` or surrounding `{=...}` delimiters. It does not parse nested function calls.");
 
   /** Chart Title Formula Injection. */
   public static final Limit CHART_TITLE_FORMULA_INJECTION =
@@ -521,7 +705,14 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("ChartTitleSpec.Formula"),
-          "`ChartTitleSpec.Formula` uses `type: FORMULA` and calls `FormulaInputSecurity.rejectDde`\nin its constructor. The guard rejects leading `DDE(` and `WEBSERVICE(` calls, ignoring case\nand removing one leading `=` or surrounding `{=...}` delimiters. It does not parse nested\nfunction calls or certify how a downstream spreadsheet client will evaluate the stored title.");
+          "`ChartTitleSpec.Formula` uses `type: FORMULA` and calls"
+              + " `FormulaInputSecurity.rejectDde`\n"
+              + "in its constructor. The guard rejects leading `DDE(` and `WEBSERVICE(` calls,"
+              + " ignoring case\n"
+              + "and removing one leading `=` or surrounding `{=...}` delimiters. It does not parse"
+              + " nested\n"
+              + "function calls or certify how a downstream spreadsheet client will evaluate the"
+              + " stored title.");
 
   /** UDF Formula Template Injection (Defense-in-Depth). */
   public static final Limit UDF_FORMULA_TEMPLATE_INJECTION_DEFENSE_IN_DEPTH =
@@ -533,7 +724,15 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "",
           List.of("FormulaUdfFunctionSpec.formulaTemplate"),
-          "`FormulaUdfFunctionSpec` applies `FormulaInputSecurity.rejectDde` to its formula template\nin the constructor. This uses the same leading-function guard as other formula surfaces;\nit does not parse the complete expression. UDF templates are evaluated server-side by the\nregistered formula runtime, so this check is one constraint on authored templates rather\nthan a general-purpose sandbox.");
+          "`FormulaUdfFunctionSpec` applies `FormulaInputSecurity.rejectDde` to its formula"
+              + " template\n"
+              + "in the constructor. This uses the same leading-function guard as other formula"
+              + " surfaces;\n"
+              + "it does not parse the complete expression. UDF templates are evaluated server-side"
+              + " by the\n"
+              + "registered formula runtime, so this check is one constraint on authored templates"
+              + " rather\n"
+              + "than a general-purpose sandbox.");
 
   /** HYPERLINK() Formula Content Not Validated Against URL Allowlist. */
   public static final Limit HYPERLINK_FORMULA_CONTENT_NOT_VALIDATED_AGAINST_URL_ALLOWLIST =
@@ -545,7 +744,14 @@ public record Limit(
           List.of(),
           "",
           List.of("CellValueSpec.Formula", "NamedRangeTarget.Formula", "ChartTitleSpec.Formula"),
-          "The URL scheme allowlist in LIM-028 applies to `HyperlinkTarget.Url`. It does not inspect\nURL arguments embedded in formula strings. For example, `HYPERLINK(\"javascript:evil()\")`\npasses `FormulaInputSecurity.rejectDde`. Acceptance by this guard is not evidence that a\nformula URL is safe; navigation and evaluation depend on the consuming spreadsheet client.");
+          "The URL scheme allowlist in LIM-028 applies to `HyperlinkTarget.Url`. It does not"
+              + " inspect\n"
+              + "URL arguments embedded in formula strings. For example,"
+              + " `HYPERLINK(\"javascript:evil()\")`\n"
+              + "passes `FormulaInputSecurity.rejectDde`. Acceptance by this guard is not evidence"
+              + " that a\n"
+              + "formula URL is safe; navigation and evaluation depend on the consuming spreadsheet"
+              + " client.");
 
   /** RTD() Function Not Blocked. */
   public static final Limit RTD_FUNCTION_NOT_BLOCKED =
@@ -557,7 +763,12 @@ public record Limit(
           List.of(),
           "",
           List.of("all formula inputs"),
-          "`FormulaInputSecurity.rejectDde` does not reject a leading `RTD(` call or inspect RTD\narguments. The authored formula guard is limited to the leading DDE and WEBSERVICE patterns.\nHosts must assess the consuming client's external-data and automation capabilities; successful\nGridGrind authoring does not establish that downstream evaluation is isolated.");
+          "`FormulaInputSecurity.rejectDde` does not reject a leading `RTD(` call or inspect RTD\n"
+              + "arguments. The authored formula guard is limited to the leading DDE and WEBSERVICE"
+              + " patterns.\n"
+              + "Hosts must assess the consuming client's external-data and automation"
+              + " capabilities; successful\n"
+              + "GridGrind authoring does not establish that downstream evaluation is isolated.");
 
   /** Source workbook content is admitted as OOXML independently of its suffix. */
   public static final Limit WORKBOOK_SOURCE_CONTENT_FORMAT =
@@ -569,8 +780,9 @@ public record Limit(
           List.of("WORKBOOK_NOT_OPENABLE"),
           "Only .xlsx workbooks are supported",
           List.of("source", "EXISTING"),
-          "The materialized reader constructs XSSFWorkbook rather than the general WorkbookFactory. "
-              + "A native HSSF-written control renamed to .xlsx is rejected, while an OOXML control reopens. ");
+          "The materialized reader constructs XSSFWorkbook rather than the general WorkbookFactory."
+              + " A native HSSF-written control renamed to .xlsx is rejected, while an OOXML"
+              + " control reopens. ");
 
   /** OOXML Write Encryption Is AGILE-Only And Strong-Only. */
   public static final Limit OOXML_WRITE_ENCRYPTION_IS_AGILE_ONLY_AND_STRONG_ONLY =
@@ -578,11 +790,28 @@ public record Limit(
           ID_OOXML_WRITE_ENCRYPTION_IS_AGILE_ONLY_AND_STRONG_ONLY,
           "OOXML Write Encryption Is AGILE-Only And Strong-Only",
           "Protocol",
-          "Write-side OOXML package encryption authors AGILE only, defaults to `AES_256` / `SHA_512`, and allows only `AES_256` or `AES_192` plus `SHA_512`, `SHA_384`, or `SHA_256`",
+          "Write-side OOXML package encryption authors AGILE only, defaults to `AES_256` /"
+              + " `SHA_512`, and allows only `AES_256` or `AES_192` plus `SHA_512`, `SHA_384`, or"
+              + " `SHA_256`",
           List.of(),
           "",
           List.of("persistence.security.encryption"),
-          "GridGrind reads and reports broader factual OOXML encryption state than it authors. Inspection may\nsurface legacy envelopes such as `STANDARD`, weaker AGILE variants, or non-default hashes because\nthe goal on the read path is factual reporting. The write path is intentionally narrower:\nauthorable persistence security owns one explicit strong-only AGILE contract and does not accept a\n`mode` field. Existing-workbook writes declare encryption explicitly: `NONE`, `ENCRYPT`, or\n`PRESERVE_SOURCE`; omission never inherits source encryption. `PRESERVE_SOURCE` applies only to a\nverified source envelope that the strong AGILE write contract can reapply. Readable/reportable `STANDARD` envelopes are outside the authorable strong-only AGILE write\ncontract.");
+          "GridGrind reads and reports broader factual OOXML encryption state than it authors."
+              + " Inspection may\n"
+              + "surface legacy envelopes such as `STANDARD`, weaker AGILE variants, or non-default"
+              + " hashes because\n"
+              + "the goal on the read path is factual reporting. The write path is intentionally"
+              + " narrower:\n"
+              + "authorable persistence security owns one explicit strong-only AGILE contract and"
+              + " does not accept a\n"
+              + "`mode` field. Existing-workbook writes declare encryption explicitly: `NONE`,"
+              + " `ENCRYPT`, or\n"
+              + "`PRESERVE_SOURCE`; omission never inherits source encryption. `PRESERVE_SOURCE`"
+              + " applies only to a\n"
+              + "verified source envelope that the strong AGILE write contract can reapply."
+              + " Readable/reportable `STANDARD` envelopes are outside the authorable strong-only"
+              + " AGILE write\n"
+              + "contract.");
 
   /** Maximum Rows per Worksheet. */
   public static final Limit MAXIMUM_ROWS_PER_WORKSHEET =
@@ -596,7 +825,12 @@ public record Limit(
           List.of(),
           "Last valid zero-based row index: "
               + String.format(Locale.ROOT, "%,d", MAX_ROW_INDEX)
-              + ".\n\nGridGrind rejects out-of-bounds addressed rows on the public request path for selectors,\nrow-band operations, row-structural edits, and print-title row bands instead of deferring those\nerrors to Apache POI.");
+              + ".\n\n"
+              + "GridGrind rejects out-of-bounds addressed rows on the public request path for"
+              + " selectors,\n"
+              + "row-band operations, row-structural edits, and print-title row bands instead of"
+              + " deferring those\n"
+              + "errors to Apache POI.");
 
   /** Maximum Columns per Worksheet. */
   public static final Limit MAXIMUM_COLUMNS_PER_WORKSHEET =
@@ -610,7 +844,10 @@ public record Limit(
           List.of(),
           "Last valid zero-based column index: "
               + String.format(Locale.ROOT, "%,d", MAX_COLUMN_INDEX)
-              + ".\n\nGridGrind rejects out-of-bounds addressed columns on the public request path for\nselectors, column-band operations, column-structural edits, and print-title column bands.");
+              + ".\n\n"
+              + "GridGrind rejects out-of-bounds addressed columns on the public request path for\n"
+              + "selectors, column-band operations, column-structural edits, and print-title column"
+              + " bands.");
 
   /** Maximum Text Characters per Cell. */
   public static final Limit MAXIMUM_TEXT_CHARACTERS_PER_CELL =
@@ -622,7 +859,8 @@ public record Limit(
           List.of(),
           "",
           List.of(),
-          "This is the persisted Excel cell-text ceiling; reject oversized authored or reconstructed text before native mutation.");
+          "This is the persisted Excel cell-text ceiling; reject oversized authored or"
+              + " reconstructed text before native mutation.");
 
   /** Maximum Cell Styles per Workbook. */
   public static final Limit MAXIMUM_CELL_STYLES_PER_WORKBOOK =
@@ -636,7 +874,8 @@ public record Limit(
           List.of(),
           "Note: POI's cap ("
               + String.format(Locale.ROOT, "%,d", MAX_CELL_STYLES)
-              + ") is more conservative than Excel's (65,490). The POI figure is the\neffective limit when writing via GridGrind.");
+              + ") is more conservative than Excel's (65,490). The POI figure is the\n"
+              + "effective limit when writing via GridGrind.");
 
   /** Maximum Hyperlinks per Worksheet. */
   public static final Limit MAXIMUM_HYPERLINKS_PER_WORKSHEET =
@@ -648,7 +887,8 @@ public record Limit(
           List.of(),
           "",
           List.of(),
-          "This bounds worksheet hyperlink records before appending a new native link relationship.");
+          "This bounds worksheet hyperlink records before appending a new native link"
+              + " relationship.");
 
   /** Maximum Formula Length. */
   public static final Limit MAXIMUM_FORMULA_LENGTH =
@@ -660,7 +900,8 @@ public record Limit(
           List.of(),
           "",
           List.of(),
-          "Authored formulas are checked before native parse/persistence so oversized text fails predictably.");
+          "Authored formulas are checked before native parse/persistence so oversized text fails"
+              + " predictably.");
 
   /** Maximum Nested Function Levels. */
   public static final Limit MAXIMUM_NESTED_FUNCTION_LEVELS =
@@ -672,7 +913,8 @@ public record Limit(
           List.of(),
           "",
           List.of(),
-          "Formula shape is bounded before native parsing to retain the workbook format and parser depth contract.");
+          "Formula shape is bounded before native parsing to retain the workbook format and parser"
+              + " depth contract.");
 
   /** Maximum Function Arguments. */
   public static final Limit MAXIMUM_FUNCTION_ARGUMENTS =
@@ -684,7 +926,8 @@ public record Limit(
           List.of(),
           "",
           List.of(),
-          "Function argument counts are checked against the pinned Excel 2007 workbook version before persistence.");
+          "Function argument counts are checked against the pinned Excel 2007 workbook version"
+              + " before persistence.");
 
   /** Structural Edits That Would Move Unsupported Owned Structures. */
   public static final Limit STRUCTURAL_EDITS_THAT_WOULD_MOVE_UNSUPPORTED_OWNED_STRUCTURES =
@@ -692,9 +935,13 @@ public record Limit(
           ID_STRUCTURAL_EDITS_THAT_WOULD_MOVE_UNSUPPORTED_OWNED_STRUCTURES,
           "Structural Edits That Would Move Unsupported Owned Structures",
           "GridGrind",
-          "Structural inserts are rejected when they would move a table or sheet-owned autofilter; structural deletes and shifts are also rejected when they would move or truncate a data validation",
+          "Structural inserts are rejected when they would move a table or sheet-owned autofilter;"
+              + " structural deletes and shifts are also rejected when they would move or truncate"
+              + " a data validation",
           List.of("INVALID_REQUEST"),
-          "Product-owned `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected structure and sheet",
+          "Product-owned `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`,"
+              + " `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected structure and"
+              + " sheet",
           List.of(
               "INSERT_ROWS",
               "DELETE_ROWS",
@@ -702,7 +949,21 @@ public record Limit(
               "INSERT_COLUMNS",
               "DELETE_COLUMNS",
               "SHIFT_COLUMNS"),
-          "Direct POI 6.0.0 shift probes leave table, sheet-autofilter and data-validation references at\ntheir original ranges. GridGrind rebuilds data validations for row and column insertion, but\nrejects inserts that would move a table or sheet autofilter and rejects affected deletes or\nshifts under the supported structural-edit contract. This does not assert that every native\nedit or every OOXML structure is unsafe.\n\nThe rejection names the affected structure and sheet. Example messages include:\n- `INSERT_ROWS cannot move table 'BudgetTable' on sheet 'Budget'; row structural edits that would move tables are not supported`\n- `DELETE_COLUMNS cannot move sheet autofilter A1:C10 on sheet 'Budget'; column structural edits that would move or truncate sheet autofilters are not supported`");
+          "Direct POI 6.0.0 shift probes leave table, sheet-autofilter and data-validation"
+              + " references at\n"
+              + "their original ranges. GridGrind rebuilds data validations for row and column"
+              + " insertion, but\n"
+              + "rejects inserts that would move a table or sheet autofilter and rejects affected"
+              + " deletes or\n"
+              + "shifts under the supported structural-edit contract. This does not assert that"
+              + " every native\n"
+              + "edit or every OOXML structure is unsafe.\n\n"
+              + "The rejection names the affected structure and sheet. Example messages include:\n"
+              + "- `INSERT_ROWS cannot move table 'BudgetTable' on sheet 'Budget'; row structural"
+              + " edits that would move tables are not supported`\n"
+              + "- `DELETE_COLUMNS cannot move sheet autofilter A1:C10 on sheet 'Budget'; column"
+              + " structural edits that would move or truncate sheet autofilters are not"
+              + " supported`");
 
   /** Column Structural Edits While Formulas Are Present. */
   public static final Limit COLUMN_STRUCTURAL_EDITS_WHILE_FORMULAS_ARE_PRESENT =
@@ -710,11 +971,24 @@ public record Limit(
           ID_COLUMN_STRUCTURAL_EDITS_WHILE_FORMULAS_ARE_PRESENT,
           "Column Structural Edits While Formulas Are Present",
           "GridGrind",
-          "Column structural edits are rejected when the workbook contains any formula cells or formula-defined named ranges",
+          "Column structural edits are rejected when the workbook contains any formula cells or"
+              + " formula-defined named ranges",
           List.of("INVALID_REQUEST"),
-          "`INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` product-owned message identifying unsupported formula-bearing column edits",
+          "`INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` product-owned message identifying"
+              + " unsupported formula-bearing column edits",
           List.of("INSERT_COLUMNS", "DELETE_COLUMNS", "SHIFT_COLUMNS"),
-          "GridGrind does not admit column structural edits when formula cells or formula-defined names are present.\nPerform column layout edits before authoring formulas. Static validation rejects ordered conflicts\nthat are provable from the request, and runtime preflight checks the existing workbook's formula\nstate before execution. This is the product's supported execution boundary; it is not a claim\nthat every direct Apache POI column shift fails.\n\nExample message:\n- `SHIFT_COLUMNS cannot run while workbook formulas are present; formula-bearing column structural edits are unsupported`");
+          "GridGrind does not admit column structural edits when formula cells or formula-defined"
+              + " names are present.\n"
+              + "Perform column layout edits before authoring formulas. Static validation rejects"
+              + " ordered conflicts\n"
+              + "that are provable from the request, and runtime preflight checks the existing"
+              + " workbook's formula\n"
+              + "state before execution. This is the product's supported execution boundary; it is"
+              + " not a claim\n"
+              + "that every direct Apache POI column shift fails.\n\n"
+              + "Example message:\n"
+              + "- `SHIFT_COLUMNS cannot run while workbook formulas are present; formula-bearing"
+              + " column structural edits are unsupported`");
 
   /** Destructive Structural Edits Against Range-Backed Named Ranges. */
   public static final Limit DESTRUCTIVE_STRUCTURAL_EDITS_AGAINST_RANGE_BACKED_NAMED_RANGES =
@@ -722,11 +996,28 @@ public record Limit(
           ID_DESTRUCTIVE_STRUCTURAL_EDITS_AGAINST_RANGE_BACKED_NAMED_RANGES,
           "Destructive Structural Edits Against Range-Backed Named Ranges",
           "GridGrind",
-          "`DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, and `SHIFT_COLUMNS` are rejected when they would truncate a range-backed named range or partially move / overwrite one outside the moved band",
+          "`DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, and `SHIFT_COLUMNS` are rejected when"
+              + " they would truncate a range-backed named range or partially move / overwrite one"
+              + " outside the moved band",
           List.of("INVALID_REQUEST"),
-          "Product-owned `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected named range and sheet",
+          "Product-owned `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message"
+              + " naming the affected named range and sheet",
           List.of("DELETE_ROWS", "SHIFT_ROWS", "DELETE_COLUMNS", "SHIFT_COLUMNS"),
-          "GridGrind rejects row or column deletes that overlap a range-backed named range. It also\nrejects shifts that would partially move or overwrite one. This guard admits untouched names\nand names fully contained in the moved band, subject to the other structural-edit rules.\nThese are product admission boundaries; they do not certify every native POI reference rewrite.\n\nExample messages:\n- `DELETE_ROWS cannot move named range 'BudgetWindow' on sheet 'Budget'; row structural edits that would truncate range-backed named ranges are not supported`\n- `SHIFT_COLUMNS cannot move named range 'BudgetWindow' on sheet 'Budget'; column structural edits that would overwrite or partially move range-backed named ranges are not supported`");
+          "GridGrind rejects row or column deletes that overlap a range-backed named range. It"
+              + " also\n"
+              + "rejects shifts that would partially move or overwrite one. This guard admits"
+              + " untouched names\n"
+              + "and names fully contained in the moved band, subject to the other structural-edit"
+              + " rules.\n"
+              + "These are product admission boundaries; they do not certify every native POI"
+              + " reference rewrite.\n\n"
+              + "Example messages:\n"
+              + "- `DELETE_ROWS cannot move named range 'BudgetWindow' on sheet 'Budget'; row"
+              + " structural edits that would truncate range-backed named ranges are not"
+              + " supported`\n"
+              + "- `SHIFT_COLUMNS cannot move named range 'BudgetWindow' on sheet 'Budget'; column"
+              + " structural edits that would overwrite or partially move range-backed named ranges"
+              + " are not supported`");
 
   /** Event-Read Execution Mode Scope. */
   public static final Limit EVENT_READ_EXECUTION_MODE_SCOPE =
@@ -734,11 +1025,23 @@ public record Limit(
           ID_EVENT_READ_EXECUTION_MODE_SCOPE,
           "Event-Read Execution Mode Scope",
           "GridGrind",
-          "`execution.mode.type=EVENT_READ` supports only inspection steps, and only `GET_WORKBOOK_SUMMARY` plus `GET_SHEET_SUMMARY` queries",
+          "`execution.mode.type=EVENT_READ` supports only inspection steps, and only"
+              + " `GET_WORKBOOK_SUMMARY` plus `GET_SHEET_SUMMARY` queries",
           List.of("INVALID_REQUEST"),
-          "`execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}`",
+          "`execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind:"
+              + " {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or"
+              + " `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and"
+              + " GET_SHEET_SUMMARY only; unsupported read type: {type}`",
           List.of("execution.mode.type", "steps[]"),
-          "`EVENT_READ` restricts operations to workbook and sheet summary inspections. Its direct event-reader path applies to eligible EXISTING-source requests with no publication and the required calculation settings. Existing-source preflight opens the workbook through full XSSF before reader selection, and other admitted EVENT_READ requests use XSSF materialization. The mode therefore does not provide an end-to-end low-memory guarantee. Unsupported queries are rejected by the mode contract.");
+          "`EVENT_READ` restricts operations to workbook and sheet summary inspections. Its direct"
+              + " event-reader path applies to eligible EXISTING-source requests with no"
+              + " publication and the required calculation settings. Admission selects the concrete"
+              + " backend once. Eligible event-only sources are security-checked and validated"
+              + " through event metadata without an unconditional full XSSF graph; their readable"
+              + " source is retained for execution. Host terminal acceptance can still require a"
+              + " full workbook view, and other admitted EVENT_READ requests use XSSF"
+              + " materialization. The mode therefore does not provide an end-to-end low-memory"
+              + " guarantee. Unsupported queries are rejected by the mode contract.");
 
   /** Streaming-Write Execution Mode Scope. */
   public static final Limit STREAMING_WRITE_EXECUTION_MODE_SCOPE =
@@ -746,11 +1049,34 @@ public record Limit(
           ID_STREAMING_WRITE_EXECUTION_MODE_SCOPE,
           "Streaming-Write Execution Mode Scope",
           "GridGrind",
-          "`execution.mode.type=STREAMING_WRITE` requires `source.type=NEW`, limits mutation actions to `ENSURE_SHEET` and `APPEND_ROW`, requires `execution.calculation.strategy=DO_NOT_CALCULATE`, allows `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any append/assertion/inspection work, and requires at least one `ENSURE_SHEET` mutation",
+          "`execution.mode.type=STREAMING_WRITE` requires `source.type=NEW`, limits mutation"
+              + " actions to `ENSURE_SHEET` and `APPEND_ROW`, requires"
+              + " `execution.calculation.strategy=DO_NOT_CALCULATE`, allows"
+              + " `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any"
+              + " append/assertion/inspection work, and requires at least one `ENSURE_SHEET`"
+              + " mutation",
           List.of("INVALID_REQUEST"),
-          "`execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...`",
+          "`execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`,"
+              + " `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only;"
+              + " unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE"
+              + " requires execution.calculation.strategy=DO_NOT_CALCULATE ...`,"
+              + " `execution.mode.type=STREAMING_WRITE allows"
+              + " execution.calculation.markRecalculateOnOpen=true only when"
+              + " strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires"
+              + " ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE"
+              + " requires ENSURE_SHEET before any inspection step ...`, or"
+              + " `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation"
+              + " ...`",
           List.of("execution.mode.type", "source", "steps[]"),
-          "`STREAMING_WRITE` uses POI SXSSF for append-oriented NEW-workbook authoring under its reduced operation contract. Assertions and inspections can materialize the workbook through full XSSF, and saved output is reopened through XSSF for staged-artifact verification before publication. Streaming authoring therefore does not guarantee bounded end-to-end heap use. Validation rejects unsupported operations and calculation settings before execution.");
+          "`STREAMING_WRITE` uses POI SXSSF for append-oriented NEW-workbook authoring under its"
+              + " reduced operation contract. Terminal assertions and inspections share one"
+              + " materialized full XSSF view. A requested streaming plan with a mutation after an"
+              + " observation selects the reported FULL_XSSF backend to preserve each authored"
+              + " state and requires full workbook memory. Host terminal checks share one"
+              + " completed-artifact view, and saved output is reopened through XSSF for"
+              + " staged-artifact verification before publication. Streaming authoring therefore"
+              + " does not guarantee bounded end-to-end heap use. Validation rejects unsupported"
+              + " operations and calculation settings before execution.");
 
   /** Request JSON Size. */
   public static final Limit REQUEST_JSON_SIZE =
@@ -760,12 +1086,21 @@ public record Limit(
           "GridGrind",
           REQUEST_DOCUMENT_LIMIT_BYTES + " bytes",
           List.of("INVALID_REQUEST"),
-          "`Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.`",
+          "`Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored"
+              + " payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.`",
           List.of(
               "--request <path>",
               "GridGrindJson.readRequest(InputStream)",
               "GridGrindJson.readRequest(byte[])"),
-          "GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`, `FILE`, and\n`STANDARD_INPUT`), not by letting the outer request document grow without bound. The CLI\nrejects oversized request files before execution starts, and the JSON codec enforces the same\ndocument cap on stdin and byte-array entry points so every transport path fails with one stable\nproduct-owned `INVALID_REQUEST` message.");
+          "GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`,"
+              + " `FILE`, and\n"
+              + "`STANDARD_INPUT`), not by letting the outer request document grow without bound."
+              + " The CLI\n"
+              + "rejects oversized request files before execution starts, and the JSON codec"
+              + " enforces the same\n"
+              + "document cap on stdin and byte-array entry points so every transport path fails"
+              + " with one stable\n"
+              + "product-owned `INVALID_REQUEST` message.");
 
   /** Sheet Zoom Percentage. */
   public static final Limit SHEET_ZOOM_PERCENTAGE =
@@ -777,7 +1112,210 @@ public record Limit(
           List.of("INVALID_REQUEST"),
           "`zoomPercent must be between 10 and 400 inclusive: {n}`",
           List.of("SET_SHEET_ZOOM"),
-          "Excel exposes worksheet zoom in the 10% to 400% range. GridGrind validates the authored value up\nfront and reuses the same bound for factual sheet-layout reports so CLI operators and agents see\none stable limit across mutation, help, catalog, and readback surfaces.");
+          "Excel exposes worksheet zoom in the 10% to 400% range. GridGrind validates the authored"
+              + " value up\n"
+              + "front and reuses the same bound for factual sheet-layout reports so CLI operators"
+              + " and agents see\n"
+              + "one stable limit across mutation, help, catalog, and readback surfaces.");
+
+  /** Stable identity of the host-owned aggregate input snapshot budget. */
+  public static final String ID_INPUT_SNAPSHOT_BYTES = "LIM-041";
+
+  /** Host-selected external input consumption limit for one invocation. */
+  public static final Limit INPUT_SNAPSHOT_BYTES =
+      new Limit(
+          ID_INPUT_SNAPSHOT_BYTES,
+          "Input Snapshot Bytes",
+          "Host authority",
+          "ExecutionGrant.maxInputSnapshotBytes (0..9223372036854775807 bytes)",
+          List.of("INVALID_REQUEST"),
+          "Host input snapshot byte budget exceeded",
+          List.of(
+              "source",
+              "formulaEnvironment",
+              "FILE",
+              "UTF8_FILE",
+              "STANDARD_INPUT",
+              "host acceptance inputs"),
+          "The host supplies a required finite nonnegative aggregate byte allowance. Reads are"
+              + " charged while snapshotting; a unique admitted snapshot is charged once. Zero"
+              + " permits NEW/inline work with sufficient operation authority. Workbook"
+              + " decompression, native memory, output growth and general scratch capacity are"
+              + " separate concerns; this allowance does not bound end-to-end memory.");
+
+  /** Stable identity of authored media payload bytes. */
+  public static final String ID_AUTHORED_MEDIA_BYTES = "LIM-042";
+
+  /** Authored Media Payload Bytes. */
+  public static final Limit AUTHORED_MEDIA_BYTES =
+      new Limit(
+          ID_AUTHORED_MEDIA_BYTES,
+          "Authored Media Payload Bytes",
+          "GridGrind",
+          String.valueOf(MAX_AUTHORED_MEDIA_BYTES),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "One decoded payload is bounded before media accumulation, encoding, decoding or"
+              + " cloning.");
+
+  /** Stable identity of authored media use bytes. */
+  public static final String ID_AUTHORED_MEDIA_TOTAL_BYTES = "LIM-043";
+
+  /** Authored Media Use Bytes. */
+  public static final Limit AUTHORED_MEDIA_TOTAL_BYTES =
+      new Limit(
+          ID_AUTHORED_MEDIA_TOTAL_BYTES,
+          "Authored Media Use Bytes",
+          "GridGrind",
+          String.valueOf(MAX_AUTHORED_MEDIA_TOTAL_BYTES),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "Every authored occurrence charges, even when a source snapshot or equal bytes are"
+              + " reused.");
+
+  /** Stable identity of media inspection bytes. */
+  public static final String ID_MEDIA_INSPECTION_BYTES = "LIM-044";
+
+  /** Media Inspection Bytes. */
+  public static final Limit MEDIA_INSPECTION_BYTES =
+      new Limit(
+          ID_MEDIA_INSPECTION_BYTES,
+          "Media Inspection Bytes",
+          "GridGrind",
+          String.valueOf(MAX_MEDIA_INSPECTION_BYTES),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "Structural inspection includes bounded opaque spans, nested members and repeated"
+              + " reads.");
+
+  /** Stable identity of media raster pixels. */
+  public static final String ID_MEDIA_RASTER_PIXELS = "LIM-045";
+
+  /** Media Raster Pixels. */
+  public static final Limit MEDIA_RASTER_PIXELS =
+      new Limit(
+          ID_MEDIA_RASTER_PIXELS,
+          "Media Raster Pixels",
+          "GridGrind",
+          String.valueOf(MAX_MEDIA_RASTER_PIXELS),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "Coded raster and tile storage is bounded; vector coordinate units are not pixels.");
+
+  /** Stable identity of media expanded coding bytes. */
+  public static final String ID_MEDIA_EXPANDED_BYTES = "LIM-046";
+
+  /** Media Expanded Coding Bytes. */
+  public static final Limit MEDIA_EXPANDED_BYTES =
+      new Limit(
+          ID_MEDIA_EXPANDED_BYTES,
+          "Media Expanded Coding Bytes",
+          "GridGrind",
+          String.valueOf(MAX_MEDIA_EXPANDED_BYTES),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "Known expansion is reserved before decoding; failures do not restore the allowance.");
+
+  /** Stable identity of media structural records. */
+  public static final String ID_MEDIA_STRUCTURE_RECORDS = "LIM-047";
+
+  /** Media Structural Records. */
+  public static final Limit MEDIA_STRUCTURE_RECORDS =
+      new Limit(
+          ID_MEDIA_STRUCTURE_RECORDS,
+          "Media Structural Records",
+          "GridGrind",
+          String.valueOf(MAX_MEDIA_STRUCTURE_RECORDS),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "Roots, frames, directories, entries and nested records share one bounded counter.");
+
+  /** Stable identity of media container depth. */
+  public static final String ID_MEDIA_CONTAINER_DEPTH = "LIM-048";
+
+  /** Media Container Depth. */
+  public static final Limit MEDIA_CONTAINER_DEPTH =
+      new Limit(
+          ID_MEDIA_CONTAINER_DEPTH,
+          "Media Container Depth",
+          "GridGrind",
+          String.valueOf(MAX_MEDIA_CONTAINER_DEPTH),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "Nested image and preview structures cannot reset the request budget.");
+
+  /** Stable identity of eps syntax tokens. */
+  public static final String ID_EPS_SYNTAX_TOKENS = "LIM-049";
+
+  /** EPS Syntax Tokens. */
+  public static final Limit EPS_SYNTAX_TOKENS =
+      new Limit(
+          ID_EPS_SYNTAX_TOKENS,
+          "EPS Syntax Tokens",
+          "GridGrind",
+          String.valueOf(MAX_EPS_SYNTAX_TOKENS),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "PostScript is inspected lexically without executing or expanding operators.");
+
+  /** Stable identity of eps syntax depth. */
+  public static final String ID_EPS_SYNTAX_DEPTH = "LIM-050";
+
+  /** EPS Syntax Depth. */
+  public static final Limit EPS_SYNTAX_DEPTH =
+      new Limit(
+          ID_EPS_SYNTAX_DEPTH,
+          "EPS Syntax Depth",
+          "GridGrind",
+          String.valueOf(MAX_EPS_SYNTAX_DEPTH),
+          List.of("INVALID_REQUEST"),
+          "Authored media exceeds {limit}.",
+          List.of("SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE"),
+          "Lexical container tracking is bounded without executing PostScript.");
+
+  /** Stable identity of the receiving workbook's civil date domain. */
+  public static final String ID_TEMPORAL_CIVIL_DOMAIN = "LIM-051";
+
+  public static final Limit TEMPORAL_CIVIL_DOMAIN =
+      new Limit(
+          ID_TEMPORAL_CIVIL_DOMAIN,
+          "Civil Date Domain",
+          "GridGrind",
+          "1900: "
+              + dev.erst.gridgrind.core.model.value.ExcelDateSystem.WINDOWS_1900.minimumDate()
+              + ".."
+              + dev.erst.gridgrind.core.model.value.ExcelDateSystem.MAXIMUM_DATE
+              + "; 1904: "
+              + dev.erst.gridgrind.core.model.value.ExcelDateSystem.MAC_1904.minimumDate()
+              + ".."
+              + dev.erst.gridgrind.core.model.value.ExcelDateSystem.MAXIMUM_DATE,
+          List.of("INVALID_REQUEST"),
+          "{fieldName} must be within the receiving workbook's supported calendar range.",
+          List.of("SET_CELL", "SET_RANGE", "APPEND_ROW", "IMPORT_CUSTOM_XML_MAPPING"),
+          "Unsupported civil dates refuse before native mutation; observations retain their raw"
+              + " number and explicit interpretation outcome.");
+
+  /** Stable identity of authored DATE_TIME precision. */
+  public static final String ID_TEMPORAL_MILLISECOND_PRECISION = "LIM-052";
+
+  public static final Limit TEMPORAL_MILLISECOND_PRECISION =
+      new Limit(
+          ID_TEMPORAL_MILLISECOND_PRECISION,
+          "Date-Time Precision",
+          "GridGrind",
+          "millisecond",
+          List.of("INVALID_REQUEST"),
+          "{fieldName} supports millisecond precision.",
+          List.of("SET_CELL", "SET_RANGE", "APPEND_ROW"),
+          "Finer authored precision refuses rather than being silently truncated or rounded.");
 
   private static final List<Limit> ALL =
       List.of(
@@ -821,7 +1359,19 @@ public record Limit(
           WORKBOOK_SOURCE_CONTENT_FORMAT,
           OOXML_WRITE_ENCRYPTION_IS_AGILE_ONLY_AND_STRONG_ONLY,
           MATERIALIZED_WORKSHEET_WORK_PER_PLAN,
-          EXPLICIT_DATA_VALIDATION_LIST_FORMULA_LENGTH);
+          EXPLICIT_DATA_VALIDATION_LIST_FORMULA_LENGTH,
+          INPUT_SNAPSHOT_BYTES,
+          AUTHORED_MEDIA_BYTES,
+          AUTHORED_MEDIA_TOTAL_BYTES,
+          MEDIA_INSPECTION_BYTES,
+          MEDIA_RASTER_PIXELS,
+          MEDIA_EXPANDED_BYTES,
+          MEDIA_STRUCTURE_RECORDS,
+          MEDIA_CONTAINER_DEPTH,
+          EPS_SYNTAX_TOKENS,
+          EPS_SYNTAX_DEPTH,
+          TEMPORAL_CIVIL_DOMAIN,
+          TEMPORAL_MILLISECOND_PRECISION);
 
   /** Returns every stable limit entry in identifier order. */
   public static List<Limit> all() {

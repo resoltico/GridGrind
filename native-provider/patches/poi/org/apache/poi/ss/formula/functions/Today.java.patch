@@ -1,0 +1,10 @@
+--- org/apache/poi/ss/formula/functions/Today.java
++++ org/apache/poi/ss/formula/functions/Today.java
+@@ -39,6 +39,6 @@
+         now.clear(Calendar.MINUTE);
+         now.clear(Calendar.SECOND);
+         now.clear(Calendar.MILLISECOND);
+-        return new NumberEval(DateUtil.getExcelDate(now.getTime()));
++        return new NumberEval(DateUtil.getExcelDate(now.getTime(), org.apache.poi.ss.usermodel.DateSystemContext.is1904()));
+     }
+ }

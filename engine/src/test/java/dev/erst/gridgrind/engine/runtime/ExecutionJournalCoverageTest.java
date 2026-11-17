@@ -46,6 +46,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.ArrayList;
 import java.util.List;
@@ -452,13 +453,17 @@ class ExecutionJournalCoverageTest {
         assertInstanceOf(
             WorkbookResult.Success.class,
             execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
     WorkbookResult.Success secondResponse =
         assertInstanceOf(
             WorkbookResult.Success.class,
             execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
 
     ExecutionJournal.Step firstStep = firstResponse.journal().steps().getFirst();

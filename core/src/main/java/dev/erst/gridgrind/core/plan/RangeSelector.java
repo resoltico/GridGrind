@@ -46,18 +46,7 @@ public sealed interface RangeSelector extends Selector
 
     /** Returns the exact number of cells in this validated rectangular range. */
     public long cellCount() {
-      String[] endpoints = range.value().split(":", -1);
-      String first = endpoints[0];
-      String last = endpoints.length == 1 ? first : endpoints[1];
-      long rowCount =
-          (long) SelectorAddressSupport.rowIndex(last)
-              - SelectorAddressSupport.rowIndex(first)
-              + 1L;
-      long columnCount =
-          (long) SelectorAddressSupport.columnIndex(last)
-              - SelectorAddressSupport.columnIndex(first)
-              + 1L;
-      return Math.multiplyExact(rowCount, columnCount);
+      return range.cellCount();
     }
   }
 
@@ -91,14 +80,13 @@ public sealed interface RangeSelector extends Selector
       rowCount = SelectorValueValidation.requirePositive(rowCount, "rowCount");
       columnCount = SelectorValueValidation.requirePositive(columnCount, "columnCount");
       SelectorValueValidation.requireWindowSize(rowCount, columnCount);
-      if (SelectorAddressSupport.rowIndex(topLeftAddress.value()) + rowCount - 1
-              > Limit.MAX_ROW_INDEX
-          || SelectorAddressSupport.columnIndex(topLeftAddress.value()) + columnCount - 1
-              > Limit.MAX_COLUMN_INDEX) {
+      if (topLeftAddress.rowIndex() + rowCount - 1 > Limit.MAX_ROW_INDEX
+          || topLeftAddress.columnIndex() + columnCount - 1 > Limit.MAX_COLUMN_INDEX) {
         throw new dev.erst.gridgrind.core.problem.InvalidRequestException(
             new dev.erst.gridgrind.core.problem.ActionableInvariantMessage(
                 "window must end within Excel .xlsx bounds",
-                "Choose a top-left address and dimensions that keep the entire window inside the worksheet.",
+                "Choose a top-left address and dimensions that keep the entire window inside the"
+                    + " worksheet.",
                 java.util.Optional.empty()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
@@ -109,12 +97,11 @@ public sealed interface RangeSelector extends Selector
 
     /** Returns the exact A1-style rectangular range implied by this window. */
     public RangeRef range() {
-      int firstRow = SelectorAddressSupport.rowIndex(topLeftAddress.value());
-      int firstColumn = SelectorAddressSupport.columnIndex(topLeftAddress.value());
+      int firstRow = topLeftAddress.rowIndex();
+      int firstColumn = topLeftAddress.columnIndex();
       int lastRow = firstRow + rowCount - 1;
       int lastColumn = firstColumn + columnCount - 1;
-      return new RangeRef(
-          topLeftAddress + ":" + SelectorAddressSupport.absoluteA1Address(lastRow, lastColumn));
+      return new RangeRef(firstRow, lastRow, firstColumn, lastColumn);
     }
 
     @Override

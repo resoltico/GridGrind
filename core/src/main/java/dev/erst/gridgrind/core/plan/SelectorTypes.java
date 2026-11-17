@@ -138,14 +138,13 @@ public final class SelectorTypes {
       }
       typeIds =
           typeIds.stream()
-              .map(
-                  typeId -> {
-                    Objects.requireNonNull(typeId, "typeIds must not contain nulls");
-                    if (typeId.isBlank()) {
-                      throw new IllegalArgumentException("typeIds must not contain blank values");
-                    }
-                    return typeId;
-                  })
+              .map(typeId -> {
+                Objects.requireNonNull(typeId, "typeIds must not contain nulls");
+                if (typeId.isBlank()) {
+                  throw new IllegalArgumentException("typeIds must not contain blank values");
+                }
+                return typeId;
+              })
               .toList();
     }
   }

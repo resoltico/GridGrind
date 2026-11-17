@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,8 +25,16 @@ class ExcelArrayFormulaTest {
       XssfSheet sheet = workbook.getOrCreateSheet("Calc");
       seedSourceData(sheet);
 
-      sheet.cells().setArrayFormula("D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4"));
-      sheet.cells().setArrayFormula("F2", new ResolvedArrayFormula("SUM(B2:C2)"));
+      sheet
+          .cells()
+          .setArrayFormula(
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("D2:D4"),
+              new ResolvedArrayFormula("B2:B4*C2:C4"));
+      sheet
+          .cells()
+          .setArrayFormula(
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("F2"),
+              new ResolvedArrayFormula("SUM(B2:C2)"));
 
       ArrayFormulaReport multiCell =
           sheet.cells().arrayFormulas().stream()
@@ -45,7 +52,9 @@ class ExcelArrayFormulaTest {
       assertTrue(singleCell.singleCell());
 
       CellReport.FormulaReport formulaCell =
-          assertInstanceOf(CellReport.FormulaReport.class, sheet.cells().snapshotCell("D3"));
+          assertInstanceOf(
+              CellReport.FormulaReport.class,
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("D3")));
       assertEquals("B2:B4*C2:C4", formulaCell.formula().orElseThrow());
 
       workbook
@@ -68,14 +77,24 @@ class ExcelArrayFormulaTest {
               .sorted()
               .toList());
 
-      sheet.cells().clearArrayFormula("D3");
+      sheet.cells().clearArrayFormula(new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"));
       assertEquals(
           List.of("F2"),
           sheet.cells().arrayFormulas().stream().map(report -> report.range().value()).toList());
-      assertEquals("BLANK", sheet.cells().snapshotCell("D2").type());
+      assertEquals(
+          "BLANK",
+          sheet
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"))
+              .type());
 
       IllegalArgumentException notArray =
-          assertThrows(IllegalArgumentException.class, () -> sheet.cells().clearArrayFormula("A1"));
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  sheet
+                      .cells()
+                      .clearArrayFormula(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertTrue(notArray.getMessage().contains("is not part of an array formula"));
     }
   }
@@ -86,7 +105,11 @@ class ExcelArrayFormulaTest {
       WorkbookIntrospector introspector = new WorkbookIntrospector();
       XssfSheet sheet = workbook.getOrCreateSheet("Calc");
       seedSourceData(sheet);
-      sheet.cells().setArrayFormula("D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4"));
+      sheet
+          .cells()
+          .setArrayFormula(
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("D2:D4"),
+              new ResolvedArrayFormula("B2:B4*C2:C4"));
 
       dev.erst.gridgrind.core.plan.SheetInspectionResult.ArrayFormulasResult result =
           assertInstanceOf(
@@ -109,17 +132,65 @@ class ExcelArrayFormulaTest {
   }
 
   private static void seedSourceData(XssfSheet sheet) {
-    sheet.cells().setCell("A1", new CellValue.Text("Month"));
-    sheet.cells().setCell("B1", new CellValue.Text("Plan"));
-    sheet.cells().setCell("C1", new CellValue.Text("Actual"));
-    sheet.cells().setCell("A2", new CellValue.Text("Jan"));
-    sheet.cells().setCell("A3", new CellValue.Text("Feb"));
-    sheet.cells().setCell("A4", new CellValue.Text("Mar"));
-    sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
-    sheet.cells().setCell("B3", new CellValue.NumberValue(18d));
-    sheet.cells().setCell("B4", new CellValue.NumberValue(15d));
-    sheet.cells().setCell("C2", new CellValue.NumberValue(12d));
-    sheet.cells().setCell("C3", new CellValue.NumberValue(16d));
-    sheet.cells().setCell("C4", new CellValue.NumberValue(21d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Month"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plan"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Actual"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Jan"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Feb"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mar"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(18d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(15d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(16d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C4"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(21d));
   }
 }

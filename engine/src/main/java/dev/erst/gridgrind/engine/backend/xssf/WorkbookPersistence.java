@@ -99,12 +99,11 @@ public final class WorkbookPersistence {
     return new OoxmlPackageSecurityReport(
         loaded.encryption(),
         loaded.signatures().stream()
-            .map(
-                signature ->
-                    new dev.erst.gridgrind.core.model.security.OoxmlSignatureReport(
-                        signature.packagePartName(),
-                        signature.signer(),
-                        signature.state().afterMutation()))
+            .map(signature ->
+                new dev.erst.gridgrind.core.model.security.OoxmlSignatureReport(
+                    signature.packagePartName(),
+                    signature.signer(),
+                    signature.state().afterMutation()))
             .toList());
   }
 

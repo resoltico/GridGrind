@@ -24,8 +24,9 @@ final class CliExecutionFailureSupport {
    * Creates execution inputs, then retains the failed-result contract through binding cleanup.
    *
    * <p>Input construction occurs before the execution boundary and propagates its {@link
-   * IOException}. Once the binding exists, every failure, including a binding close failure, is a
-   * workbook execution failure rather than a rejected command.
+   * IOException}. Once the binding exists, ordinary exceptions, including a binding close failure,
+   * are workbook execution failures rather than rejected commands. A missing executor result cannot
+   * establish that publication was unattempted.
    */
   static WorkbookResult executeStarted(
       GridGrindRequestExecutor requestExecutor,
@@ -47,16 +48,37 @@ final class CliExecutionFailureSupport {
             inputs.secretsProviderPath(),
             request,
             inputs.stdin());
-    try (bindings) {
-      return Objects.requireNonNull(
-          requestExecutor.execute(analysis, bindings.inputs(), inputs.progressSink()),
-          "requestExecutor must not return null");
-    } catch (Exception exception) {
-      return failure(request, exception);
-    }
+    return executeBound(
+        request,
+        bindings.inputs().workingDirectory(),
+        bindings,
+        () ->
+            Objects.requireNonNull(
+                requestExecutor.execute(analysis, bindings.inputs(), inputs.progressSink()),
+                "requestExecutor must not return null"));
   }
 
-  static WorkbookResult.Failure failure(WorkbookPlan request, Throwable exception) {
+  /** Owns entered execution and its binding until the actual result and cleanup are known. */
+  static WorkbookResult executeBound(
+      WorkbookPlan request,
+      Path workingDirectory,
+      AutoCloseable bindings,
+      java.util.function.Supplier<WorkbookResult> execution) {
+    WorkbookResult result = null;
+    try (bindings) {
+      result = Objects.requireNonNull(execution.get(), "executor result must not be null");
+    } catch (Exception exception) {
+      return result == null
+          ? unreportedExecutionFailure(request, workingDirectory, exception)
+          : WorkbookResults.withSecondaryFailure(
+              result,
+              GridGrindProblems.fromException(
+                  exception, new ProblemContext.ExecuteRequest(requestShape(request))));
+    }
+    return result;
+  }
+
+  static WorkbookResult.Failure failureBeforeExecution(WorkbookPlan request, Throwable exception) {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
     return WorkbookResults.failure(
@@ -65,6 +87,50 @@ final class CliExecutionFailureSupport {
         WorkbookResults.notAttemptedPersistenceOutcome(request),
         GridGrindProblems.fromException(
             exception, new ProblemContext.ExecuteRequest(requestShape(request))));
+  }
+
+  private static WorkbookResult.Failure unreportedExecutionFailure(
+      WorkbookPlan request, Path workingDirectory, Throwable exception) {
+    var persistence =
+        switch (request.persistence()) {
+          case WorkbookPlan.WorkbookPersistence.None _ ->
+              new dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome
+                  .NotSaved();
+          case WorkbookPlan.WorkbookPersistence.SaveAs save ->
+              new dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome
+                  .SavedAs(save.path(), uncertain(save.path(), workingDirectory));
+          case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
+            if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile source)) {
+              throw new IllegalStateException(
+                  "Executor failed without a resolvable publication target", exception);
+            }
+            yield new dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome
+                .Overwritten(source.path(), uncertain(source.path(), workingDirectory));
+          }
+        };
+    return WorkbookResults.failure(
+        request.protocolVersion(),
+        request.planId(),
+        persistence,
+        GridGrindProblems.fromException(
+            exception, new ProblemContext.ExecuteRequest(requestShape(request))));
+  }
+
+  private static dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
+      uncertain(String rawPath, Path workingDirectory) {
+    Path path = Path.of(rawPath);
+    String resolved =
+        (path.isAbsolute() ? path : workingDirectory.resolve(path))
+            .toAbsolutePath()
+            .normalize()
+            .toString();
+    return new dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
+        .Uncertain(
+        resolved,
+        dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome.Recovery
+            .INSPECT_DESTINATION_DO_NOT_RETRY,
+        dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
+            .CommitObservation.NOT_ESTABLISHED);
   }
 
   private static RequestShape requestShape(WorkbookPlan request) {

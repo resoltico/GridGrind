@@ -181,7 +181,9 @@ final class ExecutionResults {
 
   static WorkbookResult.Failure failureResponse(ExecutionFailure failure) {
     return failureResponse(
-        failure, WorkbookResults.notAttemptedPersistenceOutcome(failure.context().request()), true);
+        failure,
+        WorkbookResults.notAttemptedPersistenceOutcome(failure.context().request()),
+        false);
   }
 
   static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(ExecutionFailure failure) {
@@ -195,7 +197,7 @@ final class ExecutionResults {
   static WorkbookResult.Failure failureResponse(
       ExecutionFailure failure,
       dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome persistence) {
-    return failureResponse(failure, persistence, true);
+    return failureResponse(failure, persistence, false);
   }
 
   /** Returns a failed response retaining a publisher-proven final-destination state. */

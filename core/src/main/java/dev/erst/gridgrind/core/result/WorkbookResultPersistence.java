@@ -71,13 +71,10 @@ public interface WorkbookResultPersistence {
     @Variant(id = "NOT_ATTEMPTED", summary = "Final destination mutation was never attempted.")
     record NotAttempted() implements PublicationOutcome {}
 
-    /**
-     * Final destination remains provably absent or unchanged after publication did not complete.
-     */
+    /** This run did not commit; destination evidence is reported separately. */
     @Variant(
         id = "NOT_PUBLISHED",
-        summary =
-            "Final destination remains provably absent or unchanged after publication did not complete.")
+        summary = "This run did not commit; destination evidence is reported separately.")
     record NotPublished(DestinationState destinationState) implements PublicationOutcome {
       public NotPublished {
         Objects.requireNonNull(destinationState, "destinationState must not be null");
@@ -112,17 +109,26 @@ public interface WorkbookResultPersistence {
         id = "UNCERTAIN",
         summary =
             "Final destination may have changed, so automated retry is unsafe without inspection.")
-    record Uncertain(String executionPath, Recovery recovery) implements PublicationOutcome {
+    record Uncertain(String executionPath, Recovery recovery, CommitObservation commitObservation)
+        implements PublicationOutcome {
       public Uncertain {
         executionPath = TextValidation.requireNonBlank(executionPath, "executionPath");
         Objects.requireNonNull(recovery, "recovery must not be null");
+        Objects.requireNonNull(commitObservation, "commitObservation must not be null");
       }
     }
 
     /** Known final-destination state after a publication failure. */
     enum DestinationState {
       ABSENT,
-      PRESERVED
+      PRESERVED,
+      COLLISION_OBSERVED
+    }
+
+    /** Whether this run observed the final mutation primitive return successfully. */
+    enum CommitObservation {
+      NOT_ESTABLISHED,
+      RETURNED_SUCCESSFULLY
     }
 
     /** Required operator response to an uncertain publication attempt. */

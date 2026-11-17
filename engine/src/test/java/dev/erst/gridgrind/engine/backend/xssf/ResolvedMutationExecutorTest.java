@@ -50,7 +50,6 @@ import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -121,8 +120,14 @@ class ResolvedMutationExecutorTest {
                   new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                   new ResolvedMutationAction.SetRange(
                       List.of(
-                          List.of(new CellValue.Text("Item"), new CellValue.NumberValue(49.0)),
-                          List.of(new CellValue.Text("Tax"), new CellValue.NumberValue(5.0))))),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  49.0)),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Tax"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  5.0))))),
               new ResolvedStep(
                   new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
                   new WorkbookMutationAction.MergeCells()),
@@ -145,7 +150,9 @@ class ResolvedMutationExecutorTest {
               new ResolvedStep(
                   new SheetSelector.ByName(new SheetName("Budget")),
                   new ResolvedMutationAction.AppendRow(
-                      List.of(new CellValue.Text("Total"), new ResolvedFormula("SUM(B1:B2)")))),
+                      List.of(
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Total"),
+                          new ResolvedFormula("SUM(B1:B2)")))),
               new ResolvedStep(
                   new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2")),
                   new CellMutationAction.ClearRange()),
@@ -182,23 +189,41 @@ class ResolvedMutationExecutorTest {
                   new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:B3")),
                   new ResolvedMutationAction.SetRange(
                       List.of(
-                          List.of(new CellValue.Text("Owner"), new CellValue.Text("Task")),
-                          List.of(new CellValue.Text("Ada"), new CellValue.Text("Queue")),
-                          List.of(new CellValue.Text("Lin"), new CellValue.Text("Pack"))))),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Task")),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue")),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pack"))))),
               new ResolvedStep(
                   new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D1:E3")),
                   new ResolvedMutationAction.SetRange(
                       List.of(
-                          List.of(new CellValue.Text("Region"), new CellValue.Text("Desk")),
-                          List.of(new CellValue.Text("North"), new CellValue.Text("A1")),
-                          List.of(new CellValue.Text("South"), new CellValue.Text("B1"))))),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk")),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("A1")),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("B1"))))),
               new ResolvedStep(
                   new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("G1:H3")),
                   new ResolvedMutationAction.SetRange(
                       List.of(
-                          List.of(new CellValue.Text("Stage"), new CellValue.Text("Team")),
-                          List.of(new CellValue.Text("Review"), new CellValue.Text("Docs")),
-                          List.of(new CellValue.Text("Ship"), new CellValue.Text("Ops"))))),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Stage"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Team")),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Review"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Docs")),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ship"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ops"))))),
               new ResolvedStep(
                   new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D1:E3")),
                   new StructuredMutationAction.SetAutofilter(List.of(), Optional.empty())),
@@ -275,22 +300,50 @@ class ResolvedMutationExecutorTest {
                   new WorkbookMutationAction.UnmergeCells())));
       workbook.formulas().markRecalculateOnOpen();
       assertEquals(List.of("History", "Budget", "Ops"), workbook.sheets().sheetNames());
-      assertEquals("Item", workbook.sheet("Budget").cells().text("A1"));
-      assertEquals(54.0, workbook.sheet("Budget").cells().number("B3"));
-      assertTrue(workbook.sheet("Budget").cells().snapshotCell("A1").hyperlink().isEmpty());
-      assertTrue(workbook.sheet("Budget").cells().snapshotCell("B1").comment().isEmpty());
+      assertEquals(
+          "Item",
+          workbook
+              .sheet("Budget")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertEquals(
+          54.0,
+          workbook
+              .sheet("Budget")
+              .cells()
+              .number(new dev.erst.gridgrind.core.vocabulary.CellAddress("B3")));
+      assertTrue(
+          workbook
+              .sheet("Budget")
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
+              .hyperlink()
+              .isEmpty());
+      assertTrue(
+          workbook
+              .sheet("Budget")
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"))
+              .comment()
+              .isEmpty());
       assertEquals(1, workbook.names().namedRangeCount());
       assertEquals(
           ExcelHorizontalAlignment.CENTER,
           workbook
               .sheet("Budget")
               .cells()
-              .snapshotCell("A1")
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
               .style()
               .orElseThrow()
               .alignment()
               .horizontalAlignment());
-      assertEquals("BLANK", workbook.sheet("Budget").cells().snapshotCell("A2").type());
+      assertEquals(
+          "BLANK",
+          workbook
+              .sheet("Budget")
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"))
+              .type());
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
       dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult autofilters =
@@ -414,7 +467,8 @@ class ResolvedMutationExecutorTest {
                   workbook,
                   new ResolvedStep(
                       new CellSelector.ByAddress(new SheetName("Missing"), new CellAddress("A1")),
-                      new ResolvedMutationAction.SetCell(new CellValue.Text("x")))));
+                      new ResolvedMutationAction.SetCell(
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("x")))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
@@ -423,7 +477,10 @@ class ResolvedMutationExecutorTest {
                   new ResolvedStep(
                       new RangeSelector.ByRange(new SheetName("Missing"), new RangeRef("A1")),
                       new ResolvedMutationAction.SetRange(
-                          List.of(List.of(new CellValue.Text("x")))))));
+                          List.of(
+                              List.of(
+                                  new dev.erst.gridgrind.core.model.value.ResolvedCellText(
+                                      "x")))))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
@@ -561,7 +618,9 @@ class ResolvedMutationExecutorTest {
                   workbook,
                   new ResolvedStep(
                       new SheetSelector.ByName(new SheetName("Missing")),
-                      new ResolvedMutationAction.AppendRow(List.of(new CellValue.Text("x"))))));
+                      new ResolvedMutationAction.AppendRow(
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("x"))))));
     }
   }
 
@@ -578,7 +637,7 @@ class ResolvedMutationExecutorTest {
               new SheetDefaultsSpec(12, 19.5d),
               List.of(
                   new IgnoredErrorSpec(
-                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:A1"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
                       List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))));
 
       assertSame(
@@ -630,30 +689,30 @@ class ResolvedMutationExecutorTest {
               new ResolvedMutationAction.SetRange(
                   List.of(
                       List.of(
-                          new CellValue.Text("Region"),
-                          new CellValue.Text("Stage"),
-                          new CellValue.Text("Owner"),
-                          new CellValue.Text("Amount")),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Stage"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount")),
                       List.of(
-                          new CellValue.Text("North"),
-                          new CellValue.Text("Plan"),
-                          new CellValue.Text("Ada"),
-                          new CellValue.NumberValue(10)),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plan"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10)),
                       List.of(
-                          new CellValue.Text("North"),
-                          new CellValue.Text("Do"),
-                          new CellValue.Text("Ada"),
-                          new CellValue.NumberValue(15)),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Do"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(15)),
                       List.of(
-                          new CellValue.Text("South"),
-                          new CellValue.Text("Plan"),
-                          new CellValue.Text("Lin"),
-                          new CellValue.NumberValue(7)),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plan"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(7)),
                       List.of(
-                          new CellValue.Text("South"),
-                          new CellValue.Text("Do"),
-                          new CellValue.Text("Lin"),
-                          new CellValue.NumberValue(12))))),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Do"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12))))),
           setPivotTableStep(
               new PivotTableSpec(
                   "Ops Pivot",
@@ -935,47 +994,52 @@ class ResolvedMutationExecutorTest {
                   new ResolvedMutationAction.SetRange(
                       List.of(
                           List.of(
-                              new CellValue.Text("Item"),
-                              new CellValue.Text("Qty"),
-                              new CellValue.Text("Status"),
-                              new CellValue.Text("Note"),
-                              new CellValue.Text("Owner"),
-                              new CellValue.Text("Flag")),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Qty"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Status"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Note"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Flag")),
                           List.of(
-                              new CellValue.Text("Hosting"),
-                              new CellValue.NumberValue(42.0),
-                              new CellValue.Text("Open"),
-                              new CellValue.Text("Alpha"),
-                              new CellValue.Text("Ada"),
-                              new CellValue.Text("Y")),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  42.0),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Open"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Alpha"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Y")),
                           List.of(
-                              new CellValue.Text("Support"),
-                              new CellValue.NumberValue(84.0),
-                              new CellValue.Text("Closed"),
-                              new CellValue.Text("Beta"),
-                              new CellValue.Text("Lin"),
-                              new CellValue.Text("N")),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Support"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  84.0),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Closed"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Beta"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("N")),
                           List.of(
-                              new CellValue.Text("Ops"),
-                              new CellValue.NumberValue(168.0),
-                              new CellValue.Text("Open"),
-                              new CellValue.Text("Gamma"),
-                              new CellValue.Text("Bea"),
-                              new CellValue.Text("Y")),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ops"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  168.0),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Open"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Gamma"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Bea"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Y")),
                           List.of(
-                              new CellValue.Text("QA"),
-                              new CellValue.NumberValue(21.0),
-                              new CellValue.Text("Queued"),
-                              new CellValue.Text("Delta"),
-                              new CellValue.Text("Kai"),
-                              new CellValue.Text("N")),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("QA"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  21.0),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queued"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Delta"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Kai"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("N")),
                           List.of(
-                              new CellValue.Text("Infra"),
-                              new CellValue.NumberValue(7.0),
-                              new CellValue.Text("Done"),
-                              new CellValue.Text("Epsilon"),
-                              new CellValue.Text("Mia"),
-                              new CellValue.Text("Y"))))),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Infra"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  7.0),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Epsilon"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mia"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Y"))))),
               new ResolvedStep(
                   new RowBandSelector.Span(new SheetName("Layout"), 1, 3),
                   new WorkbookMutationAction.GroupRows(true)),
@@ -996,26 +1060,29 @@ class ResolvedMutationExecutorTest {
                   new ResolvedMutationAction.SetRange(
                       List.of(
                           List.of(
-                              new CellValue.Text("Item"),
-                              new CellValue.Text("Qty"),
-                              new CellValue.Text("Status"),
-                              new CellValue.Text("Note")),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Qty"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Status"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Note")),
                           List.of(
-                              new CellValue.Text("Hosting"),
-                              new CellValue.NumberValue(42.0),
-                              new CellValue.Text("Open"),
-                              new CellValue.Text("Alpha")),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  42.0),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Open"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Alpha")),
                           List.of(
-                              new CellValue.Text("Support"),
-                              new CellValue.NumberValue(84.0),
-                              new CellValue.Text("Closed"),
-                              new CellValue.Text("Beta"))))),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Support"),
+                              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                                  84.0),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Closed"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Beta"))))),
               new ResolvedStep(
                   new RowBandSelector.Insertion(new SheetName("Moves"), 1, 1),
                   new WorkbookMutationAction.InsertRows()),
               new ResolvedStep(
                   new CellSelector.ByAddress(new SheetName("Moves"), new CellAddress("A2")),
-                  new ResolvedMutationAction.SetCell(new CellValue.Text("Spacer"))),
+                  new ResolvedMutationAction.SetCell(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Spacer"))),
               new ResolvedStep(
                   new RowBandSelector.Span(new SheetName("Moves"), 2, 3),
                   new WorkbookMutationAction.ShiftRows(1)),
@@ -1027,7 +1094,8 @@ class ResolvedMutationExecutorTest {
                   new WorkbookMutationAction.InsertColumns()),
               new ResolvedStep(
                   new CellSelector.ByAddress(new SheetName("Moves"), new CellAddress("B1")),
-                  new ResolvedMutationAction.SetCell(new CellValue.Text("Pad"))),
+                  new ResolvedMutationAction.SetCell(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pad"))),
               new ResolvedStep(
                   new ColumnBandSelector.Span(new SheetName("Moves"), 2, 4),
                   new WorkbookMutationAction.ShiftColumns(1)),
@@ -1035,10 +1103,30 @@ class ResolvedMutationExecutorTest {
                   new ColumnBandSelector.Span(new SheetName("Moves"), 2, 2),
                   new WorkbookMutationAction.DeleteColumns())));
 
-      assertEquals("Pad", workbook.sheet("Moves").cells().text("B1"));
-      assertEquals("Hosting", workbook.sheet("Moves").cells().text("A3"));
-      assertEquals(42.0, workbook.sheet("Moves").cells().number("C3"));
-      assertEquals("Beta", workbook.sheet("Moves").cells().text("E4"));
+      assertEquals(
+          "Pad",
+          workbook
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")));
+      assertEquals(
+          "Hosting",
+          workbook
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A3")));
+      assertEquals(
+          42.0,
+          workbook
+              .sheet("Moves")
+              .cells()
+              .number(new dev.erst.gridgrind.core.vocabulary.CellAddress("C3")));
+      assertEquals(
+          "Beta",
+          workbook
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("E4")));
       workbook
           .persistence()
           .save(
@@ -1062,10 +1150,30 @@ class ResolvedMutationExecutorTest {
 
     try (XssfWorkbook reopened =
         XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      assertEquals("Pad", reopened.sheet("Moves").cells().text("B1"));
-      assertEquals("Hosting", reopened.sheet("Moves").cells().text("A3"));
-      assertEquals(42.0, reopened.sheet("Moves").cells().number("C3"));
-      assertEquals("Beta", reopened.sheet("Moves").cells().text("E4"));
+      assertEquals(
+          "Pad",
+          reopened
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")));
+      assertEquals(
+          "Hosting",
+          reopened
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A3")));
+      assertEquals(
+          42.0,
+          reopened
+              .sheet("Moves")
+              .cells()
+              .number(new dev.erst.gridgrind.core.vocabulary.CellAddress("C3")));
+      assertEquals(
+          "Beta",
+          reopened
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("E4")));
     }
   }
 
@@ -1086,7 +1194,8 @@ class ResolvedMutationExecutorTest {
                   new WorkbookMutationAction.EnsureSheet()),
               new ResolvedStep(
                   new CellSelector.ByAddress(new SheetName("Alpha"), new CellAddress("A1")),
-                  new ResolvedMutationAction.SetCell(new CellValue.Text("Live"))),
+                  new ResolvedMutationAction.SetCell(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Live"))),
               new ResolvedStep(
                   new SheetSelector.ByName(new SheetName("Alpha")),
                   new WorkbookMutationAction.CopySheet(
@@ -1110,7 +1219,12 @@ class ResolvedMutationExecutorTest {
                   new WorkbookMutationAction.ClearSheetProtection())));
 
       assertEquals(List.of("Alpha", "Alpha Copy", "Beta"), workbook.sheets().sheetNames());
-      assertEquals("Live", workbook.sheet("Alpha Copy").cells().text("A1"));
+      assertEquals(
+          "Live",
+          workbook
+              .sheet("Alpha Copy")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
 
       WorkbookSummary.WithSheets summary =
           assertInstanceOf(WorkbookSummary.WithSheets.class, workbook.workbookSummary());
@@ -1144,25 +1258,25 @@ class ResolvedMutationExecutorTest {
               new ResolvedMutationAction.SetRange(
                   List.of(
                       List.of(
-                          new CellValue.Text("Item"),
-                          new CellValue.Text("Qty"),
-                          new CellValue.Text("Status"),
-                          new CellValue.Text("Owner")),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Qty"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Status"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner")),
                       List.of(
-                          new CellValue.Text("Hosting"),
-                          new CellValue.NumberValue(42.0),
-                          new CellValue.Text("Open"),
-                          new CellValue.Text("Ada")),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(42.0),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Open"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada")),
                       List.of(
-                          new CellValue.Text("Support"),
-                          new CellValue.NumberValue(84.0),
-                          new CellValue.Text("Closed"),
-                          new CellValue.Text("Lin")),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Support"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(84.0),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Closed"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin")),
                       List.of(
-                          new CellValue.Text("Ops"),
-                          new CellValue.NumberValue(7.0),
-                          new CellValue.Text("Done"),
-                          new CellValue.Text("Mia"))))),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ops"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(7.0),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mia"))))),
           new ResolvedStep(
               new RowBandSelector.Span(new SheetName("Layout"), 1, 3),
               new WorkbookMutationAction.GroupRows(true)),
@@ -1217,9 +1331,12 @@ class ResolvedMutationExecutorTest {
               new ResolvedMutationAction.SetRange(
                   List.of(
                       List.of(
-                          new CellValue.Text("Extremely long workflow heading"),
-                          new CellValue.Text("State")),
-                      List.of(new CellValue.Text("Ada"), new CellValue.Text("Queued"))))));
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText(
+                              "Extremely long workflow heading"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("State")),
+                      List.of(
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queued"))))));
       ResolvedMutationExecutor.apply(
           workbook,
           new ResolvedStep(
@@ -1303,7 +1420,7 @@ class ResolvedMutationExecutorTest {
                   workbook
                       .sheet("Budget")
                       .cells()
-                      .snapshotCell("A1")
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
                       .comment()
                       .orElseThrow()
                       .text()),
@@ -1313,7 +1430,7 @@ class ResolvedMutationExecutorTest {
                   workbook
                       .sheet("Budget")
                       .cells()
-                      .snapshotCell("A1")
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
                       .comment()
                       .orElseThrow()
                       .author()),
@@ -1322,7 +1439,7 @@ class ResolvedMutationExecutorTest {
                   workbook
                       .sheet("Budget")
                       .cells()
-                      .snapshotCell("A1")
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
                       .comment()
                       .orElseThrow()
                       .visible()));
@@ -1333,7 +1450,7 @@ class ResolvedMutationExecutorTest {
           workbook
               .sheet("Budget")
               .cells()
-              .snapshotCell("A1")
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
               .style()
               .orElseThrow()
               .alignment()

@@ -18,7 +18,8 @@ final class RequestPathTopology {
   static Path rootPath(Path executionRoot) throws IOException {
     Path root = executionRoot.toAbsolutePath().normalize();
     rejectSymlink(root);
-    return root.toRealPath(LinkOption.NOFOLLOW_LINKS);
+    identityOf(root, true);
+    return root;
   }
 
   static Path resolveWithinRoot(String rawPath, Path root) {

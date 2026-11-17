@@ -7,26 +7,25 @@ import org.jspecify.annotations.Nullable;
 
 /** Shared number-format heuristics for projected temporal readback metadata. */
 public final class TemporalFormats {
-  /** Temporal semantic inferred from a numeric cell's observed number format. */
-  public enum ObservedKind {
-    DATE,
-    TIME,
-    DATE_TIME
-  }
-
   private TemporalFormats() {}
 
   /** Returns the temporal semantic implied by one Excel number format, when any. */
-  public static Optional<ObservedKind> observedKind(String numberFormat) {
+  public static Optional<dev.erst.gridgrind.core.model.value.CellTemporalKind> observedKind(
+      String numberFormat) {
+    String normalized = normalizeFormat(numberFormat);
+    if (normalized.matches("(?s).*\\[(?:h{1,2}|m{1,2}|s{1,2})\\].*"))
+      return Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.ELAPSED);
     if (!DateUtil.isADateFormat(-1, numberFormat)) {
       return Optional.empty();
     }
-    String normalized = normalizeFormat(numberFormat);
     boolean containsTimeFields = containsTimeFields(normalized);
     if (!containsTimeFields) {
-      return Optional.of(ObservedKind.DATE);
+      return Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE);
     }
-    return Optional.of(containsDateFields(normalized) ? ObservedKind.DATE_TIME : ObservedKind.TIME);
+    return Optional.of(
+        containsDateFields(normalized)
+            ? dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME
+            : dev.erst.gridgrind.core.model.value.CellTemporalKind.TIME);
   }
 
   private static boolean containsTimeFields(String normalizedFormat) {
@@ -137,11 +136,11 @@ public final class TemporalFormats {
       return null;
     }
     String bracket = numberFormat.substring(cursor + 1, closing).toLowerCase(Locale.ROOT);
-    return new BracketSection(bracketContainsTime(bracket) ? bracket : "", closing + 1);
+    return new BracketSection(bracketContainsTime(bracket) ? "[" + bracket + "]" : "", closing + 1);
   }
 
   private static boolean bracketContainsTime(String bracket) {
-    return bracket.contains("h") || bracket.contains("s");
+    return bracket.matches("(?:h{1,2}|m{1,2}|s{1,2})");
   }
 
   private record BracketSection(String text, int nextIndex) {}

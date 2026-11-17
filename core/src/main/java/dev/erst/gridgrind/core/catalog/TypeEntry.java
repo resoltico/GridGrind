@@ -20,7 +20,8 @@ public record TypeEntry(
     @WireDefault(value = "[]", omit = true) List<OperationPrecondition> preconditions,
     @WireDefault(value = "[]", omit = true) List<OperationEffect> effects,
     Optional<OperationEffectFootprint> effectFootprint,
-    Optional<ProtocolStepTemplate> stepTemplate) {
+    Optional<ProtocolStepTemplate> stepTemplate)
+    implements CatalogLookupValue {
   /**
    * Creates a type entry without target-selector metadata.
    *

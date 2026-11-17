@@ -5,6 +5,7 @@ import importlib.util
 import io
 import os
 from pathlib import Path
+import re
 import tarfile
 import tempfile
 import unittest
@@ -21,11 +22,11 @@ PAYLOAD_SHA256 = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015
 PAYLOAD_NAME = "demo_1.2.3.orig.tar.xz"
 DSC_NAME = "demo_1.2.3.dsc"
 SOURCE_CONFIG = """Types: deb
-# http://snapshot.debian.org/archive/debian/20261020T213255Z
-URIs: https://deb.debian.org/debian
-Suites: trixie trixie-updates
+# https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/
+URIs: https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/
+Suites: resolute resolute-updates
 Components: main
-Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 """
 
 
@@ -82,39 +83,39 @@ class SourceMetadataTest(unittest.TestCase):
 
 class AptConfigurationTest(unittest.TestCase):
     def test_snapshot_conversion_preserves_signature_configuration(self):
-        converted = collector.source_config(SOURCE_CONFIG, "debian.sources")
-        self.assertEqual(2, converted.count("Types: deb-src"))
-        self.assertEqual(2, converted.count("Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg"))
-        self.assertEqual(1, converted.count("Check-Valid-Until: no"))
-        self.assertIn("URIs: https://deb.debian.org/debian", converted)
-        self.assertIn("URIs: http://snapshot.debian.org/archive/debian/20261020T213255Z", converted)
+        converted = collector.source_config(SOURCE_CONFIG, "ubuntu.sources")
+        self.assertEqual(1, converted.count("Types: deb-src"))
+        self.assertEqual(1, converted.count("Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg"))
+        self.assertEqual(0, converted.count("Check-Valid-Until: no"))
+        self.assertIn("URIs: https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/", converted)
+        self.assertIn("URIs: https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/", converted)
 
     def test_authentication_bypasses_are_rejected(self):
         for setting in ["Trusted", "Allow-Insecure", "Allow-Unauthenticated", "Allow-Weak", "Allow-Downgrade-To-Insecure"]:
             for truth in ["yes", "true", "1"]:
                 with self.subTest(setting=setting, truth=truth), self.assertRaisesRegex(ValueError, "Unauthenticated"):
-                    collector.source_config(SOURCE_CONFIG + setting + ": " + truth + "\n", "debian.sources")
+                    collector.source_config(SOURCE_CONFIG + setting + ": " + truth + "\n", "ubuntu.sources")
         with self.assertRaisesRegex(ValueError, "Unauthenticated"):
-            collector.source_config("deb [trusted=true] https://deb.debian.org/debian trixie main", "debian.list")
+            collector.source_config("deb [trusted=true] https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/ resolute main", "ubuntu.list")
 
     def test_unsupported_source_uri_and_missing_uri_fail(self):
         for uri in ["file:/tmp/unsigned", "ftp://deb.debian.org/debian", "https://example.com/debian", "https://u:p@deb.debian.org/debian"]:
             for name, text in [
-                ("debian.sources", SOURCE_CONFIG.replace("https://deb.debian.org/debian", uri)),
-                ("debian.list", "deb " + uri + " trixie main"),
+                ("ubuntu.sources", SOURCE_CONFIG.replace("https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/", uri)),
+                ("ubuntu.list", "deb " + uri + " resolute main"),
             ]:
                 with self.subTest(uri=uri, name=name), self.assertRaises(ValueError):
                     collector.source_config(text, name)
         with self.assertRaisesRegex(ValueError, "no archive URI"):
-            collector.source_config("Types: deb\nSuites: trixie\n", "broken.sources")
+            collector.source_config("Types: deb\nSuites: resolute\n", "broken.sources")
 
     def test_apt_uri_output_is_parsed_and_malformed_rows_fail(self):
-        text = "Need to get source archives.\n'https://deb.debian.org/pool/demo.dsc' demo.dsc 12 SHA256:abc\n"
-        self.assertEqual({"demo.dsc": {"url": "https://deb.debian.org/pool/demo.dsc", "size": 12}},
+        text = "Need to get source archives.\n'https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/pool/demo.dsc' demo.dsc 12 SHA256:abc\n"
+        self.assertEqual({"demo.dsc": {"url": "https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/pool/demo.dsc", "size": 12}},
                          collector.uri_records(text))
         for row in [
-            "'https://deb.debian.org/pool/demo.dsc' ../outside 12 SHA256:abc",
-            "'https://deb.debian.org/pool/demo.dsc' demo.dsc nope SHA256:abc",
+            "'https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/pool/demo.dsc' ../outside 12 SHA256:abc",
+            "'https://snapshot.ubuntu.com/ubuntu/20261116T000000Z/pool/demo.dsc' demo.dsc nope SHA256:abc",
             "'file:/tmp/demo.dsc' demo.dsc 12 SHA256:abc",
             "'https://example.com/demo.dsc' demo.dsc 12 SHA256:abc",
             "No source URIs available",
@@ -187,7 +188,7 @@ class SourceCacheTest(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.directory = Path(self.temporary.name)
-        self.cache = self.directory / "prior" / "content" / "debian"
+        self.cache = self.directory / "prior" / "content" / "ubuntu"
         self.cached_tuple = self.cache / "demo" / "1.2.3"
         self.cached_tuple.mkdir(parents=True)
         data = dsc_text().encode()
@@ -280,6 +281,84 @@ class SourceArchiveTest(unittest.TestCase):
                     self.assertEqual(0o755 if member.isdir() else 0o644, member.mode)
                 payload = archive.extractfile("gridgrind-container-sources-0.77.0/vendor/source.tar.gz")
                 self.assertEqual(b"upstream archive bytes\x00\xff", payload.read())
+
+
+class TemurinSourceTest(unittest.TestCase):
+    def test_build_metadata_rejects_foreign_architecture_source_or_missing_configuration(self):
+        pins = {"TEMURIN_ARM64_SHA256": "a" * 64, "TEMURIN_SCM_REF": "jdk-27_adopt",
+                "TEMURIN_BUILD_COMMIT": "b" * 40, "TEMURIN_SOURCE_COMMIT": "c" * 40,
+                "TEMURIN_VERSION": "27.0.1.0.2+1"}
+        metadata = {"vendor": "Eclipse Adoptium", "os": "linux", "arch": "aarch64",
+                    "binary_type": "jdk", "scmRef": "jdk-27_adopt", "sha256": "a" * 64,
+                    "buildRef": "https://github.com/adoptium/temurin-build/commit/" + "b" * 40,
+                    "openjdk_source": "https://github.com/adoptium/jdk27u/commit/" + "c" * 40,
+                    "full_version_output": "Temurin-27.0.1.0.2+1", "configure_arguments": "--example",
+                    "openjdk_built_config": "source configuration"}
+        collector.verify_vendor_metadata(metadata, pins, "arm64")
+        for field, value in [("arch", "x64"), ("sha256", "d" * 64), ("scmRef", "other"),
+                             ("buildRef", "https://example.com/build"), ("openjdk_source", "other"),
+                             ("configure_arguments", ""), ("openjdk_built_config", None)]:
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                collector.verify_vendor_metadata({**metadata, field: value}, pins, "arm64")
+
+    def test_release_identity_is_parsed_without_shell_execution(self):
+        self.assertEqual({"JAVA_RUNTIME_VERSION": "27.0.1.0.2+1", "IMPLEMENTOR": "Eclipse Adoptium"},
+                         collector.release_properties('JAVA_RUNTIME_VERSION="27.0.1.0.2+1"\nIMPLEMENTOR="Eclipse Adoptium"'))
+        for text in ['JAVA_VERSION="27"\nJAVA_VERSION="26"', 'JAVA_VERSION=no extra', 'invalid']:
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                collector.release_properties(text)
+
+    def test_full_source_tree_requires_native_and_build_files_not_only_java_zip(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "sources.tar.gz"
+            def archive(names):
+                with tarfile.open(source, "w:gz") as output:
+                    for name in names:
+                        member = tarfile.TarInfo(name)
+                        member.size = 1
+                        output.addfile(member, io.BytesIO(b"x"))
+            archive(["jdk-src/LICENSE", "jdk-src/src/hotspot/share/runtime/thread.cpp", "jdk-src/configure"])
+            collector.verify_source_tree(source, "jdk-src", ["LICENSE", "src/hotspot/share/runtime/thread.cpp", "configure"])
+            for names in [["jdk-src/lib/src.zip"], ["other/LICENSE"], ["jdk-src/../LICENSE"]]:
+                archive(names)
+                with self.subTest(names=names), self.assertRaises(ValueError):
+                    collector.verify_source_tree(source, "jdk-src", ["LICENSE", "configure"])
+
+    def test_runtime_pin_has_one_image_and_devcontainer_uses_shared_contributor_target(self):
+        repository = Path(__file__).resolve().parents[2]
+        pins = collector.runtime_pins(repository / "release/container-runtime.properties")
+        dockerfile = (repository / "Dockerfile").read_text()
+        stages = {}
+        external = []
+        for line in dockerfile.splitlines():
+            if not line.startswith("FROM "):
+                continue
+            words = line.split()
+            base = words[1]
+            origin = stages.get(base, base)
+            if base not in stages:
+                external.append(base)
+            if "AS" in words:
+                stages[words[words.index("AS") + 1]] = origin
+        self.assertEqual([pins["JAVA_BASE_IMAGE"]], external)
+        for role in ["contributor", "build", "application"]:
+            self.assertEqual(pins["JAVA_BASE_IMAGE"], stages[role])
+        self.assertNotIn("jlink", dockerfile)
+        config = __import__("json").loads((repository / ".devcontainer/devcontainer.json").read_text())
+        self.assertEqual({"dockerfile": "../Dockerfile", "context": "..", "target": "contributor"}, config["build"])
+
+    def test_application_context_contains_each_declared_gradle_project(self):
+        repository = Path(__file__).resolve().parents[2]
+        settings = (repository / "settings.gradle.kts").read_text()
+        declarations = re.findall(r"(?m)^include\(([^)]*)\)", settings)
+        projects = [name for declaration in declarations for name in re.findall(r'"([^"]+)"', declaration)]
+        self.assertTrue(projects, "Check the declared Gradle projects rather than an empty set")
+        dockerfile = (repository / "Dockerfile").read_text().splitlines()
+        context = (repository / ".dockerignore").read_text().splitlines()
+        for project in projects:
+            with self.subTest(project=project):
+                self.assertIn(f"COPY {project} ./{project}", dockerfile)
+                self.assertIn(f"!{project}/", context)
 
 
 if __name__ == "__main__":

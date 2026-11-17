@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.cli.render;
 
-import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,6 +50,9 @@ final class GridGrindCliJsonCodecSupport {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(value, "value must not be null");
-    GridGrindJsonOutput.writeCatalogLookupValue(outputStream, value, pretty);
+    (pretty
+            ? dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.PRETTY_WIRE_JSON_MAPPER
+            : dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.WIRE_JSON_MAPPER)
+        .writeValue(outputStream, value);
   }
 }

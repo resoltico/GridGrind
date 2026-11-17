@@ -20,14 +20,14 @@ class WorkbookStepValidationTest {
     CellMutationAction.SetCell action =
         new CellMutationAction.SetCell(new CellValueSpec.Text(TextSourceSpec.inline("Owner")));
 
-    assertDoesNotThrow(
-        () ->
-            new MutationStep(
-                new StepId("set-owner"),
-                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
-                action));
+    assertDoesNotThrow(() ->
+        new MutationStep(
+            new StepId("set-owner"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
+            action));
     assertEquals(
-        "SET_CELL requires target type CELL_BY_ADDRESS or TABLE_CELL_BY_COLUMN_NAME but got RANGE_BY_RANGE",
+        "SET_CELL requires target type CELL_BY_ADDRESS or TABLE_CELL_BY_COLUMN_NAME but got"
+            + " RANGE_BY_RANGE",
         WorkbookOperationContracts.targetViolation(
                 action, new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")))
             .orElseThrow());

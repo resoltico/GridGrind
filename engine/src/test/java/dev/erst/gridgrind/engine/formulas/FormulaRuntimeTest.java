@@ -250,35 +250,28 @@ class FormulaRuntimeTest {
 
   private static void writeScalarValueCoversSupportedAndRejectedShapes(
       Cell scalarCell, AreaEval areaEval) {
-    assertDoesNotThrow(
-        () ->
-            FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
-                scalarCell, BlankEval.instance));
+    assertDoesNotThrow(() ->
+        FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(scalarCell, BlankEval.instance));
     assertEquals(CellType.BLANK, scalarCell.getCellType());
-    assertDoesNotThrow(
-        () ->
-            FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
-                scalarCell, MissingArgEval.instance));
+    assertDoesNotThrow(() ->
+        FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
+            scalarCell, MissingArgEval.instance));
     assertEquals(CellType.BLANK, scalarCell.getCellType());
-    assertDoesNotThrow(
-        () ->
-            FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
-                scalarCell, new NumberEval(3.5d)));
+    assertDoesNotThrow(() ->
+        FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
+            scalarCell, new NumberEval(3.5d)));
     assertEquals(3.5d, scalarCell.getNumericCellValue());
-    assertDoesNotThrow(
-        () ->
-            FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
-                scalarCell, new StringEval("hello")));
+    assertDoesNotThrow(() ->
+        FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
+            scalarCell, new StringEval("hello")));
     assertEquals("hello", scalarCell.getStringCellValue());
-    assertDoesNotThrow(
-        () ->
-            FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
-                scalarCell, BoolEval.valueOf(true)));
+    assertDoesNotThrow(() ->
+        FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
+            scalarCell, BoolEval.valueOf(true)));
     assertTrue(scalarCell.getBooleanCellValue());
-    assertDoesNotThrow(
-        () ->
-            FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
-                scalarCell, ErrorEval.NAME_INVALID));
+    assertDoesNotThrow(() ->
+        FormulaRuntime.TemplateFormulaUdfFunction.writeScalarValue(
+            scalarCell, ErrorEval.NAME_INVALID));
     assertEquals(FormulaError.NAME.getCode(), scalarCell.getErrorCellValue());
 
     assertThrows(

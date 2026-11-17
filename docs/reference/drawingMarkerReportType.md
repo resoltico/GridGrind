@@ -7,10 +7,10 @@ Exact cell-relative drawing marker report.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
-| columnIndex | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
-| rowIndex | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
-| dx | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
-| dy | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
+| columnIndex | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER","constraints":[{"type":"NUMBER_RANGE","minimum":0.0,"maximum":2.147483647E9}]} |  |
+| rowIndex | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER","constraints":[{"type":"NUMBER_RANGE","minimum":0.0,"maximum":2.147483647E9}]} |  |
+| dx | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"drawingCoordinateReportTypes"} |  |
+| dy | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"drawingCoordinateReportTypes"} |  |
 
 ```json
 {
@@ -21,7 +21,12 @@ Exact cell-relative drawing marker report.
     "requirement" : "REQUIRED",
     "shape" : {
       "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "scalarType" : "NUMBER",
+      "constraints" : [ {
+        "type" : "NUMBER_RANGE",
+        "minimum" : 0.0,
+        "maximum" : 2.147483647E9
+      } ]
     },
     "enumValues" : [ ]
   }, {
@@ -29,23 +34,28 @@ Exact cell-relative drawing marker report.
     "requirement" : "REQUIRED",
     "shape" : {
       "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "scalarType" : "NUMBER",
+      "constraints" : [ {
+        "type" : "NUMBER_RANGE",
+        "minimum" : 0.0,
+        "maximum" : 2.147483647E9
+      } ]
     },
     "enumValues" : [ ]
   }, {
     "name" : "dx",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "drawingCoordinateReportTypes"
     },
     "enumValues" : [ ]
   }, {
     "name" : "dy",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "drawingCoordinateReportTypes"
     },
     "enumValues" : [ ]
   } ],

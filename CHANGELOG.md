@@ -5,8 +5,38 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 
 ## [Unreleased]
 
-- Repository formatting leaves the read-only AGENTS.md baseline untouched.
-- Release dry runs skip stable-publication guards; publishing an existing stable release remains blocked.
+## [0.78.0] - 2026-11-17
+
+- GridGrind-owned code is AGPL-3.0-only. Contributions grant commercial relicensing rights; separate commercial terms require a signed agreement.
+- DATE and DATE_TIME writes require the active workbook epoch and millisecond precision; out-of-range dates and finer fractions reject before mutation.
+- Cell temporal reports distinguish interpreted, unrepresentable and non-temporal values while retaining raw numeric facts, including Excel's fictitious 1900 leap day.
+- Chart reports expose stored sparse caches and declared titles without live-cell substitution. Drawing reports retain native units and bounds; update report consumers.
+- COPY_SHEET preserves independent signature-line VML, previews and settings alongside comments; signature booleans follow their native true/false schema values.
+- Native execution uses a private provider realm with fixed en-US rendering and a UTC civil-date bridge; host locale, time zone and parent provider classes remain unchanged.
+- Verified native filename aliases share authority and snapshots; distinct hard-link names require separate grants and snapshot bytes. Ambiguous aliases refuse.
+- Authored pictures and previews require bounded structural validation for their declared format before mutation; preserved native media remains opaque.
+- Invalid authority documents reject with INVALID_AUTHORITY, their grant-file context and reliable JSON coordinates; unknown reader defects remain internal errors.
+- Known malformed or prohibited workbook XML reports safe INVALID_WORKBOOK_CONTENT diagnostics; parser initialization and unexpected native failures remain internal errors.
+- Standalone native logging emits bounded metadata frames on stderr; programmatic callers retain host logging. See [CLI settings](docs/CLI.md).
+- ExecutionGrant requires maxInputSnapshotBytes; all external snapshots share that finite allowance. Authority JSON rejects duplicate, null, malformed, unknown and trailing content.
+- Generic JSON mappers reject whole request/grant documents; use GridGrindJson.readRequest and readGrant so transport, structural and authority checks apply.
+- Static refusals stop acquisition in execution and doctor; prepared capabilities require static, authority and source checks before operations can run.
+- Concrete cell/range identity ignores anchors and case; reversed rectangles and equivalent selector aliases reject. Update consumers that relied on raw concrete spelling.
+- Java writes require validated text, finite numbers and stored errors. Observations remain permissive; catalog lookup returns a closed typed result.
+- Create-only publication uses qualified atomic no-clobber primitives. Results distinguish commit occurrence, verified content, collisions and durability; uncertain outcomes forbid blind retry.
+- Run sessions own snapshots, native scratch and cleanup. Progress failures disable the sink once; cleanup retains primary failures and completed evidence.
+- Snapshot overflow or failed reads block further reads in that run; cached snapshots remain reusable. CLI secret files enforce 65,536 actual bytes through EOF and reject malformed UTF-8.
+- Prepared steps retain original authored source provenance separately from bound operands; assertion failures report original selectors alongside resolved observations.
+- Request intake constructs canonical fragments once. JSON and CLI enforce the 16 MiB request limit while reading and retain independent source-occurrence diagnostics.
+- Admission reports the actual backend and materialization requirements; prepared sources and terminal streaming observations share native views without dropping host acceptance.
+- STREAMING_WRITE plans that mutate after an observation use the reported FULL_XSSF backend to preserve intermediate states; these plans require full workbook memory.
+- Java authoring allocates IDs across all occupied step names; explicit collisions reject immediately without changing the builder or its next generated ID.
+- Build, development and runtime share one pinned Temurin 27 JDK on Ubuntu 26.04. Source artifacts retain matching full JDK/build sources and authenticated OS package sources.
+- Update Jackson to 3.3.0, Bouncy Castle to 1.87 and the vendor-verified dependency graph; refresh locked restores and bundled legal inventory.
+- Compiler analysis uses NullAway 0.14.4; managed images select the authenticated 17 November Ubuntu snapshot for packages and corresponding source.
+- Shaded JARs expose resolved runtime component identities to SBOM scanners, including Bouncy Castle, while retaining genuine publisher metadata.
+- Builds use Gradle 9.9.1, managed Kotlin DSL and Spotless's built-in google-java-format 2.0; compiler checks reuse unchanged outputs.
+- Releases validate immutable candidates before publication, then publish the reviewed JAR, sources and both image architectures without rebuilding.
 
 ## [0.77.0] - 2026-10-28
 

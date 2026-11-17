@@ -18,14 +18,14 @@ public final class CliRequestReader {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
     if (requestPath.isEmpty() || CliPathArguments.isStandardInputPath(requestPath)) {
-      byte[] requestBytes = stdin.readAllBytes();
-      GridGrindJson.requireSupportedRequestLength(requestBytes.length);
-      return requestBytes;
+      return GridGrindJson.readRequestBytes(stdin);
     }
     Path normalizedRequestPath = requestPath.orElseThrow().toAbsolutePath().normalize();
     validateReadableRequestPath(normalizedRequestPath);
     GridGrindJson.requireSupportedRequestLength(Files.size(normalizedRequestPath));
-    return Files.readAllBytes(normalizedRequestPath);
+    try (InputStream input = Files.newInputStream(normalizedRequestPath)) {
+      return GridGrindJson.readRequestBytes(input);
+    }
   }
 
   private static void validateReadableRequestPath(Path requestPath) throws IOException {

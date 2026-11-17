@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
 import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
@@ -53,8 +54,30 @@ import java.util.Objects;
  * tracks protocol coverage rather than accidental coupling.
  */
 @SuppressWarnings("PMD.ExcessiveImports")
-final class SourceBackedInputRequirements {
+public final class SourceBackedInputRequirements {
   private SourceBackedInputRequirements() {}
+
+  /** Reports whether any host acceptance selector consumes standard input. */
+  public static boolean requiresStandardInput(AcceptancePolicy policy) {
+    return switch (policy) {
+      case AcceptancePolicy.MinimumOnly _ -> false;
+      case AcceptancePolicy.RequireAll all ->
+          all.requirements().stream()
+              .anyMatch(requirement ->
+                  switch (requirement) {
+                    case AcceptancePolicy.Requirement.TerminalAssertions terminal ->
+                        terminal.assertions().stream()
+                            .anyMatch(step ->
+                                SourceBackedInputRequirements.requiresStandardInput(step.target()));
+                    case AcceptancePolicy.Requirement.PreserveInspectionFacts facts ->
+                        facts.inspections().stream()
+                            .anyMatch(step ->
+                                SourceBackedInputRequirements.requiresStandardInput(step.target()));
+                    case AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts _ -> false;
+                    case AcceptancePolicy.Requirement.RequireCalculation _ -> false;
+                  });
+    };
+  }
 
   static boolean requiresStandardInput(WorkbookPlan plan) {
     Objects.requireNonNull(plan, "plan must not be null");

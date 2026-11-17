@@ -27,10 +27,9 @@ class GridGrindCliHelpUnitTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                ProductInfo.requestTemplateText(
-                    () -> {
-                      throw new IOException("synthetic failure");
-                    }));
+                ProductInfo.requestTemplateText(() -> {
+                  throw new IOException("synthetic failure");
+                }));
 
     assertEquals("Failed to render the built-in request template", failure.getMessage());
     assertEquals("synthetic failure", failure.getCause().getMessage());

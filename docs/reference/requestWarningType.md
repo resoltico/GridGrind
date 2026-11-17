@@ -22,7 +22,7 @@ Non-fatal authored-plan warning surfaced at the response root.
       "type" : "SCALAR",
       "scalarType" : "STRING"
     },
-    "enumValues" : [ "UNQUOTED_SHEET_NAME_IN_FORMULA", "NON_PORTABLE_ABSOLUTE_PATH", "UTF8_BOM_IGNORED", "FORMULA_NOT_EVALUATED" ]
+    "enumValues" : [ "UNQUOTED_SHEET_NAME_IN_FORMULA", "NON_PORTABLE_ABSOLUTE_PATH", "UTF8_BOM_IGNORED", "PROGRESS_SINK_FAILED", "FORMULA_NOT_EVALUATED" ]
   }, {
     "name" : "location",
     "requirement" : "REQUIRED",

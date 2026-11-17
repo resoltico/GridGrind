@@ -42,7 +42,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
@@ -51,6 +50,7 @@ import dev.erst.gridgrind.engine.backend.xssf.WorkbookNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.XlsxRoundTrip;
 import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
 import dev.erst.gridgrind.engine.formulas.UnsupportedFormulaException;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -75,7 +75,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   void returnsTableReadResultsForByNameSelectionAndNoneStyle() {
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -134,7 +136,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -166,7 +170,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -212,7 +218,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   void returnsFactualAndAnalysisReadResults() {
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -310,7 +318,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -334,7 +344,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -366,7 +378,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -408,7 +422,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -437,7 +453,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -461,7 +479,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -508,7 +528,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
@@ -546,7 +568,6 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   void returnsStructuredFailureForMissingWorkbookSource() throws IOException {
     Path workbookPath = Path.of("missing-workbook.xlsx");
     Path workingDirectory = Files.createTempDirectory("gridgrind-missing-workbook-root-");
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
     WorkbookPlan request =
         request(
@@ -555,8 +576,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
             List.of());
     WorkbookResult.Failure failure =
         failure(
-            executor.execute(
-                request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request)));
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+                .execute(
+                    request,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request)));
 
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
     assertEquals("OPEN_WORKBOOK", failure.problem().context().type());
@@ -576,7 +601,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -601,7 +628,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -632,7 +661,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -660,7 +691,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -686,7 +719,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -710,7 +745,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -749,7 +786,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -781,7 +820,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -813,7 +854,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -830,12 +873,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(workbookPath.toString(), persistence.requestedPath());
     assertEquals(workbookPath.toAbsolutePath().toString(), writtenExecutionPath(persistence));
     assertTrue(Files.size(workbookPath) > 0L);
-    assertDoesNotThrow(
-        () -> {
-          try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
-            assertNotNull(workbook.getSheet("Budget"));
-          }
-        });
+    assertDoesNotThrow(() -> {
+      try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+        assertNotNull(workbook.getSheet("Budget"));
+      }
+    });
   }
 
   @Test
@@ -846,7 +888,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -898,7 +942,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
@@ -920,7 +966,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
@@ -950,7 +998,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -979,7 +1029,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1010,12 +1062,13 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsInvalidFormulaForLambdaAndLetFormulaOperations() {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
     WorkbookResult.Failure lambdaFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1030,7 +1083,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure letFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1065,7 +1120,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1177,7 +1234,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1224,7 +1283,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.MaterializedWorkbook
                     ::close,
                 dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
-                    ::markRecalculateOnOpen));
+                    ::markRecalculateOnOpen),
+            NativeInvocationContext.enterOwned(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD));
 
     WorkbookResult.Failure failure =
         failure(
@@ -1256,7 +1317,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.MaterializedWorkbook
                     ::close,
                 dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
-                    ::markRecalculateOnOpen));
+                    ::markRecalculateOnOpen),
+            NativeInvocationContext.enterOwned(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD));
 
     WorkbookResult.Failure failure =
         failure(
@@ -1287,7 +1350,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
             NullPointerException.class,
             () ->
                 ExecutionContextFixtureSupport.execute(
-                    new DefaultGridGrindRequestExecutor(), null));
+                    new DefaultGridGrindRequestExecutor(
+                        NativeInvocationContext.enterOwned(
+                            dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+                    null));
 
     assertEquals("request must not be null", failure.getMessage());
   }
@@ -1295,9 +1361,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   @Test
   void classifiesProblemCodesAndMessagesDeterministically() {
     assertEquals(
-        GridGrindProblemCode.INVALID_CELL_ADDRESS,
+        GridGrindProblemCode.CELL_NOT_FOUND,
         GridGrindProblems.codeFor(
-            new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))));
+            WorkbookFailureFixtures.missingCell(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress(98, 1))));
     assertEquals(
         GridGrindProblemCode.INVALID_RANGE_ADDRESS,
         GridGrindProblems.codeFor(

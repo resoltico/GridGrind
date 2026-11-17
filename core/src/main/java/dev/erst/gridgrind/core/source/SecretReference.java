@@ -15,8 +15,10 @@ public record SecretReference(
   public SecretReference {
     Objects.requireNonNull(id, "id must not be null");
     if (!id.matches(ID_PATTERN)) {
-      throw new IllegalArgumentException(
-          "id must start with a letter and contain only letters, digits, '.', '_', or '-'");
+      throw new dev.erst.gridgrind.core.problem.ValueInvariantException(
+          new dev.erst.gridgrind.core.problem.MessageInvariant(
+              "id must start with a letter and contain only letters, digits, '.', '_', or '-'",
+              java.util.Optional.of("id")));
     }
   }
 }

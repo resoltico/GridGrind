@@ -33,10 +33,9 @@ class SelectorTypesTest {
         () ->
             new RangeSelector.RectangularWindow(
                 new SheetName("Data"), new CellAddress("XFD1"), 1, 2));
-    assertDoesNotThrow(
-        () ->
-            new RangeSelector.RectangularWindow(
-                new SheetName("Data"), new CellAddress("XFD1048576"), 1, 1));
+    assertDoesNotThrow(() ->
+        new RangeSelector.RectangularWindow(
+            new SheetName("Data"), new CellAddress("XFD1048576"), 1, 1));
   }
 
   @Test
@@ -185,7 +184,7 @@ class SelectorTypesTest {
             new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("$B$2")));
     assertEquals("Budget", cells.sheetName().value());
     assertEquals(
-        List.of("A1", "$B$2"),
+        List.of("A1", "B2"),
         cells.addresses().stream()
             .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
             .toList());

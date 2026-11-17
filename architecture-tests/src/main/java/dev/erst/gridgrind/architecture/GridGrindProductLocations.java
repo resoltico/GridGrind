@@ -21,13 +21,12 @@ public final class GridGrindProductLocations implements LocationProvider {
     }
     return Arrays.stream(roots.split(Pattern.quote(File.pathSeparator), -1))
         .map(Path::of)
-        .map(
-            path -> {
-              if (!Files.isDirectory(path)) {
-                throw new IllegalStateException("Missing compiled product class root: " + path);
-              }
-              return Location.of(path);
-            })
+        .map(path -> {
+          if (!Files.isDirectory(path)) {
+            throw new IllegalStateException("Missing compiled product class root: " + path);
+          }
+          return Location.of(path);
+        })
         .collect(Collectors.toUnmodifiableSet());
   }
 }

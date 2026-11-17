@@ -41,7 +41,7 @@ class StylesTableFillRegistryAccessTest {
       XSSFCellFill linear = new XSSFCellFill(linearFill, stylesTable.getIndexedColors());
       XSSFCellFill path = new XSSFCellFill(pathFill, stylesTable.getIndexedColors());
 
-      assertTrue(linear.equals(path), "POI equality ignores gradient geometry");
+      assertEquals(linear, path, "POI equality ignores gradient geometry");
 
       int linearId = access.appendFill(stylesTable, linear);
       int pathId = access.appendFill(stylesTable, path);

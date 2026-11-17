@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.grant.AcceptancePolicy;
-import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
@@ -30,57 +28,42 @@ class ExecutionStreamingWorkflowTest {
   @Test
   void mapsAStreamingPublicationFailureToItsKnownNotPublishedOutcome() throws Exception {
     Path output = root.resolve("output.xlsx");
-    WorkbookPlan request =
-        WorkbookPlan.standard(
-            new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.SaveAs(
-                output.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-            ExecutionPolicySpec.mode(new ExecutionModeSpec.StreamingWrite()),
-            FormulaEnvironmentSpec.empty(),
-            List.of());
+    WorkbookPlan request = streamingRequest(output);
     WorkbookResultPersistence.PublicationOutcome.NotPublished publication =
         new WorkbookResultPersistence.PublicationOutcome.NotPublished(
             WorkbookResultPersistence.PublicationOutcome.DestinationState.ABSENT);
+    ExecutionInputBindings bindings = ExecutionInputBindingsFixtureSupport.bindings(root, request);
     ExecutionStreamingWorkflow workflow =
         new ExecutionStreamingWorkflow(
-            (staged, persistence, source, bindings, acceptance) -> {
+            (staged, persistence, source, preparedInputs, acceptance) -> {
               throw new WorkbookPublicationException(
                   publication, new IOException("publication failed"));
             },
             new CalculationWorkflow(writer -> {}),
-            stepSupport(),
+            stepSupport(bindings),
             WorkbookTempFileFactory.rooted(root.resolve("scratch"))::createTempFile);
-    ExecutionInputBindings bindings =
-        new ExecutionInputBindings(
-            root,
-            root.resolve("scratch"),
-            new ExecutionGrant(
-                List.of(),
-                List.of(),
-                new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-                new ExecutionGrant.PublicationAuthority.None(),
-                List.of(),
-                AcceptancePolicy.minimum()));
+    try {
+      WorkbookResult.Failure failure =
+          assertInstanceOf(
+              WorkbookResult.Failure.class,
+              workflow.execute(
+                  new ExecutionStreamingWorkflow.Call(
+                      ProtocolVersion.CURRENT,
+                      RequestPreflight.verify(request, bindings).requirePreparedRequest(),
+                      new ExecutionModeSpec.StreamingWrite(),
+                      List.of(),
+                      ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root))));
 
-    WorkbookResult.Failure failure =
-        assertInstanceOf(
-            WorkbookResult.Failure.class,
-            workflow.execute(
-                new ExecutionStreamingWorkflow.Call(
-                    ProtocolVersion.CURRENT,
-                    MutationResolution.preparePlan(request),
-                    new ExecutionModeSpec.StreamingWrite(),
-                    List.of(),
-                    ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                    bindings)));
-
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals(
-        publication,
-        assertInstanceOf(
-                WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, failure.persistence())
-            .publication());
-    assertTrue(Files.notExists(output));
+      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+      assertEquals(
+          publication,
+          assertInstanceOf(
+                  WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, failure.persistence())
+              .publication());
+      assertTrue(Files.notExists(output));
+    } finally {
+      bindings.closeRunResources();
+    }
   }
 
   @Test
@@ -88,29 +71,33 @@ class ExecutionStreamingWorkflowTest {
       throws Exception {
     Path output = root.resolve("unexpected-output.xlsx");
     WorkbookPlan request = streamingRequest(output);
+    ExecutionInputBindings bindings = ExecutionInputBindingsFixtureSupport.bindings(root, request);
     ExecutionStreamingWorkflow workflow =
         new ExecutionStreamingWorkflow(
-            (staged, persistence, source, bindings, acceptance) -> {
+            (staged, persistence, source, preparedInputs, acceptance) -> {
               throw new IOException("storage unavailable");
             },
             new CalculationWorkflow(writer -> {}),
-            stepSupport(),
+            stepSupport(bindings),
             WorkbookTempFileFactory.rooted(root.resolve("scratch"))::createTempFile);
 
-    WorkbookResult.Failure failure =
-        assertInstanceOf(
-            WorkbookResult.Failure.class,
-            workflow.execute(
-                new ExecutionStreamingWorkflow.Call(
-                    ProtocolVersion.CURRENT,
-                    MutationResolution.preparePlan(request),
-                    new ExecutionModeSpec.StreamingWrite(),
-                    List.of(),
-                    ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                    bindings())));
+    try {
+      WorkbookResult.Failure failure =
+          assertInstanceOf(
+              WorkbookResult.Failure.class,
+              workflow.execute(
+                  new ExecutionStreamingWorkflow.Call(
+                      ProtocolVersion.CURRENT,
+                      RequestPreflight.verify(request, bindings).requirePreparedRequest(),
+                      new ExecutionModeSpec.StreamingWrite(),
+                      List.of(),
+                      ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root))));
 
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertTrue(Files.notExists(output));
+      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+      assertTrue(Files.notExists(output));
+    } finally {
+      bindings.closeRunResources();
+    }
   }
 
   private WorkbookPlan streamingRequest(Path output) {
@@ -120,23 +107,15 @@ class ExecutionStreamingWorkflowTest {
             output.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
         ExecutionPolicySpec.mode(new ExecutionModeSpec.StreamingWrite()),
         FormulaEnvironmentSpec.empty(),
-        List.of());
+        List.of(
+            new dev.erst.gridgrind.core.plan.MutationStep(
+                new dev.erst.gridgrind.core.vocabulary.StepId("ensure-sheet"),
+                new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Data")),
+                new dev.erst.gridgrind.core.plan.WorkbookMutationAction.EnsureSheet())));
   }
 
-  private ExecutionInputBindings bindings() {
-    return new ExecutionInputBindings(
-        root,
-        root.resolve("scratch"),
-        new ExecutionGrant(
-            List.of(),
-            List.of(),
-            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new ExecutionGrant.PublicationAuthority.None(),
-            List.of(),
-            AcceptancePolicy.minimum()));
-  }
-
-  private StepExecution stepSupport() {
+  private StepExecution stepSupport(ExecutionInputBindings bindings) {
     WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
     return new StepExecution(
@@ -144,7 +123,6 @@ class ExecutionStreamingWorkflowTest {
         selectorResolver,
         new AssertionExecutor(workbookEngine, selectorResolver),
         WorkbookTempFileFactory.rooted(root.resolve("scratch"))::createTempFile,
-        new ExecutionInputBindings(
-            root, root.resolve("scratch"), ExecutionGrantTestSupport.noPublication()));
+        bindings);
   }
 }

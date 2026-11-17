@@ -31,7 +31,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
-import dev.erst.gridgrind.engine.cells.CellTextLimits;
 import dev.erst.gridgrind.engine.poi.EnumMappings;
 import dev.erst.gridgrind.engine.poi.FillRegistryAccess;
 import java.util.ArrayList;
@@ -408,12 +407,11 @@ public final class StyleAdapter {
   private CellGradientStopReport gradientStopSnapshot(CTGradientStop stop) {
     CellColorReport color =
         ColorAdapter.snapshot(workbook, stop.getColor())
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Gradient stop at position "
-                            + stop.getPosition()
-                            + " is missing its color definition."));
+            .orElseThrow(() ->
+                new IllegalStateException(
+                    "Gradient stop at position "
+                        + stop.getPosition()
+                        + " is missing its color definition."));
     return new CellGradientStopReport(stop.getPosition(), color);
   }
 
@@ -433,7 +431,6 @@ public final class StyleAdapter {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(richText, "richText must not be null");
 
-    CellTextLimits.requireSupportedLength(richText.plainText(), "richText.text");
     XSSFRichTextString poiRichText = new XSSFRichTextString();
     for (ResolvedRichTextRun run : richText.runs()) {
       poiRichText.append(

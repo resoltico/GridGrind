@@ -3,6 +3,8 @@ package dev.erst.gridgrind.core.problem;
 import java.util.Objects;
 
 /** Stable machine-readable problem codes returned by the agent protocol. */
+@SuppressWarnings("PMD.ExcessivePublicCount")
+// Closed machine vocabulary: enum constants are outcomes, not an oversized behavioural API.
 public enum GridGrindProblemCode {
   INVALID_ARGUMENTS(
       GridGrindProblemCategory.ARGUMENTS,
@@ -14,6 +16,11 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid JSON payload",
       "Send syntactically valid JSON."),
+  INVALID_AUTHORITY(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid authority document",
+      "Correct the identified authority document or field and retry. No authority was accepted."),
   INVALID_ENCODING(
       GridGrindProblemCategory.REQUEST,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -104,6 +111,17 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Workbook not found",
       "Create the workbook first or provide an existing workbook path."),
+  INVALID_WORKBOOK_CONTENT(
+      GridGrindProblemCategory.RESOURCE,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid workbook content",
+      "Repair the identified workbook content or provide a supported source."),
+  UNSUPPORTED_WORKBOOK_CONTENT(
+      GridGrindProblemCategory.RESOURCE,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Unsupported workbook content",
+      "Use content supported by the requested operation, or choose an operation that preserves this"
+          + " content."),
   INPUT_SOURCE_NOT_FOUND(
       GridGrindProblemCategory.RESOURCE,
       GridGrindProblemRecovery.CHANGE_REQUEST,

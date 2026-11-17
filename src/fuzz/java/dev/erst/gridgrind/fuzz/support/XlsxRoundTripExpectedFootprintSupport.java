@@ -357,12 +357,11 @@ final class XlsxRoundTripExpectedFootprintSupport {
 
     LinkedHashMap<String, List<XlsxRoundTripExpectedStateSupport.CellCoordinate>>
         snapshotCoordinatesBySheet = new LinkedHashMap<>();
-    candidateCoordinatesBySheet.forEach(
-        (sheetName, coordinates) -> {
-          if (!coordinates.isEmpty()) {
-            snapshotCoordinatesBySheet.put(sheetName, sortedCoordinates(coordinates));
-          }
-        });
+    candidateCoordinatesBySheet.forEach((sheetName, coordinates) -> {
+      if (!coordinates.isEmpty()) {
+        snapshotCoordinatesBySheet.put(sheetName, sortedCoordinates(coordinates));
+      }
+    });
     return new XlsxRoundTripExpectedStateSupport.ExpectedWorkbookFootprint(
         Map.copyOf(snapshotCoordinatesBySheet));
   }
@@ -373,9 +372,11 @@ final class XlsxRoundTripExpectedFootprintSupport {
     LinkedHashMap<String, List<CellReport>> snapshotsBySheet = new LinkedHashMap<>();
     for (Map.Entry<String, List<XlsxRoundTripExpectedStateSupport.CellCoordinate>> entry :
         footprint.candidateCoordinatesBySheet().entrySet()) {
-      List<String> addresses =
+      List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses =
           entry.getValue().stream()
-              .map(XlsxRoundTripExpectedStateSupport.CellCoordinate::a1Address)
+              .map(position ->
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                      position.rowIndex(), position.columnIndex()))
               .toList();
       List<CellReport> snapshots = workbook.sheet(entry.getKey()).cells().snapshotCells(addresses);
       if (!snapshots.isEmpty()) {
@@ -451,11 +452,11 @@ final class XlsxRoundTripExpectedFootprintSupport {
   static boolean isValueBearing(ResolvedCellWrite value) {
     return switch (value) {
       case CellValue.Blank _ -> false;
-      case CellValue.Text _ -> true;
+      case dev.erst.gridgrind.core.model.value.ResolvedCellText _ -> true;
       case ResolvedRichText _ -> true;
-      case CellValue.NumberValue _ -> true;
+      case CellValueSpec.NumberValue _ -> true;
       case CellValue.BooleanValue _ -> true;
-      case CellValue.ErrorValue _ -> true;
+      case CellValueSpec.ErrorValue _ -> true;
       case CellValueSpec.Date _ -> true;
       case CellValueSpec.DateTime _ -> true;
       case ResolvedFormula _ -> true;
@@ -467,13 +468,12 @@ final class XlsxRoundTripExpectedFootprintSupport {
       Set<XlsxRoundTripExpectedStateSupport.CellCoordinate> coordinates) {
     java.util.ArrayList<XlsxRoundTripExpectedStateSupport.CellCoordinate> sorted =
         new java.util.ArrayList<>(coordinates);
-    sorted.sort(
-        (left, right) -> {
-          int rowComparison = Integer.compare(left.rowIndex(), right.rowIndex());
-          return rowComparison != 0
-              ? rowComparison
-              : Integer.compare(left.columnIndex(), right.columnIndex());
-        });
+    sorted.sort((left, right) -> {
+      int rowComparison = Integer.compare(left.rowIndex(), right.rowIndex());
+      return rowComparison != 0
+          ? rowComparison
+          : Integer.compare(left.columnIndex(), right.columnIndex());
+    });
     return List.copyOf(sorted);
   }
 

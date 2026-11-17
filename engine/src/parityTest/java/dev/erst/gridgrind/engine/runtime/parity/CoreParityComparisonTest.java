@@ -66,16 +66,15 @@ class CoreParityComparisonTest {
             direct));
     var changedColumns =
         layout.columns().stream()
-            .map(
-                column ->
-                    column.columnIndex() != 0
-                        ? column
-                        : new dev.erst.gridgrind.core.model.layout.ColumnLayoutReport(
-                            column.columnIndex(),
-                            column.widthCharacters() + 1,
-                            column.hidden(),
-                            column.outlineLevel(),
-                            column.collapsed()))
+            .map(column ->
+                column.columnIndex() != 0
+                    ? column
+                    : new dev.erst.gridgrind.core.model.layout.ColumnLayoutReport(
+                        column.columnIndex(),
+                        column.widthCharacters() + 1,
+                        column.hidden(),
+                        column.outlineLevel(),
+                        column.collapsed()))
             .toList();
     assertFalse(
         matchesCoreLayout(
@@ -89,16 +88,15 @@ class CoreParityComparisonTest {
             direct));
     var changedRows =
         layout.rows().stream()
-            .map(
-                row ->
-                    row.rowIndex() != 0
-                        ? row
-                        : new dev.erst.gridgrind.core.model.layout.RowLayoutReport(
-                            row.rowIndex(),
-                            row.heightPoints() + 1,
-                            row.hidden(),
-                            row.outlineLevel(),
-                            row.collapsed()))
+            .map(row ->
+                row.rowIndex() != 0
+                    ? row
+                    : new dev.erst.gridgrind.core.model.layout.RowLayoutReport(
+                        row.rowIndex(),
+                        row.heightPoints() + 1,
+                        row.hidden(),
+                        row.outlineLevel(),
+                        row.collapsed()))
             .toList();
     assertFalse(
         matchesCoreLayout(

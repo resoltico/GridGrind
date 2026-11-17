@@ -1,0 +1,12 @@
+--- org/apache/poi/ss/formula/functions/TimeValue.java
++++ org/apache/poi/ss/formula/functions/TimeValue.java
+@@ -79,7 +79,7 @@
+     }
+ 
+     private NumberEval parseTimeFromDateTime(String dateTimeText) throws EvaluationException {
+-        double dateTimeValue = DateUtil.parseDateTime(dateTimeText);
+-        return new NumberEval(dateTimeValue - DateUtil.getExcelDate(DateParser.parseLocalDate(dateTimeText)));
++        double dateTimeValue = DateUtil.parseDateTime(dateTimeText, org.apache.poi.ss.usermodel.DateSystemContext.is1904());
++        return new NumberEval(dateTimeValue - DateUtil.getExcelDate(DateParser.parseLocalDate(dateTimeText), org.apache.poi.ss.usermodel.DateSystemContext.is1904()));
+     }
+ }

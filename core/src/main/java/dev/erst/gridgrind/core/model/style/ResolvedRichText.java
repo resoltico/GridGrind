@@ -12,9 +12,12 @@ public record ResolvedRichText(List<ResolvedRichTextRun> runs) implements Resolv
     if (runs.isEmpty()) {
       throw new IllegalArgumentException("runs must not be empty");
     }
+    long length = 0;
     for (ResolvedRichTextRun run : runs) {
       Objects.requireNonNull(run, "runs must not contain nulls");
+      length += run.text().length();
     }
+    dev.erst.gridgrind.core.model.value.CellTextLimits.requireSupportedLength(length, "runs");
   }
 
   /** Returns the plain string value represented by the ordered run list. */

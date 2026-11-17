@@ -18,16 +18,37 @@ class GridGrindFuzzConventionsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
             pluginManager.apply("java")
+            configureFormatterDependencies()
+
             val libs = versionCatalog()
             extensions.getByType<JavaPluginExtension>().toolchain.languageVersion.set(
                 JavaLanguageVersion.of(providers.gradleProperty("gridgrindJavaVersion").get().toInt()),
             )
             tasks.withType(JavaCompile::class.java).configureEach {
-                it.options.release.set(providers.gradleProperty("gridgrindJavaTargetVersion").map(String::toInt))
+                options.release.set(providers.gradleProperty("gridgrindJavaTargetVersion").map(String::toInt))
             }
             val fuzz = extensions.getByType<SourceSetContainer>().create("fuzz")
+            fun ownerRepairClasspath(name: String, module: String, producer: String) = configurations.create(name) {
+                isCanBeConsumed = false
+                isCanBeResolved = true
+                attributes.attribute(NativeProviderVariants.REPAIR_MODULE, module)
+            }.also { configuration ->
+                dependencies.add(configuration.name, dependencies.project(mapOf("path" to ":native-provider", "configuration" to producer)))
+            }
+            val poiOwnerClasses = ownerRepairClasspath("fuzzPoiNativeCompile", NativeProviderVariants.POI_MODULE, "poiCompileElements")
+            val ooxmlOwnerClasses = ownerRepairClasspath("fuzzOoxmlNativeCompile", NativeProviderVariants.OOXML_MODULE, "ooxmlCompileElements")
+            // Low-level fuzz owners need the same explicit native view as engine unit tests.
+            // Stock-parent capsule qualification remains in the separate public native suites.
+            val nativeOwnerClasses = files(poiOwnerClasses, ooxmlOwnerClasses)
+            fuzz.compileClasspath = nativeOwnerClasses + fuzz.compileClasspath
+            fuzz.runtimeClasspath = nativeOwnerClasses + fuzz.runtimeClasspath
             val instrumentation = configurations.create("fuzzInstrumentation") {
-                it.isTransitive = false
+                isTransitive = false
+            }
+            dependencies.constraints {
+                for (library in listOf("bnd-annotations", "osgi-resource", "commons-lang3", "errorprone-annotations", "jspecify")) {
+                    add(fuzz.implementationConfigurationName, libs.findLibrary(library).get().get())
+                }
             }
             dependencies.apply {
                 add("fuzzInstrumentation", libs.findLibrary("jqf-instrument").get())
@@ -44,10 +65,10 @@ class GridGrindFuzzConventionsPlugin : Plugin<Project> {
             }
             configure<SpotlessExtension> {
                 java {
-                    it.target("src/fuzz/java/**/*.java")
-                    it.addStep(GridGrindGoogleJavaFormatStep.create(libs.findVersion("google-java-format").get().requiredVersion))
+                    target("src/fuzz/java/**/*.java")
+                    googleJavaFormat(libs.findVersion("google-java-format").get().requiredVersion)
 
-                    it.formatAnnotations()
+                    formatAnnotations()
                 }
             }
             val replayTemporary = layout.buildDirectory.dir("tmp/fuzzReplay").get().asFile
@@ -66,7 +87,7 @@ class GridGrindFuzzConventionsPlugin : Plugin<Project> {
                 inputs.dir(layout.projectDirectory.dir("src/fuzz/resources/seeds"))
                 extensions.configure<JacocoTaskExtension> { isEnabled = false }
             }
-            tasks.named("check") { it.dependsOn(replay) }
+            tasks.named("check") { dependsOn(replay) }
 
             val preparedInstrumentation = tasks.register<PrepareFuzzInstrumentation>("prepareFuzzInstrumentation") {
                 upstreamJar.set(layout.file(instrumentation.elements.map { it.single().asFile }))

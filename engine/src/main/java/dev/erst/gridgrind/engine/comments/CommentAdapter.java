@@ -11,9 +11,9 @@ import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.value.CellTextLimits;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.engine.cells.CellAccess;
-import dev.erst.gridgrind.engine.cells.CellTextLimits;
 import dev.erst.gridgrind.engine.styles.ColorAdapter;
 import dev.erst.gridgrind.engine.styles.StyleAdapter;
 import java.util.ArrayList;
@@ -57,19 +57,19 @@ public final class CommentAdapter {
     this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
   }
 
-  public void setComment(String address, ResolvedComment comment) {
-    CellAccess.requireAddress(address);
+  public void setComment(
+      dev.erst.gridgrind.core.vocabulary.CellAddress address, ResolvedComment comment) {
+    Objects.requireNonNull(address, "address must not be null");
     Objects.requireNonNull(comment, "comment must not be null");
 
-    CellReference cellReference = CellAccess.parseCellReference(address);
     repairBrokenLegacyDrawingReference((XSSFSheet) sheet);
-    Cell cell = CellAccess.getOrCreateCell(sheet, cellReference.getRow(), cellReference.getCol());
-    cell.setCellComment(newComment(cellReference.getRow(), cellReference.getCol(), comment));
+    Cell cell = CellAccess.getOrCreateCell(sheet, address.rowIndex(), address.columnIndex());
+    cell.setCellComment(newComment(address.rowIndex(), address.columnIndex(), comment));
     ensureLegacyDrawingReference((XSSFSheet) sheet);
   }
 
-  public void clearComment(String address) {
-    CellAccess.requireAddress(address);
+  public void clearComment(dev.erst.gridgrind.core.vocabulary.CellAddress address) {
+    Objects.requireNonNull(address, "address must not be null");
     CellAccess.optionalCell(sheet, address).ifPresent(CommentAdapter::clearCellComment);
   }
 
@@ -167,12 +167,8 @@ public final class CommentAdapter {
   }
 
   public static Optional<String> vmlDrawingRelationId(XSSFSheet sheet) {
-    for (RelationPart relationPart : sheet.getRelationParts()) {
-      if (relationPart.getDocumentPart() instanceof XSSFVMLDrawing) {
-        return Optional.of(relationPart.getRelationship().getId());
-      }
-    }
-    return Optional.empty();
+    XSSFVMLDrawing active = sheet.getVMLDrawing(false);
+    return active == null ? Optional.empty() : Optional.ofNullable(sheet.getRelationId(active));
   }
 
   private Comment newComment(int rowIndex, int columnIndex, ResolvedComment comment) {
@@ -225,7 +221,7 @@ public final class CommentAdapter {
       List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
     List<CellCommentReport> comments = new ArrayList<>();
     for (dev.erst.gridgrind.core.vocabulary.CellAddress address : addresses) {
-      Cell cell = CellAccess.cellOrNull(sheet, address.value()).orElse(null);
+      Cell cell = CellAccess.optionalCell(sheet, address).orElse(null);
       if (cell == null) {
         continue;
       }
@@ -349,10 +345,11 @@ public final class CommentAdapter {
   }
 
   private void setRawComment(CommentRewriteSnapshot expectedComment) {
-    CellReference reference = new CellReference(expectedComment.address());
+    var reference = expectedComment.address();
     repairBrokenLegacyDrawingReference(sheet);
-    Cell cell = getOrCreateCell(sheet, reference.getRow(), reference.getCol());
-    cell.setCellComment(newRawComment(reference.getRow(), reference.getCol(), expectedComment));
+    Cell cell = getOrCreateCell(sheet, reference.rowIndex(), reference.columnIndex());
+    cell.setCellComment(
+        newRawComment(reference.rowIndex(), reference.columnIndex(), expectedComment));
     ensureLegacyDrawingReference(sheet);
   }
 
@@ -418,7 +415,7 @@ public final class CommentAdapter {
     NavigableMap<CellAddress, CommentRewriteSnapshot> shifted = new TreeMap<>(CELL_ADDRESS_ORDER);
     for (CommentRewriteSnapshot comment : comments) {
       Objects.requireNonNull(comment, "comments must not contain nulls");
-      CellAddress address = parsedAddress(comment.address());
+      CellAddress address = nativeAddress(comment.address());
       int targetColumn =
           address.getColumn() >= columnIndex
               ? address.getColumn() + columnCount
@@ -436,7 +433,7 @@ public final class CommentAdapter {
     NavigableMap<CellAddress, CommentRewriteSnapshot> shifted = new TreeMap<>(CELL_ADDRESS_ORDER);
     for (CommentRewriteSnapshot comment : comments) {
       Objects.requireNonNull(comment, "comments must not contain nulls");
-      CellAddress address = parsedAddress(comment.address());
+      CellAddress address = nativeAddress(comment.address());
       int column = address.getColumn();
       if (column >= columns.firstColumnIndex() && column <= columns.lastColumnIndex()) {
         continue;
@@ -458,7 +455,7 @@ public final class CommentAdapter {
     NavigableMap<CellAddress, CommentRewriteSnapshot> shifted = new TreeMap<>(CELL_ADDRESS_ORDER);
     for (CommentRewriteSnapshot comment : comments) {
       Objects.requireNonNull(comment, "comments must not contain nulls");
-      CellAddress address = parsedAddress(comment.address());
+      CellAddress address = nativeAddress(comment.address());
       if (inSourceColumns(address.getColumn(), columns)) {
         continue;
       }
@@ -468,7 +465,7 @@ public final class CommentAdapter {
       shifted.put(address, comment);
     }
     for (CommentRewriteSnapshot comment : comments) {
-      CellAddress address = parsedAddress(comment.address());
+      CellAddress address = nativeAddress(comment.address());
       if (!inSourceColumns(address.getColumn(), columns)) {
         continue;
       }
@@ -517,16 +514,12 @@ public final class CommentAdapter {
     }
   }
 
-  private static CellAddress parsedAddress(String address) {
-    return new CellAddress(address);
+  private static CellAddress nativeAddress(dev.erst.gridgrind.core.vocabulary.CellAddress address) {
+    return new CellAddress(address.rowIndex(), address.columnIndex());
   }
 
   private static CellAddress at(int rowIndex, int columnIndex) {
     return new CellAddress(rowIndex, columnIndex);
-  }
-
-  private static String addressString(int rowIndex, int columnIndex) {
-    return new CellReference(rowIndex, columnIndex).formatAsString();
   }
 
   private static boolean inSourceColumns(int column, ExcelColumnSpan columns) {
@@ -569,7 +562,7 @@ public final class CommentAdapter {
   }
 
   public record CommentRewriteSnapshot(
-      String address,
+      dev.erst.gridgrind.core.vocabulary.CellAddress address,
       String text,
       String author,
       boolean visible,
@@ -585,7 +578,7 @@ public final class CommentAdapter {
 
     public static CommentRewriteSnapshot from(CellCommentReport comment) {
       return new CommentRewriteSnapshot(
-          comment.address().value(),
+          comment.address(),
           comment.comment().text(),
           comment.comment().author(),
           comment.comment().visible(),
@@ -612,7 +605,7 @@ public final class CommentAdapter {
               : StyleAdapter.snapshot(
                   workbook, richText, StyleAdapter.snapshotFont(workbook.getFontAt(0)));
       return new CommentRewriteSnapshot(
-          addressString(address.getRow(), address.getColumn()),
+          new dev.erst.gridgrind.core.vocabulary.CellAddress(address.getRow(), address.getColumn()),
           richText == null ? "" : richText.getString(),
           comment.getAuthor(),
           comment.isVisible(),
@@ -622,7 +615,12 @@ public final class CommentAdapter {
 
     public CommentRewriteSnapshot at(int rowIndex, int columnIndex) {
       return new CommentRewriteSnapshot(
-          addressString(rowIndex, columnIndex), text, author, visible, runs, anchor);
+          new dev.erst.gridgrind.core.vocabulary.CellAddress(rowIndex, columnIndex),
+          text,
+          author,
+          visible,
+          runs,
+          anchor);
     }
 
     public boolean isAuthoringCompatible() {
@@ -635,16 +633,13 @@ public final class CommentAdapter {
           author,
           visible,
           runs.map(CommentAdapter::toAuthoringRichText),
-          anchor.map(
-              value ->
-                  new CommentAnchorSpec(
-                      value.firstColumn(), value.firstRow(), value.lastColumn(), value.lastRow())));
+          anchor.map(value ->
+              new CommentAnchorSpec(
+                  value.firstColumn(), value.firstRow(), value.lastColumn(), value.lastRow())));
     }
 
     public CellCommentReport toReadComment() {
-      return new CellCommentReport(
-          new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
-          new CommentReport(text, author, visible, runs, anchor));
+      return new CellCommentReport(address, new CommentReport(text, author, visible, runs, anchor));
     }
   }
 }

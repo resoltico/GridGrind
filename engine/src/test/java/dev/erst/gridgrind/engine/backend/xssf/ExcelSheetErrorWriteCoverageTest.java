@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -22,22 +21,44 @@ class ExcelSheetErrorWriteCoverageTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Budget");
 
-      sheet.cells().setCell("A1", new CellValue.ErrorValue("#REF!"));
-      sheet.cells().setCell("A2", new CellValue.ErrorValue("#DIV/0!"));
-      sheet.cells().setCell("A3", new CellValue.ErrorValue("#N/A"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.ErrorValue("#REF!"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.ErrorValue("#DIV/0!"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.ErrorValue("#N/A"));
 
       CellReport.ErrorReport snapshot =
-          assertInstanceOf(CellReport.ErrorReport.class, sheet.cells().snapshotCell("A1"));
+          assertInstanceOf(
+              CellReport.ErrorReport.class,
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals("#REF!", snapshot.value().orElseThrow().value());
       assertEquals(
           "#DIV/0!",
-          assertInstanceOf(CellReport.ErrorReport.class, sheet.cells().snapshotCell("A2"))
+          assertInstanceOf(
+                  CellReport.ErrorReport.class,
+                  sheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2")))
               .value()
               .orElseThrow()
               .value());
       assertEquals(
           "#N/A",
-          assertInstanceOf(CellReport.ErrorReport.class, sheet.cells().snapshotCell("A3"))
+          assertInstanceOf(
+                  CellReport.ErrorReport.class,
+                  sheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A3")))
               .value()
               .orElseThrow()
               .value());
@@ -66,11 +87,22 @@ class ExcelSheetErrorWriteCoverageTest {
 
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().setCell("A1", new CellValue.ErrorValue("#CIRCULAR_REF!")));
+          () ->
+              sheet
+                  .cells()
+                  .setCell(
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.ErrorValue(
+                          "#CIRCULAR_REF!")));
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              sheet.cells().setCell("A1", new CellValue.ErrorValue("#FUNCTION_NOT_IMPLEMENTED!")));
+              sheet
+                  .cells()
+                  .setCell(
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.ErrorValue(
+                          "#FUNCTION_NOT_IMPLEMENTED!")));
     }
   }
 }

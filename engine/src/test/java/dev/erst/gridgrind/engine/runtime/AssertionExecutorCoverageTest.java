@@ -72,6 +72,7 @@ import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -85,13 +86,15 @@ import org.junit.jupiter.api.Test;
 class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestSupport {
   @Test
   void executesLeafAssertionsAcrossWorkbookFactsAndAnalysis() throws IOException {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+
     Path workbookPath = Files.createTempFile("gridgrind-assertions-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
     success(
         ExecutionContextFixtureSupport.execute(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -152,7 +155,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Success inspected =
         success(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -237,7 +242,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Success asserted =
         success(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -443,13 +450,15 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
   @Test
   void factAndAnalysisAssertionFailuresReturnStructuredProblems() throws IOException {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+
     Path workbookPath = Files.createTempFile("gridgrind-assertion-family-failures-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
     success(
         ExecutionContextFixtureSupport.execute(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -507,7 +516,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Success inspected =
         success(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -565,7 +576,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure presentMissingSheet =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "present-missing-sheet",
             new SheetSelector.ByName(new SheetName("NonExistent")),
@@ -580,7 +593,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure absentPresentSheet =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "absent-present-sheet",
             new SheetSelector.ByName(new SheetName("Budget")),
@@ -589,7 +604,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure presentMissing =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "present-missing-range",
             new NamedRangeSelector.WorkbookScope(new DefinedName("MissingTotal")),
@@ -604,7 +621,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure absentTable =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "absent-table",
             new TableSelector.ByName(new TableName("BudgetTable")),
@@ -613,7 +632,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure styleMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "style-mismatch",
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A2")),
@@ -629,7 +650,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure formulaTextMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "formula-text-mismatch",
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("F2")),
@@ -639,7 +662,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookProtectionReport expectedProtection = protection.protection();
     WorkbookResult.Failure protectionMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "workbook-protection-mismatch",
             new WorkbookSelector.Current(),
@@ -655,7 +680,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     SheetSummaryReport expectedSheet = sheet.sheet();
     WorkbookResult.Failure sheetMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "sheet-structure-mismatch",
             new SheetSelector.ByName(new SheetName("Budget")),
@@ -671,7 +698,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure namedRangeMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "named-range-facts-mismatch",
             new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
@@ -686,7 +715,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure tableMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "table-facts-mismatch",
             new TableSelector.ByName(new TableName("BudgetTable")),
@@ -701,7 +732,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure severityMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "analysis-max-severity-mismatch",
             new SheetSelector.ByName(new SheetName("Budget")),
@@ -711,7 +744,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure missingFinding =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "analysis-finding-present-missing",
             new SheetSelector.ByName(new SheetName("Budget")),
@@ -724,7 +759,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure unexpectedFinding =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             workbookPath,
             "analysis-finding-absent-unexpected",
             new SheetSelector.ByName(new SheetName("Budget")),
@@ -738,13 +775,15 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
   @Test
   void compositeFailuresAndFormulaTextMismatchesReturnStructuredProblems() throws IOException {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+
     Path workbookPath = Files.createTempFile("gridgrind-assertion-failures-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
     success(
         ExecutionContextFixtureSupport.execute(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -762,7 +801,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Failure formulaMismatch =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -779,7 +820,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Failure allOfFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -801,7 +844,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Failure anyOfFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -823,7 +868,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Failure notFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -844,12 +891,13 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
   @Test
   void zeroMatchDisplayFormulaAndStyleAssertionsReturnStructuredProblems() {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
     WorkbookResult.Failure displayFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -876,7 +924,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Failure formulaFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -897,7 +947,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Failure styleFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -915,7 +967,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
   @Test
   void executesChartAndPivotFactAssertionsFromPublicWorkflows() throws IOException {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+
     Path chartPath = Files.createTempFile("gridgrind-chart-assertions-", ".xlsx");
     Path pivotPath = Files.createTempFile("gridgrind-pivot-assertions-", ".xlsx");
     Files.deleteIfExists(chartPath);
@@ -923,16 +975,24 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     success(
         ExecutionContextFixtureSupport.execute(
-            executor, rewritePersistence(readExample("chart-request.json"), chartPath)));
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+            rewritePersistence(readExample("chart-request.json"), chartPath)));
     success(
         ExecutionContextFixtureSupport.execute(
-            executor, rewritePersistence(readExample("pivot-request.json"), pivotPath)));
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+            rewritePersistence(readExample("pivot-request.json"), pivotPath)));
 
     WorkbookAssetInspectionResult.ChartsResult charts =
         inspection(
             success(
                 ExecutionContextFixtureSupport.execute(
-                    executor,
+                    new DefaultGridGrindRequestExecutor(
+                        NativeInvocationContext.enterOwned(
+                            dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(chartPath.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
@@ -948,7 +1008,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         inspection(
             success(
                 ExecutionContextFixtureSupport.execute(
-                    executor,
+                    new DefaultGridGrindRequestExecutor(
+                        NativeInvocationContext.enterOwned(
+                            dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(pivotPath.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
@@ -964,7 +1026,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Success asserted =
         success(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(chartPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -989,7 +1053,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Success pivotAssertions =
         success(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(pivotPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1012,7 +1078,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure chartFactsMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             chartPath,
             "chart-facts-mismatch",
             new ChartSelector.AllOnSheet(new SheetName("Ops")),
@@ -1021,7 +1089,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     WorkbookResult.Failure pivotFactsMismatch =
         assertionFailure(
-            executor,
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             pivotPath,
             "pivot-facts-mismatch",
             new PivotTableSelector.All(),
@@ -1190,13 +1260,15 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   @Test
   void streamingAssertionsAndPrivateExecutionModeBranchesAreCovered(
       @org.junit.jupiter.api.io.TempDir Path executionRoot) throws Exception {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+
     StepExecution stepSupport = executionStepSupport(executionRoot);
 
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1234,7 +1306,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookResult.Failure streamingAssertionFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                executor,
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1277,11 +1351,15 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             IllegalStateException.class,
             () ->
                 stepSupport.executeAssertionStep(
-                    new AssertionStep(
-                        new StepId("assert"),
-                        new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                        new CellAssertion.Value(
-                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
+                    (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                        dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                            new AssertionStep(
+                                new StepId("assert"),
+                                new CellSelector.ByAddress(
+                                    new SheetName("Ops"), new CellAddress("A1")),
+                                new CellAssertion.Value(
+                                    new dev.erst.gridgrind.core.model.value.CellValue.Text(
+                                        "Owner")))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
                     ExecutionModeSpec.eventRead()));
@@ -1292,11 +1370,15 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             IllegalStateException.class,
             () ->
                 stepSupport.executeAssertionStepCollecting(
-                    new AssertionStep(
-                        new StepId("assert"),
-                        new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                        new CellAssertion.Value(
-                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
+                    (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                        dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                            new AssertionStep(
+                                new StepId("assert"),
+                                new CellSelector.ByAddress(
+                                    new SheetName("Ops"), new CellAddress("A1")),
+                                new CellAssertion.Value(
+                                    new dev.erst.gridgrind.core.model.value.CellValue.Text(
+                                        "Owner")))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
                     ExecutionModeSpec.eventRead()));
@@ -1306,20 +1388,25 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     Path workbookPath = Files.createTempFile("gridgrind-private-event-read-", ".xlsx");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Owner"));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
     WorkbookInspectionResult.WorkbookSummaryResult eventSummary =
         assertInstanceOf(
             WorkbookInspectionResult.WorkbookSummaryResult.class,
-            stepSupport.executeInspectionAgainstMaterializedPath(
-                inspect(
-                    "event-summary",
-                    new WorkbookSelector.Current(),
-                    new WorkbookIntrospectionQuery.GetWorkbookSummary()),
-                new WorkbookLocation.StoredWorkbook(workbookPath),
-                ExecutionModeSpec.eventRead(),
-                workbookPath));
+            stepSupport.executeEventInspection(
+                workbookPath,
+                (dev.erst.gridgrind.core.plan.PreparedInspectionStep)
+                    dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                        inspect(
+                            "event-summary",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary()))));
     assertEquals("event-summary", eventSummary.stepId().value());
 
     assertTrue(

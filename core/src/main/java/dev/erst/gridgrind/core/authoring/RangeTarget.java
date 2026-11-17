@@ -28,11 +28,10 @@ public final class RangeTarget {
         new CellMutationAction.SetRange(
             new CellGridSpec.Typed(
                 rows.stream()
-                    .map(
-                        row ->
-                            row.stream()
-                                .map(Values::toCellInput)
-                                .collect(Collectors.toUnmodifiableList()))
+                    .map(row ->
+                        row.stream()
+                            .map(Values::toCellInput)
+                            .collect(Collectors.toUnmodifiableList()))
                     .collect(Collectors.toUnmodifiableList()))));
   }
 

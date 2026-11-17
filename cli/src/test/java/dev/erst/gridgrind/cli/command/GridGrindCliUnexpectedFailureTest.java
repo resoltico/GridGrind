@@ -24,10 +24,9 @@ class GridGrindCliUnexpectedFailureTest extends GridGrindCliTestSupport {
   void executionStartedErrorsProduceRejectedCommandErrorsInsteadOfFabricatedJournals()
       throws Exception {
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, inputs, sink) -> {
-              throw new AssertionError("secret execution failure");
-            });
+        GridGrindCli.forTesting((request, inputs, sink) -> {
+          throw new AssertionError("secret execution failure");
+        });
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -55,10 +54,9 @@ class GridGrindCliUnexpectedFailureTest extends GridGrindCliTestSupport {
   void preExecutionErrorsRemainRejectedCommandErrors(@TempDir Path temporaryDirectory)
       throws Exception {
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, inputs, sink) -> {
-              throw new AssertionError("executor must not run");
-            });
+        GridGrindCli.forTesting((request, inputs, sink) -> {
+          throw new AssertionError("executor must not run");
+        });
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     Path executionRoot = temporaryDirectory.resolve("execution-root");

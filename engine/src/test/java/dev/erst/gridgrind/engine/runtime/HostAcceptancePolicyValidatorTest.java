@@ -28,6 +28,7 @@ class HostAcceptancePolicyValidatorTest {
         HostAcceptancePolicyValidator.violations(
             streamingPlan(),
             new dev.erst.gridgrind.core.grant.ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of(),
                 new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
@@ -47,6 +48,7 @@ class HostAcceptancePolicyValidatorTest {
         HostAcceptancePolicyValidator.violations(
                 fullPlan(),
                 new dev.erst.gridgrind.core.grant.ExecutionGrant(
+                    16L * 1024 * 1024,
                     List.of(),
                     List.of(),
                     new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
@@ -63,6 +65,7 @@ class HostAcceptancePolicyValidatorTest {
         HostAcceptancePolicyValidator.violations(
             streamingPlan(),
             new dev.erst.gridgrind.core.grant.ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of(),
                 new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
@@ -83,6 +86,7 @@ class HostAcceptancePolicyValidatorTest {
         HostAcceptancePolicyValidator.violations(
             fullPlan(),
             new dev.erst.gridgrind.core.grant.ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of(),
                 new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
@@ -103,6 +107,7 @@ class HostAcceptancePolicyValidatorTest {
         HostAcceptancePolicyValidator.violations(
                 streamingPlan(),
                 new dev.erst.gridgrind.core.grant.ExecutionGrant(
+                    16L * 1024 * 1024,
                     List.of(),
                     List.of(),
                     new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
@@ -165,6 +170,7 @@ class HostAcceptancePolicyValidatorTest {
         HostAcceptancePolicyValidator.violations(
                 streamingPlan(),
                 new dev.erst.gridgrind.core.grant.ExecutionGrant(
+                    16L * 1024 * 1024,
                     List.of(),
                     List.of(),
                     new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
@@ -179,6 +185,7 @@ class HostAcceptancePolicyValidatorTest {
     return HostAcceptancePolicyValidator.violations(
             request,
             new dev.erst.gridgrind.core.grant.ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of(),
                 new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority

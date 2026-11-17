@@ -1,7 +1,10 @@
 package dev.erst.gridgrind.cli.io;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,6 +15,7 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -19,6 +23,84 @@ import org.junit.jupiter.api.io.TempDir;
 /** Verifies atomic recipe-workspace publication without caller-controlled asset traversal. */
 class RecipeWorkspacePublisherTest {
   @TempDir Path parent;
+
+  @Test
+  void collisionRemainsPrimaryWhenPrivateStageCleanupAlsoFails() throws Exception {
+    Recipe recipe = RecipeRegistry.recipeFor("BUDGET").orElseThrow();
+    Path workspace = parent.resolve("occupied-during-commit");
+    var collision = new FileAlreadyExistsException(workspace.toString());
+    var cleanup = new IOException("synthetic private-stage cleanup failure");
+    var cleaned = new java.util.concurrent.atomic.AtomicInteger();
+    var publisher =
+        new RecipeWorkspacePublisher(
+            (source, target) -> {
+              Files.createDirectory(target);
+              throw collision;
+            },
+            stage -> {
+              cleaned.incrementAndGet();
+              assertTrue(Files.isRegularFile(stage.resolve(recipe.requestFileName())));
+              throw cleanup;
+            });
+    var failure =
+        assertThrows(
+            RecipeWorkspacePublicationException.class,
+            () -> publisher.publishWorkspace(recipe, workspace, new byte[] {1}));
+    assertTrue(failure.getMessage().contains("Workspace already exists"));
+    assertSame(collision, failure.getCause());
+    assertEquals(1, collision.getSuppressed().length);
+    assertSame(cleanup, collision.getSuppressed()[0]);
+    assertEquals(1, cleaned.get());
+    try (var entries = Files.list(workspace)) {
+      assertTrue(entries.findAny().isEmpty());
+    }
+  }
+
+  @Test
+  void assetCopyFailureRemainsPrimaryWhenPrivateStageCleanupAlsoFails() {
+    var cleanup = new IOException("synthetic private-stage cleanup failure");
+    var publisher =
+        new RecipeWorkspacePublisher(
+            (source, target) -> {
+              throw new AssertionError("Invalid assets must prevent publication");
+            },
+            stage -> {
+              throw cleanup;
+            });
+    IOException failure =
+        assertThrows(
+            IOException.class,
+            () ->
+                publisher.publishWorkspace(
+                    recipeWithPath("missing-assets/none.xlsx"),
+                    parent.resolve("copy-failed"),
+                    new byte[] {1}));
+    assertNotSame(cleanup, failure);
+    assertEquals(1, failure.getSuppressed().length);
+    assertSame(cleanup, failure.getSuppressed()[0]);
+    assertFalse(Files.exists(parent.resolve("copy-failed")));
+  }
+
+  @Test
+  void concurrentEmptyWorkspaceSurvivesTheFinalPublicationPrimitive() throws Exception {
+    Recipe recipe = RecipeRegistry.recipeFor("BUDGET").orElseThrow();
+    Path workspace = parent.resolve("concurrent-workspace");
+    var identity = new java.util.concurrent.atomic.AtomicReference<Object>();
+    var publisher =
+        new RecipeWorkspacePublisher((source, target) -> {
+          Files.createDirectory(target);
+          identity.set(Files.readAttributes(target, BasicFileAttributes.class).fileKey());
+          RecipeWorkspacePublisher.moveAtomically(source, target);
+        });
+    assertThrows(
+        RecipeWorkspacePublicationException.class,
+        () -> publisher.publishWorkspace(recipe, workspace, new byte[] {1}));
+    assertEquals(
+        identity.get(), Files.readAttributes(workspace, BasicFileAttributes.class).fileKey());
+    try (var files = Files.list(workspace)) {
+      assertTrue(files.findAny().isEmpty());
+    }
+  }
 
   @Test
   void publishesTheRequestAndEveryAssetOnlyInsideOneNewWorkspace() throws Exception {

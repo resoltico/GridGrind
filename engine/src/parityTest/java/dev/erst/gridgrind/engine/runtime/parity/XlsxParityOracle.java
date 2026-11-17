@@ -2,20 +2,15 @@ package dev.erst.gridgrind.engine.runtime.parity;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
-import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
-import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -62,19 +57,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
-import org.apache.poi.xddf.usermodel.chart.AxisPosition;
 import org.apache.poi.xddf.usermodel.chart.BarDirection;
 import org.apache.poi.xddf.usermodel.chart.LegendPosition;
 import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
-import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFChartLegend;
-import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
 import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFPieChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -371,18 +359,15 @@ final class XlsxParityOracle {
           return new AutofilterSnapshot(
               autoFilter.getRef(),
               java.util.Arrays.stream(autoFilter.getFilterColumnArray())
-                  .map(
-                      filterColumn ->
-                          new FilterColumnSnapshot(
-                              filterColumn.getColId(),
-                              filterColumn.isSetFilters()
-                                  ? java.util.Arrays.stream(
-                                          filterColumn.getFilters().getFilterArray())
-                                      .map(
-                                          filter -> Objects.requireNonNullElse(filter.getVal(), ""))
-                                      .toList()
-                                  : List.of(),
-                              filterColumn.isSetFilters() && filterColumn.getFilters().getBlank()))
+                  .map(filterColumn ->
+                      new FilterColumnSnapshot(
+                          filterColumn.getColId(),
+                          filterColumn.isSetFilters()
+                              ? java.util.Arrays.stream(filterColumn.getFilters().getFilterArray())
+                                  .map(filter -> Objects.requireNonNullElse(filter.getVal(), ""))
+                                  .toList()
+                              : List.of(),
+                          filterColumn.isSetFilters() && filterColumn.getFilters().getBlank()))
                   .toList(),
               autoFilter.isSetSortState()
                   ? new SortStateSnapshot(
@@ -395,14 +380,11 @@ final class XlsxParityOracle {
                           ? autoFilter.getSortState().getSortMethod().toString()
                           : "",
                       java.util.Arrays.stream(autoFilter.getSortState().getSortConditionArray())
-                          .map(
-                              condition ->
-                                  new SortConditionSnapshot(
-                                      condition.getRef(),
-                                      condition.isSetDescending() && condition.getDescending(),
-                                      condition.isSetSortBy()
-                                          ? condition.getSortBy().toString()
-                                          : ""))
+                          .map(condition ->
+                              new SortConditionSnapshot(
+                                  condition.getRef(),
+                                  condition.isSetDescending() && condition.getDescending(),
+                                  condition.isSetSortBy() ? condition.getSortBy().toString() : ""))
                           .toList())
                   : null);
         });
@@ -610,13 +592,12 @@ final class XlsxParityOracle {
           List<CellCommentSnapshot> comments =
               sheet.getCellComments().entrySet().stream()
                   .sorted(Comparator.comparing(entry -> entry.getKey().formatAsString()))
-                  .map(
-                      entry ->
-                          new CellCommentSnapshot(
-                              entry.getKey().formatAsString(),
-                              entry.getValue().getString().getString(),
-                              entry.getValue().getAuthor(),
-                              entry.getValue().isVisible()))
+                  .map(entry ->
+                      new CellCommentSnapshot(
+                          entry.getKey().formatAsString(),
+                          entry.getValue().getString().getString(),
+                          entry.getValue().getAuthor(),
+                          entry.getValue().isVisible()))
                   .toList();
 
           return new DrawingSheetSnapshot(
@@ -1406,7 +1387,7 @@ final class XlsxParityOracle {
       DrawingAnchorSnapshot anchor,
       boolean supported,
       List<String> plotTypeTokens,
-      String title)
+      ChartReport.Title title)
       implements DirectDrawingObjectSnapshot {}
 
   record ShapeDrawingObjectSnapshot(
@@ -1470,7 +1451,7 @@ final class XlsxParityOracle {
             anchor,
             chartSupported(chartReport(chart)),
             chartPlotTypeTokens(chart),
-            chartTitleSummary(chart));
+            titleReport(chart));
       }
       return new ShapeDrawingObjectSnapshot(
           graphicFrame.getShapeName(), anchor, "GRAPHIC_FRAME", null, null, 0);
@@ -1497,28 +1478,14 @@ final class XlsxParityOracle {
     XSSFGraphicFrame graphicFrame = requiredGraphicFrame(chart);
     List<XDDFChartData> chartData = chart.getChartSeries();
     DrawingAnchorReport anchor = drawingAnchorReport(graphicFrame);
-    try {
-      return new ChartReport(
-          resolvedChartName(chart),
-          anchor,
-          titleReport(chart),
-          legendReport(chart),
-          displayBlanksReport(chart),
-          chart.isPlotOnlyVisibleCells(),
-          chartData.stream().map(data -> chartPlot(chart, data)).toList());
-    } catch (RuntimeException exception) {
-      return new ChartReport(
-          resolvedChartName(chart),
-          anchor,
-          titleReport(chart),
-          legendReport(chart),
-          displayBlanksReport(chart),
-          chart.isPlotOnlyVisibleCells(),
-          chartPlotTypeTokens(chartData).stream()
-              .<ChartReport.Plot>map(
-                  token -> new ChartReport.Unsupported(token, exception.getMessage()))
-              .toList());
-    }
+    return new ChartReport(
+        resolvedChartName(chart),
+        anchor,
+        titleReport(chart),
+        legendReport(chart),
+        displayBlanksReport(chart),
+        chart.isPlotOnlyVisibleCells(),
+        chartData.stream().map(data -> chartPlot(chart, data)).toList());
   }
 
   private static ChartReport.Plot chartPlot(XSSFChart chart, XDDFChartData data) {
@@ -1530,11 +1497,18 @@ final class XlsxParityOracle {
               ExcelChartBarGrouping.CLUSTERED,
               Optional.empty(),
               Optional.empty(),
-              axes(chart),
+              StoredChartOracle.axes(
+                  chart.getCTChart().getPlotArea(),
+                  chart.getCTChart().getPlotArea().getBarChartArray(0).getAxIdList()),
               series(bar));
       case XDDFLineChartData line ->
           new ChartReport.Line(
-              varyColors(chart, line), ExcelChartGrouping.STANDARD, axes(chart), series(line));
+              varyColors(chart, line),
+              ExcelChartGrouping.STANDARD,
+              StoredChartOracle.axes(
+                  chart.getCTChart().getPlotArea(),
+                  chart.getCTChart().getPlotArea().getLineChartArray(0).getAxIdList()),
+              series(line));
       case XDDFPieChartData pie ->
           new ChartReport.Pie(
               varyColors(chart, pie), Optional.ofNullable(pie.getFirstSliceAngle()), series(pie));
@@ -1568,42 +1542,15 @@ final class XlsxParityOracle {
 
   private static String resolvedChartName(XSSFChart chart) {
     XSSFGraphicFrame graphicFrame = requiredGraphicFrame(chart);
-    String name = graphicFrame.getName();
-    return name == null || name.isBlank() ? "Chart-" + graphicFrame.getId() : name;
-  }
-
-  private static String chartTitleSummary(XSSFChart chart) {
-    return switch (titleReport(chart)) {
-      case ChartReport.Title.None _ -> "";
-      case ChartReport.Title.Text text -> text.text();
-      case ChartReport.Title.Formula formula ->
-          formula.cachedText().isEmpty() ? formula.formula() : formula.cachedText();
-    };
+    return Objects.requireNonNull(
+        graphicFrame.getName(), "Native graphic-frame name must be present");
   }
 
   private static DrawingAnchorReport drawingAnchorReport(XSSFShape shape) {
-    if (!(shape.getAnchor() instanceof XSSFClientAnchor anchor)) {
-      throw new IllegalStateException(
-          "Unsupported drawing anchor type: "
-              + (shape.getAnchor() == null ? "null" : shape.getAnchor().getClass().getName()));
+    if (shape instanceof XSSFGraphicFrame frame) {
+      return StoredChartOracle.anchor(frame.getCTGraphicalObjectFrame());
     }
-    return new DrawingAnchorReport.TwoCell(
-        new DrawingMarkerReport(
-            anchor.getCol1(), anchor.getRow1(), anchor.getDx1(), anchor.getDy1()),
-        new DrawingMarkerReport(
-            anchor.getCol2(), anchor.getRow2(), anchor.getDx2(), anchor.getDy2()),
-        toDrawingBehavior(anchor.getAnchorType()));
-  }
-
-  private static ExcelDrawingAnchorBehavior toDrawingBehavior(
-      org.apache.poi.ss.usermodel.ClientAnchor.AnchorType anchorType) {
-    return switch (anchorType) {
-      case MOVE_AND_RESIZE -> ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE;
-      case MOVE_DONT_RESIZE -> ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE;
-      case DONT_MOVE_AND_RESIZE -> ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE;
-      default ->
-          throw new IllegalArgumentException("Unsupported drawing anchor behavior: " + anchorType);
-    };
+    throw new IllegalStateException("Chart oracle requires its native graphic frame");
   }
 
   private static ChartReport.Title titleReport(XSSFChart chart) {
@@ -1612,7 +1559,7 @@ final class XlsxParityOracle {
     }
     String formula = chart.getTitleFormula();
     if (formula != null) {
-      return new ChartReport.Title.Formula(formula, cachedTitleText(chart));
+      return StoredChartOracle.formula(chart.getCTChart().getTitle().getTx().getStrRef());
     }
     XSSFRichTextString titleText = chart.getTitleText();
     return titleText == null
@@ -1620,23 +1567,25 @@ final class XlsxParityOracle {
         : new ChartReport.Title.Text(titleText.getString());
   }
 
-  private static String cachedTitleText(XSSFChart chart) {
-    if (!chart.getCTChart().isSetTitle()
-        || !chart.getCTChart().getTitle().isSetTx()
-        || !chart.getCTChart().getTitle().getTx().isSetStrRef()
-        || !chart.getCTChart().getTitle().getTx().getStrRef().isSetStrCache()
-        || chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().sizeOfPtArray() == 0) {
-      return "";
-    }
-    return chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV();
-  }
-
   private static ChartReport.Legend legendReport(XSSFChart chart) {
     if (!chart.getCTChart().isSetLegend()) {
       return new ChartReport.Legend.Hidden();
     }
     return new ChartReport.Legend.Visible(
-        fromPoiLegendPosition(new XDDFChartLegend(chart.getCTChart()).getPosition()));
+        chart.getCTChart().getLegend().isSetLegendPos()
+            ? fromPoiLegendPosition(
+                LegendPosition.valueOf(
+                    switch (chart.getCTChart().getLegend().getLegendPos().getVal().toString()) {
+                      case "b" -> "BOTTOM";
+                      case "l" -> "LEFT";
+                      case "r" -> "RIGHT";
+                      case "t" -> "TOP";
+                      case "tr" -> "TOP_RIGHT";
+                      default ->
+                          throw new IllegalStateException(
+                              "Unrecognized native oracle legend position");
+                    }))
+            : ExcelChartLegendPosition.RIGHT);
   }
 
   private static ExcelChartDisplayBlanksAs displayBlanksReport(XSSFChart chart) {
@@ -1645,24 +1594,12 @@ final class XlsxParityOracle {
         : ExcelChartDisplayBlanksAs.GAP;
   }
 
-  private static List<ChartReport.Axis> axes(XSSFChart chart) {
-    List<ChartReport.Axis> axes = new ArrayList<>();
-    for (XDDFChartAxis axis : chart.getAxes()) {
-      axes.add(
-          new ChartReport.Axis(
-              axisKind(axis),
-              fromPoiAxisPosition(axis.getPosition()),
-              fromPoiAxisCrosses(axis.getCrosses()),
-              axis.isVisible()));
-    }
-    return List.copyOf(axes);
-  }
-
   private static List<ChartReport.Series> series(XDDFBarChartData data) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       XDDFChartData.Series value = data.getSeries(index);
-      series.add(series(value, ((XDDFBarChartData.Series) value).getCTBarSer().getTx()));
+      var nativeSeries = ((XDDFBarChartData.Series) value).getCTBarSer();
+      series.add(series(nativeSeries.getTx(), nativeSeries.getCat(), nativeSeries.getVal()));
     }
     return List.copyOf(series);
   }
@@ -1671,7 +1608,8 @@ final class XlsxParityOracle {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       XDDFChartData.Series value = data.getSeries(index);
-      series.add(series(value, ((XDDFLineChartData.Series) value).getCTLineSer().getTx()));
+      var nativeSeries = ((XDDFLineChartData.Series) value).getCTLineSer();
+      series.add(series(nativeSeries.getTx(), nativeSeries.getCat(), nativeSeries.getVal()));
     }
     return List.copyOf(series);
   }
@@ -1680,16 +1618,20 @@ final class XlsxParityOracle {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       XDDFChartData.Series value = data.getSeries(index);
-      series.add(series(value, ((XDDFPieChartData.Series) value).getCTPieSer().getTx()));
+      var nativeSeries = ((XDDFPieChartData.Series) value).getCTPieSer();
+      series.add(series(nativeSeries.getTx(), nativeSeries.getCat(), nativeSeries.getVal()));
     }
     return List.copyOf(series);
   }
 
-  private static ChartReport.Series series(XDDFChartData.Series series, CTSerTx title) {
+  private static ChartReport.Series series(
+      CTSerTx title,
+      org.openxmlformats.schemas.drawingml.x2006.chart.CTAxDataSource categories,
+      org.openxmlformats.schemas.drawingml.x2006.chart.CTNumDataSource values) {
     return new ChartReport.Series(
         seriesTitle(title),
-        dataSource(series.getCategoryData()),
-        dataSource(series.getValuesData()),
+        StoredChartOracle.source(categories),
+        StoredChartOracle.source(values),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
@@ -1705,34 +1647,9 @@ final class XlsxParityOracle {
       return new ChartReport.Title.None();
     }
     if (title.isSetStrRef()) {
-      String cachedText =
-          title.getStrRef().isSetStrCache() && title.getStrRef().getStrCache().sizeOfPtArray() > 0
-              ? title.getStrRef().getStrCache().getPtArray(0).getV()
-              : "";
-      return new ChartReport.Title.Formula(title.getStrRef().getF(), cachedText);
+      return StoredChartOracle.formula(title.getStrRef());
     }
     return title.isSetV() ? new ChartReport.Title.Text(title.getV()) : new ChartReport.Title.None();
-  }
-
-  private static ChartReport.DataSource dataSource(XDDFDataSource<?> source) {
-    if (source == null) {
-      throw new IllegalStateException("Chart series is missing its data source");
-    }
-    List<String> values = new ArrayList<>();
-    for (int index = 0; index < source.getPointCount(); index++) {
-      Object point = source.getPointAt(index);
-      values.add(point == null ? "" : point.toString());
-    }
-    if (source.isReference()) {
-      return source.isNumeric()
-          ? new ChartReport.DataSource.NumericReference(
-              source.getDataRangeReference(), Optional.ofNullable(source.getFormatCode()), values)
-          : new ChartReport.DataSource.StringReference(source.getDataRangeReference(), values);
-    }
-    return source.isNumeric()
-        ? new ChartReport.DataSource.NumericLiteral(
-            Optional.ofNullable(source.getFormatCode()), values)
-        : new ChartReport.DataSource.StringLiteral(values);
   }
 
   private static List<String> chartPlotTypeTokens(XSSFChart chart) {
@@ -1774,17 +1691,6 @@ final class XlsxParityOracle {
         && chart.getCTChart().getPlotArea().getPieChartArray(0).getVaryColors().getVal();
   }
 
-  private static ExcelChartAxisKind axisKind(XDDFChartAxis axis) {
-    return switch (axis) {
-      case XDDFCategoryAxis _ -> ExcelChartAxisKind.CATEGORY;
-      case XDDFValueAxis _ -> ExcelChartAxisKind.VALUE;
-      default ->
-          throw new IllegalArgumentException(
-              "Chart axis family is outside the current modeled simple-chart contract: "
-                  + axis.getClass().getName());
-    };
-  }
-
   private static ExcelChartBarDirection fromPoiBarDirection(BarDirection direction) {
     return switch (direction) {
       case COL -> ExcelChartBarDirection.COLUMN;
@@ -1809,23 +1715,6 @@ final class XlsxParityOracle {
       case STDispBlanksAs.INT_ZERO -> ExcelChartDisplayBlanksAs.ZERO;
       default ->
           throw new IllegalArgumentException("Unsupported displayBlanksAs token: " + displayBlanks);
-    };
-  }
-
-  private static ExcelChartAxisPosition fromPoiAxisPosition(AxisPosition position) {
-    return switch (position) {
-      case BOTTOM -> ExcelChartAxisPosition.BOTTOM;
-      case LEFT -> ExcelChartAxisPosition.LEFT;
-      case RIGHT -> ExcelChartAxisPosition.RIGHT;
-      case TOP -> ExcelChartAxisPosition.TOP;
-    };
-  }
-
-  private static ExcelChartAxisCrosses fromPoiAxisCrosses(AxisCrosses crosses) {
-    return switch (crosses) {
-      case AUTO_ZERO -> ExcelChartAxisCrosses.AUTO_ZERO;
-      case MAX -> ExcelChartAxisCrosses.MAX;
-      case MIN -> ExcelChartAxisCrosses.MIN;
     };
   }
 

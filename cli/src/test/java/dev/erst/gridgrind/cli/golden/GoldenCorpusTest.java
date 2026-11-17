@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli.golden;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,7 +23,9 @@ import org.opentest4j.AssertionFailedError;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
 
-/** Behavioural observations made before changing the model, wire vocabulary, or hosts. */
+/**
+ * Reviewed protocol and persisted-artifact observations through both supported CLI launch paths.
+ */
 class GoldenCorpusTest {
   @TempDir Path temporary;
 
@@ -160,7 +163,7 @@ class GoldenCorpusTest {
       ObjectNode baseline = GoldenWorkbook.execute(launcher, workspace, request);
       GoldenSnapshots.verify("control", launcher, workspace, baseline);
       String changed = original.replace("alpha", "alphb");
-      assertFalse(original.equals(changed), "Negative control must change its SET_CELL operand");
+      assertNotEquals(original, changed, "Negative control must change its SET_CELL operand");
       Files.writeString(request, changed);
       ObjectNode observation = GoldenWorkbook.execute(launcher, workspace, request);
       String actual = GoldenSnapshots.canonical(observation, workspace);
@@ -233,6 +236,7 @@ class GoldenCorpusTest {
         GoldenSnapshots.JSON.readTree(
             Files.readAllBytes(materialized.resolve(recipe.requestFileName()))));
     Path request = materialized.resolve(recipe.requestFileName());
+    var signatureIdentities = GoldenSignatureIdentities.capture(request, materialized);
     ObjectNode execution = GoldenWorkbook.execute(launcher, materialized, request);
     observation.set("execution", execution);
     GoldenSnapshots.verify(
@@ -240,7 +244,8 @@ class GoldenCorpusTest {
         launcher,
         workspace,
         observation,
-        GoldenSignaturePreviews.certify(request, materialized, execution));
+        GoldenSignaturePreviews.certify(request, materialized, execution),
+        GoldenSignatureIdentities.certify(signatureIdentities, materialized, execution));
   }
 
   private void example(Path file, Recipe recipe, GoldenLauncher launcher)
@@ -250,13 +255,15 @@ class GoldenCorpusTest {
     Path materialized = materialize(recipe, launcher, workspace);
     Path request = materialized.resolve(recipe.requestFileName());
     Files.write(request, Files.readAllBytes(file));
+    var signatureIdentities = GoldenSignatureIdentities.capture(request, materialized);
     ObjectNode execution = GoldenWorkbook.execute(launcher, materialized, request);
     GoldenSnapshots.verify(
         id,
         launcher,
         workspace,
         execution,
-        GoldenSignaturePreviews.certify(request, materialized, execution));
+        GoldenSignaturePreviews.certify(request, materialized, execution),
+        GoldenSignatureIdentities.certify(signatureIdentities, materialized, execution));
   }
 
   private static Path materialize(Recipe recipe, GoldenLauncher launcher, Path workspace)

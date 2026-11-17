@@ -3,6 +3,8 @@ package dev.erst.gridgrind.cli.golden;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -34,6 +36,8 @@ class DistributionTest {
           "LICENSE",
           "NOTICE",
           "PATENTS.md",
+          "PROJECT-NOTICE.md",
+          "LICENSE-COMMERCIAL.md",
           "LICENSE-APACHE-2.0",
           "LICENSE-BSD-2-CLAUSE",
           "LICENSE-BSD-3-CLAUSE");
@@ -48,6 +52,7 @@ class DistributionTest {
     try (JarFile jar = new JarFile(path.toFile())) {
       var attributes = jar.getManifest().getMainAttributes();
       assertEquals("dev.erst.gridgrind.cli.App", attributes.getValue("Main-Class"));
+      assertEquals("ALL-UNNAMED", attributes.getValue("Enable-Native-Access"));
       assertEquals("Multiple; see META-INF/NOTICE", attributes.getValue("Implementation-License"));
       for (String name : LEGAL) {
         byte[] expected = Files.readAllBytes(GoldenLauncher.REPOSITORY.resolve(name));
@@ -62,14 +67,15 @@ class DistributionTest {
           List.of(
               "FastDoubleParser-LICENSE",
               "FastDoubleParser-ThirdParty-LICENSE",
-              "Schubfach-LICENSE")) {
-        assertTrue(jar.getJarEntry("META-INF/" + name) != null, name);
+              "jsoniter-scala-LICENSE",
+              "xjb-LICENSE")) {
+        assertNotNull(jar.getJarEntry("META-INF/" + name), name);
       }
       for (String excluded :
           List.of(
               "com/ctc/wstx/shaded/msv_core/datatype/xsd/CommandLineTester.class",
               "META-INF/maven/com.sun.xml.bind.jaxb/isorelax/pom.xml")) {
-        assertTrue(jar.getJarEntry(excluded) == null, excluded);
+        assertNull(jar.getJarEntry(excluded), excluded);
       }
       for (String retained :
           List.of(
@@ -82,7 +88,7 @@ class DistributionTest {
               "com/ctc/wstx/msv/RelaxNGSchemaFactory.class",
               "com/ctc/wstx/msv/W3CSchemaFactory.class",
               "com/ctc/wstx/shaded/msv_core/datatype/xsd/ngimpl/DataTypeLibraryImpl.class")) {
-        assertTrue(jar.getJarEntry(retained) != null, retained);
+        assertNotNull(jar.getJarEntry(retained), retained);
       }
       for (String toolPackage :
           List.of(
@@ -122,7 +128,7 @@ class DistributionTest {
         var entry = entries.nextElement();
         if (!entry.isDirectory()) {
           try (InputStream input = archive.getInputStream(entry)) {
-            assertTrue(zipContents.put(entry.getName(), sha256(input)) == null, entry.getName());
+            assertNull(zipContents.put(entry.getName(), sha256(input)), entry.getName());
           }
         }
       }
@@ -132,7 +138,7 @@ class DistributionTest {
         new TarArchiveInputStream(Files.newInputStream(singleArchive(directory, ".tar")))) {
       for (var entry = archive.getNextEntry(); entry != null; entry = archive.getNextEntry()) {
         if (!entry.isDirectory()) {
-          assertTrue(tarContents.put(entry.getName(), sha256(archive)) == null, entry.getName());
+          assertNull(tarContents.put(entry.getName(), sha256(archive)), entry.getName());
         }
       }
     }
@@ -236,7 +242,7 @@ class DistributionTest {
     assertEquals(0, license.exit(), license.stderr());
     for (String text :
         List.of(
-            "Mozilla Public License",
+            "GNU AFFERO GENERAL PUBLIC LICENSE",
             "Jakarta Activation API",
             "Jakarta XML Binding API",
             "Eclipse Distribution License v1.0",

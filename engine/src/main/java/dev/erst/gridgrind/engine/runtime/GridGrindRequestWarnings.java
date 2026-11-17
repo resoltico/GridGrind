@@ -33,9 +33,8 @@ final class GridGrindRequestWarnings {
     return spacedSheetNames.isEmpty()
         ? List.of()
         : IntStream.range(0, request.steps().size())
-            .mapToObj(
-                stepIndex ->
-                    warningFor(request.steps().get(stepIndex), stepIndex, spacedSheetNames))
+            .mapToObj(stepIndex ->
+                warningFor(request.steps().get(stepIndex), stepIndex, spacedSheetNames))
             .flatMap(Optional::stream)
             .toList();
   }

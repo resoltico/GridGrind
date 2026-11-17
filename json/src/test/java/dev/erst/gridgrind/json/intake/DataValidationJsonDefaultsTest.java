@@ -16,87 +16,87 @@ class DataValidationJsonDefaultsTest {
     ObjectNode missingAllowBlank =
         requestTree(
             """
-        {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "execution": {
-            "mode": { "type": "FULL_XSSF" },
-            "journal": { "level": "NORMAL" },
-            "calculation": {
-              "strategy": { "type": "DO_NOT_CALCULATE" },
-              "markRecalculateOnOpen": false
-            }
-          },
-          "formulaEnvironment": {
-            "externalWorkbooks": [ ],
-            "missingWorkbookPolicy": "ERROR",
-            "udfToolpacks": [ ]
-          },
-          "steps": [
             {
-              "stepId": "validation-missing-allowBlank",
-              "target": {
-                "type": "RANGE_BY_RANGE",
-                "sheetName": "Intake",
-                "range": "A2:A20"
-              },
-              "action": {
-                "type": "SET_DATA_VALIDATION",
-                "validation": {
-                  "rule": {
-                    "type": "EXPLICIT_LIST",
-                    "values": [ "Queued" ]
-                  },
-                  "suppressDropDownArrow": false
+              "protocolVersion": 1,
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "mode": { "type": "FULL_XSSF" },
+                "journal": { "level": "NORMAL" },
+                "calculation": {
+                  "strategy": { "type": "DO_NOT_CALCULATE" },
+                  "markRecalculateOnOpen": false
                 }
-              }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [ ],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": [ ]
+              },
+              "steps": [
+                {
+                  "stepId": "validation-missing-allowBlank",
+                  "target": {
+                    "type": "RANGE_BY_RANGE",
+                    "sheetName": "Intake",
+                    "range": "A2:A20"
+                  },
+                  "action": {
+                    "type": "SET_DATA_VALIDATION",
+                    "validation": {
+                      "rule": {
+                        "type": "EXPLICIT_LIST",
+                        "values": [ "Queued" ]
+                      },
+                      "suppressDropDownArrow": false
+                    }
+                  }
+                }
+              ]
             }
-          ]
-        }
-        """);
+            """);
     ObjectNode missingSuppressDropDownArrow =
         requestTree(
             """
-        {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "execution": {
-            "mode": { "type": "FULL_XSSF" },
-            "journal": { "level": "NORMAL" },
-            "calculation": {
-              "strategy": { "type": "DO_NOT_CALCULATE" },
-              "markRecalculateOnOpen": false
-            }
-          },
-          "formulaEnvironment": {
-            "externalWorkbooks": [ ],
-            "missingWorkbookPolicy": "ERROR",
-            "udfToolpacks": [ ]
-          },
-          "steps": [
             {
-              "stepId": "validation-missing-suppressDropDownArrow",
-              "target": {
-                "type": "RANGE_BY_RANGE",
-                "sheetName": "Intake",
-                "range": "A2:A20"
-              },
-              "action": {
-                "type": "SET_DATA_VALIDATION",
-                "validation": {
-                  "rule": {
-                    "type": "EXPLICIT_LIST",
-                    "values": [ "Queued" ]
-                  },
-                  "allowBlank": false
+              "protocolVersion": 1,
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "mode": { "type": "FULL_XSSF" },
+                "journal": { "level": "NORMAL" },
+                "calculation": {
+                  "strategy": { "type": "DO_NOT_CALCULATE" },
+                  "markRecalculateOnOpen": false
                 }
-              }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [ ],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": [ ]
+              },
+              "steps": [
+                {
+                  "stepId": "validation-missing-suppressDropDownArrow",
+                  "target": {
+                    "type": "RANGE_BY_RANGE",
+                    "sheetName": "Intake",
+                    "range": "A2:A20"
+                  },
+                  "action": {
+                    "type": "SET_DATA_VALIDATION",
+                    "validation": {
+                      "rule": {
+                        "type": "EXPLICIT_LIST",
+                        "values": [ "Queued" ]
+                      },
+                      "allowBlank": false
+                    }
+                  }
+                }
+              ]
             }
-          ]
-        }
-        """);
+            """);
 
     assertDefaultBooleans(missingAllowBlank);
     assertDefaultBooleans(missingSuppressDropDownArrow);

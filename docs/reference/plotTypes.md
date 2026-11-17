@@ -313,7 +313,7 @@ Exact doughnut-chart plot report.
 | --- | --- | --- | --- |
 | varyColors | REQUIRED | {"type":"SCALAR","scalarType":"BOOLEAN"} |  |
 | firstSliceAngle | OPTIONAL | {"type":"SCALAR","scalarType":"NUMBER"} |  |
-| holeSize | OPTIONAL | {"type":"SCALAR","scalarType":"NUMBER"} |  |
+| holeSize | OPTIONAL | {"type":"SCALAR","scalarType":"NUMBER","constraints":[{"type":"NUMBER_RANGE","minimum":1.0,"maximum":90.0}]} |  |
 | series | REQUIRED | {"type":"LIST","elementShape":{"type":"PLAIN_TYPE_GROUP","group":"chartSeriesReportType"}} |  |
 
 ```json
@@ -341,7 +341,12 @@ Exact doughnut-chart plot report.
     "requirement" : "OPTIONAL",
     "shape" : {
       "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "scalarType" : "NUMBER",
+      "constraints" : [ {
+        "type" : "NUMBER_RANGE",
+        "minimum" : 1.0,
+        "maximum" : 90.0
+      } ]
     },
     "enumValues" : [ ]
   }, {

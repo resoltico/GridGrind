@@ -1,0 +1,13 @@
+--- org/apache/poi/xssf/usermodel/BaseXSSFEvaluationWorkbook.java
++++ org/apache/poi/xssf/usermodel/BaseXSSFEvaluationWorkbook.java
+@@ -51,8 +51,9 @@
+  * Internal POI use only - parent of XSSF and SXSSF evaluation workbooks
+  */
+ @Internal
+-public abstract class BaseXSSFEvaluationWorkbook implements FormulaRenderingWorkbook, EvaluationWorkbook, FormulaParsingWorkbook {
++public abstract class BaseXSSFEvaluationWorkbook implements FormulaRenderingWorkbook, EvaluationWorkbook, FormulaParsingWorkbook, org.apache.poi.ss.usermodel.Date1904Support {
+     protected final XSSFWorkbook _uBook;
++    @Override public boolean isDate1904() { return _uBook.isDate1904(); }
+ 
+     // lazily populated. This should only be accessed through getTableCache
+     // keys are lower-case to make this a quasi-case-insensitive map

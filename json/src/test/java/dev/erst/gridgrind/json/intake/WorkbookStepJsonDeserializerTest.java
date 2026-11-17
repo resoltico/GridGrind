@@ -61,11 +61,11 @@ class WorkbookStepJsonDeserializerTest {
                 GridGrindJson.readRequest(
                     requestWithStepBody(
                         """
-                    "stepId": "bad",
-                    "target": { "type": "WORKBOOK_CURRENT" },
-                    "query": { "type": "GET_WORKBOOK_SUMMARY" },
-                    "legacy": true
-                    """)));
+                        "stepId": "bad",
+                        "target": { "type": "WORKBOOK_CURRENT" },
+                        "query": { "type": "GET_WORKBOOK_SUMMARY" },
+                        "legacy": true
+                        """)));
     InvalidRequestShapeException missingStepId =
         assertThrows(
             InvalidRequestShapeException.class,
@@ -73,9 +73,9 @@ class WorkbookStepJsonDeserializerTest {
                 GridGrindJson.readRequest(
                     requestWithStepBody(
                         """
-                    "target": { "type": "WORKBOOK_CURRENT" },
-                    "query": { "type": "GET_WORKBOOK_SUMMARY" }
-                    """)));
+                        "target": { "type": "WORKBOOK_CURRENT" },
+                        "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        """)));
     InvalidRequestShapeException missingTarget =
         assertThrows(
             InvalidRequestShapeException.class,
@@ -83,9 +83,9 @@ class WorkbookStepJsonDeserializerTest {
                 GridGrindJson.readRequest(
                     requestWithStepBody(
                         """
-                    "stepId": "bad",
-                    "query": { "type": "GET_WORKBOOK_SUMMARY" }
-                    """)));
+                        "stepId": "bad",
+                        "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        """)));
     InvalidRequestShapeException missingStepPayload =
         assertThrows(
             InvalidRequestShapeException.class,
@@ -93,9 +93,9 @@ class WorkbookStepJsonDeserializerTest {
                 GridGrindJson.readRequest(
                     requestWithStepBody(
                         """
-                    "stepId": "bad",
-                    "target": { "type": "WORKBOOK_CURRENT" }
-                    """)));
+                        "stepId": "bad",
+                        "target": { "type": "WORKBOOK_CURRENT" }
+                        """)));
     InvalidRequestShapeException nonStringStepId =
         assertThrows(
             InvalidRequestShapeException.class,
@@ -103,10 +103,10 @@ class WorkbookStepJsonDeserializerTest {
                 GridGrindJson.readRequest(
                     requestWithStepBody(
                         """
-                    "stepId": 3,
-                    "target": { "type": "WORKBOOK_CURRENT" },
-                    "query": { "type": "GET_WORKBOOK_SUMMARY" }
-                    """)));
+                        "stepId": 3,
+                        "target": { "type": "WORKBOOK_CURRENT" },
+                        "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        """)));
 
     assertEquals("Unknown field 'steps[0].legacy'", unknownField.getMessage());
     assertEquals(Optional.of("steps[0].legacy"), unknownField.jsonPath());
@@ -130,11 +130,10 @@ class WorkbookStepJsonDeserializerTest {
   @Test
   void readsAssertionStepsThroughTheCanonicalEnvelope() {
     var request =
-        assertDoesNotThrow(
-            () ->
-                GridGrindJson.readRequest(
-                    requestWithStepBody(
-                        """
+        assertDoesNotThrow(() ->
+            GridGrindJson.readRequest(
+                requestWithStepBody(
+                    """
                     "stepId": "assert-owner",
                     "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                     "assertion": {
@@ -149,30 +148,28 @@ class WorkbookStepJsonDeserializerTest {
 
   @Test
   void keepsKnownSelectorTypesBoundForTheStaticContractPhase() {
-    assertDoesNotThrow(
-        () ->
-            GridGrindJson.readRequest(
-                requestWithStepBody(
-                    """
-                        "stepId": "set-cell",
-                        "target": { "type": "WORKBOOK_CURRENT" },
-                        "action": {
-                          "type": "SET_CELL",
-                          "value": {
-                            "type": "TEXT",
-                            "value": { "type": "INLINE", "text": "Owner" }
-                          }
-                        }
-                        """)));
-    assertDoesNotThrow(
-        () ->
-            GridGrindJson.readRequest(
-                requestWithStepBody(
-                    """
-                        "stepId": "window",
-                        "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                        "query": { "type": "GET_WINDOW" }
-                        """)));
+    assertDoesNotThrow(() ->
+        GridGrindJson.readRequest(
+            requestWithStepBody(
+                """
+                "stepId": "set-cell",
+                "target": { "type": "WORKBOOK_CURRENT" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "value": { "type": "INLINE", "text": "Owner" }
+                  }
+                }
+                """)));
+    assertDoesNotThrow(() ->
+        GridGrindJson.readRequest(
+            requestWithStepBody(
+                """
+                "stepId": "window",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "query": { "type": "GET_WINDOW" }
+                """)));
   }
 
   @Test
@@ -285,7 +282,8 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals(Optional.of("steps[0].target.address"), invalidTarget.jsonPath());
     assertEquals(FieldValidationAddressRule.ADDRESS_SYNTAX, requestProblem.rule());
     assertEquals(
-        "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field 'address'.",
+        "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field"
+            + " 'address'.",
         GridGrindRequestProblemSupport.resolution(
             requestProblem,
             new ProblemContext.ReadRequest(
@@ -331,15 +329,14 @@ class WorkbookStepJsonDeserializerTest {
 
   @Test
   void readsFamilySpecificPresenceAssertionsWithoutSharedSelectorAmbiguity() {
-    assertDoesNotThrow(
-        () ->
-            GridGrindJson.readRequest(
-                requestWithStepBody(
-                    """
-                    "stepId": "assert-pivot-present",
-                    "target": { "type": "PIVOT_TABLE_BY_NAME", "name": "ExpensePivot" },
-                    "assertion": { "type": "EXPECT_PIVOT_TABLE_PRESENT" }
-                    """)));
+    assertDoesNotThrow(() ->
+        GridGrindJson.readRequest(
+            requestWithStepBody(
+                """
+                "stepId": "assert-pivot-present",
+                "target": { "type": "PIVOT_TABLE_BY_NAME", "name": "ExpensePivot" },
+                "assertion": { "type": "EXPECT_PIVOT_TABLE_PRESENT" }
+                """)));
   }
 
   @Test
@@ -439,32 +436,32 @@ class WorkbookStepJsonDeserializerTest {
 
   private static byte[] requestWithStepBody(String stepBody) {
     return ("""
+    {
+      "protocolVersion": 1,
+      "source": { "type": "NEW" },
+      "persistence": { "type": "NONE" },
+      "execution": {
+        "mode": {"type": "FULL_XSSF"},
+        "journal": { "level": "NORMAL" },
+        "calculation": {
+          "strategy": { "type": "DO_NOT_CALCULATE" },
+          "markRecalculateOnOpen": false
+        }
+      },
+      "formulaEnvironment": {
+        "externalWorkbooks": [],
+        "missingWorkbookPolicy": "ERROR",
+        "udfToolpacks": []
+      },
+      "steps": [
         {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "execution": {
-            "mode": {"type": "FULL_XSSF"},
-            "journal": { "level": "NORMAL" },
-            "calculation": {
-              "strategy": { "type": "DO_NOT_CALCULATE" },
-              "markRecalculateOnOpen": false
-            }
-          },
-          "formulaEnvironment": {
-            "externalWorkbooks": [],
-            "missingWorkbookPolicy": "ERROR",
-            "udfToolpacks": []
-          },
-          "steps": [
-            {
-        """
+    """
             + stepBody
             + """
+                }
+              ]
             }
-          ]
-        }
-        """)
+            """)
         .getBytes(StandardCharsets.UTF_8);
   }
 

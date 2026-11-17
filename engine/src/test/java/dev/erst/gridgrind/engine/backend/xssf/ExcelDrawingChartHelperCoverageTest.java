@@ -7,6 +7,7 @@ import dev.erst.gridgrind.engine.charts.ChartAdapter;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.Test;
 /** Drawing chart-title and vary-color helper coverage. */
 class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSupport {
   @Test
-  @SuppressWarnings("PMD.NcssCount")
   void drawingControllerReflectiveTitleNameAndVaryColorHelpersCoverResidualBranches()
       throws Exception {
     DrawingAdapter controller = new DrawingAdapter();
@@ -55,52 +55,43 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
       assertSame(
           secondChart, ChartAdapter.chartForGraphicFrame(drawing, secondChart.getGraphicFrame()));
 
-      org.apache.poi.xssf.usermodel.XSSFChart blankTitleChart =
-          drawing.createChart(poiAnchor(drawing, 10, 0, 14, 6));
+      var blankTitleChart = drawing.createChart(poiAnchor(drawing, 10, 0, 14, 6));
       blankTitleChart.setTitleText(" ");
-      assertNotNull(blankTitleChart.getTitleText());
-      assertTrue(blankTitleChart.getTitleText().getString().isBlank());
-      assertInstanceOf(ChartReport.Title.None.class, ChartAdapter.snapshotTitle(blankTitleChart));
-      org.apache.poi.xssf.usermodel.XSSFChart missingTextChart =
-          drawing.createChart(poiAnchor(drawing, 15, 0, 19, 6));
+      assertEquals(
+          new ChartReport.Title.Text(" "),
+          ChartAdapter.snapshotChart(blankTitleChart, blankTitleChart.getGraphicFrame()).title());
+      var missingTextChart = drawing.createChart(poiAnchor(drawing, 15, 0, 19, 6));
       missingTextChart.getCTChart().addNewTitle().addNewTx();
-      assertInstanceOf(ChartReport.Title.None.class, ChartAdapter.snapshotTitle(missingTextChart));
-      org.apache.poi.xssf.usermodel.XSSFChart textTitleChart =
-          drawing.createChart(poiAnchor(drawing, 15, 7, 19, 13));
+      assertInstanceOf(
+          ChartReport.Title.None.class,
+          ChartAdapter.snapshotChart(missingTextChart, missingTextChart.getGraphicFrame()).title());
+      var textTitleChart = drawing.createChart(poiAnchor(drawing, 15, 7, 19, 13));
       textTitleChart.setTitleText("Solid");
-      assertEquals(new ChartReport.Title.Text("Solid"), ChartAdapter.snapshotTitle(textTitleChart));
-
-      org.apache.poi.xssf.usermodel.XSSFChart cachedTitleChart =
-          drawing.createChart(poiAnchor(drawing, 20, 0, 24, 6));
-      assertEquals("", ChartAdapter.cachedTitleText(cachedTitleChart, "Ops!$A$99"));
-      cachedTitleChart.getCTChart().addNewTitle();
-      assertEquals("", ChartAdapter.cachedTitleText(cachedTitleChart, "Ops!$A$99"));
-      cachedTitleChart.getCTChart().getTitle().addNewTx();
-      assertEquals("", ChartAdapter.cachedTitleText(cachedTitleChart, "Ops!$A$99"));
-      cachedTitleChart.getCTChart().getTitle().getTx().addNewStrRef();
-      cachedTitleChart.getCTChart().getTitle().getTx().getStrRef().setF("Ops!$A$1");
-      assertEquals("Fallback title", ChartAdapter.cachedTitleText(cachedTitleChart, "Ops!$A$1"));
-      cachedTitleChart.getCTChart().getTitle().getTx().getStrRef().addNewStrCache();
-      assertEquals("Fallback title", ChartAdapter.cachedTitleText(cachedTitleChart, "Ops!$A$1"));
-      cachedTitleChart
-          .getCTChart()
-          .getTitle()
-          .getTx()
-          .getStrRef()
-          .getStrCache()
-          .addNewPt()
-          .setV(" ");
-      assertEquals("Fallback title", ChartAdapter.cachedTitleText(cachedTitleChart, "Ops!$A$1"));
-      cachedTitleChart
-          .getCTChart()
-          .getTitle()
-          .getTx()
-          .getStrRef()
-          .getStrCache()
-          .getPtArray(0)
-          .setV("Cached title");
-      assertEquals("Fallback title", ChartAdapter.cachedTitleText(cachedTitleChart, "Ops!$A$1"));
-      assertEquals("", ChartAdapter.resolvedTitleFormulaText(cachedTitleChart, "Bad["));
+      assertEquals(
+          new ChartReport.Title.Text("Solid"),
+          ChartAdapter.snapshotChart(textTitleChart, textTitleChart.getGraphicFrame()).title());
+      var cachedTitleChart = drawing.createChart(poiAnchor(drawing, 20, 0, 24, 6));
+      var reference = cachedTitleChart.getCTChart().addNewTitle().addNewTx().addNewStrRef();
+      reference.setF("Ops!$A$1");
+      assertEquals(
+          new ChartReport.Title.Formula(
+              Optional.of("Ops!$A$1"), new ChartReport.StringCache.Missing()),
+          ChartAdapter.snapshotChart(cachedTitleChart, cachedTitleChart.getGraphicFrame()).title());
+      reference.addNewStrCache();
+      assertEquals(
+          new ChartReport.Title.Formula(
+              Optional.of("Ops!$A$1"),
+              new ChartReport.StringCache.Stored(Optional.empty(), List.of())),
+          ChartAdapter.snapshotChart(cachedTitleChart, cachedTitleChart.getGraphicFrame()).title());
+      reference.getStrCache().addNewPt().setV("Cached title");
+      assertEquals(
+          new ChartReport.Title.Formula(
+              Optional.of("Ops!$A$1"),
+              new ChartReport.StringCache.Stored(
+                  Optional.empty(),
+                  List.of(
+                      new ChartReport.StringPoint(Optional.empty(), Optional.of("Cached title"))))),
+          ChartAdapter.snapshotChart(cachedTitleChart, cachedTitleChart.getGraphicFrame()).title());
 
       Object noImageDimensions =
           invoke(
@@ -117,25 +108,8 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
               Object.class,
               Base64.getDecoder()
                   .decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQ="));
-      assertNull(invoke(invalidPngDimensions, "widthPixels", Integer.class));
-      assertNull(invoke(invalidPngDimensions, "heightPixels", Integer.class));
-      assertEquals(
-          "Ops!$A$1", ChartAdapter.titleSummary(new ChartReport.Title.Formula("Ops!$A$1", "")));
-      assertEquals(
-          "Fallback title",
-          ChartAdapter.titleSummary(new ChartReport.Title.Formula("Ops!$A$1", "Fallback title")));
-
-      var formulaSeriesTitle =
-          org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx.Factory.newInstance();
-      formulaSeriesTitle.addNewStrRef().setF("Ops!$A$1");
-      assertEquals(
-          new ChartReport.Title.Formula("Ops!$A$1", ""),
-          ChartAdapter.snapshotSeriesTitle(formulaSeriesTitle));
-      formulaSeriesTitle.getStrRef().addNewStrCache();
-      assertEquals(
-          new ChartReport.Title.Formula("Ops!$A$1", ""),
-          ChartAdapter.snapshotSeriesTitle(formulaSeriesTitle));
-
+      assertEquals(1, invoke(invalidPngDimensions, "widthPixels", Integer.class));
+      assertEquals(1, invoke(invalidPngDimensions, "heightPixels", Integer.class));
       org.apache.poi.xssf.usermodel.XSSFChart bareBarChart =
           drawing.createChart(poiAnchor(drawing, 20, 0, 24, 6));
       assertFalse(ChartAdapter.barVaryColors(bareBarChart));

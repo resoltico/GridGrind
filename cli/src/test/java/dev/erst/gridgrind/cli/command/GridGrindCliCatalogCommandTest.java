@@ -346,9 +346,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     String rendered = stdout.toString(StandardCharsets.UTF_8);
     Recipe recipe =
         RecipeRegistry.recipeFor("DASHBOARD")
-            .filter(
-                candidate ->
-                    candidate.type() == dev.erst.gridgrind.core.discovery.RecipeType.TASK_STARTER)
+            .filter(candidate ->
+                candidate.type() == dev.erst.gridgrind.core.discovery.RecipeType.TASK_STARTER)
             .orElseThrow();
 
     assertEquals(0, exitCode);
@@ -671,10 +670,13 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertTrue(problemMessages.contains("Missing required field 'persistence.ifExists'"));
     assertTrue(
         problemMessages.contains(
-            "execution.mode.type=EVENT_READ requires execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false"));
+            "execution.mode.type=EVENT_READ requires"
+                + " execution.calculation.strategy=DO_NOT_CALCULATE and"
+                + " markRecalculateOnOpen=false"));
     assertTrue(
         problemMessages.contains(
-            "execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: ASSERTION"));
+            "execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind:"
+                + " ASSERTION"));
   }
 
   @Test

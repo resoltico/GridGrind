@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.engine.poi.CellBounds;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import dev.erst.gridgrind.engine.tables.TableAdapter;
 import java.lang.reflect.Proxy;
@@ -24,22 +24,22 @@ class ExcelTableStructureSupportTest {
   @Test
   void requireSupportedTableShapeValidatesDataAndTotalsLayouts() {
     assertDoesNotThrow(
-        () -> TableAdapter.requireSupportedTableShape(CellBounds.parse("A1:B2"), false));
+        () -> TableAdapter.requireSupportedTableShape(RangeRef.parse("A1:B2"), false));
     assertDoesNotThrow(
-        () -> TableAdapter.requireSupportedTableShape(CellBounds.parse("A1:B3"), true));
+        () -> TableAdapter.requireSupportedTableShape(RangeRef.parse("A1:B3"), true));
     assertThrows(
         IllegalArgumentException.class,
-        () -> TableAdapter.requireSupportedTableShape(CellBounds.parse("A1:B1"), false));
+        () -> TableAdapter.requireSupportedTableShape(RangeRef.parse("A1:B1"), false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> TableAdapter.requireSupportedTableShape(CellBounds.parse("A1:B2"), true));
+        () -> TableAdapter.requireSupportedTableShape(RangeRef.parse("A1:B2"), true));
   }
 
   @Test
   void headerNamesAndHeaderTextNormalizeSupportedCellKinds() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
-      assertEquals(List.of("", ""), SheetStructure.headerNames(sheet, CellBounds.parse("A1:B1")));
+      assertEquals(List.of("", ""), SheetStructure.headerNames(sheet, RangeRef.parse("A1:B1")));
 
       var row = sheet.createRow(0);
       row.createCell(1).setBlank();
@@ -58,7 +58,7 @@ class ExcelTableStructureSupportTest {
       assertEquals("TRUE", SheetStructure.headerText(row.getCell(5)));
       assertEquals(
           List.of("", "Owner", "A1", "12.0", "TRUE"),
-          SheetStructure.headerNames(sheet, CellBounds.parse("B1:F1")));
+          SheetStructure.headerNames(sheet, RangeRef.parse("B1:F1")));
     }
   }
 
@@ -67,10 +67,10 @@ class ExcelTableStructureSupportTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFTable table = createTable(workbook, "Ops", "A1:B4");
 
-      TableAdapter.applyAutofilter(table, CellBounds.parse("A1:B4"), false);
+      TableAdapter.applyAutofilter(table, RangeRef.parse("A1:B4"), false);
       assertEquals("A1:B4", table.getCTTable().getAutoFilter().getRef());
 
-      TableAdapter.applyAutofilter(table, CellBounds.parse("A1:B4"), true);
+      TableAdapter.applyAutofilter(table, RangeRef.parse("A1:B4"), true);
       assertEquals("A1:B3", table.getCTTable().getAutoFilter().getRef());
     }
   }

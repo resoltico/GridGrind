@@ -6,6 +6,9 @@ plugins {
 description = "JSON codecs and tolerant request intake"
 
 dependencies {
+    constraints {
+        testImplementation(libs.snakeyaml.engine)
+    }
     api(project(":core"))
     implementation(libs.jackson.annotations)
     implementation(libs.jackson.databind)

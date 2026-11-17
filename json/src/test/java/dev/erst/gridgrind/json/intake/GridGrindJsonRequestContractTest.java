@@ -134,9 +134,9 @@ class GridGrindJsonRequestContractTest {
             {
               "protocolVersion": 1,
               "source": { "type": "NEW" },
-	              "persistence": {
-	                "type": "SAVE_AS",
-	                "path": "secured.xlsx",
+               "persistence": {
+                 "type": "SAVE_AS",
+                 "path": "secured.xlsx",
                 "ifExists": "REJECT",
                 "security": {
                   "encryption": {
@@ -328,7 +328,8 @@ class GridGrindJsonRequestContractTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals(
-        "Unsupported value 'AES_128' for field 'persistence.security.encryption.encryption.cipher'; expected one of: AES_256, AES_192",
+        "Unsupported value 'AES_128' for field 'persistence.security.encryption.encryption.cipher';"
+            + " expected one of: AES_256, AES_192",
         exception.getMessage());
   }
 
@@ -363,7 +364,8 @@ class GridGrindJsonRequestContractTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals(
-        "Unsupported value 'SHA_1' for field 'persistence.security.encryption.encryption.hash'; expected one of: SHA_512, SHA_384, SHA_256",
+        "Unsupported value 'SHA_1' for field 'persistence.security.encryption.encryption.hash';"
+            + " expected one of: SHA_512, SHA_384, SHA_256",
         exception.getMessage());
   }
 

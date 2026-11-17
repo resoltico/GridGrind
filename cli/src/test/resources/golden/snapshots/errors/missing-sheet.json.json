@@ -14,8 +14,16 @@
     },
     "evidence" : {
       "admission" : {
+        "executionStrategy" : {
+          "backend" : "FULL_XSSF",
+          "fullWorkbookMaterializationRequired" : true
+        },
         "materializedInputs" : [ ],
-        "operations" : [ ]
+        "operations" : [ {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_CELLS"
+        } ]
       },
       "computational" : {
         "status" : "NOT_REQUESTED"

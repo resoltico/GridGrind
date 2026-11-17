@@ -12,7 +12,12 @@ public sealed interface RequestWarningLocation
     permits dev.erst.gridgrind.core.problem.RequestWarningLocation.Step,
         dev.erst.gridgrind.core.problem.RequestWarningLocation.RequestPath,
         dev.erst.gridgrind.core.problem.RequestWarningLocation.RequestByteOffset,
-        dev.erst.gridgrind.core.problem.RequestWarningLocation.FormulaCell {
+        dev.erst.gridgrind.core.problem.RequestWarningLocation.FormulaCell,
+        dev.erst.gridgrind.core.problem.RequestWarningLocation.Execution {
+  /** One warning about optional execution infrastructure. */
+  @Variant(id = "EXECUTION", summary = "Warning about this execution's optional infrastructure.")
+  record Execution() implements RequestWarningLocation {}
+
   /** Returns the step index for ordered step warnings, or {@code -1} for request-level warnings. */
   default int orderingStepIndex() {
     return this instanceof Step step ? step.stepIndex() : -1;

@@ -29,6 +29,20 @@ public interface GridGrindProblemDetail {
       causes = WorkbookResultSupport.copyProblemCauses(causes);
     }
 
+    /** Appends bounded secondary diagnostics without changing the primary problem. */
+    public Problem withCause(ProblemCause cause) {
+      Objects.requireNonNull(cause, "cause must not be null");
+      if (causes.size() >= 8) return this;
+      var combined = new java.util.ArrayList<>(causes);
+      combined.add(cause);
+      return new Problem(code, category, recovery, title, message, resolution, context, combined);
+    }
+
+    /** Projects this problem into one secondary diagnostic at its classified stage. */
+    public ProblemCause asCause() {
+      return new ProblemCause(code, title + ": " + message, context.type());
+    }
+
     /**
      * Constructs a Problem from a code and message, deriving category, recovery, title, and
      * resolution from the code.

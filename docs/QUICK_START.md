@@ -1,6 +1,8 @@
 # Quick start
 
-Use a Java 27 JDK and the checked-in Gradle wrapper:
+Use the pinned Eclipse Temurin 27 JDK and checked-in Gradle wrapper. The
+[local setup](DEVELOPER.md#toolchain-and-dependencies) and
+[contributor container](DEVELOPER.md#contributor-container) use the same JDK as the runtime image:
 
     ./gradlew :cli:shadowJar
     java -jar cli/build/libs/gridgrind.jar help
@@ -12,14 +14,21 @@ Materialize a published recipe into a new workspace:
     java -jar cli/build/libs/gridgrind.jar recipe show BUDGET --details
 
 Edit grant.json to permit the recipe's exact operation IDs, read resources, workbook target
-scope and SAVE_AS output path/collision policy. The template is deliberately fail-closed.
+scope and SAVE_AS output path/collision policy. Set the required `maxInputSnapshotBytes`
+allowance for file and standard-input acquisition; the template starts at zero. It authorizes
+no operations until edited.
 Then diagnose and execute:
 
     java -jar cli/build/libs/gridgrind.jar doctor --request budget-workspace/budget-request.json --grant budget-workspace/grant.json
     java -jar cli/build/libs/gridgrind.jar run --request budget-workspace/budget-request.json --grant budget-workspace/grant.json --response budget-workspace/result.json
 
 Request-owned relative paths resolve from the request file's directory. Host response/grant
-paths resolve from the host invocation. Stdin requires an explicit root:
+filenames resolve from the process working directory. Relative FILE read-authority and SAVE_AS
+publication-authority paths inside the grant also use that process directory. For the BUDGET
+commands above, the request's `generated-workbooks/gridgrind-budget.xlsx` refers to
+`budget-workspace/generated-workbooks/gridgrind-budget.xlsx` from the shell's working directory;
+use that latter path or its absolute equivalent in `publicationAuthority.path`. The grant file's
+own directory does not establish an authority root. Stdin requires an explicit request root:
 
     java -jar cli/build/libs/gridgrind.jar run --request - --execution-root budget-workspace --grant budget-workspace/grant.json < budget-workspace/budget-request.json
 
@@ -33,7 +42,9 @@ reproducible runs. The current release workflow supplies matching container sour
 `X.Y.Z-sources` and in the [GitHub release](https://github.com/resoltico/GridGrind/releases).
 The source tag is a data-only image; see [source retrieval](RELEASING.md#container-source-delivery).
 
-Build the local image and mount the caller-owned workspace at its identical absolute path.
+The application and contributor images support AMD64 and 64-bit ARM, including
+[Raspberry Pi](DEVELOPER.md#raspberry-pi). Build the local image and mount the caller-owned
+workspace at its identical absolute path.
 This keeps absolute grant paths valid inside the container. Match the host uid/gid so output
 files remain caller-owned:
 

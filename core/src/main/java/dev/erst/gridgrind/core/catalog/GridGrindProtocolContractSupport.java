@@ -30,6 +30,11 @@ public final class GridGrindProtocolContractSupport {
     return Optional.of(union.discriminator());
   }
 
+  /** Returns the canonical components visible at the document boundary, in declaration order. */
+  public static List<RecordComponent> visibleRecordComponents(Class<? extends Record> recordType) {
+    return RequestCreatorContractSupport.visibleRecordComponents(recordType);
+  }
+
   /** Returns the effective required request fields for one record type. */
   public static List<String> requiredFieldNames(Class<? extends Record> recordType) {
     return effectiveObjectContract(recordType).requiredFields();
@@ -92,32 +97,29 @@ public final class GridGrindProtocolContractSupport {
     Objects.requireNonNull(recordTypes, "recordTypes must not be null");
     return recordTypes.stream()
         .sorted(java.util.Comparator.comparing(Class::getName))
-        .flatMap(
-            recordType -> {
-              EffectiveObjectContract contract = effectiveObjectContract(recordType);
-              Set<String> requiredFields = Set.copyOf(contract.requiredFields());
-              List<RecordComponent> visibleComponents =
-                  RequestCreatorContractSupport.visibleRecordComponents(recordType);
-              return contract.fields().stream()
-                  .map(
-                      fieldName ->
-                          Objects.requireNonNull(
-                              visibleComponents.stream()
-                                  .filter(component -> wireFieldName(component).equals(fieldName))
-                                  .findFirst()
-                                  .orElse(null),
-                              "Effective request contract field has no visible record component"))
-                  .filter(component -> component.getType().isPrimitive())
-                  .map(
-                      component -> {
-                        String fieldName = wireFieldName(component);
-                        return new RequestPrimitiveField(
-                            recordType,
-                            fieldName,
-                            requiredFields.contains(fieldName),
-                            booleanDefault(component));
-                      });
-            })
+        .flatMap(recordType -> {
+          EffectiveObjectContract contract = effectiveObjectContract(recordType);
+          Set<String> requiredFields = Set.copyOf(contract.requiredFields());
+          List<RecordComponent> visibleComponents =
+              RequestCreatorContractSupport.visibleRecordComponents(recordType);
+          return contract.fields().stream()
+              .map(fieldName ->
+                  Objects.requireNonNull(
+                      visibleComponents.stream()
+                          .filter(component -> wireFieldName(component).equals(fieldName))
+                          .findFirst()
+                          .orElse(null),
+                      "Effective request contract field has no visible record component"))
+              .filter(component -> component.getType().isPrimitive())
+              .map(component -> {
+                String fieldName = wireFieldName(component);
+                return new RequestPrimitiveField(
+                    recordType,
+                    fieldName,
+                    requiredFields.contains(fieldName),
+                    booleanDefault(component));
+              });
+        })
         .toList();
   }
 

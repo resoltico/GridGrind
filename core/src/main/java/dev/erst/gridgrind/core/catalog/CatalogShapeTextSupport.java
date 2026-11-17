@@ -42,11 +42,10 @@ final class CatalogShapeTextSupport {
 
   private static String nestedGroupText(Catalog catalog, String groupName) {
     return nestedGroupDescriptor(catalog, groupName).types().stream()
-        .flatMap(
-            entry ->
-                Stream.concat(
-                    Stream.of(entry.id(), entry.summary()),
-                    entry.fields().stream().map(FieldEntry::name)))
+        .flatMap(entry ->
+            Stream.concat(
+                Stream.of(entry.id(), entry.summary()),
+                entry.fields().stream().map(FieldEntry::name)))
         .collect(java.util.stream.Collectors.joining(" "));
   }
 
@@ -98,10 +97,9 @@ final class CatalogShapeTextSupport {
 
   static List<String> relatedEntryIdsForFieldShape(Catalog catalog, FieldShape targetShape) {
     return CatalogRefResolutionSupport.topLevelEntryRefs(catalog).stream()
-        .filter(
-            entryRef ->
-                entryReferencesShape(
-                    catalog, entryRef.entry().fields(), targetShape, new LinkedHashSet<>()))
+        .filter(entryRef ->
+            entryReferencesShape(
+                catalog, entryRef.entry().fields(), targetShape, new LinkedHashSet<>()))
         .map(CatalogRefResolutionSupport.CatalogEntryRef::qualifiedId)
         .toList();
   }
@@ -148,18 +146,16 @@ final class CatalogShapeTextSupport {
         }
         boolean matched =
             nestedGroupEntries(catalog, nestedTypeGroupRef.group()).stream()
-                .anyMatch(
-                    entry ->
-                        entryReferencesShape(catalog, entry.fields(), targetShape, recursionGuard));
+                .anyMatch(entry ->
+                    entryReferencesShape(catalog, entry.fields(), targetShape, recursionGuard));
         recursionGuard.remove(guardKey);
         yield matched;
       }
       case FieldShape.NestedTypeGroupUnionRef unionRef ->
           unionRef.groups().stream()
               .flatMap(group -> nestedGroupEntries(catalog, group).stream())
-              .anyMatch(
-                  entry ->
-                      entryReferencesShape(catalog, entry.fields(), targetShape, recursionGuard));
+              .anyMatch(entry ->
+                  entryReferencesShape(catalog, entry.fields(), targetShape, recursionGuard));
       case FieldShape.PlainTypeGroupRef plainTypeGroupRef -> {
         String guardKey = "plain:" + plainTypeGroupRef.group();
         if (!recursionGuard.add(guardKey)) {

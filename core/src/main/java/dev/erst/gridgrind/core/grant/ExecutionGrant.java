@@ -12,7 +12,15 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Explicit authority for one execution; workbook plans cannot create this grant. */
+@dev.erst.gridgrind.core.limits.EnforcesLimit({
+  dev.erst.gridgrind.core.limits.Limit.ID_INPUT_SNAPSHOT_BYTES
+})
 public record ExecutionGrant(
+    @dev.erst.gridgrind.core.metadata.FieldRule(
+            kind = dev.erst.gridgrind.core.metadata.FieldRule.Kind.NUMBER_RANGE,
+            minimum = 0,
+            maximum = Long.MAX_VALUE)
+        long maxInputSnapshotBytes,
     List<ReadAuthority> readableResources,
     List<String> operationIds,
     WorkbookTargetAuthority targetAuthority,
@@ -20,12 +28,25 @@ public record ExecutionGrant(
     List<SecretReference> allowedSecretReferences,
     AcceptancePolicy acceptancePolicy) {
   public ExecutionGrant {
+    if (maxInputSnapshotBytes < 0) {
+      throw invalid("maxInputSnapshotBytes", "maxInputSnapshotBytes must be nonnegative");
+    }
     readableResources = copyReadableResources(readableResources);
     operationIds = copyOperationIds(operationIds);
     Objects.requireNonNull(targetAuthority, "targetAuthority must not be null");
     Objects.requireNonNull(publicationAuthority, "publicationAuthority must not be null");
     allowedSecretReferences = copySecretReferences(allowedSecretReferences);
     Objects.requireNonNull(acceptancePolicy, "acceptancePolicy must not be null");
+  }
+
+  /** Checks cumulative external snapshot consumption without overflowing a signed long. */
+  public void requireInputSnapshotBytes(long consumed, long additional) {
+    if (consumed < 0 || additional < 0) {
+      throw new IllegalArgumentException("Input snapshot byte counts must be nonnegative");
+    }
+    if (consumed > maxInputSnapshotBytes || additional > maxInputSnapshotBytes - consumed) {
+      throw new IllegalArgumentException("Host input snapshot byte budget exceeded");
+    }
   }
 
   private static List<ReadAuthority> copyReadableResources(List<ReadAuthority> readableResources) {
@@ -45,7 +66,7 @@ public record ExecutionGrant(
       String normalized =
           Objects.requireNonNull(operationId, "operationIds must not contain null values");
       if (!normalized.matches("[A-Z][A-Z0-9_]*")) {
-        throw new IllegalArgumentException("operationIds must contain SCREAMING_SNAKE_CASE values");
+        throw invalid("operationIds", "operationIds must contain SCREAMING_SNAKE_CASE values");
       }
       unique.add(normalized);
     }
@@ -61,12 +82,20 @@ public record ExecutionGrant(
   /** Returns explicit authority permitting no operations, reads, secrets or publication. */
   public static ExecutionGrant denied() {
     return new ExecutionGrant(
+        0,
         List.of(),
         List.of(),
         new WorkbookTargetAuthority.WorkbookWide(),
         new PublicationAuthority.None(),
         List.of(),
         AcceptancePolicy.minimum());
+  }
+
+  private static dev.erst.gridgrind.core.problem.ValueInvariantException invalid(
+      String field, String message) {
+    return new dev.erst.gridgrind.core.problem.ValueInvariantException(
+        new dev.erst.gridgrind.core.problem.MessageInvariant(
+            message, java.util.Optional.of(field)));
   }
 
   /** One resource the trusted host permits the execution to read. */
@@ -107,7 +136,7 @@ public record ExecutionGrant(
           String normalized =
               Objects.requireNonNull(sheetName, "sheetNames must not contain null values");
           if (normalized.isBlank()) {
-            throw new IllegalArgumentException("sheetNames must not contain blank values");
+            throw invalid("sheetNames", "sheetNames must not contain blank values");
           }
           copied.add(normalized);
         }

@@ -501,7 +501,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             () ->
                 SourceBackedPlanResolver.resolve(
                     missingFilePlan,
-                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, missingFilePlan)));
     assertEquals("cell text", notFound.inputKind());
 
     WorkbookPlan standardInputPlan =
@@ -519,7 +520,11 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             () ->
                 SourceBackedPlanResolver.resolve(
                     standardInputPlan,
-                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                    new ExecutionInputBindings(
+                        workingDirectory,
+                        workingDirectory.resolve("scratch"),
+                        ExecutionGrantTestSupport.noPublicationWithStandardInput(
+                            List.of("SET_CELL")))));
     assertEquals("cell text", unavailable.inputKind());
   }
 

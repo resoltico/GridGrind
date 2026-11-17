@@ -42,7 +42,10 @@ public final class XssfSheet {
 
   XssfSheet(Sheet sheet, StyleAdapter styleRegistry, FormulaRuntime formulaRuntime) {
     this.sheet = sheet;
-    DataFormatter dataFormatter = new DataFormatter();
+    DataFormatter dataFormatter =
+        new DataFormatter(
+            java.util.Locale.forLanguageTag(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD.localeTag()));
     DataValidationAdapter dataValidationAdapter = new DataValidationAdapter();
     ConditionalFormattingAdapter conditionalFormattingAdapter = new ConditionalFormattingAdapter();
     AutofilterAdapter autofilterAdapter = new AutofilterAdapter();

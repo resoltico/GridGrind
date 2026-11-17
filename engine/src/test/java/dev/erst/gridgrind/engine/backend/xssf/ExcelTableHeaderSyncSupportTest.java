@@ -4,11 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.tables.TableAdapter;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +32,7 @@ class ExcelTableHeaderSyncSupportTest {
       var table = poiSheet.getTables().getFirst();
       poiSheet.getRow(0).getCell(0).setCellValue("Desk");
 
-      TableAdapter.syncAffectedHeaders(poiSheet, new CellBounds(0, 0, 0, 0));
+      TableAdapter.syncAffectedHeaders(poiSheet, new RangeRef(0, 0, 0, 0));
 
       assertEquals("Desk", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
     }
@@ -58,7 +56,7 @@ class ExcelTableHeaderSyncSupportTest {
       var table = poiSheet.getTables().getFirst();
       poiSheet.getRow(1).getCell(0).setCellValue("Grace");
 
-      TableAdapter.syncAffectedHeaders(poiSheet, new CellBounds(1, 1, 0, 0));
+      TableAdapter.syncAffectedHeaders(poiSheet, new RangeRef(1, 1, 0, 0));
 
       assertEquals("Owner", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
     }
@@ -83,14 +81,14 @@ class ExcelTableHeaderSyncSupportTest {
       poiSheet.getRow(0).getCell(0).setCellValue("Desk");
       table.getCTTable().setHeaderRowCount(0);
 
-      TableAdapter.syncAffectedHeaders(poiSheet, new CellBounds(0, 0, 0, 0));
+      TableAdapter.syncAffectedHeaders(poiSheet, new RangeRef(0, 0, 0, 0));
 
       assertEquals("Owner", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
 
       table.getCTTable().setHeaderRowCount(1);
       table.getCTTable().setRef("");
 
-      TableAdapter.syncAffectedHeaders(poiSheet, new CellBounds(0, 0, 0, 0));
+      TableAdapter.syncAffectedHeaders(poiSheet, new RangeRef(0, 0, 0, 0));
 
       assertEquals("Owner", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
     }
@@ -128,11 +126,35 @@ class ExcelTableHeaderSyncSupportTest {
   }
 
   private static void populateTableCells(XssfSheet sheet, String firstHeader, String secondHeader) {
-    sheet.cells().setCell("A1", new CellValue.Text(firstHeader));
-    sheet.cells().setCell("B1", new CellValue.Text(secondHeader));
-    sheet.cells().setCell("A2", new CellValue.Text("Ada"));
-    sheet.cells().setCell("B2", new CellValue.Text("Queue"));
-    sheet.cells().setCell("A3", new CellValue.Text("Lin"));
-    sheet.cells().setCell("B3", new CellValue.Text("Pack"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText(firstHeader));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText(secondHeader));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pack"));
   }
 }

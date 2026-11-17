@@ -65,29 +65,26 @@ final class MutationActionNumericValidation {
 
   static void requireColumnWidthCharacters(double widthCharacters) {
     ExcelSheetLayoutLimits.columnWidthViolation(widthCharacters)
-        .ifPresent(
-            violation -> {
-              throw MutationActionNameValidation.invalidField(
-                  FieldValidationProblemMappers.columnWidth(
-                      "widthCharacters", widthCharacters, violation));
-            });
+        .ifPresent(violation -> {
+          throw MutationActionNameValidation.invalidField(
+              FieldValidationProblemMappers.columnWidth(
+                  "widthCharacters", widthCharacters, violation));
+        });
   }
 
   static void requireRowHeightPoints(double heightPoints) {
     ExcelSheetLayoutLimits.rowHeightViolation(heightPoints)
-        .ifPresent(
-            violation -> {
-              throw MutationActionNameValidation.invalidField(
-                  FieldValidationProblemMappers.rowHeight("heightPoints", heightPoints, violation));
-            });
+        .ifPresent(violation -> {
+          throw MutationActionNameValidation.invalidField(
+              FieldValidationProblemMappers.rowHeight("heightPoints", heightPoints, violation));
+        });
   }
 
   static void requireZoomPercent(int zoomPercent) {
     ExcelSheetLayoutLimits.zoomViolation(zoomPercent)
-        .ifPresent(
-            violation -> {
-              throw MutationActionNameValidation.invalidField(
-                  FieldValidationProblemMappers.zoomPercent("zoomPercent", zoomPercent, violation));
-            });
+        .ifPresent(violation -> {
+          throw MutationActionNameValidation.invalidField(
+              FieldValidationProblemMappers.zoomPercent("zoomPercent", zoomPercent, violation));
+        });
   }
 }

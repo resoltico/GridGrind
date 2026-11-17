@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.engine.comments.CommentAdapter;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
 import dev.erst.gridgrind.engine.drawing.SignatureAdapter;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -31,11 +31,6 @@ import org.junit.jupiter.api.Test;
 
 /** Branch coverage for VML-backed signature-line inspection and mutation. */
 class ExcelSignatureLineControllerTest {
-  private static final byte[] PNG_PIXEL_BYTES =
-      Base64.getDecoder()
-          .decode(
-              "iVBORw0KGgoAAAANSUhEUgAAAZAAAACWCAIAAADwkd5lAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAABYlAAAWJQFJUiTwAAAB60lEQVR42u3TMQ0AAAgDIN8/9K3hHFQg3DQakJzZAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwDkGxAAB27JxWQAAAABJRU5ErkJggg==");
-
   @Test
   void controllerHandlesEmptySheetsLifecycleAndPreviewReferenceTracking() throws Exception {
     SignatureAdapter controller = new SignatureAdapter();
@@ -71,7 +66,7 @@ class ExcelSignatureLineControllerTest {
 
       assertTrue(controller.updateAnchorIfPresent(sheet, "OpsSignature", movedAnchor));
       assertEquals(
-          DrawingGeometryFixtures.report(movedAnchor),
+          DrawingGeometryFixtures.signatureReport(movedAnchor),
           controller.signatureLines(sheet).getFirst().anchor());
 
       assertTrue(controller.deleteIfPresent(sheet, "OpsSignature"));
@@ -93,7 +88,12 @@ class ExcelSignatureLineControllerTest {
       shape.removeClientData(0);
 
       IllegalStateException readFailure =
-          assertThrows(IllegalStateException.class, () -> controller.signatureLines(sheet));
+          assertInstanceOf(
+              IllegalStateException.class,
+              assertThrows(
+                      UnexpectedNativeContentException.class,
+                      () -> controller.signatureLines(sheet))
+                  .getCause());
       assertEquals(
           "Signature line 'OpsSignature' is missing VML clientData", readFailure.getMessage());
 
@@ -114,7 +114,12 @@ class ExcelSignatureLineControllerTest {
       clientData.removeAnchor(0);
 
       IllegalStateException readFailure =
-          assertThrows(IllegalStateException.class, () -> controller.signatureLines(sheet));
+          assertInstanceOf(
+              IllegalStateException.class,
+              assertThrows(
+                      UnexpectedNativeContentException.class,
+                      () -> controller.signatureLines(sheet))
+                  .getCause());
       assertEquals(
           "Signature line 'OpsSignature' is missing its VML anchor", readFailure.getMessage());
 
@@ -140,7 +145,12 @@ class ExcelSignatureLineControllerTest {
           signatureShapes(sheet.getVMLDrawing(false)).getFirst().getClientDataArray(0);
       clientData.setAnchorArray(0, "1, 2, 3");
       IllegalStateException malformedTokens =
-          assertThrows(IllegalStateException.class, () -> controller.signatureLines(sheet));
+          assertInstanceOf(
+              IllegalStateException.class,
+              assertThrows(
+                      UnexpectedNativeContentException.class,
+                      () -> controller.signatureLines(sheet))
+                  .getCause());
       assertTrue(malformedTokens.getMessage().contains("invalid VML anchor"));
     }
 
@@ -151,7 +161,12 @@ class ExcelSignatureLineControllerTest {
           signatureShapes(sheet.getVMLDrawing(false)).getFirst().getClientDataArray(0);
       clientData.setAnchorArray(0, "a, b, c, d, e, f, g, h");
       IllegalStateException malformedNumbers =
-          assertThrows(IllegalStateException.class, () -> controller.signatureLines(sheet));
+          assertInstanceOf(
+              IllegalStateException.class,
+              assertThrows(
+                      UnexpectedNativeContentException.class,
+                      () -> controller.signatureLines(sheet))
+                  .getCause());
       assertTrue(malformedNumbers.getMessage().contains("invalid VML anchor"));
     }
 
@@ -204,7 +219,9 @@ class ExcelSignatureLineControllerTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
       CommentAdapter annotationSupport = new CommentAdapter(sheet);
-      annotationSupport.setComment("C3", new ResolvedComment("Note", "GridGrind", false));
+      annotationSupport.setComment(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+          new ResolvedComment("Note", "GridGrind", false));
 
       controller.setSignatureLine(
           sheet,
@@ -236,7 +253,8 @@ class ExcelSignatureLineControllerTest {
     }
   }
 
-  private static ResolvedSignatureLine definition(String name, DrawingAnchorSpec.TwoCell anchor) {
+  private static ResolvedSignatureLine definition(String name, DrawingAnchorSpec.TwoCell anchor)
+      throws java.io.IOException {
     return new ResolvedSignatureLine(
         name,
         anchor,
@@ -248,7 +266,7 @@ class ExcelSignatureLineControllerTest {
         Optional.empty(),
         Optional.of("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
-        Optional.of(new BinaryContent(PNG_PIXEL_BYTES)));
+        Optional.of(new BinaryContent(dev.erst.gridgrind.engine.media.MediaFixtures.validPng())));
   }
 
   private static List<CTShape> signatureShapes(XSSFVMLDrawing vmlDrawing) {

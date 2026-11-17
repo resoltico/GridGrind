@@ -18,7 +18,9 @@ public record ProtocolVersion(
 
   public ProtocolVersion {
     if (value != NUMBER) {
-      throw new IllegalArgumentException("protocolVersion must equal " + NUMBER);
+      throw new dev.erst.gridgrind.core.problem.ValueInvariantException(
+          new dev.erst.gridgrind.core.problem.MessageInvariant(
+              "protocolVersion must equal " + NUMBER, java.util.Optional.of("protocolVersion")));
     }
   }
 

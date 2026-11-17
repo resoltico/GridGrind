@@ -9,7 +9,6 @@ import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
@@ -37,7 +36,7 @@ class ExcelDocumentAnalyzerTest {
           .sheet("Budget")
           .metadata()
           .setDataValidation(
-              "A1:A3",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
               new ResolvedDataValidation(
                   new DataValidationRuleSpec.FormulaList(
                       ComparisonFormulas.normalizeFormula("#REF!", "formula")),
@@ -49,7 +48,7 @@ class ExcelDocumentAnalyzerTest {
           .sheet("Archive")
           .metadata()
           .setDataValidation(
-              "A1:A3",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
               new ResolvedDataValidation(
                   new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
                   false,
@@ -83,12 +82,36 @@ class ExcelDocumentAnalyzerTest {
   void autofilterAndTableHealthHonorTheirSelections() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", new CellValue.Text("Owner"));
-      budget.cells().setCell("B1", new CellValue.Text("Task"));
-      budget.cells().setCell("A2", new CellValue.Text("Ada"));
-      budget.cells().setCell("B2", new CellValue.Text("Queue"));
-      budget.cells().setCell("A3", new CellValue.Text("Lin"));
-      budget.cells().setCell("B3", new CellValue.Text("Pack"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Task"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pack"));
       new TableAdapter()
           .setTable(
               workbook,
@@ -101,10 +124,20 @@ class ExcelDocumentAnalyzerTest {
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("A1:B2");
 
       XssfSheet archive = workbook.getOrCreateSheet("Archive");
-      archive.cells().setCell("D1", new CellValue.Text(""));
-      archive.cells().setCell("E1", new CellValue.Text(""));
-      archive.cells().setCell("D2", new CellValue.Text("Old"));
-      archive.cells().setCell("E2", new CellValue.Text("Done"));
+      // External workbook facts can contain empty strings that authored write operands reject.
+      var externalHeader = archive.xssfSheet().createRow(0);
+      externalHeader.createCell(3).setCellValue("");
+      externalHeader.createCell(4).setCellValue("");
+      archive
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Old"));
+      archive
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
       archive.xssfSheet().getCTWorksheet().addNewAutoFilter().setRef("D1:E2");
 
       DocumentAnalyzer analyzer = new DocumentAnalyzer();

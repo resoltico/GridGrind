@@ -10,7 +10,6 @@ import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.NumberNotRepresentableException;
 import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidSigningConfigurationException;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidWorkbookPasswordException;
@@ -37,6 +36,10 @@ final class GridGrindProblemCodeClassifier {
   static GridGrindProblemCode codeFor(Throwable exception) {
     Objects.requireNonNull(exception, "exception must not be null");
     return switch (exception) {
+      case dev.erst.gridgrind.core.problem.InvalidAuthorityException _ ->
+          GridGrindProblemCode.INVALID_AUTHORITY;
+      case dev.erst.gridgrind.engine.backend.xssf.WorkbookContentRefusalException refusal ->
+          refusal.issue().problemCode();
       case InvalidEncodingException _ -> GridGrindProblemCode.INVALID_ENCODING;
       case InvalidJsonException _ -> GridGrindProblemCode.INVALID_JSON;
       case NumberNotRepresentableException _ -> GridGrindProblemCode.NUMBER_NOT_REPRESENTABLE;
@@ -58,7 +61,6 @@ final class GridGrindProblemCodeClassifier {
       case NamedRangeNotFoundException _ -> GridGrindProblemCode.NAMED_RANGE_NOT_FOUND;
       case CellNotFoundException _ -> GridGrindProblemCode.CELL_NOT_FOUND;
       case WorkbookNotOpenableException _ -> GridGrindProblemCode.WORKBOOK_NOT_OPENABLE;
-      case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
       case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
       case FormulaRequestException formula -> formula.problemCode();
       case InvalidFormulaInputException _ -> GridGrindProblemCode.INVALID_FORMULA;

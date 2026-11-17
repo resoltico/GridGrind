@@ -1,0 +1,33 @@
+--- org/apache/poi/ss/formula/functions/EOMonth.java
++++ org/apache/poi/ss/formula/functions/EOMonth.java
+@@ -57,15 +57,15 @@
+             int months = OperandResolver.coerceDoubleToInt(
+                     NumericFunction.singleOperandEvaluate(args[1], ec.getRowIndex(), ec.getColumnIndex()));
+ 
+-            if (startDateAsNumber < 0 || startDateAsNumber >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++            if (startDateAsNumber < 0 || startDateAsNumber >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+                 return ErrorEval.NUM_ERROR;
+             }
+             // Excel treats date 0 as 1900-01-00; EOMONTH results in 1900-01-31
+-            if (startDateAsNumber < 1.0) {
++            if (!org.apache.poi.ss.usermodel.DateSystemContext.is1904() && startDateAsNumber < 1.0) {
+                 startDateAsNumber = 1.0;
+             }
+ 
+-            Date startDate = DateUtil.getJavaDate(startDateAsNumber, false);
++            Date startDate = DateUtil.getJavaDate(startDateAsNumber, org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+ 
+             Calendar cal = LocaleUtil.getLocaleCalendar();
+             cal.setTime(startDate);
+@@ -79,9 +79,9 @@
+             cal.set(Calendar.DAY_OF_MONTH, 1);
+             cal.add(Calendar.DAY_OF_MONTH, -1);
+ 
+-            double result = DateUtil.getExcelDate(cal.getTime());
++            double result = DateUtil.getExcelDate(cal.getTime(), org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+ 
+-            if (result >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++            if (result >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+ 
+                 return ErrorEval.NUM_ERROR;
+ 

@@ -25,7 +25,7 @@ public sealed interface AcceptancePolicy
     public RequireAll {
       Objects.requireNonNull(requirements, "requirements must not be null");
       if (requirements.isEmpty()) {
-        throw new IllegalArgumentException("requirements must not be empty; use minimum() instead");
+        throw invalid("requirements", "requirements must not be empty; use minimum() instead");
       }
       requirements = List.copyOf(requirements);
     }
@@ -46,14 +46,14 @@ public sealed interface AcceptancePolicy
       public TerminalAssertions {
         Objects.requireNonNull(assertions, "assertions must not be null");
         if (assertions.isEmpty()) {
-          throw new IllegalArgumentException("assertions must not be empty; use minimum() instead");
+          throw invalid("assertions", "assertions must not be empty; use minimum() instead");
         }
         Set<dev.erst.gridgrind.core.vocabulary.StepId> stepIds = new LinkedHashSet<>();
         for (AssertionStep assertion : assertions) {
           AssertionStep required =
               Objects.requireNonNull(assertion, "assertions must not contain null values");
           if (!stepIds.add(required.stepId())) {
-            throw new IllegalArgumentException("assertions must not reuse step ids");
+            throw invalid("assertions", "assertions must not reuse step ids");
           }
         }
         assertions = List.copyOf(assertions);
@@ -70,14 +70,14 @@ public sealed interface AcceptancePolicy
       public PreserveInspectionFacts {
         Objects.requireNonNull(inspections, "inspections must not be null");
         if (inspections.isEmpty()) {
-          throw new IllegalArgumentException("inspections must not be empty");
+          throw invalid("inspections", "inspections must not be empty");
         }
         Set<dev.erst.gridgrind.core.vocabulary.StepId> stepIds = new LinkedHashSet<>();
         for (InspectionStep inspection : inspections) {
           InspectionStep required =
               Objects.requireNonNull(inspection, "inspections must not contain null values");
           if (!stepIds.add(required.stepId())) {
-            throw new IllegalArgumentException("inspections must not reuse step ids");
+            throw invalid("inspections", "inspections must not reuse step ids");
           }
         }
         inspections = List.copyOf(inspections);
@@ -92,18 +92,17 @@ public sealed interface AcceptancePolicy
       public PreserveOpaqueOoxmlParts {
         Objects.requireNonNull(partNames, "partNames must not be null");
         if (partNames.isEmpty()) {
-          throw new IllegalArgumentException("partNames must not be empty");
+          throw invalid("partNames", "partNames must not be empty");
         }
         Set<String> distinct = new LinkedHashSet<>();
         for (String partName : partNames) {
           String required =
               Objects.requireNonNull(partName, "partNames must not contain null values");
           if (!isOoxmlPartName(required)) {
-            throw new IllegalArgumentException(
-                "partNames must contain normalized OOXML part names");
+            throw invalid("partNames", "partNames must contain normalized OOXML part names");
           }
           if (!distinct.add(required)) {
-            throw new IllegalArgumentException("partNames must not contain duplicates");
+            throw invalid("partNames", "partNames must not contain duplicates");
           }
         }
         partNames = List.copyOf(partNames);
@@ -133,5 +132,12 @@ public sealed interface AcceptancePolicy
   /** Returns the product minimum acceptance policy. */
   static AcceptancePolicy minimum() {
     return new MinimumOnly();
+  }
+
+  private static dev.erst.gridgrind.core.problem.ValueInvariantException invalid(
+      String field, String message) {
+    return new dev.erst.gridgrind.core.problem.ValueInvariantException(
+        new dev.erst.gridgrind.core.problem.MessageInvariant(
+            message, java.util.Optional.of(field)));
   }
 }

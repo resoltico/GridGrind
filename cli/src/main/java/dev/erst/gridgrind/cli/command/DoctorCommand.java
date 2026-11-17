@@ -82,6 +82,10 @@ final class DoctorCommand {
         | InvalidRequestShapeException
         | InvalidRequestException exception) {
       return writeFailure(command, stdout, stderr, exception, requestRedactor, prettyJson);
+    } catch (dev.erst.gridgrind.cli.io.CliAuthorityIOException authorityIo) {
+      throw authorityIo;
+    } catch (dev.erst.gridgrind.cli.io.CliAuthorityDocumentException authorityDocument) {
+      throw authorityDocument;
     } catch (IOException exception) {
       return CliRequestReadFailureSupport.write(
           responseWriter,
@@ -93,6 +97,8 @@ final class DoctorCommand {
           exception,
           requestRedactor,
           prettyJson);
+    } catch (dev.erst.gridgrind.cli.io.CliAuthorityUnexpectedException failure) {
+      throw failure;
     } catch (RuntimeException exception) {
       return writeFailure(command, stdout, stderr, exception, requestRedactor, prettyJson);
     }

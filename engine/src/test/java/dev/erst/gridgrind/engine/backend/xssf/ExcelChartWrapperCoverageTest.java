@@ -15,20 +15,17 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.engine.charts.ChartAdapter;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
-import dev.erst.gridgrind.engine.formulas.FormulaRuntime;
 import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Optional;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
-import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
 import org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTGraphicalObjectFrame;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -51,26 +48,12 @@ class ExcelChartWrapperCoverageTest {
       ResolvedChart definition = lineChartDefinition("OpsChart");
 
       ChartAdapter.validateChart(sheet, definition);
-      ChartReport.Title preparedTitle =
-          ChartAdapter.prepareSeriesTitle(sheet, new ChartTitleSpec.Formula("B1"));
-      ChartReport.Title.Formula resolvedSeriesTitle =
-          assertInstanceOf(
-              ChartReport.Title.Formula.class,
-              ChartAdapter.snapshotSeriesTitle(
-                  sheet,
-                  formulaSeriesTitle("Charts!$B$1"),
-                  FormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator())));
-
-      assertInstanceOf(ChartReport.Title.Formula.class, preparedTitle);
-      assertEquals("Plan", resolvedSeriesTitle.cachedText());
-
       ChartAdapter.createChart(sheet, definition);
       XSSFDrawing drawing = sheet.getDrawingPatriarch();
       XSSFChart chart = drawing.getCharts().getFirst();
       XSSFGraphicFrame graphicFrame = chart.getGraphicFrame();
       assertEquals(chart, ChartAdapter.chartForGraphicFrame(drawing, graphicFrame));
       assertEquals(1, ChartAdapter.snapshotPlots(chart, chart.getChartSeries()).size());
-      assertEquals(1, ChartAdapter.snapshotPlots(chart, chart.getChartSeries(), null).size());
 
       assertEquals("OpsChart", ChartAdapter.snapshotChart(chart, graphicFrame).name());
       assertEquals("OpsChart", ChartAdapter.snapshotChartDrawingObject(chart, graphicFrame).name());
@@ -90,11 +73,6 @@ class ExcelChartWrapperCoverageTest {
       SheetDrawings support = new SheetDrawings(controllerSheet, controller);
       assertEquals(1, controller.charts(controllerSheet).size());
       assertEquals(1, support.charts().size());
-
-      assertEquals(
-          List.of("cached-only"),
-          ChartAdapter.resolvedOrCachedReferenceValues(
-              controllerSheet, " ", new ReferenceDataSource(" ", List.of("cached-only")), null));
 
       XSSFSheet facadeSheet = workbook.createSheet("Facade");
       ExcelChartTestSupport.seedChartData(facadeSheet);
@@ -385,12 +363,6 @@ class ExcelChartWrapperCoverageTest {
                 Optional.empty())));
   }
 
-  private static CTSerTx formulaSeriesTitle(String formula) {
-    CTSerTx title = CTSerTx.Factory.newInstance();
-    title.addNewStrRef().setF(formula);
-    return title;
-  }
-
   private static Node chartRelationNode(XSSFGraphicFrame graphicFrame) {
     NodeList children =
         graphicFrame
@@ -459,61 +431,5 @@ class ExcelChartWrapperCoverageTest {
       return '\0';
     }
     throw new IllegalArgumentException("Unsupported primitive type: " + returnType);
-  }
-
-  /** Minimal reference-backed data source stub for chart helper fallback coverage. */
-  private static final class ReferenceDataSource implements XDDFDataSource<String> {
-    private final String formula;
-    private final List<String> values;
-
-    private ReferenceDataSource(String formula, List<String> values) {
-      this.formula = formula;
-      this.values = List.copyOf(values);
-    }
-
-    @Override
-    public int getPointCount() {
-      return values.size();
-    }
-
-    @Override
-    public String getPointAt(int index) {
-      return values.get(index);
-    }
-
-    @Override
-    public boolean isLiteral() {
-      return false;
-    }
-
-    @Override
-    public boolean isCellRange() {
-      return true;
-    }
-
-    @Override
-    public boolean isReference() {
-      return true;
-    }
-
-    @Override
-    public boolean isNumeric() {
-      return false;
-    }
-
-    @Override
-    public int getColIndex() {
-      return 0;
-    }
-
-    @Override
-    public String getDataRangeReference() {
-      return formula;
-    }
-
-    @Override
-    public String getFormatCode() {
-      return null;
-    }
   }
 }

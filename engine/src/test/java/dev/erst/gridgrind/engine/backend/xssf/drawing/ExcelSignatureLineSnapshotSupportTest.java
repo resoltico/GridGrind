@@ -20,31 +20,39 @@ class ExcelSignatureLineSnapshotSupportTest {
   @Test
   void signatureLineSetupReturnsEmptyOnlyWhenAllMetadataIsAbsent() {
     assertTrue(
-        SignatureAdapter.signatureLineSetup(CTSignatureLine.Factory.newInstance(), null).isEmpty());
+        SignatureAdapter.signatureLineSetup(
+                CTSignatureLine.Factory.newInstance(), null, Optional.empty())
+            .isEmpty());
 
     CTSignatureLine allowComments = CTSignatureLine.Factory.newInstance();
     allowComments.setAllowcomments(STTrueFalse.TRUE);
     assertEquals(
         Optional.of(true),
-        SignatureAdapter.signatureLineSetup(allowComments, null).orElseThrow().allowComments());
+        SignatureAdapter.signatureLineSetup(allowComments, null, Optional.empty())
+            .orElseThrow()
+            .allowComments());
 
     CTSignatureLine setupId = CTSignatureLine.Factory.newInstance();
     setupId.setId("Setup-42");
     assertEquals(
         Optional.of("Setup-42"),
-        SignatureAdapter.signatureLineSetup(setupId, null).orElseThrow().setupId());
+        SignatureAdapter.signatureLineSetup(setupId, null, Optional.empty())
+            .orElseThrow()
+            .setupId());
 
     CTSignatureLine suggestedSigner = CTSignatureLine.Factory.newInstance();
     suggestedSigner.setSuggestedsigner("Ada Lovelace");
     assertEquals(
         Optional.of("Ada Lovelace"),
-        SignatureAdapter.signatureLineSetup(suggestedSigner, null).orElseThrow().suggestedSigner());
+        SignatureAdapter.signatureLineSetup(suggestedSigner, null, Optional.empty())
+            .orElseThrow()
+            .suggestedSigner());
 
     CTSignatureLine suggestedSigner2 = CTSignatureLine.Factory.newInstance();
     suggestedSigner2.setSuggestedsigner2("Finance");
     assertEquals(
         Optional.of("Finance"),
-        SignatureAdapter.signatureLineSetup(suggestedSigner2, null)
+        SignatureAdapter.signatureLineSetup(suggestedSigner2, null, Optional.empty())
             .orElseThrow()
             .suggestedSigner2());
 
@@ -52,14 +60,14 @@ class ExcelSignatureLineSnapshotSupportTest {
     suggestedSignerEmail.setSuggestedsigneremail("ada@example.com");
     assertEquals(
         Optional.of("ada@example.com"),
-        SignatureAdapter.signatureLineSetup(suggestedSignerEmail, null)
+        SignatureAdapter.signatureLineSetup(suggestedSignerEmail, null, Optional.empty())
             .orElseThrow()
             .suggestedSignerEmail());
 
     assertEquals(
         Optional.of("Review before signing."),
         SignatureAdapter.signatureLineSetup(
-                CTSignatureLine.Factory.newInstance(), "Review before signing.")
+                CTSignatureLine.Factory.newInstance(), "Review before signing.", Optional.empty())
             .orElseThrow()
             .signingInstructions());
   }

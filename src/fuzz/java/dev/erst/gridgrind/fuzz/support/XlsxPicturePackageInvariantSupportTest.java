@@ -8,11 +8,13 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -71,7 +73,8 @@ class XlsxPicturePackageInvariantSupportTest {
     Path workbookPath =
         Files.createTempFile(temporary, "gridgrind-picture-package-embedded-copy-", ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")
@@ -104,7 +107,8 @@ class XlsxPicturePackageInvariantSupportTest {
     Path workbookPath =
         Files.createTempFile(temporary, "gridgrind-picture-package-sheet-preview-", ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")
@@ -146,7 +150,8 @@ class XlsxPicturePackageInvariantSupportTest {
   private Path workbookWithPicture(String prefix) throws IOException {
     Path workbookPath = Files.createTempFile(temporary, prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")

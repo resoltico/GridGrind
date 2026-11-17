@@ -53,7 +53,6 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSp
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.source.BinaryContent;
@@ -212,11 +211,8 @@ class ExcelSheetCopyControllerTest {
 
     try (XssfWorkbook workbook =
         XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      assertDoesNotThrow(
-          () ->
-              workbook
-                  .sheets()
-                  .copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd()));
+      assertDoesNotThrow(() ->
+          workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd()));
       assertEquals(
           "Review", workbook.sheet("Replica").comments().comments().getFirst().comment().text());
     }
@@ -336,11 +332,11 @@ class ExcelSheetCopyControllerTest {
       ChartReport.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
-          "Replica!$A$2:$A$4",
+          Optional.of("Replica!$A$2:$A$4"),
           assertInstanceOf(ChartReport.DataSource.StringReference.class, copiedSeries.categories())
               .formula());
       assertEquals(
-          "Replica!$B$2:$B$4",
+          Optional.of("Replica!$B$2:$B$4"),
           assertInstanceOf(ChartReport.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
@@ -363,7 +359,7 @@ class ExcelSheetCopyControllerTest {
       ChartReport.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
-          "Replica!$A$2:$A$4",
+          Optional.of("Replica!$A$2:$A$4"),
           assertInstanceOf(ChartReport.DataSource.StringReference.class, copiedSeries.categories())
               .formula());
     }
@@ -451,22 +447,19 @@ class ExcelSheetCopyControllerTest {
                           ExcelChartTestSupport.ref("ChartCategories"),
                           ExcelChartTestSupport.ref("ChartPlan")))));
 
-      assertDoesNotThrow(
-          () ->
-              workbook
-                  .sheets()
-                  .copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd()));
+      assertDoesNotThrow(() ->
+          workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd()));
       assertEquals(List.of("Source", "Replica"), workbook.sheets().sheetNames());
 
       ChartReport sourceChart = workbook.sheet("Source").drawings().charts().getFirst();
       ChartReport.Series sourceSeries =
           ExcelChartTestSupport.singlePlot(sourceChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
-          "ChartCategories",
+          Optional.of("ChartCategories"),
           assertInstanceOf(ChartReport.DataSource.StringReference.class, sourceSeries.categories())
               .formula());
       assertEquals(
-          "ChartPlan",
+          Optional.of("ChartPlan"),
           assertInstanceOf(ChartReport.DataSource.NumericReference.class, sourceSeries.values())
               .formula());
 
@@ -474,11 +467,11 @@ class ExcelSheetCopyControllerTest {
       ChartReport.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
-          "Replica!$A$2:$A$4",
+          Optional.of("Replica!$A$2:$A$4"),
           assertInstanceOf(ChartReport.DataSource.StringReference.class, copiedSeries.categories())
               .formula());
       assertEquals(
-          "Replica!$B$2:$B$4",
+          Optional.of("Replica!$B$2:$B$4"),
           assertInstanceOf(ChartReport.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
@@ -497,11 +490,11 @@ class ExcelSheetCopyControllerTest {
       ChartReport.Series sourceSeries =
           ExcelChartTestSupport.singlePlot(sourceChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
-          "ChartCategories",
+          Optional.of("ChartCategories"),
           assertInstanceOf(ChartReport.DataSource.StringReference.class, sourceSeries.categories())
               .formula());
       assertEquals(
-          "ChartPlan",
+          Optional.of("ChartPlan"),
           assertInstanceOf(ChartReport.DataSource.NumericReference.class, sourceSeries.values())
               .formula());
 
@@ -509,11 +502,11 @@ class ExcelSheetCopyControllerTest {
       ChartReport.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ChartReport.Bar.class).series().getFirst();
       assertEquals(
-          "Replica!$A$2:$A$4",
+          Optional.of("Replica!$A$2:$A$4"),
           assertInstanceOf(ChartReport.DataSource.StringReference.class, copiedSeries.categories())
               .formula());
       assertEquals(
-          "Replica!$B$2:$B$4",
+          Optional.of("Replica!$B$2:$B$4"),
           assertInstanceOf(ChartReport.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
     }
@@ -537,7 +530,9 @@ class ExcelSheetCopyControllerTest {
       workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
 
       XssfSheet replica = workbook.sheet("Replica");
-      assertEquals("SUM(Replica!B2:B3)", replica.cells().formula("C2"));
+      assertEquals(
+          "SUM(Replica!B2:B3)",
+          replica.cells().formula(new dev.erst.gridgrind.core.vocabulary.CellAddress("C2")));
       assertEquals(
           sourceComments,
           replica
@@ -622,35 +617,31 @@ class ExcelSheetCopyControllerTest {
       assertTrue(rawReplicaValidations.get(1).getFormula2().contains("$B$2:$B$3"));
       List<NamedRangeReport> replicaNames =
           workbook.names().namedRanges().stream()
-              .filter(
-                  namedRange ->
-                      namedRange.scope() instanceof NamedRangeScopeReport.Sheet scope
-                          && "Replica".equals(scope.sheetName().value()))
+              .filter(namedRange ->
+                  namedRange.scope() instanceof NamedRangeScopeReport.Sheet scope
+                      && "Replica".equals(scope.sheetName().value()))
               .toList();
       assertEquals(2, replicaNames.size());
       assertTrue(
           replicaNames.stream()
-              .anyMatch(
-                  namedRange ->
-                      namedRange instanceof NamedRangeReport.RangeReport rangeSnapshot
-                          && "LocalRange".equals(rangeSnapshot.name().value())
-                          && rangeSnapshot.refersToFormula().contains("Replica")
-                          && rangeSnapshot.refersToFormula().contains("$A$2")
-                          && rangeSnapshot.refersToFormula().contains("$A$3")
-                          && "A2:A3"
-                              .equals(
-                                  assertInstanceOf(
-                                          NamedRangeTarget.Range.class, rangeSnapshot.target())
-                                      .range()
-                                      .value())));
+              .anyMatch(namedRange ->
+                  namedRange instanceof NamedRangeReport.RangeReport rangeSnapshot
+                      && "LocalRange".equals(rangeSnapshot.name().value())
+                      && rangeSnapshot.refersToFormula().contains("Replica")
+                      && rangeSnapshot.refersToFormula().contains("$A$2")
+                      && rangeSnapshot.refersToFormula().contains("$A$3")
+                      && "A2:A3"
+                          .equals(
+                              assertInstanceOf(NamedRangeTarget.Range.class, rangeSnapshot.target())
+                                  .range()
+                                  .value())));
       assertTrue(
           replicaNames.stream()
-              .anyMatch(
-                  namedRange ->
-                      namedRange instanceof NamedRangeReport.FormulaReport formulaSnapshot
-                          && "LocalFormula".equals(formulaSnapshot.name().value())
-                          && formulaSnapshot.refersToFormula().contains("Replica")
-                          && formulaSnapshot.refersToFormula().contains("$B$2:$B$3")));
+              .anyMatch(namedRange ->
+                  namedRange instanceof NamedRangeReport.FormulaReport formulaSnapshot
+                      && "LocalFormula".equals(formulaSnapshot.name().value())
+                      && formulaSnapshot.refersToFormula().contains("Replica")
+                      && formulaSnapshot.refersToFormula().contains("$B$2:$B$3")));
       ConditionalFormattingEntryReport copiedFormatting =
           replica.metadata().conditionalFormatting().getFirst();
       assertEquals(
@@ -729,26 +720,86 @@ class ExcelSheetCopyControllerTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet source = workbook.getOrCreateSheet("Source");
-      source.cells().setCell("A1", new CellValue.Text("Owner"));
-      source.cells().setCell("B1", new CellValue.Text("Amount"));
-      source.cells().setCell("C1", new CellValue.Text("Flag"));
-      source.cells().setCell("A2", new CellValue.Text("Ada"));
-      source.cells().setCell("A3", new CellValue.Text("Lin"));
-      source.cells().setCell("B2", new CellValue.NumberValue(2));
-      source.cells().setCell("B3", new CellValue.NumberValue(4));
-      source.cells().setCell("E1", new CellValue.Text("Desk"));
-      source.cells().setCell("F1", new CellValue.Text("Region"));
-      source.cells().setCell("E2", new CellValue.Text("A1"));
-      source.cells().setCell("E3", new CellValue.Text("B1"));
-      source.cells().setCell("E4", new CellValue.Text("Totals"));
-      source.cells().setCell("F2", new CellValue.Text("North"));
-      source.cells().setCell("F3", new CellValue.Text("South"));
-      source.cells().setCell("F4", new CellValue.Text("2"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Flag"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(4));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("A1"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("B1"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"));
+      source
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("2"));
 
       source
           .metadata()
           .setAutofilter(
-              "A1:B3",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"),
               List.of(
                   new AutofilterFilterColumnSpec(
                       0L, true, new AutofilterFilterCriterionSpec.Values(List.of("Ada"), false))),
@@ -945,7 +996,7 @@ class ExcelSheetCopyControllerTest {
           .sheet("Source")
           .metadata()
           .setDataValidation(
-              "A1:A3",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
               new ResolvedDataValidation(
                   new DataValidationRuleSpec.FormulaList(
                       ComparisonFormulas.normalizeFormula("Source!$D$1:$D$3", "formula")),
@@ -1102,34 +1153,130 @@ class ExcelSheetCopyControllerTest {
 
   private static XssfSheet seedAdvancedCopySource(XssfWorkbook workbook) throws IOException {
     XssfSheet source = workbook.getOrCreateSheet("Source");
-    source.cells().setCell("A1", new CellValue.Text("Owner"));
-    source.cells().setCell("B1", new CellValue.Text("Amount"));
-    source.cells().setCell("C1", new CellValue.Text("Formula"));
-    source.cells().setCell("D1", new CellValue.Text("Stage"));
-    source.cells().setCell("E1", new CellValue.Text("Comment"));
-    source.cells().setCell("F1", new CellValue.Text("Flag"));
-    source.cells().setCell("G1", new CellValue.Text("List"));
-    source.cells().setCell("H1", new CellValue.Text("Whole"));
-    source.cells().setCell("I1", new CellValue.Text("Note"));
-    source.cells().setCell("J1", new CellValue.Text("Statuses"));
-    source.cells().setCell("A2", new CellValue.Text("Ada"));
-    source.cells().setCell("A3", new CellValue.Text("Lin"));
-    source.cells().setCell("B2", new CellValue.NumberValue(2));
-    source.cells().setCell("B3", new CellValue.NumberValue(4));
-    source.cells().setCell("C2", new ResolvedFormula("SUM(Source!B2:B3)"));
-    source.cells().setCell("D2", new CellValue.Text("Today"));
-    source.cells().setCell("D3", new CellValue.Text("Today"));
-    source.cells().setCell("F2", new CellValue.Text("High"));
-    source.cells().setCell("F3", new CellValue.Text("Low"));
-    source.cells().setCell("J2", new CellValue.Text("Ready"));
-    source.cells().setCell("J3", new CellValue.Text("Done"));
-    source.cells().setCell("H2", new CellValue.NumberValue(1));
-    source.cells().setCell("H3", new CellValue.NumberValue(2));
-    source.cells().setCell("E2", new CellValue.Text("Quarterly Review"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Formula"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("D1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Stage"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("E1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Comment"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("F1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Flag"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("G1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("List"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("H1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Whole"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("I1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Note"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("J1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Statuses"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(4));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+            new ResolvedFormula("SUM(Source!B2:B3)"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Today"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Today"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("F2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("High"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("F3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Low"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("J2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ready"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("J3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("H2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("H3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Quarterly Review"));
     source
         .comments()
         .setComment(
-            "E2",
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
             new ResolvedComment(
                 "Quarterly Review",
                 "GridGrind",
@@ -1153,11 +1300,13 @@ class ExcelSheetCopyControllerTest {
     source
         .metadata()
         .setAutofilter(
-            "A1:F3", advancedAutofilterCriteria(), Optional.of(advancedAutofilterSortState()));
+            new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:F3"),
+            advancedAutofilterCriteria(),
+            Optional.of(advancedAutofilterSortState()));
     source
         .metadata()
         .setDataValidation(
-            "G2:G3",
+            new dev.erst.gridgrind.core.vocabulary.RangeRef("G2:G3"),
             new ResolvedDataValidation(
                 new DataValidationRuleSpec.FormulaList(
                     ComparisonFormulas.normalizeFormula("Source!$J$2:$J$3", "formula")),
@@ -1168,7 +1317,7 @@ class ExcelSheetCopyControllerTest {
     source
         .metadata()
         .setDataValidation(
-            "H2:H3",
+            new dev.erst.gridgrind.core.vocabulary.RangeRef("H2:H3"),
             new ResolvedDataValidation(
                 new DataValidationRuleSpec.WholeNumber(
                     ExcelComparisonOperator.BETWEEN,
@@ -1213,12 +1362,36 @@ class ExcelSheetCopyControllerTest {
                 new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
                     new dev.erst.gridgrind.core.vocabulary.SheetName("Source")),
                 NamedRangeTarget.formula("SUM(Source!$B$2:$B$3)")));
-    source.cells().setCell("L1", new CellValue.Text("Region"));
-    source.cells().setCell("M1", new CellValue.Text("Desk"));
-    source.cells().setCell("L2", new CellValue.Text("North"));
-    source.cells().setCell("M2", new CellValue.Text("A1"));
-    source.cells().setCell("L3", new CellValue.Text("South"));
-    source.cells().setCell("M3", new CellValue.Text("B1"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("L1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("M1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Desk"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("L2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("M2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("A1"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("L3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"));
+    source
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("M3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("B1"));
     new TableAdapter()
         .setTable(
             workbook,

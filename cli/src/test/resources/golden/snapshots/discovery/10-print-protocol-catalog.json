@@ -196,7 +196,7 @@
       "id" : "LIM-019",
       "messageTemplate" : "`execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}`",
       "problemCodes" : [ "INVALID_REQUEST" ],
-      "rationale" : "`EVENT_READ` restricts operations to workbook and sheet summary inspections. Its direct event-reader path applies to eligible EXISTING-source requests with no publication and the required calculation settings. Existing-source preflight opens the workbook through full XSSF before reader selection, and other admitted EVENT_READ requests use XSSF materialization. The mode therefore does not provide an end-to-end low-memory guarantee. Unsupported queries are rejected by the mode contract.",
+      "rationale" : "`EVENT_READ` restricts operations to workbook and sheet summary inspections. Its direct event-reader path applies to eligible EXISTING-source requests with no publication and the required calculation settings. Admission selects the concrete backend once. Eligible event-only sources are security-checked and validated through event metadata without an unconditional full XSSF graph; their readable source is retained for execution. Host terminal acceptance can still require a full workbook view, and other admitted EVENT_READ requests use XSSF materialization. The mode therefore does not provide an end-to-end low-memory guarantee. Unsupported queries are rejected by the mode contract.",
       "title" : "Event-Read Execution Mode Scope",
       "value" : "`execution.mode.type=EVENT_READ` supports only inspection steps, and only `GET_WORKBOOK_SUMMARY` plus `GET_SHEET_SUMMARY` queries"
     }, {
@@ -205,7 +205,7 @@
       "id" : "LIM-020",
       "messageTemplate" : "`execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...`",
       "problemCodes" : [ "INVALID_REQUEST" ],
-      "rationale" : "`STREAMING_WRITE` uses POI SXSSF for append-oriented NEW-workbook authoring under its reduced operation contract. Assertions and inspections can materialize the workbook through full XSSF, and saved output is reopened through XSSF for staged-artifact verification before publication. Streaming authoring therefore does not guarantee bounded end-to-end heap use. Validation rejects unsupported operations and calculation settings before execution.",
+      "rationale" : "`STREAMING_WRITE` uses POI SXSSF for append-oriented NEW-workbook authoring under its reduced operation contract. Terminal assertions and inspections share one materialized full XSSF view. A requested streaming plan with a mutation after an observation selects the reported FULL_XSSF backend to preserve each authored state and requires full workbook memory. Host terminal checks share one completed-artifact view, and saved output is reopened through XSSF for staged-artifact verification before publication. Streaming authoring therefore does not guarantee bounded end-to-end heap use. Validation rejects unsupported operations and calculation settings before execution.",
       "title" : "Streaming-Write Execution Mode Scope",
       "value" : "`execution.mode.type=STREAMING_WRITE` requires `source.type=NEW`, limits mutation actions to `ENSURE_SHEET` and `APPEND_ROW`, requires `execution.calculation.strategy=DO_NOT_CALCULATE`, allows `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any append/assertion/inspection work, and requires at least one `ENSURE_SHEET` mutation"
     }, {
@@ -286,7 +286,7 @@
       "id" : "LIM-029",
       "messageTemplate" : "",
       "problemCodes" : [ "UNSAFE_PATH_ACCESS" ],
-      "rationale" : "GridGrind binds the root and every existing parent with no-follow directory descriptors, records\ntheir filesystem identities, copies request inputs into private staging, and commits output through\nthe retained parent descriptor. Any symlink is rejected, including a link that happens to point\ninside the root. Immediately before persistence, GridGrind rechecks the recorded topology and\nfails closed if it observes a replacement, unlink, rename, or symlink transition.\n\nThis protects containment while the bound filesystem topology remains stable. It does not claim\nabsolute containment against a principal that can mutate that topology in the scheduling window\nbetween the final identity recheck and a descriptor-relative commit; Java exposes no proven,\nportable root-anchored atomic-resolve-and-commit primitive for that stronger guarantee.",
+      "rationale" : "GridGrind binds the root and every existing parent with no-follow directory descriptors, records\ntheir filesystem identities, copies request inputs into private staging, and retains the verified parent binding for publication. Any symlink is rejected, including a link that happens to point\ninside the root. Immediately before persistence, GridGrind rechecks the recorded topology and\nfails closed if it observes a replacement, unlink, rename, or symlink transition.\n\nThis protects containment while the bound filesystem topology remains stable. It does not claim\nabsolute containment against a principal that can mutate that topology in the scheduling window\nbetween the final identity recheck and a pathname-based commit; Java exposes no proven,\nportable root-anchored atomic-resolve-and-commit primitive for that stronger guarantee.",
       "title" : "No-Follow Request Path Binding",
       "value" : "Request-owned reads and writes never follow a symbolic link and use descriptor-relative access below a verified execution root"
     }, {
@@ -388,6 +388,114 @@
       "rationale" : "Excel data-validation explicit lists are stored as one quoted comma-separated formula. GridGrind\nrejects commas and quotes inside individual values because that representation cannot preserve them;\nuse `FORMULA_LIST` when values require delimiters. It validates the complete stored formula before\nApache POI authoring so callers receive the request path and computed length instead of a library\nexception.",
       "title" : "Explicit Data-Validation List Formula Length",
       "value" : "255 characters in the stored explicit-list formula"
+    }, {
+      "appliesTo" : [ "source", "formulaEnvironment", "FILE", "UTF8_FILE", "STANDARD_INPUT", "host acceptance inputs" ],
+      "category" : "Host authority",
+      "id" : "LIM-041",
+      "messageTemplate" : "Host input snapshot byte budget exceeded",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "The host supplies a required finite nonnegative aggregate byte allowance. Reads are charged while snapshotting; a unique admitted snapshot is charged once. Zero permits NEW/inline work with sufficient operation authority. Workbook decompression, native memory, output growth and general scratch capacity are separate concerns; this allowance does not bound end-to-end memory.",
+      "title" : "Input Snapshot Bytes",
+      "value" : "ExecutionGrant.maxInputSnapshotBytes (0..9223372036854775807 bytes)"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-042",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "One decoded payload is bounded before media accumulation, encoding, decoding or cloning.",
+      "title" : "Authored Media Payload Bytes",
+      "value" : "33554432"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-043",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Every authored occurrence charges, even when a source snapshot or equal bytes are reused.",
+      "title" : "Authored Media Use Bytes",
+      "value" : "67108864"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-044",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Structural inspection includes bounded opaque spans, nested members and repeated reads.",
+      "title" : "Media Inspection Bytes",
+      "value" : "268435456"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-045",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Coded raster and tile storage is bounded; vector coordinate units are not pixels.",
+      "title" : "Media Raster Pixels",
+      "value" : "16777216"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-046",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Known expansion is reserved before decoding; failures do not restore the allowance.",
+      "title" : "Media Expanded Coding Bytes",
+      "value" : "134217728"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-047",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Roots, frames, directories, entries and nested records share one bounded counter.",
+      "title" : "Media Structural Records",
+      "value" : "65536"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-048",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Nested image and preview structures cannot reset the request budget.",
+      "title" : "Media Container Depth",
+      "value" : "8"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-049",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "PostScript is inspected lexically without executing or expanding operators.",
+      "title" : "EPS Syntax Tokens",
+      "value" : "1000000"
+    }, {
+      "appliesTo" : [ "SET_PICTURE", "SET_EMBEDDED_OBJECT", "SET_SIGNATURE_LINE" ],
+      "category" : "GridGrind",
+      "id" : "LIM-050",
+      "messageTemplate" : "Authored media exceeds {limit}.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Lexical container tracking is bounded without executing PostScript.",
+      "title" : "EPS Syntax Depth",
+      "value" : "256"
+    }, {
+      "appliesTo" : [ "SET_CELL", "SET_RANGE", "APPEND_ROW", "IMPORT_CUSTOM_XML_MAPPING" ],
+      "category" : "GridGrind",
+      "id" : "LIM-051",
+      "messageTemplate" : "{fieldName} must be within the receiving workbook's supported calendar range.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Unsupported civil dates refuse before native mutation; observations retain their raw number and explicit interpretation outcome.",
+      "title" : "Civil Date Domain",
+      "value" : "1900: 1900-01-01..9999-12-31; 1904: 1904-01-01..9999-12-31"
+    }, {
+      "appliesTo" : [ "SET_CELL", "SET_RANGE", "APPEND_ROW" ],
+      "category" : "GridGrind",
+      "id" : "LIM-052",
+      "messageTemplate" : "{fieldName} supports millisecond precision.",
+      "problemCodes" : [ "INVALID_REQUEST" ],
+      "rationale" : "Finer authored precision refuses rather than being silently truncated or rounded.",
+      "title" : "Date-Time Precision",
+      "value" : "millisecond"
     } ],
     "lookupNamespaces" : [ {
       "shape" : "<topLevelGroup>:<id>",
@@ -397,10 +505,10 @@
       "usage" : "Resolve one nested tagged-union group such as nestedTypes:cellValueSpecTypes."
     }, {
       "shape" : "plainTypes:<group>",
-      "usage" : "Resolve one plain record group such as plainTypes:sheetSummaryReport."
+      "usage" : "Resolve one plain record group such as plainTypes:sheetSummaryReportType."
     }, {
       "shape" : "<id>",
-      "usage" : "Resolve one unqualified top-level type id only when it is globally unique."
+      "usage" : "Resolve one unqualified catalog id only when it is globally unique."
     } ],
     "nestedTypeGroups" : [ {
       "entryIds" : [ "BLANK", "TEXT", "NUMBER", "BOOLEAN", "ERROR" ],
@@ -442,17 +550,29 @@
       "entryIds" : [ "HIDDEN", "VISIBLE" ],
       "group" : "legendTypes"
     }, {
-      "entryIds" : [ "STRING_REFERENCE", "NUMERIC_REFERENCE", "STRING_LITERAL", "NUMERIC_LITERAL" ],
+      "entryIds" : [ "STRING_REFERENCE", "NUMERIC_REFERENCE", "STRING_LITERAL", "NUMERIC_LITERAL", "MISSING", "UNSUPPORTED" ],
       "group" : "dataSourceTypes"
     }, {
       "entryIds" : [ "TWO_CELL", "ONE_CELL", "ABSOLUTE" ],
       "group" : "drawingAnchorReportTypes"
     }, {
+      "entryIds" : [ "MISSING", "STORED" ],
+      "group" : "stringCacheTypes"
+    }, {
       "entryIds" : [ "BLANK", "TEXT", "RICH_TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA", "RAW_FORMULA" ],
       "group" : "cellValueSpecTypes"
     }, {
+      "entryIds" : [ "EMU", "MEASURED", "PIXELS" ],
+      "group" : "drawingCoordinateReportTypes"
+    }, {
+      "entryIds" : [ "MISSING", "STORED" ],
+      "group" : "numericCacheTypes"
+    }, {
       "entryIds" : [ "TYPED", "TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA" ],
       "group" : "cellRowSpecTypes"
+    }, {
+      "entryIds" : [ "MISSING", "MODE", "VALUE" ],
+      "group" : "axisCrossingTypes"
     }, {
       "entryIds" : [ "TYPED", "TEXT", "NUMBER", "BOOLEAN", "ERROR", "DATE", "DATE_TIME", "FORMULA" ],
       "group" : "cellGridSpecTypes"
@@ -544,7 +664,7 @@
       "entryIds" : [ "NONE", "SIGN" ],
       "group" : "ooxmlPersistenceSignatureSpecTypes"
     }, {
-      "entryIds" : [ "STEP", "REQUEST_PATH", "REQUEST_BYTE_OFFSET", "FORMULA_CELL" ],
+      "entryIds" : [ "STEP", "REQUEST_PATH", "REQUEST_BYTE_OFFSET", "FORMULA_CELL", "EXECUTION" ],
       "group" : "requestWarningLocationTypes"
     }, {
       "entryIds" : [ "TWO_CELL" ],
@@ -618,6 +738,9 @@
     }, {
       "entryIds" : [ "DO_NOT_CALCULATE", "DEFERRED_CALCULATION", "EVALUATE_ALL", "EVALUATE_TARGETS", "REQUIRE_EVALUATION", "CLEAR_CACHES_ONLY" ],
       "group" : "calculationStrategySpecTypes"
+    }, {
+      "entryIds" : [ "NOT_TEMPORAL", "INTERPRETED", "UNREPRESENTABLE" ],
+      "group" : "cellTemporalReportTypes"
     } ],
     "plainTypeGroups" : [ {
       "entryIds" : [ "ExecutionJournal" ],
@@ -875,9 +998,6 @@
       "entryIds" : [ "CellGradientStopReport" ],
       "group" : "cellGradientStopReportType"
     }, {
-      "entryIds" : [ "CellTemporalReport" ],
-      "group" : "cellTemporalReportType"
-    }, {
       "entryIds" : [ "RichTextRunReport" ],
       "group" : "richTextRunReportType"
     }, {
@@ -958,6 +1078,12 @@
     }, {
       "entryIds" : [ "ChartSeriesReport" ],
       "group" : "chartSeriesReportType"
+    }, {
+      "entryIds" : [ "ChartStringCachePoint" ],
+      "group" : "chartStringCachePointType"
+    }, {
+      "entryIds" : [ "ChartNumericCachePoint" ],
+      "group" : "chartNumericCachePointType"
     }, {
       "entryIds" : [ "SecretReference" ],
       "group" : "secretReferenceType"

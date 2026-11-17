@@ -88,6 +88,7 @@ class GridGrindCliExecutionGrantIntegrationTest {
     Path grant = Files.createTempFile("gridgrind-cli-execution-grant-", ".json");
     ExecutionGrant document =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             operationIds,
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

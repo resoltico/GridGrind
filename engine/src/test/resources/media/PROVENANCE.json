@@ -1,0 +1,1053 @@
+{
+  "scope": "New authored-media test fixtures only",
+  "upstream_assets_in_repository": false,
+  "external_only_assets": [
+    "Apache POI wrench.emf",
+    "Apache POI santa.wmf",
+    "upstream cow.pict",
+    "GBM os2huff.bmp and g24rle_os2.bmp"
+  ],
+  "notice": "Existing runtime dependency notices remain required. Oracle/source tools and their code are qualification inputs outside the repository, not product dependencies or bundled fixture code.",
+  "fixtures": [
+    {
+      "file": "active-cycle.tiff",
+      "sha256": "45a914a720ea8e1a3f47f223f1585d3fb8509dfc4cd52288c508bd8b1b35fddd",
+      "bytes": 280,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored grayscale1x1 IFD graph layouts with explicit repeated/active/depth edges.",
+      "generator": "Project tiff_graph_controls.py struct builder",
+      "oracle": "Independent literal directory/pixel expectations; actual graph consumer tests",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "aliased-child.tiff",
+      "sha256": "174d3069db25857b4228ce644d51926ad86c4bcf5ec6e851cc123c11ee86547c",
+      "bytes": 280,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored grayscale1x1 IFD graph layouts with explicit repeated/active/depth edges.",
+      "generator": "Project tiff_graph_controls.py struct builder",
+      "oracle": "Independent literal directory/pixel expectations; actual graph consumer tests",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "arithmetic.jpeg",
+      "sha256": "b1e622f1e17b200c8e477d8e073069cb4a5ec83ead33642dfa2dca7e2b21c755",
+      "bytes": 261,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored six RGB colors in PPM, including twelve/sixteen-bit sample encodings.",
+      "generator": "libjpeg-turbo3.2.1 cjpeg",
+      "oracle": "Independent djpeg decoding",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "blank-v1.pict",
+      "sha256": "ac3e7cbbe2f79e940e29b12e246962e0d3159606a1e24156c94ad143dcb2b7e1",
+      "bytes": 13,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal blank/control-only grammar records.",
+      "generator": "Project byte/struct builder from Adobe DSC, GIF89a, MS-WMF and Apple QuickDraw functional format facts",
+      "oracle": "Normative grammar plus actual admission controls; no rendering certificate",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "blank-v2.pict",
+      "sha256": "554204b6e09019b8e960316230f8639f8b7b68138f0263463d7e26f7f3fe26e3",
+      "bytes": 42,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal blank/control-only grammar records.",
+      "generator": "Project byte/struct builder from Adobe DSC, GIF89a, MS-WMF and Apple QuickDraw functional format facts",
+      "oracle": "Normative grammar plus actual admission controls; no rendering certificate",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "blank.eps",
+      "sha256": "8b5c4ab265dd2b9e9900e76f28ff64b8a4a505a190f1371ea6c6ec01d7d17837",
+      "bytes": 47,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal blank/control-only grammar records.",
+      "generator": "Project byte/struct builder from Adobe DSC, GIF89a, MS-WMF and Apple QuickDraw functional format facts",
+      "oracle": "Normative grammar plus actual admission controls; no rendering certificate",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "blank.wmf",
+      "sha256": "7f5467a08b4fbdf80a0b29448d0e5550fdc8bccc08f982c42bac707a0b3059ff",
+      "bytes": 24,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal blank/control-only grammar records.",
+      "generator": "Project byte/struct builder from Adobe DSC, GIF89a, MS-WMF and Apple QuickDraw functional format facts",
+      "oracle": "Normative grammar plus actual admission controls; no rendering certificate",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "control-only.gif",
+      "sha256": "1f19970f056cd116a5fe3c02422c1ee1ac827136df470b5c89af492620512aa4",
+      "bytes": 14,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal blank/control-only grammar records.",
+      "generator": "Project byte/struct builder from Adobe DSC, GIF89a, MS-WMF and Apple QuickDraw functional format facts",
+      "oracle": "Normative grammar plus actual admission controls; no rendering certificate",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "counted-description.emf",
+      "sha256": "8abd467af3753e5f5d39a375855b45b5c1e7b49e0b803355ae2c208df0f3da58",
+      "bytes": 160,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal Microsoft record layouts and synthetic rectangle; counted-description adds only the literal GridGrindTest plus header NUL padding.",
+      "generator": "Project struct-based record builder from MS-EMF/MS-WMF functional format facts",
+      "oracle": "Apache POI independent parser for original minimal records; owner span regression cases",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "deflate-legacy-tag.tiff",
+      "sha256": "63dddb8961279874313672e91dcca0ef46a09ef8cbae5b95538ae2bd64b5d9d0",
+      "bytes": 292,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project mutation of synthetic valid Deflate TIFF: registered compression tag32946.",
+      "generator": "Project tag mutation retaining original coded stream",
+      "oracle": "Independent LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "deflate.tiff",
+      "sha256": "e1d5a0ea03b0b2b43e0e7ec6e97a0a66af5d5ab5889abc8c70cd0f1085b70b8a",
+      "bytes": 292,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic RGB bytes (256x128) or 3x2 red 16-bit control; coded strips/tiles/planes and prediction.",
+      "generator": "ImageMagick / LibTIFF; recorded generated-codec-controls.json commands",
+      "oracle": "Independent LibTIFF reopening and exact coded-span count controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "depth-8.tiff",
+      "sha256": "ff4edbb62400b5659ccf16d2d8af4c99e3275b574e67f8ef22528fbda58b004d",
+      "bytes": 1168,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored grayscale1x1 IFD graph layouts with explicit repeated/active/depth edges.",
+      "generator": "Project tiff_graph_controls.py struct builder",
+      "oracle": "Independent literal directory/pixel expectations; actual graph consumer tests",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "depth-9.tiff",
+      "sha256": "7b393974cb525feb66eb0e7255f89e4dcb18d43ac7afc4c6878e406063d0048f",
+      "bytes": 1296,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored grayscale1x1 IFD graph layouts with explicit repeated/active/depth edges.",
+      "generator": "Project tiff_graph_controls.py struct builder",
+      "oracle": "Independent literal directory/pixel expectations; actual graph consumer tests",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "framed-invalid-lzw.tiff",
+      "sha256": "130a648fcac1f17fda3511b461d5d1322b36627257495c6c3c0a3dff6395a95f",
+      "bytes": 202,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project mutation of synthetic raw TIFF: Compression changed to5 while raw pixel bytes retained.",
+      "generator": "Project tag mutation",
+      "oracle": "Required initial-Clear negative and independent decoder refusal",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "g3-1d-msb2lsb-31-13.tif",
+      "sha256": "a269baddaffdea19765640cedec8950963848cb512563c9c4ad19e0cf14a517c",
+      "bytes": 286,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored31x13 monochrome pattern (x//(y%7+1)+y)%3; native fax encoding.",
+      "generator": "ImageMagick raw TIFF then LibTIFF4.7.2 tiffcp selected coding/options/FillOrder",
+      "oracle": "Independent LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "g3-2d-fill-msb2lsb-31-13.tif",
+      "sha256": "d78bdd70e3641341bb3a4eb6ed443d6376aee3ae42a0bd02fa919b272fc7bc22",
+      "bytes": 290,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored31x13 monochrome pattern (x//(y%7+1)+y)%3; native fax encoding.",
+      "generator": "ImageMagick raw TIFF then LibTIFF4.7.2 tiffcp selected coding/options/FillOrder",
+      "oracle": "Independent LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "g3-2d-lsb2msb-31-13.tif",
+      "sha256": "541dcd5567086867e01b4cbc0e0dbdc3007de238fcfb740ec2c347e8dd079803",
+      "bytes": 284,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored31x13 monochrome pattern (x//(y%7+1)+y)%3; native fax encoding.",
+      "generator": "ImageMagick raw TIFF then LibTIFF4.7.2 tiffcp selected coding/options/FillOrder",
+      "oracle": "Independent LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "g4-lsb2msb-31-13.tif",
+      "sha256": "b72bda16a164b7c23b51c5f8d3d9d6eb4fbbe42a4959e731532247084523790a",
+      "bytes": 262,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored31x13 monochrome pattern (x//(y%7+1)+y)%3; native fax encoding.",
+      "generator": "ImageMagick raw TIFF then LibTIFF4.7.2 tiffcp selected coding/options/FillOrder",
+      "oracle": "Independent LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "huffman-short-header.bmp",
+      "sha256": "268953aee49bdf52941cab38141cd59da908a8e3189d7c111901c4bbe01ae17a",
+      "bytes": 56,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored all-white8x2 Huffman rows or five explicit RGB colors; OS/2 complete/truncated header and hotspot facts.",
+      "generator": "Project os2_owned_controls.py from IBM header/T.4 functional facts",
+      "oracle": "Deark1.7.3-1 native decoding; all-white output mean1 and dimensions8x2",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "huffman-white8x2.bmp",
+      "sha256": "1dcbb286af8fb65f24f0723ca652f92ba6501089c75a0ef8203f29bdb3108bf7",
+      "bytes": 100,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored all-white8x2 Huffman rows or five explicit RGB colors; OS/2 complete/truncated header and hotspot facts.",
+      "generator": "Project os2_owned_controls.py from IBM header/T.4 functional facts",
+      "oracle": "Deark1.7.3-1 native decoding; all-white output mean1 and dimensions8x2",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-header-declaration-order.jpeg",
+      "sha256": "17a042be7ec8c89007b443ef69c7d9b15df9c3472cff9688ae73e83f3525e03a",
+      "bytes": 652,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project consistent component-ID relabeling to nonnumeric declaration order7,2,5; entropy unchanged",
+      "generator": "Project functional-header mutations or libjpeg-turbo3.2.1 cjpeg; synthetic source only",
+      "oracle": "T.81 B.2.3/B.3.1/B.3.2 relationships; positive sampling and relabeling controls independently djpeg decoded, relabeling output byte-identical",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-header-dhp-precision.jpeg",
+      "sha256": "0978949185f6ec60d66219b1135edcdc9219f46f4c8f2b4c350a92a7912a96f0",
+      "bytes": 1287,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project one-field first SOF precision8to12 with unchanged DHP8",
+      "generator": "Project functional-header mutations or libjpeg-turbo3.2.1 cjpeg; synthetic source only",
+      "oracle": "T.81 B.2.3/B.3.1/B.3.2 relationships; positive sampling and relabeling controls independently djpeg decoded, relabeling output byte-identical",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-header-dhp-quant.jpeg",
+      "sha256": "2365066259b2c4956e4d8d5eb0ee82e3b7e167fc510fc7c7ea007f6b1c5edece",
+      "bytes": 1287,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project one-field DHP quantizer0to1 mutation",
+      "generator": "Project functional-header mutations or libjpeg-turbo3.2.1 cjpeg; synthetic source only",
+      "oracle": "T.81 B.2.3/B.3.1/B.3.2 relationships; positive sampling and relabeling controls independently djpeg decoded, relabeling output byte-identical",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-header-interleaved-overflow.jpeg",
+      "sha256": "3fed66943904956ae4da5e694724cbba83988d1e6fb49bf77e9f1b1423d4255e",
+      "bytes": 652,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project mutation of synthetic valid.jpeg: sampling factors44 create interleaved sum48",
+      "generator": "Project functional-header mutations or libjpeg-turbo3.2.1 cjpeg; synthetic source only",
+      "oracle": "T.81 B.2.3/B.3.1/B.3.2 relationships; positive sampling and relabeling controls independently djpeg decoded, relabeling output byte-identical",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-header-interleaved-ten.jpeg",
+      "sha256": "7af894d98c8ddd8823cb70be295d023458477e322de339d55fc69ca2875cf43c",
+      "bytes": 848,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project synthetic17x19 PPM, independently cjpeg encoded with explicit sampling/scan structure",
+      "generator": "Project functional-header mutations or libjpeg-turbo3.2.1 cjpeg; synthetic source only",
+      "oracle": "T.81 B.2.3/B.3.1/B.3.2 relationships; positive sampling and relabeling controls independently djpeg decoded, relabeling output byte-identical",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-header-noninterleaved-sixteen.jpeg",
+      "sha256": "b733409c22bd8caf2ca4ff1db0bc43072b78a0db45a277aa01e0e45239a7885a",
+      "bytes": 1061,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project synthetic17x19 PPM, independently cjpeg encoded with explicit sampling/scan structure",
+      "generator": "Project functional-header mutations or libjpeg-turbo3.2.1 cjpeg; synthetic source only",
+      "oracle": "T.81 B.2.3/B.3.1/B.3.2 relationships; positive sampling and relabeling controls independently djpeg decoded, relabeling output byte-identical",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-header-scan-order.jpeg",
+      "sha256": "0df7107d07f41f32afd8115820fef4ff0e397f8cc2f402ee5fc67d0ebe8ffb39",
+      "bytes": 652,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project mutation swapping only first two SOS component IDs",
+      "generator": "Project functional-header mutations or libjpeg-turbo3.2.1 cjpeg; synthetic source only",
+      "oracle": "T.81 B.2.3/B.3.1/B.3.2 relationships; positive sampling and relabeling controls independently djpeg decoded, relabeling output byte-identical",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-hierarchical-hybrid-arithmetic-wrong-predictor.jpeg",
+      "sha256": "ddc989371e215df24a922f773ad7f1a731581e8cf62655e6ad582bcf502f4726",
+      "bytes": 1456,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project header/entropy mutation of synthetic independently encoded JPEG control; intentional malformed predictor or missing-Huffman-entropy case.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-hierarchical-hybrid-wrong-predictor.jpeg",
+      "sha256": "470c92a7cc8aac642422bf5f2b6991a7833afaef8e79fe4049091880f9b1abb5",
+      "bytes": 1543,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project header/entropy mutation of synthetic independently encoded JPEG control; intentional malformed predictor or missing-Huffman-entropy case.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg-huffman-empty-entropy.jpeg",
+      "sha256": "bb59c518f3ef46452d2e1f5a2b207cf99b0f2ea53831946dd6cbe28ca65c9f2a",
+      "bytes": 625,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project header/entropy mutation of synthetic independently encoded JPEG control; intentional malformed predictor or missing-Huffman-entropy case.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg7-malformed-tables.tiff",
+      "sha256": "558a8888d6e1fd5b8ee9afe4097327c6d2080bc943a485ced103897a7584a968",
+      "bytes": 1278,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated17x19 synthetic RGB function (byte*31+chunk*67)%256; malformed variant changes only tables SOI.",
+      "generator": "Project C writer using LibTIFF4.7.2 JPEG7 complete/shared tables, strips/tiles",
+      "oracle": "Independent LibTIFF/Magick decoding for positives; intended tables-marker negative",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg7-strip-complete.tiff",
+      "sha256": "84281b7b7214087f268b469648360e1e8ea1f8dee68c3189454f1999c3b0f1c1",
+      "bytes": 1176,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated17x19 synthetic RGB function (byte*31+chunk*67)%256; malformed variant changes only tables SOI.",
+      "generator": "Project C writer using LibTIFF4.7.2 JPEG7 complete/shared tables, strips/tiles",
+      "oracle": "Independent LibTIFF/Magick decoding for positives; intended tables-marker negative",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg7-strip-shared-tables.tiff",
+      "sha256": "712d0d42ec7022e4c1da2a9ff0fcb13c3a03384cc9509fb7be27dd4cd3c191a4",
+      "bytes": 1278,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated17x19 synthetic RGB function (byte*31+chunk*67)%256; malformed variant changes only tables SOI.",
+      "generator": "Project C writer using LibTIFF4.7.2 JPEG7 complete/shared tables, strips/tiles",
+      "oracle": "Independent LibTIFF/Magick decoding for positives; intended tables-marker negative",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg7-tile-complete.tiff",
+      "sha256": "dea608756b813eb3d9608e2206b5c6fdfa3a852cca1d3303f5c6eddfd6eddcfc",
+      "bytes": 2120,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated17x19 synthetic RGB function (byte*31+chunk*67)%256; malformed variant changes only tables SOI.",
+      "generator": "Project C writer using LibTIFF4.7.2 JPEG7 complete/shared tables, strips/tiles",
+      "oracle": "Independent LibTIFF/Magick decoding for positives; intended tables-marker negative",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "jpeg7-tile-shared-tables.tiff",
+      "sha256": "2c97ef69701689de33628c70c36e2227d0e99fd011f84f0889cba298232e0f33",
+      "bytes": 1764,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated17x19 synthetic RGB function (byte*31+chunk*67)%256; malformed variant changes only tables SOI.",
+      "generator": "Project C writer using LibTIFF4.7.2 JPEG7 complete/shared tables, strips/tiles",
+      "oracle": "Independent LibTIFF/Magick decoding for positives; intended tables-marker negative",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "logical-palette.emf",
+      "sha256": "c5aa436daa29cc862be6431085685b884f5b27dd4bdc9625f6cf952fd4af4a20",
+      "bytes": 236,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored1x2 DIB8bpp, explicit palette words/RGB values and selected row in complete EMF/WMF records; short member changes cbBits only.",
+      "generator": "Project metafile_bitmap_controls.py from Microsoft functional record layouts",
+      "oracle": "Normative field layout and independent selected-row/palette/span expectations; no GDI rendering claim",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "logical-palette.wmf",
+      "sha256": "5393ebec413af2d19ac6eb71b9cf7b33edec3b118f121746cd8fc435386e2ba0",
+      "bytes": 100,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored1x2 DIB8bpp, explicit palette words/RGB values and selected row in complete EMF/WMF records; short member changes cbBits only.",
+      "generator": "Project metafile_bitmap_controls.py from Microsoft functional record layouts",
+      "oracle": "Normative field layout and independent selected-row/palette/span expectations; no GDI rendering claim",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "lossless.jpeg",
+      "sha256": "6b8da6edf1fe08d5cbc475afed98960c1fe1502ab6e6dea3f069fd7553c8caad",
+      "bytes": 95,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored six RGB colors in PPM, including twelve/sixteen-bit sample encodings.",
+      "generator": "libjpeg-turbo3.2.1 cjpeg",
+      "oracle": "Independent djpeg decoding",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "lossless16.jpeg",
+      "sha256": "942d997bfac9cd8fee527891992f460d85c5c6bd2ce9e82688da568498ff0d85",
+      "bytes": 86,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored six RGB colors in PPM, including twelve/sixteen-bit sample encodings.",
+      "generator": "libjpeg-turbo3.2.1 cjpeg",
+      "oracle": "Independent djpeg decoding",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "lzw-bigendian.tiff",
+      "sha256": "e3aa36bc47cf6036f1c82c72174250117a027e8dfc91f4f8c254437c60c3008e",
+      "bytes": 134382,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic RGB bytes (256x128) or 3x2 red 16-bit control; coded strips/tiles/planes and prediction.",
+      "generator": "ImageMagick / LibTIFF; recorded generated-codec-controls.json commands",
+      "oracle": "Independent LibTIFF reopening and exact coded-span count controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "lzw-full-dictionary.tiff",
+      "sha256": "d24c2dc07339b4b0db9c91606055ca4a2ee2844f7c9da77e25a1b5c20be0bba6",
+      "bytes": 5531,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored grayscale3838pixel TIFF; independent fixed-width literal code groups through dictionary4094.",
+      "generator": "Project create_full_dictionary_control.py from TIFF6 functional code transitions",
+      "oracle": "Independent LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "lzw-planar.tiff",
+      "sha256": "1792a793e3d99ca7d6c23645f25c128ff8cfcb5439dc9aaa02a35d5e813a7b4d",
+      "bytes": 134260,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic RGB bytes (256x128) or 3x2 red 16-bit control; coded strips/tiles/planes and prediction.",
+      "generator": "ImageMagick / LibTIFF; recorded generated-codec-controls.json commands",
+      "oracle": "Independent LibTIFF reopening and exact coded-span count controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "lzw-tiled.tiff",
+      "sha256": "65bc82754ac46400b33a9dc27a28770325ee563282381576a31382397a10674b",
+      "bytes": 119540,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic RGB bytes (256x128) or 3x2 red 16-bit control; coded strips/tiles/planes and prediction.",
+      "generator": "ImageMagick / LibTIFF; recorded generated-codec-controls.json commands",
+      "oracle": "Independent LibTIFF reopening and exact coded-span count controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "lzw-widths.tiff",
+      "sha256": "13ab75cbec9cf6c4108b0342f56b7c525ed6be2dcf4a162f25875d2a5074cf0b",
+      "bytes": 134382,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic RGB bytes (256x128) or 3x2 red 16-bit control; coded strips/tiles/planes and prediction.",
+      "generator": "ImageMagick / LibTIFF; recorded generated-codec-controls.json commands",
+      "oracle": "Independent LibTIFF reopening and exact coded-span count controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-ac-plus-one-preview.eps",
+      "sha256": "b9c898c65b30b2d4440a513a944a46f42fbcdfb491bf53479fc7976b6e0e46df",
+      "bytes": 989,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-ac-plus-one.tif",
+      "sha256": "72cce39530313a840692e3a8f1581a21fa3f815b9fc2d9093e891bd572261073",
+      "bytes": 912,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-dc-plus-one-preview.eps",
+      "sha256": "88cfdf9ae71a47bc78e56c933c0eb469a8af678c31c2c89a9365e8c6907c7085",
+      "bytes": 989,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-dc-plus-one.tif",
+      "sha256": "44dd0cc7eac97b1c831cbd28e341d30bc9d8178d2bcfc92649a0327ac476cf2e",
+      "bytes": 912,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-entropy-plus-one-preview.eps",
+      "sha256": "e6d4a2a927cca3228f2dda8042481853e85baede1385d2bab11def0c47e08973",
+      "bytes": 989,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-entropy-plus-one.tif",
+      "sha256": "0303edcdfca024bfb7c099aefe402223902da0f292c6f8338ce9646a6be5fdf2",
+      "bytes": 912,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-interchange.tif",
+      "sha256": "91f07307ad8241d36607d90ea5de4e2a36ef7006822dd1a6fd8d307ef922ad5a",
+      "bytes": 912,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored TIFF6 complete interchange container around the field-campaign synthetic JPEG; exact Q/DC/AC table pointers and entropy extents.",
+      "generator": "Project old_jpeg_control.py struct builder",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-preview.eps",
+      "sha256": "0c83b6f6a35cf4e0944acc4f84b82582fa8836611bf84af08c88170b659689eb",
+      "bytes": 989,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-quant-plus-one-preview.eps",
+      "sha256": "6720f7a801b0fa346de11f9ece1d753c07d03302dc6ca22d32aa8af0e046fe84",
+      "bytes": 989,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "old-jpeg-quant-plus-one.tif",
+      "sha256": "e86fb5370eca5ea9fbc6d3849ca9f913f372f724303a726723bd40969bcf8254",
+      "bytes": 912,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project DOS EPS wrapper or+1 TIFF-pointer mutation around the same project synthetic old-JPEG interchange image; all pixel/codec bytes preserved.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "packbits.tiff",
+      "sha256": "a5707b00f66ca55ce8de8f9c396fd19c73b80084063918e9329aa3f71b3caa20",
+      "bytes": 288,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic RGB bytes (256x128) or 3x2 red 16-bit control; coded strips/tiles/planes and prediction.",
+      "generator": "ImageMagick / LibTIFF; recorded generated-codec-controls.json commands",
+      "oracle": "Independent LibTIFF reopening and exact coded-span count controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "partial-logical-palette.emf",
+      "sha256": "db436bd66de35daeac8ac3d819dcb2366e58b79862267a1dc222aef9eb56b460",
+      "bytes": 232,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored1x2 DIB8bpp, explicit palette words/RGB values and selected row in complete EMF/WMF records; short member changes cbBits only.",
+      "generator": "Project metafile_bitmap_controls.py from Microsoft functional record layouts",
+      "oracle": "Normative field layout and independent selected-row/palette/span expectations; no GDI rendering claim",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "partial-logical-palette.wmf",
+      "sha256": "38e601419ae4817970caf27d424f354a69f6b67d4eefcc69729ae35c16b5d1e8",
+      "bytes": 96,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored1x2 DIB8bpp, explicit palette words/RGB values and selected row in complete EMF/WMF records; short member changes cbBits only.",
+      "generator": "Project metafile_bitmap_controls.py from Microsoft functional record layouts",
+      "oracle": "Normative field layout and independent selected-row/palette/span expectations; no GDI rendering claim",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "partial-rgb.emf",
+      "sha256": "e8713528de6f930c1ef8ccd4faea97e91d594b39cabad0108afd7082d823c768",
+      "bytes": 236,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored1x2 DIB8bpp, explicit palette words/RGB values and selected row in complete EMF/WMF records; short member changes cbBits only.",
+      "generator": "Project metafile_bitmap_controls.py from Microsoft functional record layouts",
+      "oracle": "Normative field layout and independent selected-row/palette/span expectations; no GDI rendering claim",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "partial-rgb.wmf",
+      "sha256": "16511d69ed6215e1400e84caf1227e01473976764abc5689162466569a63a2a8",
+      "bytes": 100,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored1x2 DIB8bpp, explicit palette words/RGB values and selected row in complete EMF/WMF records; short member changes cbBits only.",
+      "generator": "Project metafile_bitmap_controls.py from Microsoft functional record layouts",
+      "oracle": "Normative field layout and independent selected-row/palette/span expectations; no GDI rendering claim",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "progressive-arithmetic.jpeg",
+      "sha256": "8c9ab1f8cd54e6985dcd15dcd02e047d3f8e736716822da8e862cc753d3826ae",
+      "bytes": 397,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored six RGB colors in PPM, including twelve/sixteen-bit sample encodings.",
+      "generator": "libjpeg-turbo3.2.1 cjpeg",
+      "oracle": "Independent djpeg decoding",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-dnl.jpeg",
+      "sha256": "34b8e9ca5b95be9f9b543e848b59d3c81b187f451dcb55e5d3a2e9574cb67dc7",
+      "bytes": 1488,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic PPM, encoded/decoded with JPEG.org reference implementation commit702114c8130ae818ccd2354cc03e879dac69e579; no upstream asset copied.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-hierarchical-arithmetic.jpeg",
+      "sha256": "747917438ea90ed3b3a97483a70afc240e5a6923e0544edf2ed2251093eed6ef",
+      "bytes": 1229,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic PPM, encoded/decoded with JPEG.org reference implementation commit702114c8130ae818ccd2354cc03e879dac69e579; no upstream asset copied.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-hierarchical-hybrid-arithmetic.jpeg",
+      "sha256": "c75faf2fce0a19cc8756aa931a4ee7ba3ce334bd8cab8edda6d334e0d41df6f7",
+      "bytes": 1456,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic PPM, encoded/decoded with JPEG.org reference implementation commit702114c8130ae818ccd2354cc03e879dac69e579; no upstream asset copied.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-hierarchical-hybrid.jpeg",
+      "sha256": "f26bb7a414d7851e2810fd41f17a57642006b0bf05d7657d6256627323c41a1f",
+      "bytes": 1543,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic PPM, encoded/decoded with JPEG.org reference implementation commit702114c8130ae818ccd2354cc03e879dac69e579; no upstream asset copied.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-hierarchical-progressive-arithmetic.jpeg",
+      "sha256": "0bcd373ff169d9b6a3fcfb7ad530b25cda7a8f630e5bc0842f8bd9d37d341436",
+      "bytes": 1593,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic PPM, encoded/decoded with JPEG.org reference implementation commit702114c8130ae818ccd2354cc03e879dac69e579; no upstream asset copied.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-hierarchical-progressive.jpeg",
+      "sha256": "e367f9b77059f613613acf7b86a4343efe6d8ca1df12acadfc9890533f9ca0da",
+      "bytes": 1913,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic PPM, encoded/decoded with JPEG.org reference implementation commit702114c8130ae818ccd2354cc03e879dac69e579; no upstream asset copied.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-hierarchical-sequential.jpeg",
+      "sha256": "1e175d14734155432d3e78747784a63d56d617a0ae170e9949aa82dd0f455928",
+      "bytes": 1287,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic PPM, encoded/decoded with JPEG.org reference implementation commit702114c8130ae818ccd2354cc03e879dac69e579; no upstream asset copied.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-lossless-arithmetic.jpeg",
+      "sha256": "176fad24a7e2a9cdb6e17b1bc03becce6eb8aa2e94c426a66361d5625406787d",
+      "bytes": 33,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-constructed JPEG1 non-differential header around independently coded zero arithmetic differences; JPEG.org reference decoder output is exactly P5 1x1 sample128.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "reference-restart.jpeg",
+      "sha256": "c7f5dcd394d2ce844f55726dedb5fa11b8bfbdd02ede14d2414597a1dbc22144",
+      "bytes": 1502,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic PPM, encoded/decoded with JPEG.org reference implementation commit702114c8130ae818ccd2354cc03e879dac69e579; no upstream asset copied.",
+      "generator": "Project functional-format builder / external native oracle as described",
+      "oracle": "Native reference decode or intended malformed counterpart; codec/frame evidence retained outside repository",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "rle24-literal5.bmp",
+      "sha256": "31fde14e976945065c5d2053dca0d8c9781caabccdc0cb81690594153cc786c3",
+      "bytes": 98,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored all-white8x2 Huffman rows or five explicit RGB colors; OS/2 complete/truncated header and hotspot facts.",
+      "generator": "Project os2_owned_controls.py from IBM header/T.4 functional facts",
+      "oracle": "Deark1.7.3-1 native decoding; all-white output mean1 and dimensions8x2",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "sequential12.jpeg",
+      "sha256": "bef328d1218f313da743f0d5f2201e4e0c349444b4127ef602a1cbed0aef7093",
+      "bytes": 383,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored six RGB colors in PPM, including twelve/sixteen-bit sample encodings.",
+      "generator": "libjpeg-turbo3.2.1 cjpeg",
+      "oracle": "Independent djpeg decoding",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "short-partial-member.emf",
+      "sha256": "950e406dceb18459cee04b726c1fc58aec80454c554cfd575246590a002e5dd5",
+      "bytes": 232,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored1x2 DIB8bpp, explicit palette words/RGB values and selected row in complete EMF/WMF records; short member changes cbBits only.",
+      "generator": "Project metafile_bitmap_controls.py from Microsoft functional record layouts",
+      "oracle": "Normative field layout and independent selected-row/palette/span expectations; no GDI rendering claim",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "tall-single-frame.tiff",
+      "sha256": "6596fb11a23d12a14e1c12b7519f776023f0042501c7bd9b2181ea1adc9a2b72",
+      "bytes": 16558,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated1x65536 all-white monochrome image.",
+      "generator": "ImageMagick native Group4 encoder",
+      "oracle": "Independent LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid-adam7.png",
+      "sha256": "34d76abbb76f64366f45dc67447c531573aa7b81f6eb1188674841f08599aaaa",
+      "bytes": 296,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic red/blue 3x2 image or animation; endian/BigTIFF encoding variants.",
+      "generator": "ImageMagick 7.1.2-35; recorded extended-positive-controls.json command",
+      "oracle": "ImageMagick / LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid-animated.gif",
+      "sha256": "473f60f19f21fbb75ef4fc1d18eeebbf2fef8dfe6f82cb4221ed7d574b06dbff",
+      "bytes": 91,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic red/blue 3x2 image or animation; endian/BigTIFF encoding variants.",
+      "generator": "ImageMagick 7.1.2-35; recorded extended-positive-controls.json command",
+      "oracle": "ImageMagick / LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid-bigendian.tiff",
+      "sha256": "382b155cc0f6d237425ceea57ec71fc40d741172e010c9a2ef6b22caeb597b52",
+      "bytes": 300,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic red/blue 3x2 image or animation; endian/BigTIFF encoding variants.",
+      "generator": "ImageMagick 7.1.2-35; recorded extended-positive-controls.json command",
+      "oracle": "ImageMagick / LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid-bigtiff.tiff",
+      "sha256": "20350522cd4d3f4fe3bbca3ef59b194166c66478bb733d8af7083a02998a981c",
+      "bytes": 432,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic red/blue 3x2 image or animation; endian/BigTIFF encoding variants.",
+      "generator": "ImageMagick 7.1.2-35; recorded extended-positive-controls.json command",
+      "oracle": "ImageMagick / LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid-progressive.jpeg",
+      "sha256": "0910c2191b2de5c7be0a598e190d538f39d9fc38babccf54ee821068854b373e",
+      "bytes": 523,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic red/blue 3x2 image or animation; endian/BigTIFF encoding variants.",
+      "generator": "ImageMagick 7.1.2-35; recorded extended-positive-controls.json command",
+      "oracle": "ImageMagick / LibTIFF reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid-standard.wmf",
+      "sha256": "b271024385edd4a660d982aa97504c89068b8283c06fe91949085fe2306ce9dd",
+      "bytes": 58,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal Microsoft record layouts and synthetic rectangle; counted-description adds only the literal GridGrindTest plus header NUL padding.",
+      "generator": "Project struct-based record builder from MS-EMF/MS-WMF functional format facts",
+      "oracle": "Apache POI independent parser for original minimal records; owner span regression cases",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid-v1.pict",
+      "sha256": "2dfaf0e4a64ab952f6bea24ff0a5879a418cd21b411666da4416808de65ee50c",
+      "bytes": 534,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal rectangle or six RGB pixels; record layout facts, no upstream asset bytes.",
+      "generator": "Project struct builder from Apple opcode tables / libwpg published layout",
+      "oracle": "Independent ImageMagick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid-v2.wpg",
+      "sha256": "9c7e446312ef7d8b855b2b83cfd822a49ca812f08f71f010131ed146282d1bd2",
+      "bytes": 73,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal rectangle or six RGB pixels; record layout facts, no upstream asset bytes.",
+      "generator": "Project struct builder from Apple opcode tables / libwpg published layout",
+      "oracle": "Independent ImageMagick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.bmp",
+      "sha256": "9d565b89feab4c14ea8d1c62870dc9f29cec3808043cd938e6bdc12bece5f406",
+      "bytes": 78,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Original GridGrind field campaign synthetic 3x2 RGB grid (R=70*x, G=90*y, B=35); generator.log records independent encoding/decoding. DIB removes the same BMP file header; EPS is authored geometry.",
+      "generator": "field campaign media-formats generator",
+      "oracle": "Independent image decoder and original field byte-preservation controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.dib",
+      "sha256": "5b194ada3e6406800e4186132f73f8078b5389585cc245b9b93d56bea40bacd3",
+      "bytes": 64,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Original GridGrind field campaign synthetic 3x2 RGB grid (R=70*x, G=90*y, B=35); generator.log records independent encoding/decoding. DIB removes the same BMP file header; EPS is authored geometry.",
+      "generator": "field campaign media-formats generator",
+      "oracle": "Independent image decoder and original field byte-preservation controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.emf",
+      "sha256": "c4f217812a4330ca7b23295124b85260e4a18411588b559c5bb79755824c2524",
+      "bytes": 132,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal Microsoft record layouts and synthetic rectangle; counted-description adds only the literal GridGrindTest plus header NUL padding.",
+      "generator": "Project struct-based record builder from MS-EMF/MS-WMF functional format facts",
+      "oracle": "Apache POI independent parser for original minimal records; owner span regression cases",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.eps",
+      "sha256": "0859496006a57efdb8ffd34fb0c130b3bd8b62c8443c4090d2c8e1548fd3cf42",
+      "bytes": 113,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Original GridGrind field campaign synthetic 3x2 RGB grid (R=70*x, G=90*y, B=35); generator.log records independent encoding/decoding. DIB removes the same BMP file header; EPS is authored geometry.",
+      "generator": "field campaign media-formats generator",
+      "oracle": "Independent image decoder and original field byte-preservation controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.gif",
+      "sha256": "fd3fdb328f487495f3f784191c5c089c84d9277cdb6a88e281a04eddffd09592",
+      "bytes": 60,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Original GridGrind field campaign synthetic 3x2 RGB grid (R=70*x, G=90*y, B=35); generator.log records independent encoding/decoding. DIB removes the same BMP file header; EPS is authored geometry.",
+      "generator": "field campaign media-formats generator",
+      "oracle": "Independent image decoder and original field byte-preservation controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.jpeg",
+      "sha256": "47b5cb88f01b76a8f87875c0965eefb9bf1fbe69d436f83628e16378228a4509",
+      "bytes": 652,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Original GridGrind field campaign synthetic 3x2 RGB grid (R=70*x, G=90*y, B=35); generator.log records independent encoding/decoding. DIB removes the same BMP file header; EPS is authored geometry.",
+      "generator": "field campaign media-formats generator",
+      "oracle": "Independent image decoder and original field byte-preservation controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.pict",
+      "sha256": "57c2fe61a19add236d87be03daf085b234c9e5b9d75f3cdda2bf371ed5ce6aa7",
+      "bytes": 646,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic 3x2 solid red image.",
+      "generator": "ImageMagick 7.1.2-35 native encoder",
+      "oracle": "Independent ImageMagick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.png",
+      "sha256": "775a7cdae152c4f124b4dd12b6e558922401f088cf9a4ce52eb527fd51f0ea42",
+      "bytes": 85,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Original GridGrind field campaign synthetic 3x2 RGB grid (R=70*x, G=90*y, B=35); generator.log records independent encoding/decoding. DIB removes the same BMP file header; EPS is authored geometry.",
+      "generator": "field campaign media-formats generator",
+      "oracle": "Independent image decoder and original field byte-preservation controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.tiff",
+      "sha256": "4ebdd7dd7bc5518de0f3f40af80b0cfb87142ab2df6697af3155a28660acb2ff",
+      "bytes": 202,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Original GridGrind field campaign synthetic 3x2 RGB grid (R=70*x, G=90*y, B=35); generator.log records independent encoding/decoding. DIB removes the same BMP file header; EPS is authored geometry.",
+      "generator": "field campaign media-formats generator",
+      "oracle": "Independent image decoder and original field byte-preservation controls",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.wmf",
+      "sha256": "78489e202a9d376db3c03f31e47d897ccd80b8344538583d9944c2ca64e43fee",
+      "bytes": 80,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-authored minimal Microsoft record layouts and synthetic rectangle; counted-description adds only the literal GridGrindTest plus header NUL padding.",
+      "generator": "Project struct-based record builder from MS-EMF/MS-WMF functional format facts",
+      "oracle": "Apache POI independent parser for original minimal records; owner span regression cases",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "valid.wpg",
+      "sha256": "527e85b413dbfd8454b78d5329028c6f86b097fcd688b001493b4b059aa262bd",
+      "bytes": 46,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated synthetic 3x2 solid red image.",
+      "generator": "ImageMagick 7.1.2-35 native encoder",
+      "oracle": "Independent ImageMagick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-1x1-strip.tiff",
+      "sha256": "408d6fa0a302076cafaff36b0d585a8aeace2a5df200cc4a0a1f998bc6cee5bb",
+      "bytes": 280,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-1x1-tile.tiff",
+      "sha256": "96f2ac22f7f01415824986f3ddc2e22d5d408e1b15e3d03813cead4845084be6",
+      "bytes": 948,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-2x1-strip.tiff",
+      "sha256": "85317ebf3ae487c74d067a97512de788ba00f739cd24a4a9cae5f4978d0a6046",
+      "bytes": 252,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-2x1-tile.tiff",
+      "sha256": "94f3548817ea77c7a482f6d5e541ca2b8c41f8a4dd29819f4f2e36a6cbffb9bb",
+      "bytes": 676,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-2x2-strip.tiff",
+      "sha256": "66ed95947026ded7154fba5db59d61e3e8c40ee5f4b4c413c877ab3996631d99",
+      "bytes": 224,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-2x2-tile.tiff",
+      "sha256": "9b5b20c5403e174d690aacc113c209dcf31de639422cd27cc3dfc2f5d5bcac81",
+      "bytes": 420,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-4x1-strip.tiff",
+      "sha256": "ba3fa3f5ee38b4a6122b2de6b6525cb2c41634b8d9ba175ef15f19476c1f98b8",
+      "bytes": 224,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-4x1-tile.tiff",
+      "sha256": "00f4509ee0cb39eb6618b8aa8ca55990cdd79feef415dac8ded17d5809d17bf5",
+      "bytes": 420,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-4x2-strip.tiff",
+      "sha256": "1a7d3bae6a0fe7f7e71fa17902e79da12d30e41ae8a9fae599c9abbac3283aba",
+      "bytes": 200,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-4x2-tile.tiff",
+      "sha256": "bec5103d6ccf0a43723d1aa8691d325f959968782d9195428962a250d1308de3",
+      "bytes": 298,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-4x4-strip.tiff",
+      "sha256": "2d5ed10f628c104fa7325e2fb933fc52754a73901c20eb9c8bb23b900b861dd1",
+      "bytes": 192,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    },
+    {
+      "file": "ycbcr-packbits-4x4-tile.tiff",
+      "sha256": "6d0a60c5edd8e319aa873ab6fbc6b18dbb6ac530fafaea450749d089891e3cd6",
+      "bytes": 236,
+      "origin_kind": "project_synthetic_or_project_mutated_synthetic",
+      "origin": "Project-generated5x7 or padded16x16 synthetic constant Y/Cb/Cr clumps.",
+      "generator": "Project C writer using LibTIFF4.7.2 PackBits and six normative subsampling pairs",
+      "oracle": "Independent LibTIFF/Magick reopening",
+      "asset_terms": "Project synthetic test data; see repository LICENSE. No upstream vendor asset is copied."
+    }
+  ]
+}

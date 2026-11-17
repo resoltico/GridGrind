@@ -186,7 +186,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             && Objects.equals(directEmbedded.fileName(), reportEmbedded.fileName().orElse(null));
     return matches
         ? pass(
-            "GridGrind authors, mutates, persists, and rereads Phase 5 drawing objects with direct POI agreement.")
+            "GridGrind authors, mutates, persists, and rereads Phase 5 drawing objects with direct"
+                + " POI agreement.")
         : fail("GridGrind-authored drawing workbook diverged from the direct POI oracle.");
   }
 
@@ -209,7 +210,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
     return before.equals(after)
         ? pass(
-            "Comment operations coexist with drawing parts without corrupting pictures or comments.")
+            "Comment operations coexist with drawing parts without corrupting pictures or"
+                + " comments.")
         : fail("Comment operations changed drawing-backed or comment-backed sheet state.");
   }
 
@@ -335,7 +337,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             && drawing.drawingObjects().size() == 1;
     return matches
         ? pass(
-            "GridGrind reads supported POI-authored simple charts and chart drawing inventory losslessly.")
+            "GridGrind reads supported POI-authored simple charts and chart drawing inventory"
+                + " losslessly.")
         : fail("GridGrind chart readback diverged from the direct POI oracle.");
   }
 
@@ -373,7 +376,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         || !(directDrawing.objects().getFirst()
             instanceof XlsxParityOracle.ChartDrawingObjectSnapshot directDrawingChart)) {
       return fail(
-          "GridGrind-authored chart corpus workbook is not in the expected single-bar-chart shape.");
+          "GridGrind-authored chart corpus workbook is not in the expected single-bar-chart"
+              + " shape.");
     }
     ChartReport directChart = directCharts.getFirst();
     ChartReport.Bar directChartPlot = onlyPlot(directChart, ChartReport.Bar.class);
@@ -382,10 +386,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             instanceof ChartReport.DataSource.StringReference categories)
         || !(directChartPlot.series().get(1).values()
             instanceof ChartReport.DataSource.NumericReference values)
-        || !"ChartCategories".equals(categories.formula())
-        || !"ChartActual".equals(values.formula())) {
+        || !Optional.of("ChartCategories").equals(categories.formula())
+        || !Optional.of("ChartActual").equals(values.formula())) {
       return fail(
-          "GridGrind-authored chart corpus workbook did not retain named-range-backed series binding.");
+          "GridGrind-authored chart corpus workbook did not retain named-range-backed series"
+              + " binding.");
     }
     if (charts.charts().size() != 1
         || drawing.drawingObjects().size() != 1
@@ -399,7 +404,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             && drawing.drawingObjects().size() == 1;
     return matches
         ? pass(
-            "GridGrind authors named-range-backed simple charts and rereads them with direct POI agreement.")
+            "GridGrind authors named-range-backed simple charts and rereads them with direct POI"
+                + " agreement.")
         : fail("GridGrind-authored chart workbook diverged from the direct POI oracle.");
   }
 
@@ -483,7 +489,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             && directChart.title().equals(new ChartReport.Title.Text("Actual focus"));
     return matches
         ? pass(
-            "GridGrind mutates existing simple charts after workbook-core edits with direct POI agreement.")
+            "GridGrind mutates existing simple charts after workbook-core edits with direct POI"
+                + " agreement.")
         : fail("GridGrind simple-chart mutation diverged from the direct POI oracle.");
   }
 
@@ -516,7 +523,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     }
     return mismatches.isEmpty()
         ? pass(
-            "All Phase 6 chart corpus workbooks preserve chart relations and anchors across unrelated edits.")
+            "All Phase 6 chart corpus workbooks preserve chart relations and anchors across"
+                + " unrelated edits.")
         : fail("Unrelated GridGrind edits changed chart state for scenarios: " + mismatches);
   }
 
@@ -605,7 +613,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             && hasSinglePlot(replacedCharts.charts().getFirst(), ChartReport.Bar.class);
     return matches
         ? pass(
-            "Combo charts are surfaced truthfully, preserved losslessly, and can be authoritatively replaced.")
+            "Combo charts are surfaced truthfully, preserved losslessly, and can be authoritatively"
+                + " replaced.")
         : fail("Combo-chart handling diverged from the direct POI oracle or replacement contract.");
   }
 
@@ -634,7 +643,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     }
     return mismatches.isEmpty()
         ? pass(
-            "Phase 7 pivot corpus workbooks preserve pivot parts and sources across unrelated edits.")
+            "Phase 7 pivot corpus workbooks preserve pivot parts and sources across unrelated"
+                + " edits.")
         : fail("Unrelated GridGrind edits changed pivot state for scenarios: " + mismatches);
   }
 
@@ -712,13 +722,15 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         || !(supportedPivotByName(directPivots, "Table Pivot").source()
             instanceof PivotTableReport.PivotSourceReport.Table)) {
       return fail(
-          "GridGrind-authored pivot corpus workbook did not retain the expected range, named-range, and table-backed pivot shapes.");
+          "GridGrind-authored pivot corpus workbook did not retain the expected range, named-range,"
+              + " and table-backed pivot shapes.");
     }
     boolean matches =
         pivots.pivotTables().equals(directPivots) && pivotHealthClean(health, directPivots.size());
     return matches
         ? pass(
-            "GridGrind authors range-, named-range-, and table-backed pivot tables and rereads them with direct POI agreement.")
+            "GridGrind authors range-, named-range-, and table-backed pivot tables and rereads them"
+                + " with direct POI agreement.")
         : fail("GridGrind-authored pivot workbook diverged from the direct POI oracle.");
   }
 

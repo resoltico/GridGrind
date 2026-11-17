@@ -238,7 +238,7 @@ class ExcelChartMutationFlowTest {
           ExcelChartTestSupport.singlePlot(lineChart, ChartReport.Line.class).series().getFirst();
       ChartReport.Title.Formula title =
           assertInstanceOf(ChartReport.Title.Formula.class, firstSeries.title());
-      assertEquals("10.0", title.cachedText());
+      assertEquals("10.0", ChartCacheAssertions.singleStringValue(title.cache()));
     }
   }
 

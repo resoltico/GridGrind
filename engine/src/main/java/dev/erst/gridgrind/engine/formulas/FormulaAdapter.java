@@ -15,7 +15,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.SheetCollectionAdapter;
 import dev.erst.gridgrind.engine.cells.CellErrors;
 import java.util.ArrayList;
@@ -90,7 +89,7 @@ public final class FormulaAdapter {
     formulaRuntime.clearCachedResults();
     for (FormulaCellTarget target : cells) {
       Objects.requireNonNull(target, "cells must not contain nulls");
-      Cell cell = requiredCell(target.sheetName().value(), target.address().value());
+      Cell cell = requiredCell(target.sheetName().value(), target.address());
       if (cell.getCellType() != CellType.FORMULA) {
         throw new IllegalArgumentException(
             "Cell "
@@ -112,7 +111,7 @@ public final class FormulaAdapter {
     List<CalculationReport.FormulaCapability> assessments = new ArrayList<>(cells.size());
     for (FormulaCellTarget target : cells) {
       Objects.requireNonNull(target, "cells must not contain nulls");
-      Cell cell = requiredCell(target.sheetName().value(), target.address().value());
+      Cell cell = requiredCell(target.sheetName().value(), target.address());
       if (cell.getCellType() != CellType.FORMULA) {
         throw new IllegalArgumentException(
             "Cell "
@@ -275,26 +274,17 @@ public final class FormulaAdapter {
         new SheetLabel(sheet.getSheetName()), count, patterns.size(), patterns);
   }
 
-  private Cell requiredCell(String sheetName, String address) {
-    CellReference reference = parseCellReference(address);
+  private Cell requiredCell(String sheetName, CellAddress address) {
     Sheet sheet = SheetCollectionAdapter.requiredSheet(workbook, sheetName);
-    Row row = sheet.getRow(reference.getRow());
+    Row row = sheet.getRow(address.rowIndex());
     if (row == null) {
-      throw new CellNotFoundException(address);
+      throw new CellNotFoundException(address.value());
     }
-    Cell cell = row.getCell(reference.getCol());
+    Cell cell = row.getCell(address.columnIndex());
     if (cell == null) {
-      throw new CellNotFoundException(address);
+      throw new CellNotFoundException(address.value());
     }
     return cell;
-  }
-
-  private static CellReference parseCellReference(String address) {
-    try {
-      return new CellReference(address);
-    } catch (IllegalArgumentException exception) {
-      throw new InvalidCellAddressException(address, exception);
-    }
   }
 
   public static List<AnalysisFindingReport> formulaHealthFindings(
@@ -399,16 +389,15 @@ public final class FormulaAdapter {
   private static void addVolatileFunctionFindings(
       List<AnalysisFindingReport> findings, String formula, AnalysisLocationReport.Cell location) {
     FormulaAdapter.volatileFunctions(formula)
-        .forEach(
-            functionName ->
-                findings.add(
-                    new AnalysisFindingReport(
-                        AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
-                        AnalysisSeverity.INFO,
-                        "Volatile formula function",
-                        "Formula uses volatile function " + functionName + ".",
-                        location,
-                        List.of(formula, functionName))));
+        .forEach(functionName ->
+            findings.add(
+                new AnalysisFindingReport(
+                    AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+                    AnalysisSeverity.INFO,
+                    "Volatile formula function",
+                    "Formula uses volatile function " + functionName + ".",
+                    location,
+                    List.of(formula, functionName))));
   }
 
   private static void addEvaluationFindings(
@@ -532,12 +521,11 @@ public final class FormulaAdapter {
   }
 
   /** Checks whether the exact stored formula still owns an authored origin. */
-  public boolean matchesStoredFormula(String sheetName, String address, String formula) {
+  public boolean matchesStoredFormula(String sheetName, CellAddress address, String formula) {
     Sheet sheet = workbook.getSheet(sheetName);
     if (sheet == null) return false;
-    CellReference reference = new CellReference(address);
-    Row row = sheet.getRow(reference.getRow());
-    Cell cell = row == null ? null : row.getCell(reference.getCol());
+    Row row = sheet.getRow(address.rowIndex());
+    Cell cell = row == null ? null : row.getCell(address.columnIndex());
     return cell != null
         && cell.getCellType() == CellType.FORMULA
         && formula.equals(cell.getCellFormula());

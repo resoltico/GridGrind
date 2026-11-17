@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare a release source archive for two locally built Debian/Corretto images."""
+"""Prepare a release source archive for two locally built Ubuntu/Temurin images."""
 
 import argparse
 import gzip
@@ -16,6 +16,7 @@ import sys
 import tarfile
 import time
 from urllib.parse import urlparse
+import urllib.request
 import uuid
 
 
@@ -31,7 +32,8 @@ MANIFEST_MEDIA_TYPES = {
 }
 BUILD_INPUTS = (
     "Dockerfile", "release/container-runtime.properties", "scripts/prepare-container-sources.py",
-    "LICENSE", "NOTICE",
+    "LICENSE", "PROJECT-NOTICE.md", "LICENSE-COMMERCIAL.md", "NOTICE", "PATENTS.md",
+    "LICENSE-APACHE-2.0", "LICENSE-BSD-2-CLAUSE", "LICENSE-BSD-3-CLAUSE",
 )
 
 
@@ -46,6 +48,66 @@ def digest(path):
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             value.update(chunk)
     return value.hexdigest()
+
+
+def runtime_pins(path):
+    records = {}
+    for line in path.read_text().splitlines():
+        if not line.strip() or line.startswith("#"):
+            continue
+        key, separator, value = line.partition("=")
+        require(separator and key not in records and value, "Malformed runtime pin")
+        records[key] = value
+    return records
+
+
+def release_properties(text):
+    records = {}
+    for line in text.splitlines():
+        key, separator, value = line.partition("=")
+        require(separator and key not in records, "Malformed Java release identity")
+        values = shlex.split(value)
+        require(len(values) == 1, "Malformed Java release value")
+        records[key] = values[0]
+    return records
+
+
+def verify_source_tree(path, prefix, required):
+    """Inspect full native/build material without executing or extracting upstream files."""
+    with tarfile.open(path, "r:gz") as archive:
+        members = archive.getmembers()
+        for member in members:
+            parts = Path(member.name).parts
+            require(parts and parts[0] == prefix and not Path(member.name).is_absolute()
+                    and ".." not in parts, "Unsafe or foreign vendor source archive member")
+        files = {member.name for member in members if member.isfile() and member.size > 0}
+        require(all(prefix + "/" + name in files for name in required),
+                "Vendor archive lacks required native source or build material")
+
+
+def verify_vendor_material(source, build, pins):
+    for path, key in [(source, "TEMURIN_SOURCE_SHA256"), (build, "TEMURIN_BUILD_SHA256")]:
+        require(path.is_file() and digest(path) == pins[key], "Vendor source file missing or SHA256 differs")
+    verify_source_tree(source, "jdk-" + pins["TEMURIN_VERSION"] + "-src",
+                       ["LICENSE", "ASSEMBLY_EXCEPTION", "configure", "Makefile",
+                        "make/conf/version-numbers.conf", "src/hotspot/share/runtime/thread.cpp"])
+    verify_source_tree(build, "temurin-build-" + pins["TEMURIN_BUILD_COMMIT"],
+                       ["LICENSE", "makejdk-any-platform.sh"])
+
+
+def verify_vendor_metadata(metadata, pins, architecture):
+    prefix = "TEMURIN_" + architecture.upper()
+    require(metadata.get("vendor") == "Eclipse Adoptium"
+            and metadata.get("os") == "linux"
+            and metadata.get("arch") == {"amd64": "x64", "arm64": "aarch64"}[architecture]
+            and metadata.get("binary_type") == "jdk"
+            and metadata.get("scmRef") == pins["TEMURIN_SCM_REF"]
+            and metadata.get("sha256") == pins[prefix + "_SHA256"]
+            and metadata.get("buildRef") == "https://github.com/adoptium/temurin-build/commit/" + pins["TEMURIN_BUILD_COMMIT"]
+            and metadata.get("openjdk_source") == "https://github.com/adoptium/jdk27u/commit/" + pins["TEMURIN_SOURCE_COMMIT"]
+            and "Temurin-" + pins["TEMURIN_VERSION"] in metadata.get("full_version_output", "")
+            and metadata.get("configure_arguments") and metadata.get("openjdk_built_config"),
+            "Vendor build metadata does not match selected binary/source tuple")
 
 
 def write_archive(content, archive, version):
@@ -129,12 +191,14 @@ def source_record(text, name, version):
     return files
 
 
-def require_debian_uri(uri):
+def require_ubuntu_uri(uri):
     parsed = urlparse(uri)
     host = parsed.hostname or ""
-    require(parsed.scheme in {"http", "https"} and (host == "debian.org" or host.endswith(".debian.org"))
-            and parsed.username is None and parsed.password is None and not parsed.fragment,
-            f"Unsupported or non-Debian source archive URI: {uri}")
+    require(parsed.scheme in {"http", "https"} and host == "snapshot.ubuntu.com"
+            and parsed.username is None and parsed.password is None and not parsed.fragment
+            and not parsed.query and parsed.port is None
+            and re.match(r"/ubuntu/[0-9]{8}T[0-9]{6}Z/", parsed.path),
+            f"Unsupported or non-Ubuntu source archive URI: {uri}")
 
 
 def source_config(text, filename):
@@ -158,16 +222,12 @@ def source_config(text, filename):
                 continue
             block = re.sub(r"(?m)^Types:.*$", "Types: deb-src", block)
             blocks.append(block)
-            for snapshot in re.findall(r"(?m)^#\s*(https?://snapshot\.debian\.org/archive/[^\s]+)", block):
-                historic = re.sub(r"(?m)^URIs:.*$", "URIs: " + snapshot, block)
-                historic = re.sub(r"(?m)^Check-Valid-Until:.*\n?", "", historic)
-                blocks.append(historic + "\nCheck-Valid-Until: no")
         converted = "\n\n".join(dict.fromkeys(blocks)) + "\n"
         uri_fields = re.findall(r"(?m)^URIs:([^\n]*(?:\n[ \t]+[^\n]*)*)", converted)
         uris = [uri for field in uri_fields for uri in field.split()]
     require(not converted.strip() or uris, "APT source configuration has no archive URI")
     for uri in uris:
-        require_debian_uri(uri)
+        require_ubuntu_uri(uri)
     return converted
 
 
@@ -179,7 +239,7 @@ def uri_records(text):
         fields = shlex.split(line)
         require(len(fields) == 4 and fields[2].isdecimal(), "Malformed apt source URI output")
         uri, name, size, _ = fields
-        require_debian_uri(uri)
+        require_ubuntu_uri(uri)
         require(Path(name).name == name and name not in records, "Unsafe or repeated apt source file")
         records[name] = {"url": uri, "size": int(size)}
     require(records, "APT produced no source download URIs")
@@ -250,8 +310,12 @@ def prepare(args):
         return process.stdout
 
     try:
-        manifest = {"version": args.version, "vendorSourceCommit": args.vendor_source_commit,
-                    "vendorSourceSha256": args.vendor_source_sha256, "images": [], "sources": []}
+        pins = runtime_pins(Path(__file__).resolve().parents[1] / "release/container-runtime.properties")
+        manifest = {"version": args.version, "vendorScmRef": pins["TEMURIN_SCM_REF"],
+                    "vendorVersion": pins["TEMURIN_VERSION"],
+                    "vendorSourceSha256": pins["TEMURIN_SOURCE_SHA256"],
+                    "vendorBuildCommit": pins["TEMURIN_BUILD_COMMIT"],
+                    "vendorBuildSha256": pins["TEMURIN_BUILD_SHA256"], "images": [], "sources": []}
         repository = Path(__file__).resolve().parents[1]
         manifest["gridgrindBuildSources"] = copy_build_inputs(repository, content)
         tuples = set()
@@ -278,17 +342,21 @@ def prepare(args):
                     continue
                 binary, binary_version, source, source_version = fields[1:]
                 require(all(fields[1:]), "Incomplete installed package source mapping")
-                require(SOURCE_NAME.fullmatch(source), "Invalid Debian source package name")
-                require(SOURCE_VERSION.fullmatch(source_version), "Invalid Debian source version")
+                require(SOURCE_NAME.fullmatch(source), "Invalid Ubuntu source package name")
+                require(SOURCE_VERSION.fullmatch(source_version), "Invalid Ubuntu source version")
                 tuples.add((source, source_version))
                 packages.append({"binary": binary, "version": binary_version, "source": source, "sourceVersion": source_version})
             (image_dir / "packages.tsv").write_text("".join(
                 "\t".join([p["binary"], p["version"], p["source"], p["sourceVersion"]]) + "\n" for p in packages))
             release = run(["docker", "exec", name, "sh", "-ec", 'cat "$JAVA_HOME/release"'])
-            commit = run(["docker", "exec", name, "sh", "-ec", 'cat "$JAVA_HOME/commitId.txt"']).strip()
-            require(commit == args.vendor_source_commit, f"Vendor source commit does not match {platform} JRE")
+            properties = release_properties(release)
+            require(properties.get("JAVA_RUNTIME_VERSION") == pins["TEMURIN_VERSION"]
+                    and properties.get("IMPLEMENTOR") == "Eclipse Adoptium",
+                    f"Vendor identity does not match {platform} JDK")
+            require(properties.get("SOURCE") == ".:git:" + pins["TEMURIN_SOURCE_COMMIT"][:12]
+                    and properties.get("BUILD_SOURCE") == "git:" + pins["TEMURIN_BUILD_COMMIT"],
+                    f"Vendor source ref does not match {platform} JDK")
             (image_dir / "java-release.txt").write_text(release)
-            (image_dir / "java-commitId.txt").write_text(commit + "\n")
             image_id = json.loads(run(["docker", "inspect", name]))[0]["Image"]
             image_info = json.loads(run(["docker", "image", "inspect", "--platform", platform, image_id]))[0]
             manifest["images"].append({"platform": platform, "manifestDigest": manifest_digest(image_info), "packages": packages})
@@ -302,7 +370,7 @@ def prepare(args):
                 if converted.strip():
                     configs.setdefault((converted, Path(filename).suffix), None)
 
-        require(tuples and configs, "Final images have no Debian source mapping or apt archive configuration")
+        require(tuples and configs, "Final images have no Ubuntu source mapping or apt archive configuration")
         helper = containers[0]
         config_dir = content / "apt-source-config"
         config_dir.mkdir()
@@ -314,7 +382,7 @@ def prepare(args):
         run(["docker", "exec", helper, "mkdir", "-p", "/tmp/gridgrind-source-lists/partial", "/tmp/gridgrind-source-cache/archives/partial"])
         run(["docker", "exec", helper, "apt-get", *apt_options, "update"], timeout=600)
         index_size = int(run(["docker", "exec", helper, "du", "-sb", "/tmp/gridgrind-source-lists"]).split()[0])
-        require(index_size <= INDEX_LIMIT, "Debian source index evidence exceeds 256 MiB")
+        require(index_size <= INDEX_LIMIT, "Ubuntu source index evidence exceeds 256 MiB")
         plans = []
         for name, version in sorted(tuples):
             text = run(["docker", "exec", helper, "apt-cache", *apt_options, "showsrc", name])
@@ -325,14 +393,14 @@ def prepare(args):
                     f"APT source URI set disagrees with authenticated metadata for {name}={version}")
             plans.append({"package": name, "version": version, "files": expected, "uris": uris, "indexStanza": text})
         planned = (sum(v["size"] for p in plans for v in p["files"].values())
-                   + args.vendor_source.stat().st_size + index_size
+                   + args.vendor_source.stat().st_size + args.vendor_build_source.stat().st_size + index_size
                    + sum(source["size"] for source in manifest["gridgrindBuildSources"]))
         # Conservative publication peak: upstream tree, release archive, BuildKit upload
         # snapshot, source-image layer, Docker download blob, and unpacked layer.
         # Existing runtime-image caches have already consumed their earlier disk budget.
         required_space = 6 * planned + 512 * 1024**2
         free_space = shutil.disk_usage(output).free
-        print(f"Preflight: {len(plans)} Debian source tuples; {planned} planned source/index bytes; "
+        print(f"Preflight: {len(plans)} Ubuntu source tuples; {planned} planned source/index bytes; "
               f"required free bytes={required_space}; available free bytes={free_space} "
               "(six preparation/publication copies plus 512 MiB headroom)", flush=True)
         require(planned + 16 * 1024**2 < ASSET_LIMIT, "Source payload would exceed the single GitHub release asset limit")
@@ -340,7 +408,7 @@ def prepare(args):
         (output / "source-plan.json").write_text(json.dumps(plans, indent=2) + "\n")
         for plan in plans:
             name, version = plan["package"], plan["version"]
-            directory = content / "debian" / name / version
+            directory = content / "ubuntu" / name / version
             directory.mkdir(parents=True)
             relative = directory.relative_to(output)
             if reuse_source_package(args.source_cache, directory, name, version, plan["files"]):
@@ -359,26 +427,44 @@ def prepare(args):
                 run(["docker", "cp", helper + ":" + path, str(trust / Path(path).name)])
         vendor = content / "vendor"
         vendor.mkdir()
-        vendor_archive = vendor / f"corretto-{args.vendor_source_commit}.tar.gz"
+        vendor_archive = vendor / "temurin-sources.tar.gz"
+        build_archive = vendor / "temurin-build.tar.gz"
         shutil.copyfile(args.vendor_source, vendor_archive)
-        require(digest(vendor_archive) == args.vendor_source_sha256, "Copied vendor source hash changed")
+        shutil.copyfile(args.vendor_build_source, build_archive)
+        verify_vendor_material(vendor_archive, build_archive, pins)
         manifest["vendorSourceArchive"] = vendor_archive.relative_to(content).as_posix()
+        manifest["vendorBuildArchive"] = build_archive.relative_to(content).as_posix()
+        manifest["vendorMetadata"] = []
+        for platform, architecture in PLATFORMS.items():
+            prefix = "TEMURIN_" + architecture.upper()
+            request = urllib.request.Request(pins[prefix + "_METADATA_URL"], headers={"User-Agent": "GridGrind source collector"})
+            with urllib.request.urlopen(request, timeout=60) as response:
+                data = response.read(1024 * 1024 + 1)
+            metadata_path = vendor / (architecture + "-build-metadata.json")
+            metadata_path.write_bytes(data)
+            require(len(data) <= 1024 * 1024 and digest(metadata_path) == pins[prefix + "_METADATA_SHA256"],
+                    "Vendor metadata differs from pinned bytes")
+            metadata = json.loads(data)
+            verify_vendor_metadata(metadata, pins, architecture)
+            manifest["vendorMetadata"].append({"platform": platform, "path": metadata_path.relative_to(content).as_posix(),
+                                              "sha256": digest(metadata_path)})
         for source in manifest["gridgrindBuildSources"]:
             require(digest(repository / source["sourcePath"]) == source["sha256"],
                     "Container build source changed during collection: " + source["sourcePath"])
         (content / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
         (content / "README.txt").write_text(
             "Corresponding source for the listed GridGrind container platform manifests.\n"
-            "manifest.json maps both image platforms and Debian binary packages to exact source versions.\n"
-            "Each debian/<package>/<version> directory retains the original .dsc and every source part.\n"
-            "Extract with: dpkg-source -x <package>.dsc (Debian dpkg-dev). Debian packaging/build rules\n"
+            "manifest.json maps both image platforms and Ubuntu binary packages to exact source versions.\n"
+            "Each ubuntu/<package>/<version> directory retains the original .dsc and every source part.\n"
+            "Extract with: dpkg-source -x <package>.dsc (Ubuntu dpkg-dev). Ubuntu packaging/build rules\n"
             "and component license notices are inside the source archives. No rebuilding is claimed here.\n"
-            "vendor/ contains the unchanged complete vendor commit archive identified in the manifest;\n"
+            "vendor/ contains the unchanged complete vendor source and build archives identified in the manifest;\n"
             "its source, native code, build scripts and licenses retain their upstream terms.\n"
             "gridgrind-build/ contains the exact image Dockerfile, runtime pins and source collector,\n"
-            "with their hashes in manifest.json. Those GridGrind files use MPL2; their LICENSE and\n"
-            "NOTICE preserve the project scope, attribution and source-availability information.\n"
-            "The corresponding GridGrind release tag separately publishes the application source.\n"
+            "with their hashes in manifest.json. Original GridGrind files use AGPL-3.0-only; LICENSE,\n"
+            "PROJECT-NOTICE.md and NOTICE preserve scope, attribution and source-delivery information.\n"
+            f"The separate gridgrind-{args.version}-sources.tar.gz archive retains the exact frozen owned\n"
+            "application/helper/repair/build source for the release; tags are convenience references.\n"
             "This is delivered source material, not a new written offer for later source delivery.\n")
         archive = output / f"gridgrind-container-sources-{args.version}.tar.gz"
         write_archive(content, archive, args.version)
@@ -413,23 +499,20 @@ def main():
     parser.add_argument("--version", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-cache", type=Path,
-                        help="Read-only prior content/debian directory; reuse requires fresh authenticated hashes")
+                        help="Read-only prior content/ubuntu directory; reuse requires fresh authenticated hashes")
     parser.add_argument("--vendor-source", type=Path, required=True)
-    parser.add_argument("--vendor-source-sha256", required=True)
-    parser.add_argument("--vendor-source-commit", required=True)
+    parser.add_argument("--vendor-build-source", type=Path, required=True)
     args = parser.parse_args()
     try:
         require(re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", args.version), "Version must be X.Y.Z")
         args.image = [tuple(item.split("=", 1)) for item in args.image]
         require(all(len(item) == 2 and item[0] in PLATFORMS and item[1] for item in args.image), "Invalid platform=image input")
         require(sorted(p for p, _ in args.image) == sorted(PLATFORMS), "Supply exactly amd64 and arm64 final images")
-        require(SHA256.fullmatch(args.vendor_source_sha256), "Invalid vendor source SHA256")
-        require(re.fullmatch(r"[a-f0-9]{40}", args.vendor_source_commit), "Vendor source commit must be a full SHA1")
-        require(args.vendor_source.is_file() and digest(args.vendor_source) == args.vendor_source_sha256,
-                "Vendor source file is missing or its SHA256 differs")
+        pins = runtime_pins(Path(__file__).resolve().parents[1] / "release/container-runtime.properties")
+        verify_vendor_material(args.vendor_source, args.vendor_build_source, pins)
         if args.source_cache is not None:
             args.source_cache = args.source_cache.resolve()
-            require(args.source_cache.is_dir(), "Source cache must be an existing prior content/debian directory")
+            require(args.source_cache.is_dir(), "Source cache must be an existing prior content/ubuntu directory")
         def interrupt(*_):
             raise KeyboardInterrupt()
 

@@ -102,6 +102,7 @@ class FullXssfPersistenceTest {
         root,
         root.resolve("scratch"),
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of(),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

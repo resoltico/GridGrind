@@ -1,11 +1,18 @@
 {
   "name": "GridGrind Contributor",
   "build": {
-    "dockerfile": "Dockerfile",
-    "context": "."
+    "dockerfile": "../Dockerfile",
+    "context": "..",
+    "target": "contributor"
   },
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.1@sha256:698f5900fac471e046c6e9d4333fec88c0e8d952c713494fa0712dce80baeca0": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.2@sha256:661b0fd4c57a7e0bd14d99701ab9bc824719678a9319118728f8d9c59441b7e4": {
+      "version": "29.9.3",
+      "dockerDashComposeVersion": "none",
+      "installDockerBuildx": false,
+      "moby": false,
+      "installDockerComposeSwitch": false
+    }
   },
   "workspaceFolder": "/workspaces/gridgrind",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/gridgrind,type=bind,consistency=cached",
@@ -25,7 +32,7 @@
         "java.configuration.runtimes": [
           {
             "name": "JavaSE-27",
-            "path": "/usr/lib/jvm/zulu-27",
+            "path": "/opt/java/openjdk",
             "default": true
           }
         ],

@@ -23,10 +23,9 @@ final class MutationActionNameValidation {
   static void requirePivotTableName(String name) {
     Objects.requireNonNull(name, "name must not be null");
     ExcelPivotTableNaming.violation(name)
-        .ifPresent(
-            violation -> {
-              throw invalidField(FieldValidationProblemMappers.pivotTableName("name"));
-            });
+        .ifPresent(violation -> {
+          throw invalidField(FieldValidationProblemMappers.pivotTableName("name"));
+        });
   }
 
   static InvalidRequestException invalidField(FieldValidationProblem problem) {

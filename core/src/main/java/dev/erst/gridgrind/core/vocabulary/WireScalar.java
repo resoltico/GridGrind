@@ -7,6 +7,13 @@ public sealed interface WireScalar permits WireString, ProtocolVersion {
     return type.isRecord() && WireScalar.class.isAssignableFrom(type);
   }
 
+  /** Returns the scalar constructor type, independent of the internal record representation. */
+  static Class<?> wireType(Class<?> type) {
+    if (WireString.class.isAssignableFrom(type)) return String.class;
+    if (type == ProtocolVersion.class) return int.class;
+    throw new IllegalArgumentException("Unsupported wire scalar: " + type);
+  }
+
   /** Returns the primitive string or integer represented by this value. */
   Object scalarValue();
 }

@@ -1,0 +1,13 @@
+--- org/apache/poi/ss/formula/atp/WorkdayIntlFunction.java
++++ org/apache/poi/ss/formula/atp/WorkdayIntlFunction.java
+@@ -83,8 +83,8 @@
+             ValueEval holidaysCell = args.length >= 4 ? args[3] : null;
+             holidays = this.evaluator.evaluateDatesArg(holidaysCell, srcCellRow, srcCellCol);
+             double result = DateUtil.getExcelDate(
+-                    WorkdayCalculator.instance.calculateWorkdays(start, days, weekendType, holidays));
+-            if (result >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++                    WorkdayCalculator.instance.calculateWorkdays(start, days, weekendType, holidays), org.apache.poi.ss.usermodel.DateSystemContext.is1904());
++            if (result >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+                 return ErrorEval.NUM_ERROR;
+             }
+             return new NumberEval(result);

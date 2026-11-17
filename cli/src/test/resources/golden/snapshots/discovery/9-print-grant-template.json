@@ -6,6 +6,7 @@
       "type" : "MINIMUM_ONLY"
     },
     "allowedSecretReferences" : [ ],
+    "maxInputSnapshotBytes" : 0,
     "operationIds" : [ ],
     "publicationAuthority" : {
       "type" : "NONE"

@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Objects;
 
-/** Reports end-of-file immediately while retaining the delegate's authoritative file size. */
+/** Reports end-of-file immediately while retaining the delegate's size hint. */
 final class EndOfFileChannel implements SeekableByteChannel {
   private final SeekableByteChannel delegate;
 

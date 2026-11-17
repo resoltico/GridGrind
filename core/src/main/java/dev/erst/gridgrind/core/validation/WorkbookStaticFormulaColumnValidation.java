@@ -54,11 +54,10 @@ final class WorkbookStaticFormulaColumnValidation {
   private static FormulaPresence initialFormulaPresence(WorkbookStaticRequest request) {
     return request
         .source()
-        .map(
-            source ->
-                source instanceof WorkbookPlan.WorkbookSource.New
-                    ? FormulaPresence.ABSENT
-                    : FormulaPresence.UNKNOWN)
+        .map(source ->
+            source instanceof WorkbookPlan.WorkbookSource.New
+                ? FormulaPresence.ABSENT
+                : FormulaPresence.UNKNOWN)
         .orElse(FormulaPresence.UNKNOWN);
   }
 

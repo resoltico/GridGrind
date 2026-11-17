@@ -1,72 +1,201 @@
 # Releasing
 
-Use the Java 27 build toolchain configured in gradle.properties. Local builds use 0.0.0-dev.
-A release builds the checked-out vX.Y.Z tag with -Pversion=X.Y.Z; the effective version reaches
-JAR metadata, archive names, image labels and verification inputs.
+[Release](../.github/workflows/release.yml) is a dispatch-only workflow on protected `main`.
+`prepare` builds and checks an untagged source commit; `publish-prepared` publishes an explicitly
+reviewed immutable artifact pair. Tags do not trigger a build or publication. Release controls,
+source and the protected main head must be the same commit. All releases share one serialized
+workflow concurrency group.
 
-Move the reviewed Unreleased bullets into one exact `## [X.Y.Z] - YYYY-MM-DD` section with a
-valid calendar date, leaving an empty Unreleased section above it. Docs-only changes do not
-need release-note bullets. Prepare and inspect the changelog-derived notes with:
+## Prepare the source and candidate
 
-    ./gradlew prepareReleaseNotes -Pversion=X.Y.Z
+Commit the intended product, documentation, dependency and legal inputs before preparation.
+Move the reviewed Unreleased bullets into one exact `## [X.Y.Z] - YYYY-MM-DD` changelog section,
+leaving an empty Unreleased section above it. Release notes come from that section. Documentation-only
+changes do not need release-note bullets. Local builds use `0.0.0-dev`; preparation supplies
+`-Pversion=X.Y.Z` to the declared build, archive and verification tasks.
 
-The task writes build/release-notes.md and rejects missing, duplicated, empty or invalidly dated
-entries. Creating/pushing tags and dispatching publication require explicit release authorization.
+From the matching clean checkout, set the intended numeric stable version and dispatch:
 
-## Verification and publication
+```sh
+repo=resoltico/GridGrind
+version=X.Y.Z # Replace with the intended unpublished numeric version.
+source_commit=$(git rev-parse HEAD)
+test "$source_commit" = "$(gh api "repos/$repo/branches/main" --jq .commit.sha)"
+gh workflow run release.yml --repo "$repo" --ref main \
+  -f operation=prepare -f version="$version" -f source_commit="$source_commit"
+```
 
-The tag workflow serializes all releases and retention. It runs the deterministic check graph
-and builds versioned archives, then builds both runtime platforms without publication. It compares
-the image JARs with the verified standalone JAR and runs the container suite against those exact
-local image IDs. `-PcontainerImage=<local-image>` selects this borrowed-image check without
-rebuilding or deleting the supplied image.
+The workflow refuses a dirty checkout, another source/workflow commit, unprotected or moved
+main, an existing version tag, or an existing release/draft. It checks identity before expensive
+work. Its preparation and QA jobs have read-only publication permissions.
 
-The workflow enables the containerd image store to preserve typed local manifest descriptors.
-It inventories both final filesystems and prepares corresponding source before any
-runtime publication. It stages verified assets in a draft, exposes the complete sources and
-binaries as a non-latest public prerelease, and publishes the data-only source image first.
-Anonymous retrieval must reproduce the source bytes. It then publishes the versioned runtime
-index with provenance and SPDX SBOMs, verifies platform-manifest/source bindings, applies safe
-retention, advances the image's latest tag and promotes the GitHub release to stable/latest.
-There is no atomic transaction across GitHub Releases and GHCR; a failure leaves the verified
-prerelease available for inspection rather than silently declaring a stable release.
+`Prepare candidate` runs release-control tests, the deterministic check/build graph, a bounded
+active fuzz run and a bounded real mutation control. `prepareReleaseNotes` validates and writes
+the dated changelog section in the same deterministic Gradle graph before assembly. It derives
+the resolved component inventory
+with `:cli:writeRuntimeComponentInventory`: `cli/build/runtime-component-inventory.json` contains
+portable component/legal facts; `cli/build/runtime-component-files.json` maps build-local files
+and is not a retained public inventory. Exact versions and checksums remain in the
+[authoritative pins](DEVELOPER.md#toolchain-and-dependencies).
 
-The manual workflow verifies an existing tag and defaults to dry_run=true. A dry run performs
-builds, platform tests and source preparation but skips release/registry mutations and pruning.
-Draft assets can be resumed. Public prerelease assets must match exactly; they are not replaced.
-An existing stable release stops publication. Inspect remote state after an ambiguous network
-failure rather than retagging or blindly overwriting published assets.
+Preparation builds retained AMD64 and ARM64 OCI runtime graphs with provenance and SPDX SBOMs,
+loads those same roots, and checks the JAR, launcher archives, capsule, stock provider classes,
+legal bytes and source correspondence. It exercises the runtime container suite for each selected
+platform and the contributor container. The explicit borrowed-image form is:
 
-Publication controls and their tests come from the commit defining the workflow; product code,
-build inputs and source inventories remain on the selected release tag. The release job runs
-AMD64 natively and ARM64 under emulation. Staging and publication share
-one BuildKit instance and its job-local cache. Before publication, the workflow also retains both
-platforms' local BuildKit cache exports, all seven release assets, finalized notes and the exact
-image IDs, version, commit and source epoch in a verified-delivery artifact. Its name includes
-the run ID and attempt, and it expires after one day. Cache exports contain the final image
-layers, not the downloaded JDK, Gradle cache or unpacked source collection.
+    ./gradlew containerTest -PcontainerImage=<retained-local-image> -PcontainerPlatform=linux/arm64
 
-These retained inputs support inspection and recovery after a publication failure. They do not
-enable automatic resume or waive verification: each fresh workflow run performs the full checks.
-Recovery must establish the retained assets' hashes and exact tested image identities before
-using them for publication.
+`containerPlatform` also accepts `linux/amd64` and requires a supplied image. This form verifies
+the selected JVM architecture without rebuilding or deleting the borrowed image.
+
+Only completed checks permit sealing and uploading `delivery-X.Y.Z-RUN-ATTEMPT`. The separate
+`Bind candidate QA receipt` job downloads that exact service artifact ID, checks the actual ZIP
+and payload, then uploads `artifact-qa-X.Y.Z-RUN-ATTEMPT`. Both use immutable service artifacts
+with seven-day retention. They are CI candidates visible to authenticated artifact readers;
+preparation creates no public tag, release or registry image. Failure diagnostics are separate
+from the two publication roles.
+
+## Download and independently accept the pair
+
+Wait for the entire preparation run to succeed. Record its run ID, current attempt, and both
+artifact IDs and service digests from GitHub, not merely artifact names:
+
+    gh run list --repo "$repo" --workflow release.yml --branch main --commit "$source_commit"
+    gh api "repos/$repo/actions/runs/$candidate_run_id"
+    gh api --paginate "repos/$repo/actions/runs/$candidate_run_id/artifacts"
+
+Set `candidate_run_id`, `candidate_run_attempt`, `delivery_id`, `delivery_digest`, `qa_id` and
+`qa_digest` to the reviewed service values. Digests use `sha256:` followed by 64 lowercase hex
+digits. With a credential in `GH_TOKEN` that can read Actions artifacts, use the trusted checkout's
+helper and a destination that does not exist:
+
+```sh
+python3 -B scripts/release_pair.py download \
+  --repo "$repo" --version "$version" --source "$source_commit" \
+  --run-id "$candidate_run_id" --attempt "$candidate_run_attempt" \
+  --delivery-id "$delivery_id" --delivery-digest "$delivery_digest" \
+  --qa-id "$qa_id" --qa-digest "$qa_digest" --output reviewed-release
+```
+
+[The pair validator](../scripts/release_pair.py) verifies the workflow, branch, source, successful
+jobs, current attempt, exact role IDs/digests, service ZIP bytes, candidate inventory and QA
+binding. `reviewed-release/delivery/` holds `candidate.json`, release assets, OCI archives and
+check evidence. `reviewed-release/qa/artifact-qa.json` binds that candidate to the delivery
+service artifact. `reviewed-release/reviewed-pair.json` binds both roles and their inner hashes.
+Never execute scripts supplied by downloaded payloads; use controls from the reviewed checkout.
+
+Independently review the downloaded contents, applicable changed contracts, platform behavior,
+actual test discovery and required failure controls. Use **that downloaded**
+`delivery/assets/gridgrind.jar` for any additional runtime acceptance. Record what was exercised,
+its outcomes and remaining limits in retained review evidence. The automated artifact receipt
+binds earlier CI checks; it does not replace independent acceptance.
+
+After the applicable review passes, the reviewer creates `independent-acceptance.json` using the
+exact [acknowledgement contract](../scripts/release_candidate.py):
+
+| Field | Meaning |
+| --- | --- |
+| `formatVersion`, `role` | `1` and `independent-acceptance` |
+| `pairSha256`, `jarSha256` | The reviewed canonical pair and downloaded JAR |
+| `status` | `PASS`, supported by the independent review evidence |
+| `evidenceSha256` | SHA-256 of the retained independent QA evidence |
+
+The acknowledgement is bounded to 32 KiB. Its shape, canonical digest and pair/JAR binding are
+checked automatically; those checks cannot establish that the declared independent work happened.
+The reviewer owns the evidence behind PASS. This is an explicit dispatcher acknowledgement,
+not a manual GitHub environment gate or an automatic publisher trigger.
+
+## Publish exactly the accepted delivery
+
+Generate dispatch inputs from the verified pair and the completed acknowledgement. Run this
+read-only preparation in the trusted checkout; it validates the acknowledgement before writing
+`publish-inputs.json`:
+
+```sh
+python3 - <<'PY'
+import json
+from pathlib import Path
+import sys
+sys.path.insert(0, 'scripts')
+from release_candidate import canonical, independent_acceptance, read_json, sha_bytes, sha_file
+record = read_json(Path('reviewed-release/reviewed-pair.json'))
+pair = record['pair']
+identity = pair['identity']
+ack = read_json(Path('independent-acceptance.json'))
+ack_sha = sha_bytes(canonical(ack))
+jar_sha = sha_file(Path('reviewed-release/delivery/assets/gridgrind.jar'))
+independent_acceptance(ack, ack_sha, record['pairSha256'], jar_sha)
+inputs = {
+    'operation': 'publish-prepared', 'version': identity['version'],
+    'source_commit': identity['sourceCommit'],
+    'candidate_run_id': str(identity['runId']),
+    'candidate_run_attempt': str(identity['runAttempt']),
+    'delivery_artifact_id': str(pair['delivery']['id']),
+    'delivery_artifact_digest': pair['delivery']['digest'],
+    'candidate_manifest_sha256': pair['candidateSha256'],
+    'qa_artifact_id': str(pair['qa']['id']), 'qa_artifact_digest': pair['qa']['digest'],
+    'qa_receipt_sha256': pair['receiptSha256'], 'reviewed_pair_sha256': record['pairSha256'],
+    'independent_acceptance': canonical(ack).decode('utf-8'),
+    'independent_acceptance_sha256': ack_sha,
+}
+Path('publish-inputs.json').write_text(json.dumps(inputs, indent=2) + '\n', encoding='utf-8')
+PY
+gh workflow run release.yml --repo "$repo" --ref main --json < publish-inputs.json
+```
+
+The [publisher](../scripts/publish_prepared.py) downloads and verifies the pair again. It checks
+current protected-main controls, all committed input hashes, owned source bytes, OCI graphs,
+SBOMs and the independent acknowledgement before any tag, release, registry or retention mutation.
+It does not rebuild the product, regenerate sources, rerun the preparation suites or execute
+artifact-supplied code. The installed OCI transfer client is checksum-pinned in
+[transfer-tools.properties](../release/transfer-tools.properties).
+
+Publication creates or verifies the version tag, stages the exact assets, then exposes a non-latest
+public prerelease with source assets. Anonymous source retrieval must match the reviewed bytes.
+The data-only source image is published and checked before the versioned runtime graph. After
+runtime/source verification and conservative retention, the publisher advances `latest` and
+promotes the GitHub release to stable/latest. There is no atomic transaction across GitHub and
+GHCR. A failure can leave an inspectable prerelease or partial registry state; it does not establish
+a completed stable release. Publication receipts and diagnostics are retained separately.
+
+## Expiry, changes and retries
+
+Missing, deleted or expired artifacts refuse publication. The seven-day candidate retention is
+not an indefinite recovery store. A new preparation attempt needs both fresh artifact roles and
+fresh independent acceptance; roles or acknowledgements cannot be mixed across attempts. A
+partial failed-job rerun cannot substitute an older delivery into a newer QA attempt. Use a full
+preparation attempt when replacing an unaccepted candidate.
+
+Moved main, changed controls or changed product inputs require a complete new preparation and
+review. If publication already created a tag or release/draft, inspect that state: preparation
+refuses to treat it as a new untagged version. Do not retag or overwrite public assets to bypass
+that refusal. A publication retry is a new `publish-prepared` dispatch naming the same still-valid
+reviewed pair. Exact matching draft/prerelease state can resume; mismatched assets or registry
+roots refuse. An already matching stable release receives read-only verification rather than
+replacement. Inspect ambiguous network failures before retrying; publication mutations are not
+blindly repeated.
 
 ## Container source delivery
 
-Runtime inputs are owned by [container-runtime.properties](../release/container-runtime.properties)
-and the [Dockerfile](../Dockerfile). The build JDK and contributor toolchain remain separate from
-the Corretto runtime. Debian snapshot indexes remain authenticated; only historical metadata
-expiry checks are disabled.
+[Runtime pins](../release/container-runtime.properties) and the [Dockerfile](../Dockerfile) own one
+immutable Temurin JDK/Ubuntu 26.04 family for build, contributor and application images. Fixed
+Ubuntu snapshot indexes remain authenticated; only historical metadata expiry checks are disabled.
 
-[prepare-container-sources.py](../scripts/prepare-container-sources.py) maps both image configurations,
-JRE commit identities and installed Debian binaries to exact source versions. It verifies the
-complete vendor source archive and every original, auxiliary and Debian patch/build archive
-named by authenticated source metadata and `.dsc` hashes. It also includes the runtime build
-inputs and their legal notices. It does not claim to have rebuilt upstream vendor/OS binaries.
+Every delivery includes `gridgrind-X.Y.Z-sources.tar.gz`, created from the exact committed Git tree
+before a tag exists and checked against every tracked blob and executable mode. It is separate
+from `gridgrind-container-sources-X.Y.Z.tar.gz` and its manifest/checksums, which bind matching
+Temurin source/build inputs and installed Ubuntu binary/source versions for both image platforms.
+The [source collector](../scripts/prepare-container-sources.py) verifies authenticated source
+metadata and archive hashes; it does not claim to rebuild upstream vendor/OS binaries.
 
-Release assets include the application JAR, ZIP/TAR launchers, a versioned container source
-archive, source manifest/checksums and SHA256SUMS. The same source files are offered beside the
-runtime at `ghcr.io/resoltico/gridgrind:X.Y.Z-sources`. This is data, not a runnable service:
+The JAR and launcher archives retain the [repair capsule](../native-provider/README.md), its Maven
+identity, matching patched/helper sources and mixed-license attribution. Parent-classpath provider
+classes retain their publisher bytes. Runtime SBOM checks include the capsule and the actual
+resolved components; source/legal content is inspected separately from component identification.
+
+The GitHub release offers the JAR, ZIP/TAR launchers, owned source archive, container source archive,
+source manifest/checksums and `SHA256SUMS`. The data-only source image at
+`ghcr.io/resoltico/gridgrind:X.Y.Z-sources` contains both source deliveries:
 
     docker create --platform linux/amd64 --name gridgrind-sources ghcr.io/resoltico/gridgrind:X.Y.Z-sources /source-only
     docker cp gridgrind-sources:/sources/. ./container-sources
@@ -74,24 +203,21 @@ runtime at `ghcr.io/resoltico/gridgrind:X.Y.Z-sources`. This is data, not a runn
     cd container-sources
     sha256sum --check gridgrind-container-sources-X.Y.Z.sha256
 
-The source tag must be publicly retrievable before the runtime and retained with it. Direct
-source delivery avoids making a new GridGrind written source offer. [NOTICE](../NOTICE) identifies
-the component terms and scope; packaging checks establish retained bytes, not a general legal
-opinion about every redistribution scenario.
+The container-source checksum file covers that archive and manifest. Verify the owned project
+archive against the release's `SHA256SUMS` as well. On macOS, `shasum -a 256 -c <checksum-file>`
+provides the checksum-checking command.
 
-Source acquisition preflights exact sizes and available space. The release asset must stay below
-2 GiB. Its conservative free-space budget covers six possible source copies: upstream payloads,
-release archive, BuildKit upload snapshot, source-image layer, downloaded blob and unpacked layer,
-plus 512 MiB of scratch headroom. Public verification streams bytes instead of making another
-archive copy. Failed source preparation retains diagnostic evidence and refuses an occupied
-output directory; review it before resuming.
+[Project licensing](../PROJECT-NOTICE.md) and [third-party notices](../NOTICE) describe the scopes.
+Source acquisition checks expected sizes and space; individual public release assets stay below
+2 GiB. The collector's free-space estimate covers source copies and scratch, not an overall disk
+quota. Failed preparation retains diagnostics and refuses an occupied output directory.
 
 ## Retention
 
-[prune-container-versions.py](../scripts/prune-container-versions.py) retains complete manifest
-graphs for the five newest stable runtime versions and their matching source tags. All other
-nonretired aliases and source-only incoming versions remain protected. It verifies manifest
-hashes and a fresh package-state snapshot before applying a deletion plan; its default is dry-run.
-Only resolved manifests in retired graphs can be deleted. Missing retired nodes and unrelated
-untagged records are left alone; an incomplete protected graph or other error blocks deletion.
-Timestamps choose stable roots, never their child retention boundaries.
+[The pruner](../scripts/prune-container-versions.py) retains the five newest stable semantic-version
+roots and matching source tags. Protected subject/fallback metadata and unassociated tagged roots
+can retain older graphs indefinitely. This is not a five-graph or physical-storage bound, and it
+does not guarantee a merge with concurrent external referrer updates. The pruner verifies graph
+hashes and fresh package state before deletion; its standalone default is dry-run. Missing retired
+nodes and unrelated untagged records remain untouched, while incomplete protected graphs block
+deletion.

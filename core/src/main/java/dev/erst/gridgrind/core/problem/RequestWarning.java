@@ -29,8 +29,17 @@ public record RequestWarning(
     return new RequestWarning(
         GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH,
         new RequestWarningLocation.RequestPath(path, pathRole),
-        "Absolute request-owned paths are portable only when the same execution-root layout exists: "
+        "Absolute request-owned paths are portable only when the same execution-root layout exists:"
+            + " "
             + path);
+  }
+
+  /** Reports that optional progress delivery was disabled after its first runtime failure. */
+  public static RequestWarning progressSinkFailed() {
+    return new RequestWarning(
+        GridGrindWarningCode.PROGRESS_SINK_FAILED,
+        new RequestWarningLocation.Execution(),
+        "Progress delivery failed and was disabled; workbook execution continued.");
   }
 
   /** Creates the warning for one accepted leading UTF-8 byte-order mark. */

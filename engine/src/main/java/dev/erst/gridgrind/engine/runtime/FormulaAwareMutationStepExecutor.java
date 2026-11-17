@@ -36,8 +36,8 @@ final class FormulaAwareMutationStepExecutor {
         new ResolvedStep(
             (ResolvedTarget)
                 selectorResolver.resolveMutationTarget(
-                    workbook, mutationStep.target(), mutationStep.action()),
-            MutationResolution.finish(prepared.action(), bindings));
+                    workbook, prepared.target(), mutationStep.action()),
+            MutationSecrets.finish(prepared.action(), bindings));
     FormulaOriginTracker.FormulaWrites writes = formulaOrigins.plannedWrites(workbook, step);
     ResolvedMutationExecutor.apply(workbook, step);
     formulaOrigins.record(workbook, writes, authoringStep);
@@ -45,10 +45,9 @@ final class FormulaAwareMutationStepExecutor {
 
   void executeStreaming(StreamingWorkbookWriter writer, PreparedMutationStep prepared)
       throws IOException {
-    MutationStep mutationStep = prepared.authoredStep();
     writer.apply(
         new ResolvedStep(
-            (ResolvedTarget) mutationStep.target(),
-            MutationResolution.finish(prepared.action(), bindings)));
+            (ResolvedTarget) prepared.target(),
+            MutationSecrets.finish(prepared.action(), bindings)));
   }
 }

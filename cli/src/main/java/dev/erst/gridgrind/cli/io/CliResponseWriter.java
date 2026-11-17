@@ -120,6 +120,32 @@ public final class CliResponseWriter {
             Optional.of(redactor),
             GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson),
             prettyJson);
+    return routeReservedPayload(reservation, stdout, stderr, payload, logicalExitCode);
+  }
+
+  /** Writes a preexecution command refusal through the already-reserved response descriptor. */
+  public int writeReservedCommandError(
+      CliResponseReservation reservation,
+      OutputStream stdout,
+      OutputStream stderr,
+      CommandError error,
+      boolean prettyJson)
+      throws IOException {
+    return routeReservedPayload(
+        reservation,
+        stdout,
+        stderr,
+        commandErrorBytes(error, Optional.empty(), prettyJson),
+        CliExitCodes.forCommandError(error));
+  }
+
+  private static int routeReservedPayload(
+      CliResponseReservation reservation,
+      OutputStream stdout,
+      OutputStream stderr,
+      byte[] payload,
+      int logicalExitCode)
+      throws IOException {
     try {
       reservation.write(payload);
       return logicalExitCode;
@@ -293,7 +319,8 @@ public final class CliResponseWriter {
     Path temporaryPath = Files.createTempFile(parent, ".gridgrind-response-", ".tmp");
     try {
       temporaryWriter.write(temporaryPath, payload);
-      Files.move(temporaryPath, targetPath);
+      CliPublicationPrimitives.createFile(temporaryPath, targetPath);
+      Files.delete(temporaryPath);
     } catch (IOException | RuntimeException | Error exception) {
       deleteFailedStagingFile(temporaryPath, exception);
       throw exception;

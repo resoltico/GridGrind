@@ -6,12 +6,10 @@ import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
-import org.gradle.testing.jacoco.tasks.JacocoReportsContainer
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.register
 
@@ -28,8 +26,8 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             description = providers.gradleProperty("gridgrindDescription").get()
             configureGridGrindRepositories()
 
-            allprojects { candidate ->
-                candidate.dependencyLocking { it.lockAllConfigurations() }
+            allprojects { val candidate = this
+                candidate.dependencyLocking { lockAllConfigurations() }
                 candidate.group = providers.gradleProperty("group").get()
                 candidate.version = providers.gradleProperty("version").get()
             }
@@ -40,7 +38,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
 
             configure<SpotlessExtension> {
                 lineEndings = LineEnding.UNIX
-                format("projectFiles") { formatExtension ->
+                format("projectFiles") { val formatExtension = this
                     formatExtension.target(*projectFileTargets().toTypedArray())
                     formatExtension.trimTrailingWhitespace()
                     formatExtension.endWithNewline()
@@ -48,7 +46,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             }
 
             val verifyExplicitImports =
-                tasks.register("verifyExplicitImports") { verifyTask ->
+                tasks.register("verifyExplicitImports") { val verifyTask = this
                     verifyTask.group = "verification"
                     verifyTask.description =
                         "Fails when handwritten production Java/Kotlin sources use wildcard imports."
@@ -94,19 +92,19 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 }
 
             val verifyNoLegacyBuildSrc =
-                tasks.register("verifyNoLegacyBuildSrc") { verifyTask ->
+                tasks.register("verifyNoLegacyBuildSrc") { val verifyTask = this
                     verifyTask.group = "verification"
                     verifyTask.description =
-                        "Fails when a legacy buildSrc directory is present anywhere in the repository checkout."
+                        "Fails when buildSrc is present in an owned Gradle build or project."
+                    val ownedBuildSrcDirectories =
+                        (listOf(repositoryLayout.repositoryRoot) +
+                            subprojects.map { it.projectDir } +
+                            listOf(repositoryLayout.repositoryRoot.resolve("gradle/build-logic")))
+                            .map { it.resolve("buildSrc") }
+                    verifyTask.inputs.files(ownedBuildSrcDirectories)
                     verifyTask.doLast {
-                        val legacyBuildSrcDirectories =
-                            repositoryLayout.repositoryRoot.walkTopDown()
-                                .filter { candidate ->
-                                    candidate.isDirectory &&
-                                        candidate.name == "buildSrc" &&
-                                        !candidate.invariantSeparatorsPath.contains("/.git/") &&
-                                        !candidate.invariantSeparatorsPath.contains("/.gradle/")
-                                }.toList()
+                        val legacyBuildSrcDirectories = ownedBuildSrcDirectories.filter(File::isDirectory)
+
 
                         if (legacyBuildSrcDirectories.isNotEmpty()) {
                             throw GradleException(
@@ -139,7 +137,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             registerGridGrindMutationReport()
 
             val reportRetention = registerGridGrindReportRetention()
-            tasks.named("check") { checkTask ->
+            tasks.named("check") { val checkTask = this
                 checkTask.finalizedBy(reportRetention)
                 checkTask.dependsOn("spotlessCheck")
                 checkTask.dependsOn(verifyExplicitImports)
@@ -174,14 +172,14 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                             coverageSubprojects().map { subproject ->
                                 subproject.fileTree(
                                     subproject.layout.buildDirectory.dir("classes/java/main").get().asFile,
-                                ) { patternFilterable ->
+                                ) { val patternFilterable = this
                                     patternFilterable.exclude("**/module-info.class")
                                 }
                             }
                         },
                     )
 
-                    reports { reports: JacocoReportsContainer ->
+                    reports { val reports = this
                         reports.xml.required.set(true)
                         reports.xml.outputLocation.set(
                             layout.buildDirectory.file("reports/jacoco/aggregated/report.xml"),
@@ -194,14 +192,14 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 }
 
             val coverage =
-                tasks.register("coverage") { coverageTask ->
+                tasks.register("coverage") { val coverageTask = this
                     coverageTask.group = "verification"
                     coverageTask.description =
                         "Runs tests and generates per-module and aggregated coverage reports."
                     coverageTask.dependsOn(jacocoAggregatedReport)
                 }
 
-            tasks.register("parity") { parityTask ->
+            tasks.register("parity") { val parityTask = this
                 parityTask.group = "verification"
                 parityTask.description = "Runs the dedicated Apache POI XSSF parity verification suite."
                 parityTask.dependsOn(":engine:parityTest")
@@ -210,38 +208,16 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             gradle.projectsEvaluated {
                 val coverageSubprojects = coverageSubprojects()
                 val subprojectCoverageReports = taskPathsByName(coverageSubprojects, "jacocoTestReport")
-                val subprojectSpotlessTasks = taskPathsByName(coverageSubprojects, "spotlessJava")
-                val projectFileSpotlessTasks =
-                    listOfNotNull(
-                        tasks.findByName("spotlessProjectFiles"),
-                        tasks.findByName("spotlessProjectFilesCheck"),
-                    )
-                val projectFileSpotlessTaskPaths = projectFileSpotlessTasks.map(Task::getPath).toSet()
-                val allRootAndSubprojectTasks =
-                    (listOf(this@with) + subprojects).flatMap { candidateProject ->
-                        candidateProject.tasks.toList()
-                    }
-
-                jacocoAggregatedReport.configure { report ->
+                jacocoAggregatedReport.configure { val report = this
                     report.dependsOn(subprojectCoverageReports)
-                    report.mustRunAfter(
-                        listOf("spotlessProjectFiles") + subprojectSpotlessTasks + subprojectCoverageReports,
-                    )
+
                 }
 
-                coverage.configure { coverageTask ->
+                coverage.configure { val coverageTask = this
                     coverageTask.dependsOn(subprojectCoverageReports)
                 }
 
-                // Keep repository-wide project-file formatting on a stable file tree. The target set spans
-                // the whole checkout, so letting compile/test tasks create build outputs in parallel can make
-                // Spotless walk paths that appear or disappear mid-scan.
-                projectFileSpotlessTasks.forEach { projectFileTask ->
-                    allRootAndSubprojectTasks
-                        .asSequence()
-                        .filter { candidateTask -> candidateTask.path !in projectFileSpotlessTaskPaths }
-                        .forEach { candidateTask -> candidateTask.mustRunAfter(projectFileTask) }
-                }
+
             }
         }
     }
@@ -280,6 +256,10 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("CHANGELOG.md"))
             add(rootFile("Dockerfile"))
             add(rootFile("LICENSE"))
+            add(rootFile("PROJECT-NOTICE.md"))
+            add(rootFile("LICENSE-COMMERCIAL.md"))
+            add(rootFile("CONTRIBUTING.md"))
+            add(rootFile(".github/pull_request_template.md"))
             add(rootFile("LICENSE-APACHE-2.0"))
             add(rootFile("LICENSE-BSD-2-CLAUSE"))
             add(rootFile("LICENSE-BSD-3-CLAUSE"))
@@ -303,7 +283,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
     private fun Project.projectFileTree(
         path: String,
         configureTree: org.gradle.api.file.ConfigurableFileTree.() -> Unit,
-    ) = fileTree(layout.projectDirectory.dir(path)) { fileTree ->
+    ) = fileTree(layout.projectDirectory.dir(path)) { val fileTree = this
         fileTree.configureTree()
     }
 

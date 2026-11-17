@@ -53,10 +53,9 @@ final class RequestCreatorContractSupport {
 
   static List<RecordComponent> visibleRecordComponents(Class<? extends Record> recordType) {
     return Arrays.stream(recordType.getRecordComponents())
-        .filter(
-            component ->
-                !component.isAnnotationPresent(CatalogIgnored.class)
-                    && !component.getAccessor().isAnnotationPresent(CatalogIgnored.class))
+        .filter(component ->
+            !component.isAnnotationPresent(CatalogIgnored.class)
+                && !component.getAccessor().isAnnotationPresent(CatalogIgnored.class))
         .toList();
   }
 
