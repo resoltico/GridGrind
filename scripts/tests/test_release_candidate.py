@@ -1,11 +1,13 @@
 """Pure candidate/source/OCI boundary controls; no GitHub, registry or product execution."""
 import copy
+import contextlib
 import hashlib
 import io
 import json
 import os
 from pathlib import Path
 import stat
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -140,16 +142,159 @@ class CapsuleSourceTest(unittest.TestCase):
 
 
 class OwnedSourceTest(unittest.TestCase):
-    def test_git_owned_archive_content_and_completeness_not_merely_tar_parse(self):
-        data=b'owned source';oid=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
-        row=b'100644 blob '+oid.encode()+b'\tbuild.gradle.kts\0'
-        with tempfile.TemporaryDirectory()as temp:
-            path=Path(temp)/'sources.tar.gz'
-            with tarfile.open(path,'w:gz')as t:
-                member=tarfile.TarInfo('gridgrind-0.78.0/build.gradle.kts');member.size=len(data);member.mode=0o644;t.addfile(member,io.BytesIO(data))
-            with mock.patch.object(sources,'git',return_value=row):self.assertEqual(1,sources.verify_archive(path,'1'*40,'0.78.0')['files'])
-            with mock.patch.object(sources,'git',return_value=row+b'100644 blob '+oid.encode()+b'\tmissing.java\0'):
-                with self.assertRaisesRegex(c.CandidateError,'omitted'):sources.verify_archive(path,'1'*40,'0.78.0')
+    def test_declared_projection_still_rejects_missing_changed_extra_and_links(self):
+        data=b'owned source';row={'mode':'100644','gitBlob':hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest(),
+                                  'sha256':c.sha_bytes(data),'size':len(data),'exported':True}
+        for kind in ('valid','missing','changed','extra','link'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory()as temp:
+                path=Path(temp)/'sources.tar.gz'
+                with tarfile.open(path,'w:gz')as t:
+                    if kind!='missing':
+                        body=b'changed data'if kind=='changed'else data
+                        name='unexpected.java'if kind=='extra'else'App.java'
+                        member=tarfile.TarInfo('gridgrind-0.78.0/'+name);member.size=len(body);member.mode=0o644
+                        if kind=='link':member.type=tarfile.SYMTYPE;member.linkname='outside';member.size=0;t.addfile(member)
+                        else:t.addfile(member,io.BytesIO(body))
+                if kind=='valid':self.assertEqual(1,sources.verify_archive(path,'1'*40,'0.78.0',{'App.java':row})['files'])
+                else:
+                    with self.assertRaises(c.CandidateError):sources.verify_archive(path,'1'*40,'0.78.0',{'App.java':row})
+
+
+class CommittedExportProjectionTest(unittest.TestCase):
+    @contextlib.contextmanager
+    def repository(self):
+        with tempfile.TemporaryDirectory()as temporary:
+            before=Path.cwd();root=Path(temporary)
+            environment={k:v for k,v in os.environ.items()if not k.startswith('GIT_')}
+            environment.update({'GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null',
+                                'GIT_AUTHOR_NAME':'Synthetic export control','GIT_COMMITTER_NAME':'Synthetic export control',
+                                'GIT_AUTHOR_EMAIL':'export@example.invalid','GIT_COMMITTER_EMAIL':'export@example.invalid'})
+            def command(*args):
+                result=subprocess.run(['git','-c','user.name=Synthetic export control','-c','user.email=export@example.invalid',
+                                       '-c','commit.gpgsign=false','-c','core.hooksPath=/dev/null',
+                                       '-c','core.attributesFile=/dev/null','-c','core.autocrlf=false','-c','core.eol=lf',*args],
+                                      cwd=root,capture_output=True,check=True,env=environment)
+                return result.stdout.decode().strip()
+            command('init','-q')
+            (root/'.gitattributes').write_text('* text=auto eol=lf\n*.bat eol=crlf\n/AGENTS.md export-ignore\n/.codex/ export-ignore\n/.codex/keep.txt -export-ignore\n')
+            (root/'App.java').write_bytes(b'class App {}\n');(root/'gradlew.bat').write_bytes(b'@echo off\nrem windows\n')
+            (root/'AGENTS.md').write_text('Synthetic nonshipping control metadata.\n')
+            (root/'.codex').mkdir();(root/'.codex/keep.txt').write_text('Ancestor excludes this despite file unset.\n')
+            command('add','.');command('commit','-qm','Synthetic export fixture');commit=command('rev-parse','HEAD')
+            (root/'gradlew.bat').unlink()
+            command('checkout-index','--all','--force')
+            try:
+                os.chdir(root)
+                with mock.patch.dict(os.environ,environment,clear=True):yield root,commit,command
+            finally:os.chdir(before)
+
+    def test_actual_git_file_ancestor_policy_and_crlf_projection(self):
+        with self.repository()as(root,commit,command):
+            projection=sources.source_projection(commit)
+            self.assertEqual(set(sources.tracked(commit)),set(projection))
+            self.assertFalse(projection['AGENTS.md']['exported'])
+            self.assertFalse(projection['.codex/keep.txt']['exported'])
+            self.assertTrue(projection['App.java']['exported'])
+            windows=b'@echo off\r\nrem windows\r\n'
+            self.assertEqual(c.sha_bytes(windows),projection['gradlew.bat']['sha256'])
+            self.assertEqual(len(windows),projection['gradlew.bat']['size'])
+            self.assertEqual(windows,(root/'gradlew.bat').read_bytes())
+            inputs=sources.working_input_hashes(commit,projection)
+            self.assertIn('AGENTS.md',{r['path']for r in inputs})
+            self.assertTrue(all(set(r)=={'path','size','sha256'}for r in inputs))
+            asset=root/'gridgrind-0.78.0-sources.tar.gz';proof=sources.create_archive(asset,commit,'0.78.0',1)
+            self.assertEqual(3,proof['files'])
+            with tarfile.open(asset)as t:self.assertEqual(windows,t.extractfile('gridgrind-0.78.0/gradlew.bat').read())
+            (root/'App.java').write_text('different source\n')
+            with self.assertRaisesRegex(c.CandidateError,'input bytes'):sources.working_input_hashes(commit,projection)
+
+    def test_committed_policy_overrides_worktree_global_and_attribute_source_env(self):
+        with self.repository()as(root,commit,command):
+            (root/'global-attrs').write_text('/App.java export-ignore\n')
+            command('config','core.attributesFile',str(root/'global-attrs'))
+            (root/'.gitattributes').write_text('* export-ignore\n')
+            command('add','.gitattributes');command('commit','-qm','Different later export policy');later=command('rev-parse','HEAD')
+            with mock.patch.dict(os.environ,{'GIT_ATTR_SOURCE':later}):
+                projection=sources.source_projection(commit)
+                self.assertTrue(projection['App.java']['exported'])
+                asset=root/'gridgrind-0.78.0-sources.tar.gz'
+                self.assertEqual(3,sources.create_archive(asset,commit,'0.78.0',1)['files'])
+
+    def test_repository_info_overrides_and_custom_filters_refuse(self):
+        with self.repository()as(root,commit,command):
+            (root/'.git/info/attributes').write_text('/App.java export-ignore\n')
+            with self.assertRaisesRegex(c.CandidateError,'info attributes'):sources.source_projection(commit)
+        with self.repository()as(root,commit,command):
+            with(root/'.gitattributes').open('a')as f:f.write('/App.java filter=unrecorded\n')
+            command('add','.gitattributes');command('commit','-qm','Unsupported custom filter')
+            with self.assertRaisesRegex(c.CandidateError,'custom filters'):sources.source_projection(command('rev-parse','HEAD'))
+
+    def test_committed_policy_cannot_exclude_required_source_or_near_match_metadata(self):
+        for name in ('core/src/main/java/Required.java','native-provider/src/helper/java/Helper.java',
+                     'native-provider/patches/poi/Repair.patch','gradle/build-logic/build.gradle.kts',
+                     'LICENSE','docs/API.md','AGENTS.other','.codex-other/required.txt','nested/AGENTS.md'):
+            with self.subTest(path=name),self.repository()as(root,commit,command):
+                path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('Required project material.\n')
+                with(root/'.gitattributes').open('a')as f:f.write('/'+name+' export-ignore\n')
+                command('add','.');command('commit','-qm','Overbroad export policy');selected=command('rev-parse','HEAD')
+                projection=sources.source_projection(selected)
+                self.assertFalse(projection[name]['exported'])
+                self.assertIn(name,{r['path']for r in sources.working_input_hashes(selected,projection)})
+                asset=root/'gridgrind-0.78.0-sources.tar.gz'
+                with self.assertRaisesRegex(c.CandidateError,'required project source'):sources.create_archive(asset,selected,'0.78.0',1)
+                self.assertFalse(asset.exists())
+
+    def test_attribute_triplets_must_be_complete_unique_and_known(self):
+        with mock.patch.object(sources,'export_environment',return_value={}),mock.patch.object(sources.subprocess,'run')as run:
+            for raw in (b'App.java\0export-ignore\0set',b'App.java\0unknown\0set\0',b'App.java\0export-ignore\0set\0App.java\0export-ignore\0set\0'):
+                run.return_value=mock.Mock(stdout=raw)
+                with self.subTest(raw=raw),self.assertRaises(c.CandidateError):sources.export_attributes('1'*40,['App.java'])
+
+
+class BeginSourcePreflightTest(unittest.TestCase):
+    def test_begin_refuses_omitted_app_and_runs_all_input_projection_before_expensive_phase(self):
+        class MissingTag(Exception):
+            status=404
+        api=mock.Mock();api.legacy.ApiError=MissingTag;api.legacy.Publication.return_value.release.return_value=None
+        def get(path):
+            if path=='/branches/main':return {'protected':True,'commit':{'sha':'1'*40}}
+            if path=='/actions/workflows/release.yml':return {'id':2,'path':c.WORKFLOW_PATH}
+            if path=='/git/ref/tags/v0.78.0':raise MissingTag()
+            raise AssertionError('Unexpected API path')
+        api.get.side_effect=get
+        def git(*args):
+            if args[0]=='rev-parse':return ('1'*40+'\n').encode()
+            if args[0]=='status':return b''
+            if args[0]=='show':return b'1\n'
+            raise AssertionError('Unexpected Git source read')
+        for exported in (False,True):
+            with self.subTest(exported=exported),tempfile.TemporaryDirectory()as temp:
+                env={'GITHUB_REPOSITORY':'example/GridGrind','GH_TOKEN':'synthetic-not-a-token','GITHUB_EVENT_NAME':'workflow_dispatch',
+                     'GITHUB_REF':'refs/heads/main','RELEASE_WORKFLOW_COMMIT':'1'*40,'GITHUB_RUN_ID':'3','GITHUB_RUN_ATTEMPT':'4','GITHUB_OUTPUT':str(Path(temp)/'outputs')}
+                projection={'core/src/main/java/App.java':{'exported':exported}}
+                with mock.patch.dict(os.environ,env),mock.patch.object(delivery,'WORK',Path(temp)),                     mock.patch.object(delivery,'Github',return_value=api),mock.patch.object(delivery,'git',side_effect=git),                     mock.patch.object(delivery,'source_projection',return_value=projection),mock.patch.object(delivery,'working_input_hashes')as inputs:
+                    if exported:
+                        delivery.begin('0.78.0','1'*40);inputs.assert_called_once_with('1'*40,projection)
+                    else:
+                        with self.assertRaisesRegex(c.CandidateError,'required project source'):delivery.begin('0.78.0','1'*40)
+                        inputs.assert_not_called();self.assertFalse((Path(temp)/'outputs').exists())
+
+
+class PreparationDiagnosticsTest(unittest.TestCase):
+    def test_known_guard_and_unknown_failure_keep_safe_context(self):
+        with tempfile.TemporaryDirectory()as temp,mock.patch.object(delivery,'WORK',Path(temp)),mock.patch.object(delivery,'ACTIVE_PHASE','assemble'):
+            message=delivery.preparation_failure(c.CandidateError('Owned source archive omitted exported committed material'))
+            self.assertIn('omitted exported committed material',message)
+            self.assertEqual('assemble',c.read_json(Path(temp)/'preparation-error.json')['phase'])
+            try:raise RuntimeError('synthetic credential marker must not be logged')
+            except RuntimeError as error:message=delivery.preparation_failure(error)
+            record=c.read_json(Path(temp)/'preparation-error.json')
+            self.assertEqual('RuntimeError',record['failureType']);self.assertTrue(record['frames'])
+            self.assertNotIn('synthetic credential marker',message+json.dumps(record))
+            with mock.patch.object(Path,'write_bytes',side_effect=OSError('private filesystem detail')):
+                message=delivery.preparation_failure(c.CandidateError('Known fixed guard'))
+            self.assertIn('Known fixed guard',message);self.assertIn('could not be retained',message)
+            self.assertNotIn('private filesystem detail',message)
 
 
 class OciProfileTest(unittest.TestCase):
@@ -230,3 +375,26 @@ class PublisherBoundaryTest(unittest.TestCase):
                 self.assertEqual('source-index-copy',actual['activePhase'])
                 self.assertEqual(Q,actual['pairSha256'])
             finally:os.chdir(before)
+
+
+class InspectionReportTest(unittest.TestCase):
+    def test_large_statements_remain_available_but_persisted_summary_stays_bounded(self):
+        with tempfile.TemporaryDirectory()as temp:
+            root=Path(temp);work=root/'work';work.mkdir()
+            large='x'*(8*1024*1024+1)
+            purl={'referenceType':'purl','referenceLocator':'pkg:maven/dev.erst.gridgrind/native-provider@0.78.0'}
+            statements={platform:{'https://spdx.dev/Document':{'predicate':{'packages':[{'name':'native-provider','externalRefs':[purl]}]}},
+                                  'https://slsa.dev/provenance/v1':{'predicate':{'large':large}}}
+                        for platform in ('linux/amd64','linux/arm64')}
+            full={'graph':{'root':{'digest':D},'nodes':{},'edges':[]},'platforms':{},'graphSha256':Q,'statements':statements}
+            old=root/'old-full.json';c.write_json(old,full)
+            with self.assertRaisesRegex(c.CandidateError,'oversized'):c.read_json(old)
+            value={'version':'0.78.0','sourceCommit':'1'*40,'epoch':1,'runId':3,'runAttempt':4}
+            with mock.patch.object(delivery,'WORK',work),mock.patch.object(delivery,'DELIVERY',root/'delivery'),\
+                 mock.patch.object(delivery,'run_logged'),mock.patch.object(delivery,'unpack',return_value={'digest':D}),\
+                 mock.patch.object(delivery,'inspect',return_value=full):
+                _,_,returned,_=delivery.build_oci(value)
+            compact=c.read_json(work/'runtime-inspection.json')
+            self.assertEqual({'graph','platforms','graphSha256'},set(compact))
+            self.assertIs(full,returned)
+            oci.check_sbom(returned,[{'group':'dev.erst.gridgrind','artifact':'native-provider','version':'0.78.0'}])

@@ -153,6 +153,10 @@ jobs:
           name: prepare-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             build/release-work/*.log
+            build/release-work/*.json
+            cli/build/runtime-component-inventory.json
+            build/fuzz/findings/**
+            core/build/reports/pitest/**
             **/build/test-results/**/*.xml
             **/build/reports/tests/**
             build/reports/configuration-cache/**

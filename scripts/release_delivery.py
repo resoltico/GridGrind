@@ -10,12 +10,13 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import traceback
 import xml.etree.ElementTree as ET
 import zipfile
 from release_candidate import (CandidateError, Github, canonical, candidate, identity, inventory, read_json,
                                require, relative, sha_bytes, sha_file, validate_checks, write_json)
 from release_oci import (command, inspect, load_for_testing, properties, source_payload, unpack, check_sbom)
-from release_sources import create_archive, git, tracked
+from release_sources import create_archive, git, tracked, source_projection, working_input_hashes, exported_source_rows
 
 WORK = Path('build/release-work')
 DELIVERY = Path('build/release-candidate')
@@ -45,6 +46,11 @@ def begin(version, source):
     require(publication.release() is None, 'Existing release/draft must be inspected instead of preparing another candidate')
     WORK.mkdir(parents=True, exist_ok=True)
     write_json(WORK/'identity.json', value)
+    # The exact property is checked again at seal. Refuse unsupported export
+    # policy/representations before paying for the complete versioned graph.
+    projection = source_projection(source)
+    exported_source_rows(projection)
+    working_input_hashes(source, projection)
     if os.environ.get('GITHUB_OUTPUT'):
         with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
             for key, item in {'version':version, 'commit':source, 'epoch':value['epoch'],
@@ -213,7 +219,10 @@ def build_oci(value, source=False):
         args += ['--provenance=mode=max', '--attest', 'type=sbom,generator=docker.io/docker/buildkit-syft-scanner@sha256:873a7458c3c8ac8e32c7b796c10e1600b07b963d2aa000a72a2d97aaaa2d6315', '.']
     run_logged(args, role+'-oci-build.log')
     layout = WORK/(role+'-layout'); root = unpack(archive, layout); result = inspect(layout, root, role)
-    write_json(WORK/(role+'-inspection.json'), result)
+    # Keep full statements for immediate scanner/content checks in memory. Their
+    # immutable raw bytes already live in the OCI; do not duplicate multi-MiB
+    # predicates into the small graph summary consumed by seal.
+    write_json(WORK/(role+'-inspection.json'), {key:result[key] for key in ('graph','platforms','graphSha256')})
     return archive, layout, result, tag
 
 
@@ -353,15 +362,11 @@ def seal():
     checks = validate_checks({'formatVersion':1,'status':'PASS','suites':suites,'negativeControls':['evidence/control-tests.log','evidence/oci-negative-controls.json']})
     control = (WORK/'control-tests.log').read_text()
     require(re.search(r'Ran [1-9][0-9]* tests',control) and re.search(r'\nOK\s*\Z',control), 'Release-control negative tests did not execute successfully')
-    inputs = []
     require(not git('status', '--porcelain', '--untracked-files=all').strip(), 'Release checks changed committed source inputs')
-    for name, record in sorted(tracked(value['sourceCommit']).items()):
-        path = Path(name); require(path.is_file() and not path.is_symlink(), 'Committed input disappeared')
-        blob = hashlib.sha1(b'blob ' + str(path.stat().st_size).encode('ascii') + b'\0')
-        with path.open('rb') as stream:
-            for block in iter(lambda: stream.read(1024 * 1024), b''): blob.update(block)
-        require(blob.hexdigest() == record['gitBlob'], 'Input bytes differ from selected Git commit')
-        inputs.append({'path':name,'size':path.stat().st_size,'sha256':sha_file(path)})
+    projection = source_projection(value['sourceCommit'])
+    owned_projection = read_json(WORK/'delivery-content.json')['ownedSource']['projection']
+    require(projection == owned_projection, 'Source projection changed since owned archive creation')
+    inputs = working_input_hashes(value['sourceCommit'], projection)
     rows = inventory(DELIVERY)
     oci = {}
     for role in ('runtime','source'):
@@ -372,16 +377,39 @@ def seal():
     candidate(DELIVERY)
 
 
+ACTIVE_PHASE = None
+
+
+def preparation_failure(error):
+    """Keep known safe guards, never exception payloads/locals/credentials."""
+    known = isinstance(error, CandidateError)
+    reason = str(error) if known else 'Unexpected failure; inspect retained stack locations'
+    frames = [{'file':Path(frame.filename).name, 'line':frame.lineno, 'function':frame.name}
+              for frame in traceback.extract_tb(error.__traceback__)[-16:]]
+    value = {'formatVersion':1, 'status':'STOPPED', 'phase':ACTIVE_PHASE,
+             'failureType':type(error).__name__, 'reason':reason, 'frames':frames}
+    retained = True
+    try:
+        WORK.mkdir(parents=True, exist_ok=True)
+        (WORK/'preparation-error.json').write_bytes(canonical(value)+b'\n')
+    except OSError:
+        retained = False
+    suffix = '' if retained else ' Diagnostic file could not be retained.'
+    return 'Release preparation stopped: '+value['failureType']+': '+reason+'. No candidate/publication is permitted.'+suffix
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
     b=sub.add_parser('begin');b.add_argument('--version',required=True);b.add_argument('--source',required=True)
     a=sub.add_parser('assemble');a.add_argument('--components',type=Path,required=True);a.add_argument('--component-files',type=Path,required=True)
     sub.add_parser('seal');args=p.parse_args()
+    global ACTIVE_PHASE
+    ACTIVE_PHASE = args.command
     if args.command=='begin': begin(args.version,args.source)
     elif args.command=='assemble': assemble(args.components,args.component_files)
     else: seal()
 
 if __name__=='__main__':
     try: main()
-    except (CandidateError,OSError,ValueError,KeyError,subprocess.SubprocessError,zipfile.BadZipFile,tarfile.TarError,ET.ParseError):
-        raise SystemExit('Release preparation stopped; retain failure evidence. No candidate/publication is permitted.') from None
+    except Exception as error:
+        raise SystemExit(preparation_failure(error)) from None

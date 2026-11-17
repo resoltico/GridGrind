@@ -182,7 +182,9 @@ immutable Temurin JDK/Ubuntu 26.04 family for build, contributor and application
 Ubuntu snapshot indexes remain authenticated; only historical metadata expiry checks are disabled.
 
 Every delivery includes `gridgrind-X.Y.Z-sources.tar.gz`, created from the exact committed Git tree
-before a tag exists and checked against every tracked blob and executable mode. It is separate
+before a tag exists and checked against its exported source bytes and executable modes.
+[Git attributes](../.gitattributes) select the export and text representations, excluding agent
+metadata while retaining the application, helper, repair, build and installation inputs. It is separate
 from `gridgrind-container-sources-X.Y.Z.tar.gz` and its manifest/checksums, which bind matching
 Temurin source/build inputs and installed Ubuntu binary/source versions for both image platforms.
 The [source collector](../scripts/prepare-container-sources.py) verifies authenticated source
