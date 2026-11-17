@@ -270,6 +270,19 @@ def manifest_digest(image_info):
     return value
 
 
+def resolve_platform_image(image, platform, run):
+    """Keep a daemon-addressable root distinct from selected manifest metadata."""
+    root_info = json.loads(run(["docker", "image", "inspect", image]))[0]
+    root = root_info.get("Id", "")
+    require(isinstance(root, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", root),
+            "Docker must resolve an immutable local image root")
+    selected = json.loads(run(["docker", "image", "inspect", "--platform", platform, root]))[0]
+    require(selected.get("Os", "") + "/" + selected.get("Architecture", "") == platform,
+            "Selected source image platform differs from requested platform")
+    manifest_digest(selected)
+    return root, selected
+
+
 def reuse_source_package(cache, destination, name, version, expected):
     """Read a prior tuple only after authenticating its exact files against the fresh index."""
     if cache is None:
@@ -321,10 +334,11 @@ def prepare(args):
         tuples = set()
         configs = {}
         for platform, image in args.image:
+            image_root, image_info = resolve_platform_image(image, platform, run)
             name = "gridgrind-source-" + uuid.uuid4().hex
             run(["docker", "create", "--pull=never", "--platform", platform, "--user", "0",
                  "--name", name, "--mount", f"type=bind,source={output},target=/source-output",
-                 "--entrypoint", "sh", image, "-c", "while :; do sleep 3600; done"])
+                 "--entrypoint", "sh", image_root, "-c", "while :; do sleep 3600; done"])
             containers.append(name)
             run(["docker", "start", name])
             actual_arch = run(["docker", "exec", name, "dpkg", "--print-architecture"]).strip()
@@ -357,8 +371,6 @@ def prepare(args):
                     and properties.get("BUILD_SOURCE") == "git:" + pins["TEMURIN_BUILD_COMMIT"],
                     f"Vendor source ref does not match {platform} JDK")
             (image_dir / "java-release.txt").write_text(release)
-            image_id = json.loads(run(["docker", "inspect", name]))[0]["Image"]
-            image_info = json.loads(run(["docker", "image", "inspect", "--platform", platform, image_id]))[0]
             manifest["images"].append({"platform": platform, "manifestDigest": manifest_digest(image_info), "packages": packages})
             paths = run(["docker", "exec", name, "sh", "-ec",
                          "find /etc/apt -maxdepth 2 -type f \\( -name '*.sources' -o -name '*.list' \\) -print"])
